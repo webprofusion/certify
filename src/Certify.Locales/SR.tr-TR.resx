@@ -403,10 +403,10 @@
     <value>SNI kullan (IIS 8+):</value>
   </data>
   <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
-    <value>PS Komut Dosyası Ön İstek:</value>
+    <value>İstek öncesi PS Komut Dosyası:</value>
   </data>
   <data name="Test" xml:space="preserve">
-    <value>Ölçek</value>
+    <value>Test</value>
   </data>
   <data name="Browser" xml:space="preserve">
     <value>...</value>
@@ -433,16 +433,16 @@
     <value>Bu öğe için bir ad gereklidir.</value>
   </data>
   <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
-    <value>Birincil Etki Alanı dahil edilmelidir</value>
+    <value>Birincil Alan adı içermelidir</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
-    <value>{0} sorgulaması yalnızca IIS 8+ sürümleri için kullanılabilir.</value>
+    <value>{0} talebi yalnızca IIS 8+ sürümleri için kullanılabilir.</value>
   </data>
   <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
-    <value>Web kancasının URL'si geçerli bir URL'ye ayarlanmalıdır.</value>
+    <value>Webhook URL'si geçerli bir URL'ye ayarlanmalıdır.</value>
   </data>
   <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
-    <value>Web kancası için Yöntem ayarlanmalıdır.</value>
+    <value>Webhook için Yöntem ayarlanmalıdır.</value>
   </data>
   <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
     <value>Hiçbir değişiklik yapılmadı, kaydetme atlanıyor</value>
@@ -460,13 +460,13 @@
     <value>Bu öğe için sertifika dosyası henüz oluşturulmadı veya dosya silindi.</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
-    <value>Meydan Okuma Hatası</value>
+    <value>Talep Hatası</value>
   </data>
   <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
-    <value>IIS mevcut değilse zorluklar kontrol edilemez.</value>
+    <value>IIS mevcut değilse talep kontrol edilemez.</value>
   </data>
   <data name="Challenge" xml:space="preserve">
-    <value>Meydan okumak</value>
+    <value>Talep</value>
   </data>
   <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>Yapılandırma Kontrol Edildi Tamam</value>
@@ -476,25 +476,25 @@
 {0}</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
-    <value>Meydan Okuma Testi Başarısız</value>
+    <value>Talep Testi Başarısız</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
-    <value>Web kancası Testi Başarısız</value>
+    <value>Webhook Testi Başarısız</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
-    <value>Web kancası Testi</value>
+    <value>Webhook Testi</value>
   </data>
   <data name="succeed" xml:space="preserve">
     <value>başarılı</value>
   </data>
   <data name="failed" xml:space="preserve">
-    <value>arızalı</value>
+    <value>başarısız</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
-    <value>Web kancası isteği {0}: HTTP {1}</value>
+    <value>Webhook isteği {0}: HTTP {1}</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
-    <value>Web kancası istek hatası: {0}</value>
+    <value>Webhook istek hatası: {0}</value>
   </data>
   <data name="Alert" xml:space="preserve">
     <value>Uyarı</value>
@@ -516,7 +516,7 @@
     <value>Bu uygulamanın deneme sürümünü kullanıyorsunuz. Lütfen yükseltmek için bir kayıt anahtarı satın alın. Hakkında sekmesindeki Kayıt seçeneğine bakın.</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
-    <value>Bu, otomatik olarak yenilenen tüm öğeler için sertifikaları yenileyecektir. İlerlemek?</value>
+    <value>Bu, otomatik olarak yenilenen tüm öğeler için sertifikaları yenileyecektir. Devam etmek istiyor musunuz?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
     <value>IIS Bu sunucuda algılanmadı, önemli işlevler kullanılamayacak. IIS'nin bu sunucuda kurulu olduğunu ve çalıştığını biliyorsanız, lütfen bu hatayı sunucunuzun İşletim Sistemi sürümünün ve IIS sürümlerinin ayrıntılarını vererek support@certifytheweb.com adresine bildirin.</value>
@@ -525,13 +525,13 @@
     <value>Yeni bir kişi kaydederek başlayın, ardından sertifika istemeye başlayabilirsiniz.</value>
   </data>
   <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
-    <value>İndirme sayfasını şimdi ziyaret edin?</value>
+    <value>İndirme sayfası şimdi ziyaret etmek istiyor musunuz?</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
     <value>[Topluluk Sürümü]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
-    <value>SSL Yöneticisi Katkıda Bulunanları Onaylayın （https://certifytheweb.com）</value>
+    <value>Certify SSL Yöneticisi'ne Katkıda Bulunanlar（https://certifytheweb.com）</value>
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>Mevcut Dil Tercümanı:</value>
@@ -546,7 +546,7 @@
     <value>Sertifikayı İptal Et</value>
   </data>
   <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
-    <value>URL:</value>
+    <value>Url:</value>
   </data>
   <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
     <value>Yöntem:</value>
@@ -567,13 +567,13 @@
     <value>Belirli IP/Port bağlamalarını kullanın</value>
   </data>
   <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
-    <value>Web kancası Tetikleyicisi:</value>
+    <value>Webhook Tetikleyicisi:</value>
   </data>
   <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>Sertifika Yolu: [ayarlanacak]</value>
   </data>
   <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
-    <value>Geçerli sertifika yok.</value>
+    <value>Geçerli bir sertifika yok.</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
     <value>{0} gün içinde sona eriyor</value>
@@ -585,7 +585,7 @@
     <value>Geçerli uygulama sürümü artık desteklenmiyor. Devam etmek için lütfen güncelleyin.</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>Not: Bu ayar yalnızca yeni https bağlamaları için geçerlidir, mevcut bağlamalar yalnızca yeni sertifika ile güncellenir. Birden çok sertifika için sabit bir IP kullanmak, Windows'ta ciltleme çakışmasına neden olur, dikkatli kullanın.</value>
+    <value>Not: Bu ayar yalnızca yeni https bağlamaları için geçerlidir, mevcut bağlamalar yalnızca yeni sertifika ile güncellenir. Birden çok sertifika için sabit bir IP kullanmak, Windows'ta bağlama çakışmasına neden olur, dikkatli kullanın.</value>
   </data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
     <value>Sertifikayı Bağlamalara Yeniden Uygulayın</value>
@@ -594,19 +594,19 @@
     <value>Ekle</value>
   </data>
   <data name="Dashboard_Password" xml:space="preserve">
-    <value>Şifre</value>
+    <value>Parola</value>
   </data>
   <data name="GettingStarted_AddToDashboard" xml:space="preserve">
-    <value>Raporlama Panosuna Ekle</value>
+    <value>Raporlama Paneline Ekle</value>
   </data>
   <data name="GettingStarted_Dashboard" xml:space="preserve">
     <value>Gösterge Paneli</value>
   </data>
   <data name="GettingStarted_DashboardIntro" xml:space="preserve">
-    <value>Bir veya daha fazla sunucuda sertifika yenileme durumunu kolayca görüntülemek için raporlama panosunu kullanabilirsiniz.</value>
+    <value>Bir veya daha fazla sunucuda sertifika yenileme durumunu kolayca görüntülemek için raporlama panelini kullanabilirsiniz.</value>
   </data>
   <data name="GettingStarted_ViewDashboard" xml:space="preserve">
-    <value>Gösterge Tablosunu Görüntüle</value>
+    <value>Gösterge Panelini Görüntüle</value>
   </data>
   <data name="Dashboard_NewAccount" xml:space="preserve">
     <value>Yeni bir hesap oluştur</value>
@@ -624,13 +624,13 @@
     <value>Yenile</value>
   </data>
   <data name="Update_DownloadNow" xml:space="preserve">
-    <value>Güncellemeyi otomatik olarak indirmek ister misiniz? Başvuruya hazır olduğunda bilgilendirileceksiniz.</value>
+    <value>Güncellemeyi otomatik olarak indirmek ister misiniz? Kurmaya hazır olduğunda bilgilendirileceksiniz.</value>
   </data>
   <data name="Update_ReadyToApply" xml:space="preserve">
-    <value>Yeni bir güncelleme uygulanmaya hazır. Şimdi yüklemek ister misiniz?</value>
+    <value>Yeni bir güncelleme kurmaya hazır. Şimdi yüklemek ister misiniz?</value>
   </data>
   <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
-    <value>Ayrıca belirli bir bağlı IP adresine sahip bir SNI bağlaması oluşturmaya çalışıyorsunuz. Bunun yerine SNI bağlamalarının Tüm Atanmamışları kullanması önerilir. Kaydetmeye devam etmek istiyor musunuz?</value>
+    <value>Belirli bir IP adresine sahip bir SNI bağlaması oluşturmaya çalışıyorsunuz. Bunun yerine SNI bağlamalarının Tüm Atanmamışları kullanması önerilir. Kaydetmeye devam etmek istiyor musunuz?</value>
   </data>
   <data name="Credentials_EditCredential" xml:space="preserve">
     <value>Saklanan Kimlik Bilgilerini Ekle/Güncelle</value>
@@ -645,19 +645,19 @@
     <value>Yeni Yönetilen Sertifika</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
-    <value>Sertifikaya etki alanları ekleyin:</value>
+    <value>Sertifikaya alan adları ekleyin:</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
-    <value>Örneğin. test.com, www.test.com veya *.test.com</value>
+    <value>Örneğin test.com, www.test.com veya *.test.com</value>
   </data>
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
-    <value>Http Challenge Sunucusunu Etkinleştir</value>
+    <value>Http Talep Sunucusunu Etkinleştir</value>
   </data>
   <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
     <value>Sertifika Temizlemeyi Etkinleştir</value>
   </data>
   <data name="Settings_EnableStatusReporting" xml:space="preserve">
-    <value>Durum Raporlarını Kontrol Panelinde Etkinleştir</value>
+    <value>Durum Raporlarını Gösterge Panelinde Göster</value>
   </data>
   <data name="PreferredCertificateAuthority" xml:space="preserve">
     <value>Tercih Edilen Sertifika Yetkilisi</value>
@@ -669,7 +669,7 @@
     <value>Süresi {0} Gün Önce Doldu</value>
   </data>
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
-    <value>Bir web sitesindeki mevcut ana bilgisayar adı bağlarından alan seçin veya alanları manuel olarak ekleyin. Daha sonra yukarıda Sertifika İste'yi seçebilir veya seçenekleri gerektiği gibi değiştirebilirsiniz. Özel bir CSR belirtmek için Gelişmiş sekmesine bakın.</value>
+    <value>Bu web sunucusundaki mevcut alan adı bağlamalarından birini seçin veya alanları elle ekleyin. Daha sonra yukarıdaki Sertifika İste'yi seçebilir veya seçenekleri gerektiği gibi değiştirebilirsiniz. Özel bir CSR belirtmek için Gelişmiş sekmesine bakın.</value>
   </data>
   <data name="Credentials_Intro" xml:space="preserve">
     <value>Sertifika yenileme ve dağıtım sırasında API'lere ve diğer kaynaklara otomatik çağrılar yapmak için depolanan kimlik bilgileri gerekir. Bu kimlik bilgileri, Windows Veri Koruma API'leri kullanılarak korunur ve bu makinede saklanır.</value>
@@ -678,7 +678,7 @@
     <value>Sertifikanızın dağıtımı otomatik olabilir veya kendi dağıtım görevlerinizi gerçekleştirebilirsiniz (Görevler sekmesine bakın).</value>
   </data>
   <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
-    <value>Görevler, en son sertifikanızla çalışmanın veya yenilemeden önce veya sonra diğer eylemleri tetiklemenin isteğe bağlı bir yoludur.</value>
+    <value>Görevler en son sertifikanızla çalışmanın, yenilemeden önce veya sonra diğer eylemleri tetiklemenin isteğe bağlı bir yoludur.</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
     <value>Dağıtım Görevleri, standart Dağıtım işlemi tamamlandıktan sonra (gösterilen sırayla) çalışır (Dağıtım sekmesine bakın). Görevler, sertifika güncellendikten hemen sonra çalıştırılabilir veya ertelenebilir (manuel olarak veya zamanlanmış bir görev aracılığıyla vb. çalıştırılmak üzere). Ayrıca görevleri yeniden sıralamak için sürükleyebilirsiniz:</value>
@@ -687,7 +687,7 @@
     <value>İsteğe bağlı olarak, sertifika isteği başlamadan önce çalıştırmak üzere istediğiniz sayıda görev ekleyebilirsiniz:</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Title" xml:space="preserve">
-    <value>Sertifika yetkilisi</value>
+    <value>Sertifika Yetkilisi</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
     <value>Sertifika Yetkilileri, güvenilir sertifikalar verebilen kuruluşlardır. Kullanmak istediğiniz her (ACME) Sertifika Yetkilisi için Ayarlar altında bir hesap açmanız gerekir.</value>
