@@ -121,7 +121,7 @@
     <value>Kayıt</value>
   </data>
   <data name="RegistrationEmailAddress" xml:space="preserve">
-    <value>Kayıt E-posta Adresi</value>
+    <value>Kayıtlı E-posta Adresi</value>
   </data>
   <data name="LicenseKey" xml:space="preserve">
     <value>Lisans anahtarı</value>
@@ -142,13 +142,13 @@
     <value>Otomatik Yenilemeyi Yapılandır</value>
   </data>
   <data name="Update_Available" xml:space="preserve">
-    <value>Güncelleme uygun</value>
+    <value>Güncelleme Mevcut</value>
   </data>
   <data name="Managed_Sites" xml:space="preserve">
     <value>Yönetilen Sertifikalar</value>
   </data>
   <data name="In_Progress" xml:space="preserve">
-    <value>Devam etmekte</value>
+    <value>Devam edenler</value>
   </data>
   <data name="Settings" xml:space="preserve">
     <value>Ayarlar</value>
@@ -163,13 +163,13 @@
     <value>Evet katılıyorum</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
-    <value>Kayıt İletişim</value>
+    <value>Yetkiliyi Kaydet</value>
   </data>
   <data name="New_Contact_Tip1" xml:space="preserve">
     <value>Sertifika talep etmek için kullanmak istediğiniz Sertifika Yetkililerinin her birine kaydolmanız gerekir.</value>
   </data>
   <data name="New_Contact_Tip2" xml:space="preserve">
-    <value>Sağlanan e-posta adresi, gerekirse, yaklaşan sertifika yenilemelerini size bildirmek için kullanılabilir. Geçersiz e-posta adresleri Sertifika Yetkilisi tarafından reddedilecektir.</value>
+    <value>Sağlanan e-posta adresi, gerekirse yaklaşan sertifika yenilemelerini size bildirmek için kullanılabilir. Geçersiz e-posta adresleri Sertifika Yetkilisi tarafından reddedilecektir.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Geribildirim yolla</value>
@@ -184,28 +184,28 @@
     <value>E-posta Adresiniz (isteğe bağlı):</value>
   </data>
   <data name="Send" xml:space="preserve">
-    <value>Göndermek</value>
+    <value>Gönder</value>
   </data>
   <data name="ImportDlg_Title" xml:space="preserve">
-    <value>Onayla - İçe Aktar</value>
+    <value>Certify - İçe Aktar</value>
   </data>
   <data name="ImportDlg_OpTitle" xml:space="preserve">
     <value>Yönetilen Sertifikaları İçe Aktar</value>
   </data>
   <data name="ImportDlg_OpComment" xml:space="preserve">
-    <value>Certify'ın eski bir sürümünden yükseltme yapıyorsunuz. Bu, daha sonra yenileme ayarlarını vb. düzenlemek için düzenleyebileceğiniz yeni Yönetilen Sertifikalar oluşturacaktır.</value>
+    <value>Certify'ın eski bir sürümünden yükseltme yapıyorsunuz. Bu, yeni Yönetilen Sertifikalar oluşturacaktır. Daha sonra yenileme ve diğer ayarları düzenleyebilirsiniz.</value>
   </data>
   <data name="ImportDlg_Merge" xml:space="preserve">
-    <value>Site başına birden çok alanı/sertifikayı tek bir Yönetilen Sertifikada birleştirin</value>
+    <value>Site başına birden çok alan adını/sertifikayı tek bir Yönetilen Sertifikada birleştirin</value>
   </data>
   <data name="ImportDlg_Skip" xml:space="preserve">
     <value>İçe Aktarmayı Atla</value>
   </data>
   <data name="Import" xml:space="preserve">
-    <value>İçe aktarmak</value>
+    <value>İçe aktar</value>
   </data>
   <data name="Send_Feedback_Exception" xml:space="preserve">
-    <value>Hoop! Birşeyler yanlış gitti. Lütfen bize bundan bahsedin.</value>
+    <value>Oops! Birşeyler yanlış gitti. Lütfen bize bundan bahsedin.</value>
   </data>
   <data name="Send_Feedback_Success" xml:space="preserve">
     <value>Teşekkürler, geri bildiriminiz şimdi gönderildi.</value>
@@ -232,7 +232,7 @@
     <value>Lisans doğrulama sürecini başlatırken bir sorun oluştu.</value>
   </data>
   <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
-    <value>Otomatik yenileme görevi zaten yapılandırılmış. Gerekirse, görevi yürütmek için kullanılan yönetici kullanıcı hesabını değiştirebilirsiniz.</value>
+    <value>Otomatik yenileme görevi zaten yapılandırılmış. Gerekirse, görevi yürütmek için kullanılan yönetici hesabını değiştirebilirsiniz.</value>
   </data>
   <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
     <value>Verilen kimlik bilgileriyle zamanlanmış görev oluşturulamadı</value>
@@ -247,16 +247,16 @@
     <value>Otomatik Yenilemeyi Yapılandır</value>
   </data>
   <data name="ScheduledTaskConfig_UserNameLabel" xml:space="preserve">
-    <value>Kullanıcı adı (ALAN\Kullanıcı)</value>
+    <value>Kullanıcı adı (ALAN ADI\Kullanıcı)</value>
   </data>
   <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
-    <value>Sertifikaların otomatik olarak yenilenmesini gerçekleştirmek için Windows Görev Zamanlayıcı'da bir görev oluşturulacaktır. Sertifika yönetimi ve IIS yönetim görevlerini gerçekleştirmek için bu görevin Yönetici düzeyinde bir kullanıcı olarak çalıştırılması gerekir.</value>
+    <value>Sertifikaların otomatik olarak yenilenmesi için Windows Görev Zamanlayıcı'da bir görev oluşturulacaktır. Sertifika yönetimi ve IIS yönetim görevlerini gerçekleştirmek için bu görevin Yönetici düzeyinde bir kullanıcı olarak çalıştırılması gerekir.</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>TAMAM</value>
   </data>
   <data name="Password" xml:space="preserve">
-    <value>Şifre</value>
+    <value>Parola</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
     <value>Bu sürüm değerlendirme için ücretsizdir ve sınırlı sayıda sertifikayı yönetecektir. Bu sınırlamayı kaldırmak için lütfen https://certifytheweb.com/register adresinden bir kayıt anahtarı satın alın. Kayıtlı kullanıcılar support@certifytheweb.com adresine e-posta göndererek destek alabilirler.</value>
@@ -271,7 +271,7 @@
     <value>Kayıt ol</value>
   </data>
   <data name="AboutControl_EnterKey" xml:space="preserve">
-    <value>Giriş anahtarı..</value>
+    <value>Anahtarı Girin..</value>
   </data>
   <data name="AboutControl_Support" xml:space="preserve">
     <value>Destek</value>
@@ -310,28 +310,28 @@
     <value>Uygulama telemetrisini etkinleştir (özellik kullanım raporlaması)</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>Etki alanı yapılandırma kontrolleri için proxy API'sini etkinleştir</value>
+    <value>Alan adı yapılandırma kontrolleri için proxy API'sini etkinleştir</value>
   </data>
   <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>Hassas dosyalar için Şifreli Dosya Sistemini (EFS) etkinleştirin. Bu seçenek, Windows'un tüm sürümlerinde çalışmaz.</value>
+    <value>Hassas dosyalar için Şifreli Dosya Sistemini (EFS) etkinleştirin. Bu seçenek, Windows'un bazı sürümlerinde çalışmaz.</value>
   </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>Yeni sertifikalar ve yenilemeler için durdurulan IIS sitelerini yoksay</value>
   </data>
   <data name="Settings_EnableDnsValidation" xml:space="preserve">
-    <value>DNS Doğrulama kontrollerini etkinleştirin (Çözünürlük, CAA, DNSSEC)</value>
+    <value>DNS Doğrulama kontrollerini etkinleştirin (Resolution, CAA, DNSSEC)</value>
   </data>
   <data name="SaveChanges" xml:space="preserve">
     <value>Değişiklikleri Kaydet</value>
   </data>
   <data name="Save" xml:space="preserve">
-    <value>Kaydetmek</value>
+    <value>Kaydet</value>
   </data>
   <data name="DiscardChanges" xml:space="preserve">
     <value>Değişiklikleri gözardı et</value>
   </data>
   <data name="Delete" xml:space="preserve">
-    <value>Silmek</value>
+    <value>Sil</value>
   </data>
   <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>Sertifika İste</value>
@@ -340,7 +340,7 @@
     <value>Otomatik Yenilemeyi Etkinleştir</value>
   </data>
   <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
-    <value>Yenileme Başarısızlığında Birincil İlgili Kişiyi Bildir</value>
+    <value>Yenileme Başarısızlığında Birincil İlgili Kişiyi Bilgilendir</value>
   </data>
   <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
     <value>Sertifika oluşturmak için en az bir tam ana bilgisayar adı (ör. 'github.com') veya joker karakter (ör. '*.github.com) gereklidir.</value>
@@ -352,13 +352,13 @@
     <value>Site Seçin (isteğe bağlı):</value>
   </data>
   <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
-    <value>Ekran adı:</value>
+    <value>Görünen Ad:</value>
   </data>
   <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>Aşağıdaki seçili alanlar, tek bir sertifika isteği olarak dahil edilecektir. Sertifikayı veren Sertifika Yetkilisinin, sertifika sürecinin çalışması için bağlantı noktası 80 (HTTP talepleri için) veya 443 numaralı bağlantı noktası (TLS-SNI zorlukları için) aracılığıyla bu etki alanlarının tümüne erişebilmesi gerekir.</value>
+    <value>Aşağıdaki seçili alanlar, tek bir sertifika isteğine dahil edilecektir. Sertifika Yetkilisinin, sertifika sürecinin çalışması için 80 numaralı bağlantı noktası (HTTP talepleri için) veya 443 numaralı bağlantı noktası (TLS-SNI talepleri için) aracılığıyla bu alan adlarının tümüne erişebilmesi gerekir.</value>
   </data>
   <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
-    <value>Dahil edilecek Alanlar ve Alt Alanlar:</value>
+    <value>Dahil edilecek Alan Adları ve Alt Alan Adları:</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Hepsini seç</value>
@@ -367,10 +367,10 @@
     <value>Hiçbirini Seçme</value>
   </data>
   <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
-    <value>Öncelik</value>
+    <value>Birincil</value>
   </data>
   <data name="ManagedCertificateSettings_Include" xml:space="preserve">
-    <value>Katmak</value>
+    <value>Dahil</value>
   </data>
   <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
     <value>Alan adı</value>
@@ -379,7 +379,7 @@
     <value>Gelişmiş</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
-    <value>Meydan Okuma Türü:</value>
+    <value>Talep Türü:</value>
   </data>
   <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>Site Kök Dizini</value>
@@ -388,19 +388,19 @@
     <value>...</value>
   </data>
   <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
-    <value>Meydan okuma yanıtı yapılandırma kontrollerini gerçekleştirin</value>
+    <value>Talep yanıtı yapılandırma kontrollerini gerçekleştirin</value>
   </data>
   <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
     <value>Web uygulaması otomatik yapılandırmasını gerçekleştirin</value>
   </data>
   <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
-    <value>Belirli IP'ye Bağla:</value>
+    <value>Belirli bir IP'ye Bağla:</value>
   </data>
   <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
-    <value>Belirli Bağlantı Noktasına Bağla:</value>
+    <value>Belirli bir Port'a Bağla:</value>
   </data>
   <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
-    <value>SNI kullanın (IIS 8+):</value>
+    <value>SNI kullan (IIS 8+):</value>
   </data>
   <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
     <value>PS Komut Dosyası Ön İstek:</value>
