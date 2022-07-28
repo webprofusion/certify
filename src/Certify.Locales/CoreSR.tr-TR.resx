@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
+    <value>Yerel IIS, ACME CA aracılığıyla SSL Sertifikası</value>
+  </data>
+  <data name="ManagedCertificateType_Manual" xml:space="preserve">
+    <value>ACME CA aracılığıyla Manuel SSL Sertifikası</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>Bitiş</value>
+  </data>
+  <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
+    <value>Alan doğrulaması başarısız oldu: {0}
+{1}</value>
+  </data>
+  <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
+    <value>Alan doğrulaması tamamlandı: {0}</value>
+  </data>
+  <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
+    <value>Alan zaten geçerli yetkilendirmeye sahip, doğrulama atlanıyor: {0}</value>
+  </data>
+  <data name="CertifyManager_RequestCertificate" xml:space="preserve">
+    <value>Sertifika Yetkilisi Aracılığıyla Sertifika İsteme</value>
+  </data>
+  <data name="CertifyManager_CompleteRequest" xml:space="preserve">
+    <value>Tamamlanmış Sertifika İsteği.</value>
+  </data>
+  <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
+    <value>Tamamlanmış sertifika isteği ve otomatik bağlama güncellemesi (IIS)</value>
+  </data>
+  <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
+    <value>{0} için sertifika yüklendi ve SSL bağlamaları güncellendi</value>
+  </data>
+  <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
+    <value>Sertifika yüklenirken bir hata oluştu. Sertifika dosyası geçerli olmayabilir: {0}</value>
+  </data>
+  <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
+    <value>Manuel bağlamaya hazır olarak oluşturulan sertifika: {0}</value>
+  </data>
+  <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
+    <value>ACME CA hizmeti, izin verilen süre içinde geçerli bir sertifika vermedi. {0}</value>
+  </data>
+  <data name="CertifyManager_ValidationForChallengeNotSuccess" xml:space="preserve">
+    <value>Gerekli zorlukların doğrulanması başarıyla tamamlanmadı. {0}</value>
+  </data>
+  <data name="CertifyManager_RequestFailed" xml:space="preserve">
+    <value>{0}: İstek başarısız oldu - {1} {2}</value>
+  </data>
+  <data name="CertificateRequestWasAbortedByPSScript" xml:space="preserve">
+    <value>Sertifika İsteği, PS komut dosyası tarafından iptal edildi</value>
+  </data>
+  <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
+    <value>Yapılandırma Testlerini Gerçekleştirme</value>
+  </data>
+  <data name="CertifyManager_RegisteringAndValidatingX0" xml:space="preserve">
+    <value>{0} Kaydetme ve Doğrulama</value>
+  </data>
+  <data name="CertifyManager_FailedPrerequisiteCheck" xml:space="preserve">
+    <value>Başarısız önkoşul yapılandırma kontrolleri ({0})</value>
+  </data>
+  <data name="CertifyManager_AutomateConfigurationCheckFailed_HTTP" xml:space="preserve">
+    <value>Otomatik yapılandırma kontrolleri başarısız oldu. Yetkilendirmeler tamamlanamayacak.
+Siteniz için http bağlantılarınız olup olmadığını kontrol edin ve devam etmeden önce http://{0}/.well-known/acme-challenge/configcheck'e göz atabildiğinizden emin olun.</value>
+  </data>
+  <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
+    <value>Otomatik yapılandırma kontrolleri başarısız oldu. Yetkilendirmeler tamamlanamayacak.
+Siteniz için https SNI bağlarınız olup olmadığını kontrol edin
+(ör: '0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid') devam etmeden önce.</value>
+  </data>
+  <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
+    <value>Doğrulama İsteme: {0}</value>
+  </data>
+  <data name="CertifyManager_AutoBinding" xml:space="preserve">
+    <value>Otomatik Sertifika Bağlama Gerçekleştirme</value>
+  </data>
+  <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
+    <value>Yenileme atlanıyor, mevcut sertifika hala iyi durumda.</value>
+  </data>
+  <data name="CertifyManager_SiteStopped" xml:space="preserve">
+    <value>Site durduruldu (veya mevcut değil), alan doğrulaması gerçekleştirilemediğinden yenileme atlandı.</value>
+  </data>
+  <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
+    <value>İstenen alan adları için başlangıç ​​sertifikası siparişi</value>
+  </data>
+  <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
+    <value>Önceki yenilemeler başarısız oldu: {0}. Yenileme 48 saat içinde denenecektir.</value>
+  </data>
+</root>
