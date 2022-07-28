@@ -118,20 +118,20 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>SSL/TLS Sertifika Yöneticisini Onaylayın</value>
+    <value>Certify SSL/TLS Sertifika Yöneticisi</value>
   </data>
   <data name="Credits" xml:space="preserve">
-    <value>Yazılım, koşul, kesintisiz kullanım, satılabilirlik, belirli bir amaca uygunluk veya ihlal etmeme gibi zımni garantiler dahil ancak bunlarla sınırlı olmamak üzere açık veya zımni hiçbir garanti olmaksızın "olduğu gibi" sağlanır.
+    <value>Yazılım, kesintisiz kullanım, satılabilirlik, belirli bir amaca uygunluk veya ihlal etmeme gibi zımni garantiler dahil, bunlarla sınırlı olmamak üzere açık veya zımni hiçbir garanti olmaksızın "olduğu gibi" sağlanır.
 
-LetsEncrypt.org hizmetinin ücretsiz SSL/TLS sertifikaları için kullanımı LetsEncrypt.org hizmet koşullarına tabidir. Bu yazılım LetsEncrypt.org'a bağlı değildir veya tarafından desteklenmemektedir.
+LetsEncrypt.org hizmetinin ücretsiz SSL/TLS sertifikaları için kullanımı LetsEncrypt.org hizmet koşullarına tabidir. Bu yazılım LetsEncrypt.org'a bağlı değildir veya onun tarafından desteklenmemektedir.
 
-Bu yazılım, aşağıdaki Açık Kaynak yazılımını (veya önemli bölümlerini) kullanır:
-- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) MPL V 2.0 altında lisanslanmıştır
-- Dave Gandy'den Font Awesome'den bazı simgeler - http://fontawesome.io
+Bu yazılım, aşağıdaki Açık Kaynak yazılımlarını (veya önemli bölümlerini) kullanır:
+- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) MPL V 2.0 altında lisanslanmıştır.
+- Dave Gandy'den ve Font Awesome'dan bazı simgeler - http://fontawesome.io
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>SSL/TLS Sertifika Yöneticisini Onaylayın</value>
+    <value>Certify SSL/TLS Sertifika Yöneticisi</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>En son sürümü kullanıyorsunuz.</value>
@@ -145,7 +145,7 @@ Bu yazılım, aşağıdaki Açık Kaynak yazılımını (veya önemli bölümler
     <comment>Do not translate</comment>
   </data>
   <data name="BetaWarning" xml:space="preserve">
-    <value>Uyarı: Bu yazılım, test etme ve geri bildirim amaçlı bir yayın öncesi sürümüdür. Hata beklemelisin. Önemli üretim siteleri için bu yazılıma güvenmeyin.</value>
+    <value>Uyarı: Bu yazılım, test etme ve geri bildirim amaçlı bir yayın öncesi sürümüdür. Hata beklemelisin. Önemli web siteleri için bu yazılıma güvenmeyin.</value>
   </data>
   <data name="AIInstrumentationKey" xml:space="preserve">
     <value>63154103-66ba-4636-8c6b-7081084daa0e</value>
