@@ -1,10 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Certify.Datastore.Postgres;
+using Certify.Datastore.SQLServer;
 using Certify.Management;
 using Certify.Models;
+using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
@@ -12,22 +15,35 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class ManagedItemTests
     {
+        private string _storeType = "sqlite";
+
         private const string TEST_PATH = "Tests";
 
         public ManagedItemTests()
         {
 
-            var itemManager = new ItemManager(TEST_PATH);
-
-#if DEBUG
-            Task.Run(async () =>
+        }
+        private IManagedItemStore GetManagedItemStore()
+        {
+            if (_storeType == "sqlite")
             {
-                await itemManager.DeleteAll();
-            });
-#endif
+                return new SQLiteItemManager(TEST_PATH);
+            }
+            else if (_storeType == "postgres")
+            {
+                return new PostgresItemManager(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+            }
+            else if (_storeType == "sqlserver")
+            {
+                return new SQLServerItemManager(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException("_storeType", "Unsupport store type " + _storeType);
+            }
         }
 
-        private ManagedCertificate BuildTestManagedCertificate()
+        private static ManagedCertificate BuildTestManagedCertificate()
         {
             var testSite = new ManagedCertificate
             {
@@ -59,13 +75,13 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed sites list loads")]
         public async Task TestLoadManagedCertificates()
         {
-            var managedCertificateSettings = new ItemManager(TEST_PATH);
-            var testCert = BuildTestManagedCertificate();
+            var managedCertificateSettings = GetManagedItemStore();
+            var testCert = ManagedItemTests.BuildTestManagedCertificate();
             try
             {
                 var managedCertificate = await managedCertificateSettings.Update(testCert);
 
-                var managedCertificates = await managedCertificateSettings.GetAll();
+                var managedCertificates = await managedCertificateSettings.Find(new ManagedCertificateFilter { MaxResults = 10 });
                 Assert.IsTrue(managedCertificates.Count > 0);
             }
             finally
@@ -77,7 +93,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
         public async Task TestCreateDeleteManagedCertificate()
         {
-            var itemManager = new ItemManager(TEST_PATH);
+            var itemManager = GetManagedItemStore();
 
             var testSite = new ManagedCertificate
             {
@@ -119,11 +135,11 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(managedCertificate, "Managed site deleted");
         }
 
-        [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
+        [TestMethod("Create many items"), Description("Ensure managed site can be created, retrieved and deleted")]
         [Ignore]
-        public async Task TestCreateManyManagedCertificates()
+        public async Task TestCreateDeleteManyManagedCertificates()
         {
-            var itemManager = new ItemManager(TEST_PATH);
+            var itemManager = GetManagedItemStore();
 
             var testItem = new ManagedCertificate
             {
@@ -151,25 +167,51 @@ namespace Certify.Core.Tests.Unit
 
             // create competing sets of tasks to create managed items
 
-            var numItems = 10000; // 100,000 items takes about 40 mins to generate
-
+            var numItems = 100000; // 100,000 items takes about 40 mins to generate for SQLite, 43 secs in Postgres, 66 secs in SQL Server
+            var batchSize = 50;
             // now attempt async creation of bindings
-            var taskSet = new Task[numItems];
+            var taskSet = new Task[batchSize];
 
             var timer = Stopwatch.StartNew();
 
-            for (var i = 0; i < numItems; i++)
-            {
-                testItem.Name = "MultiTest_" + i;
-                testItem.Id = Guid.NewGuid().ToString();
-
-                taskSet[i] = itemManager.Update(testItem);
-            }
-
-            // create a large number of managed items, to see if we encounter isses saving/loading from DB async       
+            // create a large number of managed items, to see if we encounter issues saving/loading from DB async       
             try
             {
-                await Task.WhenAll(taskSet);
+                var runParallell = true;
+                var numInBatch = 0;
+                for (var i = 0; i < numItems; i++)
+                {
+                    var newTestItem = testItem.CopyAsTemplate();
+                    newTestItem.Name = "MultiTest_" + i;
+                    newTestItem.Id = Guid.NewGuid().ToString();
+                    newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
+
+                    if (runParallell)
+                    {
+                        taskSet[numInBatch] = itemManager.Update(newTestItem);
+
+                        numInBatch++;
+                        if (numInBatch >= batchSize)
+                        {
+                            // perform batch and start new batch
+                            numInBatch = 0;
+
+                            await Task.WhenAll(taskSet);
+                            taskSet = new Task[batchSize];
+                        }
+                    }
+                    else
+                    {
+                        await itemManager.Update(newTestItem).ConfigureAwait(false);
+
+                    }
+                }
+
+                if (numInBatch > 0 && runParallell)
+                {
+                    // perform last few tasks
+                    await Task.WhenAll(taskSet);
+                }
 
                 timer.Stop();
 
