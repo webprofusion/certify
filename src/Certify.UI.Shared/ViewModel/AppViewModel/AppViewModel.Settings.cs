@@ -57,6 +57,7 @@ namespace Certify.UI.ViewModel
             {"es-ES","Spanish/Español"},
             {"nb-NO","Norwegian/Bokmål"},
             {"zh-Hans","Chinese (Simplified)"}
+            {"tr-TR","Turkish/Türkçe"},
         };
 
         /// <summary>
