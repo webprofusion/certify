@@ -1,63 +1,81 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <Platforms>AnyCPU</Platforms>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Description>Certify SSL Manager UI Resources</Description>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Update="SR.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>SR.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="ConfigResources.es-ES.resx">
-      <DependentUpon>ConfigResources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
-      <DependentUpon>ConfigResources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="ConfigResources.nb-NO.resx">
-      <DependentUpon>ConfigResources.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="CoreSR.es-ES.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="CoreSR.nb-NO.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="CoreSR.zh-Hans.resx">
-      <DependentUpon>CoreSR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="SR.es-ES.resx">
-      <DependentUpon>SR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="SR.nb-NO.resx">
-      <DependentUpon>SR.resx</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="SR.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>SR.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="SR.zh-Hans.resx">
-      <DependentUpon>SR.resx</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <Platforms>AnyCPU</Platforms>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Description>Certify SSL Manager UI Resources</Description>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Update="Properties\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="SR.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>SR.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="ConfigResources.es-ES.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.nb-NO.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.ja-JP.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.tr-TR.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.es-ES.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.nb-NO.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.zh-Hans.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.ja-JP.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.tr-TR.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Properties\Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.es-ES.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.nb-NO.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>SR.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.zh-Hans.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.ja-JP.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.tr-TR.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+    </ItemGroup>
 </Project>

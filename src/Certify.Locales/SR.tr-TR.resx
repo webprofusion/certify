@@ -1,0 +1,692 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Registration" xml:space="preserve">
+    <value>Kayıt</value>
+  </data>
+  <data name="RegistrationEmailAddress" xml:space="preserve">
+    <value>Kayıtlı E-posta Adresi</value>
+  </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>Lisans anahtarı</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>İptal</value>
+  </data>
+  <data name="ValidateKey" xml:space="preserve">
+    <value>Anahtarı Doğrula</value>
+  </data>
+  <data name="New_Certificate" xml:space="preserve">
+    <value>Yeni Sertifika</value>
+  </data>
+  <data name="Renew_All" xml:space="preserve">
+    <value>Tümünü Yenile</value>
+  </data>
+  <data name="Configure_Auto_Renew" xml:space="preserve">
+    <value>Otomatik Yenilemeyi Yapılandır</value>
+  </data>
+  <data name="Update_Available" xml:space="preserve">
+    <value>Güncelleme Mevcut</value>
+  </data>
+  <data name="Managed_Sites" xml:space="preserve">
+    <value>Yönetilen Sertifikalar</value>
+  </data>
+  <data name="In_Progress" xml:space="preserve">
+    <value>Devam edenler</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Ayarlar</value>
+  </data>
+  <data name="About" xml:space="preserve">
+    <value>Hakkında</value>
+  </data>
+  <data name="Email_Address" xml:space="preserve">
+    <value>E-posta Adresi</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>Evet katılıyorum</value>
+  </data>
+  <data name="Register_Contact" xml:space="preserve">
+    <value>Yetkiliyi Kaydet</value>
+  </data>
+  <data name="New_Contact_Tip1" xml:space="preserve">
+    <value>Sertifika talep etmek için kullanmak istediğiniz Sertifika Yetkililerinin her birine kaydolmanız gerekir.</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>Sağlanan e-posta adresi, gerekirse yaklaşan sertifika yenilemelerini size bildirmek için kullanılabilir. Geçersiz e-posta adresleri Sertifika Yetkilisi tarafından reddedilecektir.</value>
+  </data>
+  <data name="Send_Feedback" xml:space="preserve">
+    <value>Geribildirim yolla</value>
+  </data>
+  <data name="Send_Feedback_Tip" xml:space="preserve">
+    <value>Geliştiricilerimize geri bildirim gönderdiğiniz için teşekkür ederiz. Bir sorunuz varsa lütfen support@certifytheweb.com adresine e-posta gönderin.</value>
+  </data>
+  <data name="Send_Feedback_Quest" xml:space="preserve">
+    <value>Önerin var mı?</value>
+  </data>
+  <data name="Send_Feedback_Email" xml:space="preserve">
+    <value>E-posta Adresiniz (isteğe bağlı):</value>
+  </data>
+  <data name="Send" xml:space="preserve">
+    <value>Gönder</value>
+  </data>
+  <data name="ImportDlg_Title" xml:space="preserve">
+    <value>Certify - İçe Aktar</value>
+  </data>
+  <data name="ImportDlg_OpTitle" xml:space="preserve">
+    <value>Yönetilen Sertifikaları İçe Aktar</value>
+  </data>
+  <data name="ImportDlg_OpComment" xml:space="preserve">
+    <value>Certify'ın eski bir sürümünden yükseltme yapıyorsunuz. Bu, yeni Yönetilen Sertifikalar oluşturacaktır. Daha sonra yenileme ve diğer ayarları düzenleyebilirsiniz.</value>
+  </data>
+  <data name="ImportDlg_Merge" xml:space="preserve">
+    <value>Site başına birden çok alan adını/sertifikayı tek bir Yönetilen Sertifikada birleştirin</value>
+  </data>
+  <data name="ImportDlg_Skip" xml:space="preserve">
+    <value>İçe Aktarmayı Atla</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>İçe aktar</value>
+  </data>
+  <data name="Send_Feedback_Exception" xml:space="preserve">
+    <value>Oops! Birşeyler yanlış gitti. Lütfen bize bundan bahsedin.</value>
+  </data>
+  <data name="Send_Feedback_Success" xml:space="preserve">
+    <value>Teşekkürler, geri bildiriminiz şimdi gönderildi.</value>
+  </data>
+  <data name="Send_Feedback_Error" xml:space="preserve">
+    <value>Üzgünüz, geri bildiriminiz gönderilirken bir sorun oluştu.</value>
+  </data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+    <value>Bu e-posta adresini kullanarak Sertifika Yetkilisine kaydolurken bir sorun oluştu. E-posta adresinin geçerli olduğunu ve bu bilgisayarın internete açık bir bağlantısı olduğunu kontrol edin (API çağrıları için giden https gereklidir).</value>
+  </data>
+  <data name="New_Contact_NeedAgree" xml:space="preserve">
+    <value>Devam etmek için bu Sertifika Yetkilisi için geçerli hüküm ve koşulları kabul ettiğinizi onaylayın.</value>
+  </data>
+  <data name="Registration_NeedEmail" xml:space="preserve">
+    <value>Lütfen anahtarınızı kaydederken kullandığınız e-posta adresini girin.</value>
+  </data>
+  <data name="Registration_NeedKey" xml:space="preserve">
+    <value>Lütfen lisans anahtarınızı girin.</value>
+  </data>
+  <data name="Registration_KeyValidationError" xml:space="preserve">
+    <value>Lisans anahtarınızı doğrulamaya çalışırken bir sorun oluştu. Lütfen tekrar deneyin veya desteğe başvurun.</value>
+  </data>
+  <data name="Registration_UnableToVerify" xml:space="preserve">
+    <value>Lisans doğrulama sürecini başlatırken bir sorun oluştu.</value>
+  </data>
+  <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
+    <value>Otomatik yenileme görevi zaten yapılandırılmış. Gerekirse, görevi yürütmek için kullanılan yönetici hesabını değiştirebilirsiniz.</value>
+  </data>
+  <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
+    <value>Verilen kimlik bilgileriyle zamanlanmış görev oluşturulamadı</value>
+  </data>
+  <data name="ScheduledTaskConfig_TaskCreated" xml:space="preserve">
+    <value>Zamanlanmış görev oluşturuldu</value>
+  </data>
+  <data name="ScheduledTaskConfig_PleaseProvideCredential" xml:space="preserve">
+    <value>Lütfen yönetici düzeyinde bir kullanıcı için kullanıcı adı ve şifre sağlayın.</value>
+  </data>
+  <data name="ScheduledTaskConfig_WindowTitle" xml:space="preserve">
+    <value>Otomatik Yenilemeyi Yapılandır</value>
+  </data>
+  <data name="ScheduledTaskConfig_UserNameLabel" xml:space="preserve">
+    <value>Kullanıcı adı (ALAN ADI\Kullanıcı)</value>
+  </data>
+  <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
+    <value>Sertifikaların otomatik olarak yenilenmesi için Windows Görev Zamanlayıcı'da bir görev oluşturulacaktır. Sertifika yönetimi ve IIS yönetim görevlerini gerçekleştirmek için bu görevin Yönetici düzeyinde bir kullanıcı olarak çalıştırılması gerekir.</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>TAMAM</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
+    <value>Bu sürüm değerlendirme için ücretsizdir ve sınırlı sayıda sertifikayı yönetecektir. Bu sınırlamayı kaldırmak için lütfen https://certifytheweb.com/register adresinden bir kayıt anahtarı satın alın. Kayıtlı kullanıcılar support@certifytheweb.com adresine e-posta göndererek destek alabilirler.</value>
+  </data>
+  <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
+    <value>Kayıtlı değil</value>
+  </data>
+  <data name="AboutControl_CheckForUpdateButton" xml:space="preserve">
+    <value>Güncellemeleri kontrol et..</value>
+  </data>
+  <data name="AboutControl_Register" xml:space="preserve">
+    <value>Kayıt ol</value>
+  </data>
+  <data name="AboutControl_EnterKey" xml:space="preserve">
+    <value>Anahtarı Girin..</value>
+  </data>
+  <data name="AboutControl_Support" xml:space="preserve">
+    <value>Destek</value>
+  </data>
+  <data name="AboutControl_SendFeedback" xml:space="preserve">
+    <value>Geribildirim yolla</value>
+  </data>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>En son sürümü kullanıyorsunuz.</value>
+  </data>
+  <data name="ManagedCertificates_Filter" xml:space="preserve">
+    <value>Filtre...</value>
+  </data>
+  <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
+    <value>Bir Yönetilen Sertifika seçin veya başlamak için Yeni Sertifika'yı seçin.</value>
+  </data>
+  <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
+    <value>Seçilen sitede kaydedilmemiş değişiklikler var. Değişiklikleri gözardı et?</value>
+  </data>
+  <data name="ProgressMonitor_NoProgress" xml:space="preserve">
+    <value>Şu anda devam eden bir istek yok.</value>
+  </data>
+  <data name="Settings_PrimaryContact" xml:space="preserve">
+    <value>Birincil İletişim:</value>
+  </data>
+  <data name="Settings_AutoRenewalInterval" xml:space="preserve">
+    <value>Otomatik Yenileme Aralığı (Gün)</value>
+  </data>
+  <data name="Settings_AutoRenewalRequestLimit" xml:space="preserve">
+    <value>Oturum Başına Maksimum Otomatik Yenileme İsteği (0 = Sınırsız)</value>
+  </data>
+  <data name="Settings_CheckUpdates" xml:space="preserve">
+    <value>Güncellemeleri otomatik olarak kontrol et</value>
+  </data>
+  <data name="Settings_EnableTelemetry" xml:space="preserve">
+    <value>Uygulama telemetrisini etkinleştir (özellik kullanım raporlaması)</value>
+  </data>
+  <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
+    <value>Alan adı yapılandırma kontrolleri için proxy API'sini etkinleştir</value>
+  </data>
+  <data name="Settings_EnableEFS" xml:space="preserve">
+    <value>Hassas dosyalar için Şifreli Dosya Sistemini (EFS) etkinleştirin. Bu seçenek, Windows'un bazı sürümlerinde çalışmaz.</value>
+  </data>
+  <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
+    <value>Yeni sertifikalar ve yenilemeler için durdurulan IIS sitelerini yoksay</value>
+  </data>
+  <data name="Settings_EnableDnsValidation" xml:space="preserve">
+    <value>DNS Doğrulama kontrollerini etkinleştirin (Resolution, CAA, DNSSEC)</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Değişiklikleri Kaydet</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Kaydet</value>
+  </data>
+  <data name="DiscardChanges" xml:space="preserve">
+    <value>Değişiklikleri gözardı et</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Sil</value>
+  </data>
+  <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
+    <value>Sertifika İste</value>
+  </data>
+  <data name="ManagedCertificateSettings_EnableAutoRenewal" xml:space="preserve">
+    <value>Otomatik Yenilemeyi Etkinleştir</value>
+  </data>
+  <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
+    <value>Yenileme Başarısızlığında Birincil İlgili Kişiyi Bilgilendir</value>
+  </data>
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
+    <value>Sertifika oluşturmak için en az bir tam ana bilgisayar adı (ör. 'github.com') veya joker karakter (ör. '*.github.com) gereklidir.</value>
+  </data>
+  <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
+    <value>Seçenekler</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
+    <value>Site Seçin (isteğe bağlı):</value>
+  </data>
+  <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
+    <value>Görünen Ad:</value>
+  </data>
+  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
+    <value>Aşağıdaki seçili alanlar, tek bir sertifika isteğine dahil edilecektir. Sertifika Yetkilisinin, sertifika sürecinin çalışması için 80 numaralı bağlantı noktası (HTTP talepleri için) veya 443 numaralı bağlantı noktası (TLS-SNI talepleri için) aracılığıyla bu alan adlarının tümüne erişebilmesi gerekir.</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
+    <value>Dahil edilecek Alan Adları ve Alt Alan Adları:</value>
+  </data>
+  <data name="SelectAll" xml:space="preserve">
+    <value>Hepsini seç</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
+    <value>Hiçbirini Seçme</value>
+  </data>
+  <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
+    <value>Birincil</value>
+  </data>
+  <data name="ManagedCertificateSettings_Include" xml:space="preserve">
+    <value>Dahil</value>
+  </data>
+  <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
+    <value>Alan adı</value>
+  </data>
+  <data name="Advanced" xml:space="preserve">
+    <value>Gelişmiş</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
+    <value>Talep Türü:</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
+    <value>Site Kök Dizini</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
+    <value>Talep yanıtı yapılandırma kontrollerini gerçekleştirin</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
+    <value>Web uygulaması otomatik yapılandırmasını gerçekleştirin</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
+    <value>Belirli bir IP'ye Bağla:</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
+    <value>Belirli bir Port'a Bağla:</value>
+  </data>
+  <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
+    <value>SNI kullan (IIS 8+):</value>
+  </data>
+  <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
+    <value>İstek öncesi PS Komut Dosyası:</value>
+  </data>
+  <data name="Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Browser" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
+    <value>Not: Bu sertifikayı dışa aktarmak için Windows'ta Bilgisayar Sertifikalarını Yönet seçeneğini kullanın.</value>
+  </data>
+  <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
+    <value>Günlük Dosyasını Aç</value>
+  </data>
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
+    <value>Sertifikayı Görüntüle</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
+    <value>UYARI: Bu sertifika iptal edilmiştir.</value>
+  </data>
+  <data name="SaveError" xml:space="preserve">
+    <value>Hatayı Kaydet</value>
+  </data>
+  <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
+    <value>Sertifika oluşturulacak siteyi seçin.</value>
+  </data>
+  <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
+    <value>Bu öğe için bir ad gereklidir.</value>
+  </data>
+  <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
+    <value>Birincil Alan adı içermelidir</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
+    <value>{0} talebi yalnızca IIS 8+ sürümleri için kullanılabilir.</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
+    <value>Webhook URL'si geçerli bir URL'ye ayarlanmalıdır.</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
+    <value>Webhook için Yöntem ayarlanmalıdır.</value>
+  </data>
+  <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
+    <value>Hiçbir değişiklik yapılmadı, kaydetme atlanıyor</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>Silmeyi Onayla</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
+    <value>Bu öğeyi silmek istediğinizden emin misiniz? Öğenin silinmesi IIS ayarlarını vb. etkilemez.</value>
+  </data>
+  <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
+    <value>Bu öğe için günlük dosyası henüz oluşturulmadı.</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
+    <value>Bu öğe için sertifika dosyası henüz oluşturulmadı veya dosya silindi.</value>
+  </data>
+  <data name="ChallengeError" xml:space="preserve">
+    <value>Talep Hatası</value>
+  </data>
+  <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
+    <value>IIS mevcut değilse talep kontrol edilemez.</value>
+  </data>
+  <data name="Challenge" xml:space="preserve">
+    <value>Talep</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
+    <value>Yapılandırma Kontrol Edildi Tamam</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfigurationCheckFailed" xml:space="preserve">
+    <value>Yapılandırma Kontrolü Başarısız:
+{0}</value>
+  </data>
+  <data name="ManagedCertificateSettings_ChallengeTestFailed" xml:space="preserve">
+    <value>Talep Testi Başarısız</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
+    <value>Webhook Testi Başarısız</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
+    <value>Webhook Testi</value>
+  </data>
+  <data name="succeed" xml:space="preserve">
+    <value>başarılı</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>başarısız</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
+    <value>Webhook isteği {0}: HTTP {1}</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
+    <value>Webhook istek hatası: {0}</value>
+  </data>
+  <data name="Alert" xml:space="preserve">
+    <value>Uyarı</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
+    <value>Sertifika İptal Edildi.</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
+    <value>Sertifika İptal Edilirken Hata:
+{0}</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
+    <value>Bu sertifikayı iptal etmek istediğinizden emin misiniz?</value>
+  </data>
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
+    <value>Bu uygulamanın deneme sürümünü kullanıyorsunuz. Lütfen yükseltmek için bir kayıt anahtarı satın alın. Hakkında sekmesindeki Kayıt seçeneğine bakın.</value>
+  </data>
+  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
+    <value>Bu, otomatik olarak yenilenen tüm öğeler için sertifikaları yenileyecektir. Devam etmek istiyor musunuz?</value>
+  </data>
+  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
+    <value>IIS Bu sunucuda algılanmadı, önemli işlevler kullanılamayacak. IIS'nin bu sunucuda kurulu olduğunu ve çalıştığını biliyorsanız, lütfen bu hatayı sunucunuzun İşletim Sistemi sürümünün ve IIS sürümlerinin ayrıntılarını vererek support@certifytheweb.com adresine bildirin.</value>
+  </data>
+  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+    <value>Yeni bir kişi kaydederek başlayın, ardından sertifika istemeye başlayabilirsiniz.</value>
+  </data>
+  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
+    <value>İndirme sayfası şimdi ziyaret etmek istiyor musunuz?</value>
+  </data>
+  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
+    <value>[Topluluk Sürümü]</value>
+  </data>
+  <data name="LanguageAuthor" xml:space="preserve">
+    <value>Certify SSL Yöneticisi'ne Katkıda Bulunanlar（https://certifytheweb.com）</value>
+  </data>
+  <data name="About_LanguageTranslator" xml:space="preserve">
+    <value>Mevcut Dil Tercümanı:</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Bilgi</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Yorumlar:</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
+    <value>Sertifikayı İptal Et</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
+    <value>Url:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
+    <value>Yöntem:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
+    <value>Gövde:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
+    <value>İçerik türü:</value>
+  </data>
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
+    <value>İstek sonrası PS Komut Dosyası:</value>
+  </data>
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>IIS bağlamalarını otomatik oluştur/güncelle (SNI kullanır)</value>
+  </data>
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
+    <value>Belirli IP/Port bağlamalarını kullanın</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
+    <value>Webhook Tetikleyicisi:</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>Sertifika Yolu: [ayarlanacak]</value>
+  </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>Geçerli bir sertifika yok.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>{0} gün içinde sona eriyor</value>
+  </data>
+  <data name="General_Loading" xml:space="preserve">
+    <value>Yükleniyor...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>Geçerli uygulama sürümü artık desteklenmiyor. Devam etmek için lütfen güncelleyin.</value>
+  </data>
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
+    <value>Not: Bu ayar yalnızca yeni https bağlamaları için geçerlidir, mevcut bağlamalar yalnızca yeni sertifika ile güncellenir. Birden çok sertifika için sabit bir IP kullanmak, Windows'ta bağlama çakışmasına neden olur, dikkatli kullanın.</value>
+  </data>
+  <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
+    <value>Sertifikayı Bağlamalara Yeniden Uygulayın</value>
+  </data>
+  <data name="Dashboard_Register" xml:space="preserve">
+    <value>Ekle</value>
+  </data>
+  <data name="Dashboard_Password" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="GettingStarted_AddToDashboard" xml:space="preserve">
+    <value>Raporlama Paneline Ekle</value>
+  </data>
+  <data name="GettingStarted_Dashboard" xml:space="preserve">
+    <value>Gösterge Paneli</value>
+  </data>
+  <data name="GettingStarted_DashboardIntro" xml:space="preserve">
+    <value>Bir veya daha fazla sunucuda sertifika yenileme durumunu kolayca görüntülemek için raporlama panelini kullanabilirsiniz.</value>
+  </data>
+  <data name="GettingStarted_ViewDashboard" xml:space="preserve">
+    <value>Gösterge Panelini Görüntüle</value>
+  </data>
+  <data name="Dashboard_NewAccount" xml:space="preserve">
+    <value>Yeni bir hesap oluştur</value>
+  </data>
+  <data name="Dashboard_AddIntro" xml:space="preserve">
+    <value>Bu sunucuyu kontrol panelinize eklemek için https://certifytheweb.com/profile oturum açma bilgilerinizi sağlayın veya yeni bir hesap açın:</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
+    <value>Arka Plan Hizmetini Kullan (Yerel Sistem olarak çalışır)</value>
+  </data>
+  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
+    <value>Zamanlanmış Görev kullanın (belirtilen kullanıcı olarak çalışır)</value>
+  </data>
+  <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
+    <value>Yenile</value>
+  </data>
+  <data name="Update_DownloadNow" xml:space="preserve">
+    <value>Güncellemeyi otomatik olarak indirmek ister misiniz? Kurmaya hazır olduğunda bilgilendirileceksiniz.</value>
+  </data>
+  <data name="Update_ReadyToApply" xml:space="preserve">
+    <value>Yeni bir güncelleme kurmaya hazır. Şimdi yüklemek ister misiniz?</value>
+  </data>
+  <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
+    <value>Belirli bir IP adresine sahip bir SNI bağlaması oluşturmaya çalışıyorsunuz. Bunun yerine SNI bağlamalarının Tüm Atanmamışları kullanması önerilir. Kaydetmeye devam etmek istiyor musunuz?</value>
+  </data>
+  <data name="Credentials_EditCredential" xml:space="preserve">
+    <value>Saklanan Kimlik Bilgilerini Ekle/Güncelle</value>
+  </data>
+  <data name="Update_DownloadFailed" xml:space="preserve">
+    <value>Maalesef güncelleme indirilemedi. Lütfen daha sonra tekrar deneyiniz.</value>
+  </data>
+  <data name="Managed_Certificates" xml:space="preserve">
+    <value>Yönetilen Sertifikalar</value>
+  </data>
+  <data name="ManagedCertificateSettings_DefaultTitle" xml:space="preserve">
+    <value>Yeni Yönetilen Sertifika</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
+    <value>Sertifikaya alan adları ekleyin:</value>
+  </data>
+  <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
+    <value>Örneğin test.com, www.test.com veya *.test.com</value>
+  </data>
+  <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
+    <value>Http Talep Sunucusunu Etkinleştir</value>
+  </data>
+  <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
+    <value>Sertifika Temizlemeyi Etkinleştir</value>
+  </data>
+  <data name="Settings_EnableStatusReporting" xml:space="preserve">
+    <value>Durum Raporlarını Gösterge Panelinde Göster</value>
+  </data>
+  <data name="PreferredCertificateAuthority" xml:space="preserve">
+    <value>Tercih Edilen Sertifika Yetkilisi</value>
+  </data>
+  <data name="MainWindow_KeyExpired" xml:space="preserve">
+    <value>Lisans anahtarınızın süresi doldu veya artık etkin değil.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
+    <value>Süresi {0} Gün Önce Doldu</value>
+  </data>
+  <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
+    <value>Bu web sunucusundaki mevcut alan adı bağlamalarından birini seçin veya alanları elle ekleyin. Daha sonra yukarıdaki Sertifika İste'yi seçebilir veya seçenekleri gerektiği gibi değiştirebilirsiniz. Özel bir CSR belirtmek için Gelişmiş sekmesine bakın.</value>
+  </data>
+  <data name="Credentials_Intro" xml:space="preserve">
+    <value>Sertifika yenileme ve dağıtım sırasında API'lere ve diğer kaynaklara otomatik çağrılar yapmak için depolanan kimlik bilgileri gerekir. Bu kimlik bilgileri, Windows Veri Koruma API'leri kullanılarak korunur ve bu makinede saklanır.</value>
+  </data>
+  <data name="ManagedCertificates_Deployment_Intro" xml:space="preserve">
+    <value>Sertifikanızın dağıtımı otomatik olabilir veya kendi dağıtım görevlerinizi gerçekleştirebilirsiniz (Görevler sekmesine bakın).</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
+    <value>Görevler en son sertifikanızla çalışmanın, yenilemeden önce veya sonra diğer eylemleri tetiklemenin isteğe bağlı bir yoludur.</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
+    <value>Dağıtım Görevleri, standart Dağıtım işlemi tamamlandıktan sonra (gösterilen sırayla) çalışır (Dağıtım sekmesine bakın). Görevler, sertifika güncellendikten hemen sonra çalıştırılabilir veya ertelenebilir (manuel olarak veya zamanlanmış bir görev aracılığıyla vb. çalıştırılmak üzere). Ayrıca görevleri yeniden sıralamak için sürükleyebilirsiniz:</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
+    <value>İsteğe bağlı olarak, sertifika isteği başlamadan önce çalıştırmak üzere istediğiniz sayıda görev ekleyebilirsiniz:</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Title" xml:space="preserve">
+    <value>Sertifika Yetkilisi</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
+    <value>Sertifika Yetkilileri, güvenilir sertifikalar verebilen kuruluşlardır. Kullanmak istediğiniz her (ACME) Sertifika Yetkilisi için Ayarlar altında bir hesap açmanız gerekir.</value>
+  </data>
+</root>
