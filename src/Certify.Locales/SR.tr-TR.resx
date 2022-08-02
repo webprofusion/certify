@@ -384,9 +384,6 @@
   <data name="ManagedCertificateSettings_WebsiteRoot" xml:space="preserve">
     <value>Site Kök Dizini</value>
   </data>
-  <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
-    <value>...</value>
-  </data>
   <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>Talep yanıtı yapılandırma kontrollerini gerçekleştirin</value>
   </data>
