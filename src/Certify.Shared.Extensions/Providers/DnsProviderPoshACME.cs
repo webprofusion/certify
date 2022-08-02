@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -29,6 +29,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [DNSPod](https://poshac.me/docs/v4/Plugins/DNSPod),
             [DNSimple](https://poshac.me/docs/v4/Plugins/DNSimple),
             [DomainOffensive](https://poshac.me/docs/v4/Plugins/DomainOffensive),
+            [Domeneshop](https://poshac.me/docs/v4/Plugins/Domeneshop)
             [deSEC](https://poshac.me/docs/v4/Plugins/DeSEC),
             [DigitalOcean](https://poshac.me/docs/v4/Plugins/DOcean),
             [Dreamhost](https://poshac.me/docs/v4/Plugins/Dreamhost),
@@ -426,6 +427,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DomainOffensive",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Domeneshop",
+                Title = "Domeneshop DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/Domeneshop",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "DomeneshopToken", Name = "Token", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DomeneshopSecret", Name = "Secret", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Domeneshop",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
