@@ -284,11 +284,11 @@ namespace Certify.UI.Windows
 
                 if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
-                    MessageBox.Show("Certify SSL Manager service not started. " + config.ServiceFaultMsg);
+                    MessageBox.Show("Certify Certificate Manager service not started. " + config.ServiceFaultMsg);
                 }
                 else
                 {
-                    MessageBox.Show("Certify SSL Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq and if you cannot resolve the problem contact support@certifytheweb.com.");
+                    MessageBox.Show("Certify Certificate Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq and if you cannot resolve the problem contact support@certifytheweb.com.");
                 }
 
                 if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))

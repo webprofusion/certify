@@ -26,7 +26,7 @@ def main(argv):
     txt_record_value = ""
 
     # init
-    logging.info("Certify SSL Manager - Python/Libcloud DNS Helper.")
+    logging.info("Certify Certificate Manager - Python/Libcloud DNS Helper.")
 
     opts, args = getopt.getopt(argv, "h:p:c:d:n:v:", [])
 

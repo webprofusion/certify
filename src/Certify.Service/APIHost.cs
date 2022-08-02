@@ -26,7 +26,7 @@ namespace Certify.Service
 
 #if DEBUG
             config
-              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify SSL Manager"))
+              .EnableSwagger(c => c.SingleApiVersion("v1", "Service API for local install of Certify Certificate Manager"))
               .EnableSwaggerUi();
 #endif
 

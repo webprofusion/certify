@@ -3,7 +3,7 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <Platforms>AnyCPU</Platforms>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Description>Certify SSL Manager UI Resources</Description>
+        <Description>Certify Certificate Manager UI Resources</Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <PlatformTarget>AnyCPU</PlatformTarget>

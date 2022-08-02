@@ -1,4 +1,4 @@
-# Certify SSL Manager - Python DNS Helper
+# Certify Certificate Manager - Python DNS Helper
 # using apache libcloud
 # with some inspiration from https://github.com/ArroyoNetworks/asyncme
 

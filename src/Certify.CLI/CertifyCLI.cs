@@ -79,7 +79,7 @@ namespace Certify.CLI
         internal void ShowVersion()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify SSL Manager - CLI Certify.Core v" + GetAppVersion().Result.Replace("\"", ""));
+            System.Console.WriteLine("Certify Certificate Manager - CLI Certify.Core v" + GetAppVersion().Result.Replace("\"", ""));
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
             System.Console.WriteLine("");

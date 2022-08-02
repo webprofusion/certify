@@ -71,7 +71,7 @@ namespace Certify.Locales {
         
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify SSL/TLS Certificate Manager.
+        ///   Looks up a localized string similar to Certify Certificate Manager.
         /// </summary>
         public static string AppName {
             get {
@@ -210,7 +210,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify SSL/TLS Certificate Manager.
+        ///   Looks up a localized string similar to Certify Certificate Manager.
         /// </summary>
         public static string LongAppName {
             get {

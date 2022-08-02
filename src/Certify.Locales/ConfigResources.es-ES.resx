@@ -117,26 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName" xml:space="preserve">
-    <value>Certify SSL - Gestión de Certificados SSL</value>
-  </data>
+
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>Estás utilizando la última versión.</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Advertencia: este software es una versión preliminar para fines de prueba y retroalimentación. Deberías esperar errores. No confíe en este software para sitios de producción importantes.</value>
   </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value>Certify SSL - Gestión de Certificados SSL/TLS</value>
-  </data>
-  <data name="Credits" xml:space="preserve">
-    <value>El Software se proporciona "tal cual" sin garantía de ningún tipo, ya sea expresa o implícita, incluidas, entre otras, las garantías implícitas de condición, el uso ininterrumpido, la comerciabilidad, la idoneidad para un fin determinado o la no infracción.
 
-El uso del servicio LetsEncrypt.org para certificados SSL/TLS gratuitos está sujeto a los términos de servicio de LetsEncrypt.org. Este software no está afiliado ni respaldado por LetsEncrypt.org
-
-Este software utiliza el siguiente software de código abierto (o porciones significativas de):
-- ACMESharp por Eugene Bekker (https://github.com/ebekker/ACMESharp) Licencia bajo MPL V 2.0
-- Algunos iconos de Font Awesome por Dave Gandy - http://fontawesome.io
-- OpenSSL (https://github.com/openssl-net/openssl-net)</value>
-  </data>
 </root>

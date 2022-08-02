@@ -45,7 +45,7 @@ namespace Certify.CLI
                 if (!p.IsServiceAvailable().Result)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    System.Console.WriteLine("Certify SSL Manager service not started.");
+                    System.Console.WriteLine("Certify Certificate Manager service not started.");
                     Console.ForegroundColor = defaultFontColour;
                     return -1;
                 }

@@ -466,7 +466,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certify SSL Manager Contributors （https://certifytheweb.com）.
+        ///   Looks up a localized string similar to Certify Certificate Manager Contributors （https://certifytheweb.com）.
         /// </summary>
         public static string LanguageAuthor {
             get {

@@ -6,7 +6,7 @@
 		<LangVersion>10.0</LangVersion>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Description>Certify SSL Manager API Models</Description>
+		<Description>Certify Certificate Manager API Models</Description>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
