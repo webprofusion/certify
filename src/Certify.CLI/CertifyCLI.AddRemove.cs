@@ -32,6 +32,12 @@ namespace Certify.CLI
                 performRequestNow = true;
             }
 
+            var preserveConfig = false;
+            if (args.Contains("--preserve-config"))
+            {
+                preserveConfig = true;
+            }
+
             if (domains != null && domains.Any())
             {
                 ManagedCertificate managedCert = null;
@@ -97,7 +103,7 @@ namespace Certify.CLI
                     }
                     else
                     {
-                        managedCert = templateCert.CopyAsTemplate();
+                        managedCert = templateCert.CopyAsTemplate(preserveConfig);
 
                         // if no managed cert name specifed, use first domain
                         if (string.IsNullOrEmpty(managedCert.Name))
