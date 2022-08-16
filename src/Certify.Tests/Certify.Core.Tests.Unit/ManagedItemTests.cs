@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -135,7 +135,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(managedCertificate, "Managed site deleted");
         }
 
-        [TestMethod("Create many items"), Description("Ensure managed site can be created, retrieved and deleted")]
+        [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
         [Ignore]
         public async Task TestCreateDeleteManyManagedCertificates()
         {
