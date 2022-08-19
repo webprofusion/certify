@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -358,15 +358,24 @@ namespace Certify.Management
         /// <param name="state"></param>
         public void BeginTrackingProgress(RequestProgressState state)
         {
-            lock (_progressResults)
+            try
             {
-                var existing = _progressResults?.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
-                if (existing != null)
+                lock (_progressResults)
                 {
-                    _progressResults.Remove(existing);
-                }
+                    var existing = _progressResults?.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
 
-                _progressResults.Add(state);
+                    if (existing != null)
+                    {
+                        _progressResults.Remove(existing);
+                    }
+
+                    _progressResults.Add(state);
+                }
+            }
+            catch (Exception)
+            {
+                // failed to add progress tracking, likely concurrency issue
+                _serviceLog?.Warning($"Failed to add tracking progress for {state.ManagedCertificate.Id}. Likely concurrency issue.");
             }
         }
 

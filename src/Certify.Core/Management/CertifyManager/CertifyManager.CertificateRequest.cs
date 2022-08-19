@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -19,7 +19,9 @@ namespace Certify.Management
         /// <summary>
         /// The maximum number of certificate requests which will be attempted in a batch (Renew All)
         /// </summary>
-        private const int MAX_CERTIFICATE_REQUEST_TASKS = 50;
+        private const int MAX_CERTIFICATE_REQUEST_TASKS = 75;
+
+        private const int DEFAULT_CERTIFICATE_REQUEST_TASKS = 50;
 
         /// <summary>
         /// Internet domain name ASCII > Unicode mapping provider
@@ -113,14 +115,23 @@ namespace Certify.Management
 
             if (managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error) > MAX_CERTIFICATE_REQUEST_TASKS)
             {
-                System.Diagnostics.Debug.WriteLine("Too many failed certificates. Fix failures or delete. Failures: " + managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error));
+                _serviceLog?.Warning("Too many failed certificates outstanding. Fix failures or delete. Failures: " + managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error));
             }
 
             foreach (var managedCertificate in managedCertificates)
             {
                 var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
                 var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-                progressTrackers.Add(managedCertificate.Id, progressIndicator);
+
+                try
+                {
+                    progressTrackers.Add(managedCertificate.Id, progressIndicator);
+                }
+                catch
+                {
+                    _serviceLog?.Error($"Failed to add progress tracker for {managedCertificate.Id}. Likely concurrency issue, skipping this managed cert during this run.");
+                    continue;
+                }
 
                 BeginTrackingProgress(progressState);
 
@@ -164,8 +175,7 @@ namespace Certify.Management
                     }
 
                     // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
-                    if (
-                        (maxRenewalTasks == 0 && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS)
+                    if ((maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
                         || (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS))
                     {
                         if (testModeOnly)
