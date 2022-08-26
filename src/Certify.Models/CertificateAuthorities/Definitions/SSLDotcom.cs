@@ -10,7 +10,7 @@ namespace Certify.CertificateAuthorities.Definitions
             return new CertificateAuthority
             {
                 Id = "rsa.ssl.com",
-                Title = "SSL.com (RSA)",
+                Title = "SSL.com (DV RSA)",
                 Description = "SSL.com offer free and paid certificate services. Free certificates are valid for 90 days and can contain a single domain plus www.",
                 APIType = CertAuthorityAPIType.ACME_V2.ToString(),
                 WebsiteUrl = "https://ssl.com/",

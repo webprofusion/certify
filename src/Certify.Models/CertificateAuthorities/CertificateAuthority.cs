@@ -71,7 +71,10 @@ namespace Certify.Models
             CertificateAuthorities.Definitions.BuyPass.GetDefinition(),
             CertificateAuthorities.Definitions.ZeroSSL.GetDefinition(),
             CertificateAuthorities.Definitions.SSLDotcom.GetDefinition(),
-            CertificateAuthorities.Definitions.Google.GetDefinition()
+            CertificateAuthorities.Definitions.Google.GetDefinition(),
+            CertificateAuthorities.Definitions.SectigoDV.GetDefinition(),
+            CertificateAuthorities.Definitions.SectigoOV.GetDefinition(),
+            CertificateAuthorities.Definitions.SectigoEV.GetDefinition()
         };
 
         public string? Id { get; set; }
