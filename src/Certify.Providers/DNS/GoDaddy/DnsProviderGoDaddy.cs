@@ -42,7 +42,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private HttpClient _client;
         private string _authKey;
         private string _authSecret;
-        private const int _maxZonesPerPage = 1000;
+        private const int _maxZonesPerPage = 250; // go daddy API documentation varies between a 500 and 1000 page limit so we use a smaller number for potential future proofing.
         private const string _baseUri = "https://api.godaddy.com/v1/";
         private const string _listZonesUri = _baseUri + "domains?limit={0}&marker={1}";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
