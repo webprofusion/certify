@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -832,6 +832,7 @@ namespace Certify.Core.Management.Challenges.DNS
                     new ProviderParameter { Key = "DDNSKeyType", Name = "Key Type", IsRequired = true, IsCredential = false, Value="hmac-sha256", OptionsList="hmac-md5;hmac-sha1;hmac-sha224;hmac-sha256;hmac-sha384;hmac-sha512"},
                     new ProviderParameter { Key = "DDNSKeyName", Name = "Key Name", IsRequired = true, IsCredential = true, Description="e.g. mykey" },
                     new ProviderParameter { Key = "DDNSKeyValueInsecure", Name = "DDNS Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","DDNSKeyValue") },
+                    new ProviderParameter { Key = "DDNSZone", Name = "DDNS Zone", IsRequired = false, IsCredential = false, Description="e.g. myzone.domain.net (optional)" },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
