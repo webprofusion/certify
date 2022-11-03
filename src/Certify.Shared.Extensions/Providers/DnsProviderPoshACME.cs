@@ -40,6 +40,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Hetzner](https://poshac.me/docs/v4/Plugins/Hetzner),
             [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
+            [Infomaniak](https://poshac.me/docs/v4/Plugins/Infomaniak)
             [IBM Cloud/SoftLayer](https://poshac.me/docs/v4/Plugins/IBMSoftLayer),
             [ISPConfig](https://poshac.me/docs/v4/Plugins/ISPConfig),
             [Leaseweb](https://poshac.me/docs/v4/Plugins/LeaseWeb/),
@@ -647,6 +648,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 IsTestModeSupported = true,
                 IsExperimental = true
             },
+              new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Infomaniak",
+                Title = "Infomaniak DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/Infomaniak",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "InfomaniakToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infomaniak;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
              new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.LeaseWeb",
@@ -1066,7 +1085,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var script = config.FirstOrDefault(c => c.StartsWith("Script="))?.Split('=')[1];
 
-            // get powershell credential fields spec if used, e.g MyCredentials=MyUsername,MyPassword
+            // get powershell credential fields spec if used, e.g MyCredentials=MyUsername,MyPassword - only used for some providers
             var psCredentialSpec = config.FirstOrDefault(c => c.StartsWith("Credential="))?.Split('=')[1].Split(',');
 
             var scriptFile = Path.Combine(_poshAcmeScriptPath, "Plugins", script);
