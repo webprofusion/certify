@@ -140,6 +140,21 @@
                                 Foreground="{DynamicResource WarningColorBrush}"
                                 TextWrapping="WrapWithOverflow"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_NoHostNameBindingWarning}" /></TextBlock>
                         </StackPanel>
+                        <StackPanel
+                            x:Name="InvalidConfig"
+                            Margin="0,4,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical"
+                            Visibility="{Binding HasInvalidPrimaryDomainConfig, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBlock
+                                Margin="8,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Foreground="{DynamicResource ErrorColorBrush}"
+                                TextWrapping="WrapWithOverflow">
+                                There can be only one Primary Domain included on a certificate. There are currently multiple domains configured as the Primary, please review and correct the primary domain selection.
+                            </TextBlock>
+                        </StackPanel>
                         <DockPanel
                             x:Name="DomainOptions"
                             Margin="0,8,0,0"
@@ -211,7 +226,7 @@
                                 CanUserAddRows="False"
                                 EnableRowVirtualization="True"
                                 ItemsSource="{Binding SelectedItem.DomainOptions}"
-                                MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
+                                MouseLeftButtonUp="ToggleSelectedDomainOption"
                                 ScrollViewer.CanContentScroll="True"
                                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -221,11 +236,40 @@
                                     <DataGridTemplateColumn Header="{x:Static Resources:SR.ManagedCertificateSettings_Primary}">
                                         <DataGridTemplateColumn.CellTemplate>
                                             <DataTemplate>
-                                                <RadioButton
-                                                    HorizontalAlignment="Center"
-                                                    GroupName="PrimaryDomainGroup"
-                                                    IsChecked="{Binding IsPrimaryDomain, UpdateSourceTrigger=PropertyChanged}"
-                                                    Style="{DynamicResource MahApps.Styles.RadioButton}" />
+                                                <StackPanel>
+                                                    <Button
+                                                        Width="20"
+                                                        Margin="4,0,0,0"
+                                                        AutomationProperties.Name="Set As Primary Domain"
+                                                        BorderThickness="0"
+                                                        Click="SetPrimaryDomainOption_Click"
+                                                        Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                                                        Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                                                        <fa:ImageAwesome
+                                                            Height="12"
+                                                            Margin="0,0,0,0"
+                                                            Foreground="{DynamicResource MahApps.Brushes.Control.Disabled}"
+                                                            Icon="CircleOutline" />
+
+                                                    </Button>
+
+                                                    <Button
+                                                        Width="20"
+                                                        Margin="4,0,0,0"
+                                                        AutomationProperties.Name="Selected as Primary Domain"
+                                                        BorderThickness="0"
+                                                        Click="SetPrimaryDomainOption_Click"
+                                                        Style="{DynamicResource MahApps.Styles.Button.Circle}"
+                                                        Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                                        <fa:ImageAwesome
+                                                            Height="12"
+                                                            Margin="0,0,0,0"
+                                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                                            Icon="CheckCircleOutline" />
+
+                                                    </Button>
+                                                </StackPanel>
+
                                             </DataTemplate>
                                         </DataGridTemplateColumn.CellTemplate>
                                     </DataGridTemplateColumn>
@@ -276,12 +320,10 @@
                             EnableRowVirtualization="True"
                             IsReadOnly="True"
                             ItemsSource="{Binding SelectedItem.DomainOptions}"
-                            MouseLeftButtonUp="DataGrid_MouseLeftButtonUp"
                             ScrollViewer.CanContentScroll="True"
                             ScrollViewer.HorizontalScrollBarVisibility="Auto"
                             ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            SelectionMode="Single"
-                            VirtualizingPanel.IsVirtualizing="True">
+                            SelectionMode="Single">
                             <DataGrid.Columns>
 
 

@@ -106,7 +106,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
 
             // ensure item with no selected identifiers (but present) is invalid
             model.SelectedItem = new ManagedCertificate
@@ -119,7 +119,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
 
             // ensure item with local host name is invalid
             model.SelectedItem = new ManagedCertificate

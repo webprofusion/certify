@@ -8,13 +8,14 @@ namespace Certify.Models.Shared.Validation
 {
     public enum ValidationErrorCodes
     {
-        REQUIRED_PRIMARY_IDENTIFIER,
+        NONE,
+        PRIMARY_IDENTIFIER_REQUIRED,
+        PRIMARY_IDENTIFIER_TOOMANY,
         CHALLENGE_TYPE_INVALID,
         REQUIRED_NAME,
         INVALID_HOSTNAME,
         REQUIRED_CHALLENGE_CONFIG_PARAM,
-        SAN_LIMIT,
-        NONE
+        SAN_LIMIT
     }
 
     public class CertificateEditorService
@@ -162,7 +163,22 @@ namespace Certify.Models.Shared.Validation
         {
             return item?.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain);
         }
-
+        public static void SetPrimarySubjectDomain(ManagedCertificate item, DomainOption opt)
+        {
+            // mark the matching domain option as the primary domain (common name or primary subject), mark anything else as not primary.
+            foreach (var o in item.DomainOptions)
+            {
+                if (!o.IsPrimaryDomain && o.Domain == opt.Domain && o.Type == opt.Type)
+                {
+                    o.IsPrimaryDomain = true;
+                    o.IsSelected = true;
+                }
+                else if (o.IsPrimaryDomain && !(o.Domain == opt.Domain && o.Type == opt.Type))
+                {
+                    o.IsPrimaryDomain = false;
+                }
+            }
+        }
         /// <summary>
         /// Add set of domains as domain options froma given string
         /// </summary>
@@ -237,6 +253,12 @@ namespace Certify.Models.Shared.Validation
         {
             try
             {
+                // too many domains options selected as primary (UI bug)
+                if (item.DomainOptions?.Count(d=>d.IsPrimaryDomain)>1)
+                {
+                    return new ValidationResult(false, "There can only be one domain selected as the primary domain.", ValidationErrorCodes.PRIMARY_IDENTIFIER_TOOMANY.ToString());
+                }
+
                 if (applyAutoConfiguration)
                 {
                     CertificateEditorService.ApplyAutoConfiguration(item, selectedTargetSite);
@@ -255,7 +277,7 @@ namespace Certify.Models.Shared.Validation
                     return new ValidationResult(
                         false,
                         SR.ManagedCertificateSettings_NeedPrimaryDomain,
-                        ValidationErrorCodes.REQUIRED_PRIMARY_IDENTIFIER.ToString()
+                        ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString()
                     );
                 }
 

@@ -38,6 +38,19 @@ namespace Certify.UI.ViewModel
 
         public void RaiseSelectedItemChanges()
         {
+
+            // check for invalid primary domains (from previous RadioButton in DataGrid UI bug)
+            if (SelectedItem?.DomainOptions.Count(d => d.IsPrimaryDomain) > 1)
+            {
+                HasInvalidPrimaryDomainConfig = true;
+            }
+            else
+            {
+                HasInvalidPrimaryDomainConfig = false;
+            }
+
+            RaisePropertyChangedEvent(nameof(HasInvalidPrimaryDomainConfig));
+
             // workaround - these should be happening automatically but we're currently having to
             // force them manually
             RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
@@ -147,6 +160,8 @@ namespace Certify.UI.ViewModel
         public bool IsNameEditMode { get; set; }
         public bool IsTestInProgress { get; set; }
         public bool IsSiteListQueryProgress { get; set; }
+
+        public bool HasInvalidPrimaryDomainConfig { get; set; }
 
         [DependsOn(nameof(SelectedItem))]
         public bool IsEditable

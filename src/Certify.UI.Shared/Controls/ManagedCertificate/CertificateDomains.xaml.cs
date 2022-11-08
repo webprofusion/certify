@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Certify.Models;
+using Certify.Models.Shared.Validation;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -90,9 +91,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void RefreshWebsiteList_Click(object sender, RoutedEventArgs e)
         {
-
             await ItemViewModel.RefreshWebsiteList();
-
         }
 
         private async void RefreshSanList_Click(object sender, RoutedEventArgs e) => await ItemViewModel.SANRefresh();
@@ -106,29 +105,24 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void DataGrid_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            // auto toggle item included/not included
-            var dg = (DataGrid)sender;
-            if (dg.SelectedItem != null)
-            {
-                var opt = (DomainOption)dg.SelectedItem;
-                opt.IsSelected = !opt.IsSelected;
-            }
-        }
-
         private void DomainFilter_TextChanged(object sender, TextChangedEventArgs e) => SetFilter();
 
         private void RemoveDomainOption_Click(object sender, RoutedEventArgs e)
         {
-            var dg = DomainOptionsList;
-            if (dg.SelectedItem != null)
+            if (DomainOptionsList.SelectedItem is DomainOption opt)
             {
-                var opt = (DomainOption)dg.SelectedItem;
                 if (MessageBox.Show($"Remove {opt.Domain}?", "Confirm Domain Option Removal", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     ItemViewModel.SelectedItem.DomainOptions.Remove(opt);
                 }
+            }
+        }
+
+        private void SetPrimaryDomainOption_Click(object sender, RoutedEventArgs e)
+        {
+            if (DomainOptionsList.SelectedItem is DomainOption opt)
+            {
+                CertificateEditorService.SetPrimarySubjectDomain(ItemViewModel.SelectedItem, opt);
             }
         }
 
@@ -137,6 +131,15 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (e.Key == Key.Return)
             {
                 AddDomains_Click(sender, e);
+            }
+        }
+
+        private void ToggleSelectedDomainOption(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // auto toggle item included/not included
+            if (DomainOptionsList.SelectedItem is DomainOption opt)
+            {
+                opt.IsSelected = !opt.IsSelected;
             }
         }
     }
