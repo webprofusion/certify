@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="6.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
     <PackageReference Include="MSTest.TestAdapter" Version="2.2.10" />
     <PackageReference Include="MSTest.TestFramework" Version="2.2.10" />
