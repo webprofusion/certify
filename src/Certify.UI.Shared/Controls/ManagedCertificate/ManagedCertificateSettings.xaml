@@ -19,7 +19,6 @@
     d:DesignWidth="697.442"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
         <utils:OptionalBooleanToVisibilityConverter
             x:Key="InvBoolVisConverter"

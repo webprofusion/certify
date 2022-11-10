@@ -22,7 +22,6 @@
         <StackPanel Margin="8,0,8,8">
 
             <StackPanel.Resources>
-                <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
                 <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
                 <utils:OptionalBooleanToVisibilityConverter
                     x:Key="InvBoolVisConverter"

@@ -15,9 +15,7 @@
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
-    <Controls:MetroWindow.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-    </Controls:MetroWindow.Resources>
+
     <DockPanel Margin="16" LastChildFill="true">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Import/Export Settings</TextBlock>
@@ -67,9 +65,14 @@
                 </Button>
             </StackPanel>
 
-            <Controls:MetroProgressBar DockPanel.Dock="Top" Width="250" Height="32"
-                      Margin="4"
-                      IsIndeterminate="True" HorizontalAlignment="Left"   Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+            <Controls:MetroProgressBar
+                Width="250"
+                Height="32"
+                Margin="4"
+                HorizontalAlignment="Left"
+                DockPanel.Dock="Top"
+                IsIndeterminate="True"
+                Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
 
             <DockPanel
                 DockPanel.Dock="Top"

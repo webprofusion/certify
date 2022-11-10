@@ -16,7 +16,6 @@
     d:DesignWidth="631.2"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <utils:NullableDateFormatter x:Key="NullDateFormatter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
         <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />

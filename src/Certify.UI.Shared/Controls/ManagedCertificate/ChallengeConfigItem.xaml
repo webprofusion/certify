@@ -13,7 +13,6 @@
     d:DesignWidth="468"
     mc:Ignorable="d">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         <DataTemplate x:Key="ProviderStringParameter">
             <StackPanel
                 Margin="0,8,0,0"

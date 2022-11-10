@@ -35,6 +35,7 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
+               
                 // show status tab for existing managed certs
                 var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
 
@@ -266,6 +267,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             ItemViewModel.IsNameEditMode = true;
             EditName.Focus();
         }
+
         private void FinishedEditName_Click(object sender, RoutedEventArgs e)
         {
             ItemViewModel.IsNameEditMode = false;

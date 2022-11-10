@@ -27,11 +27,6 @@
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
-    <Controls:MetroWindow.Resources>
-        <ResourceDictionary>
-            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-        </ResourceDictionary>
-    </Controls:MetroWindow.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="48" />

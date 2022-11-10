@@ -74,8 +74,10 @@
             <!--  control templates  -->
             <DataTemplate x:Key="ProviderHiddenParameter" />
 
+            <!--  standard converters  -->
             <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
             <utils:FeatureBooleanConverter x:Key="FeatureBooleanConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
         </ResourceDictionary>
 
 

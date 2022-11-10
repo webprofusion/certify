@@ -16,10 +16,6 @@
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
-    <Controls:MetroWindow.Resources>
-        <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
-    </Controls:MetroWindow.Resources>
-
     <DockPanel Margin="8" LastChildFill="False">
         <TextBlock
             DockPanel.Dock="Top"
@@ -62,16 +58,17 @@
                                 Height="28"
                                 Margin="8,0,0,0"
                                 VerticalAlignment="Top"
+                                Click="Edit_Click"
                                 CommandParameter="{Binding}"
-                                DockPanel.Dock="Right" Click="Edit_Click">
+                                DockPanel.Dock="Right">
                                 <StackPanel Orientation="Horizontal">
-                                    
+
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Foreground="{StaticResource MahApps.Brushes.Accent}"
                                         Icon="Edit" />
-                                    
+
 
                                 </StackPanel>
                             </Button>
@@ -114,7 +111,12 @@
                 HorizontalAlignment="Stretch"
                 DockPanel.Dock="Left"
                 IsIndeterminate="True" />
-            <Button Width="80" DockPanel.Dock="Right" Click="Button_Click">Cancel</Button>
+            <Button
+                Width="80"
+                Click="Button_Click"
+                DockPanel.Dock="Right">
+                Cancel
+            </Button>
         </DockPanel>
     </DockPanel>
 </Controls:MetroWindow>
