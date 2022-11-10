@@ -23,10 +23,6 @@
 
             <StackPanel.Resources>
                 <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-                <utils:OptionalBooleanToVisibilityConverter
-                    x:Key="InvBoolVisConverter"
-                    False="Visible"
-                    True="Collapsed" />
                 <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
                 <utils:NullVisibilityConverter
                     x:Key="NullVisibleConverter"

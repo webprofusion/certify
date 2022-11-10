@@ -78,6 +78,10 @@
             <utils:FeatureVisibilityConverter x:Key="FeatureVisibilityConverter" />
             <utils:FeatureBooleanConverter x:Key="FeatureBooleanConverter" />
             <BooleanToVisibilityConverter x:Key="BoolToVisConverter" />
+            <utils:OptionalBooleanToVisibilityConverter
+                x:Key="InvBoolToVisConverter"
+                False="Visible"
+                True="Collapsed" />
 
         </ResourceDictionary>
 

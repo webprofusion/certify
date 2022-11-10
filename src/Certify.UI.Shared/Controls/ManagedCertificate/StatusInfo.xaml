@@ -19,10 +19,6 @@
         <utils:NullableDateFormatter x:Key="NullDateFormatter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
         <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="InvBoolVisConverter"
-            False="Visible"
-            True="Collapsed" />
         <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
         <utils:NullVisibilityConverter
@@ -154,7 +150,7 @@
                         <Label
                             Content="No"
                             FontWeight="Bold"
-                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource InvBoolVisConverter}}" />
+                            Visibility="{Binding SelectedItem.IncludeInAutoRenew, Converter={StaticResource InvBoolToVisConverter}}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Last Renewal:" />

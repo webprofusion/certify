@@ -20,10 +20,6 @@
     mc:Ignorable="d">
     <UserControl.Resources>
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="InvBoolVisConverter"
-            False="Visible"
-            True="Collapsed" />
         <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
         <utils:ManagedCertificateHealthColourConverter x:Key="HealthColourConverter" />
         <utils:NullVisibilityConverter
@@ -70,7 +66,7 @@
                 Margin="0,0,0,0"
                 DockPanel.Dock="Left"
                 Orientation="Horizontal"
-                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                 <TextBlock
                     Margin="16,0,0,4"
                     VerticalAlignment="Top"
@@ -105,7 +101,7 @@
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
                 ToolTip="Dismiss"
-                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
 
                 <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="AngleDoubleDown" />
 
@@ -214,7 +210,7 @@
                         Foreground="{DynamicResource MahApps.Brushes.Accent}"
                         Icon="CheckCircle"
                         Spin="False"
-                        Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolVisConverter}}" />
+                        Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Test}" /></TextBlock>
                 </StackPanel>
             </Button>

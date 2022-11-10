@@ -16,10 +16,6 @@
     <UserControl.Resources>
 
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="InvBoolVisConverter"
-            False="Visible"
-            True="Collapsed" />
         <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
         <utils:ManagedCertificateHealthVisibilityConverter x:Key="HealthVisibleConverter" />
         <utils:NullVisibilityConverter
@@ -132,7 +128,7 @@
                             Margin="0,4,0,0"
                             DockPanel.Dock="Top"
                             Orientation="Vertical"
-                            Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            Visibility="{Binding HasSelectedItemDomainOptions, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                             <TextBlock
                                 Margin="8,0"
                                 HorizontalAlignment="Left"
@@ -244,7 +240,7 @@
                                                         BorderThickness="0"
                                                         Click="SetPrimaryDomainOption_Click"
                                                         Style="{DynamicResource MahApps.Styles.Button.Circle}"
-                                                        Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                                                        Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
                                                         <fa:ImageAwesome
                                                             Height="12"
                                                             Margin="0,0,0,0"

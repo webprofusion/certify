@@ -18,16 +18,7 @@
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
-    <Controls:MetroWindow.Resources>
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="BoolVisConverter"
-            False="Collapsed"
-            True="Visible" />
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="InvBoolVisConverter"
-            False="Visible"
-            True="Collapsed" />
-    </Controls:MetroWindow.Resources>
+
     <Controls:MetroWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
     </Controls:MetroWindow.LayoutTransform>
@@ -91,7 +82,7 @@
             Margin="8"
             DockPanel.Dock="Top"
             LastChildFill="False"
-            Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+            Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
             <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">Your installation is currently using a license key. If you wish to change license key or allocate this license to a different install you can deactivate your install:</TextBlock>
             <StackPanel
                 Margin="8"

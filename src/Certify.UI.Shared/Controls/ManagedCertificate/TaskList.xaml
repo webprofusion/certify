@@ -17,10 +17,6 @@
     <UserControl.Resources>
         <utils:TaskTriggerConverter x:Key="TaskTriggerConverter" />
         <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
-        <utils:OptionalBooleanToVisibilityConverter
-            x:Key="InvBoolVisConverter"
-            False="Visible"
-            True="Collapsed" />
         <utils:EnumConverter x:Key="EnumConverter" />
         <utils:NullVisibilityConverter
             x:Key="NullVisibleConverter"
