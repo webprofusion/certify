@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -947,7 +947,10 @@ namespace Certify.Management
                                     // clean up challenge answers (.well-known/acme-challenge/* files
                                     // for http-01 or iis bindings for tls-sni-01)
 
-                                    authorization.Cleanup();
+                                    if (authorization.Cleanup != null)
+                                    {
+                                        await authorization.Cleanup();
+                                    }
                                 }
                             }
                             else

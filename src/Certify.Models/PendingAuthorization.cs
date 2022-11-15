@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Certify.Models
 {
@@ -66,7 +67,7 @@ namespace Certify.Models
 
         public string? TempFilePath { get; set; }
 
-        public Action Cleanup { get; set; } = () => { };
+        public Func<Task>? Cleanup { get; set; }
         public List<string>? LogItems { get; set; }
         public string? AuthorizationError { get; set; }
         public bool IsValidated { get; set; }

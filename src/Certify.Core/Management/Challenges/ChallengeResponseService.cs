@@ -190,40 +190,7 @@ namespace Certify.Core.Management.Challenges
                         results.Add(result);
 
                         return results;
-                        /*
 
-                        var serverVersion = await serverManager.GetServerVersion();
-
-                        if (serverVersion.Major < 8)
-                        {
-                            result.IsOK = false;
-                            result.FailedItemSummary.Add($"The {SupportedChallengeTypes.CHALLENGE_TYPE_SNI} challenge is only available for IIS versions 8+.");
-                            results.Add(result);
-
-                            return results;
-                        }
-
-                        var simulatedAuthorization = new PendingAuthorization
-                        {
-                            Challenges = new List<AuthorizationChallengeItem> {
-                                     new AuthorizationChallengeItem
-                                     {
-                                          ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_SNI,
-                                          HashIterationCount= 1,
-                                          Value = GenerateSimulatedKeyAuth()
-                                     }
-                                 }
-                        };
-
-                        generatedAuthorizations.Add(simulatedAuthorization);
-
-                        result.IsOK =
-                             PrepareChallengeResponse_TlsSni01(
-                                log, serverManager, domain, managedCertificate, simulatedAuthorization
-                            )();
-
-                        results.Add(result);
-                        */
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
@@ -278,8 +245,15 @@ namespace Certify.Core.Management.Challenges
             }
             finally
             {
-                //FIXME: needs to be filtered by managed site: result.Message = String.Join("\r\n", GetActionLogSummary());
-                generatedAuthorizations.ForEach(ga => ga.Cleanup());
+                log?.Verbose("Performing test challenge cleanup");
+
+                foreach (var ga in generatedAuthorizations)
+                {
+                    if (ga.Cleanup != null)
+                    {
+                        await ga.Cleanup();
+                    }
+                }
             }
 
             return results;
@@ -495,7 +469,7 @@ namespace Certify.Core.Management.Challenges
 
                 // prepare cleanup - should this be configurable? Because in some case many sites
                 // renewing may all point to the same web root, we keep the configcheck file
-                pendingAuth.Cleanup = () =>
+                pendingAuth.Cleanup = async () =>
                 {
                     if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
                     {
@@ -604,7 +578,7 @@ namespace Certify.Core.Management.Challenges
             }
 
             // generate certs and install iis bindings
-            var cleanupQueue = new List<Action>();
+            var cleanupQueue = new List<Func<Task>>();
 
             var checkQueue = new List<Func<bool>>();
 
@@ -630,11 +604,11 @@ namespace Certify.Core.Management.Challenges
                 // add cleanup actions to queue
                 cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate.ServerSiteId, sni));
 
-                cleanupQueue.Add(() => CertificateManager.RemoveCertificate(x509));
+                cleanupQueue.Add(() => Task.Run(() => CertificateManager.RemoveCertificate(x509)));
             }
 
             // configure cleanup to execute the cleanup queue
-            pendingAuth.Cleanup = () => cleanupQueue.ForEach(a => a());
+            pendingAuth.Cleanup = async () => cleanupQueue.ForEach(a => a());
 
             // perform our own config checks
             return () => checkQueue.All(check => check());
