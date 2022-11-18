@@ -93,5 +93,7 @@ namespace Certify.Management
 
         ICredentialsManager GetCredentialsManager();
         IManagedItemStore GetManagedItemStore();
+
+        Task ApplyPreferences();
     }
 }

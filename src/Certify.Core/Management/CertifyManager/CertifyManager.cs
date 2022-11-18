@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -865,5 +865,18 @@ namespace Certify.Management
 
         public ICredentialsManager GetCredentialsManager() => _credentialsManager;
         public IManagedItemStore GetManagedItemStore() => _itemManager;
+        public Task ApplyPreferences()
+        {
+            if (CoreAppSettings.Current.EnableAppTelematics && _tc == null)
+            {
+                _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
+            }
+            else if (!CoreAppSettings.Current.EnableAppTelematics && _tc != null)
+            {
+                _tc = null;
+            }
+
+            return Task.FromResult(true);
+        }
     }
 }
