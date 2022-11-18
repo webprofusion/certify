@@ -1,7 +1,4 @@
-﻿using System;
-using Certify.Models.Config;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -14,7 +11,7 @@ namespace Certify.Core.Tests.Unit
 
         }
 
-  
+
         [TestMethod, Description("Test null/blank coalesce of string")]
         public void TestNullOrBlankCoalesce()
         {

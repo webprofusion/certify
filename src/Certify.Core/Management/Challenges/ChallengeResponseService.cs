@@ -645,11 +645,11 @@ namespace Certify.Core.Management.Challenges
             {
                 if (dnsResult.IsAwaitingUser)
                 {
-                    log.Error($"Action Required: {dnsResult.Result.Message}");
+                    log?.Error($"Action Required: {dnsResult.Result.Message}");
                 }
                 else
                 {
-                    log.Error($"DNS update failed: {dnsResult.Result.Message}");
+                    log?.Error($"DNS update failed: {dnsResult.Result.Message}");
                 }
             }
             else

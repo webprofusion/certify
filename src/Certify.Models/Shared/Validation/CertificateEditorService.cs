@@ -254,7 +254,7 @@ namespace Certify.Models.Shared.Validation
             try
             {
                 // too many domains options selected as primary (UI bug)
-                if (item.DomainOptions?.Count(d=>d.IsPrimaryDomain)>1)
+                if (item.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1)
                 {
                     return new ValidationResult(false, "There can only be one domain selected as the primary domain.", ValidationErrorCodes.PRIMARY_IDENTIFIER_TOOMANY.ToString());
                 }

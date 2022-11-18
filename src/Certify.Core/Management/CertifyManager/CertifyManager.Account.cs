@@ -41,7 +41,7 @@ namespace Certify.Management
             }
 
             var currentCA = GetCurrentCAId(item);
-           
+
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
             var matchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
@@ -122,7 +122,7 @@ namespace Certify.Management
                     }
                     catch (Exception exp)
                     {
-                        _serviceLog.Error($"Failed to decrypt Account Credentials [{c.Title}] {exp.Message}");
+                        _serviceLog?.Error($"Failed to decrypt Account Credentials [{c.Title}] {exp.Message}");
                     }
                 }
             }
@@ -222,7 +222,7 @@ namespace Certify.Management
                     existingAccount.Email = reg.EmailAddress;
                     existingAccount.AccountKey = updatedAccount.Result.AccountKey;
                     existingAccount.PreferredChain = reg.PreferredChain;
-                    
+
                     await StoreAccountAsCredential(existingAccount);
                 }
 
@@ -399,7 +399,7 @@ namespace Certify.Management
             catch (Exception exp)
             {
                 // failed to load custom CAs
-                _serviceLog.Error(exp.Message);
+                _serviceLog?.Error(exp.Message);
             }
 
             return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));

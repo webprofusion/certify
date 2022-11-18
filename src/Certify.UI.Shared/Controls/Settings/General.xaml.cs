@@ -144,6 +144,7 @@ namespace Certify.UI.Controls.Settings
                     RefreshRewalIntervalLimits();
                 }
 
+
                 // save settings
                 await EditModel.MainViewModel.SavePreferences();
 

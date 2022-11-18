@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Models;
 using Certify.Models.Config;
 using Certify.Providers;
-using Newtonsoft.Json;
 
 namespace Certify.Management
 {
     public class CredentialsManagerBase
     {
-        
+
         internal bool _useWindowsNativeFeatures = true;
 
         public CredentialsManagerBase(bool useWindowsNativeFeatures = true)

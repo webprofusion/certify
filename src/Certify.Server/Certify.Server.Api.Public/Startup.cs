@@ -137,16 +137,19 @@ namespace Certify.Server.API
 
         private StatusHubReporting _statusReporting;
 
-        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj) {
+        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
+        {
             System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
 
             _statusReporting.ReportManagedCertificateUpdated(obj);
         }
-        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj) {
+        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj)
+        {
             System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
             _statusReporting.ReportRequestProgress(obj);
         }
-        private void InternalServiceClient_OnMessageFromService(string arg1, string arg2) {
+        private void InternalServiceClient_OnMessageFromService(string arg1, string arg2)
+        {
             System.Diagnostics.Debug.WriteLine($"Public API: got message to forward: {arg1} {arg2}"); ;
         }
 
@@ -165,7 +168,7 @@ namespace Certify.Server.API
             {
                 app.UseDeveloperExceptionPage();
             }
-            
+
             app.UseHttpsRedirection();
 
             app.UseRouting();

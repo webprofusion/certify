@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -52,13 +52,13 @@ namespace Certify.Management
                                 }
                                 catch (Exception ex)
                                 {
-                                    _serviceLog.Error($"Failed to query certificate manager plugin {cp.Title} {ex}");
+                                    _serviceLog?.Error($"Failed to query certificate manager plugin {cp.Title} {ex}");
                                 }
                             }
                         }
                         else
                         {
-                            _serviceLog.Error($"Failed to create one or more certificate manager plugins");
+                            _serviceLog?.Error($"Failed to create one or more certificate manager plugins");
                         }
                     }
                 }

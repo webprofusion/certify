@@ -208,6 +208,7 @@
                 <CustomControls:AboutControl Width="Auto" Height="Auto" />
             </TabItem>
         </TabControl>
+
     </Grid>
     <Controls:MetroWindow.Flyouts>
 

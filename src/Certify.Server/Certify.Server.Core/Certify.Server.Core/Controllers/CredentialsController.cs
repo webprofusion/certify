@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 using Certify.Management;
@@ -12,7 +11,7 @@ namespace Certify.Service
     [Route("api/credentials")]
     public class CredentialsController : Controllers.ControllerBase
     {
-      
+
         private ICertifyManager _certifyManager;
         private ICredentialsManager _credentialsManager;
 
@@ -42,7 +41,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await _credentialsManager.Delete(_certifyManager.GetManagedItemStore(),storageKey);
+            return await _credentialsManager.Delete(_certifyManager.GetManagedItemStore(), storageKey);
         }
 
         [HttpPost, Route("{storageKey}/test")]

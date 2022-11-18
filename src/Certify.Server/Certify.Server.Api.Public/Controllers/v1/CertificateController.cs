@@ -139,7 +139,7 @@ namespace Certify.Server.API.Controllers
 
             var log = await _client.GetItemLog(managedCertId, maxLines);
 
-            return new OkObjectResult(string.Join("\n",log));
+            return new OkObjectResult(string.Join("\n", log));
 
         }
 
