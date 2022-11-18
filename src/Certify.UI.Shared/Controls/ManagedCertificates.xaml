@@ -73,8 +73,6 @@
                     DockPanel.Dock="Left"
                     Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
                     Text="{Binding ConnectionTitle}" />
-
-
             </DockPanel>
             <DockPanel
                 Margin="0,0,0,4"
@@ -89,10 +87,7 @@
                     DockPanel.Dock="Right"
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
                     TextChanged="TxtFilter_TextChanged" />
-
-
             </DockPanel>
-
 
             <ListView
                 Name="lvManagedCertificates"
@@ -108,7 +103,7 @@
                 SelectionMode="Single"
                 VirtualizingPanel.IsVirtualizing="True">
                 <ListView.ContextMenu>
-                    <ContextMenu x:Name="ListContextMenu" PlacementRectangle="{Binding RelativeSource={RelativeSource Self}}">
+                    <ContextMenu x:Name="ListContextMenu" PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
                         <MenuItem
                             Click="SetListSortOrder_Click"
                             Header="Sort By Name"
