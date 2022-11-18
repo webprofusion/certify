@@ -439,7 +439,7 @@ namespace Certify.Management
                     if (async.IsCompleted)
                     {
                         shell.EndInvoke(async);
-                        output.AppendLine($"Powershell Task Completed.");
+                        output.Append($"Powershell Task Completed.");
                     }
                 }
                 catch (System.Management.Automation.RuntimeException ex)
