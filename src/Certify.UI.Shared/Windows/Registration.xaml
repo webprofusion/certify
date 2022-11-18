@@ -24,7 +24,7 @@
     </Controls:MetroWindow.LayoutTransform>
 
     <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=BoolVisConverter}}">
+        <StackPanel DockPanel.Dock="Top" Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
             <Grid>
                 <TextBlock Margin="10,10,-10,-11" TextWrapping="WrapWithOverflow"><Run>You can purchase a license key by registering at:</Run><LineBreak /> <Hyperlink NavigateUri="https://certifytheweb.com/register?src=app.enterkey" RequestNavigate="Hyperlink_RequestNavigate">https://certifytheweb.com/register</Hyperlink></TextBlock>

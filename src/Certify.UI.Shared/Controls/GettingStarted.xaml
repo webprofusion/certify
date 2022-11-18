@@ -19,10 +19,6 @@
             Margin="6,8"
             LastChildFill="True">
             <DockPanel.Resources>
-                <utils:OptionalBooleanToVisibilityConverter
-                    x:Key="InvBoolVisConverter"
-                    False="Visible"
-                    True="Collapsed" />
                 <utils:NullVisibilityConverter x:Key="NullCollapsedConverter" />
             </DockPanel.Resources>
 
@@ -268,7 +264,7 @@
                                 Margin="0,0,16,0"
                                 HorizontalAlignment="Left"
                                 Click="AddToDashboard_Click"
-                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolVisConverter}}">
+                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
                                 <StackPanel Orientation="Horizontal">
                                     <fa:ImageAwesome
                                         Height="16"
