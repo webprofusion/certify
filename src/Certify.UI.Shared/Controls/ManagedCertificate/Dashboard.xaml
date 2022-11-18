@@ -131,6 +131,29 @@
                             <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=TotalDomains}" />
                         </Border>
                     </DockPanel>
+                    <DockPanel x:Name="PanelInvalidConfig">
+                        <DockPanel.Style>
+                            <Style BasedOn="{StaticResource SummaryPanel}" TargetType="DockPanel">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding InvalidConfig}" Value="0">
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=InvalidConfig]">
+                                Invalid Config
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="MediumVioletRed"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=InvalidConfig}" />
+                        </Border>
+                    </DockPanel>
 
 
                 </StackPanel>

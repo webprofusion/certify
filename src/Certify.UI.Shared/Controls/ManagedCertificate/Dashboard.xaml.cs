@@ -27,6 +27,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             public int Error { get; set; }
             public int Warning { get; set; }
             public int AwaitingUser { get; set; }
+            public int InvalidConfig { get; set; }
 
             public int TotalDomains { get; set; }
 
@@ -68,6 +69,9 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ViewModel.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
                 ViewModel.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
 
+                // count items with invalid config (e.g. multiple primary domains)
+                ViewModel.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
+
                 ViewModel.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
 
                 PanelTotal.Visibility = ViewModel.Total == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
@@ -85,6 +89,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ViewModel.Error = 0;
                 ViewModel.Warning = 0;
                 ViewModel.AwaitingUser = 0;
+                ViewModel.InvalidConfig = 0;
 
                 ViewModel.TotalDomains = 0;
 
