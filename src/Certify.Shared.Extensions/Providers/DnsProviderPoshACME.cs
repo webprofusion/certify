@@ -22,6 +22,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Akamai](https://poshac.me/docs/v4/Plugins/Akamai),
             [AutoDNS](https://poshac.me/docs/v4/Plugins/AutoDNS),
             [All-Inkl](https://poshac.me/docs/v4/Plugins/All-Inkl),
+            [Bunny](https://poshac.me/docs/v4/Plugins/Bunny),
             [ClouDNS](https://poshac.me/docs/v4/Plugins/ClouDNS),
             [Combell](https://poshac.me/docs/v4/Plugins/Combell),
             [Constellix](https://poshac.me/docs/v4/Plugins/Constellix),
@@ -239,6 +240,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=AutoDNS",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+                 new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Bunny",
+                Title = "Bunny.net DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/Bunny/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "BunnyAccessKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Bunny",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
