@@ -55,15 +55,28 @@ namespace Certify.UI.Controls
             CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
             {
                 var filter = txtFilter.Text.Trim();
+                var matchItem = item as Models.ManagedCertificate;
 
                 return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
-                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.Error && f == "[Status=Error]") ||
-                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.OK && f == "[Status=OK]") ||
-                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.Warning && f == "[Status=Warning]") ||
-                    (((Models.ManagedCertificate)item).Health == Models.ManagedCertificateHealth.AwaitingUser && f == "[Status=AwaitingUser]") ||
-                    ((Models.ManagedCertificate)item).Name.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1 ||
-                    (((Models.ManagedCertificate)item).DomainOptions?.Any(d => d.Domain.IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1) ?? false) ||
-                    (((Models.ManagedCertificate)item).Comments ?? "").IndexOf(f, StringComparison.OrdinalIgnoreCase) > -1);
+
+                        // match on a specific status filter
+                        (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
+                        (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
+                        (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
+                        (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
+                        (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
+                        // match on selected or primary domain options with domain containing keyword
+                        (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+                        // match on requestconfig primary or san containing keyword
+                        (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+                        (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
+                        // match on comments containing keyword
+                        (matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+                        // match on name containing keyword
+                        matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+                        // match on ID
+                        matchItem.Id == f
+                    );
             };
 
             //sort by name ascending
@@ -356,6 +369,28 @@ namespace Certify.UI.Controls
         private void GettingStarted_FilterApplied(string filter)
         {
             txtFilter.Text = filter;
+        }
+    }
+
+    public static class StringExtensions
+    {
+        // older .net doesn't have string.Contains  https://learn.microsoft.com/en-us/dotnet/api/system.string.contains?view=net-7.0
+
+        public static bool Contains(this String str, String substring,
+                                    StringComparison comp)
+        {
+            if (substring == null)
+            {
+                throw new ArgumentNullException("substring",
+                                             "substring cannot be null.");
+            }
+            else if (!Enum.IsDefined(typeof(StringComparison), comp))
+            {
+                throw new ArgumentException("comp is not a member of StringComparison",
+                                         "comp");
+            }
+
+            return str.IndexOf(substring, comp) >= 0;
         }
     }
 }
