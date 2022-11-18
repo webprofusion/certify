@@ -76,7 +76,7 @@ namespace Certify.Providers.DeploymentTasks.Core
 
                 if (!execParams.Settings.Parameters.Exists(s => s.Key == p.Key) && p.IsRequired)
                 {
-                    results.Add(new ActionResult($"Required parameter not supplied: { p.Name}", false));
+                    results.Add(new ActionResult($"Required parameter not supplied: {p.Name}", false));
                 }
             }
 
