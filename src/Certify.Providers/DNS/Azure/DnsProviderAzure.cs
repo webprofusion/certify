@@ -257,20 +257,80 @@ namespace Certify.Providers.DNS.Azure
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
 
+            bool deleteRequired = true;
+
             try
             {
-                await _dnsClient.RecordSets.DeleteAsync(
-                       _credentials["resourcegroupname"],
-                       request.ZoneId,
-                       recordName,
-                       RecordType.TXT
-               );
+                var currentRecord = await _dnsClient.RecordSets.GetAsync(_credentials["resourcegroupname"], request.ZoneId, recordName, RecordType.TXT);
 
-                return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' Deleted" };
+                if (currentRecord != null && currentRecord.TxtRecords.Any())
+                {
+                    var existing = currentRecord.TxtRecords.FirstOrDefault(t => t.Value.Contains(request.RecordValue));
+
+                    var patchedRecord = currentRecord.TxtRecords;
+                    foreach (var p in patchedRecord)
+                    {
+                        // remove unwanted value from collection
+                        p.Value = p.Value.Where(t => t != request.RecordValue).ToList();
+                    }
+
+                    if (existing != null && currentRecord.TxtRecords.Count > 1)
+                    {
+                        var recordSetParams = new RecordSet
+                        {
+                            TTL = 5,
+                            TxtRecords = new List<TxtRecord>
+                            {
+                                new TxtRecord(patchedRecord[0].Value)
+                            }
+                        };
+
+                        // patch record to remove this value
+                        var result = await _dnsClient.RecordSets.CreateOrUpdateAsync(
+                              _credentials["resourcegroupname"],
+                              request.ZoneId,
+                              recordName,
+                              RecordType.TXT,
+                              recordSetParams
+                       );
+                        deleteRequired = false;
+
+                        return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' Cleaned Up" };
+                    }
+                    else
+                    {
+                        // delete as normal
+                        deleteRequired = true;
+                    }
+                }
             }
-            catch (Exception exp)
+            catch
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record '{recordName}' Delete failed: " + exp.InnerException.Message };
+                // No record exist
+            }
+
+            if (deleteRequired)
+            {
+
+                try
+                {
+                    await _dnsClient.RecordSets.DeleteAsync(
+                           _credentials["resourcegroupname"],
+                           request.ZoneId,
+                           recordName,
+                           RecordType.TXT
+                   );
+
+                    return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' Deleted" };
+                }
+                catch (Exception exp)
+                {
+                    return new ActionResult { IsSuccess = false, Message = "DNS TXT Record '{recordName}' Delete failed: " + exp.InnerException.Message };
+                }
+            }
+            else
+            {
+                return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' delete not required" };
             }
         }
 
