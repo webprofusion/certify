@@ -6,6 +6,8 @@ using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
 using System.Security;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -123,11 +125,17 @@ namespace Certify.Management
                                     _defaultLogonType = LogonType.NewCredentials;
                                 }
 
-                                return Impersonation.RunAsUser(windowsCredentials, _defaultLogonType, () =>
-                              {
-                                  // run as current user
-                                  return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-                              });
+                                ActionResult powerShellResult = null;
+                                using (var userHandle = windowsCredentials.LogonUser(_defaultLogonType))
+                                {
+                                    WindowsIdentity.RunImpersonated(userHandle, () =>
+                                    {
+                                        powerShellResult = InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+
+                                    });
+                                }
+
+                                return powerShellResult;
                             }
                             else
                             {
@@ -182,7 +190,13 @@ namespace Certify.Management
                 return new ActionResult("Script content is not yet supported when used with launch as new process.", false);
             }
 
-            var arguments = scriptFile;
+            var appBasePath = AppContext.BaseDirectory;
+            var wrapperScriptPath = Path.Combine(new string[] { appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1" });
+
+            // note that the impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it and the target script
+            // if the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
+
+            var arguments = $"{wrapperScriptPath}";
 
             if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
             {
@@ -194,11 +208,28 @@ namespace Certify.Management
                 arguments = $"-ExecutionPolicy {executionPolicy} " + arguments;
             }
 
+            arguments += $" -scriptFile \"{scriptFile}\"";
+
+            string resultsJsonTempPath = null;
+
             if (parameters?.Any() == true)
             {
                 foreach (var p in parameters)
                 {
-                    arguments = arguments += $" -{p.Key}{(p.Value != null ? " " + p.Value : "")}";
+                    if (p.Key == "result" && p.Value != null)
+                    {
+                        // reserved parameter name for the ManagedCertificate object
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(p.Value);
+
+                        resultsJsonTempPath = Path.GetTempFileName();
+                        File.WriteAllText(resultsJsonTempPath, json);
+
+                        arguments += $" -resultJsonFile " + resultsJsonTempPath;
+                    }
+                    else
+                    {
+                        arguments = arguments += $" -{p.Key}{(p.Value != null ? " " + p.Value : "")}";
+                    }
                 }
             }
 
@@ -210,7 +241,9 @@ namespace Certify.Management
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 FileName = commandExe,
-                Arguments = arguments
+                Arguments = arguments,
+                Verb = "RunAs",
+                WorkingDirectory = Path.GetDirectoryName(scriptFile)
             };
 
             // launch process with user credentials set
@@ -238,6 +271,24 @@ namespace Certify.Management
                 sPwd.MakeReadOnly();
 
                 scriptProcessInfo.Password = sPwd;
+
+                if (resultsJsonTempPath != null)
+                {
+                    //allow this user to read the results file
+                    var fileInfo = new FileInfo(resultsJsonTempPath);
+                    var accessControl = fileInfo.GetAccessControl();
+                    var fullUser = domain == "." ? username : $"{domain}\\{username}";
+                    accessControl.AddAccessRule(new FileSystemAccessRule(fullUser, FileSystemRights.Read, AccessControlType.Allow));
+
+                    try
+                    {
+                        fileInfo.SetAccessControl(accessControl);
+                    }
+                    catch
+                    {
+                        _log.AppendLine("Running Powershell As New Process: Could not apply access control to allow this user to read the temp results file");
+                    }
+                }
 
                 _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
             }
@@ -303,6 +354,21 @@ namespace Certify.Management
             {
                 _log.AppendLine("Error: " + exp.ToString());
                 return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+            }
+            finally
+            {
+
+                // cleanup temp json
+                if (resultsJsonTempPath != null)
+                {
+                    try
+                    {
+                        File.Delete(resultsJsonTempPath);
+                    }
+                    catch {
+                        _log.AppendLine("Running Powershell As New Process: Could not delete temp results file.");
+                    }
+                }
             }
         }
 
