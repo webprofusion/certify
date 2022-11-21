@@ -640,11 +640,8 @@ namespace Certify.Management
         public void InitTelemetry(string key)
         {
             _config = TelemetryConfiguration.CreateDefault();
-
+            _config.ConnectionString = $"InstrumentationKey={key}";
             _tc = new TelemetryClient(_config);
-
-            _tc.Context.InstrumentationKey = key;
-            _tc.InstrumentationKey = key;
 
             // Set session data:
 
