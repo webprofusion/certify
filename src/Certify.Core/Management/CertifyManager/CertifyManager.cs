@@ -159,12 +159,12 @@ namespace Certify.Management
 
                 if (!_itemManager.IsInitialised().Result)
                 {
-                    _serviceLog.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
                 }
             }
             catch (Exception exp)
             {
-                _serviceLog.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
+                _serviceLog?.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
             }
 
             _credentialsManager = new SQLiteCredentialsManager(useWindowsNativeFeatures);
@@ -194,7 +194,7 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                _serviceLog.Error($"Failed to perform ACME account upgrades. :: {exp}");
+                _serviceLog?.Error($"Failed to perform ACME account upgrades. :: {exp}");
             }
 
             PerformManagedCertificateMigrations().Wait();
@@ -272,7 +272,7 @@ namespace Certify.Management
             catch (Exception exp)
             {
                 // failed to load custom CAs
-                _serviceLog.Error(exp.Message);
+                _serviceLog?.Error(exp.Message);
             }
         }
 

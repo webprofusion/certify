@@ -34,6 +34,7 @@ namespace Certify.Management
             }
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         public virtual async Task<StoredCredential> GetCredential(string storageKey)
         {
             throw new NotImplementedException();
@@ -43,6 +44,7 @@ namespace Certify.Management
         {
             throw new NotImplementedException();
         }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
         public async Task<ActionResult> TestCredentials(string storageKey)
         {

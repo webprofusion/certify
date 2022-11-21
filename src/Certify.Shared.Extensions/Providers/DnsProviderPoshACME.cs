@@ -73,7 +73,9 @@ namespace Certify.Core.Management.Challenges.DNS
                     if (provider.Id == id)
                     {
                         var appBasePath = AppContext.BaseDirectory;
-                        var scriptPath = Path.Combine(appBasePath, @"Scripts\DNS\PoshACME");
+
+                        var scriptPath = Path.Combine(new string[] { appBasePath, "Scripts", "DNS", "PoshACME" });
+
                         // TODO : move this out, shared config should be injected
                         var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
                         return new DnsProviderPoshACME(scriptPath, config.PowershellExecutionPolicy) { DelegateProviderDefinition = provider };

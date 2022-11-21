@@ -23,6 +23,11 @@ namespace Certify.Server.API
             _hubContext = hubContext;
         }
 
+        /// <summary>
+        /// Send progress result back to subscribed UIs
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public async Task ReportRequestProgress(RequestProgressState state)
         {
             System.Diagnostics.Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
@@ -30,6 +35,11 @@ namespace Certify.Server.API
 
         }
 
+        /// <summary>
+        /// Report change to managed certificate to subscribers
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
         {
             System.Diagnostics.Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
@@ -42,8 +52,18 @@ namespace Certify.Server.API
     /// </summary>
     public interface IStatusHub
     {
+        /// <summary>
+        /// Send progress result back to subscribed UIs
+        /// </summary>
+        /// <param name="state"></param>
+        /// <returns></returns>
         Task SendRequestProgressState(RequestProgressState state);
 
+        /// <summary>
+        /// Send managed certificate update to subscribers
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         Task SendManagedCertificateUpdate(ManagedCertificate item);
     }
 
@@ -52,11 +72,21 @@ namespace Certify.Server.API
     /// </summary>
     public class StatusHub : Hub<IStatusHub>
     {
+        /// <summary>
+        /// Handle connection event
+        /// </summary>
+        /// <returns></returns>
         public override Task OnConnectedAsync()
         {
             Debug.WriteLine("StatusHub: Client connected to status stream..");
             return base.OnConnectedAsync();
         }
+
+        /// <summary>
+        /// Handle disonnection event
+        /// </summary>
+        /// <param name="exception"></param>
+        /// <returns></returns>
         public override Task OnDisconnectedAsync(Exception exception)
         {
             Debug.WriteLine("StatusHub: Client disconnected from status stream..");

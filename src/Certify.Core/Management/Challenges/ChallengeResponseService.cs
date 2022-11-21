@@ -608,7 +608,10 @@ namespace Certify.Core.Management.Challenges
             }
 
             // configure cleanup to execute the cleanup queue
-            pendingAuth.Cleanup = async () => cleanupQueue.ForEach(a => a());
+            pendingAuth.Cleanup = async () =>
+            {
+                cleanupQueue.ForEach(a => a());
+            };
 
             // perform our own config checks
             return () => checkQueue.All(check => check());

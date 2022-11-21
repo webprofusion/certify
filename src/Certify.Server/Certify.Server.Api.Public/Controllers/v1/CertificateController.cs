@@ -264,7 +264,11 @@ namespace Certify.Server.API.Controllers
             }
         }
 
-
+        /// <summary>
+        /// Perform default tests for the given configuration
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("test")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]

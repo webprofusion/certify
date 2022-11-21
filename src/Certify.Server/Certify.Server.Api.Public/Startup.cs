@@ -161,7 +161,7 @@ namespace Certify.Server.API
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHubContext<StatusHub> statusHubContext)
         {
 
-            // setup signlar message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
+            // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
             _statusReporting = new StatusHubReporting(statusHubContext);
 
             if (env.IsDevelopment())
