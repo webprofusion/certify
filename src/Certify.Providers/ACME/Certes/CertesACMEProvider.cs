@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -95,7 +96,7 @@ namespace Certify.Providers.ACME.Certes
         private readonly string _settingsBaseFolder = null;
 
         private CertesSettings _settings = null;
-        private Dictionary<string, IOrderContext> _currentOrders;
+        private ConcurrentDictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
         private DateTime _lastInitDateTime = new DateTime();
         private readonly bool _newContactUseCurrentAccountKey = false;
@@ -114,6 +115,13 @@ namespace Certify.Providers.ACME.Certes
         public bool EnableUnknownCARoots { get; set; } = true;
 
         /// <summary>
+        /// Standard ms to wait before attempting to check for an attempted challenge to be validated (e.g. an HTTP check or DNS lookup)
+        /// </summary>
+
+        private const int _challengeValidationWaitMS = 5000;
+        private const int _orderRetryWaitMS = 1000;
+
+        /// <summary>
         /// Default output when finalizing a certificate download: pfx (single file container), pem (multiple files), all (pfx, pem etc)
         /// </summary>
         public string DefaultCertificateFormat { get; set; } = "pfx";
@@ -121,9 +129,8 @@ namespace Certify.Providers.ACME.Certes
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
-            _settingsBaseFolder = settingsBasePath;
 
-            var certesAssembly = typeof(AcmeContext).Assembly.GetName();
+            _settingsBaseFolder = settingsBasePath;
 
             _userAgentName = $"{userAgentName}";
 
@@ -141,8 +148,6 @@ namespace Certify.Providers.ACME.Certes
                 };
             }
 #pragma warning restore SCS0004 // Certificate Validation has been disabled
-
-            RefreshIssuerCertCache();
         }
 
         public string GetProviderName() => "Certes";
@@ -251,7 +256,9 @@ namespace Certify.Providers.ACME.Certes
                 SetAcmeContextAccountKey(_settings.AccountKey);
             }
 
-            _currentOrders = new Dictionary<string, IOrderContext>();
+            _currentOrders = new ConcurrentDictionary<string, IOrderContext>();
+
+            RefreshIssuerCertCache();
 
             return await Task.FromResult(true);
         }
@@ -335,32 +342,40 @@ namespace Certify.Providers.ACME.Certes
             var acc = await _acme.Account();
 
             log?.Information($"Updating account {email} with certificate authority");
-
-            var results = await acc.Update(new string[] { (email.StartsWith("mailto:") ? email : "mailto:" + email) }, termsAgreed);
-            if (results.Status == AccountStatus.Valid)
+            try
             {
-
-                log?.Information($"Account updated.");
-                await PopulateSettingsFromCurrentAccount();
-                _settings.AccountEmail = email;
-
-                return new ActionResult<AccountDetails>
+                var results = await acc.Update(new string[] { (email.StartsWith("mailto:") ? email : "mailto:" + email) }, termsAgreed);
+                if (results.Status == AccountStatus.Valid)
                 {
-                    IsSuccess = true,
-                    Result = new AccountDetails
+
+                    log?.Information($"Account updated.");
+                    await PopulateSettingsFromCurrentAccount();
+                    _settings.AccountEmail = email;
+
+                    return new ActionResult<AccountDetails>
                     {
-                        AccountKey = _settings.AccountKey,
-                        Email = _settings.AccountEmail,
-                        AccountURI = _settings.AccountUri,
-                        ID = _settings.AccountUri.Split('/').Last()
-                    }
-                };
+                        IsSuccess = true,
+                        Result = new AccountDetails
+                        {
+                            AccountKey = _settings.AccountKey,
+                            Email = _settings.AccountEmail,
+                            AccountURI = _settings.AccountUri,
+                            ID = _settings.AccountUri.Split('/').Last()
+                        }
+                    };
+                }
+
+                else
+                {
+                    var msg = $"Failed to update account contact. {results.Status}";
+                    log?.Warning(msg);
+                    return new ActionResult<AccountDetails> { IsSuccess = false, Message = msg };
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var msg = $"Failed to update account contact. {results.Status}";
-                log?.Warning(msg);
-                return new ActionResult<AccountDetails> { IsSuccess = false, Message = msg };
+                var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, ex);
+                return new ActionResult<AccountDetails> { IsSuccess = false, Message = message };
             }
         }
 
@@ -497,11 +512,78 @@ namespace Certify.Providers.ACME.Certes
             }
             catch (Exception exp)
             {
-                log.Error($"Failed to register account with certificate authority: {exp.Message}");
+                log?.Error($"Failed to register account with certificate authority: {exp.Message}");
                 return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account with certificate authority: {exp.Message}" };
             }
         }
 
+        private (bool exceptionHandled, bool abandonRequest, string message, Exception unwrappedException) HandleAndLogAcmeException(ILog itemLog, Exception exp)
+        {
+            // unwrap actual exception if required 
+            if (exp.InnerException != null)
+            {
+                itemLog.Verbose($"{exp.Message} [{exp.GetType().Name}] ");
+                return HandleAndLogAcmeException(itemLog, exp.InnerException);
+            }
+
+            if (exp is System.Net.Sockets.SocketException)
+            {
+                var msg = $"Communication with the Certificate Authority API failed: [{exp.GetType().Name}] {exp.Message}";
+                itemLog?.Error(msg);
+                return (exceptionHandled: true, abandonRequest: true, message: msg, exp);
+            }
+
+            if (exp is TaskCanceledException)
+            {
+                itemLog.Warning($"{exp.GetType().Name} {exp.Message}");
+                return (exceptionHandled: true, abandonRequest: true, message: "Timeout while communicating with the ACME API.", exp);
+            }
+
+            if (exp is AcmeRequestException)
+            {
+                var err = (exp as AcmeRequestException).Error;
+
+                itemLog?.Warning(exp.Message);
+
+                // log error detail
+
+                // e.g. urn:ietf:params:acme:error:userActionRequired
+
+                if (err != null)
+                {
+                    var orderErrorMsg = $"{err.Type} :: {err.Detail}";
+
+                    if (err?.Subproblems?.Any() == true)
+                    {
+                        orderErrorMsg += string.Join("; ", err.Subproblems.Select(a => $" [Subproblem] {a.Type} :: {a.Detail}"));
+                    }
+
+                    // Add additional explanation for common error types
+                    if ((int)err.Status == 429)
+                    {
+                        // hit an ACME API rate limit 
+                        itemLog.Warning($"Encountered a rate limit while communicating with the ACME API");
+                    }
+                    else if (err.Type?.EndsWith("accountDoesNotExist") == true)
+                    {
+                        // wrong account details, probably used staging for prod or vice versa
+                        itemLog.Warning($"Attempted to use invalid account details with the ACME API");
+                    }
+
+                    return (exceptionHandled: true, abandonRequest: true, message: orderErrorMsg, exp);
+                }
+                else
+                {
+                    itemLog?.Error($"Exception not handled: {exp}");
+                    return (exceptionHandled: false, abandonRequest: false, message: "Exception not handled. Please report this to Certify The Web support.", exp);
+                }
+            }
+            else
+            {
+                itemLog?.Error($"Exception not handled: {exp}");
+                return (exceptionHandled: false, abandonRequest: false, message: "Exception not handled. Please report this to Certify The Web support.", exp);
+            }
+        }
         /// <summary>
         /// Begin order for new certificate for one or more domains, fetching the required challenges
         /// to complete
@@ -520,8 +602,7 @@ namespace Certify.Providers.ACME.Certes
 
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
 
-            // prepare a list of all pending authorization we need to complete, or those we have
-            // already satisfied
+            // prepare a list of all pending authorization we need to complete, or those we have already satisfied
             var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
@@ -565,8 +646,8 @@ namespace Certify.Providers.ACME.Certes
                 IOrderContext order = null;
                 var remainingAttempts = 3;
                 var orderCreated = false;
+                var orderAttemptAbandoned = false;
                 object lastException = null;
-                var orderErrorMsg = "";
 
                 try
                 {
@@ -575,21 +656,19 @@ namespace Certify.Providers.ACME.Certes
                     {
                         _ = await _acme.GetDirectory(throwOnError: true);
                     }
-                    catch (AcmeException exp)
+                    catch (Exception exp)
                     {
-                        var msg = exp.Message;
-                        log.Error(exp.Message);
-                        return new PendingOrder(msg);
+                        var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, exp);
+
+                        return new PendingOrder($"Failed to begin certificate order: {message}");
                     }
 
                     // attempt to start our certificate order
-                    while (!orderCreated && remainingAttempts > 0)
+                    while (!orderCreated && !orderAttemptAbandoned && remainingAttempts >= 0)
                     {
                         try
                         {
-                            remainingAttempts--;
-
-                            log.Information($"BeginCertificateOrder: creating/retrieving order. Retries remaining:{remainingAttempts} ");
+                            log.Debug($"Creating/retrieving order. Attempts remaining:{remainingAttempts}");
 
                             if (orderUri != null)
                             {
@@ -599,6 +678,7 @@ namespace Certify.Providers.ACME.Certes
                             {
                                 // begin new order, with optional preference for the expiry
                                 var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
+
                                 order = await _acme.NewOrder(certificateIdentifiers, notAfter: notAfter);
                             }
 
@@ -609,98 +689,58 @@ namespace Certify.Providers.ACME.Certes
                         }
                         catch (Exception exp)
                         {
-                            log.Error(exp.ToString());
+                            var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, exp);
 
-                            orderErrorMsg = exp.Message;
+                            lastException = unwrappedException;
 
-                            if (exp is TaskCanceledException)
+                            if (abandonRequest || remainingAttempts == 0)
                             {
-                                log.Warning($"BeginCertificateOrder: timeout while communicating with the ACME API");
-                            }
+                                log?.Error(message);
 
-                            if (exp is AcmeRequestException)
-                            {
-                                var err = (exp as AcmeRequestException).Error;
-
-                                // e.g. urn:ietf:params:acme:error:userActionRequired
-
-                                orderErrorMsg = err?.Detail ?? orderErrorMsg;
-
-                                if ((int)err.Status == 429)
+                                if (abandonRequest)
                                 {
-                                    // hit an ACME API rate limit 
-
-                                    log.Warning($"BeginCertificateOrder: encountered a rate limit while communicating with the ACME API");
-
-                                    return new PendingOrder(orderErrorMsg);
+                                    orderAttemptAbandoned = true;
                                 }
-
-                                if (err.Type?.EndsWith("accountDoesNotExist") == true)
-                                {
-                                    // wrong account details, probably used staging for prod or vice versa
-                                    log.Warning($"BeginCertificateOrder: attempted to use invalid account details with the ACME API");
-
-                                    return new PendingOrder(orderErrorMsg);
-
-                                }
-                            }
-                            else if (exp.InnerException != null && exp.InnerException is AcmeRequestException)
-                            {
-                                orderErrorMsg = (exp.InnerException as AcmeRequestException).Error?.Detail ?? orderErrorMsg;
-                            }
-
-                            remainingAttempts--;
-
-                            log.Error($"BeginCertificateOrder: error creating order. Retries remaining:{remainingAttempts} :: {orderErrorMsg} ");
-
-                            lastException = exp;
-
-                            if (remainingAttempts == 0)
-                            {
-                                // all attempts to create order failed
-                                throw;
                             }
                             else
                             {
-                                await Task.Delay(1000);
+                                log.Warning(message);
+
+                                // pause before next attempt
+                                await Task.Delay(_orderRetryWaitMS);
                             }
                         }
+
+                        remainingAttempts--;
                     }
                 }
                 catch (NullReferenceException exp)
                 {
                     var msg = $"Failed to begin certificate order (account problem or API is not currently available): {exp.Message}";
 
-                    log.Error(msg);
+                    log?.Error(msg);
 
                     return new PendingOrder(msg);
                 }
 
+                // if our order failed, report the final error we encountered
                 if (order == null || order.Location == null)
                 {
+                    var msg = "";
 
-                    var msg = "Failed to begin certificate order.";
-
-                    if (lastException is AcmeRequestException)
+                    if (lastException is AcmeException)
                     {
                         var err = (lastException as AcmeRequestException).Error;
 
-                        msg = err?.Detail ?? msg;
-                        if (lastException != null && (lastException as Exception).InnerException is AcmeRequestException)
-                        {
-                            msg = ((lastException as Exception).InnerException as AcmeRequestException).Error?.Detail ?? msg;
-                        }
+                        msg += $"{err.Type} :: {err.Detail}";
                     }
-                    else
+
+                    if (string.IsNullOrEmpty(msg))
                     {
-                        if (lastException is Exception)
-                        {
-                            msg += "::" + (lastException as Exception).ToString();
-                        }
+                        msg = "Could not begin certificate order. The specific error is unknown.";
                     }
 
                     return new PendingOrder("Error creating Order with Certificate Authority: " + msg);
-
                 }
 
                 orderUri = order.Location.ToString();
@@ -710,12 +750,8 @@ namespace Certify.Providers.ACME.Certes
                 log.Information($"Created ACME Order: {orderUri}");
 
                 // track order in memory, keyed on order Uri
-                if (_currentOrders.Keys.Contains(orderUri))
-                {
-                    _currentOrders.Remove(orderUri);
-                }
-
-                _currentOrders.Add(orderUri, order);
+                _currentOrders.TryRemove(orderUri, out var existingOrderContext);
+                _currentOrders.TryAdd(orderUri, order);
 
                 // handle order status 'Ready' if all authorizations are already valid
                 var requireAuthzFetch = true;
@@ -724,7 +760,8 @@ namespace Certify.Providers.ACME.Certes
                 if (orderDetails.Status == OrderStatus.Ready)
                 {
                     pendingOrder.IsPendingAuthorizations = false;
-                    requireAuthzFetch = true;
+                    requireAuthzFetch = false;
+                    log?.Information("Order is already valid. Auth challenges will not be re-attempted.");
                 }
 
                 if (_compatibilityMode == ACMECompatibilityMode.Standard)
@@ -773,7 +810,7 @@ namespace Certify.Providers.ACME.Certes
                         }
                         catch
                         {
-                            log.Error("Failed to fetch auth challenge details from ACME API.");
+                            log?.Error("Failed to fetch auth challenge details from ACME API.");
                             break;
                         }
 
@@ -821,6 +858,7 @@ namespace Certify.Providers.ACME.Certes
                                 try
                                 {
                                     Challenge httpChallengeStatus;
+
                                     if (useAuthzForChallengeStatus)
                                     {
                                         // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
@@ -836,7 +874,7 @@ namespace Certify.Providers.ACME.Certes
 
                                     if (httpChallengeStatus.Status == ChallengeStatus.Invalid)
                                     {
-                                        log.Error($"HTTP challenge has an invalid status");
+                                        log?.Error($"HTTP challenge has an invalid status");
                                     }
 
                                     challenges.Add(new AuthorizationChallengeItem
@@ -852,9 +890,9 @@ namespace Certify.Providers.ACME.Certes
                                 }
                                 catch (Exception exp)
                                 {
-                                    var msg = $"Could fetch http-01 challenge details from ACME server (timeout) : {exp.Message}";
+                                    var msg = $"Could not fetch http-01 challenge details from ACME server (timeout) : {exp.Message}";
 
-                                    log.Error(msg);
+                                    log?.Error(msg);
 
                                     return new PendingOrder(msg);
                                 }
@@ -892,7 +930,7 @@ namespace Certify.Providers.ACME.Certes
 
                                 if (dnsChallengeStatus.Status == ChallengeStatus.Invalid)
                                 {
-                                    log.Error($"DNS challenge has an invalid status");
+                                    log?.Error($"DNS challenge has an invalid status");
                                 }
 
                                 var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
@@ -938,7 +976,7 @@ namespace Certify.Providers.ACME.Certes
 
                 var msg = $"Could not begin certificate order: {exp.Error?.Detail}";
 
-                log.Error(msg);
+                log?.Error(msg);
 
                 return new PendingOrder(msg);
             }
@@ -993,7 +1031,7 @@ namespace Certify.Providers.ACME.Certes
                 {
                     var msg = $"Submit Challenge failed: {exp.Error?.Detail}";
 
-                    log.Error(msg);
+                    log?.Error(msg);
 
                     return new StatusMessage
                     {
@@ -1026,9 +1064,13 @@ namespace Certify.Providers.ACME.Certes
 
             await _acme.HttpClient.ConsumeNonce();
 
+            // wait a couple of seconds to allow CA to complete validation
+            await Task.Delay(_challengeValidationWaitMS);
+
             var res = await authz.Resource();
 
-            var attempts = 20;
+            var attempts = 10;
+
             while (attempts > 0 && (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid))
             {
                 res = await authz.Resource();
@@ -1036,9 +1078,10 @@ namespace Certify.Providers.ACME.Certes
                 attempts--;
 
                 // if status is not yet valid or invalid, wait a sec and try again
-                if (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid)
+                if (attempts > 0 && res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid)
                 {
-                    await Task.Delay(1000);
+                    log.Verbose("Validation not yet completed. Pausing..");
+                    await Task.Delay(_challengeValidationWaitMS);
                 }
             }
 
@@ -1060,8 +1103,8 @@ namespace Certify.Providers.ACME.Certes
                     {
                         if (challenge.Error != null)
                         {
-
-                            pendingAuthorization.AuthorizationError = $"{challenge.Error.Detail} {challenge.Error.Status} {challenge.Error.Type}";
+                            log.Verbose($"Failed auth: {challenge.Url}");
+                            pendingAuthorization.AuthorizationError = $"Response from Certificate Authority: {challenge.Error.Detail} [{challenge.Error.Status} :: {challenge.Error.Type}]";
                         }
                     }
                 }
@@ -1230,7 +1273,7 @@ namespace Certify.Providers.ACME.Certes
             catch (AcmeRequestException exp)
             {
                 var msg = $"Failed to finalize certificate order:  {exp.Error?.Detail}";
-                log.Error(msg);
+                log?.Error(msg);
 
                 var subproblems = "";
                 if (exp.Error.Subproblems?.Any() == true)
@@ -1248,7 +1291,7 @@ namespace Certify.Providers.ACME.Certes
             catch (TaskCanceledException exp)
             {
                 var msg = "Failed to complete certificate request because the request to the CAs ACME API timed out. API may be temporarily unavailable or inaccessible.";
-                log.Error(msg);
+                log?.Error(msg);
                 return new ProcessStepResult { ErrorMessage = msg, IsSuccess = false, Result = exp };
             }
 
@@ -1585,7 +1628,7 @@ namespace Certify.Providers.ACME.Certes
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, false);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)

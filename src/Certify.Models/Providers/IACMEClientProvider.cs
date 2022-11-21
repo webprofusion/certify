@@ -61,17 +61,15 @@ namespace Certify.Models.Plugins
         /// <param name="failureMessage"></param>
         public PendingOrder(string failureMessage)
         {
-
-            Authorizations = new List<PendingAuthorization> {
-                                        new PendingAuthorization{
-                                            IsFailure = true,
-                                            AuthorizationError = failureMessage
-                                        }
-                                    };
+            IsFailure = true;
+            FailureMessage = failureMessage;
         }
 
         public List<PendingAuthorization> Authorizations { get; set; }
         public string OrderUri { get; set; }
         public bool IsPendingAuthorizations { get; set; } = true;
+
+        public bool IsFailure { get; set; }
+        public string FailureMessage { get; set; }
     }
 }

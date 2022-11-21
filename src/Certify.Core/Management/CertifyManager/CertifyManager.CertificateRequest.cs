@@ -392,7 +392,7 @@ namespace Certify.Management
                 log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
             }
 
-            LogMessage(managedCertificate.Id, $"---- Beginning Request [{managedCertificate.Name}] ----");
+            log.Information($"---- Beginning Request [{managedCertificate.Name}] ----");
 
             // start with a failure result, set to success when succeeding
             var certRequestResult = new CertificateRequestResult(managedCertificate);
@@ -408,7 +408,7 @@ namespace Certify.Management
                 {
                     // run pre-request tasks, currently if any of these fail the request will abort
 
-                    LogMessage(managedCertificate.Id, $"Performing Pre-Request Tasks..");
+                    log.Information($"Performing Pre-Request Tasks..");
 
                     var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PreRequestTasks);
 
@@ -424,11 +424,8 @@ namespace Certify.Management
 
                     foreach (var r in results)
                     {
-                        // LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
-
                         r.Category = "Pre-Request Tasks";
                         preRequestTasks.Substeps.Add(r);
-
                     }
 
                     certRequestResult.Actions.Add(preRequestTasks);
@@ -493,7 +490,7 @@ namespace Certify.Management
                                 // request is waiting on user input but has been automatically initiated,
                                 // therefore skip for now
                                 certRequestResult.Abort = true;
-                                LogMessage(managedCertificate.Id, $"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
+                                log.Information($"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
                             }
                         }
                     }
@@ -533,9 +530,9 @@ namespace Certify.Management
 
                     certRequestResult.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
 
-                    LogMessage(managedCertificate.Id, certRequestResult.Message, LogItemType.CertificateRequestFailed);
+                    log?.Error(certRequestResult.Message);
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate));
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate), logThisEvent: false);
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, certRequestResult.Message);
                 }
@@ -550,7 +547,7 @@ namespace Certify.Management
                 {
 
                     // run applicable deployment tasks (whether success or failed), powershell
-                    LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
+                    log?.Information($"Performing Post-Request (Deployment) Tasks..");
 
                     var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PostRequestTasks);
 
@@ -566,7 +563,16 @@ namespace Certify.Management
 
                     foreach (var r in results)
                     {
-                        LogMessage(managedCertificate.Id, $"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
+                        if (r.HasError || r.HasWarning)
+                        {
+                            log.Error($"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning));
+
+                        }
+                        else
+                        {
+                            log.Information($"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
+
+                        }
 
                         r.Category = "Post-Request Tasks";
                         postRequestTasks.Substeps.Add(r);
@@ -590,7 +596,7 @@ namespace Certify.Management
                      RequestState.Paused :
                      (certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error);
 
-                ReportProgress(progress, new RequestProgressState(finalState, certRequestResult.Message, managedCertificate));
+                ReportProgress(progress, new RequestProgressState(finalState, certRequestResult.Message, managedCertificate), logThisEvent: false);
 
                 if (string.IsNullOrEmpty(certRequestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
                 {
@@ -631,7 +637,7 @@ namespace Certify.Management
         private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with ACEM CA and validated
-            LogMessage(managedCertificate.Id, $"{Util.GetUserAgent()}");
+            log?.Information($"{Util.GetUserAgent()}");
 
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
@@ -641,17 +647,15 @@ namespace Certify.Management
                 result.Abort = true;
                 result.Message = $"There is no matching ACME account for the currently selected Certificate Authority. Check you have added a {(managedCertificate.UseStagingMode ? "Staging" : "Production")} account for the CA under the app Settings.";
 
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
-                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
                 return result;
             }
 
-            LogMessage(managedCertificate.Id, $"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
+            log?.Information($"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
 
-            LogMessage(managedCertificate.Id, $"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
+            log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
 
             ReportProgress(progress,
-                new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate)
+                new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate, false), logThisEvent: false
             );
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -676,6 +680,15 @@ namespace Certify.Management
             // step may fail.
             var pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, config);
 
+            if (pendingOrder.IsFailure)
+            {
+                result.IsSuccess = false;
+                result.Abort = true;
+                result.Message = pendingOrder.FailureMessage;
+
+                return result;
+            }
+
             if (pendingOrder.IsPendingAuthorizations)
             {
                 var authorizations = pendingOrder.Authorizations;
@@ -687,9 +700,7 @@ namespace Certify.Management
                     result.Abort = true;
                     result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent:false);
 
                     return result;
                 }
@@ -756,10 +767,10 @@ namespace Certify.Management
                     result.Abort = true;
                     result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
+                    log?.Error(result.Message);
 
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
+                
                     return result;
                 }
 
@@ -859,132 +870,140 @@ namespace Certify.Management
 
                         var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Dns == asciiDomain);
 
-                        var challengeConfig = managedCertificate.GetChallengeConfig(domain);
-
-                        if (authorization?.Identifier != null)
+                        if (authorization?.IsValidated == true)
                         {
-                            LogMessage(managedCertificate.Id, $"Attempting Challenge Response Validation for Domain: {domain}", LogItemType.CertificateRequestStarted);
+                            //skip already verified
+                            log?.Information(string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
+                        }
+                        else
+                        {
+                            var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
-                            ReportProgress(progress,
-                                new RequestProgressState(RequestState.Running,
-                                    string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, domain),
-                                    managedCertificate)
-                            );
-
-                            // check if authorization is pending, it may already be valid if an
-                            // existing authorization was reused
-                            if (authorization.Identifier.IsAuthorizationPending)
+                            if (authorization?.Identifier != null)
                             {
-                                ReportProgress(progress,
-                                    new RequestProgressState(
-                                        RequestState.Running,
-                                        $"Checking automated challenge response for Domain: {domain}",
-                                        managedCertificate
-                                    )
-                                );
+                                var msg = $"Attempting Challenge Response Validation for Domain: {domain}";
 
-                                // ask LE to check our answer to their authorization challenge
-                                // (http-01 or tls-sni-01), ACME CA will then attempt to fetch our answer,
-                                // if all accessible and correct (authorized) ACME CA will then allow us
-                                // to request a certificate
-                                // note: rate limits apply to pending authorizations which have not yet been submitted so a
-                                // pending authorization for each identifier must be submitted even if others have already failed
+                                log?.Information(msg);
 
-                                try
+                                ReportProgress(progress, new RequestProgressState(RequestState.Running, msg, managedCertificate), logThisEvent: false);
+
+                                // check if authorization is pending, it may already be valid if an
+                                // existing authorization was reused
+                                if (authorization.Identifier.IsAuthorizationPending)
                                 {
-                                    // ask ACME CA to validate our challenge response
+                                    ReportProgress(progress,
+                                        new RequestProgressState(
+                                            RequestState.Running,
+                                            $"Checking automated challenge response for Domain: {domain}",
+                                            managedCertificate
+                                        )
+                                    );
 
-                                    // this strategy could be optimised by submitting all challenges first, then checking the overall order authz, rather than polling each one
+                                    // ask CA to check our answer to their authorization challenge
+                                    // (http-01 or dns-01), ACME CA will then attempt to fetch our answer,
+                                    // if all accessible and correct (authorized) ACME CA will then allow us
+                                    // to request a certificate
+                                    // note: rate limits apply to pending authorizations which have not yet been submitted so a
+                                    // pending authorization for each identifier must be submitted even if others have already failed
 
-                                    if (authorization.AttemptedChallenge == null)
+                                    try
                                     {
-                                        authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
-                                    }
+                                        // ask ACME CA to validate our challenge response
 
-                                    var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType, authorization);
+                                        // this strategy could be optimised by submitting all challenges first, then checking the overall order authz, rather than polling each one
 
-                                    if (submissionStatus.IsOK)
-                                    {
-                                        authorization = await _acmeClientProvider.CheckValidationCompleted(log, challengeConfig.ChallengeType, authorization);
-
-                                        if (!authorization.IsValidated)
+                                        if (authorization.AttemptedChallenge == null)
                                         {
-                                            var identifierInfo = authorization.Identifier;
-                                            var errorMsg = authorization.AuthorizationError;
-                                            var errorType = identifierInfo?.ValidationErrorType;
+                                            authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
+                                        }
 
-                                            failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
+                                        log?.Information($"Submitting challenge for validation: {domain} :: {authorization?.AttemptedChallenge?.ResourceUri}");
 
-                                            ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedCertificate));
+                                        var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType, authorization);
 
-                                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, failureSummaryMessage);
+                                        if (submissionStatus.IsOK)
+                                        {
+                                            authorization = await _acmeClientProvider.CheckValidationCompleted(log, challengeConfig.ChallengeType, authorization);
 
-                                            validationFailed = true;
+                                            if (!authorization.IsValidated)
+                                            {
+                                                var identifierInfo = authorization.Identifier;
+                                                var errorMsg = authorization.AuthorizationError;
+                                                var errorType = identifierInfo?.ValidationErrorType;
+
+                                                failureSummaryMessage = string.Format(CoreSR.CertifyManager_DomainValidationFailed, domain, errorMsg);
+
+                                                ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedCertificate));
+
+                                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, failureSummaryMessage);
+
+                                                validationFailed = true;
+                                            }
+                                            else
+                                            {
+                                                ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain), managedCertificate));
+                                            }
                                         }
                                         else
                                         {
-                                            ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_DomainValidationCompleted, domain), managedCertificate));
+                                            failureSummaryMessage = submissionStatus.Message;
+                                            ReportProgress(progress, new RequestProgressState(RequestState.Error, submissionStatus.Message, managedCertificate));
+
+                                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, submissionStatus.Message);
+                                            validationFailed = true;
                                         }
+                                    }
+                                    catch (Exception exp)
+                                    {
+                                        failureSummaryMessage = $"A problem occurred while checking challenge responses: {exp.ToString()}";
+
+                                        log?.Error(failureSummaryMessage);
+                                        validationFailed = true;
+                                    }
+                                    finally
+                                    {
+                                        // clean up challenge answers (.well-known/acme-challenge/* files or DNS entries)
+                                        // for http-01 or dns-01)
+
+                                        if (authorization.Cleanup != null)
+                                        {
+                                            await authorization.Cleanup();
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    // we already have a completed authorization, check it's valid
+                                    if (authorization.IsValidated)
+                                    {
+                                        log?.Information(string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
                                     }
                                     else
                                     {
-                                        failureSummaryMessage = submissionStatus.Message;
-                                        ReportProgress(progress, new RequestProgressState(RequestState.Error, submissionStatus.Message, managedCertificate));
+                                        var errorMsg = "";
+                                        if (authorization?.Identifier != null)
+                                        {
+                                            errorMsg = authorization.Identifier.ValidationError;
+                                        }
 
-                                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, submissionStatus.Message);
+                                        failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+
+                                        log?.Error(failureSummaryMessage);
+
                                         validationFailed = true;
-                                    }
-                                }
-                                catch (Exception exp)
-                                {
-                                    failureSummaryMessage = $"A problem occurred while checking challenge responses: {exp.ToString()}";
-
-                                    LogMessage(managedCertificate.Id, failureSummaryMessage);
-                                    validationFailed = true;
-                                }
-                                finally
-                                {
-                                    // clean up challenge answers (.well-known/acme-challenge/* files
-                                    // for http-01 or iis bindings for tls-sni-01)
-
-                                    if (authorization.Cleanup != null)
-                                    {
-                                        await authorization.Cleanup();
                                     }
                                 }
                             }
                             else
                             {
-                                // we already have a completed authorization, check it's valid
-                                if (authorization.IsValidated)
-                                {
-                                    LogMessage(managedCertificate.Id, string.Format(CoreSR.CertifyManager_DomainValidationSkipVerifed, domain));
-                                }
-                                else
-                                {
-                                    var errorMsg = "";
-                                    if (authorization?.Identifier != null)
-                                    {
-                                        errorMsg = authorization.Identifier.ValidationError;
-                                    }
+                                // could not begin authorization
 
-                                    failureSummaryMessage = $"Domain validation failed: {domain} \r\n{errorMsg}";
+                                log?.Error($"Could not complete authorization for domain with the Certificate Authority: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
 
-                                    LogMessage(managedCertificate.Id, failureSummaryMessage);
+                                failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
 
-                                    validationFailed = true;
-                                }
+                                validationFailed = true;
                             }
-                        }
-                        else
-                        {
-                            // could not begin authorization
-
-                            LogMessage(managedCertificate.Id,
-                                $"Could not complete authorization for domain with the Certificate Authority: [{domain}] {(authorization?.AuthorizationError ?? "Could not register domain identifier")}");
-                            failureSummaryMessage = $"[{domain}] : {authorization?.AuthorizationError}";
-
-                            validationFailed = true;
                         }
                     }
                 }
@@ -1043,7 +1062,7 @@ namespace Certify.Management
                     }
                     catch (Exception)
                     {
-                        LogMessage(managedCertificate.Id, "Failed to parse certificate dates", LogItemType.GeneralError);
+                        log?.Error("Failed to parse certificate dates.");
                     }
 
                     // deploy certificate as required
@@ -1067,15 +1086,24 @@ namespace Certify.Management
                     if (!actions.Any(a => a.HasError))
                     {
                         // certificate deployment was completed, log success
-                        LogMessage(managedCertificate.Id, CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
+                        log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
 
                         await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
 
                         result.IsSuccess = true;
 
                         // depending on the deployment type the final result will vary
-                        // string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
-                        result.Message = "Request completed";
+                        result.Message = "New certificate acquired and standard deployment performed.";
+
+                        if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
+                        {
+                            result.Message = "New certificate acquired and stored.";
+                        }
+                        else if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
+                        {
+                            result.Message = "New certificate acquired.";
+                        }
+
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
                         // perform cert cleanup (if enabled)
@@ -1117,7 +1145,7 @@ namespace Certify.Management
                             catch (Exception exp)
                             {
                                 // log exception
-                                _serviceLog.Error("Failed to perform certificate cleanup: " + exp.ToString());
+                                _serviceLog?.Error("Failed to perform certificate cleanup: " + exp.ToString());
                             }
                         }
                     }
@@ -1131,9 +1159,9 @@ namespace Certify.Management
 
                         result.Message = msg;
 
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                        log?.Error(result.Message);
 
-                        LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
                     }
                 }
                 else
@@ -1142,9 +1170,11 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
 
+                    log?.Error(result.Message);
+
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 }
             }
             else
@@ -1154,11 +1184,11 @@ namespace Certify.Management
                 result.IsSuccess = false;
                 result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage ?? ""));
 
+                log?.Error(result.Message);
+
                 await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
-                LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestFailed);
-
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate));
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
             }
 
             return result;
@@ -1241,38 +1271,35 @@ namespace Certify.Management
 
                         if (_httpChallengeServerAvailable)
                         {
-                            LogMessage(managedCertificate.Id, $"Http Challenge Server process available.", LogItemType.CertificateRequestStarted);
+                            log?.Information($"Http Challenge Server process available.");
                         }
                         else
                         {
-                            LogMessage(managedCertificate.Id, $"Http Challenge Server process unavailable.", LogItemType.CertificateRequestStarted);
+                            log?.Warning($"Http Challenge Server process enabled but unavailable (port 80 may be in use).");
 
                             _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Unavailable");
                         }
                     }
                     else
                     {
-                        LogMessage(managedCertificate.Id, $"Http Challenge Server process is disabled. Only filesystem based validation via system web server will be possible.", LogItemType.CertificateRequestStarted);
+                        log?.Information($"Http Challenge Server process is disabled. Only filesystem based validation via system web server will be possible.");
                     }
                 }
 
                 if (authorization?.Identifier != null)
                 {
-                    LogMessage(managedCertificate.Id, $"Attempting Domain Validation: {identifier.Name}", LogItemType.CertificateRequestStarted);
-
-                    ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Name), managedCertificate));
 
                     // check if authorization is pending, it may already be valid if an existing
                     // authorization was reused
-                    if (authorization.Identifier.IsAuthorizationPending)
+                    if (!authorization.IsValidated)
                     {
-                        ReportProgress(progress,
-                            new RequestProgressState(
-                                RequestState.Running,
-                                $"Preparing automated challenge responses ({identifier.Name})",
-                                managedCertificate
-                            )
-                        );
+                        //ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(Certify.Locales.CoreSR.CertifyManager_RegisteringAndValidatingX0, identifier.Name), managedCertificate), logThisEvent: false);
+
+                        var logmsg = $"Preparing automated challenge responses ({identifier.Name})";
+
+                        log?.Information(logmsg);
+
+                        ReportProgress(progress, new RequestProgressState(RequestState.Running, logmsg, managedCertificate), logThisEvent: false);
 
                         // store cache of key/value responses for http challenge server use
                         var rc = authorization.Challenges?.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
@@ -1291,9 +1318,7 @@ namespace Certify.Management
 
                         _tc?.TrackEvent($"PerformChallengeResponse_{providerDesc}");
 
-                        // ask LE to check our answer to their authorization challenge (http-01 or
-                        // tls-sni-01), LE will then attempt to fetch our answer, if all accessible
-                        // and correct (authorized) LE will then allow us to request a certificate
+                        // perform our challenge response (http or dns)
 
                         var serverProvider = GetTargetServerProvider(managedCertificate);
 
@@ -1322,7 +1347,7 @@ namespace Certify.Management
                                 msg += ":: " + authorization.AttemptedChallenge.ChallengeResultMsg;
                             }
 
-                            LogMessage(managedCertificate.Id, msg, LogItemType.CertificateRequestFailed);
+                            log?.Error(msg);
                             result.Message = msg;
 
                             switch (challengeConfig.ChallengeType)
@@ -1337,27 +1362,23 @@ namespace Certify.Management
                                     break;
                             }
 
-                            ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result });
+                            ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
 
                             await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                             return;
                         }
-                        else
-                        {
-                            ReportProgress(progress, new RequestProgressState(RequestState.Running, string.Format(CoreSR.CertifyManager_RequestValidationFromCertificateAuthority, identifier.Name), managedCertificate));
-                        }
                     }
                     else
                     {
-                        log.Information($"Authorization already valid for {identifier.Name}");
+                        log?.Information($"Authorization already valid for {identifier.Name}");
                     }
                 }
                 else
                 {
                     // could not begin authorization
 
-                    LogMessage(managedCertificate.Id, $"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Name}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
+                    log?.Error($"Could not begin authorization for identifier with the Certificate Authority: [{identifier.Name}] {(authorization?.AuthorizationError ?? "Could not register identifier")} ");
 
                     failureSummaryMessage = $"[{identifier.Name}] : {authorization?.AuthorizationError}";
                 }

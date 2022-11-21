@@ -398,7 +398,14 @@ namespace Certify.Management
 
             if (state.ManagedCertificate != null && logThisEvent)
             {
-                LogMessage(state.ManagedCertificate.Id, state.Message, LogItemType.GeneralInfo);
+                if (state.CurrentState == RequestState.Error)
+                {
+                    LogMessage(state.ManagedCertificate.Id, "[Progress] " + state.Message, LogItemType.GeneralError);
+                }
+                else
+                {
+                    LogMessage(state.ManagedCertificate.Id, "[Progress] " + state.Message, LogItemType.GeneralInfo);
+                }
             }
         }
 
