@@ -64,7 +64,7 @@
                                 HorizontalAlignment="Left"
                                 DisplayMemberPath="Title"
                                 ItemsSource="{Binding CertificateAuthorities}"
-                                SelectedValue="{Binding SelectedItem.CertificateAuthorityId}"
+                                SelectedValue="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullValueConverter}, ConverterParameter='(Empty)'}"
                                 SelectedValuePath="Id"
                                 SelectionChanged="CertificateAuthorityList_SelectionChanged" />
 
@@ -222,7 +222,7 @@
                                     HorizontalAlignment="Left"
                                     DisplayMemberPath="Title"
                                     ItemsSource="{Binding StoredPasswords}"
-                                    SelectedValue="{Binding SelectedItem.CertificatePasswordCredentialId}"
+                                    SelectedValue="{Binding SelectedItem.CertificatePasswordCredentialId, Converter={StaticResource NullValueConverter}, ConverterParameter='(Empty)'}"
                                     SelectedValuePath="StorageKey" />
                                 <Button
                                     x:Name="AddStoredCredential"

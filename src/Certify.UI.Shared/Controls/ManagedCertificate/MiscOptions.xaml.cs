@@ -241,9 +241,9 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             cred.ShowDialog();
 
-            //refresh credentials list on complete
+            //refresh dependent properties including credentials list
 
-            RefreshPfxCredentials();
+            ItemViewModel.RaisePropertyChangedEvent(null);
 
             var credential = cred.Item;
 
@@ -253,20 +253,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void RefreshPfxCredentials()
-        {
-            // FIXME: combobox binding misbehaves so force it here
-            var currentCredentialId = ItemViewModel.SelectedItem?.CertificatePasswordCredentialId;
-            CertPasswordCredential.ItemsSource = ItemViewModel.StoredPasswords;
-            CertPasswordCredential.SelectedValue = currentCredentialId;
-        }
-
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
         {
             DataContext = ItemViewModel;
-            ItemViewModel.RaisePropertyChangedEvent(null);
 
-            RefreshPfxCredentials();
+            ItemViewModel.RaisePropertyChangedEvent(null);
         }
     }
 }

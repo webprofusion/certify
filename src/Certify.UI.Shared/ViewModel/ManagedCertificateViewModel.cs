@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Shared.Validation;
 using Certify.Shared.Utils;
 using PropertyChanged;
@@ -217,21 +218,49 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        private ObservableCollection<CertificateAuthority> _certificateAuthorities = new ObservableCollection<CertificateAuthority>();
         [DependsOn("_appViewModel.CertificateAuthorities")]
         public IEnumerable<CertificateAuthority> CertificateAuthorities
         {
             get
             {
-                var list = _appViewModel.CertificateAuthorities.Where(c => c.IsEnabled == true).ToList();
-                list.Insert(0, new CertificateAuthority
+                // binding directly to the main CA list causes combobox selected value binding to reset, so we maintain a copy of the collection
+                var caList = _appViewModel.CertificateAuthorities?.Where(c => c.IsEnabled == true).ToList();
+
+                if (_certificateAuthorities.Count == 0)
                 {
-                    Id = null,
-                    Title = "Auto",
-                    Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts."
-                });
-                return list;
+                    _certificateAuthorities.Insert(0, new CertificateAuthority
+                    {
+                        Id = "(Empty)",
+                        Title = "Auto",
+                        Description = "The Certificate Authority will be automatically selected based on compatibility and the configured ACME accounts."
+                    });
+
+                    if (caList != null)
+                    {
+                        foreach (var a in caList)
+                        {
+                            _certificateAuthorities.Add(a);
+                        }
+                    }
+                }
+                else if (caList != null)
+                {
+                    // add new items
+                    foreach (var a in caList)
+                    {
+                        if (!_certificateAuthorities.Any(c => c.Id == a.Id))
+                        {
+                            _certificateAuthorities.Add(a);
+                        }
+                    }
+                }
+
+                return _certificateAuthorities;
             }
         }
+
+        private ObservableCollection<StoredCredential> _storedPasswords = new ObservableCollection<StoredCredential>();
 
         [DependsOn("_appViewModel.StoredCredentials")]
         public IEnumerable<Models.Config.StoredCredential> StoredPasswords
@@ -240,18 +269,36 @@ namespace Certify.UI.ViewModel
             {
                 var list = _appViewModel.StoredCredentials?.Where(c => c.ProviderType == StandardAuthTypes.STANDARD_AUTH_PASSWORD).ToList();
 
-                if (list == null)
+                if (_storedPasswords.Count == 0)
                 {
-                    list = new List<Models.Config.StoredCredential>();
+                    _storedPasswords.Insert(0, new Models.Config.StoredCredential
+                    {
+                        StorageKey = "(Empty)",
+                        Title = "(No Password)",
+                        ProviderType = StandardAuthTypes.STANDARD_AUTH_PASSWORD
+                    });
+
+                    if (list != null)
+                    {
+                        foreach (var a in list)
+                        {
+                            _storedPasswords.Add(a);
+                        }
+                    }
+                }
+                else if (list != null)
+                {
+                    // add new items
+                    foreach (var p in list)
+                    {
+                        if (!_storedPasswords.Any(c => c.StorageKey == p.StorageKey))
+                        {
+                            _storedPasswords.Add(p);
+                        }
+                    }
                 }
 
-                list.Insert(0, new Models.Config.StoredCredential
-                {
-                    StorageKey = null,
-                    Title = "(No Password)",
-                    ProviderType = StandardAuthTypes.STANDARD_AUTH_PASSWORD
-                });
-                return list;
+                return _storedPasswords;
             }
         }
 
