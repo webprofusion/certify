@@ -131,14 +131,16 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)
         {
+
             PauseChangeEvents();
             SelectedItem.PauseChangeEvents();
+
+            var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
 
             // filter list of matching credentials
             await _appViewModel.RefreshStoredCredentialsList();
 
             var credentials = _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider);
-            var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
 
             // updating item source also clears selected value, so this workaround sets it back
             // this is only an issue when you have two or more credentials for one provider
