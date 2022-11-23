@@ -348,7 +348,7 @@ namespace Certify.Core.Management.Challenges
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
                         pendingAuth.IsFailure = !check.Result.IsSuccess;
-                        pendingAuth.AuthorizationError = check.Result.Message;
+                        pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";
                     }
                 }
             }

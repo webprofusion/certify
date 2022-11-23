@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -1093,15 +1093,15 @@ namespace Certify.Management
                         result.IsSuccess = true;
 
                         // depending on the deployment type the final result will vary
-                        result.Message = "New certificate acquired and standard deployment performed.";
+                        result.Message = "New certificate received and standard deployment performed OK.";
 
                         if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
                         {
-                            result.Message = "New certificate acquired and stored.";
+                            result.Message = "New certificate received and stored OK.";
                         }
                         else if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                         {
-                            result.Message = "New certificate acquired.";
+                            result.Message = "New certificate received OK.";
                         }
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
