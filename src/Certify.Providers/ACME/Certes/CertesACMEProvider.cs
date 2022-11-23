@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1073,6 +1073,10 @@ namespace Certify.Providers.ACME.Certes
 
             while (attempts > 0 && (res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid))
             {
+                var challenge = res.Challenges.FirstOrDefault(c => c.Type == challengeType);
+
+                log.Information($"Waiting for the CA to validate the {challengeType} challenge response for: {res.Identifier.Value} [{challenge?.Url}]");
+
                 res = await authz.Resource();
 
                 attempts--;
@@ -1093,6 +1097,12 @@ namespace Certify.Providers.ACME.Certes
             }
             else
             {
+
+                if (attempts == 0)
+                {
+                    pendingAuthorization.AuthorizationError = "The CA did not respond with a valid status for this identifier authorization within the time allowed ["+res.Status.ToString()+"]";
+                }
+
                 pendingAuthorization.Identifier.Status = "invalid";
 
                 //determine error
