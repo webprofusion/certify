@@ -123,16 +123,19 @@ namespace Certify.Management
             _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
 
             // setup supported target server types for default deployment
-            foreach (var p in _pluginManager.ServerProviders)
+            if (_pluginManager.ServerProviders != null)
             {
-                var providers = p.GetProviders(p.GetType());
-                foreach (var provider in providers)
+                foreach (var p in _pluginManager.ServerProviders)
                 {
-                    var pr = p.GetProvider(p.GetType(), provider.Id);
-                    if (pr != null)
+                    var providers = p.GetProviders(p.GetType());
+                    foreach (var provider in providers)
                     {
-                        pr.Init(_serviceLog);
-                        _serverProviders.Add(pr);
+                        var pr = p.GetProvider(p.GetType(), provider.Id);
+                        if (pr != null)
+                        {
+                            pr.Init(_serviceLog);
+                            _serverProviders.Add(pr);
+                        }
                     }
                 }
             }
