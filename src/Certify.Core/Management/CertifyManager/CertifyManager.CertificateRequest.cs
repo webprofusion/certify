@@ -1034,7 +1034,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, useLegacyPFXBuildAlgs: CoreAppSettings.Current.EnableLegacyPFXBuildAlgs);
 
                 if (certRequestResult.IsSuccess)
                 {

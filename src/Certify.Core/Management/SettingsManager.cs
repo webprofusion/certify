@@ -155,6 +155,7 @@ namespace Certify.Management
         public string NtpServer { get; set; }
         public string DefaultCertificateStore { get; set; }
         public bool EnableExternalCertManagers { get; set; }
+        public bool EnableLegacyPFXBuildAlgs { get; set; }
     }
 
     public class SettingsManager
@@ -182,6 +183,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableAutomaticCAFailover = prefs.EnableAutomaticCAFailover;
 
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
+            CoreAppSettings.Current.EnableLegacyPFXBuildAlgs = prefs.EnableLegacyPFXBuildAlgs;
 
             if (prefs.CertificateCleanupMode == null)
             {
@@ -230,6 +232,7 @@ namespace Certify.Management
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
+                EnableLegacyPFXBuildAlgs = CoreAppSettings.Current.EnableLegacyPFXBuildAlgs,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
                 NtpServer = CoreAppSettings.Current.NtpServer,

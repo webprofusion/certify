@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1140,7 +1140,7 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useLegacyPFXBuildAlgs)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1319,7 +1319,7 @@ namespace Certify.Providers.ACME.Certes
 
             if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
             {
-                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true);
+                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useLegacyAlgorithms: useLegacyPFXBuildAlgs);
             }
 
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
@@ -1586,7 +1586,7 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useLegacyAlgorithms = false)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
@@ -1638,7 +1638,7 @@ namespace Certify.Providers.ACME.Certes
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd, false);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyAlgorithms: true);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)

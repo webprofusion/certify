@@ -84,6 +84,11 @@
         public bool EnableAutomaticCAFailover { get; set; }
 
         /// <summary>
+        /// If true, PFX build favours older key store algorithms compatible with older OpenSSL etc
+        /// </summary>
+        public bool EnableLegacyPFXBuildAlgs { get; set; }
+
+        /// <summary>
         /// If true, will allow plugins to load from appdata
         /// </summary>
         public bool IncludeExternalPlugins { get; set; }
