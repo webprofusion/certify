@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>..\..\..\..\certify.service</DockerfileContext>
+    <DockerfileContext>..\..\..\..\certify-general</DockerfileContext>
     <UserSecretsId>8793068b-aa98-48a5-807b-962b5b3e1aea</UserSecretsId>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
   </PropertyGroup>

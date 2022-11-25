@@ -138,7 +138,6 @@ namespace Certify.Providers.ACME.Certes
 
             _allowInvalidTls = allowInvalidTls;
 
-#pragma warning disable SCS0004 // Certificate Validation has been disabled
             if (_allowInvalidTls)
             {
                 ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
@@ -147,7 +146,6 @@ namespace Certify.Providers.ACME.Certes
                     return true;
                 };
             }
-#pragma warning restore SCS0004 // Certificate Validation has been disabled
         }
 
         public string GetProviderName() => "Certes";
