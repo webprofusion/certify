@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -728,9 +728,17 @@ namespace Certify.Providers.ACME.Certes
 
                     if (lastException is AcmeException)
                     {
-                        var err = (lastException as AcmeRequestException).Error;
+                        if (lastException is AcmeRequestException)
+                        {
+                            var err = (lastException as AcmeRequestException).Error;
 
-                        msg += $"{err.Type} :: {err.Detail}";
+                            msg += $"{err.Type} :: {err.Detail}";
+                        }
+                        else
+                        {
+                            msg += $"{(lastException as AcmeException).Message}";
+                        }
+
                     }
 
                     if (string.IsNullOrEmpty(msg))
