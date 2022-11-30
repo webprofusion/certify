@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1106,7 +1106,7 @@ namespace Certify.Providers.ACME.Certes
 
                 if (attempts == 0)
                 {
-                    pendingAuthorization.AuthorizationError = "The CA did not respond with a valid status for this identifier authorization within the time allowed ["+res.Status.ToString()+"]";
+                    pendingAuthorization.AuthorizationError = "The CA did not respond with a valid status for this identifier authorization within the time allowed [" + res.Status.ToString() + "]";
                 }
 
                 pendingAuthorization.Identifier.Status = "invalid";
@@ -1592,7 +1592,7 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useLegacyAlgorithms = false)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useLegacyAlgorithms = true)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
@@ -1638,13 +1638,22 @@ namespace Certify.Providers.ACME.Certes
             var pfxPath = Path.Combine(storePath, pfxFile);
             var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
 
+            if (useLegacyAlgorithms)
+            {
+                _log.Information("PFX Build: using legacy algorithms");
+            }
+            else
+            {
+                _log.Information("PFX Build: using modern algorithms");
+            }
+
             byte[] pfxBytes;
             try
             {
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyAlgorithms: true);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyAlgorithms: useLegacyAlgorithms);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
@@ -1652,6 +1661,7 @@ namespace Certify.Providers.ACME.Certes
 
                 if (EnableUnknownCARoots)
                 {
+                    _log?.Error("PFX build failed, trying build for unknown CA roots");
                     // unknown CA roots allowed, attempt PFX build without.
                     try
                     {
@@ -1659,7 +1669,7 @@ namespace Certify.Providers.ACME.Certes
                         var pfxNoChain = certificateChain.ToPfx(csrKey);
                         pfxNoChain.FullChain = false;
                         // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                        pfxBytes = pfxNoChain.Build(certFriendlyName, pwd);
+                        pfxBytes = pfxNoChain.Build(certFriendlyName, pwd, useLegacyAlgorithms);
                         System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
                         return pfxPath;
                     }
@@ -1683,7 +1693,7 @@ namespace Certify.Providers.ACME.Certes
 
                 try
                 {
-                    pfxBytes = pfx.Build(certFriendlyName, pwd);
+                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyAlgorithms);
                     System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)
