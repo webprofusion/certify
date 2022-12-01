@@ -33,6 +33,7 @@ namespace Certify.Management
             DefaultCertificateAuthority = "letsencrypt.org";
             EnableAutomaticCAFailover = false;
             EnableExternalCertManagers = true;
+            EnableLegacyPFXBuildAlgs = true;
             NtpServer = "pool.ntp.org";
         }
 
