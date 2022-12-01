@@ -84,9 +84,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\..\..\certify-plugins\src\DataStores\Postgres\Plugin.Datastore.Postgres.csproj" />
     <ProjectReference Include="..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
-    <ProjectReference Include="..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />

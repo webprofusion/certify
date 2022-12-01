@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -145,19 +145,28 @@ namespace Certify.Management
             iisServerProvider.Init(_serviceLog);
             _serverProviders.Add(iisServerProvider);
 
+            var enableExtendedDataStores = false;
+
             try
             {
-                if (_serverConfig.ConfigDataStoreType == "sqlite" || string.IsNullOrEmpty(_serverConfig.ConfigDataStoreType))
+                if (enableExtendedDataStores)
+                {
+                    if (_serverConfig.ConfigDataStoreType == "sqlite" || string.IsNullOrEmpty(_serverConfig.ConfigDataStoreType))
+                    {
+                        _itemManager = new SQLiteItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    }
+                    /*else if (_serverConfig.ConfigDataStoreType == "postgres")
+                    {
+                        _itemManager = new Datastore.Postgres.PostgresItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    }
+                    else if (_serverConfig.ConfigDataStoreType == "sqlserver")
+                    {
+                        _itemManager = new Datastore.SQLServer.SQLServerItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    }*/
+                }
+                else
                 {
                     _itemManager = new SQLiteItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
-                }
-                else if (_serverConfig.ConfigDataStoreType == "postgres")
-                {
-                    _itemManager = new Datastore.Postgres.PostgresItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
-                }
-                else if (_serverConfig.ConfigDataStoreType == "sqlserver")
-                {
-                    _itemManager = new Datastore.SQLServer.SQLServerItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
                 }
 
                 if (!_itemManager.IsInitialised().Result)
