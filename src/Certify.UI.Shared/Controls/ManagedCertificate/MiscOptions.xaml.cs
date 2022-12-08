@@ -48,7 +48,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private async void RevokeCertificateBtn_Click(object sender, RoutedEventArgs e)
+        private async void RevokeCertificate_Click(object sender, RoutedEventArgs e)
         {
             // check cert exists, if not inform user
             var certPath = ItemViewModel.SelectedItem.CertificatePath;
@@ -123,7 +123,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
             else
             {
-                MessageBox.Show("You have not requested this certificate yet so it cannot be downloaded again. Use Request Certificate to perform the certificate order.");
+                MessageBox.Show("You have not ordered this certificate yet or you have changed certificate authority, so it cannot be downloaded again. Use Request Certificate to perform the certificate order.");
             }
         }
 

@@ -6,7 +6,7 @@ using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/system")]

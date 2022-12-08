@@ -4,7 +4,7 @@ using Certify.Management;
 using Certify.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [ApiController]
     [Route("api/server")]

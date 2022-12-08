@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -453,7 +453,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// When called, look for periodic tasks we can perform such as renewal
+        /// When called, look for periodic maintenance tasks we can perform such as renewal
         /// </summary>
         /// <returns>  </returns>
         public async Task<bool> PerformPeriodicTasks()
@@ -465,7 +465,7 @@ namespace Certify.Management
                 SettingsManager.LoadAppSettings();
 
                 // perform pending renewals
-                await PerformRenewalAllManagedCertificates(new RenewalSettings { }, null);
+                await PerformRenewAll(new RenewalSettings { }, null);
             }
             catch (Exception exp)
             {

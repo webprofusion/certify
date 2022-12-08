@@ -11,7 +11,7 @@ using Certify.Models.Config;
 using Certify.Models.Utils;
 using Serilog;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/managedcertificates")]
@@ -137,7 +137,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await _certifyManager.PerformRenewalAllManagedCertificates(settings, null);
+            return await _certifyManager.PerformRenewAll(settings, null);
         }
 
         [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}/{isInteractive}")]

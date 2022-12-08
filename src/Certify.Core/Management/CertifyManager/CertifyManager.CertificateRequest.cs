@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -36,7 +36,7 @@ namespace Certify.Management
         /// <param name="autoRenewalOnly">  </param>
         /// <param name="progressTrackers">  </param>
         /// <returns>  </returns>
-        public async Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
+        public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             if (_isRenewAllInProgress)
             {
@@ -374,13 +374,13 @@ namespace Certify.Management
         /// <param name="progress">  </param>
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(
-            ILog log, ManagedCertificate managedCertificate,
-            IProgress<RequestProgressState> progress = null,
-            bool resumePaused = false,
-            bool skipRequest = false,
-            bool failOnSkip = false,
-            bool skipTasks = false,
-            bool isInteractive = false
+                ILog log, ManagedCertificate managedCertificate,
+                IProgress<RequestProgressState> progress = null,
+                bool resumePaused = false,
+                bool skipRequest = false,
+                bool failOnSkip = false,
+                bool skipTasks = false,
+                bool isInteractive = false
             )
         {
             _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
@@ -395,7 +395,7 @@ namespace Certify.Management
             log.Information($"---- Beginning Request [{managedCertificate.Name}] ----");
 
             // start with a failure result, set to success when succeeding
-            var certRequestResult = new CertificateRequestResult(managedCertificate);
+            var requestResult = new CertificateRequestResult(managedCertificate);
 
             var config = managedCertificate.RequestConfig;
 
@@ -410,7 +410,7 @@ namespace Certify.Management
 
                     log.Information($"Performing Pre-Request Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PreRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PreRequestTasks);
 
                     // log results
                     var preRequestTasks = new ActionStep
@@ -428,20 +428,20 @@ namespace Certify.Management
                         preRequestTasks.Substeps.Add(r);
                     }
 
-                    certRequestResult.Actions.Add(preRequestTasks);
+                    requestResult.Actions.Add(preRequestTasks);
 
                     if (results.Any(r => r.HasError))
                     {
-                        certRequestResult.Abort = true;
+                        requestResult.Abort = true;
 
                         var msg = $"Request was aborted due to failed Pre-Request Task.";
 
-                        certRequestResult.Message = msg;
+                        requestResult.Message = msg;
                     }
                 }
 
                 // if the script has requested the certificate request to be aborted, skip the request
-                if (!certRequestResult.Abort)
+                if (!requestResult.Abort)
                 {
 
                     if (!skipRequest && managedCertificate.SkipCertificateRequest != true)
@@ -449,47 +449,38 @@ namespace Certify.Management
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {
                             // resume a previously paused request
-                            CertificateRequestResult r;
+                            CertificateRequestResult result;
 
                             // If mixing manual dns with acme-dns, manual challenges need to be checked without re-challenging
                             if (managedCertificate.RequestConfig.Challenges?.Any(c => c.ChallengeProvider == "DNS01.Manual") == true)
                             {
                                 // resume manual dns requests etc
-                                r = await CompleteCertificateRequestProcessing(log, managedCertificate, progress, null);
+                                result = await CompleteCertificateRequest(log, managedCertificate, progress, null);
 
                             }
                             else
                             {
                                 // perform normal certificate challenge/response/renewal (acme-dns etc)
-                                r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config, isInteractive);
+                                result = await PerformCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
                             }
 
                             // copy result from sub-request, preserve existing logged actions
-                            certRequestResult.Message = r.Message;
-                            certRequestResult.IsSuccess = r.IsSuccess;
-                            certRequestResult.ManagedItem = r.ManagedItem;
-                            certRequestResult.Result = r.Result;
-                            certRequestResult.Abort = r.Abort;
-
+                            requestResult.ApplyChanges(result);
+                            
                         }
                         else
                         {
                             if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                             {
                                 // perform normal certificate challenge/response/renewal
-                                var r = await PerformCertificateRequestProcessing(log, managedCertificate, progress, certRequestResult, config, isInteractive);
-
-                                certRequestResult.Message = r.Message;
-                                certRequestResult.IsSuccess = r.IsSuccess;
-                                certRequestResult.ManagedItem = r.ManagedItem;
-                                certRequestResult.Result = r.Result;
-                                certRequestResult.Abort = r.Abort;
+                                var result = await PerformCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
+                                requestResult.ApplyChanges(result);
                             }
                             else
                             {
                                 // request is waiting on user input but has been automatically initiated,
                                 // therefore skip for now
-                                certRequestResult.Abort = true;
+                                requestResult.Abort = true;
                                 log.Information($"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
                             }
                         }
@@ -500,18 +491,16 @@ namespace Certify.Management
 
                         if (failOnSkip)
                         {
-                            certRequestResult.Message = $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}";
-                            // LogMessage(managedCertificate.Id, msg);
-                            certRequestResult.IsSuccess = false;
+                            requestResult.Message = $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}";
+                            requestResult.IsSuccess = false;
                         }
                         else
                         {
-                            certRequestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
-                            // LogMessage(managedCertificate.Id, msg);
-                            certRequestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
+                            requestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
+                            requestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
                         }
 
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, certRequestResult.Message, managedCertificate));
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate));
                     }
                 }
             }
@@ -519,8 +508,8 @@ namespace Certify.Management
             {
                 // overall exception thrown during process
 
-                certRequestResult.IsSuccess = false;
-                certRequestResult.Abort = true;
+                requestResult.IsSuccess = false;
+                requestResult.Abort = true;
 
                 try
                 {
@@ -528,19 +517,19 @@ namespace Certify.Management
 
                     log?.Error(exp, $"Certificate request process failed: {exp}");
 
-                    certRequestResult.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
+                    requestResult.Message = string.Format(Certify.Locales.CoreSR.CertifyManager_RequestFailed, managedCertificate.Name, exp.Message, exp);
 
-                    log?.Error(certRequestResult.Message);
+                    log?.Error(requestResult.Message);
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, certRequestResult.Message, managedCertificate), logThisEvent: false);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, requestResult.Message, managedCertificate), logThisEvent: false);
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, certRequestResult.Message);
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, requestResult.Message);
                 }
                 catch { }
             }
             finally
             {
-                certRequestResult.ManagedItem = managedCertificate;
+                requestResult.ManagedItem = managedCertificate;
 
                 // if request is not awaiting user and there are any post requests tasks, run them now
                 if (managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
@@ -549,7 +538,7 @@ namespace Certify.Management
                     // run applicable deployment tasks (whether success or failed), powershell
                     log?.Information($"Performing Post-Request (Deployment) Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, certRequestResult, managedCertificate.PostRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks);
 
                     // log results
                     var postRequestTasks = new ActionStep
@@ -579,34 +568,34 @@ namespace Certify.Management
 
                     }
 
-                    certRequestResult.Actions.Add(postRequestTasks);
+                    requestResult.Actions.Add(postRequestTasks);
 
                     // certificate may already be deployed to some extent so this counts a completed with warnings
                     if (results.Any(r => r.HasError))
                     {
-                        certRequestResult.IsSuccess = false;
+                        requestResult.IsSuccess = false;
 
                         var msg = $"Deployment Tasks did not complete successfully.";
-                        certRequestResult.Message = msg;
+                        requestResult.Message = msg;
                     }
                 }
 
                 // final state is either paused, success or error
                 var finalState = managedCertificate.Health == ManagedCertificateHealth.AwaitingUser ?
                      RequestState.Paused :
-                     (certRequestResult.IsSuccess ? RequestState.Success : RequestState.Error);
+                     (requestResult.IsSuccess ? RequestState.Success : RequestState.Error);
 
-                ReportProgress(progress, new RequestProgressState(finalState, certRequestResult.Message, managedCertificate), logThisEvent: false);
+                ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate), logThisEvent: false);
 
-                if (string.IsNullOrEmpty(certRequestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
+                if (string.IsNullOrEmpty(requestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
                 {
-                    certRequestResult.Message = managedCertificate.RenewalFailureMessage;
+                    requestResult.Message = managedCertificate.RenewalFailureMessage;
                 }
 
-                await UpdateManagedCertificateStatus(managedCertificate, finalState, certRequestResult.Message);
+                await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message);
             }
 
-            return certRequestResult;
+            return requestResult;
         }
 
         /// <summary>
@@ -634,7 +623,7 @@ namespace Certify.Management
         /// <param name="config"></param>
         /// <param name="isInteractive"></param>
         /// <returns></returns>
-        private async Task<CertificateRequestResult> PerformCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
+        private async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
         {
             //primary domain and each subject alternative name must now be registered as an identifier with ACEM CA and validated
             log?.Information($"{Util.GetUserAgent()}");
@@ -700,7 +689,7 @@ namespace Certify.Management
                     result.Abort = true;
                     result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent:false);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
 
                     return result;
                 }
@@ -770,12 +759,13 @@ namespace Certify.Management
                     log?.Error(result.Message);
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
-                
+
                     return result;
                 }
 
                 // if any of our authorizations require a delay for challenge response propagation, wait now.
                 var propagationSecondsRequired = authorizations.Max(a => a.AttemptedChallenge?.PropagationSeconds);
+
                 if (authorizations.Any() && propagationSecondsRequired > 0)
                 {
                     var wait = propagationSecondsRequired;
@@ -801,7 +791,7 @@ namespace Certify.Management
             }
 
             // perform any pending authorizations (submit challenges for validation) and complete processing
-            return await CompleteCertificateRequestProcessing(log, managedCertificate, progress, pendingOrder);
+            return await CompleteCertificateRequest(log, managedCertificate, progress, pendingOrder);
         }
 
         /// <summary>
@@ -833,7 +823,7 @@ namespace Certify.Management
         /// <param name="progress"></param>
         /// <param name="pendingOrder"></param>
         /// <returns></returns>
-        private async Task<CertificateRequestResult> CompleteCertificateRequestProcessing(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
+        private async Task<CertificateRequestResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
         {
             var result = new CertificateRequestResult(managedCertificate);
 
@@ -1562,7 +1552,7 @@ namespace Certify.Management
 
             _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Refetch: {managedCertificate.Name}");
 
-            return await CompleteCertificateRequestProcessing(_serviceLog, managedCertificate, progress, null);
+            return await CompleteCertificateRequest(_serviceLog, managedCertificate, progress, pendingOrder: null);
         }
 
         /// <summary>

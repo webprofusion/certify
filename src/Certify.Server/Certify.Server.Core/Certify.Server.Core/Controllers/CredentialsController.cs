@@ -5,13 +5,12 @@ using Certify.Management;
 using Certify.Models.Config;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [ApiController]
     [Route("api/credentials")]
     public class CredentialsController : Controllers.ControllerBase
     {
-
         private ICertifyManager _certifyManager;
         private ICredentialsManager _credentialsManager;
 

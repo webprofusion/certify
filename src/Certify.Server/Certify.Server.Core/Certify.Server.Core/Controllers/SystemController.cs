@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [ApiController]
     [EnableCors()]

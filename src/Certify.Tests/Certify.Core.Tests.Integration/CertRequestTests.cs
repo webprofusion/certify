@@ -487,7 +487,7 @@ namespace Certify.Core.Tests
 
             var targets = new List<string> { managedCertificate.Id };
 
-            var results = await certifyManager.PerformRenewalAllManagedCertificates(
+            var results = await certifyManager.PerformRenewAll(
                 new RenewalSettings
                 {
                     TargetManagedCertificates = targets,

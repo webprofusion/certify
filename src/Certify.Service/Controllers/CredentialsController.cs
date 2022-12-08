@@ -4,7 +4,7 @@ using System.Web.Http;
 using Certify.Management;
 using Certify.Models.Config;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/credentials")]
     public class CredentialsController : Controllers.ControllerBase

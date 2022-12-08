@@ -2,6 +2,9 @@
 
 namespace Certify.Models
 {
+    /// <summary>
+    /// The result of a new/renewed certificate request, encompassing status, most relevant message, individual task/deployment action results
+    /// </summary>
     public class CertificateRequestResult
     {
         public CertificateRequestResult(ManagedCertificate item, bool isSuccess, string msg)
@@ -15,6 +18,19 @@ namespace Certify.Models
         {
             ManagedItem = item;
             Message = string.Empty;
+        }
+
+        /// <summary>
+        /// Update existing request result, preserving actions
+        /// </summary>
+        /// <param name="update"></param>
+        public void ApplyChanges(CertificateRequestResult update)
+        {
+            Message = update.Message;
+            IsSuccess = update.IsSuccess;
+            ManagedItem = update.ManagedItem;
+            Result = update.Result;
+            Abort = update.Abort;
         }
 
         public CertificateRequestResult()

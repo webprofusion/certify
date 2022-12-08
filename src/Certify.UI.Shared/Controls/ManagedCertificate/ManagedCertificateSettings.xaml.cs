@@ -123,7 +123,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     };
                 }
 
-                //creating new managed item
+                //create/update managed item
                 return await ItemViewModel.SaveManagedCertificateChanges();
             }
         }

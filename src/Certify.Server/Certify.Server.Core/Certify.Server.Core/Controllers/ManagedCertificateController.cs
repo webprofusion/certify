@@ -11,7 +11,7 @@ using Certify.Models.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [ApiController]
     [Microsoft.AspNetCore.Cors.EnableCors()]
@@ -138,7 +138,7 @@ namespace Certify.Service
         {
             DebugLog();
 
-            return await _certifyManager.PerformRenewalAllManagedCertificates(settings, null);
+            return await _certifyManager.PerformRenewAll(settings, null);
         }
 
         [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}/{isInteractive}")]
@@ -212,7 +212,7 @@ namespace Certify.Service
             return result.FirstOrDefault();
         }
 
-        private bool _redeployInProgress;
+        private bool _redeployInProgress = false;
         [HttpGet, Route("redeploy/{isPreviewOnly}/{includeDeploymentTasks}")]
         public async Task<List<CertificateRequestResult>> RedeployManagedCertificate(bool isPreviewOnly, bool includeDeploymentTasks)
         {

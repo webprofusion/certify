@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
 
-namespace Certify.Service
+namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/auth")]
     public class AuthController : Controllers.ControllerBase
