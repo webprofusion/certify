@@ -125,6 +125,22 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
+
+            // get existing
+            try
+            {
+                var existing = await _certifyClient.GetManagedCertificate(item.Id);
+                if (existing.CertificateAuthorityId != item.CertificateAuthorityId)
+                {
+                    // invalidate current order uri if CA has changed
+                    item.CurrentOrderUri = null;
+                }
+            }
+            catch
+            {
+                // does not exist
+            }
+
             var updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
             updatedManagedCertificate.IsChanged = false;
 
