@@ -15,11 +15,11 @@ namespace Certify.Service.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/managedcertificates")]
-    public class ManagedCertificatesController : Controllers.ControllerBase
+    public class ManagedCertificatesController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public ManagedCertificatesController(Management.ICertifyManager manager)
+        public ManagedCertificatesController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }
@@ -280,7 +280,15 @@ namespace Certify.Service.Controllers
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
-        public class ProgressLogSink : Serilog.Core.ILogEventSink
+        [HttpGet, Route("maintenance")]
+        public async Task<List<ActionResult>> PerformCertMaintenanceTasks()
+        {
+            DebugLog();
+
+            return await _certifyManager.PerformCertificateMaintenance();
+        }
+
+        internal class ProgressLogSink : Serilog.Core.ILogEventSink
         {
             private IProgress<RequestProgressState> _progress;
             private ManagedCertificate _item;

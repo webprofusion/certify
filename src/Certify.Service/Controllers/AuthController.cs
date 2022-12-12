@@ -6,7 +6,7 @@ using Certify.Management;
 namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/auth")]
-    public class AuthController : Controllers.ControllerBase
+    public class AuthController : ControllerBase
     {
         public class AuthModel
         {
@@ -17,7 +17,7 @@ namespace Certify.Service.Controllers
 
         private ICertifyManager _certifyManager = null;
 
-        public AuthController(Management.ICertifyManager manager)
+        public AuthController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }

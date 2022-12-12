@@ -8,11 +8,11 @@ namespace Certify.Service.Controllers
 {
     [ApiController]
     [Route("api/server")]
-    public class ServerController : Controllers.ControllerBase
+    public class ServerController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public ServerController(Management.ICertifyManager manager)
+        public ServerController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }
@@ -28,13 +28,13 @@ namespace Certify.Service.Controllers
         [HttpGet, Route("sitelist/{serverType}")]
         public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
-            return await _certifyManager.GetPrimaryWebSites(serverType, Management.CoreAppSettings.Current.IgnoreStoppedSites);
+            return await _certifyManager.GetPrimaryWebSites(serverType, CoreAppSettings.Current.IgnoreStoppedSites);
         }
 
         [HttpGet, Route("sitelist/{serverType}/{itemId?}")]
         public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null)
         {
-            return await _certifyManager.GetPrimaryWebSites(serverType, Management.CoreAppSettings.Current.IgnoreStoppedSites, itemId);
+            return await _certifyManager.GetPrimaryWebSites(serverType, CoreAppSettings.Current.IgnoreStoppedSites, itemId);
         }
 
         [HttpGet, Route("sitedomains/{serverType}/{serverSiteId}")]

@@ -5,11 +5,11 @@ using Certify.Models;
 namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/preferences")]
-    public class PreferencesController : Controllers.ControllerBase
+    public class PreferencesController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public PreferencesController(Management.ICertifyManager manager)
+        public PreferencesController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }
@@ -19,7 +19,7 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return Management.SettingsManager.ToPreferences();
+            return SettingsManager.ToPreferences();
         }
 
         [HttpPost, Route("")]
@@ -27,8 +27,8 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            var updated = Management.SettingsManager.FromPreferences(preferences);
-            Management.SettingsManager.SaveAppSettings();
+            var updated = SettingsManager.FromPreferences(preferences);
+            SettingsManager.SaveAppSettings();
 
             _certifyManager.ApplyPreferences();
 

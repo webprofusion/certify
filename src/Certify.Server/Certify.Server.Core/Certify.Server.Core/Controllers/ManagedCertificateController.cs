@@ -16,11 +16,11 @@ namespace Certify.Service.Controllers
     [ApiController]
     [Microsoft.AspNetCore.Cors.EnableCors()]
     [Route("api/managedcertificates")]
-    public class ManagedCertificatesController : Controllers.ControllerBase
+    public class ManagedCertificatesController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public ManagedCertificatesController(Management.ICertifyManager manager)
+        public ManagedCertificatesController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }

@@ -10,11 +10,11 @@ namespace Certify.Service.Controllers
 {
     [EnableCors(origins: "*", headers: "*", methods: "*")]
     [RoutePrefix("api/system")]
-    public class SystemController : Controllers.ControllerBase
+    public class SystemController : ControllerBase
     {
         private ICertifyManager _certifyManager = null;
 
-        public SystemController(Management.ICertifyManager manager)
+        public SystemController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }
@@ -34,15 +34,6 @@ namespace Certify.Service.Controllers
             DebugLog();
 
             return await new Management.Util().CheckForUpdates();
-        }
-
-        [HttpGet, Route("maintenance")]
-        public async Task<string> PerformMaintenanceTasks()
-        {
-            DebugLog();
-
-            await _certifyManager.PerformCertificateCleanup();
-            return "OK";
         }
 
         [HttpGet, Route("diagnostics")]

@@ -8,11 +8,11 @@ namespace Certify.Service.Controllers
 {
     [ApiController]
     [Route("api/accounts")]
-    public class AccountsController : Controllers.ControllerBase
+    public class AccountsController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public AccountsController(Management.ICertifyManager manager)
+        public AccountsController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }

@@ -365,7 +365,8 @@ namespace Certify.Management
                     {
                         File.Delete(resultsJsonTempPath);
                     }
-                    catch {
+                    catch
+                    {
                         _log.AppendLine("Running Powershell As New Process: Could not delete temp results file.");
                     }
                 }

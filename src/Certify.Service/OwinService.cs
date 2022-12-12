@@ -108,7 +108,7 @@ namespace Certify.Service
                         // if that worked, save the new port setting
                         serviceConfig.Port = newPort;
 
-                        System.Diagnostics.Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
+                        Debug.WriteLine($"Service started on {reconfiguredServiceUri}.");
                     }
                     catch (Exception)
                     {

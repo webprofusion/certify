@@ -7,12 +7,12 @@ using Certify.Models.Config;
 namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/credentials")]
-    public class CredentialsController : Controllers.ControllerBase
+    public class CredentialsController : ControllerBase
     {
         private ICertifyManager _certifyManager;
         private ICredentialsManager _credentialsManager;
 
-        public CredentialsController(Management.ICertifyManager manager)
+        public CredentialsController(ICertifyManager manager)
         {
             _certifyManager = manager;
 
@@ -42,7 +42,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("{storageKey}/test")]
-        public async Task<Models.Config.ActionResult> TestCredentials(string storageKey)
+        public async Task<ActionResult> TestCredentials(string storageKey)
         {
             DebugLog();
 

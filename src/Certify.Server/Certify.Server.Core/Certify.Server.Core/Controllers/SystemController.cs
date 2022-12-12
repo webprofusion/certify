@@ -12,11 +12,11 @@ namespace Certify.Service.Controllers
     [ApiController]
     [EnableCors()]
     [Route("api/system")]
-    public class SystemController : Controllers.ControllerBase
+    public class SystemController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public SystemController(Management.ICertifyManager manager)
+        public SystemController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }

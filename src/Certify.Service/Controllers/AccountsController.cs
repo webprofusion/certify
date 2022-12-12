@@ -7,11 +7,11 @@ using Certify.Models;
 namespace Certify.Service.Controllers
 {
     [RoutePrefix("api/accounts")]
-    public class AccountsController : Controllers.ControllerBase
+    public class AccountsController : ControllerBase
     {
         private ICertifyManager _certifyManager;
 
-        public AccountsController(Management.ICertifyManager manager)
+        public AccountsController(ICertifyManager manager)
         {
             _certifyManager = manager;
         }

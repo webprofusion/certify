@@ -50,7 +50,7 @@ namespace Certify.Service.Controllers
             }
 #endif
 
-            var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
+            var user = actionContext.RequestContext.Principal as WindowsPrincipal;
             if (user.IsInRole(WindowsBuiltInRole.Administrator))
             {
                 return true;

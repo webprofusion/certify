@@ -73,7 +73,7 @@ namespace Certify.Service
             catch { }
 
             //submit diagnostic info if connection available and status reporting enabled
-            if (Management.CoreAppSettings.Current.EnableStatusReporting && includeReporting)
+            if (CoreAppSettings.Current.EnableStatusReporting && includeReporting)
             {
                 if (exceptionObject != null && exceptionObject is Exception)
                 {
@@ -82,7 +82,7 @@ namespace Certify.Service
                         var properties = new Dictionary<string, string>
                         {
                             { "AppVersion", Management.Util.GetAppVersion().ToString() },
-                            { "InstanceId", Management.CoreAppSettings.Current.InstanceId}
+                            { "InstanceId", CoreAppSettings.Current.InstanceId}
                         };
 
                         tc.TrackException((Exception)exceptionObject, properties);
@@ -102,8 +102,8 @@ namespace Certify.Service
                         AppVersion = appVersion.ToString(),
                         SupportingData = new
                         {
-                            InstanceId = Management.CoreAppSettings.Current.InstanceId,
-                            Framework = Certify.Management.Util.GetDotNetVersion(),
+                            InstanceId = CoreAppSettings.Current.InstanceId,
+                            Framework = Management.Util.GetDotNetVersion(),
                             OS = Environment.OSVersion.ToString(),
                             AppVersion = Management.Util.GetAppVersion(),
                             IsException = true

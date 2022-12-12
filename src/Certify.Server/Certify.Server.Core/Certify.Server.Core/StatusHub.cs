@@ -7,24 +7,24 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Service
 {
-    public class StatusHubReporting : Providers.IStatusReporting
+    public class StatusHubReporting : IStatusReporting
     {
-        private IHubContext<Service.StatusHub> _hubContext;
-        public StatusHubReporting(IHubContext<Service.StatusHub> hubContext)
+        private IHubContext<StatusHub> _hubContext;
+        public StatusHubReporting(IHubContext<StatusHub> hubContext)
         {
             _hubContext = hubContext;
         }
 
         public async Task ReportRequestProgress(RequestProgressState state)
         {
-            System.Diagnostics.Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
+            Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, state);
 
         }
 
         public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
         {
-            System.Diagnostics.Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
+            Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
     }
