@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
@@ -114,6 +115,23 @@ namespace Certify.Shared.Core.Utils.PKI
                     return writer.ToString();
                 }
             }
+        }
+
+        /// <summary>
+        /// For a given PFX, calculate the Base64Url encoded SHA256 CertID based on public key and serial (see OCSP CertID)
+        /// </summary>
+        /// <param name="pfxData"></param>
+        /// <param name="pwd"></param>
+        /// <returns></returns>
+        public static string GetCertIdBase64(byte[] pfxData, string pwd)
+        {
+            var certPfx = new X509Certificate2(pfxData, pwd);
+
+            var cert = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(certPfx.GetRawCertData());
+
+            var certId = new CertificateID(Org.BouncyCastle.Asn1.Nist.NistObjectIdentifiers.IdSha256.Id, cert, cert.SerialNumber);
+
+            return Certify.Management.Util.ToUrlSafeBase64String(certId.ToAsn1Object().GetDerEncoded());
         }
     }
 }

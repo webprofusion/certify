@@ -503,6 +503,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<string[]>(response);
         }
 
+        public async Task<List<ActionResult>> PerformManagedCertMaintenance()
+        {
+            var result = await FetchAsync("managedcertificates/maintenance");
+            return JsonConvert.DeserializeObject<List<ActionResult>>(result);
+        }
+
         #endregion Managed Certificates
 
         #region Accounts

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -75,6 +75,8 @@ namespace Certify.Management
 
         Task PerformCertificateCleanup();
 
+        Task<List<ActionResult>> PerformCertificateMaintenance();
+
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
 
         void ReportProgress(IProgress<RequestProgressState> progress, RequestProgressState state, bool logThisEvent = true);
@@ -89,7 +91,7 @@ namespace Certify.Management
 
         Task<string[]> GetItemLog(string id, int limit = 1000);
 
-        Task<string[]> GetLog(string logType, int limit = 10000);
+        Task<string[]> GetServiceLog(string logType, int limit = 10000);
 
         ICredentialsManager GetCredentialsManager();
         IManagedItemStore GetManagedItemStore();

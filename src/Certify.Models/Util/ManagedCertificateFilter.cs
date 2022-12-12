@@ -38,6 +38,19 @@ namespace Certify.Models
         /// </summary>
         public int? PageSize { get; set; }
 
+        /// <summary>
+        /// If true, include items from external cert managers
+        /// </summary>
         public bool IncludeExternal { get; set; }
+
+        /// <summary>
+        /// If set, returns items with last OCSP check is greater than N hrs.
+        /// </summary>
+        public int? LastOCSPCheckHrs { get; set; }
+
+        /// <summary>
+        /// If set, return items with last ACME ARI check greater than N hrs.
+        /// </summary>
+        public int? LastRenewalInfoCheckHrs { get; set; }
     }
 }

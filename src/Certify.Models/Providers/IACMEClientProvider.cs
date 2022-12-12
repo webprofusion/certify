@@ -1,25 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Models.Config;
-using Certify.Models.Providers;
+using Certify.Models.Shared;
+
 #nullable disable
 
-namespace Certify.Models.Plugins
+namespace Certify.Models.Providers
 {
-
-    public enum ACMECompatibilityMode
-    {
-        /// <summary>
-        /// ACME provider should follow compatibility requirements for current Let's Encrypt service
-        /// </summary>
-        Standard = 1,
-        /// <summary>
-        /// ACME provider follows compatibility requirements for alternative ACME APIs which may include deviations from spec or different behaviours
-        /// </summary>
-        AltProvider1 = 2
-    }
-
     public interface IACMEClientProvider
     {
         string GetProviderName();
@@ -28,7 +14,7 @@ namespace Certify.Models.Plugins
 
         Task<bool> InitProvider(ILog log = null, AccountDetails account = null);
 
-        Task<Uri> GetAcmeTermsOfService();
+        Task<AcmeDirectoryInfo> GetAcmeDirectory();
 
         Task<string> GetAcmeAccountStatus();
 
@@ -49,27 +35,7 @@ namespace Certify.Models.Plugins
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<bool> ChangeAccountKey(ILog log);
-    }
 
-    public class PendingOrder
-    {
-        public PendingOrder() { }
-
-        /// <summary>
-        /// if failure message is provider a default failed pending order object is created
-        /// </summary>
-        /// <param name="failureMessage"></param>
-        public PendingOrder(string failureMessage)
-        {
-            IsFailure = true;
-            FailureMessage = failureMessage;
-        }
-
-        public List<PendingAuthorization> Authorizations { get; set; }
-        public string OrderUri { get; set; }
-        public bool IsPendingAuthorizations { get; set; } = true;
-
-        public bool IsFailure { get; set; }
-        public string FailureMessage { get; set; }
+        Task<RenewalInfo> GetRenewalInfo(string certificateId);
     }
 }

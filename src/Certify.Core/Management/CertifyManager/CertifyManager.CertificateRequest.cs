@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -9,8 +9,8 @@ using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Locales;
 using Certify.Models;
-using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
@@ -466,7 +466,7 @@ namespace Certify.Management
 
                             // copy result from sub-request, preserve existing logged actions
                             requestResult.ApplyChanges(result);
-                            
+
                         }
                         else
                         {
@@ -788,6 +788,12 @@ namespace Certify.Management
                            new RequestProgressState(RequestState.Running, $"Order authorizations already completed.", managedCertificate),
                            logThisEvent: true
                            );
+            }
+
+            // store the Order Uri so we can refer to the order later if required
+            if (!string.IsNullOrEmpty(pendingOrder.OrderUri))
+            {
+                managedCertificate.CurrentOrderUri = pendingOrder.OrderUri;
             }
 
             // perform any pending authorizations (submit challenges for validation) and complete processing

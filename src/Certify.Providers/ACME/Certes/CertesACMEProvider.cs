@@ -15,6 +15,8 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Models.Shared;
+using Newtonsoft.Json;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
@@ -126,6 +128,11 @@ namespace Certify.Providers.ACME.Certes
         /// </summary>
         public string DefaultCertificateFormat { get; set; } = "pfx";
 
+        /// <summary>
+        /// Cache for last retrieved copy of ACME drectory info
+        /// </summary>
+        private AcmeDirectoryInfo _dir;
+
         public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
@@ -151,19 +158,6 @@ namespace Certify.Providers.ACME.Certes
         public string GetProviderName() => "Certes";
 
         public string GetAcmeBaseURI() => _serviceUri?.ToString();
-
-        public async Task<Uri> GetAcmeTermsOfService()
-        {
-
-            if (_acme == null)
-            {
-                // no acme context setup yet (account not yet initialised), create a temporary context
-                PreInitAcmeContext();
-                _acme = new AcmeContext(_serviceUri, null, _httpClient);
-            }
-
-            return await _acme.TermsOfService();
-        }
 
         /// <summary>
         /// setup the basic settings before we init the acme context
@@ -457,6 +451,31 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
+        public async Task<AcmeDirectoryInfo> GetAcmeDirectory()
+        {
+            if (_dir != null)
+            {
+                return _dir;
+            }
+
+            try
+            {
+                var tempAcmeContext = new AcmeContext(_serviceUri, null, _httpClient);
+
+                var dir = await tempAcmeContext.GetDirectory(true);
+
+                var dirObj = JsonConvert.DeserializeObject<AcmeDirectoryInfo>(JsonConvert.SerializeObject(dir));
+
+                _dir = dirObj;
+
+                return dirObj;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Register a new account with the ACME CA (e.g. Let's Encrypt), accepting terms and conditions
         /// </summary>
@@ -738,7 +757,6 @@ namespace Certify.Providers.ACME.Certes
                         {
                             msg += $"{(lastException as AcmeException).Message}";
                         }
-
                     }
 
                     if (string.IsNullOrEmpty(msg))
@@ -767,7 +785,13 @@ namespace Certify.Providers.ACME.Certes
                 {
                     pendingOrder.IsPendingAuthorizations = false;
                     requireAuthzFetch = false;
-                    log?.Information("Order is already valid. Auth challenges will not be re-attempted.");
+                    log?.Information("Order is ready and valid. Auth challenges will not be re-attempted.");
+                }
+                else if (orderDetails.Status == OrderStatus.Valid)
+                {
+                    pendingOrder.IsPendingAuthorizations = false;
+                    requireAuthzFetch = false;
+                    log?.Information("Order is already valid and cert previously issued. Auth challenges will not be re-attempted.");
                 }
 
                 if (_compatibilityMode == ACMECompatibilityMode.Standard)
@@ -775,7 +799,7 @@ namespace Certify.Providers.ACME.Certes
                     if (orderDetails.Status == OrderStatus.Valid)
                     {
                         pendingOrder.IsPendingAuthorizations = false;
-                        requireAuthzFetch = true;
+                        requireAuthzFetch = false;
                     }
                 }
 
@@ -1098,7 +1122,7 @@ namespace Certify.Providers.ACME.Certes
             if (res.Status == AuthorizationStatus.Valid)
             {
                 pendingAuthorization.Identifier.IsAuthorizationPending = false;
-                pendingAuthorization.Identifier.Status = "valid";
+                pendingAuthorization.Identifier.Status = IdentifierStatus.Valid;
                 pendingAuthorization.IsValidated = true;
             }
             else
@@ -1109,7 +1133,7 @@ namespace Certify.Providers.ACME.Certes
                     pendingAuthorization.AuthorizationError = "The CA did not respond with a valid status for this identifier authorization within the time allowed [" + res.Status.ToString() + "]";
                 }
 
-                pendingAuthorization.Identifier.Status = "invalid";
+                pendingAuthorization.Identifier.Status = IdentifierStatus.Invalid;
 
                 //determine error
                 try
@@ -1665,7 +1689,6 @@ namespace Certify.Providers.ACME.Certes
                     // unknown CA roots allowed, attempt PFX build without.
                     try
                     {
-                        //pfxPath = ExportPFX_AnyRoot(certFriendlyName, pwd, csrKey, certificateChain, certId, primaryDomainPath);
                         var pfxNoChain = certificateChain.ToPfx(csrKey);
                         pfxNoChain.FullChain = false;
                         // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
@@ -1705,49 +1728,6 @@ namespace Certify.Providers.ACME.Certes
             return pfxPath;
 
         }
-
-        /*  private string ExportPFX_AnyRoot(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath)
-          {
-              var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
-
-              if (!System.IO.Directory.Exists(storePath))
-              {
-                  System.IO.Directory.CreateDirectory(storePath);
-              }
-
-              var pfxFile = certId + ".pfx";
-              var pfxPath = Path.Combine(storePath, pfxFile);
-
-              KeyAlgorithmProvider signatureAlgorithmProvider = new KeyAlgorithmProvider();
-              var (_, keyPair) = signatureAlgorithmProvider.GetKeyPair(csrKey.ToDer());
-              var certParser = new X509CertificateParser();
-              var certificate = certParser.ReadCertificate(certificateChain.Certificate.ToDer());
-
-              var store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
-
-              var entry = new Org.BouncyCastle.Pkcs.X509CertificateEntry(certificate);
-              store.SetCertificateEntry(certFriendlyName, entry);
-
-              store.SetKeyEntry(certFriendlyName, new Org.BouncyCastle.Pkcs.AsymmetricKeyEntry(keyPair.Private), new[] { entry });
-
-              byte[] pfxBytes;
-              using (var buffer = new MemoryStream())
-              {
-                  store.Save(buffer, pwd.ToCharArray(), new Org.BouncyCastle.Security.SecureRandom());
-                  pfxBytes = buffer.ToArray();
-              }
-
-              try
-              {
-
-                  System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-                  return pfxPath;
-              }
-              catch (Exception ex)
-              {
-                  throw new Exception(ex.Message);
-              }
-          }*/
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryDomainPath)
         {
@@ -1830,12 +1810,22 @@ namespace Certify.Providers.ACME.Certes
             return list;
         }
 
-        public void EnableSensitiveFileEncryption()
-        {
-            //FIXME: not implemented
-        }
-
         public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
 
+        public async Task<RenewalInfo> GetRenewalInfo(string certificateId)
+        {
+            var info = await _acme.GetRenewalInfo(certificateId);
+
+            return new RenewalInfo
+            {
+                ExplanationURL = info.ExplanationURL,
+                SuggestedWindow = new RenewalWindow
+                {
+                    Start = info.SuggestedWindow.Start,
+                    End = info.SuggestedWindow.End
+                }
+            };
+
+        }
     }
 }

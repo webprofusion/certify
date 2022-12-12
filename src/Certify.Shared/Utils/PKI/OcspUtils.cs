@@ -196,7 +196,7 @@ namespace Certify.Shared.Utils
                 return null;
             }
 
-            var bytes = cert.GetExtensionValue(new DerObjectIdentifier(oid)).GetOctets();
+            var bytes = cert.GetExtensionValue(new DerObjectIdentifier(oid))?.GetOctets();
 
             if (bytes == null)
             {

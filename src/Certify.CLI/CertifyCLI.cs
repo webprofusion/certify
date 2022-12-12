@@ -87,15 +87,6 @@ namespace Certify.CLI
 
         internal void ShowACMEInfo()
         {
-            /*
-                        var certifyManager = new CertifyManager();
-                        string vaultInfo = certifyManager.GetVaultSummary();
-                        string acmeInfo = certifyManager.GetAcmeSummary();
-
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        System.Console.WriteLine("ACME API: " + acmeInfo);
-                        System.Console.WriteLine("ACMESharp Vault: " + vaultInfo);
-            */
             System.Console.WriteLine("");
             Console.ForegroundColor = ConsoleColor.White;
         }

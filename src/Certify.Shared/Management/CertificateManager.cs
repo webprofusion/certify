@@ -174,12 +174,17 @@ namespace Certify.Management
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename)
+        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename, string pwd)
         {
+            if (string.IsNullOrEmpty(filename) || !File.Exists(filename))
+            {
+                return CertificateStatusType.Unknown;
+            }
+
             try
             {
 
-                var cert = LoadCertificate(filename);
+                var cert = LoadCertificate(filename, pwd);
 
                 var chain = new X509Chain();
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;

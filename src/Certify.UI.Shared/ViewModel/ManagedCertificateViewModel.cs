@@ -361,27 +361,31 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                // for the simplest version based on preference for renewal interval this is
-                // DateRenewed + Interval more complicated would be based on last renewal attempt and
-                // number of attempts so far etc
-                if (SelectedItem != null && SelectedItem.DateRenewed.HasValue)
-                {
-                    if (SelectedItem.DateExpiry != null && _appViewModel.Preferences?.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
-                    {
-                        // Start renewing N days before expiry 
-                        return SelectedItem.DateExpiry.Value.AddDays(-Preferences.RenewalIntervalDays);
-                    }
-                    else
-                    {
-                        // days since last renewal + preferred interval
-                        return SelectedItem.DateRenewed.Value.AddDays(Preferences.RenewalIntervalDays);
-                    }
-                }
-
-                return null;
+                return CalculateDateNextRenewalDue(SelectedItem, _appViewModel.Preferences?.RenewalIntervalMode, -Preferences.RenewalIntervalDays);
             }
         }
 
+        public static DateTime? CalculateDateNextRenewalDue(ManagedCertificate item, string prefRenewalIntervalMode, int prefRenewalIntervalDays)
+        {
+            // for the simplest version based on preference for renewal interval this is
+            // DateRenewed + Interval more complicated would be based on last renewal attempt and
+            // number of attempts so far etc
+            if (item != null && item.DateRenewed.HasValue)
+            {
+                if (item.DateExpiry != null && prefRenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                {
+                    // Start renewing N days before expiry 
+                    return item.DateExpiry.Value.AddDays(-prefRenewalIntervalDays);
+                }
+                else
+                {
+                    // days since last renewal + preferred interval
+                    return item.DateRenewed.Value.AddDays(prefRenewalIntervalDays);
+                }
+            }
+
+            return null;
+        }
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
             get; set;

@@ -6,7 +6,7 @@ namespace Certify.CLI
 {
     internal class Program
     {
-        private const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server (normall run time is
+        private const int MAX_CHALLENGE_SERVER_RUNTIME = 1000 * 60 * 30;  // Allow up to 30 mins of run time for the challenge server
 
         private static async Task<int> Main(string[] args)
         {
@@ -120,6 +120,11 @@ namespace Certify.CLI
                     }
 
                     await p.RunCertDiagnostics(autoFix, forceAutoDeploy, includeOcspCheck: includeOcspCheck);
+                }
+
+                if (command == "maintenance")
+                {
+                    await p.RunCertMaintenanceTasks();
                 }
 
                 if (command == "pending")
