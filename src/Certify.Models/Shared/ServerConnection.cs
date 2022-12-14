@@ -16,7 +16,7 @@ namespace Certify.Shared
 #else
         public int Port { get; set; } = 9696;
 #endif
-        public string Host { get; set; } = "localhost";
+        public string Host { get; set; } = Certify.Shared.ServiceConfig.DEFAULT_LOCALHOST;
         public DateTime? DateLastConnected { get; set; }
 
         public string? Mode { get; set; } = "direct";
@@ -33,7 +33,7 @@ namespace Certify.Shared
         {
             Id = Guid.NewGuid().ToString();
             UseHTTPS = config?.UseHTTPS ?? false;
-            Host = config?.Host ?? "localhost";
+            Host = config?.Host ?? Certify.Shared.ServiceConfig.DEFAULT_LOCALHOST;
             Port = config?.Port ?? 9696;
             DisplayName = "(local)";
             Mode = "direct";
