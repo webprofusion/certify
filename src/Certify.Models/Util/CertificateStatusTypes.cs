@@ -7,6 +7,8 @@
             Active,
             Expired,
             Revoked,
+            TryLater,
+            OcspNotSupported,
             Unknown
         }
     }

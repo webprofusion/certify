@@ -46,11 +46,11 @@ namespace Certify.Models
         /// <summary>
         /// If set, returns items with last OCSP check is greater than N hrs.
         /// </summary>
-        public int? LastOCSPCheckHrs { get; set; }
+        public int? LastOCSPCheckMins { get; set; }
 
         /// <summary>
         /// If set, return items with last ACME ARI check greater than N hrs.
         /// </summary>
-        public int? LastRenewalInfoCheckHrs { get; set; }
+        public int? LastRenewalInfoCheckMins { get; set; }
     }
 }

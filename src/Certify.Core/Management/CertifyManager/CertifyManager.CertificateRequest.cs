@@ -1049,6 +1049,8 @@ namespace Certify.Management
                         managedCertificate.DateStart = certInfo.NotBefore;
                         managedCertificate.DateExpiry = certInfo.NotAfter;
                         managedCertificate.DateRenewed = DateTime.Now;
+                        managedCertificate.DateLastOcspCheck = DateTime.Now;
+                        managedCertificate.DateLastRenewalInfoCheck = DateTime.Now;
 
                         managedCertificate.CertificatePath = primaryCertFilePath;
                         managedCertificate.CertificatePreviousThumbprintHash = managedCertificate.CertificateThumbprintHash;

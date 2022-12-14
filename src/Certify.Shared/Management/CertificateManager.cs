@@ -174,7 +174,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename, string pwd)
+        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename, string pwd, ILog log = null)
         {
             if (string.IsNullOrEmpty(filename) || !File.Exists(filename))
             {
@@ -183,7 +183,6 @@ namespace Certify.Management
 
             try
             {
-
                 var cert = LoadCertificate(filename, pwd);
 
                 var chain = new X509Chain();
@@ -201,13 +200,15 @@ namespace Certify.Management
                 if (cert != null)
                 {
                     var endEntityCert = new X509CertificateParser().ReadCertificate(cert.RawData);
-                    return await Shared.Utils.OcspUtils.Query(endEntityCert, issuerCert);
+                    return await Shared.Utils.OcspUtils.Query(endEntityCert, issuerCert, log);
                 }
 
                 return CertificateStatusType.Unknown;
             }
             catch (Exception)
             {
+                log?.Warning("Failed to Check Ocsp Revoked Status {file}", filename);
+
                 return CertificateStatusType.Unknown;
             }
         }
@@ -257,13 +258,14 @@ namespace Certify.Management
         }
 
         public static async Task<X509Certificate2> StoreCertificate(
-        string host,
-        string pfxFile,
-        bool isRetry = false,
-        bool enableRetryBehaviour = true,
-        string storeName = DEFAULT_STORE_NAME,
-        string customFriendlyName = null,
-        string pwd = "")
+                string host,
+                string pfxFile,
+                bool isRetry = false,
+                bool enableRetryBehaviour = true,
+                string storeName = DEFAULT_STORE_NAME,
+                string customFriendlyName = null,
+                string pwd = ""
+            )
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             X509Certificate2 certificate;

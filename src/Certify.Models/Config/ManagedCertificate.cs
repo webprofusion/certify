@@ -143,12 +143,12 @@ namespace Certify.Models
         /// <summary>
         /// Date we last check the OCSP status for this cert
         /// </summary>
-        public DateTime? LastOcspCheck { get; set; }
+        public DateTime? DateLastOcspCheck { get; set; }
 
         /// <summary>
         /// Date we last checked the CA renewal info (ARI), if available
         /// </summary>
-        public DateTime? LastRenewalInfoCheck { get; set; }
+        public DateTime? DateLastRenewalInfoCheck { get; set; }
 
         /// <summary>
         /// Date we last attempted renewal

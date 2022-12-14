@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Certify.Models.Certify.Models;
+using Certify.Models.Providers;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.X509;
@@ -18,20 +19,30 @@ namespace Certify.Shared.Utils
     public class OcspUtils
     {
         // adapted from https://github.com/reisjr/BouncyCastleExamples/blob/master/OcspClient/OcspClient.cs by https://github.com/reisjr
-
-        public static async Task<CertificateStatusType> Query(X509Certificate endEntityCert, X509Certificate issuerCert)
+        private static void LogOrConsole(ILog log, string msg)
+        {
+            if (log != null)
+            {
+                log.Verbose(msg);
+            }
+            else
+            {
+                Console.WriteLine(msg);
+            }
+        }
+        public static async Task<CertificateStatusType> Query(X509Certificate endEntityCert, X509Certificate issuerCert, ILog log = null)
         {
             // Query the first Ocsp Url found in certificate
             var urls = GetAuthorityInformationAccessOcspUrl(endEntityCert);
 
-            if (urls.Count == 0)
+            if (urls?.Any() != true)
             {
-                throw new Exception("No OCSP url found in certificate.");
+                return CertificateStatusType.OcspNotSupported;
             }
 
             var url = urls[0];
 
-            Console.WriteLine("Querying '" + url + "'...");
+            LogOrConsole(log, "Querying '" + url + "'...");
 
             var req = GenerateOcspRequest(issuerCert, endEntityCert.SerialNumber);
 
@@ -43,7 +54,7 @@ namespace Certify.Shared.Utils
             request.ContentType = "application/ocsp-request";
             request.ContentLength = data.Length;
             request.Accept = "application/ocsp-response";
-            //            request.Expect = "";
+
             request.ServicePoint.Expect100Continue = false;
 
             var stream = request.GetRequestStream();
@@ -105,7 +116,7 @@ namespace Certify.Shared.Utils
                     cStatus = CertificateStatusType.Unknown;
                     break;
                 case OcspRespStatus.TryLater:
-                    cStatus = CertificateStatusType.Unknown;
+                    cStatus = CertificateStatusType.TryLater;
                     break;
                 default:
                     cStatus = CertificateStatusType.Unknown;
