@@ -120,11 +120,12 @@ dotnet_style_allow_statement_immediately_after_block_experimental = false:error
 dotnet_code_quality_unused_parameters = all:suggestion
 dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
 dotnet_style_qualification_for_field = false:silent
+dotnet_diagnostic.CA1068.severity = error
 
 [*.cs]
 # Prefer "var" everywhere
-csharp_style_var_for_built_in_types = true:suggestion
-csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_for_built_in_types = true:warning
+csharp_style_var_when_type_is_apparent = true:warning
 csharp_style_var_elsewhere = true:suggestion
 
 # Prefer method-like constructs to have a block body
@@ -184,3 +185,6 @@ csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 csharp_space_around_binary_operators = before_and_after
 csharp_style_prefer_method_group_conversion = true:silent
+csharp_style_prefer_top_level_statements = true:silent
+csharp_style_prefer_utf8_string_literals = true:suggestion
+csharp_style_prefer_readonly_struct = true:suggestion

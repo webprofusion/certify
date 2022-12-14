@@ -35,38 +35,38 @@ namespace Certify.Models.Shared
         public class AcmeDirectoryMeta
         {
             [JsonProperty("termsOfService")]
-            public Uri TermsOfService { get; }
+            public Uri? TermsOfService { get; }
 
             [JsonProperty("website")]
-            public Uri Website { get; }
+            public Uri? Website { get; }
 
             [JsonProperty("caaIdentities")]
-            public IList<string> CaaIdentities { get; }
+            public IList<string>? CaaIdentities { get; }
 
             [JsonProperty("externalAccountRequired")]
             public bool? ExternalAccountRequired { get; }
         }
 
         [JsonProperty("newNonce")]
-        public Uri NewNonce { get; }
+        public Uri? NewNonce { get; }
 
         [JsonProperty("newAccount")]
-        public Uri NewAccount { get; }
+        public Uri? NewAccount { get; }
 
         [JsonProperty("newOrder")]
-        public Uri NewOrder { get; }
+        public Uri? NewOrder { get; }
 
         [JsonProperty("revokeCert")]
-        public Uri RevokeCert { get; }
+        public Uri? RevokeCert { get; }
 
         [JsonProperty("keyChange")]
-        public Uri KeyChange { get; }
+        public Uri? KeyChange { get; }
 
         [JsonProperty("renewalInfo")]
-        public Uri RenewalInfo { get; }
+        public Uri? RenewalInfo { get; }
 
         [JsonProperty("meta")]
-        public AcmeDirectoryMeta Meta { get; }
+        public AcmeDirectoryMeta? Meta { get; }
     }
 
     public class PendingOrder
@@ -83,11 +83,11 @@ namespace Certify.Models.Shared
             FailureMessage = failureMessage;
         }
 
-        public List<PendingAuthorization> Authorizations { get; set; }
-        public string OrderUri { get; set; }
+        public List<PendingAuthorization> Authorizations { get; set; } = new List<PendingAuthorization>();
+        public string? OrderUri { get; set; }
         public bool IsPendingAuthorizations { get; set; } = true;
 
         public bool IsFailure { get; set; }
-        public string FailureMessage { get; set; }
+        public string? FailureMessage { get; set; }
     }
 }
