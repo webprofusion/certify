@@ -11,16 +11,40 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-
+        private static object _accountsLock = new object();
+        private List<AccountDetails> _accounts;
         /// <summary>
         /// Get the applicable Account Details for this managed item
         /// </summary>
         /// <param name="item"></param>
         /// <returns>Account Details or null if there is no matching account</returns>
-        private async Task<AccountDetails> GetAccountDetailsForManagedItem(ManagedCertificate item)
+        private async Task<AccountDetails> GetAccountDetailsForManagedItem(ManagedCertificate item, bool allowCache = true)
         {
+            List<AccountDetails> accounts = null;
 
-            var accounts = await GetAccountRegistrations();
+            if (allowCache)
+            {
+                if (_accounts?.Any() != true)
+                {
+                    accounts = await GetAccountRegistrations();
+
+                    lock (_accountsLock)
+                    {
+                        if (accounts?.Any() == true)
+                        {
+                            _accounts = accounts?.ToList();
+                        }
+                    }
+                }
+                else
+                {
+                    accounts = _accounts;
+                }
+            }
+            else
+            {
+                accounts = await GetAccountRegistrations();
+            }
 
             if (item == null)
             {
@@ -179,6 +203,12 @@ namespace Certify.Management
                     await StoreAccountAsCredential(addedAccount.Result);
                 }
 
+                // invalidate accounts cache
+                lock (_accountsLock)
+                {
+                    _accounts?.Clear();
+                }
+
                 return addedAccount;
             }
             else
@@ -226,6 +256,12 @@ namespace Certify.Management
                     await StoreAccountAsCredential(existingAccount);
                 }
 
+                // invalidate accounts cache
+                lock (_accountsLock)
+                {
+                    _accounts?.Clear();
+                }
+
                 return updatedAccount;
             }
             else
@@ -266,6 +302,13 @@ namespace Certify.Management
                 _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
 
                 var resultOk = await _credentialsManager.Delete(_itemManager, storageKey);
+
+                // invalidate accounts cache
+                lock (_accountsLock)
+                {
+                    _accounts?.Clear();
+                }
+
                 return new ActionResult("RemoveAccount", resultOk);
             }
             else
@@ -340,6 +383,12 @@ namespace Certify.Management
                         }
                     }
                 }
+            }
+
+            // invalidate accounts cache
+            lock (_accountsLock)
+            {
+                _accounts?.Clear();
             }
         }
 
