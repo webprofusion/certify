@@ -453,7 +453,7 @@ namespace Certify.Management
         /// When called, look for periodic maintenance tasks we can perform such as renewal
         /// </summary>
         /// <returns>  </returns>
-        public async Task<bool> PerformPeriodicTasks()
+        public async Task<bool> PerformHourlyTasks()
         {
             try
             {

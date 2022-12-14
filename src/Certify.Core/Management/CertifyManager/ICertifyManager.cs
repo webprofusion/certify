@@ -69,7 +69,7 @@ namespace Certify.Management
 
         RequestProgressState GetRequestProgressState(string managedItemId);
 
-        Task<bool> PerformPeriodicTasks();
+        Task<bool> PerformHourlyTasks();
 
         Task<bool> PerformDailyTasks();
 
