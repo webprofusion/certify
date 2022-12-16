@@ -1010,20 +1010,19 @@ namespace Certify.Management
                 // all identifiers validated, request the certificate
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
-                // check item or settings for preferred chain option
-                var preferredChain = managedCertificate.RequestConfig.PreferredChain;
                 var acc = await GetAccountDetailsForManagedItem(managedCertificate);
+                var currentCaId = GetCurrentCAId(managedCertificate);
+                _certificateAuthorities.TryGetValue(currentCaId, out var certAuthority);
+                
+                // check item or settings for preferred chain option, prefer most specific first in order of: Managed Cert config, Account Settings config, CA Default config
+                var preferredChain = managedCertificate.RequestConfig.PreferredChain;
 
                 if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(acc?.PreferredChain))
                 {
                     preferredChain = acc.PreferredChain;
                 }
 
-                // if no other preferred chain set, check if this CA config has a default, if so use that if we are in production mode for the account
-                var currentCaId = GetCurrentCAId(managedCertificate);
-                _certificateAuthorities.TryGetValue(currentCaId, out var certAuthority);
-
-                if (!string.IsNullOrEmpty(certAuthority?.DefaultPreferredChain) && acc?.IsStagingAccount != true)
+                if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(certAuthority?.DefaultPreferredChain))
                 {
                     preferredChain = certAuthority.DefaultPreferredChain;
                 }
