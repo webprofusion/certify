@@ -1169,7 +1169,7 @@ namespace Certify.Providers.ACME.Certes
         /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useLegacyPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1348,7 +1348,7 @@ namespace Certify.Providers.ACME.Certes
 
             if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
             {
-                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useLegacyKeyAlgorithms: useLegacyPFXBuildAlgs);
+                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
             }
 
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
@@ -1615,7 +1615,7 @@ namespace Certify.Providers.ACME.Certes
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useLegacyKeyAlgorithms = true)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
 
@@ -1661,13 +1661,13 @@ namespace Certify.Providers.ACME.Certes
             var pfxPath = Path.Combine(storePath, pfxFile);
             var failedBuildMsg = "Failed to build certificate as PFX. Check system date/time is correct and that the issuing CA is a trusted root CA on this machine (or in custom_ca_certs). :";
 
-            if (useLegacyKeyAlgorithms)
+            if (useModernKeyAlgorithms)
             {
-                _log.Information("PFX Build: using legacy algorithms");
+                _log?.Information("PFX Build: using modern algorithms");
             }
             else
             {
-                _log.Information("PFX Build: using modern algorithms");
+                _log?.Information("PFX Build: using legacy algorithms");
             }
 
             byte[] pfxBytes;
@@ -1677,7 +1677,7 @@ namespace Certify.Providers.ACME.Certes
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: useLegacyKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
                 System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
@@ -1698,7 +1698,7 @@ namespace Certify.Providers.ACME.Certes
 
                 try
                 {
-                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms, EnableUnknownCARoots);
+                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
                     System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)

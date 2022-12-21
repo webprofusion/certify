@@ -1013,7 +1013,7 @@ namespace Certify.Management
                 var acc = await GetAccountDetailsForManagedItem(managedCertificate);
                 var currentCaId = GetCurrentCAId(managedCertificate);
                 _certificateAuthorities.TryGetValue(currentCaId, out var certAuthority);
-                
+
                 // check item or settings for preferred chain option, prefer most specific first in order of: Managed Cert config, Account Settings config, CA Default config
                 var preferredChain = managedCertificate.RequestConfig.PreferredChain;
 
@@ -1029,7 +1029,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, useLegacyPFXBuildAlgs: CoreAppSettings.Current.EnableLegacyPFXBuildAlgs);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, usModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
 
                 if (certRequestResult.IsSuccess)
                 {

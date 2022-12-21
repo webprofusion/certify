@@ -33,7 +33,7 @@ namespace Certify.Management
             DefaultCertificateAuthority = "letsencrypt.org";
             EnableAutomaticCAFailover = false;
             EnableExternalCertManagers = true;
-            EnableLegacyPFXBuildAlgs = true;
+            UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
         }
 
@@ -156,7 +156,11 @@ namespace Certify.Management
         public string NtpServer { get; set; }
         public string DefaultCertificateStore { get; set; }
         public bool EnableExternalCertManagers { get; set; }
-        public bool EnableLegacyPFXBuildAlgs { get; set; }
+
+        /// <summary>
+        /// If true, use modern key and cert algorithms
+        /// </summary>
+        public bool UseModernPFXAlgs { get; set; }
     }
 
     public class SettingsManager
@@ -184,7 +188,7 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableAutomaticCAFailover = prefs.EnableAutomaticCAFailover;
 
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
-            CoreAppSettings.Current.EnableLegacyPFXBuildAlgs = prefs.EnableLegacyPFXBuildAlgs;
+            CoreAppSettings.Current.UseModernPFXAlgs = prefs.UseModernPFXAlgs;
 
             if (prefs.CertificateCleanupMode == null)
             {
@@ -233,7 +237,7 @@ namespace Certify.Management
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
-                EnableLegacyPFXBuildAlgs = CoreAppSettings.Current.EnableLegacyPFXBuildAlgs,
+                UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
                 NtpServer = CoreAppSettings.Current.NtpServer,
