@@ -311,15 +311,6 @@ namespace Certify.UI.Windows
 
             _appViewModel.IsLoading = false;
 
-            if (!_appViewModel.IsRegisteredVersion)
-            {
-                Title += SR.MainWindow_TitleTrialPostfix;
-            }
-            else
-            {
-                _appViewModel.IsLicenseExpired = await _appViewModel.CheckLicenseIsActive() == false;
-            }
-
             //check for updates and report result to view model
             if (_appViewModel.IsServiceAvailable)
             {
@@ -332,6 +323,15 @@ namespace Certify.UI.Windows
 
                     PerformUpdateConfirmation(updateCheck);
                 }
+            }
+
+            if (!_appViewModel.IsRegisteredVersion)
+            {
+                Title += SR.MainWindow_TitleTrialPostfix;
+            }
+            else
+            {
+                _appViewModel.IsLicenseExpired = await _appViewModel.CheckLicenseIsActive() == false;
             }
         }
 
