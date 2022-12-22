@@ -23,6 +23,8 @@ namespace Certify.Models.Plugins
         Task<bool> IsInstallActive(int productTypeId, string settingsPath);
 
         Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance);
+
+        DateTime? GetInstallDate(string settingsPath);
     }
 
     public interface IDomainValidationType

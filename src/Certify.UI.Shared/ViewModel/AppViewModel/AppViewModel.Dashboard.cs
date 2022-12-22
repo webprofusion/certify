@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Certify.Models;
 using PropertyChanged;
 
@@ -53,6 +54,20 @@ namespace Certify.UI.ViewModel
             {
                 return true;
             }
+        }
+
+        public bool IsInstallBeforeDate(DateTime target)
+        {
+            var licensingManager = PluginManager?.LicensingManager;
+
+            var installDate = licensingManager.GetInstallDate(EnvironmentUtil.GetAppDataFolder());
+
+            if (installDate == null)
+            {
+                return false;
+            }
+
+            return installDate < target;
         }
 
         /// <summary>

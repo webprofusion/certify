@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -23,7 +24,9 @@ namespace Certify.UI.Windows
         protected Certify.UI.ViewModel.AppViewModel _appViewModel => UI.ViewModel.AppViewModel.Current;
         protected Certify.UI.ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 10;
+        private const int NUM_ITEMS_FOR_LIMIT = 5;
+        private const int NUM_ITEMS_FOR_LEGACY_INSTALL = 10;
+        private System.Timers.Timer _periodicCheckTimer;
 
         public int NumManagedCertificates
         {
@@ -61,23 +64,29 @@ namespace Certify.UI.Windows
             {
                 MessageBox.Show(SR.MainWindow_TrialLimitationReached);
 
-                if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
+                if (_appViewModel.IsInstallBeforeDate(new System.DateTime(2023, 1, 1)))
                 {
-                    return;
+                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LEGACY_INSTALL)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
+                    {
+                        return;
+                    }
                 }
             }
             else
             {
-                if (_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= 1)
+                if (_appViewModel.IsLicenseExpired)
                 {
-                    if (await _appViewModel.CheckLicenseIsActive() == false)
+                    MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
+                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
                     {
-                        MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
-
-                        if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
-                        {
-                            return;
-                        }
+                        return;
                     }
                 }
             }
@@ -332,6 +341,42 @@ namespace Certify.UI.Windows
             else
             {
                 _appViewModel.IsLicenseExpired = await _appViewModel.CheckLicenseIsActive() == false;
+            }
+
+            _periodicCheckTimer = new System.Timers.Timer(60 * 60 * 1000); // every hour
+            _periodicCheckTimer.Elapsed += _periodicCheckTimer_Elapsed;
+            _periodicCheckTimer.Start();
+        }
+
+        private async void _periodicCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // perform periodic update check
+
+            try
+            {
+                var updateCheck = await _appViewModel.CheckForUpdates();
+
+                if (updateCheck != null && updateCheck.IsNewerVersion)
+                {
+                    _appViewModel.UpdateCheckResult = updateCheck;
+                    _appViewModel.IsUpdateAvailable = true;
+                }
+            }
+            catch (Exception exp)
+            {
+                _appViewModel.Log?.Error("Periodic task failed: Update check {err}", exp.Message);
+            }
+
+            if (_appViewModel.IsRegisteredVersion)
+            {
+                try
+                {
+                    _appViewModel.IsLicenseExpired = ! await _appViewModel.CheckLicenseIsActive();
+                }
+                catch (Exception exp)
+                {
+                    _appViewModel.Log?.Error("Periodic task failed: License status check {err}", exp.Message);
+                }
             }
         }
 
