@@ -1029,7 +1029,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, usModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
 
                 if (certRequestResult.IsSuccess)
                 {
