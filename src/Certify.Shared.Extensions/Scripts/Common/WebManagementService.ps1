@@ -17,4 +17,10 @@ $guid = [guid]::NewGuid()
 # set the current certificate:
 & netsh http add sslcert ipport=0.0.0.0:8172 certhash=$thumb appid=`{$guid`}
 
-# TODO: does management service need restarted?
+# Set (binary) registry key value used by Web Management Service UI in IIS
+$registryPath ="HKLM:\Software\Microsoft\WebManagement\Server\"
+$name="SslCertificateHash"
+
+$hexValue= ($thumb -split '(.{2})' -ne '' -replace '^', '0X')
+$binaryHash = ([byte[]] $hexValue)
+New-ItemProperty -Path $registryPath -Name $name -Value $binaryHash -PropertyType BINARY -Force 
