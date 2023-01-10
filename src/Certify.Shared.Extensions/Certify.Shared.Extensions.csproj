@@ -28,7 +28,7 @@
 		
 		<!--package references used by other plugins, included here as a workaround to hook them into the app build-->
 		<PackageReference Include="AWSSDK.Route53">
-			<Version>3.7.103.29</Version>
+			<Version>3.7.103.30</Version>
 		</PackageReference>
 		<PackageReference Include="Azure.Identity">
 			<Version>1.8.0</Version>
