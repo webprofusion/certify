@@ -627,16 +627,11 @@ namespace Certify.Core.Management.Challenges
 
                 log.Warning(msg);
 
-                return new DnsChallengeHelperResult
+                return new DnsChallengeHelperResult(new ActionResult
                 {
-                    Result = new ActionResult
-                    {
-                        IsSuccess = false,
-                        Message = msg
-                    },
-                    IsAwaitingUser = false,
-                    PropagationSeconds = 0
-                };
+                    IsSuccess = false,
+                    Message = msg
+                });
             }
 
             // create DNS records (manually or via automation)

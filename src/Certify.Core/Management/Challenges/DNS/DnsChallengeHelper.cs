@@ -11,6 +11,22 @@ namespace Certify.Core.Management.Challenges
 {
     public struct DnsChallengeHelperResult
     {
+        public DnsChallengeHelperResult(ActionResult result)
+        {
+            Result = result;
+            IsAwaitingUser = false;
+            PropagationSeconds = 0;
+            Provider = null;
+        }
+
+        public DnsChallengeHelperResult(string failureMsg)
+        {
+            Result = new ActionResult(failureMsg, isSuccess: false);
+            IsAwaitingUser = false;
+            PropagationSeconds = 0;
+            Provider = null;
+        }
+
         public ActionResult Result;
         public int PropagationSeconds;
         public bool IsAwaitingUser;
@@ -30,12 +46,9 @@ namespace Certify.Core.Management.Challenges
             var credentials = new Dictionary<string, string>();
             if (!string.IsNullOrEmpty(credentialsId))
             {
-                var failureResult = new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted or no longer exists. The original user must be used for decryption." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                var failureResult = new DnsChallengeHelperResult(
+                    failureMsg: "DNS Challenge API Credentials could not be decrypted or no longer exists. The original user must be used for decryption."
+                    );
 
                 // decode credentials string array
                 try
@@ -60,31 +73,18 @@ namespace Certify.Core.Management.Challenges
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "This DNS Challenge API requires one or more credentials to be specified.");
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set and software dependencies installed. {exp.ToString()}" },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(
+                    failureMsg: $"DNS Challenge API Provider could not be created. Check all required credentials are set and software dependencies installed. {exp.ToString()}"
+                    );
             }
 
             if (dnsAPIProvider == null)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or could not load." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "DNS Challenge API Provider not set or could not load.");
             }
 
             return new DnsChallengeHelperResult
@@ -119,12 +119,7 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception)
                 {
-                    return new DnsChallengeHelperResult
-                    {
-                        Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption." },
-                        PropagationSeconds = 0,
-                        IsAwaitingUser = false
-                    };
+                    return new DnsChallengeHelperResult(failureMsg: "DNS Challenge API Credentials could not be decrypted. The original user must be used for decryption.");
                 }
             }
 
@@ -143,31 +138,16 @@ namespace Certify.Core.Management.Challenges
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult("This DNS Challenge API requires one or more credentials to be specified.");
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
             }
 
             if (dnsAPIProvider == null)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult("DNS Challenge API Provider not set or not recognised. Select an API to proceed.");
             }
 
             if (isTestMode && !dnsAPIProvider.IsTestModeSupported)
@@ -233,12 +213,7 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception exp)
                 {
-                    return new DnsChallengeHelperResult
-                    {
-                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}" },
-                        PropagationSeconds = 0,
-                        IsAwaitingUser = false
-                    };
+                    return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}");
                 }
 
                 //TODO: DNS query to check for new record
@@ -276,12 +251,7 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "Error: Could not determine DNS API Provider.");
             }
         }
 
@@ -402,31 +372,16 @@ namespace Certify.Core.Management.Challenges
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "This DNS Challenge API requires one or more credentials to be specified." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "This DNS Challenge API requires one or more credentials to be specified.");
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}" },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
             }
 
             if (dnsAPIProvider == null)
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "DNS Challenge API Provider not set or not recognised. Select an API to proceed." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "DNS Challenge API Provider not set or not recognised. Select an API to proceed.");
             }
 
             string zoneId = null;
@@ -475,22 +430,12 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception exp)
                 {
-                    return new DnsChallengeHelperResult
-                    {
-                        Result = new ActionResult { IsSuccess = false, Message = $"Failed [{dnsAPIProvider.ProviderTitle}]: " + exp.Message },
-                        PropagationSeconds = 0,
-                        IsAwaitingUser = false
-                    };
+                    return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp.Message}");
                 }
             }
             else
             {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = false, Message = "Error: Could not determine DNS API Provider." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
+                return new DnsChallengeHelperResult(failureMsg: "Error: Could not determine DNS API Provider.");
             }
         }
     }
