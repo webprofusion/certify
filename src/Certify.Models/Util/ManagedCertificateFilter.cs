@@ -52,5 +52,10 @@ namespace Certify.Models
         /// If set, return items with last ACME ARI check greater than N hrs.
         /// </summary>
         public int? LastRenewalInfoCheckMins { get; set; }
+
+        /// <summary>
+        /// Optonal description for the current set of filters (e.g. specific tests)
+        /// </summary>
+        public string FilterDescription { get; set; }
     }
 }
