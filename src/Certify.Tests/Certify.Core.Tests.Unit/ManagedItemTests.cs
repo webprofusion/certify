@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Management.Automation.Language;
 using System.Threading.Tasks;
 using Certify.Datastore.Postgres;
 using Certify.Datastore.SQLServer;
@@ -11,7 +10,6 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -292,6 +290,12 @@ namespace Certify.Core.Tests.Unit
                     newTestItem.DateLastRenewalInfoCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 30));
                     newTestItem.DateRenewed = DateTime.Now.AddDays(-new Random().Next(1, 30));
 
+                    if (new Random().Next(0,10)>=8)
+                    {
+                        // randomly make some items dns challenges
+                        newTestItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig { ChallengeCredentialKey = "ABCD123", ChallengeProvider = "A.Test.Provider", ChallengeType = "dns-01" });
+                    }
+
                     inMemoryList.Add(newTestItem);
                 }
 
@@ -357,7 +361,13 @@ namespace Certify.Core.Tests.Unit
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_" , Name="FilterMultiTest_1", FilterDescription="Test keyword filter and name"},
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", LastOCSPCheckMins = 10 , FilterDescription="Test LastOCSPCheckMins"},
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", LastRenewalInfoCheckMins = 5, FilterDescription="Test LastRenewalInfoCheckMins" },
-                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", MaxResults =10, FilterDescription="Test Max results" }
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", MaxResults =10, FilterDescription="Test Max results" },
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=0, PageSize =5, FilterDescription="Paging test 0" },
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=1, PageSize =5, FilterDescription="Paging test 1" },
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=2, PageSize =5, FilterDescription="Paging test 3" },
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeType ="http-01", FilterDescription="Challenge type filter"},
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeProvider ="A.Test.Provider", FilterDescription="Challenge provider filter"},
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", StoredCredentialKey ="ABCD123", FilterDescription="Stored Credential filter"}
                 };
 
                 foreach (var filter in testFilter)
@@ -372,7 +382,22 @@ namespace Certify.Core.Tests.Unit
                            && (filter.Name == null || i.Name.Equals(filter.Name, StringComparison.InvariantCultureIgnoreCase))
                            && (filter.LastOCSPCheckMins == null || i.DateLastOcspCheck < DateTime.Now.AddMinutes(-(int)filter.LastOCSPCheckMins))
                            && (filter.LastRenewalInfoCheckMins == null || i.DateLastRenewalInfoCheck < DateTime.Now.AddMinutes(-(int)filter.LastRenewalInfoCheckMins))
-                        );
+                           && (filter.ChallengeType==null || i.RequestConfig.Challenges.Any(c=>c.ChallengeType==filter.ChallengeType))
+                           && (filter.ChallengeProvider == null || i.RequestConfig.Challenges.Any(c => c.ChallengeProvider == filter.ChallengeProvider))
+                           && (filter.StoredCredentialKey == null || i.RequestConfig.Challenges.Any(c => c.ChallengeCredentialKey == filter.StoredCredentialKey))
+                        )
+                        .OrderBy(t=>t.Name)
+                        .AsQueryable();
+
+                    if (filter.PageIndex != null && filter.PageSize != null)
+                    {
+                        expectedResult = expectedResult.Skip((int)filter.PageIndex * (int)filter.PageSize);
+                    }
+
+                    if (filter.PageSize != null)
+                    {
+                        expectedResult = expectedResult.Take((int)filter.PageSize);
+                    }
 
                     if (filter.MaxResults > 0)
                     {
@@ -381,7 +406,11 @@ namespace Certify.Core.Tests.Unit
 
                     Assert.IsTrue(expectedResult.Count() > 0, $"{filter.FilterDescription} Expected results should have more than zero results");
                     Assert.IsTrue(testResult.Count() > 0, $"{filter.FilterDescription} Test results should have more than zero results");
+
                     Assert.AreEqual(expectedResult.Count(), testResult.Count, filter.FilterDescription);
+
+                    Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
+                    Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
                 }
             }
             finally
