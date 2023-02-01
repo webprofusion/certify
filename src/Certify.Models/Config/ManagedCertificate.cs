@@ -99,13 +99,6 @@ namespace Certify.Models
         public long Version { get; set; }
 
         /// <summary>
-        /// If set, this the Id of the parent managed item which controls the Certificate Request.
-        /// When the parent item completes a certificate request the child item will then also be
-        /// invoked in order to perform subsequent deployments/scripting etc
-        /// </summary>
-        public string? ParentId { get; set; }
-
-        /// <summary>
         /// Deprecated, use Server Site Id
         /// </summary>
 
