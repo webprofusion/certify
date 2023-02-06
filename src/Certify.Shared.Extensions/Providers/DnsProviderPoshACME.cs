@@ -38,6 +38,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [EasyDNS](https://poshac.me/docs/v4/Plugins/EasyDNS),
             [Gandi](https://poshac.me/docs/v4/Plugins/Gandi),
             [Google Cloud](https://poshac.me/docs/v4/Plugins/GCloud),
+            [Google Domains](https://poshac.me/docs/v4/Plugins/GoogleDomains),
             [Hetzner](https://poshac.me/docs/v4/Plugins/Hetzner),
             [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
@@ -543,6 +544,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GCloud",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+               new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.GoogleDomains",
+                Title = "Google Domains API (using Posh-ACME)",
+                Description = "Validates via Google Domains DNS ACME Challenge API",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/GoogleDomains/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "RootDomain", Name = "Root Domain", IsRequired = true, IsCredential = false },
+                    new ProviderParameter { Key = "AccessToken", Name = "Access Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoogleDomains",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
