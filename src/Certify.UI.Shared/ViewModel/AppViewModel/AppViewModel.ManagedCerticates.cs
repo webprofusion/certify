@@ -127,18 +127,12 @@ namespace Certify.UI.ViewModel
         {
 
             // get existing
-            try
+
+            var existing = await _certifyClient.GetManagedCertificate(item.Id);
+            if (existing != null && existing.CertificateAuthorityId != item.CertificateAuthorityId)
             {
-                var existing = await _certifyClient.GetManagedCertificate(item.Id);
-                if (existing.CertificateAuthorityId != item.CertificateAuthorityId)
-                {
-                    // invalidate current order uri if CA has changed
-                    item.CurrentOrderUri = null;
-                }
-            }
-            catch
-            {
-                // does not exist
+                // invalidate current order uri if CA has changed
+                item.CurrentOrderUri = null;
             }
 
             var updatedManagedCertificate = await _certifyClient.UpdateManagedCertificate(item);
