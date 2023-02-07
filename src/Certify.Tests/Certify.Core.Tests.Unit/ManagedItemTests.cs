@@ -16,7 +16,7 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class ManagedItemTests
     {
-        private string _storeType = "sqlite";
+        private string _storeType = "postgres";
 
         private const string TEST_PATH = "Tests";
 
@@ -238,6 +238,8 @@ namespace Certify.Core.Tests.Unit
         public async Task TestManagedCertificateFilters()
         {
             var itemManager = GetManagedItemStore();
+
+            Assert.IsTrue(await itemManager.IsInitialised(),"Database should be initialised ok");
 
             var testItem = new ManagedCertificate
             {
