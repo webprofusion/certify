@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -558,11 +558,11 @@ namespace Certify.Core.Management.Challenges.DNS
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = "RootDomain", Name = "Root Domain", IsRequired = true, IsCredential = false },
-                    new ProviderParameter { Key = "AccessToken", Name = "Access Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new ProviderParameter { Key = "AccessToken", Name = "Access Token", IsRequired = true, IsCredential = true },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoogleDomains",
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoogleDomains;Credential=GDomCredential,RootDomain,AccessToken;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
@@ -1201,7 +1201,7 @@ namespace Certify.Core.Management.Challenges.DNS
                       .ToList();
 
             // if using PSCredential, convert legacy plaintext individual credentials to primary credential argument
-            if (psCredentialSpec?.Length == 3)
+            if (psCredentialSpec?.Length >= 3)
             {
                 var credKey = psCredentialSpec[0];
                 var credUser = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[1]).KV.Value;
