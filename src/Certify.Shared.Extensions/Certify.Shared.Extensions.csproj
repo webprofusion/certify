@@ -28,10 +28,10 @@
 		
 		<!--package references used by other plugins, included here as a workaround to hook them into the app build-->
 		<PackageReference Include="AWSSDK.Route53">
-			<Version>3.7.104.8</Version>
+			<Version>3.7.104.12</Version>
 		</PackageReference>
 		<PackageReference Include="Azure.Identity">
-			<Version>1.8.1</Version>
+			<Version>1.8.2</Version>
 		</PackageReference>
 		<PackageReference Include="Azure.Security.KeyVault.Certificates">
 			<Version>4.4.0</Version>
