@@ -65,13 +65,18 @@ namespace Certify.Management
 
         public async Task<List<ActionResult>> PerformCertificateMaintenance()
         {
+            if (_isRenewAllInProgress)
+            {
+                return new List<ActionResult> { new ActionResult("Skipped OCSP and ARI Checks. Renewals in progress.", true) };
+            }
+
             var steps = new List<ActionResult>();
 
             using (var cancellationTokenSource = new CancellationTokenSource())
             {
                 cancellationTokenSource.CancelAfter(30 * 60 * 1000); // 30 min auto-cancellation
                 await PerformCertificateStatusChecks(cancellationTokenSource.Token);
-                steps.Add(new ActionResult { Message = "Performed OCSP Checks" });
+                steps.Add(new ActionResult("Performed OCSP and ARI Checks", true));
             }
 
             return steps;
