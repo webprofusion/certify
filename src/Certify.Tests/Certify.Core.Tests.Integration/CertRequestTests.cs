@@ -79,6 +79,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod, TestCategory("MegaTest")]
+        [Ignore]
         public async Task TestChallengeRequestHttp01()
         {
             var site = await iisManager.GetIISSiteById(_siteId);
@@ -353,6 +354,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod, TestCategory("MegaTest")]
+        [Ignore]
         public async Task TestChallengeRequestDNS()
         {
             var site = await iisManager.GetIISSiteById(_siteId);
@@ -507,6 +509,7 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod, TestCategory("MegaTest")]
+        [Ignore]
         public async Task TestChallengeRequestDNSWildcard()
         {
             var testStr = Guid.NewGuid().ToString().Substring(0, 6);

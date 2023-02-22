@@ -63,7 +63,9 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\Postgres\Plugin.Datastore.Postgres.csproj" />
     <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
+    <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
     <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Plugin.DNS.AWSRoute53.csproj" />

@@ -11,7 +11,7 @@ using Certify.Models;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests.Unit
+namespace Certify.Core.Tests
 {
     [TestClass]
     public class ManagedItemTests
@@ -20,27 +20,45 @@ namespace Certify.Core.Tests.Unit
 
         private const string TEST_PATH = "Tests";
 
+        public static IEnumerable<object[]> TestDataStores
+        {
+            get
+            {
+                return new[]
+                {
+                    new object[] { "postgres" },
+                    new object[] { "sqlite" },
+                    new object[] { "sqlserver" }
+                };
+            }
+        }
+
         public ManagedItemTests()
         {
 
         }
-        private IManagedItemStore GetManagedItemStore()
+        private IManagedItemStore GetManagedItemStore(string storeType = null)
         {
-            if (_storeType == "sqlite")
+            if (storeType == null)
             {
-                return new SQLiteItemManager(TEST_PATH, highPerformanceMode: true);
+                storeType = _storeType;
             }
-            else if (_storeType == "postgres")
+
+            if (storeType == "sqlite")
             {
-                return new PostgresItemManager(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+                return new SQLiteManagedItemStore(TEST_PATH, highPerformanceMode: true);
             }
-            else if (_storeType == "sqlserver")
+            else if (storeType == "postgres")
             {
-                return new SQLServerItemManager(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
+                return new PostgresManagedItemStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+            }
+            else if (storeType == "sqlserver")
+            {
+                return new SQLServerManagedItemStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
             }
             else
             {
-                throw new ArgumentOutOfRangeException("_storeType", "Unsupport store type " + _storeType);
+                throw new ArgumentOutOfRangeException("storeType", "Unsupport store type " + storeType);
             }
         }
 
@@ -74,27 +92,30 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure managed sites list loads")]
-        public async Task TestLoadManagedCertificates()
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestLoadManagedCertificates(string storeType = null)
         {
-            var managedCertificateSettings = GetManagedItemStore();
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+            
             var testCert = BuildTestManagedCertificate();
             try
             {
-                var managedCertificate = await managedCertificateSettings.Update(testCert);
+                var managedCertificate = await itemManager.Update(testCert);
 
-                var managedCertificates = await managedCertificateSettings.Find(new ManagedCertificateFilter { MaxResults = 10 });
+                var managedCertificates = await itemManager.Find(new ManagedCertificateFilter { MaxResults = 10 });
                 Assert.IsTrue(managedCertificates.Count > 0);
             }
             finally
             {
-                await managedCertificateSettings.Delete(testCert);
+                await itemManager.Delete(testCert);
             }
         }
 
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
-        public async Task TestCreateDeleteManagedCertificate()
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestCreateDeleteManagedCertificate(string storeType = null)
         {
-            var itemManager = GetManagedItemStore();
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
 
             var testSite = new ManagedCertificate
             {
@@ -137,11 +158,12 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
+        [DynamicData(nameof(TestDataStores))]
         [Ignore]
-        public async Task TestCreateDeleteManyManagedCertificates()
+        public async Task TestCreateDeleteManyManagedCertificates(string storeType = null)
         {
-            var itemManager = GetManagedItemStore();
-
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+          
             var testItem = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -235,11 +257,12 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Create many managed items, then test filter behaviour on result sets")]
-        public async Task TestManagedCertificateFilters()
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestManagedCertificateFilters(string storeType = null)
         {
-            var itemManager = GetManagedItemStore();
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
 
-            Assert.IsTrue(await itemManager.IsInitialised(),"Database should be initialised ok");
+            Assert.IsTrue(await itemManager.IsInitialised(), "Database should be initialised ok");
 
             var testItem = new ManagedCertificate
             {
@@ -278,8 +301,9 @@ namespace Certify.Core.Tests.Unit
             {
                 Debug.WriteLine($"Checking no previous test data exists");
                 var check = await itemManager.Find(new ManagedCertificateFilter { Keyword = "FilterMultiTest" });
-                Assert.IsTrue(check.Count() == 0, "There should be no previous test data present");
+                Assert.IsTrue(check.Count == 0, "There should be no previous test data present");
 
+                var rnd = new Random();
                 for (var i = 0; i < numItems; i++)
                 {
                     var newTestItem = testItem.CopyAsTemplate();
@@ -292,7 +316,7 @@ namespace Certify.Core.Tests.Unit
                     newTestItem.DateLastRenewalInfoCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 30));
                     newTestItem.DateRenewed = DateTime.Now.AddDays(-new Random().Next(1, 30));
 
-                    if (new Random().Next(0,10)>=8)
+                    if (rnd.Next(0, 10) >= 8)
                     {
                         // randomly make some items dns challenges
                         newTestItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig { ChallengeCredentialKey = "ABCD123", ChallengeProvider = "A.Test.Provider", ChallengeType = "dns-01" });
@@ -384,11 +408,11 @@ namespace Certify.Core.Tests.Unit
                            && (filter.Name == null || i.Name.Equals(filter.Name, StringComparison.InvariantCultureIgnoreCase))
                            && (filter.LastOCSPCheckMins == null || i.DateLastOcspCheck < DateTime.Now.AddMinutes(-(int)filter.LastOCSPCheckMins))
                            && (filter.LastRenewalInfoCheckMins == null || i.DateLastRenewalInfoCheck < DateTime.Now.AddMinutes(-(int)filter.LastRenewalInfoCheckMins))
-                           && (filter.ChallengeType==null || i.RequestConfig.Challenges.Any(c=>c.ChallengeType==filter.ChallengeType))
+                           && (filter.ChallengeType == null || i.RequestConfig.Challenges.Any(c => c.ChallengeType == filter.ChallengeType))
                            && (filter.ChallengeProvider == null || i.RequestConfig.Challenges.Any(c => c.ChallengeProvider == filter.ChallengeProvider))
                            && (filter.StoredCredentialKey == null || i.RequestConfig.Challenges.Any(c => c.ChallengeCredentialKey == filter.StoredCredentialKey))
                         )
-                        .OrderBy(t=>t.Name)
+                        .OrderBy(t => t.Name)
                         .AsQueryable();
 
                     if (filter.PageIndex != null && filter.PageSize != null)
@@ -407,7 +431,7 @@ namespace Certify.Core.Tests.Unit
                     }
 
                     Assert.IsTrue(expectedResult.Count() > 0, $"{filter.FilterDescription} Expected results should have more than zero results");
-                    Assert.IsTrue(testResult.Count() > 0, $"{filter.FilterDescription} Test results should have more than zero results");
+                    Assert.IsTrue(testResult.Count > 0, $"{filter.FilterDescription} Test results should have more than zero results");
 
                     Assert.AreEqual(expectedResult.Count(), testResult.Count, filter.FilterDescription);
 
