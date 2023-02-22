@@ -135,6 +135,9 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// determine if selected deployment provider supports remote targets
+        /// </summary>
         public bool UsesRemoteOptions
         {
             get
@@ -147,7 +150,7 @@ namespace Certify.UI.ViewModel
                 {
                     if (SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER)
                     {
-                        return DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH) || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork);
+                        return DeploymentProvider.SupportsRemoteTarget && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH) || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork));
                     }
                     else
                     {

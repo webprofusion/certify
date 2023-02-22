@@ -85,6 +85,11 @@ namespace Certify.Models.Config
         public DeploymentContextType SupportedContexts { get; set; } = DeploymentContextType.LocalAsService;
 
         /// <summary>
+        /// If true, task type supports running against remote hosts
+        /// </summary>
+        public bool SupportsRemoteTarget { get; set; }
+        
+        /// <summary>
         /// If set, challenge type of external credential required
         /// </summary>
         public string? ExternalCredentialType { get; set; }
