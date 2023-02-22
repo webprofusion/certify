@@ -47,7 +47,7 @@ namespace Certify.Core.Tests
         [TestInitialize]
         public async Task InitTest()
         {
-            var credentialsManager = new SQLiteCredentialsManager();
+            var credentialsManager = new SQLiteCredentialStore();
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
             _provider = new Providers.DNS.AWSRoute53.DnsProviderAWSRoute53();

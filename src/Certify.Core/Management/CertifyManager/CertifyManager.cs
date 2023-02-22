@@ -152,20 +152,25 @@ namespace Certify.Management
                 {
                     if (_serverConfig.ConfigDataStoreType == "sqlite" || string.IsNullOrEmpty(_serverConfig.ConfigDataStoreType))
                     {
-                        _itemManager = new SQLiteItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                        _itemManager = new SQLiteManagedItemStore(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                        _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder:"credentials");
                     }
                     /*else if (_serverConfig.ConfigDataStoreType == "postgres")
                     {
                         _itemManager = new Datastore.Postgres.PostgresItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                        _credentialsManager = new Datastore.Postgres.PostgresCredentialsManager(useWindowsNativeFeatures);
                     }
                     else if (_serverConfig.ConfigDataStoreType == "sqlserver")
                     {
                         _itemManager = new Datastore.SQLServer.SQLServerItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                        _credentialsManager =  Datastore.SQLServer.SQLServerCredentialsManager(useWindowsNativeFeatures);
                     }*/
+
                 }
                 else
                 {
-                    _itemManager = new SQLiteItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    _itemManager = new SQLiteManagedItemStore(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder: "credentials");
                 }
 
                 if (!_itemManager.IsInitialised().Result)
@@ -178,7 +183,7 @@ namespace Certify.Management
                 _serviceLog?.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
             }
 
-            _credentialsManager = new SQLiteCredentialsManager(useWindowsNativeFeatures);
+           
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 

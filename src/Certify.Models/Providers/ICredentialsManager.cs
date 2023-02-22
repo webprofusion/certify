@@ -9,7 +9,7 @@ namespace Certify.Management
     public interface ICredentialsManager
     {
         Task<bool> Delete(IManagedItemStore itemStore, string storageKey);
-        Task<List<StoredCredential>> GetCredentials(string type = null);
+        Task<List<StoredCredential>> GetCredentials(string type = null, string storageKey = null);
         Task<StoredCredential> GetCredential(string storageKey);
         Task<string> GetUnlockedCredential(string storageKey);
         Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey);
