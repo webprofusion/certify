@@ -4,7 +4,7 @@ using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests.Unit
+namespace Certify.Core.Tests
 {
     [TestClass]
     public class PowerShellManagerTests
