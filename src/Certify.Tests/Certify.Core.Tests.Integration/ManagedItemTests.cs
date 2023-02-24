@@ -58,7 +58,7 @@ namespace Certify.Core.Tests
             }
             else
             {
-                throw new ArgumentOutOfRangeException("storeType", "Unsupport store type " + storeType);
+                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupport store type " + storeType);
             }
         }
 
