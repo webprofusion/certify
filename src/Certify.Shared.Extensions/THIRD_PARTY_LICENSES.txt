@@ -20,24 +20,28 @@ Fontawesome.WPF:
 	https://github.com/charri/Font-Awesome-WPF
 MahApps.Metro: 
 	MIT License
-	Copyright (c) 2016 MahApps 
+	Copyright (c) .NET Foundation and Contributors.
 	https://mahapps.com/
+Markdig:
+	BSD 2-Clause "Simplified" License
+	Copyright (c) 2018-2019, Alexandre Mutel
+	https://github.com/xoofx/markdig
+Markdig.WPF:
+	MIT License
+	Copyright (c) 2016-2021 Nicolas Musset
+	https://github.com/Kryptos-FR/markdig.wpf
 ARSoft.Tools.Net: 
 	Apache License 2.0
 	Copyright (c) 2010-2017 Alexander Reinert
 	https://github.com/alexreinert/ARSoft.Tools.Net
 Fody: 
 	MIT License
-	Copyright (c) Simon Cropp and contributors
+	Copyright (c) Simon Cropp
 	https://github.com/Fody/Fody 
 LightInject: 
 	MIT License
 	Copyright (c) 2017 Bernhard Richter
 	https://github.com/seesharper/LightInject
-TaskScheduler: 
-	MIT License
-	Copyright (c) 2003-2010 David Hall
-	https://github.com/dahall/TaskScheduler
 BouncyCastle: 
 	MIT License
 	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.
@@ -57,3 +61,7 @@ Polly:
 Serilog:
 	Apache License 2.0
 	https://serilog.net
+SSH.NET
+	MIT License
+	Copyright (c) Renci, Oleg Kapeljushnik, Gert Driesen and contributors
+	https://github.com/sshnet/SSH.NET
