@@ -63,7 +63,7 @@ namespace Certify.UI.Windows
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("The selected file could not be read as valid Import Package.");
+                    MessageBox.Show("The selected file could not be read as a valid Import Package.");
                     return;
                 }
 
