@@ -105,6 +105,8 @@ namespace Certify.CLI
             System.Console.WriteLine("certify acmeaccount add  <ACME CA ID> <your contact email> <optional EAB key id> <optional EAB Key> : add a new ACME account");
             System.Console.WriteLine("certify acmeaccount list : list registered acme accounts");
             System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");
+            System.Console.WriteLine("certify backup export <directory or full filename> <encryption secret> : export a backup file (autonamed if a directory) using the given secret password for encryption.");
+            System.Console.WriteLine("certify backup import preview <full filename> <encryption secret> : import a backup file using the given secret password for encryption. 'preview' is optional and us used to test a backup without importing anything.");
             System.Console.WriteLine("\n\n");
             System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
 

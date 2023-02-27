@@ -173,6 +173,16 @@ namespace Certify.CLI
                 {
                     await p.ListACMEAccounts();
                 }
+
+                if (command == "backup" && args.Contains("export"))
+                {
+                    await p.PerformBackupExport(args);
+                }
+
+                if (command == "backup" && args.Contains("import"))
+                {
+                    await p.PerformBackupImport(args);
+                }
             }
 #if DEBUG
             System.Console.WriteLine("CLI: Completed (DEBUG)");
