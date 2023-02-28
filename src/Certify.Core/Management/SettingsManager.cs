@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Certify.Models;
@@ -35,7 +35,7 @@ namespace Certify.Management
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
-        }
+    }
 
         public static CoreAppSettings Current
         {
@@ -161,6 +161,8 @@ namespace Certify.Management
         /// If true, use modern key and cert algorithms
         /// </summary>
         public bool UseModernPFXAlgs { get; set; }
+
+        public string ConfigDataStoreConnectionId { get; set; }
     }
 
     public class SettingsManager
@@ -209,6 +211,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.EnableExternalCertManagers = prefs.EnableExternalCertManagers;
 
+            CoreAppSettings.Current.ConfigDataStoreConnectionId = prefs.ConfigDataStoreConnectionId;
+
             return true;
         }
 
@@ -241,8 +245,9 @@ namespace Certify.Management
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
                 NtpServer = CoreAppSettings.Current.NtpServer,
-                EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers
-            };
+                EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
+                ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId
+        };
 
             return prefs;
         }

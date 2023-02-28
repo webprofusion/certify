@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -150,9 +150,10 @@ namespace Certify.Management
             {
                 if (enableExtendedDataStores)
                 {
-                    if (_serverConfig.ConfigDataStoreType == "sqlite" || string.IsNullOrEmpty(_serverConfig.ConfigDataStoreType))
+                    if (string.IsNullOrEmpty(CoreAppSettings.Current.ConfigDataStoreConnectionId) || CoreAppSettings.Current.ConfigDataStoreConnectionId=="0")
                     {
-                        _itemManager = new SQLiteManagedItemStore(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                        // default sqlite storage
+                        _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                         _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder:"credentials");
                     }
                     /*else if (_serverConfig.ConfigDataStoreType == "postgres")
@@ -169,7 +170,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    _itemManager = new SQLiteManagedItemStore(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
+                    _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                     _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder: "credentials");
                 }
 
@@ -182,8 +183,6 @@ namespace Certify.Management
             {
                 _serviceLog?.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
             }
-
-           
 
             _progressResults = new ObservableCollection<RequestProgressState>();
 

@@ -33,12 +33,6 @@ namespace Certify.Shared
         /// If true, allow service to negotitate it's own port and update required config.
         /// </summary>
         public bool EnableAutoPortNegotiation { get; set; }
-
-        public string ConfigDataStoreType { get; set; } = "sqlite";
-        public string ConfigDataStoreConnectionString { get; set; } = string.Empty;
-        public string CredentialDataStoreType { get; set; } = "sqlite";
-        public string CredentialDataStoreConnectionString { get; set; } = string.Empty;
-
     }
 
     public enum ConfigStatus

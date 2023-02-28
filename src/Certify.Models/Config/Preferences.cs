@@ -1,4 +1,4 @@
-﻿namespace Certify.Models
+namespace Certify.Models
 {
     public enum CertificateCleanupMode
     {
@@ -104,6 +104,11 @@
         /// If enabled, certificate manager plugins are used to check for ACME certificates managed outside of Certify on same machine
         /// </summary>
         public bool EnableExternalCertManagers { get; set; }
+
+        /// <summary>
+        /// Id of the data store conenction configuration to use. 0 is the default scheme using local SQLite
+        /// </summary>
+        public string ConfigDataStoreConnectionId { get; set; } = "0";
     }
 
     public static class FeatureFlags
@@ -137,5 +142,10 @@
         /// Enable server connection UI
         /// </summary>
         public const string SERVER_CONNECTIONS = "SERVER_CONNECTIONS";
+
+        /// <summary>
+        /// Enable data store UI
+        /// </summary>
+        public const string DATA_STORES = "DATA_STORES";
     }
 }
