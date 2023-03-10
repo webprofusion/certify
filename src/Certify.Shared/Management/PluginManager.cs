@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
+using Certify.Providers;
 using Serilog;
 
 namespace Certify.Management
@@ -23,6 +24,13 @@ namespace Certify.Management
     }
     public class PluginManager
     {
+        public const string PLUGINS_LICENSING= "Licensing";
+        public const string PLUGINS_DASHBOARD = "DashboardClient";
+        public const string PLUGINS_DEPLOYMENT_TASKS = "DeploymentTasks";
+        public const string PLUGINS_CERTIFICATE_MANAGERS = "CertificateManagers";
+        public const string PLUGINS_DNS_PROVIDERS = "DnsProviders";
+        public const string PLUGINS_SERVER_PROVIDERS = "ServerProviders";
+        public const string PLUGINS_DATASTORE_PROVIDERS = "DataStores";
 
         public ILicensingManager LicensingManager { get; set; }
         public IDashboardClient DashboardClient { get; set; }
@@ -30,6 +38,8 @@ namespace Certify.Management
         public List<ICertificateManagerProviderPlugin> CertificateManagerProviders { get; set; }
         public List<IServerProviderPlugin> ServerProviders { get; set; }
         public List<IDnsProviderProviderPlugin> DnsProviderProviders { get; set; }
+        public List<IManagedItemProviderPlugin> ManagedItemStoreProviders { get; set; }
+        public List<ICredentialStoreProviderPlugin> CredentialStoreProviders { get; set; }
         public List<PluginLoadResult> PluginLoadResults { get; private set; } = new List<PluginLoadResult>();
 
         /// <summary>
@@ -107,7 +117,7 @@ namespace Certify.Management
         private T LoadPlugin<T>(string dllFileName, string pluginFolder = null)
         {
             var interfaceType = typeof(T);
-            var pluginPath = String.Empty;
+            var pluginPath = string.Empty;
 
             try
             {
@@ -169,17 +179,17 @@ namespace Certify.Management
         {
             var s = Stopwatch.StartNew();
 
-            if (includeSet.Contains("Licensing"))
+            if (includeSet.Contains(PLUGINS_LICENSING))
             {
                 LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll");
             }
 
-            if (includeSet.Contains("DashboardClient"))
+            if (includeSet.Contains(PLUGINS_DASHBOARD))
             {
                 DashboardClient = LoadPlugin<IDashboardClient>("Plugin.DashboardClient.dll");
             }
 
-            if (includeSet.Contains("DeploymentTasks"))
+            if (includeSet.Contains(PLUGINS_DEPLOYMENT_TASKS))
             {
                 DeploymentTaskProviders = new List<IDeploymentTaskProviderPlugin>();
 
@@ -194,7 +204,7 @@ namespace Certify.Management
                 }
             }
 
-            if (includeSet.Contains("CertificateManagers"))
+            if (includeSet.Contains(PLUGINS_CERTIFICATE_MANAGERS))
             {
                 CertificateManagerProviders = new List<ICertificateManagerProviderPlugin>();
 
@@ -209,7 +219,7 @@ namespace Certify.Management
                 }
             }
 
-            if (includeSet.Contains("DnsProviders"))
+            if (includeSet.Contains(PLUGINS_DNS_PROVIDERS))
             {
                 DnsProviderProviders = new List<IDnsProviderProviderPlugin>();
 
@@ -233,7 +243,7 @@ namespace Certify.Management
                 }
             }
 
-            if (includeSet.Contains("ServerProviders"))
+            if (includeSet.Contains(PLUGINS_SERVER_PROVIDERS))
             {
                 ServerProviders = new List<IServerProviderPlugin>();
 
@@ -246,6 +256,19 @@ namespace Certify.Management
                     var customPlugins = LoadPlugins<IServerProviderPlugin>("*.dll", loadFromAppData: true);
                     ServerProviders.AddRange(customPlugins);
                 }
+            }
+
+            if (includeSet.Contains(PLUGINS_DATASTORE_PROVIDERS))
+            {
+                ManagedItemStoreProviders = new List<IManagedItemProviderPlugin>();
+                CredentialStoreProviders = new List<ICredentialStoreProviderPlugin>();
+
+                var providers = LoadPlugins<IManagedItemProviderPlugin>("Plugin.Datastore.*.dll", usePluginSubfolder: usePluginSubfolder);
+                ManagedItemStoreProviders.AddRange(providers);
+
+                var credProviders = LoadPlugins<ICredentialStoreProviderPlugin>("Plugin.Datastore.*.dll", usePluginSubfolder: usePluginSubfolder);
+                CredentialStoreProviders.AddRange(credProviders);
+
             }
 
             s.Stop();

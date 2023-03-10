@@ -43,7 +43,7 @@ namespace Certify.CLI
             {
                 _pluginManager = new Management.PluginManager();
 
-                _pluginManager.LoadPlugins(new List<string> { "Licensing" });
+                _pluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_LICENSING });
             }
         }
 

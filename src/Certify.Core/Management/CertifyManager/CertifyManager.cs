@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Core.Management;
 using Certify.Core.Management.Challenges;
+using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Certify.Providers.ACME.Certes;
+using Certify.Shared;
 using Serilog;
 
 namespace Certify.Management
@@ -117,9 +119,20 @@ namespace Certify.Management
 
             Util.SetSupportedTLSVersions();
 
-            _pluginManager = new PluginManager();
-            _pluginManager.EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins;
-            _pluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient", "DeploymentTasks", "CertificateManagers", "DnsProviders", "ServerProviders" });
+            _pluginManager = new PluginManager
+            {
+                EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
+            };
+
+            _pluginManager.LoadPlugins(new List<string> {
+                PluginManager.PLUGINS_LICENSING,
+                PluginManager.PLUGINS_DASHBOARD,
+                PluginManager.PLUGINS_DEPLOYMENT_TASKS,
+                PluginManager.PLUGINS_CERTIFICATE_MANAGERS,
+                PluginManager.PLUGINS_DNS_PROVIDERS,
+                PluginManager.PLUGINS_SERVER_PROVIDERS,
+                PluginManager.PLUGINS_DATASTORE_PROVIDERS
+            });
 
             // setup supported target server types for default deployment
             if (_pluginManager.ServerProviders != null)
@@ -150,11 +163,20 @@ namespace Certify.Management
             {
                 if (enableExtendedDataStores)
                 {
-                    if (string.IsNullOrEmpty(CoreAppSettings.Current.ConfigDataStoreConnectionId) || CoreAppSettings.Current.ConfigDataStoreConnectionId=="0")
+
+                    var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+
+                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
                     {
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                        _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder:"credentials");
+                        _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder: "credentials");
+                    }
+                    else
+                    {
+                        // select data store based on curretn default selection
+                        SelectManagedItemStore(defaultStoreId).Wait();
+                        SelectCredentialsStore(defaultStoreId).Wait();
                     }
                     /*else if (_serverConfig.ConfigDataStoreType == "postgres")
                     {

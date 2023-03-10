@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -234,7 +234,7 @@ namespace Certify.UI.Windows
 
             _appViewModel.PluginManager = new Management.PluginManager();
 
-            _appViewModel.PluginManager.LoadPlugins(new List<string> { "Licensing", "DashboardClient" });
+            _appViewModel.PluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_LICENSING, PluginManager.PLUGINS_DASHBOARD });
 
             var licensingManager = _appViewModel.PluginManager.LicensingManager;
             if (licensingManager != null)
