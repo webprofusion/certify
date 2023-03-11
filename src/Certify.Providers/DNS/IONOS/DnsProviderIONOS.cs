@@ -72,13 +72,23 @@ namespace Certify.Providers.DNS.IONOS
 
         private async Task<DnsRecord> EnrichRecordByZoneIfRequired(DnsRecord request)
         {
-            if (string.IsNullOrEmpty(request.ZoneId))
-            {
-                var zones = await GetZones();
-                request.ZoneId = zones.Single(z => request.TargetDomainName.Contains(z.Name)).ZoneId;
-            }
+            DnsRecord domainInfo;
 
-            return request;
+            try
+            {
+                domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+
+                if (string.IsNullOrEmpty(domainInfo.RootDomain))
+                {
+                    throw new Exception("Failed to determine root domain in zone.");
+                }
+
+                return domainInfo;
+            }
+            catch (Exception exp)
+            {
+                throw new Exception($"[{ProviderTitle}] Failed to create record due to problem querying zones: {exp.Message}");
+            }
         }
 
         private async Task<List<DnsRecord>> GetRecordsForZone(string zone, string suffix = null, string recordName = null, string recordType = null)
