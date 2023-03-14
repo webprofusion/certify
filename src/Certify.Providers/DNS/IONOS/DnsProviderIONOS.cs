@@ -75,7 +75,17 @@ namespace Certify.Providers.DNS.IONOS
             if (string.IsNullOrEmpty(request.ZoneId))
             {
                 var zones = await GetZones();
-                request.ZoneId = zones.Single(z => request.TargetDomainName.Contains(z.Name)).ZoneId;
+
+                // match exact zone to domain or longest match zone name
+                var zoneId = zones
+                    .OrderByDescending(z => z.Name.Length)
+                    .FirstOrDefault(z => request.TargetDomainName == z.Name || request.TargetDomainName.EndsWith("." + z.Name))?
+                .ZoneId;
+
+                if (string.IsNullOrEmpty(zoneId))
+                {
+                    throw new Exception($"[{ProviderTitle}] Failed to match record to a DNS zone: {request.TargetDomainName} ");
+                }
             }
 
             return request;
