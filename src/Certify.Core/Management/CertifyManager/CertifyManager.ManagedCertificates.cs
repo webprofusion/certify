@@ -272,16 +272,12 @@ namespace Certify.Management
             return results;
         }
 
-        private async Task<bool> IsManagedCertificateRunning(string id, ITargetWebServer serverProvider = null)
+        private async Task<bool> IsManagedCertificateRunning(string id)
         {
             var managedCertificate = await _itemManager.GetById(id);
             if (managedCertificate != null)
             {
-                if (serverProvider == null)
-                {
-                    serverProvider = GetTargetServerProvider(managedCertificate);
-                }
-
+                var serverProvider = GetTargetServerProvider(managedCertificate);
                 try
                 {
                     return await serverProvider.IsSiteRunning(managedCertificate.GroupId);
