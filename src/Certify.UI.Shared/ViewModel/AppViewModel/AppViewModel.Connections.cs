@@ -283,7 +283,7 @@ namespace Certify.UI.ViewModel
         /// <param name="parentWindow"></param>
         public void ChooseConnection(System.Windows.DependencyObject parentWindow)
         {
-            var d = new Windows.Connections { Owner = System.Windows.Window.GetWindow(parentWindow) };
+            var d = new Windows.ServerConnections { Owner = System.Windows.Window.GetWindow(parentWindow) };
 
             d.ShowDialog();
         }

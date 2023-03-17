@@ -8,13 +8,13 @@ namespace Certify.UI.Windows
     /// <summary>
     /// Edit details for a certify server connection
     /// </summary>
-    public partial class EditConnectionDialog
+    public partial class EditServerConnectionDialog
     {
         public ServerConnection Item { get; set; }
 
         public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
 
-        public EditConnectionDialog(ServerConnection editItem = null)
+        public EditServerConnectionDialog(ServerConnection editItem = null)
         {
             InitializeComponent();
 

@@ -29,8 +29,10 @@ namespace Certify.UI.ViewModel
             FeatureFlags.EXTERNAL_CERT_MANAGERS,
             FeatureFlags.PRIVKEY_PWD,
 #if DEBUG
-            FeatureFlags.SERVER_CONNECTIONS
+            FeatureFlags.SERVER_CONNECTIONS,
 #endif
+            FeatureFlags.IMPORT_EXPORT,
+            FeatureFlags.CA_EDITOR
         };
 
         /// <summary>
@@ -152,16 +154,9 @@ namespace Certify.UI.ViewModel
         {
             Preferences = await GetPreferences();
 
-            await RefreshManagedCertificates();
-
-            await RefreshCertificateAuthorityList();
-
-            await RefreshAccountsList();
+            await RefreshAllDataStoreItems();
 
             await RefreshChallengeAPIList();
-
-            await RefreshStoredCredentialsList();
-
             await RefreshDeploymentTaskProviderList();
 
         }

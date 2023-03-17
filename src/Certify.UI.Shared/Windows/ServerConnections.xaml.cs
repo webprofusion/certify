@@ -7,13 +7,13 @@ using Certify.UI.ViewModel;
 namespace Certify.UI.Windows
 {
     /// <summary>
-    /// Interaction logic for Connections.xaml
+    /// Interaction logic for ServerConnections.xaml
     /// </summary>
-    public partial class Connections
+    public partial class ServerConnections
     {
         private CancellationTokenSource _cts = new CancellationTokenSource();
 
-        public Connections()
+        public ServerConnections()
         {
             InitializeComponent();
 
@@ -56,7 +56,7 @@ namespace Certify.UI.Windows
 
         private void AddConnection_Click(object sender, RoutedEventArgs e)
         {
-            var d = new Windows.EditConnectionDialog { Owner = Window.GetWindow(this) };
+            var d = new Windows.EditServerConnectionDialog { Owner = Window.GetWindow(this) };
             d.ShowDialog();
             RefreshConnections();
         }
@@ -64,7 +64,7 @@ namespace Certify.UI.Windows
         private void Edit_Click(object sender, RoutedEventArgs e)
         {
             var editItem = (sender as Button).DataContext as ServerConnection;
-            var d = new Windows.EditConnectionDialog(editItem) { Owner = Window.GetWindow(this) };
+            var d = new Windows.EditServerConnectionDialog(editItem) { Owner = Window.GetWindow(this) };
             d.ShowDialog();
 
             RefreshConnections();

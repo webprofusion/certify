@@ -10,7 +10,7 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Certificate Authority"
     Width="580"
-    Height="520"
+    Height="430"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResize"
@@ -124,27 +124,8 @@
             <StackPanel Orientation="Vertical">
                 <Controls:ToggleSwitch Content="Enabled" IsOn="{Binding Model.Item.IsEnabled}" />
                 <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
-                <Controls:ToggleSwitch Content="Allow Untrusted Tls" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
-                <Controls:ToggleSwitch
-                    x:Name="DOMAIN_SINGLE"
-                    Content="Single Domains (www.domain.com)"
-                    Tag="DOMAIN_SINGLE"
-                    Toggled="OnFeatureToggled" />
-                <Controls:ToggleSwitch
-                    x:Name="DOMAIN_SINGLE_PLUS_WWW"
-                    Content="Single Domain + www (e.g. domain.com and www.domain.com)"
-                    Tag="DOMAIN_SINGLE_PLUS_WWW"
-                    Toggled="OnFeatureToggled" />
-                <Controls:ToggleSwitch
-                    x:Name="DOMAIN_WILDCARD"
-                    Content="Wildcards (*.domain.com)"
-                    Tag="DOMAIN_WILDCARD"
-                    Toggled="OnFeatureToggled" />
-                <Controls:ToggleSwitch
-                    x:Name="DOMAIN_MULTIPLE_SAN"
-                    Content="Multiple SAN (www.domain.com, mail.domain.com etc.)"
-                    Tag="DOMAIN_MULTIPLE_SAN"
-                    Toggled="OnFeatureToggled" />
+                <Controls:ToggleSwitch Content="Allow Untrusted TLS" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
+
 
             </StackPanel>
         </StackPanel>

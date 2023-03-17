@@ -1,5 +1,5 @@
 <Controls:MetroWindow
-    x:Class="Certify.UI.Windows.EditConnectionDialog"
+    x:Class="Certify.UI.Windows.EditServerConnectionDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
@@ -8,7 +8,7 @@
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    Title="Edit Connection"
+    Title="Edit Server Connection"
     Width="522"
     Height="276"
     BorderThickness="1"

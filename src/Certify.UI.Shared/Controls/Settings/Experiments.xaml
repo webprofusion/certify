@@ -12,23 +12,17 @@
     <StackPanel>
 
         <TextBlock Style="{StaticResource Instructions}">The following features are a work in progress and can optionally be enabled for testing. Close and re-open the app to see changes:</TextBlock>
-        <CheckBox
-            Margin="0,8"
-            Content="Certificate Authority Editor"
-            IsChecked="{Binding IsCAEditorEnabled}"
-            Tag="CA_EDITOR" />
-        <TextBlock Margin="28,0" Style="{StaticResource Instructions}">Add/Remove your own custom certificate authorities. Edit under Settings &gt; Certificate Authority tab</TextBlock>
 
         <CheckBox
             Margin="0,8"
-            Content="Import/Export Migration Tool"
-            IsChecked="{Binding IsImportExportEnabled}"
-            Tag="IMPORT_EXPORT" />
+            Content="Data Store Manager"
+            IsChecked="{Binding IsDataStoresEnabled}"
+            Tag="DATA_STORES" />
         <TextBlock
             Margin="28,0"
             Style="{StaticResource Instructions}"
             TextWrapping="Wrap">
-            Perform Import or Export of application settings including managed certificates, related files and certificates. Accessible via Settings.
+            Managed Data Store connections to external database servers such as PostgreSQL or SQL Server. Perform data copy between data stores.
         </TextBlock>
 
         <CheckBox

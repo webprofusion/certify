@@ -62,6 +62,7 @@
 
 	<ItemGroup>
 	  <Page Update="Windows\EditConnection.xaml">
+	  <Page Update="Windows\EditServerConnection.xaml">
 	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
 	    <SubType>Designer</SubType>
 	  </Page>

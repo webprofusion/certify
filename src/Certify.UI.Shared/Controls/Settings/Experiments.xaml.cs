@@ -14,22 +14,16 @@ namespace Certify.UI.Controls.Settings
         {
             public Models.Preferences Prefs => ViewModel.AppViewModel.Current.Preferences;
 
-            public bool IsCAEditorEnabled
-            {
-                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.CA_EDITOR);
-                set => ToggleFeature(FeatureFlags.CA_EDITOR, value);
-            }
-
             public bool IsPrivKeyPwdEnabled
             {
                 get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.PRIVKEY_PWD);
                 set => ToggleFeature(FeatureFlags.PRIVKEY_PWD, value);
             }
 
-            public bool IsImportExportEnabled
+            public bool IsDataStoresEnabled
             {
-                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.IMPORT_EXPORT);
-                set => ToggleFeature(FeatureFlags.IMPORT_EXPORT, value);
+                get => ViewModel.AppViewModel.Current.IsFeatureEnabled(FeatureFlags.DATA_STORES);
+                set => ToggleFeature(FeatureFlags.DATA_STORES, value);
             }
 
             public bool IsExternalCertManagersEnabled

@@ -119,10 +119,10 @@ namespace Certify.UI.Windows
                     Model.Item = ca;
                 }
 
-                DOMAIN_SINGLE.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
+                /*DOMAIN_SINGLE.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
                 DOMAIN_SINGLE_PLUS_WWW.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW);
                 DOMAIN_WILDCARD.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
-                DOMAIN_MULTIPLE_SAN.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
+                DOMAIN_MULTIPLE_SAN.IsOn = Model.IsFeatureEnabled(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);*/
 
             }
         }
