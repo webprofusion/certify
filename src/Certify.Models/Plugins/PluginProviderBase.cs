@@ -48,8 +48,15 @@ namespace Certify.Plugins
 
             foreach (var t in typeList)
             {
-                var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
-                list.Add(def);
+                try
+                {
+                    var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
+                    list.Add(def);
+                }
+                catch (Exception)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Plugin Type {t.Name} does not implement a Provider Definition");
+                }
             }
 
             return list;

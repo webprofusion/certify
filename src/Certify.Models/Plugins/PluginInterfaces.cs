@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Management;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
+using Certify.Providers;
 using Certify.Providers.CertificateManagers;
 using Certify.Providers.DeploymentTasks;
 using Registration.Core.Models.Shared;
@@ -77,6 +79,13 @@ namespace Certify.Models.Plugins
     /// Plugins which implement one or more server providers implement this interface for dynamic plugin loading
     /// </summary>
     public interface IServerProviderPlugin : IProviderPlugin<ITargetWebServer, ProviderDefinition>
+    {
+    }
+
+    public interface IManagedItemProviderPlugin : IProviderPlugin<IManagedItemStore, ProviderDefinition>
+    {
+    }
+    public interface ICredentialStoreProviderPlugin : IProviderPlugin<ICredentialsManager, ProviderDefinition>
     {
     }
 }

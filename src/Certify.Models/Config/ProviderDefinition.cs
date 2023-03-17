@@ -30,6 +30,8 @@ namespace Certify.Models.Config
         public bool IsTestModeSupported { get; set; } = true;
         public bool HasDynamicParameters { get; set; }
 
+        public string ProviderCategoryId { get; set; } = string.Empty;
+
         public ProviderDefinition()
         {
             ProviderParameters = new List<ProviderParameter>();
@@ -88,7 +90,7 @@ namespace Certify.Models.Config
         /// If true, task type supports running against remote hosts
         /// </summary>
         public bool SupportsRemoteTarget { get; set; }
-        
+
         /// <summary>
         /// If set, challenge type of external credential required
         /// </summary>
