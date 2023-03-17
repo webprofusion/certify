@@ -12,7 +12,7 @@ namespace Certify.Management
     public class CredentialsManagerBase
     {
 
-        internal bool _useWindowsNativeFeatures = true;
+        protected bool _useWindowsNativeFeatures = true;
 
         public CredentialsManagerBase(bool useWindowsNativeFeatures = true)
         {

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
-using Certify.Providers;
 using Serilog;
 
 namespace Certify.Management
@@ -24,7 +23,7 @@ namespace Certify.Management
     }
     public class PluginManager
     {
-        public const string PLUGINS_LICENSING= "Licensing";
+        public const string PLUGINS_LICENSING = "Licensing";
         public const string PLUGINS_DASHBOARD = "DashboardClient";
         public const string PLUGINS_DEPLOYMENT_TASKS = "DeploymentTasks";
         public const string PLUGINS_CERTIFICATE_MANAGERS = "CertificateManagers";

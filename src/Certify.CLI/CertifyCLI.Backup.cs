@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition.Primitives;
 using System.IO;
-using System.IO.Packaging;
 using System.Linq;
-using System.Text.Json.Nodes;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 
 using Certify.Config.Migration;
-using Certify.Models;
-using Certify.Shared.Utils;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Tls.Crypto;
 
 namespace Certify.CLI
 {

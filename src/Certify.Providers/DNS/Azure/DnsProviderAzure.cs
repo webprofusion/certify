@@ -257,7 +257,7 @@ namespace Certify.Providers.DNS.Azure
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
 
-            bool deleteRequired = true;
+            var deleteRequired = true;
 
             try
             {

@@ -144,7 +144,7 @@ namespace Certify.CLI
                                     Console.WriteLine($"\t Cert Ocsp Status Check: {fileCert.Subject} " + result);
                                 }
 
-                                var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath,"");
+                                var ocspCheck = await CertificateManager.CheckOcspRevokedStatus(site.CertificatePath, "");
                                 Console.ForegroundColor = ConsoleColor.White;
 
                                 if (ocspCheck == Models.Certify.Models.CertificateStatusType.Revoked || ocspCheck == Models.Certify.Models.CertificateStatusType.Expired)

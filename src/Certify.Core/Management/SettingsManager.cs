@@ -35,7 +35,7 @@ namespace Certify.Management
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
-    }
+        }
 
         public static CoreAppSettings Current
         {
@@ -247,7 +247,7 @@ namespace Certify.Management
                 NtpServer = CoreAppSettings.Current.NtpServer,
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
                 ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId
-        };
+            };
 
             return prefs;
         }

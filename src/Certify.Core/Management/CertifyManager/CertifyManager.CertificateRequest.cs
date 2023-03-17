@@ -51,18 +51,18 @@ namespace Certify.Management
                 IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites
             };
 
-            var results =  await RenewalManager.PerformRenewAll(
+            var results = await RenewalManager.PerformRenewAll(
                 _serviceLog,
                 _itemManager,
                 settings,
-                prefs, 
-                BeginTrackingProgress, 
-                ReportProgress, IsManagedCertificateRunning, 
+                prefs,
+                BeginTrackingProgress,
+                ReportProgress, IsManagedCertificateRunning,
                 (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview) => { return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview); },
                 progressTrackers);
 
             _isRenewAllInProgress = false;
-            
+
             return results;
         }
 
