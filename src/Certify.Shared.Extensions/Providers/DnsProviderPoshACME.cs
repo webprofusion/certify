@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -43,6 +43,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
             [Infomaniak](https://poshac.me/docs/v4/Plugins/Infomaniak)
+            [IONOS](https://poshac.me/docs/v4/Plugins/IONOS)
             [IBM Cloud/SoftLayer](https://poshac.me/docs/v4/Plugins/IBMSoftLayer),
             [ISPConfig](https://poshac.me/docs/v4/Plugins/ISPConfig),
             [Leaseweb](https://poshac.me/docs/v4/Plugins/LeaseWeb/),
@@ -703,6 +704,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infomaniak;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+              new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.IONOS",
+                Title = "IONOS DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/IONOS",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "IONOSKeyPrefix", Name = "API Public Prefix", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "IONOSKeySecret", Name = "API Secret", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=IONOS;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
