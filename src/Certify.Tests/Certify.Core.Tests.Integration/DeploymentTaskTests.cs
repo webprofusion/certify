@@ -30,6 +30,7 @@ namespace Certify.Core.Tests
             _log = new Loggy(log);
 
             certifyManager = new CertifyManager();
+            certifyManager.Init().Wait();
 
             // see integrationtestbase for environment variable replacement
             PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];

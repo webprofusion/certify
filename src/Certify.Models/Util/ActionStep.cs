@@ -11,5 +11,13 @@ namespace Certify.Models
         public bool HasWarning { get; set; }
         public List<ActionStep>? Substeps { get; set; }
         public string Key { get; set; } = string.Empty;
+
+        public ActionStep() { }
+        public ActionStep(string title, string descripton, bool hasError)
+        {
+            Title = title;
+            Description = descripton;
+            HasError = hasError;
+        }
     }
 }

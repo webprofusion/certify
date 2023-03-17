@@ -5,17 +5,16 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Core.Management;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
-using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Certify.Providers.ACME.Certes;
-using Certify.Shared;
 using Serilog;
 
 namespace Certify.Management
@@ -111,6 +110,13 @@ namespace Certify.Management
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
 
+           
+        }
+
+        public async Task Init()
+        {
+            _useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
             SettingsManager.LoadAppSettings();
@@ -157,53 +163,15 @@ namespace Certify.Management
             iisServerProvider.Init(_serviceLog);
             _serverProviders.Add(iisServerProvider);
 
-            var enableExtendedDataStores = false;
-
             try
             {
-                if (enableExtendedDataStores)
-                {
-
-                    var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
-
-                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
-                    {
-                        // default sqlite storage
-                        _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                        _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder: "credentials");
-                    }
-                    else
-                    {
-                        // select data store based on curretn default selection
-                        SelectManagedItemStore(defaultStoreId).Wait();
-                        SelectCredentialsStore(defaultStoreId).Wait();
-                    }
-                    /*else if (_serverConfig.ConfigDataStoreType == "postgres")
-                    {
-                        _itemManager = new Datastore.Postgres.PostgresItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
-                        _credentialsManager = new Datastore.Postgres.PostgresCredentialsManager(useWindowsNativeFeatures);
-                    }
-                    else if (_serverConfig.ConfigDataStoreType == "sqlserver")
-                    {
-                        _itemManager = new Datastore.SQLServer.SQLServerItemManager(_serverConfig.ConfigDataStoreConnectionString, _serviceLog);
-                        _credentialsManager =  Datastore.SQLServer.SQLServerCredentialsManager(useWindowsNativeFeatures);
-                    }*/
-
-                }
-                else
-                {
-                    _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                    _credentialsManager = new SQLiteCredentialStore(useWindowsNativeFeatures, storageSubfolder: "credentials");
-                }
-
-                if (!_itemManager.IsInitialised().Result)
-                {
-                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
-                }
+                await InitDataStore();
             }
-            catch (Exception exp)
+            catch
             {
-                _serviceLog?.Error($"Failed to open or upgrade the managed items database. Check service has required file access permissions. :: {exp}");
+                var msg = "Certify Manager failed to start. Failed to load datastore";
+                _serviceLog.Error(msg);
+                throw (new Exception(msg));
             }
 
             _progressResults = new ObservableCollection<RequestProgressState>();
@@ -227,18 +195,77 @@ namespace Certify.Management
 
             try
             {
-                PerformAccountUpgrades().Wait();
+                await PerformAccountUpgrades();
             }
             catch (Exception exp)
             {
                 _serviceLog?.Error($"Failed to perform ACME account upgrades. :: {exp}");
             }
 
-            PerformManagedCertificateMigrations().Wait();
+            await PerformManagedCertificateMigrations();
 
             PerformCAMaintenance();
         }
 
+        private async Task InitDataStore()
+        {
+            var enableExtendedDataStores = true;
+
+            try
+            {
+                if (enableExtendedDataStores)
+                {
+
+                    var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+                    var dataStoreInfo = await GetDataStore(defaultStoreId);
+
+                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
+                    {
+                        // default sqlite storage
+                        _itemManager = new SQLiteManagedItemStore("", _serviceLog);
+                        _credentialsManager = new SQLiteCredentialStore(_useWindowsNativeFeatures, storageSubfolder: "credentials");
+                    }
+                    else
+                    {
+                        // select data store based on current default selection
+                        var managedItemStoreOK = await SelectManagedItemStore(defaultStoreId);
+                        if (!managedItemStoreOK)
+                        {
+                            var msg = $"FATAL: Managed Item Store {defaultStoreId} could not connect or load. Service will not start.";
+                            _serviceLog.Error(msg);
+                            throw new Exception(msg);
+                        }
+
+                        var credentialStoreOK = await SelectCredentialsStore(defaultStoreId);
+
+                        if (!credentialStoreOK)
+                        {
+                            var msg = $"FATAL: Credential Store {defaultStoreId} could not connect or load. Service will not start.";
+                            _serviceLog.Error(msg);
+                            throw new Exception(msg);
+                        }
+
+                        _serviceLog.Information($"Certify Manager is connected to data store {dataStoreInfo.Id} '{dataStoreInfo.Title}' [{dataStoreInfo.TypeId}]");
+                    }
+                }
+                else
+                {
+                    _itemManager = new SQLiteManagedItemStore("", _serviceLog);
+                    _credentialsManager = new SQLiteCredentialStore(_useWindowsNativeFeatures, storageSubfolder: "credentials");
+                }
+
+                if (!_itemManager.IsInitialised().Result)
+                {
+                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                }
+            }
+            catch (Exception exp)
+            {
+                var msg = $"Failed to open or upgrade the managed items data store. :: {exp}";
+                _serviceLog?.Error(msg);
+                throw new Exception(msg);
+            }
+        }
         /// <summary>
         /// Setup service logging
         /// </summary>

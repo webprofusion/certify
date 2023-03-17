@@ -33,6 +33,7 @@ namespace Certify.Core.Tests
 
             _log = new Loggy(log);
             certifyManager = new CertifyManager();
+            certifyManager.Init().Wait();
             iisManager = new ServerProviderIIS();
 
             // see integrationtestbase for environment variable replacement

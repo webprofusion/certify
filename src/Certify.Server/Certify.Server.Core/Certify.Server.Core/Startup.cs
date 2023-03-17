@@ -81,11 +81,10 @@ namespace Certify.Server.Core
             });
 #endif
 
-            var useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
             // inject instance of certify manager
 
-            var certifyManager = new Management.CertifyManager(useWindowsNativeFeatures);
+            var certifyManager = new Management.CertifyManager();
+            certifyManager.Init().Wait();
 
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
 

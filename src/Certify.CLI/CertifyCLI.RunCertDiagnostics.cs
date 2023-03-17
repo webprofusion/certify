@@ -274,6 +274,7 @@ namespace Certify.CLI
 
                 // TODO: move this into certify manager and use client to call into service, removing dependency on certify core lib
                 var c = new CertifyManager();
+                await c.Init();
 
                 var log = new LoggerConfiguration()
                   .WriteTo.Debug()

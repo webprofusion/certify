@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -7,11 +7,14 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers;
+using Certify.Shared;
 
 namespace Certify.Management
 {
     public interface ICertifyManager
     {
+        Task Init();
+
         void SetStatusReporting(IStatusReporting statusReporting);
 
         Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
