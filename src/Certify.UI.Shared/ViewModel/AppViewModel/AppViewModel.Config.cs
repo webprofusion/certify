@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Utils;
+using Certify.Shared;
 
 namespace Certify.UI.ViewModel
 {
@@ -69,6 +71,17 @@ namespace Certify.UI.ViewModel
             return result;
         }
 
+        /// <summary>
+        /// Refresh all data from our data store
+        /// </summary>
+        /// <returns></returns>
+        public async Task RefreshAllDataStoreItems()
+        {
+            await RefreshAccountsList();
+            await RefreshCertificateAuthorityList();
+            await RefreshStoredCredentialsList();
+            await RefreshManagedCertificates();
+        }
         /// <summary>
         /// Cached list of current ACME accounts
         /// </summary>
@@ -305,5 +318,71 @@ namespace Certify.UI.ViewModel
         /// <param name="deploymentTaskValidationInfo"></param>
         /// <returns></returns>
         public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo deploymentTaskValidationInfo) => await _certifyClient.ValidateDeploymentTask(deploymentTaskValidationInfo);
+
+        /// <summary>
+        /// Change the current default data store for the service
+        /// </summary>
+        /// <param name="dataStoreId"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        internal async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId, CancellationToken token)
+        {
+            var results = await _certifyClient.SetDefaultDataStore(dataStoreId);
+
+            if (!results.Any(c => c.HasError))
+            {
+                await RefreshAllDataStoreItems();
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Get the list of supported data store providers
+        /// </summary>
+        /// <returns></returns>
+        internal async Task<List<ProviderDefinition>> GetDataStoreProviders()
+        {
+            return await _certifyClient.GetDataStoreProviders();
+        }
+
+        /// <summary>
+        /// Get the current configured data store conenctions to choose from
+        /// </summary>
+        /// <returns></returns>
+        internal async Task<List<DataStoreConnection>> GetDataStoreConnections()
+        {
+            return await _certifyClient.GetDataStoreConnections();
+        }
+
+        /// <summary>
+        /// Copy data from one data store to another
+        /// </summary>
+        /// <param name="sourceId"></param>
+        /// <param name="targetId"></param>
+        /// <returns></returns>
+        internal async Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId)
+        {
+            return await _certifyClient.CopyDataStore(sourceId, targetId);
+        }
+
+        /// <summary>
+        /// Update/add the settings for the given data store connection
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        internal async Task<List<ActionStep>> SaveDataStoreConnection(DataStoreConnection item)
+        {
+            return await _certifyClient.UpdateDataStoreConnection(item);
+        }
+
+        /// <summary>
+        /// Test the settings for the given data store connection
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        internal async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection item) {
+            return await _certifyClient.TestDataStoreConnection(item);
+        }
     }
 }

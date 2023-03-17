@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net462;net7.0-windows; </TargetFrameworks>
@@ -61,7 +61,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Page Update="Windows\EditConnection.xaml">
+	  <Page Update="Windows\EditDataStoreConnection.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
 	  <Page Update="Windows\EditServerConnection.xaml">
 	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
 	    <SubType>Designer</SubType>

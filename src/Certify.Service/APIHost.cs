@@ -10,7 +10,7 @@ namespace Certify.Service
 {
     public partial class APIHost
     {
-        private System.Timers.Timer _frequentTimer; 
+        private System.Timers.Timer _frequentTimer;
         private System.Timers.Timer _hourlyTimer;
         private System.Timers.Timer _dailyTimer;
 
@@ -56,6 +56,7 @@ namespace Certify.Service
             _container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
 
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
+            currentCertifyManager.Init().Wait();
 
             // attached handlers for SignalR hub updates
             currentCertifyManager.SetStatusReporting(new StatusHubReporting());

@@ -5,6 +5,7 @@ using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Certify.Shared;
 
 namespace Certify.Client
 {
@@ -26,6 +27,13 @@ namespace Certify.Client
 
         Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
         Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
+
+        Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId);
+        Task<List<ProviderDefinition>> GetDataStoreProviders();
+        Task<List<DataStoreConnection>> GetDataStoreConnections();
+        Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId);
+        Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection);
+        Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection);
 
         #endregion System
 

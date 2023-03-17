@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Datastore.Postgres;
+using Certify.Datastore.SQLServer;
 using Certify.Management;
 using Certify.Models.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -78,6 +80,17 @@ namespace Certify.Core.Tests
             var secret = await credentialsManager.GetUnlockedCredential(test.StorageKey);
             Assert.IsNotNull(secret);
             Assert.IsTrue(secret == testSecret, "Credential decrypted");
+
+            // perform test update to existing credential
+            test.Title = "Updated title 1";
+            result = await credentialsManager.Update(test);
+
+            Assert.IsNotNull(result, "Credential updated OK");
+            Assert.AreEqual(test.Title, result.Title);
+
+            // cleanup
+
+            await credentialsManager.Delete(null, test.StorageKey);
         }
 
         [TestMethod]

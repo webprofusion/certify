@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -100,5 +100,13 @@ namespace Certify.Management
         IManagedItemStore GetManagedItemStore();
 
         Task ApplyPreferences();
+
+        Task<List<ProviderDefinition>> GetDataStoreProviders();
+        Task<List<DataStoreConnection>> GetDataStores();
+        Task<List<ActionStep>> CopyDateStoreToTarget(string sourceId, string destId);
+        Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId);
+        Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore);
+        Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId);
+        Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
     }
 }

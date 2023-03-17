@@ -144,7 +144,6 @@ namespace Certify.UI.Controls.Settings
                     RefreshRewalIntervalLimits();
                 }
 
-
                 // save settings
                 await EditModel.MainViewModel.SavePreferences();
 
@@ -249,6 +248,16 @@ namespace Certify.UI.Controls.Settings
             {
                 MessageBox.Show("Enabling custom plugins is a significant security risk. Do not use plugins from unknown third parties.");
             }
+        }
+
+        private void EditDataStores(object sender, RoutedEventArgs e)
+        {
+            //present dialog
+            var d = new Windows.DataStoreConnections
+            {
+                Owner = Window.GetWindow(this)
+            };
+            d.ShowDialog();
         }
     }
 }

@@ -5,8 +5,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Datastore.Postgres;
+using Certify.Datastore.SQLite;
 using Certify.Datastore.SQLServer;
-using Certify.Management;
 using Certify.Models;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -96,7 +96,7 @@ namespace Certify.Core.Tests
         public async Task TestLoadManagedCertificates(string storeType = null)
         {
             var itemManager = GetManagedItemStore(storeType ?? _storeType);
-            
+
             var testCert = BuildTestManagedCertificate();
             try
             {
@@ -146,15 +146,23 @@ namespace Certify.Core.Tests
 
             Assert.IsNotNull(managedCertificate, "Create/store managed site");
 
-            //check site now exists
+            //check item now exists
             managedCertificate = await itemManager.GetById(testSite.Id);
             Assert.IsNotNull(managedCertificate, "Retrieve managed site");
+
+            // test update
+            testSite.Name = "Test update";
+            var result = await itemManager.Update(testSite);
+            Assert.IsNotNull(result, "Update managed site");
+            Assert.AreEqual(testSite.Name, result.Name);
 
             await itemManager.Delete(managedCertificate);
             managedCertificate = await itemManager.GetById(testSite.Id);
 
             // now check site has been delete
             Assert.IsNull(managedCertificate, "Managed site deleted");
+
+
         }
 
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
@@ -163,7 +171,7 @@ namespace Certify.Core.Tests
         public async Task TestCreateDeleteManyManagedCertificates(string storeType = null)
         {
             var itemManager = GetManagedItemStore(storeType ?? _storeType);
-          
+
             var testItem = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),

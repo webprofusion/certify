@@ -250,7 +250,38 @@ namespace Certify.Client
             var result = await PostAsync("system/migration/import", importRequest);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
+        public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
+        {
+            var result = await PostAsync($"system/datastores/setdefault/{dataStoreId}", null);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
+        }
+        public async Task<List<ProviderDefinition>> GetDataStoreProviders()
+        {
+            var result = await FetchAsync("system/datastores/providers");
+            return JsonConvert.DeserializeObject<List<ProviderDefinition>>(result);
+        }
+        public async Task<List<DataStoreConnection>> GetDataStoreConnections()
+        {
+            var result = await FetchAsync("system/datastores/");
+            return JsonConvert.DeserializeObject<List<DataStoreConnection>>(result);
+        }
+        public async Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId)
+        {
+            var result = await PostAsync($"system/datastores/copy/{sourceId}/{targetId}", null);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
+        }
 
+        public async Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection)
+        {
+            var result = await PostAsync($"system/datastores/update", dataStoreConnection);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection)
+        {
+            var result = await PostAsync($"system/datastores/test", dataStoreConnection);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
+        }
         #endregion System
 
         #region Server

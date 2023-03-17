@@ -5,6 +5,8 @@ using System.Web.Http.Cors;
 using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
+using Certify.Shared;
 
 namespace Certify.Service.Controllers
 {
@@ -55,5 +57,44 @@ namespace Certify.Service.Controllers
         {
             return await _certifyManager.PerformImport(importRequest);
         }
+
+        [HttpGet, Route("datastores/providers")]
+        public async Task<List<ProviderDefinition>> GetDataStoreProviders()
+        {
+            return await _certifyManager.GetDataStoreProviders();
+        }
+
+        [HttpGet, Route("datastores/")]
+        public async Task<List<DataStoreConnection>> GetDataStores()
+        {
+            return await _certifyManager.GetDataStores();
+        }
+
+        [HttpPost, Route("datastores/copy/{sourceId}/{destId}")]
+        public async Task<List<ActionStep>> CopyDataStoreToTarget(string sourceId, string destId)
+        {
+            return await _certifyManager.CopyDateStoreToTarget(sourceId, destId);
+        }
+
+        [HttpPost, Route("datastores/setdefault/{dataStoreId}")]
+        public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
+        {
+            return await _certifyManager.SetDefaultDataStore(dataStoreId);
+        }
+
+        [HttpPost, Route("datastores/update")]
+        public async Task<List<ActionStep>> UpdateDataStore(DataStoreConnection dataStore)
+        {
+            return await _certifyManager.UpdateDataStoreConnection(dataStore);
+        }
+
+        [HttpPost, Route("datastores/test")]
+        public async Task<List<ActionStep>> TestDataStore(DataStoreConnection dataStore)
+        {
+            return await _certifyManager.TestDataStoreConnection(dataStore);
+        }
+
+        [HttpPost, Route("datastores/delete")]
+        public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
     }
 }
