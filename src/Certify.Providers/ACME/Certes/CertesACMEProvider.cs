@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,7 +15,6 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
-using Newtonsoft.Json;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
