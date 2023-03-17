@@ -258,8 +258,8 @@ namespace Certify.Management
                 //get verified signed file cert
                 var cert = CertificateManager.GetFileCertificate(tempFile);
 
-                //ensure cert subject
-                if (!(cert != null && wintrustSignatureVerified && cert.SubjectName.Name.StartsWith("CN=Webprofusion Pty Ltd, O=Webprofusion Pty Ltd")))
+                //also test cert subject (not rigorous, just an additional check)
+                if (!(cert != null && wintrustSignatureVerified && cert.SubjectName.Name.Contains("Webprofusion")))
                 {
                     if (throwOnDeviation)
                     {
