@@ -38,4 +38,11 @@ namespace Certify.Models
 
         public List<string> TargetManagedCertificates { get; set; } = new();
     }
+    public class RenewalPrefs
+    {
+        public int RenewalIntervalDays { get; set; }
+        public string RenewalIntervalMode { get; set; } = string.Empty;
+        public int MaxRenewalRequests { get; set; }
+        public bool IncludeStoppedSites { get; set; }
+    }
 }
