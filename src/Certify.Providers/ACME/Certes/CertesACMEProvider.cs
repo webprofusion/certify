@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -451,7 +451,8 @@ namespace Certify.Providers.ACME.Certes
 
         public async Task<AcmeDirectoryInfo> GetAcmeDirectory()
         {
-            if (_dir != null)
+            // if we have a valid cached copy, use that
+            if (_dir != null && _dir.NewOrder != null)
             {
                 return _dir;
             }
@@ -462,11 +463,24 @@ namespace Certify.Providers.ACME.Certes
 
                 var dir = await tempAcmeContext.GetDirectory(true);
 
-                var dirObj = JsonConvert.DeserializeObject<AcmeDirectoryInfo>(JsonConvert.SerializeObject(dir));
+                _dir = new AcmeDirectoryInfo
+                {
+                    NewAccount = dir.NewAccount,
+                    NewNonce = dir.NewNonce,
+                    NewOrder = dir.NewOrder,
+                    RevokeCert = dir.RevokeCert,
+                    KeyChange = dir.KeyChange,
+                    Meta = new AcmeDirectoryInfo.AcmeDirectoryMeta
+                    {
+                        TermsOfService = dir.Meta.TermsOfService,
+                        Website = dir.Meta.Website,
+                        CaaIdentities = dir.Meta.CaaIdentities,
+                        ExternalAccountRequired = dir.Meta.ExternalAccountRequired
+                    },
+                    RenewalInfo = dir.RenewalInfo
+                };
 
-                _dir = dirObj;
-
-                return dirObj;
+                return _dir;
             }
             catch
             {
@@ -1797,16 +1811,22 @@ namespace Certify.Providers.ACME.Certes
         {
             var info = await _acme.GetRenewalInfo(certificateId);
 
-            return new RenewalInfo
+            if (info != null)
             {
-                ExplanationURL = info.ExplanationURL,
-                SuggestedWindow = new RenewalWindow
+                return new RenewalInfo
                 {
-                    Start = info.SuggestedWindow.Start,
-                    End = info.SuggestedWindow.End
-                }
-            };
-
+                    ExplanationURL = info.ExplanationURL,
+                    SuggestedWindow = new RenewalWindow
+                    {
+                        Start = info.SuggestedWindow.Start,
+                        End = info.SuggestedWindow.End
+                    }
+                };
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

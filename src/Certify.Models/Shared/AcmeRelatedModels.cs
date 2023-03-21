@@ -35,38 +35,38 @@ namespace Certify.Models.Shared
         public class AcmeDirectoryMeta
         {
             [JsonProperty("termsOfService")]
-            public Uri? TermsOfService { get; }
+            public Uri? TermsOfService { get; set; }
 
             [JsonProperty("website")]
-            public Uri? Website { get; }
+            public Uri? Website { get; set; }
 
             [JsonProperty("caaIdentities")]
-            public IList<string>? CaaIdentities { get; }
+            public IList<string>? CaaIdentities { get; set; }
 
             [JsonProperty("externalAccountRequired")]
-            public bool? ExternalAccountRequired { get; }
+            public bool? ExternalAccountRequired { get; set; }
         }
 
         [JsonProperty("newNonce")]
-        public Uri? NewNonce { get; }
+        public Uri? NewNonce { get; set; }
 
         [JsonProperty("newAccount")]
-        public Uri? NewAccount { get; }
+        public Uri? NewAccount { get; set; }
 
         [JsonProperty("newOrder")]
-        public Uri? NewOrder { get; }
+        public Uri? NewOrder { get; set; }
 
         [JsonProperty("revokeCert")]
-        public Uri? RevokeCert { get; }
+        public Uri? RevokeCert { get; set; }
 
         [JsonProperty("keyChange")]
-        public Uri? KeyChange { get; }
+        public Uri? KeyChange { get; set; }
 
         [JsonProperty("renewalInfo")]
-        public Uri? RenewalInfo { get; }
+        public Uri? RenewalInfo { get; set; }
 
         [JsonProperty("meta")]
-        public AcmeDirectoryMeta? Meta { get; }
+        public AcmeDirectoryMeta? Meta { get; set; }
     }
 
     public class PendingOrder
