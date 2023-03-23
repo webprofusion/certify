@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
 using Certes;
 using Certes.Acme;
@@ -21,70 +20,7 @@ using Org.BouncyCastle.X509;
 namespace Certify.Providers.ACME.Certes
 {
     /// <summary>
-    /// Certes Provider settings for serialization
-    /// </summary>
-    public class CertesSettings
-    {
-        public string AccountEmail { get; set; }
-        public string AccountUri { get; set; }
-        public string AccountKey { get; set; }
-    }
-
-    public class DiagEcKey
-    {
-        public string kty { get; set; }
-        public string crv { get; set; }
-        public string x { get; set; }
-        public string y { get; set; }
-    }
-
-    // used to diagnose account key faults
-    public class DiagAccountInfo
-    {
-        public int ID { get; set; }
-        public DiagEcKey Key { get; set; }
-    }
-
-    public class LoggingHandler : DelegatingHandler
-    {
-        public DiagAccountInfo DiagAccountInfo { get; set; }
-        private ILog _log = null;
-
-        public LoggingHandler(HttpMessageHandler innerHandler, ILog log)
-            : base(innerHandler)
-        {
-            _log = log;
-        }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (_log != null)
-            {
-                _log.Debug($"Http Request: {request}");
-                if (request.Content != null)
-                {
-                    _log.Debug(await request.Content.ReadAsStringAsync());
-                }
-            }
-
-            var response = await base.SendAsync(request, cancellationToken);
-
-            if (_log != null)
-            {
-                _log.Debug($"Http Response: {response}");
-
-                if (response.Content != null)
-                {
-                    _log.Debug(await response.Content.ReadAsStringAsync());
-                }
-            }
-
-            return response;
-        }
-    }
-
-    /// <summary>
-    /// ACME Provider using certes https://github.com/fszlin/certes
+    /// ACME Provider using certes https://github.com/webprofusion/certes based on https://github.com/fszlin/certes
     /// </summary>
     public class CertesACMEProvider : IACMEClientProvider
     {
@@ -202,7 +138,7 @@ namespace Certify.Providers.ACME.Certes
                     var settingsFilePath = Path.Combine(_settingsFolder, "c-settings.json");
                     if (File.Exists(settingsFilePath))
                     {
-                        var json = System.IO.File.ReadAllText(settingsFilePath);
+                        var json = File.ReadAllText(settingsFilePath);
                         _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
                     }
                     else
@@ -212,10 +148,10 @@ namespace Certify.Providers.ACME.Certes
 
                     if (!string.IsNullOrEmpty(_settings.AccountKey))
                     {
-                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
                             //remove legacy key info
-                            System.IO.File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
+                            File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
                         }
 
                         SetAcmeContextAccountKey(_settings.AccountKey);
@@ -223,9 +159,9 @@ namespace Certify.Providers.ACME.Certes
                     else
                     {
                         // no account key in settings, check .key (legacy key file)
-                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
-                            var pem = System.IO.File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
+                            var pem = File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
                             SetAcmeContextAccountKey(pem);
                         }
                     }
@@ -1165,8 +1101,6 @@ namespace Certify.Providers.ACME.Certes
                     log.Warning("Failed to determine error message for failed authorization.");
                 }
 
-                pendingAuthorization.Identifier.ValidationError = "Failed";
-                pendingAuthorization.Identifier.ValidationErrorType = "Error";
                 pendingAuthorization.IsValidated = false;
             }
 
@@ -1422,7 +1356,7 @@ namespace Certify.Providers.ACME.Certes
 
                     if (certAdded)
                     {
-                        return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
+                        return System.Text.Encoding.ASCII.GetBytes(writer.ToString());
                     }
                     else
                     {
@@ -1548,7 +1482,7 @@ namespace Certify.Providers.ACME.Certes
                 }
 
                 // well known CA certs
-                var knownCAs = Certify.Models.CertificateAuthority.CoreCertificateAuthorities;
+                var knownCAs = CertificateAuthority.CoreCertificateAuthorities;
                 foreach (var ca in knownCAs)
                 {
                     foreach (var cert in ca.TrustedRoots)
@@ -1691,7 +1625,7 @@ namespace Certify.Providers.ACME.Certes
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
-                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
             {
@@ -1712,7 +1646,7 @@ namespace Certify.Providers.ACME.Certes
                 try
                 {
                     pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
-                    System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+                    File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)
                 {
@@ -1745,12 +1679,12 @@ namespace Certify.Providers.ACME.Certes
 
             if (!File.Exists(privateKeyPath))
             {
-                System.IO.File.WriteAllText(privateKeyPath, csrKey.ToPem());
+                File.WriteAllText(privateKeyPath, csrKey.ToPem());
             }
 
             // fullchain.pem - full chain without key
             var fullchainPath = Path.GetFullPath(Path.Combine(new string[] { storePath, "fullchain.pem" }));
-            System.IO.File.WriteAllText(fullchainPath, certificateChain.ToPem());
+            File.WriteAllText(fullchainPath, certificateChain.ToPem());
 
             return fullchainPath;
         }
@@ -1792,17 +1726,6 @@ namespace Certify.Providers.ACME.Certes
             }
 
             return new StatusMessage { IsOK = true, Message = "Certificate revoked" };
-        }
-
-        public List<RegistrationItem> GetContactRegistrations()
-        {
-            var list = new List<RegistrationItem>();
-            if (IsAccountRegistered())
-            {
-                list.Add(new RegistrationItem { Name = _settings.AccountEmail });
-            }
-
-            return list;
         }
 
         public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
