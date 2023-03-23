@@ -48,14 +48,7 @@ namespace Certify.Management
             {
                 var allCredentials = await credentialsManager.GetCredentials();
 
-                var allDomains = new List<string> { item.RequestConfig.PrimaryDomain };
-
-                if (item.RequestConfig.SubjectAlternativeNames != null)
-                {
-                    allDomains.AddRange(item.RequestConfig.SubjectAlternativeNames);
-                }
-
-                allDomains = allDomains.Distinct().OrderBy(d => d).ToList();
+                var allDomains = item.GetCertificateIdentifiers();
 
                 // certificate summary
                 var certDescription = new StringBuilder();

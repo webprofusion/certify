@@ -116,10 +116,10 @@ namespace Certify.Models.Shared.Validation
             }
 
             // update our list of selected subject ip addresses, if any
-            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray()))
+            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip).Select(s => s.Domain).ToArray()))
             {
 
-                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip" && i.Domain != null)
+                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip && i.Domain != null)
                                                               .Select(s => s.Domain ?? string.Empty)
                                                               .ToArray();
             }
@@ -228,7 +228,7 @@ namespace Certify.Models.Shared.Validation
                             }
                             else if (Uri.CheckHostName(domain) == UriHostNameType.IPv4 || Uri.CheckHostName(domain) == UriHostNameType.IPv6)
                             {
-                                option.Type = "ip";
+                                option.Type = CertIdentifierType.Ip;
                                 // add an IP address instead of a domain
                                 if (item.DomainOptions.Count == 0)
                                 {

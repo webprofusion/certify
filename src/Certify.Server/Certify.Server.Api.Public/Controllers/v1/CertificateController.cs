@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
+using Certify.Models;
 using Certify.Models.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -162,8 +163,8 @@ namespace Certify.Server.API.Controllers
             {
                 Id = i.Id,
                 Title = i.Name,
-                PrimaryIdentifier = new Identifier { Type = "dns", Value = i.RequestConfig.PrimaryDomain },
-                Identifiers = i.RequestConfig.SubjectAlternativeNames.Select(s => new Identifier { Type = "dns", Value = s }),
+                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
+                Identifiers = i.GetCertificateIdentifiers(),
                 DateRenewed = i.DateRenewed,
                 DateExpiry = i.DateExpiry,
                 Comments = i.Comments,

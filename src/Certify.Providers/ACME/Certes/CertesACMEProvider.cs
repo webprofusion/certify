@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -994,11 +994,11 @@ namespace Certify.Providers.ACME.Certes
                          new PendingAuthorization
                          {
                              Challenges = challenges,
-                             Identifier = new IdentifierItem
+                             Identifier = new CertIdentifierItem
                              {
-                                 Dns = authzDomain,
-                                 ItemType = authIdentifierType == IdentifierType.Ip ? "ip" : "dns",
-                                 IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
+                                 Value = (authIdentifierType == IdentifierType.Dns) ? authzDomain.Trim().ToLowerInvariant() : authzDomain,
+                                 IdentifierType = authIdentifierType.ToString(),
+                                 IsAuthorizationPending = !challenges.Any(c => c.IsValidated) // auth is pending if we have no challenges already validated
                              },
                              AuthorizationContext = authContext,
                              IsValidated = challenges.Any(c => c.IsValidated),

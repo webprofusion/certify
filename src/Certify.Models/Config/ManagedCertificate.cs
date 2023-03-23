@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using System.Xml.Serialization;
 using Certify.Config;
+using Certify.Models.Config;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -244,6 +247,38 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// get distrinct list of certificate identifiers for this managed cert
+        /// </summary>
+        /// <returns></returns>
+        public List<CertIdentifierItem> GetCertificateIdentifiers()
+        {
+            var identifiers = new List<CertIdentifierItem>();
+
+            var domains = GetCertificateDomains();
+            foreach (var d in domains)
+            {
+                identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
+            }
+
+            if (RequestConfig.SubjectIPAddresses?.Any() == true)
+            {
+                foreach (var ip in RequestConfig.SubjectIPAddresses)
+                {
+                    identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Ip, Value = ip });
+                }
+            }
+
+            if (RequestConfig.SubjectTNList?.Any() == true)
+            {
+                foreach (var tn in RequestConfig.SubjectTNList)
+                {
+                    identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = tn });
+                }
+            }
+
+            return identifiers;
+        }
+        /// <summary>
         /// Get distinct list of certificate domains/hostnames for this managed cert
         /// </summary>
         /// <returns></returns>
@@ -271,15 +306,15 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// For the given challenge config and list of domains, return subset of domains which will
+        /// For the given challenge config and list of identifiers, return subset of identifiers which will
         /// be matched against the config (considering all other configs)
         /// </summary>
         /// <param name="config">  </param>
-        /// <param name="domains">  </param>
+        /// <param name="identifiers">  </param>
         /// <returns>  </returns>
-        public List<string> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<string> domains)
+        public List<CertIdentifierItem> GetChallengeConfigDomainMatches(CertRequestChallengeConfig config, IEnumerable<CertIdentifierItem> domains)
         {
-            var matches = new List<string>();
+            var matches = new List<CertIdentifierItem>();
             foreach (var d in domains)
             {
                 var matchedConfig = GetChallengeConfig(d);
@@ -293,17 +328,13 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// For the given domain, get the matching challenge config (DNS provider variant etc)
+        /// For the given identifier, get the matching challenge config (DNS provider variant etc)
         /// </summary>
         /// <param name="managedCertificate">  </param>
-        /// <param name="domain">  </param>
+        /// <param name="identifier">  </param>
         /// <returns>  </returns>
-        public CertRequestChallengeConfig GetChallengeConfig(string domain)
+        public CertRequestChallengeConfig GetChallengeConfig(CertIdentifierItem identifier)
         {
-            if (domain != null)
-            {
-                domain = domain.Trim().ToLower();
-            }
 
             if (RequestConfig.Challenges == null || RequestConfig.Challenges.Count == 0)
             {
@@ -317,19 +348,19 @@ namespace Certify.Models
             }
             else
             {
-                //identify matching challenge config based on domain etc
+                //identify matching challenge config based on identifier etc
                 if (RequestConfig.Challenges.Count == 1)
                 {
                     return RequestConfig.Challenges[0];
                 }
                 else
                 {
-                    // start by matching first config with no specific domain
+                    // start by matching first config with no specific identifier
                     var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
 
-                    if (domain != null && !string.IsNullOrEmpty(domain))
+                    if (identifier != null && !string.IsNullOrEmpty(identifier?.Value))
                     {
-                        // expand configs into per domain list
+                        // expand configs into per identifier list
                         var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
                         foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
                         {
@@ -343,7 +374,7 @@ namespace Certify.Models
                                     {
                                         var domainMatchKey = c.DomainMatch.Trim();
 
-                                        // if domain key is test.com for example we only support one matching config
+                                        // if identifier key is test.com for example we only support one matching config
                                         if (!configsPerDomain.ContainsKey(domainMatchKey))
                                         {
                                             configsPerDomain.Add(domainMatchKey, c);
@@ -356,7 +387,7 @@ namespace Certify.Models
                                         {
                                             if (!string.IsNullOrWhiteSpace(d))
                                             {
-                                                var domainMatchKey = d.Trim().ToLower();
+                                                var domainMatchKey = d.Trim().ToLowerInvariant();
                                                 if (!configsPerDomain.ContainsKey(domainMatchKey))
                                                 {
                                                     configsPerDomain.Add(domainMatchKey, c);
@@ -369,23 +400,24 @@ namespace Certify.Models
                         }
 
                         // if exact match exists, use that
-                        if (configsPerDomain.ContainsKey(domain))
+                        var identifierKey = identifier.Value.ToLowerInvariant() ?? "";
+                        if (configsPerDomain.TryGetValue(identifierKey, out var value))
                         {
-                            return configsPerDomain[domain];
+                            return value;
                         }
 
                         // if explicit wildcard match exists, use that
-                        if (configsPerDomain.ContainsKey("*." + domain))
+                        if (configsPerDomain.TryGetValue("*." + identifierKey, out var wildValue))
                         {
-                            return configsPerDomain["*." + domain];
+                            return wildValue;
                         }
 
-                        //if a more specific config matches the domain, use that, in order of longest domain name match first
+                        //if a more specific config matches the identifier, use that, in order of longest identifier name match first
                         var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
 
                         foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
                         {
-                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, domain))
+                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifier.Value))
                             {
                                 return configsPerDomain[wildcard];
                             }
@@ -393,9 +425,9 @@ namespace Certify.Models
 
                         foreach (var configDomain in allMatchingConfigKeys)
                         {
-                            if (configDomain.EndsWith(domain, StringComparison.CurrentCultureIgnoreCase))
+                            if (configDomain.EndsWith(identifier.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
                             {
-                                // use longest matching domain (so subdomain.test.com takes priority
+                                // use longest matching identifier (so subdomain.test.com takes priority
                                 // over test.com, )
                                 return configsPerDomain[configDomain];
                             }
@@ -497,9 +529,11 @@ namespace Certify.Models
         public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname, bool matchWildcardsToRootDomain = false)
         {
             var isMatch = false;
-
+            
             if (!string.IsNullOrEmpty(hostname))
             {
+                hostname = hostname.ToLowerInvariant();
+
                 // list of dns anmes has an exact match
                 if (dnsNames.Contains(hostname))
                 {
@@ -519,14 +553,14 @@ namespace Certify.Models
                         {
                             var domain = w.Replace("*.", "");
 
-                            // if match wildcards to root is enabled and is a root domain match
+                            // if match wildcards to root is enabled and is a root identifier match
                             if (string.Equals(domain, hostname, StringComparison.OrdinalIgnoreCase) && matchWildcardsToRootDomain)
                             {
                                 isMatch = true;
                             }
                             else
                             {
-                                //if hostname ends with our domain and is only 1 label longer then it's a match
+                                //if hostname ends with our identifier and is only 1 label longer then it's a match
                                 if (hostname.EndsWith("." + domain, StringComparison.CurrentCultureIgnoreCase))
                                 {
                                     if (hostname.Count(c => c == '.') == domain.Count(c => c == '.') + 1)
