@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -348,6 +348,10 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// used to set a specific account for testing, instead of loading from config
+        /// </summary>
+        public AccountDetails ForceAccountDetails { get; set; }
+        /// <summary>
         /// Get the ACME client applicable for the given managed certificate
         /// </summary>
         /// <param name="managedItem"></param>
@@ -355,7 +359,7 @@ namespace Certify.Management
         public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
         {
             // determine account to use for the given managed cert
-            var acc = await GetAccountDetailsForManagedItem(managedItem);
+            var acc = ForceAccountDetails ?? await GetAccountDetailsForManagedItem(managedItem);
             if (acc != null)
             {
                 _certificateAuthorities.TryGetValue(acc.CertificateAuthorityId, out var ca);

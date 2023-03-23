@@ -182,6 +182,11 @@ namespace Certify.Providers.ACME.Certes
                 SetAcmeContextAccountKey(_settings.AccountKey);
             }
 
+            if (!string.IsNullOrEmpty(_settings.AccountUri))
+            {
+                _acme.SetAccountUri(new Uri(_settings.AccountUri));
+            }
+
             _currentOrders = new ConcurrentDictionary<string, IOrderContext>();
 
             RefreshIssuerCertCache();
@@ -443,7 +448,7 @@ namespace Certify.Providers.ACME.Certes
                 }
 
                 // start new account context, create new account (with new key, if not enabled)
-                _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
+                _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
 
                 try
                 {
