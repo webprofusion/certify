@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
-using System.Xml.Serialization;
 using Certify.Config;
-using Certify.Models.Config;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -529,7 +526,7 @@ namespace Certify.Models
         public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname, bool matchWildcardsToRootDomain = false)
         {
             var isMatch = false;
-            
+
             if (!string.IsNullOrEmpty(hostname))
             {
                 hostname = hostname.ToLowerInvariant();

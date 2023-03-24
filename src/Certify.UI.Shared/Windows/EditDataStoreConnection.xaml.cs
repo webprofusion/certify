@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Input;
 using Certify.Models;
 using Certify.Models.Config;

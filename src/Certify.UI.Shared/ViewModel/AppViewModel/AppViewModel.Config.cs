@@ -381,7 +381,8 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        internal async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection item) {
+        internal async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection item)
+        {
             return await _certifyClient.TestDataStoreConnection(item);
         }
     }

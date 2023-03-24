@@ -63,7 +63,7 @@ namespace Certify.Core.Management.Challenges
             // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
             // test.wwww.example.com can
             var invalidLabels = new List<CertIdentifierItem>();
-            if (identifiers.Any(d => d.IdentifierType== CertIdentifierType.Dns && d.Value.StartsWith("*.")))
+            if (identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
             {
                 foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
                 {
@@ -96,7 +96,7 @@ namespace Certify.Core.Management.Challenges
 
                     var tasks = new List<Task<List<ActionResult>>>();
 
-                    foreach (var d in identifiers.Where(d=>d.IdentifierType== CertIdentifierType.Dns))
+                    foreach (var d in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns))
                     {
                         tasks.Add(_netUtil.CheckDNS(log, d.Value.Replace("*.", ""), includeIPResolution));
                     }
@@ -300,7 +300,7 @@ namespace Certify.Core.Management.Challenges
         public async Task<PendingAuthorization> PrepareAutomatedChallengeResponse(ILog log, ITargetWebServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
         {
             var requestConfig = managedCertificate.RequestConfig;
-            
+
             var challengeConfig = managedCertificate.GetChallengeConfig(pendingAuth.Identifier);
 
             if (pendingAuth.Challenges != null)
@@ -349,13 +349,13 @@ namespace Certify.Core.Management.Challenges
                         pendingAuth.AttemptedChallenge.ConfigCheckedOK = true;
                         // perform tkauth-01 challenge response
                         //var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
-                       /*
-                        pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
-                        pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
-                        pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
-                        pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
-                        pendingAuth.IsFailure = !check.Result.IsSuccess;
-                        pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";*/
+                        /*
+                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
+                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
+                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
+                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
+                         pendingAuth.IsFailure = !check.Result.IsSuccess;
+                         pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";*/
                     }
                 }
             }

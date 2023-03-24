@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Certify.Models;
-using Certify.Models.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit

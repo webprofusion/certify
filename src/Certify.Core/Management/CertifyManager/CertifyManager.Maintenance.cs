@@ -7,9 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Models.Plugins;
-using Microsoft.IdentityModel.Abstractions;
-using Newtonsoft.Json;
 
 namespace Certify.Management
 {

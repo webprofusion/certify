@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text;
-
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public static class CertIdentifierType
     {

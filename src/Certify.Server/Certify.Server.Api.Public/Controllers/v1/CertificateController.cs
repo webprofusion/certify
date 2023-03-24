@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Models;
 using Certify.Models.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -112,7 +111,6 @@ namespace Certify.Server.API.Controllers
             return new FileContentResult(bytes, "text/plain") { FileDownloadName = "log.txt" };
 
         }
-
 
         /// <summary>
         /// Download text log for the given managed certificate
