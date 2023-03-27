@@ -73,6 +73,11 @@ namespace Certify.Models
         public string[]? SubjectIPAddresses { get; set; } = Array.Empty<string>();
 
         /// <summary>
+        /// Optional list of TNAuthList items for Telephone Number certs
+        /// </summary>
+        public string[]? SubjectTNList { get; set; } = Array.Empty<string>();
+
+        /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
         /// </summary>
         ///
@@ -226,6 +231,11 @@ namespace Certify.Models
         /// If set, this is a custom PEM encoded CSR to use for the certificate signing request to the CA
         /// </summary>
         public string? CustomCSR { get; set; }
+
+        /// <summary>
+        /// If set, this is one or more custom JWT tokens used for TkAuth-01 : https://datatracker.ietf.org/doc/draft-ietf-acme-authority-token-tnauthlist/13/
+        /// </summary>
+        public string[]? AuthorityTokens{ get; set; }
 
         /// <summary>
         /// If set, this is a custom Private Key to use for certificate signing

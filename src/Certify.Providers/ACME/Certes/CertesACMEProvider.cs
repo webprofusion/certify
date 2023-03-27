@@ -611,6 +611,14 @@ namespace Certify.Providers.ACME.Certes
                 }
             }
 
+            if (config.SubjectTNList?.Any() == true)
+            {
+                foreach (var i in config.SubjectTNList)
+                {
+                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.TNAuthList, Value = i });
+                }
+            }
+
             try
             {
                 IOrderContext order = null;
@@ -802,6 +810,7 @@ namespace Certify.Providers.ACME.Certes
                         // determine if we are interested in each challenge type before fetching the challenge details, some APIs hang when you fetch a validated auth
                         var includeHttp01 = true;
                         var includeDns01 = true;
+                        var includeTkAuth01 = true;
 
                         if (_compatibilityMode == ACMECompatibilityMode.AltProvider1)
                         {
@@ -813,6 +822,11 @@ namespace Certify.Providers.ACME.Certes
                             if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
                             {
                                 includeDns01 = false;
+                            }
+
+                            if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH) != true)
+                            {
+                                includeTkAuth01 = false;
                             }
 
                             if (includeDns01 == false && includeHttp01 == false)
@@ -926,6 +940,55 @@ namespace Certify.Providers.ACME.Certes
                                     Value = dnsValue,
                                     ChallengeData = dnsChallenge,
                                     IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
+                                });
+                            }
+                        }
+
+                        // add TkAuth challenge (if any)
+                        if (includeTkAuth01)
+                        {
+                            IChallengeContext tkAuthChallenge = null;
+
+                            try
+                            {
+                                var c = await authContext.Challenges();
+                                tkAuthChallenge = c.FirstOrDefault(ch => ch.Type == ChallengeTypes.TkAuth01);
+                            }
+                            catch (Exception)
+                            {
+                                log.Information("Could not fetch a tkauth-01 challenge for this identifier: " + authzDomain);
+                            }
+
+                            if (tkAuthChallenge != null)
+                            {
+                                Challenge tkChallengeStatus;
+                                if (useAuthzForChallengeStatus)
+                                {
+                                    // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
+                                    tkChallengeStatus = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.TkAuth01);
+                                }
+                                else
+                                {
+                                    // fetch status directly from /challenge/ api
+                                    tkChallengeStatus = await tkAuthChallenge.Resource();
+                                }
+
+                                log.Information($"Got tkauth-01 challenge {tkChallengeStatus.Url}");
+
+                                if (tkChallengeStatus.Status == ChallengeStatus.Invalid)
+                                {
+                                    log?.Error($"tkauth-01 challenge has an invalid status");
+                                }
+
+                                var token = _acme.AccountKey.DnsTxt(tkAuthChallenge.Token);
+
+                                challenges.Add(new AuthorizationChallengeItem
+                                {
+                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH,
+                                    Key = token,
+                                    Value = authzDomain,
+                                    ChallengeData = tkAuthChallenge,
+                                    IsValidated = (tkChallengeStatus.Status == ChallengeStatus.Valid)
                                 });
                             }
                         }
@@ -1223,12 +1286,20 @@ namespace Certify.Providers.ACME.Certes
                     }
                     else
                     {
+                        if (config.Challenges.Any(t => t.ChallengeType == ChallengeTypes.TkAuth01))
+                        {
+                            // CSR is for TkAuth01
+                            var csrInfo = new CsrInfo { };
+                            order = await orderContext.Finalize(csrInfo, csrKey);
+                        }
+                        else
+                        {
                         order = await orderContext.Finalize(new CsrInfo
                         {
                             CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
                             RequireOcspMustStaple = config.RequireOcspMustStaple
                         }, csrKey);
-
+                        }
                     }
 
                     //TODO: we can remove this as certes now provides this functionality, so we shouldn't hit the Processing state.
@@ -1320,7 +1391,7 @@ namespace Certify.Providers.ACME.Certes
             };
         }
 
-        private string GetDomainAsPath(string domain) => domain.Replace("*", "_");
+        private string GetDomainAsPath(string domain) => domain?.Replace("*", "_") ?? "";
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {
