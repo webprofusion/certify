@@ -210,8 +210,6 @@ namespace Certify.Management
 
                                     if (directoryInfo?.RenewalInfo != null)
                                     {
-                                    if (directoryInfo?.RenewalInfo != null)
-                                    {
                                         if (item.CertificatePath != null)
                                         {
                                             _serviceLog.Verbose($"Checking renewal info for {item.Name}");
@@ -220,6 +218,9 @@ namespace Certify.Management
                                             var info = await provider.GetRenewalInfo(certId);
 
                                             if (info != null && item.DateExpiry != null)
+                                            {
+                                                var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
+                                                if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
                                                     var scheduledRenewalDate = info.SuggestedWindow?.Start ?? nextRenewal;
 
@@ -237,22 +238,15 @@ namespace Certify.Management
                                                 }
                                             }
                                         }
-                                    } catch (Exception ex)
-                                    {
-                                        _serviceLog.Warning("Failed to perform renewal info check for {itemName} : {ex}", item.Name, ex);
                                     }
                                 }
-                                else
-                                {
-                                    _serviceLog.Warning("ACME Service Provider not available {itemName} : {exp}", item.Name);
-                                }
-
-                                completedRenewalInfoChecks.Add(item.Id);
                             }
                             catch (Exception ex)
                             {
-                                _serviceLog.Debug("Could not check item renewal info {itemName} : {exp}", item.Name, ex);
+                                _serviceLog.Warning("Failed to perform renewal info check for {itemName} : {ex}", item.Name, ex);
                             }
+
+                            completedRenewalInfoChecks.Add(item.Id);
 
                             await Task.Delay(checkThrottleMS);
                         }
