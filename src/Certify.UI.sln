@@ -2,23 +2,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
-	ProjectSection(SolutionItems) = preProject
-		README.md = README.md
-		docs\roadmap.md = docs\roadmap.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3ABBE541-54AF-46CC-9BEA-EC7434DE59C6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.CLI", "src\Certify.CLI\Certify.CLI.csproj", "{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.CLI", "Certify.CLI\Certify.CLI.csproj", "{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Client", "src\Certify.Client\Certify.Client.csproj", "{CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Client", "Certify.Client\Certify.Client.csproj", "{CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Locales", "src\Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Locales", "Certify.Locales\Certify.Locales.csproj", "{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Models", "src\Certify.Models\Certify.Models.csproj", "{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Models", "Certify.Models\Certify.Models.csproj", "{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Tests.Integration", "src\Certify.Tests\Certify.UI.Tests.Integration\Certify.UI.Tests.Integration.csproj", "{1C2D4CAC-7093-415A-8805-4C949CA1266A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Tests.Integration", "Certify.Tests\Certify.UI.Tests.Integration\Certify.UI.Tests.Integration.csproj", "{1C2D4CAC-7093-415A-8805-4C949CA1266A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12876723-F648-4E76-9242-110F5635A4B1}"
 	ProjectSection(SolutionItems) = preProject
@@ -27,21 +21,19 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{9A70DEC0-70C4-42A7-B15A-647EC432E7F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Shared.Core", "src\Certify.Shared\Certify.Shared.Core.csproj", "{ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Shared.Core", "Certify.Shared\Certify.Shared.Core.csproj", "{ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UI", "UI", "{F24166A2-37CB-4FE8-ADCF-8F94141D2E19}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Shared", "src\Certify.UI.Shared\Certify.UI.Shared.csproj", "{2F22CB91-04C6-4BF0-A670-91BDBAA65EE1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Shared", "Certify.UI.Shared\Certify.UI.Shared.csproj", "{2F22CB91-04C6-4BF0-A670-91BDBAA65EE1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Desktop", "src\Certify.UI.Desktop\Certify.UI.Desktop.csproj", "{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.UI.Desktop", "Certify.UI.Desktop\Certify.UI.Desktop.csproj", "{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5} = {1EFDEBE9-468B-4AA0-AFD4-1C6D0A321BE5}
 		{ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45} = {ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45}
 		{BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27} = {BAAA9B8C-E44B-43F6-AC9C-B5666E69EE27}
 		{CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5} = {CEC76BB6-5B17-4267-B1FF-5EA0F67EB1C5}
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Certes", "src\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj", "{DF16B470-EFFA-470B-9DFD-8722ED080204}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -115,14 +107,6 @@ Global
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|x64.ActiveCfg = Release|Any CPU
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E}.Release|x64.Build.0 = Release|Any CPU
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|x64.ActiveCfg = Debug|x64
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Debug|x64.Build.0 = Debug|x64
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|x64.ActiveCfg = Release|x64
-		{DF16B470-EFFA-470B-9DFD-8722ED080204}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -135,7 +119,6 @@ Global
 		{ABC56ACD-E306-42B1-B5D7-3A3E90FE9A45} = {9A70DEC0-70C4-42A7-B15A-647EC432E7F7}
 		{2F22CB91-04C6-4BF0-A670-91BDBAA65EE1} = {F24166A2-37CB-4FE8-ADCF-8F94141D2E19}
 		{4553FD40-4BE1-40B8-ADD4-AD715CB87F7E} = {F24166A2-37CB-4FE8-ADCF-8F94141D2E19}
-		{DF16B470-EFFA-470B-9DFD-8722ED080204} = {9A70DEC0-70C4-42A7-B15A-647EC432E7F7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D27296BB-12D3-44A5-B5A2-B79EB1AB223D}
