@@ -109,8 +109,6 @@ namespace Certify.Management
         public CertifyManager(bool useWindowsNativeFeatures = true)
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
-
-
         }
 
         public async Task Init()
