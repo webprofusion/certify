@@ -3,19 +3,19 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
     <Platforms>AnyCPU</Platforms>
-    <RootNamespace>Certify.Providers.Acme.Certes</RootNamespace>
-    <AssemblyName>Certify.Providers.Acme.Certes</AssemblyName>
+    <RootNamespace>Certify.Providers.Acme.Anvil</RootNamespace>
+    <AssemblyName>Certify.Providers.Acme.Anvil</AssemblyName>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
-    <PackageReference Include="Webprofusion.Certes" Version="2.4.2" />
 
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj" />
     <ProjectReference Include="..\..\..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
     <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />

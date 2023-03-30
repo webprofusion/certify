@@ -1,9 +1,9 @@
-﻿namespace Certify.Providers.ACME.Certes
+﻿namespace Certify.Providers.ACME.Anvil
 {
     /// <summary>
-    /// Certes Provider settings for serialization
+    /// Anvil Provider settings for serialization
     /// </summary>
-    public class CertesSettings
+    public class AnvilSettings
     {
         public string AccountEmail { get; set; }
         public string AccountUri { get; set; }

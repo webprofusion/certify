@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Providers.ACME.Certes;
+using Certify.Providers.ACME.Anvil;
 using Newtonsoft.Json;
 
 namespace Certify.Management
@@ -336,7 +336,7 @@ namespace Certify.Management
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
                 var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
-                var provider = new CertesACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
+                var provider = new AnvilACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);
 
                 var acc = provider.GetCurrentAcmeAccount();

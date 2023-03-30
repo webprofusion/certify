@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +14,7 @@ using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Providers;
-using Certify.Providers.ACME.Certes;
+using Certify.Providers.ACME.Anvil;
 using Serilog;
 
 namespace Certify.Management
@@ -401,7 +401,7 @@ namespace Certify.Management
                 var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
+                var newProvider = new AnvilACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
 
                 if (!_useWindowsNativeFeatures)
                 {
