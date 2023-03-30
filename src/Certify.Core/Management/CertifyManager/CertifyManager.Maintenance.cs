@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
@@ -117,7 +118,7 @@ namespace Certify.Management
 
                 var itemsOcspRevoked = new List<string>();
                 var itemsOcspExpired = new List<string>();
-                var itemsViaARI = new List<string>();
+                var itemsViaARI = new Dictionary<string, DateTime>();
 
                 if (ocspItemsToCheck?.Any() == true)
                 {
@@ -176,6 +177,8 @@ namespace Certify.Management
                     {
                         _serviceLog.Information("Performing Renewal Info checks");
 
+                        var directoryInfoCache = new Dictionary<string, AcmeDirectoryInfo>();
+
                         foreach (var item in renewalInfoItemsToCheck)
                         {
                             if (cancelToken.IsCancellationRequested)
@@ -188,7 +191,23 @@ namespace Certify.Management
                                 var provider = await GetACMEProvider(item);
                                 if (provider != null)
                                 {
-                                    var directoryInfo = await provider?.GetAcmeDirectory();
+                                    var providerKey = provider.GetAcmeBaseURI();
+                                    directoryInfoCache.TryGetValue(providerKey, out var directoryInfo);
+
+                                    if (directoryInfo == null)
+                                    {
+                                        directoryInfo = await provider?.GetAcmeDirectory();
+
+                                        if (directoryInfo != null && directoryInfo.NewAccount != null)
+                                        {
+                                            try
+                                            {
+                                                directoryInfoCache.Add(providerKey, directoryInfo);
+                                            }
+                                            catch { }
+                                        }
+                                    }
+
                                     if (directoryInfo?.RenewalInfo != null)
                                     {
                                         if (item.CertificatePath != null)
@@ -203,10 +222,18 @@ namespace Certify.Management
                                                 var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
                                                 if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
-                                                    if (!itemsWhichRequireRenewal.Contains(item.Id))
+                                                    var scheduledRenewalDate = info.SuggestedWindow?.Start ?? nextRenewal;
+
+                                                    itemsViaARI.Add(item.Id, scheduledRenewalDate.LocalDateTime);
+
+                                                    if (scheduledRenewalDate < DateTimeOffset.Now)
                                                     {
-                                                        itemsWhichRequireRenewal.Add(item.Id);
-                                                        itemsViaARI.Add(item.Id);
+                                                        // item requires immediate renewal
+                                                        if (!itemsWhichRequireRenewal.Contains(item.Id))
+                                                        {
+                                                            itemsWhichRequireRenewal.Add(item.Id);
+
+                                                        }
                                                     }
                                                 }
                                             }
@@ -249,30 +276,36 @@ namespace Certify.Management
                         item.DateLastRenewalInfoCheck = DateTime.Now;
                     }
 
-                    // if item requires renewal, force expiry to now so that next renewal process will attempt renewal.
+                    if (itemsViaARI.ContainsKey(item.Id))
+                    {
+                        item.DateNextScheduledRenewalAttempt = itemsViaARI[item.Id];
+                    }
+
+                    // if item requires renewal, schedule next renewal attempt.
                     if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
                     {
                         if (item.DateExpiry > DateTime.Now.AddHours(1))
                         {
                             var reason = "Expiry";
 
-                            if (itemsViaARI.Contains(item.Id))
+                            if (itemsViaARI.ContainsKey(item.Id))
                             {
                                 reason = "ARI Suggested Window";
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
                             else if (itemsOcspRevoked.Contains(item.Id))
                             {
                                 reason = "OCSP status (Revoked)";
                                 item.CertificateRevoked = true;
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
                             else if (itemsOcspExpired.Contains(item.Id))
                             {
                                 reason = "OCSP status (Expired)";
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
 
                             _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
-
-                            item.DateExpiry = DateTime.Now;
                         }
                     }
 

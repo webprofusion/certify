@@ -144,6 +144,11 @@ namespace Certify.Models
         public DateTime? DateLastRenewalInfoCheck { get; set; }
 
         /// <summary>
+        /// If set, date we should next attempt renewal. This is normally not set but may be for items affected by ARI renewal windows etc
+        /// </summary>
+        public DateTime? DateNextScheduledRenewalAttempt { get; set; }
+
+        /// <summary>
         /// Date we last attempted renewal
         /// </summary>
         public DateTime? DateLastRenewalAttempt { get; set; }
