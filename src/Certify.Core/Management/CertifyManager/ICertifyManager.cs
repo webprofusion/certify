@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -78,7 +78,7 @@ namespace Certify.Management
 
         Task PerformCertificateCleanup();
 
-        Task<List<ActionResult>> PerformCertificateMaintenance();
+        Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null);
 
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
 

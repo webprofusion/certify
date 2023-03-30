@@ -61,7 +61,7 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
-        public async Task<List<ActionResult>> PerformCertificateMaintenance()
+        public async Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null)
         {
             if (_isRenewAllInProgress)
             {
@@ -73,7 +73,7 @@ namespace Certify.Management
             using (var cancellationTokenSource = new CancellationTokenSource())
             {
                 cancellationTokenSource.CancelAfter(30 * 60 * 1000); // 30 min auto-cancellation
-                await PerformCertificateStatusChecks(cancellationTokenSource.Token);
+                await PerformCertificateStatusChecks(cancellationTokenSource.Token, managedItemId);
                 steps.Add(new ActionResult("Performed OCSP and ARI Checks", true));
             }
 
@@ -83,9 +83,9 @@ namespace Certify.Management
         private DateTime? _lastStatusCheckInProgress = null;
 
         /// <summary>
-        /// When called, perform OCSP checks and ACME Renewal Info (ARI) checks on all managed certs or a subsample
+        /// When called, perform OCSP checks and ACME Renewal Info (ARI) checks on all managed certs or a subsample, or a single item
         /// </summary>
-        private async Task PerformCertificateStatusChecks(CancellationToken cancelToken)
+        private async Task PerformCertificateStatusChecks(CancellationToken cancelToken, string managedItemId = null)
         {
             if (_lastStatusCheckInProgress != null)
             {
@@ -110,7 +110,7 @@ namespace Certify.Management
                 var batchSize = 100;
                 var checkThrottleMS = 2500;
                 var lastCheckOlderThanMinutes = 12 * 60;
-                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize });
+                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize, Id = managedItemId });
 
                 var completedOcspUpdateChecks = new List<string>();
                 var completedRenewalInfoChecks = new List<string>();
@@ -172,7 +172,7 @@ namespace Certify.Management
 
                 if (!cancelToken.IsCancellationRequested)
                 {
-                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize });
+                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize, Id = managedItemId });
                     if (renewalInfoItemsToCheck?.Any() == true)
                     {
                         _serviceLog.Information("Performing Renewal Info checks");
@@ -210,6 +210,8 @@ namespace Certify.Management
 
                                     if (directoryInfo?.RenewalInfo != null)
                                     {
+                                    if (directoryInfo?.RenewalInfo != null)
+                                    {
                                         if (item.CertificatePath != null)
                                         {
                                             _serviceLog.Verbose($"Checking renewal info for {item.Name}");
@@ -218,9 +220,6 @@ namespace Certify.Management
                                             var info = await provider.GetRenewalInfo(certId);
 
                                             if (info != null && item.DateExpiry != null)
-                                            {
-                                                var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
-                                                if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
                                                     var scheduledRenewalDate = info.SuggestedWindow?.Start ?? nextRenewal;
 
@@ -238,6 +237,9 @@ namespace Certify.Management
                                                 }
                                             }
                                         }
+                                    } catch (Exception ex)
+                                    {
+                                        _serviceLog.Warning("Failed to perform renewal info check for {itemName} : {ex}", item.Name, ex);
                                     }
                                 }
                                 else
