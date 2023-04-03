@@ -1209,9 +1209,9 @@ namespace Certify.Providers.ACME.Anvil
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
-            // generate temp keypair for signing CSR
-            var keyAlg = KeyAlgorithm.RS256;
-            var keySize = 2048;
+            // generate temp keypair for signing CSR, default to ECDSA 256
+            var keyAlg = KeyAlgorithm.ES256;
+            var rsaKeySize = 2048;
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
@@ -1222,12 +1222,12 @@ namespace Certify.Providers.ACME.Anvil
                 else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_3072)
                 {
                     keyAlg = KeyAlgorithm.RS256;
-                    keySize = 3072;
+                    rsaKeySize = 3072;
                 }
                 else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_4096)
                 {
                     keyAlg = KeyAlgorithm.RS256;
-                    keySize = 4096;
+                    rsaKeySize = 4096;
                 }
                 else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA256)
                 {
@@ -1243,7 +1243,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var csrKey = KeyFactory.NewKey(keyAlg, keySize);
+            var csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {

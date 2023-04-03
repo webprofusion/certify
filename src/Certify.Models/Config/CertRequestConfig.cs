@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using Certify.Models.Config;
 
@@ -182,7 +182,7 @@ namespace Certify.Models
         /// <summary>
         /// Key algorithm type for CSR signing. Default is RS256 
         /// </summary>
-        public string? CSRKeyAlg { get; set; } = SupportedCSRKeyAlgs.RS256;
+        public string? CSRKeyAlg { get; set; } = SupportedCSRKeyAlgs.ECDSA256;
 
         /// <summary>
         /// Deployment site options (single/all etc) 
