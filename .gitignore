@@ -209,10 +209,7 @@ FakesAssemblies/
 src/lib/
 *.pyc
 
-Directory.Build.props
-
 src/Certify.UI/Plugins/*.dll
-
 
 src/Certify.Server/Certify.Service.Worker/Certify.Service.Worker/plugins/
 

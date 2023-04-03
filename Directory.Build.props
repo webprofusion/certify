@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <Version>5.9.5</Version>
+    <AssemblyVersion>5.9.5</AssemblyVersion>
+    <Authors>Webprofusion Pty Ltd</Authors>
+    <Company>Webprofusion Pty Ltd</Company>
+    <Product>Certify Community Edition [via github]</Product>
+    <PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
+    <Deterministic>false</Deterministic>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+</Project>

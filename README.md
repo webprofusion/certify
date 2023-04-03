@@ -47,3 +47,10 @@ Users with more complex requirements can explore the different validation modes,
 
 https://docs.certifytheweb.com
 
+## Build
+
+Create a folder for the various repos to clone to, e.g. `C:\git\certify_dev` and clone the following repos into this folder:
+- https://github.com/webprofusion/certify.git
+- https://github.com/webprofusion/certify-plugins.git
+
+Run `dotnet build Certify.Core.Service.sln` and `dotnet build Certify.UI.sln` or open using Visual Studio. UI needs the service running to connect to for normal operation.
