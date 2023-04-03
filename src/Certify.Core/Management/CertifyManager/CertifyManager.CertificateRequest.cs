@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Locales;
@@ -765,7 +766,15 @@ namespace Certify.Management
                     // update managed site summary
                     try
                     {
-                        var certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd);
+                        X509Certificate2 certInfo = null;
+                        if (certRequestResult.SupportingData is X509Certificate2)
+                        {
+                            certInfo = certRequestResult.SupportingData as X509Certificate2;
+                        }
+                        else
+                        {
+                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd);
+                        }
 
                         certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         managedCertificate.DateStart = certInfo.NotBefore;

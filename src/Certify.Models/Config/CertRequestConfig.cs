@@ -1,9 +1,52 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Text.Json;
 using Certify.Models.Config;
+using Newtonsoft.Json;
 
 namespace Certify.Models
 {
+    public class TkAuthToken
+    {
+        public string Token { get; set; } = string.Empty;
+        public string Crl { get; set; } = string.Empty;
+    }
+    /// <summary>
+    /// Authority Token Challenge claim
+    /// </summary>
+    public class AtcClaim
+    {
+        /// <summary>
+        /// Token type e.g. TNAUthList
+        /// </summary>
+        [JsonProperty(propertyName: "tktype")]
+        public string TkType { get; set; } = string.Empty;
+
+        /// <summary>
+        /// a "tkvalue" key with a string value equal to the base64url encoding of the TN Authorization List certificate extension ASN.1 object using DER encoding rules.
+        /// "tkvalue" is a required key and MUST be included.
+        /// </summary>
+        [JsonProperty(propertyName: "tkvalue")]
+        public string TkValue { get; set; } = string.Empty;
+
+        /// <summary>
+        /// a "ca" key with a boolean value set to either true when the requested certificate 
+        /// is allowed to be a CA cert for delegation uses or false 
+        /// when the requested certificate is not intended to be a CA cert, only an end-entity certificate.
+        /// "ca" is an optional key, if not included the "ca" value is considered false by default.
+        /// </summary>
+        [JsonProperty(propertyName: "ca")]
+        public bool? ca { get; set; }
+
+        /// <summary>
+        /// a "fingerprint" key is constructed as defined in [RFC8555] Section 8.1 
+        /// </summary>
+        [JsonProperty(propertyName: "fingerprint")]
+        public string Fingerprint { get; set; } = string.Empty;
+    }
 
     public class CertRequestChallengeConfig : BindableBase
     {
@@ -71,11 +114,6 @@ namespace Certify.Models
         /// Optional list of IP addresses to include in cert request, primary first
         /// </summary>
         public string[]? SubjectIPAddresses { get; set; } = Array.Empty<string>();
-
-        /// <summary>
-        /// Optional list of TNAuthList items for Telephone Number certs
-        /// </summary>
-        public string[]? SubjectTNList { get; set; } = Array.Empty<string>();
 
         /// <summary>
         /// Root path for our website content, used when responding to file based challenges 
@@ -235,7 +273,7 @@ namespace Certify.Models
         /// <summary>
         /// If set, this is one or more custom JWT tokens used for TkAuth-01 : https://datatracker.ietf.org/doc/draft-ietf-acme-authority-token-tnauthlist/13/
         /// </summary>
-        public string[]? AuthorityTokens{ get; set; }
+        public ObservableCollection<TkAuthToken>? AuthorityTokens { get; set; }
 
         /// <summary>
         /// If set, this is a custom Private Key to use for certificate signing
@@ -279,6 +317,90 @@ namespace Certify.Models
                 BindingUseSNI = true;
                 BindingIPAddress = null;
                 BindingPort = null;
+            }
+        }
+
+        internal List<string> GetCertificateDomains()
+        {
+            var allDomains = new List<string>();
+
+            if (!string.IsNullOrEmpty(PrimaryDomain))
+            {
+#pragma warning disable CS8604 // Possible null reference argument.
+                allDomains.Add(PrimaryDomain);
+#pragma warning restore CS8604 // Possible null reference argument.
+            }
+
+            if (SubjectAlternativeNames != null)
+            {
+                allDomains.AddRange(SubjectAlternativeNames);
+            }
+
+            return allDomains.Distinct().ToList();
+        }
+
+        public List<CertIdentifierItem> GetCertificateIdentifiers()
+        {
+            var identifiers = new List<CertIdentifierItem>();
+
+            var domains = GetCertificateDomains();
+            foreach (var d in domains)
+            {
+                identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
+            }
+
+            if (SubjectIPAddresses?.Any() == true)
+            {
+                foreach (var ip in SubjectIPAddresses)
+                {
+                    identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Ip, Value = ip });
+                }
+            }
+
+            if (AuthorityTokens?.Any() == true)
+            {
+                foreach (var tnAuthToken in AuthorityTokens)
+                {
+                    var jwt = new JwtSecurityToken(jwtEncodedString: tnAuthToken.Token);
+
+                    var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
+                    if (atc != null)
+                    {
+                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                    }
+                }
+            }
+
+            return identifiers;
+        }
+
+        public static AtcClaim? GetParsedAtc(string jwt)
+        {
+            var parsedJwt = new JwtSecurityToken(jwtEncodedString: jwt);
+
+            var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
+            if (atc != null)
+            {
+                var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                return parsedAtc;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public static byte[]? GetAuthorityTokenValueBytes(TkAuthToken token)
+        {
+            var parsedAtc = GetParsedAtc(token.Token);
+            if (parsedAtc != null)
+            {
+                return Microsoft.IdentityModel.Tokens.Base64UrlEncoder.DecodeBytes(parsedAtc.TkValue);
+            }
+            else
+            {
+                return null;
             }
         }
     }

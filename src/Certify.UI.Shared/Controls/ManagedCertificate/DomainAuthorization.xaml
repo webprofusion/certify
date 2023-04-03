@@ -33,8 +33,8 @@
             <!--  Authorization Types  -->
             <StackPanel>
                 <TextBlock Style="{StaticResource Subheading}">Domain Authorization</TextBlock>
-                <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove control of the domains in your request. If any included domain fails authorization the certificate request cannot be completed." />
-                <TextBlock Style="{StaticResource Instructions}" Text="You can choose to validate using HTTP (port 80), or via DNS." />
+                <TextBlock Style="{StaticResource Instructions}" Text="For a certificate to be issued you must prove control of the domains/identifiers in your request. If any included domain fails authorization the certificate request cannot be completed." />
+                <TextBlock Style="{StaticResource Instructions}" Text="For domains you can choose to validate using HTTP (port 80), or via DNS." />
             </StackPanel>
 
             <ItemsControl
@@ -61,7 +61,7 @@
 
             <StackPanel>
 
-                <TextBlock Style="{StaticResource Instructions}" Text="If you need to authorize multiple domains in different ways you can add another authorization config:" />
+                <TextBlock Style="{StaticResource Instructions}" Text="If you need to authorize multiple domains/identifiers in different ways you can add another authorization config:" />
                 <Button
                     x:Name="AddAuth"
                     MaxWidth="160"

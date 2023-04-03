@@ -70,6 +70,8 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(CertificateAuthorities));
 
             RaisePropertyChangedEvent(nameof(IsEditable));
+
+            RaisePropertyChangedEvent(nameof(ParsedTokenList));
         }
 
         public string CertificateAuthorityDescription
@@ -393,8 +395,10 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
-        public bool IsAdvancedView { get; set; }
-
+        /// <summary>
+        /// If true, the UI will show the TnAuth list view, otherwise the standard domain list view
+        /// </summary>
+        public bool UseAuthorityTokenListView { get; set; }
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
         public Preferences Preferences => _appViewModel.Preferences;
@@ -596,6 +600,44 @@ namespace Certify.UI.ViewModel
         {
             var managedCertificate = SelectedItem;
             return await _appViewModel.RevokeManageSiteCertificate(managedCertificate.Id);
+        }
+
+        public class AuthorityToken
+        {
+            public string Token { get; set; }
+            public string Crl { get; set; }
+            public string Title { get; set; }
+        }
+
+        private ObservableCollection<AuthorityToken> _parsedTokenList = new ObservableCollection<AuthorityToken>();
+        public ObservableCollection<AuthorityToken> ParsedTokenList
+        {
+            get
+            {
+                _parsedTokenList.Clear();
+
+                if (SelectedItem?.RequestConfig?.AuthorityTokens != null)
+                {
+                    foreach (var token in SelectedItem.RequestConfig.AuthorityTokens)
+                    {
+                        var parsedAtc = CertRequestConfig.GetParsedAtc(token.Token);
+
+                        if (parsedAtc != null)
+                        {
+                            var authToken = new AuthorityToken
+                            {
+                                Token = token.Token,
+                                Crl = token.Crl,
+                                Title = $"{parsedAtc.TkValue} [{Microsoft.IdentityModel.Tokens.Base64UrlEncoder.Decode(parsedAtc.TkValue)}]"
+                            };
+
+                            _parsedTokenList.Add(authToken);
+                        }
+                    }
+                }
+
+                return _parsedTokenList;
+            }
         }
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);

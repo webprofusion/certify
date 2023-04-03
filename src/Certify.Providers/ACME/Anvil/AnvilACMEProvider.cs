@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.ACME.Anvil.Acme;
@@ -594,29 +595,15 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var certificateIdentifiers = new List<Identifier>();
-
-            // prepare list of identifiers on certs, which may be domains or ip addresses
-            foreach (var d in domainOrders.Where(i => i != null))
-            {
-                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Dns, Value = d });
-            }
-
-            if (config.SubjectIPAddresses?.Any() == true)
-            {
-                foreach (var i in config.SubjectIPAddresses)
+            var certificateIdentifiers = config.GetCertificateIdentifiers()
+                .Select(i => new Identifier
                 {
-                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
-                }
-            }
-
-            if (config.SubjectTNList?.Any() == true)
-            {
-                foreach (var i in config.SubjectTNList)
-                {
-                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.TNAuthList, Value = i });
-                }
-            }
+                    Value = i.Value,
+                    Type = i.IdentifierType == CertIdentifierType.Dns ? IdentifierType.Dns :
+                        i.IdentifierType == CertIdentifierType.Ip ? IdentifierType.Ip :
+                        i.IdentifierType == CertIdentifierType.TnAuthList ? IdentifierType.TNAuthList :
+                        IdentifierType.Dns // default
+                }).ToList();
 
             try
             {
@@ -656,7 +643,7 @@ namespace Certify.Providers.ACME.Anvil
                                 // begin new order, with optional preference for the expiry
                                 var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
 
-                                order = await _acme.NewOrder(certificateIdentifiers, notAfter: notAfter);
+                                order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter);
                             }
 
                             if (order != null)
@@ -1264,8 +1251,15 @@ namespace Certify.Providers.ACME.Anvil
 
             // generate cert
             CertificateChain certificateChain = null;
+            X509Certificate2 cert = null;
+
             DateTime? certExpiration = null;
 
+            if (config.AuthorityTokens?.Any() == true)
+            {
+                DefaultCertificateFormat = "pem";
+            }
+            
             try
             {
                 if (order.Status == OrderStatus.Valid)
@@ -1291,11 +1285,25 @@ namespace Certify.Providers.ACME.Anvil
                     }
                     else
                     {
-                        if (config.Challenges.Any(t => t.ChallengeType == ChallengeTypes.TkAuth01))
+                        if (config.AuthorityTokens?.Any() == true)
                         {
-                            // CSR is for TkAuth01
-                            var csrInfo = new CsrInfo { };
-                            order = await orderContext.Finalize(csrInfo, csrKey);
+                            // CSR is for TnAuthList
+                            var csrBuilder = await orderContext.CreateCsr(csrKey);
+
+                            foreach (var token in config.AuthorityTokens)
+                            {
+                                var parsedToken = CertRequestConfig.GetParsedAtc(token.Token);
+                                var tokenValueBytes = CertRequestConfig.GetAuthorityTokenValueBytes(token);
+                                if (tokenValueBytes != null)
+                                {
+                                    csrBuilder.CrlDistributionPoints.Add(new Uri(token.Crl));
+                                    csrBuilder.TnAuthList.Add(tokenValueBytes);
+                                }
+                            }
+
+                            var csrBytes = csrBuilder.Generate();
+
+                            order = await orderContext.Finalize(csrBytes);
                         }
                         else
                         {
@@ -1332,10 +1340,11 @@ namespace Certify.Providers.ACME.Anvil
 
                 }
 
-                var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
+                cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
 
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
+
             }
             catch (AcmeRequestException exp)
             {
@@ -1365,7 +1374,7 @@ namespace Certify.Providers.ACME.Anvil
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var domainAsPath = GetDomainAsPath(config.SubjectTNList?.Any() == true ? "telephone_number" : config.PrimaryDomain);
+            var domainAsPath = GetDomainAsPath(config.AuthorityTokens?.Any() == true ? "authoritytoken" : config.PrimaryDomain);
 
             if (config.ReusePrivateKey)
             {
@@ -1392,7 +1401,8 @@ namespace Certify.Providers.ACME.Anvil
             return new ProcessStepResult
             {
                 IsSuccess = true,
-                Result = primaryCertOutputFile
+                Result = primaryCertOutputFile,
+                SupportingData = cert
             };
         }
 

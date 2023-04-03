@@ -254,31 +254,7 @@ namespace Certify.Models
         /// <returns></returns>
         public List<CertIdentifierItem> GetCertificateIdentifiers()
         {
-            var identifiers = new List<CertIdentifierItem>();
-
-            var domains = GetCertificateDomains();
-            foreach (var d in domains)
-            {
-                identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
-            }
-
-            if (RequestConfig.SubjectIPAddresses?.Any() == true)
-            {
-                foreach (var ip in RequestConfig.SubjectIPAddresses)
-                {
-                    identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Ip, Value = ip });
-                }
-            }
-
-            if (RequestConfig.SubjectTNList?.Any() == true)
-            {
-                foreach (var tn in RequestConfig.SubjectTNList)
-                {
-                    identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = tn });
-                }
-            }
-
-            return identifiers;
+            return RequestConfig.GetCertificateIdentifiers();
         }
 
         /// <summary>
@@ -287,25 +263,14 @@ namespace Certify.Models
         /// <returns></returns>
         public List<string> GetCertificateDomains()
         {
-            var allDomains = new List<string>();
-
-            if (RequestConfig != null)
+            if (RequestConfig == null)
             {
-                if (!string.IsNullOrEmpty(RequestConfig.PrimaryDomain))
-                {
-#pragma warning disable CS8604 // Possible null reference argument.
-                    allDomains.Add(RequestConfig.PrimaryDomain);
-#pragma warning restore CS8604 // Possible null reference argument.
-                }
-
-                if (RequestConfig.SubjectAlternativeNames != null)
-                {
-                    allDomains.AddRange(RequestConfig.SubjectAlternativeNames);
-                }
+                return new List<string>();
             }
-
-            return allDomains.Distinct().ToList();
-
+            else
+            {
+                return RequestConfig.GetCertificateDomains();
+            }
         }
 
         /// <summary>
