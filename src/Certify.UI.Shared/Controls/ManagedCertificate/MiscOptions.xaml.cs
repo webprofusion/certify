@@ -108,8 +108,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                     try
                     {
                         Cursor = System.Windows.Input.Cursors.Wait;
-                        await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
-                        MessageBox.Show("Latest cert re-fetched from Certificate Authority.");
+                        var result = await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
+
+                        Cursor = System.Windows.Input.Cursors.Arrow;
+
+                        if (result.IsSuccess)
+                        {
+                            MessageBox.Show("Latest cert re-fetched from Certificate Authority.");
+                        }
+                        else
+                        {
+                            MessageBox.Show($"Failed to re-fetch cert from Certificate Authority: {result.Message}");
+                        }
                     }
                     catch (Client.ServiceCommsException exp)
                     {
