@@ -564,10 +564,18 @@ namespace Certify.Management
 
             var _acmeClientProvider = await GetACMEProvider(managedCertificate);
 
-            // if we don't have a pending order, load the details of the most recent order
+            // if we don't have a pending order, load the details of the most recent order (can be used to re-fetch the existing cert)
             if (pendingOrder == null && managedCertificate.CurrentOrderUri != null)
             {
+
                 pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate.RequestConfig, managedCertificate.CurrentOrderUri);
+
+                if (pendingOrder.IsFailure)
+                {
+                    result.IsSuccess = false;
+                    result.Message = pendingOrder.FailureMessage;
+                    return result;
+                }
             }
             else
             {
@@ -766,6 +774,7 @@ namespace Certify.Management
                     // update managed site summary
                     try
                     {
+
                         X509Certificate2 certInfo = null;
                         if (certRequestResult.SupportingData is X509Certificate2)
                         {
@@ -788,6 +797,16 @@ namespace Certify.Management
                         managedCertificate.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedCertificate.CertificateRevoked = false;
 
+                        var previousCertId = managedCertificate.CertificateId;
+
+                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(managedCertificate.CertificatePath), pfxPwd);
+
+                        if (!string.IsNullOrEmpty(previousCertId))
+                        {
+                            // update ARI renewal info for replaced certId if supported
+
+                            await _acmeClientProvider.UpdateRenewalInfo(previousCertId, true);
+                        }
                     }
                     catch (Exception)
                     {

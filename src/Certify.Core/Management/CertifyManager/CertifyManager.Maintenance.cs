@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -110,7 +110,7 @@ namespace Certify.Management
                 var batchSize = 100;
                 var checkThrottleMS = 2500;
                 var lastCheckOlderThanMinutes = 12 * 60;
-                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize, Id = managedItemId });
+                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = (managedItemId == null ? lastCheckOlderThanMinutes : (int?)null), MaxResults = batchSize, Id = managedItemId });
 
                 var completedOcspUpdateChecks = new List<string>();
                 var completedRenewalInfoChecks = new List<string>();
@@ -172,7 +172,8 @@ namespace Certify.Management
 
                 if (!cancelToken.IsCancellationRequested)
                 {
-                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize, Id = managedItemId });
+                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = (managedItemId == null ? lastCheckOlderThanMinutes : (int?)null), MaxResults = batchSize, Id = managedItemId });
+
                     if (renewalInfoItemsToCheck?.Any() == true)
                     {
                         _serviceLog.Information("Performing Renewal Info checks");
@@ -214,7 +215,7 @@ namespace Certify.Management
                                         {
                                             _serviceLog.Verbose($"Checking renewal info for {item.Name}");
 
-                                            var certId = Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var certId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
                                             var info = await provider.GetRenewalInfo(certId);
 
                                             if (info != null && item.DateExpiry != null)
@@ -222,9 +223,16 @@ namespace Certify.Management
                                                 var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
                                                 if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
-                                                    var scheduledRenewalDate = info.SuggestedWindow?.Start ?? nextRenewal;
+                                                    var dateSpan = info.SuggestedWindow.End - info.SuggestedWindow.Start;
+                                                    var randomMinsInSlot = new Random().Next((int)dateSpan.Value.TotalMinutes);
+
+                                                    var scheduledRenewalDate = info.SuggestedWindow?.Start.Value.AddMinutes(randomMinsInSlot) ?? nextRenewal;
+
+                                                    _serviceLog.Information($"Random renewal date {scheduledRenewalDate} within ARI renewal window [{info.SuggestedWindow?.Start} to {info.SuggestedWindow?.End}] has been set for {item.Name} ");
 
                                                     itemsViaARI.Add(item.Id, scheduledRenewalDate.LocalDateTime);
+
+                                                    var updateRenewalInfo = await provider.GetRenewalInfo(certId);
 
                                                     if (scheduledRenewalDate < DateTimeOffset.Now)
                                                     {

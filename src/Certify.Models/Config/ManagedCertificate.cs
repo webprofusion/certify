@@ -168,6 +168,9 @@ namespace Certify.Models
         /// </summary>
         public string? RenewalFailureMessage { get; set; }
 
+        /// <summary>
+        /// The Base64 encoded Certificate Id (OCSP, ACME ARI etc) for the current certificate
+        /// </summary>
         public string? CertificateId { get; set; }
         public string? CertificatePath { get; set; }
         public string? CertificateFriendlyName { get; set; }

@@ -732,27 +732,27 @@ namespace Certify.Providers.ACME.Anvil
                 {
                     orderDetails = await order.Resource();
 
-                if (orderDetails.Status == OrderStatus.Ready)
-                {
-                    pendingOrder.IsPendingAuthorizations = false;
-                    requireAuthzFetch = false;
-                    log?.Information("Order is ready and valid. Auth challenges will not be re-attempted.");
-                }
-                else if (orderDetails.Status == OrderStatus.Valid)
-                {
-                    pendingOrder.IsPendingAuthorizations = false;
-                    requireAuthzFetch = false;
-                    log?.Information("Order is already valid and cert previously issued. Auth challenges will not be re-attempted.");
-                }
-
-                if (_compatibilityMode == ACMECompatibilityMode.Standard)
-                {
-                    if (orderDetails.Status == OrderStatus.Valid)
+                    if (orderDetails.Status == OrderStatus.Ready)
                     {
                         pendingOrder.IsPendingAuthorizations = false;
                         requireAuthzFetch = false;
+                        log?.Information("Order is ready and valid. Auth challenges will not be re-attempted.");
                     }
-                }
+                    else if (orderDetails.Status == OrderStatus.Valid)
+                    {
+                        pendingOrder.IsPendingAuthorizations = false;
+                        requireAuthzFetch = false;
+                        log?.Information("Order is already valid and cert previously issued. Auth challenges will not be re-attempted.");
+                    }
+
+                    if (_compatibilityMode == ACMECompatibilityMode.Standard)
+                    {
+                        if (orderDetails.Status == OrderStatus.Valid)
+                        {
+                            pendingOrder.IsPendingAuthorizations = false;
+                            requireAuthzFetch = false;
+                        }
+                    }
                 }
                 catch (AcmeRequestException ex)
                 {
@@ -1271,7 +1271,7 @@ namespace Certify.Providers.ACME.Anvil
             {
                 DefaultCertificateFormat = "all";
             }
-            
+
             try
             {
                 if (order.Status == OrderStatus.Valid)
@@ -1869,6 +1869,22 @@ namespace Certify.Providers.ACME.Anvil
             else
             {
                 return null;
+            }
+        }
+
+        public async Task UpdateRenewalInfo(string certificateId, bool replaced)
+        {
+            try
+            {
+                await _acme.UpdateRenewalInfo(certificateId, replaced);
+            }
+            catch (Exception ex)
+            {
+                // provider doesn't support ARI or update sent to CA failed, we fail silently because lack of ARI support is expected for many CAs
+                // and the response doesn't matter to our system
+#if DEBUG
+                _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex}");
+#endif
             }
         }
     }
