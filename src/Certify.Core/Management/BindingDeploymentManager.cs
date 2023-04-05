@@ -78,7 +78,7 @@ namespace Certify.Core.Management
                     }
                     catch (Exception exp)
                     {
-                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate." + exp.Message });
+                        actions.Add(new ActionStep { HasError = true, Title = "Certificate Storage Failed", Category = "CertificateStorage", Description = "Error storing certificate. " + exp.Message });
                         return actions;
                     }
                 }

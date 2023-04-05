@@ -31,42 +31,47 @@ namespace Certify.Management
 
             var stepIndex = 1;
 
-            var hasDomains = true;
-
             var allTaskProviders = await certifyManager.GetDeploymentProviders();
             var certificateAuthorities = await certifyManager.GetCertificateAuthorities();
 
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
 
-            if (string.IsNullOrEmpty(item.RequestConfig.PrimaryDomain))
-            {
-                hasDomains = false;
-            }
+            var identifiers = item.GetCertificateIdentifiers();
 
-            if (hasDomains)
+            if (identifiers.Any())
             {
                 var allCredentials = await credentialsManager.GetCredentials();
 
-                var allDomains = item.GetCertificateIdentifiers();
+                var alldentifiers = item.GetCertificateIdentifiers();
 
                 // certificate summary
                 var certDescription = new StringBuilder();
                 var ca = certificateAuthorities.FirstOrDefault(c => c.Id == item.CertificateAuthorityId);
 
-                certDescription.AppendLine(
-                    $"A new certificate will be requested from the *{ca?.Title.AsNullWhenBlank() ?? "Default"}* certificate authority for the following domains:"
-                    );
+                certDescription.AppendLine($"A new certificate will be requested from the **{ca?.Title.AsNullWhenBlank() ?? "Default"}** certificate authority for the following identifiers:");
 
-                certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
-
-                if (item.RequestConfig.SubjectAlternativeNames.Any(s => s != item.RequestConfig.PrimaryDomain))
+                if (identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns))
                 {
-                    certDescription.AppendLine($" and will include the following *Subject Alternative Names*:");
 
-                    foreach (var d in item.RequestConfig.SubjectAlternativeNames)
+                    certDescription.AppendLine($"\n**{item.RequestConfig.PrimaryDomain}** (Primary Domain)");
+
+                    if (item.RequestConfig.SubjectAlternativeNames.Any(s => s != item.RequestConfig.PrimaryDomain))
                     {
-                        certDescription.AppendLine($"* {d} ");
+                        certDescription.AppendLine($" and will include the following *Subject Alternative Names*:");
+
+                        foreach (var d in item.RequestConfig.SubjectAlternativeNames)
+                        {
+                            certDescription.AppendLine($"* {d} ");
+                        }
+                    }
+                }
+
+                if (identifiers.Any(d => d.IdentifierType != CertIdentifierType.Dns))
+                {
+                    foreach (var ident in identifiers.Where(i => i.IdentifierType != CertIdentifierType.Dns))
+                    {
+                        certDescription.AppendLine($"* {ident.Value} [{ident.IdentifierType}]");
                     }
                 }
 
@@ -87,11 +92,11 @@ namespace Certify.Management
                         newLine
                         );
 
-                    var matchingDomains = item.GetChallengeConfigDomainMatches(challengeConfig, allDomains);
+                    var matchingDomains = item.GetChallengeConfigDomainMatches(challengeConfig, alldentifiers);
                     if (matchingDomains.Any())
                     {
                         challengeInfo.AppendLine(
-                            $"{newLine}The following matching domains will use this challenge: " + newLine
+                            $"{newLine}The following matching identifiers will use this challenge: " + newLine
                             );
 
                         foreach (var d in matchingDomains)
@@ -99,9 +104,12 @@ namespace Certify.Management
                             challengeInfo.AppendLine($"{newLine} * {d}");
                         }
 
-                        challengeInfo.AppendLine(
-                           $"{newLine}**Please review the Deployment section below to ensure this certificate will be applied to the expected website bindings (if any).**" + newLine
-                           );
+                        if (alldentifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns))
+                        {
+                            challengeInfo.AppendLine(
+                               $"{newLine}**Please review the Deployment section below to ensure this certificate will be applied to the expected website bindings (if any).**" + newLine
+                               );
+                        }
                     }
                     else
                     {
@@ -178,7 +186,7 @@ namespace Certify.Management
                         else
                         {
                             challengeInfo.AppendLine(
-                                $"No DNS API Credentials have been set.  API Credentials are normally required to make automatic updates to DNS records."
+                                $"No DNS API Credentials have been set. API Credentials are normally required to make automatic updates to DNS records."
                                 );
                         }
 
@@ -197,12 +205,12 @@ namespace Certify.Management
                         if (item.RequestConfig.Challenges.Count > 1)
                         {
                             challengeInfo.AppendLine(
-                             $"{newLine}This challenge type will be selected for any domain not matched by another challenge. ");
+                             $"{newLine}This challenge type will be selected for any identifier not matched by another challenge. ");
                         }
                         else
                         {
                             challengeInfo.AppendLine(
-                          $"{newLine}**This challenge type will be selected for all domains.**");
+                          $"{newLine}**This challenge type will be selected for all identifiers.**");
                         }
                     }
 
@@ -211,7 +219,7 @@ namespace Certify.Management
 
                 steps.Add(new ActionStep
                 {
-                    Title = $"{stepIndex}. Domain Validation",
+                    Title = $"{stepIndex}. Validation",
                     Category = "Validation",
                     Description = challengeInfo.ToString()
                 });
