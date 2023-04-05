@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -326,20 +326,13 @@ namespace Certify.Management
             }
             else
             {
-                try
+                if (!storedCert.HasPrivateKey)
                 {
-                    if (!storedCert.HasPrivateKey)
-                    {
-                        throw new Exception("Private key not available.");
-                    }
-                    else
-                    {
-                        return storedCert;
-                    }
+                    throw new Exception("Certificate Private key not available.");
                 }
-                catch (Exception)
+                else
                 {
-                    throw new Exception("Certificate Private Key not available!");
+                    return storedCert;
                 }
             }
         }

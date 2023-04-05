@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -726,7 +726,11 @@ namespace Certify.Providers.ACME.Anvil
 
                 // handle order status 'Ready' if all authorizations are already valid
                 var requireAuthzFetch = true;
-                var orderDetails = await order.Resource();
+                Order orderDetails;
+
+                try
+                {
+                    orderDetails = await order.Resource();
 
                 if (orderDetails.Status == OrderStatus.Ready)
                 {
@@ -748,6 +752,14 @@ namespace Certify.Providers.ACME.Anvil
                         pendingOrder.IsPendingAuthorizations = false;
                         requireAuthzFetch = false;
                     }
+                }
+                }
+                catch (AcmeRequestException ex)
+                {
+                    // order may no longer be valid
+                    pendingOrder.IsFailure = true;
+                    pendingOrder.FailureMessage = ex.Message;
+                    return pendingOrder;
                 }
 
                 if (requireAuthzFetch)
@@ -1257,7 +1269,7 @@ namespace Certify.Providers.ACME.Anvil
 
             if (config.AuthorityTokens?.Any() == true)
             {
-                DefaultCertificateFormat = "pem";
+                DefaultCertificateFormat = "all";
             }
             
             try
@@ -1383,11 +1395,6 @@ namespace Certify.Providers.ACME.Anvil
 
             var primaryCertOutputFile = string.Empty;
 
-            if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
-            {
-                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
-            }
-
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
             {
                 var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, domainAsPath);
@@ -1395,6 +1402,26 @@ namespace Certify.Providers.ACME.Anvil
                 if (string.IsNullOrEmpty(primaryCertOutputFile))
                 {
                     primaryCertOutputFile = pemOutputFile;
+                }
+            }
+
+            try
+            {
+                if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
+                {
+                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (DefaultCertificateFormat == "all")
+                {
+                    // allow PFX build to fail but log it
+                    log?.Warning($"The PFX build process failed but the overall request completed OK. This problem should be investigate and resolved if PFX output is required: {ex}");
+                }
+                else
+                {
+                    throw;
                 }
             }
 
@@ -1721,7 +1748,7 @@ namespace Certify.Providers.ACME.Anvil
             catch (Exception)
             {
 
-                // if build failed, try refreshing issuer certs
+                // if build failed, try refreshing issuer certs and rebuild
                 RefreshIssuerCertCache();
 
                 var pfx = certificateChain.ToPfx(csrKey);
@@ -1736,12 +1763,14 @@ namespace Certify.Providers.ACME.Anvil
 
                 try
                 {
+                    // pfx.FullChain = true; // it's possible to build the PFX without a chain at all but we don't currently need to do that
+
                     pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
                     File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception(failedBuildMsg + ex.Message);
+                    throw new Exception($"{failedBuildMsg} {ex.Message}");
                 }
             }
 
