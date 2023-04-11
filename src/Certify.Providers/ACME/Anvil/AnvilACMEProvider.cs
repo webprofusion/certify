@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -598,7 +598,7 @@ namespace Certify.Providers.ACME.Anvil
             var certificateIdentifiers = config.GetCertificateIdentifiers()
                 .Select(i => new Identifier
                 {
-                    Value = i.Value,
+                    Value = i.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(i.Value) : i.Value,
                     Type = i.IdentifierType == CertIdentifierType.Dns ? IdentifierType.Dns :
                         i.IdentifierType == CertIdentifierType.Ip ? IdentifierType.Ip :
                         i.IdentifierType == CertIdentifierType.TnAuthList ? IdentifierType.TNAuthList :
@@ -1728,11 +1728,11 @@ namespace Certify.Providers.ACME.Anvil
 
             if (useModernKeyAlgorithms)
             {
-                _log?.Information("PFX Build: using modern algorithms");
+                _log?.Verbose("PFX Build: using modern algorithms");
             }
             else
             {
-                _log?.Information("PFX Build: using legacy algorithms");
+                _log?.Verbose("PFX Build: using legacy algorithms");
             }
 
             byte[] pfxBytes;
