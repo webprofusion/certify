@@ -80,14 +80,14 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="7.2.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.27.0" />
+    <PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
   </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
     <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
+    <ProjectReference Include="..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
     <ProjectReference Include="..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
     <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>

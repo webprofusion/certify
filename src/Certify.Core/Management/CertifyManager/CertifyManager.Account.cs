@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Providers.ACME.Anvil;
+using Certify.Providers.ACME.Certes;
 using Newtonsoft.Json;
 
 namespace Certify.Management
@@ -185,7 +185,7 @@ namespace Certify.Management
 
                 _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
-                var addedAccount = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress, reg.EabKeyId, reg.EabKey, reg.EabKeyAlgorithm, reg.ImportedAccountURI, reg.ImportedAccountKey);
+                var addedAccount = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress, reg.EabKeyId, reg.EabKey, reg.EabKeyAlgorithm);
 
                 if (addedAccount.IsSuccess)
                 {
@@ -252,7 +252,6 @@ namespace Certify.Management
                     existingAccount.Email = reg.EmailAddress;
                     existingAccount.AccountKey = updatedAccount.Result.AccountKey;
                     existingAccount.PreferredChain = reg.PreferredChain;
-                    existingAccount.AccountFingerprint = updatedAccount.Result.AccountFingerprint;
 
                     await StoreAccountAsCredential(existingAccount);
                 }
@@ -337,7 +336,7 @@ namespace Certify.Management
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
                 var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
-                var provider = new AnvilACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
+                var provider = new CertesACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
                 await provider.InitProvider(_serviceLog);
 
                 var acc = provider.GetCurrentAcmeAccount();

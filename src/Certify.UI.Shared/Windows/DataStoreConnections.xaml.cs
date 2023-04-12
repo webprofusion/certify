@@ -31,7 +31,7 @@ namespace Certify.UI.Windows
             InitializeComponent();
 
             RefreshConnections();
-
+       
             if (_model.Connections?.Count > 1)
             {
                 _model.MigrationSourceId = _model.Connections[0].Id;

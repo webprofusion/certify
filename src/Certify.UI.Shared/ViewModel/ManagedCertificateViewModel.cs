@@ -70,8 +70,6 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(CertificateAuthorities));
 
             RaisePropertyChangedEvent(nameof(IsEditable));
-
-            RaisePropertyChangedEvent(nameof(ParsedTokenList));
         }
 
         public string CertificateAuthorityDescription
@@ -363,10 +361,31 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return ManagedCertificate.CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
+                return CalculateDateNextRenewalDue(SelectedItem, _appViewModel.Preferences?.RenewalIntervalMode, -Preferences.RenewalIntervalDays);
             }
         }
 
+        public static DateTime? CalculateDateNextRenewalDue(ManagedCertificate item, string prefRenewalIntervalMode, int prefRenewalIntervalDays)
+        {
+            // for the simplest version based on preference for renewal interval this is
+            // DateRenewed + Interval more complicated would be based on last renewal attempt and
+            // number of attempts so far etc
+            if (item != null && item.DateRenewed.HasValue)
+            {
+                if (item.DateExpiry != null && prefRenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                {
+                    // Start renewing N days before expiry 
+                    return item.DateExpiry.Value.AddDays(-prefRenewalIntervalDays);
+                }
+                else
+                {
+                    // days since last renewal + preferred interval
+                    return item.DateRenewed.Value.AddDays(prefRenewalIntervalDays);
+                }
+            }
+
+            return null;
+        }
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
             get; set;
@@ -374,10 +393,8 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
-        /// <summary>
-        /// If true, the UI will show the TnAuth list view, otherwise the standard domain list view
-        /// </summary>
-        public bool UseAuthorityTokenListView { get; set; }
+        public bool IsAdvancedView { get; set; }
+
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
         public Preferences Preferences => _appViewModel.Preferences;
@@ -579,44 +596,6 @@ namespace Certify.UI.ViewModel
         {
             var managedCertificate = SelectedItem;
             return await _appViewModel.RevokeManageSiteCertificate(managedCertificate.Id);
-        }
-
-        public class AuthorityToken
-        {
-            public string Token { get; set; }
-            public string Crl { get; set; }
-            public string Title { get; set; }
-        }
-
-        private ObservableCollection<AuthorityToken> _parsedTokenList = new ObservableCollection<AuthorityToken>();
-        public ObservableCollection<AuthorityToken> ParsedTokenList
-        {
-            get
-            {
-                _parsedTokenList.Clear();
-
-                if (SelectedItem?.RequestConfig?.AuthorityTokens != null)
-                {
-                    foreach (var token in SelectedItem.RequestConfig.AuthorityTokens)
-                    {
-                        var parsedAtc = CertRequestConfig.GetParsedAtc(token.Token);
-
-                        if (parsedAtc != null)
-                        {
-                            var authToken = new AuthorityToken
-                            {
-                                Token = token.Token,
-                                Crl = token.Crl,
-                                Title = $"{parsedAtc.TkValue} [{Microsoft.IdentityModel.Tokens.Base64UrlEncoder.Decode(parsedAtc.TkValue)}]"
-                            };
-
-                            _parsedTokenList.Add(authToken);
-                        }
-                    }
-                }
-
-                return _parsedTokenList;
-            }
         }
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);

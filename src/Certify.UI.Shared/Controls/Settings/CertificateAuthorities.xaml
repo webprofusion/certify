@@ -68,66 +68,48 @@
         </StackPanel>
 
 
-        <ScrollViewer
-            MaxHeight="400"
-            Margin="0,8,0,8"
-            VerticalContentAlignment="Stretch">
+        <ScrollViewer>
             <ListView
                 x:Name="AccountList"
                 Height="Auto"
-                d:ItemsSource="{d:SampleData ItemCount=5}"
                 SelectionMode="Single">
 
                 <ListView.ItemTemplate>
                     <DataTemplate>
 
-                        <StackPanel MouseUp="AccountList_MouseUp">
-                            <DockPanel Margin="0,0" LastChildFill="False">
+                        <DockPanel Margin="0,4" LastChildFill="False">
 
-                                <fa:FontAwesome
-                                    Margin="0,8,8,0"
-                                    DockPanel.Dock="Left"
-                                    FontSize="24"
-                                    Icon="UserCircle" />
+                            <fa:FontAwesome
+                                Margin="0,8,8,0"
+                                DockPanel.Dock="Left"
+                                FontSize="24"
+                                Icon="UserCircle" />
 
-                                <TextBlock
-                                    MinWidth="200"
-                                    Margin="0,6,0,0"
-                                    DockPanel.Dock="Left"
-                                    Text="{Binding Title}" />
-                                <TextBlock
-                                    Margin="0,0,0,0"
-                                    DockPanel.Dock="Left"
-                                    Style="{StaticResource Instructions}"
-                                    Text="{Binding Email}" />
+                            <TextBlock
+                                MinWidth="200"
+                                Margin="0,12,8,0"
+                                DockPanel.Dock="Left"
+                                Text="{Binding Title}" />
+                            <TextBlock
+                                Margin="0,8,8,0"
+                                DockPanel.Dock="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="{Binding Email}"
+                                ToolTip="{Binding AccountURI}" />
 
-                                <Button
-                                    Margin="0,0,4,0"
-                                    Click="Button_Delete"
-                                    DockPanel.Dock="Right">
-                                    Delete
-                                </Button>
-                                <Button
-                                    Margin="0,0,4,0"
-                                    Click="Button_Edit"
-                                    DockPanel.Dock="Right">
-                                    Edit
-                                </Button>
-                            </DockPanel>
-                            <StackPanel>
-                                <TextBlock
-                                    MinWidth="200"
-                                    Margin="32,0,0,0"
-                                    Style="{StaticResource Instructions}"
-                                    Text="{Binding AccountURI}" />
-                                <TextBlock
-                                    MinWidth="200"
-                                    Margin="32,0,0,0"
-                                    Style="{StaticResource Instructions}"
-                                    Text="{Binding AccountFingerprint}" />
-
-                            </StackPanel>
-                        </StackPanel>
+                            <Button
+                                Margin="0,0,8,0"
+                                Click="Button_Delete"
+                                DockPanel.Dock="Right">
+                                Delete
+                            </Button>
+                            <Button
+                                Margin="0,0,8,0"
+                                Click="Button_Edit"
+                                DockPanel.Dock="Right">
+                                Edit
+                            </Button>
+                        </DockPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

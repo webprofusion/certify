@@ -21,12 +21,12 @@ namespace Certify.Models.API
         /// <summary>
         /// List of all identifiers included in this managed certificate (e.g. dns domain names)
         /// </summary>
-        public IEnumerable<CertIdentifierItem> Identifiers { get; set; } = new List<CertIdentifierItem>();
+        public IEnumerable<Identifier> Identifiers { get; set; } = new List<Identifier>();
 
         /// <summary>
         /// Primary identifier (e.g. primary subject domain name)
         /// </summary>
-        public CertIdentifierItem PrimaryIdentifier { get; set; } = new CertIdentifierItem();
+        public Identifier PrimaryIdentifier { get; set; } = new Identifier();
 
         /// <summary>
         /// Date request/renewal was last attempted (if any)
@@ -52,5 +52,21 @@ namespace Certify.Models.API
         /// If true, there is a certificate available (latest successful certificate order)
         /// </summary>
         public bool HasCertificate { get; set; }
+    }
+
+    /// <summary>
+    /// An identifier to be included on a certificate
+    /// </summary>
+    public class Identifier
+    {
+        /// <summary>
+        /// Identifier type (e.g. "dns", "ip")
+        /// </summary>
+        public string Type { get; set; } = "dns";
+
+        /// <summary>
+        /// Identifier value
+        /// </summary>
+        public string Value { get; set; } = string.Empty;
     }
 }

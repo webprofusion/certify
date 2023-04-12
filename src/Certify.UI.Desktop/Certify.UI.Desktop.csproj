@@ -1,22 +1,21 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net7.0-windows</TargetFramework>
-        <UseWPF>true</UseWPF>
-        <UseWindowsForms>true</UseWindowsForms>
-        <ApplicationIcon>icon.ico</ApplicationIcon>
-        <StartupObject>Certify.UI.App</StartupObject>
-        <Platforms>AnyCPU;x64</Platforms>
-        <XamlDebuggingInformation>True</XamlDebuggingInformation>
-    </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<ApplicationIcon>icon.ico</ApplicationIcon>
+		<StartupObject>Certify.UI.App</StartupObject>
+		<Platforms>AnyCPU;x64</Platforms>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="ToastNotifications.Messages" Version="2.5.1" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ToastNotifications.Messages" Version="2.5.1" />
+  </ItemGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\Certify.UI.Shared\Certify.UI.Shared.csproj" />
-    </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Certify.UI.Shared\Certify.UI.Shared.csproj" />
+  </ItemGroup>
 
 </Project>

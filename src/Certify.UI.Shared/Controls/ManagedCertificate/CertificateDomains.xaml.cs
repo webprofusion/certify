@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -75,16 +75,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         ItemViewModel.SelectedWebSite = null;
                     }
-
-                    if (ItemViewModel.SelectedItem.RequestConfig?.AuthorityTokens?.Any() == true)
-                    {
-                        // use AuthorityTokenList/Authority Token view instead of domains
-                        ItemViewModel.UseAuthorityTokenListView = true;
-                    }
-                    else
-                    {
-                        ItemViewModel.UseAuthorityTokenListView = false;
-                    }
                 }
             }
         }
@@ -151,13 +141,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 opt.IsSelected = !opt.IsSelected;
             }
-        }
-
-        private void AddTkAuthList_Click(object sender, RoutedEventArgs e)
-        {
-            this.ItemViewModel.UseAuthorityTokenListView = true;
-            this.ItemViewModel.SelectedItem.RequestConfig.Challenges.Clear();
-            this.ItemViewModel.SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH });
         }
     }
 }

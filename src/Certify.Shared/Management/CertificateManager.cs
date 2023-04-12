@@ -326,13 +326,20 @@ namespace Certify.Management
             }
             else
             {
-                if (!storedCert.HasPrivateKey)
+                try
                 {
-                    throw new Exception("Certificate Private key not available.");
+                    if (!storedCert.HasPrivateKey)
+                    {
+                        throw new Exception("Private key not available.");
+                    }
+                    else
+                    {
+                        return storedCert;
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    return storedCert;
+                    throw new Exception("Certificate Private Key not available!");
                 }
             }
         }

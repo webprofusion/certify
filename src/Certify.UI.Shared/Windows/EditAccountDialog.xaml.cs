@@ -36,15 +36,11 @@ namespace Certify.UI.Windows
                 // edit, disable read only options
                 CertificateAuthorityList.IsEnabled = false;
                 IsStagingMode.IsEnabled = false;
-                AccountKey.IsEnabled = false;
-                AccountURI.IsEnabled = false;
             }
             else
             {
                 CertificateAuthorityList.IsEnabled = true;
                 IsStagingMode.IsEnabled = true;
-                AccountKey.IsEnabled = true;
-                AccountURI.IsEnabled = true;
             }
         }
 

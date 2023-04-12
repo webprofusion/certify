@@ -315,18 +315,10 @@ namespace Certify.CLI
                 }
             }
         }
-        public async Task RunCertMaintenanceTasks(string[] args)
+        public async Task RunCertMaintenanceTasks()
         {
             System.Console.WriteLine("Performing managed certificate maintenance tasks..");
-
-            string managedItemId = null;
-
-            if (args.Length >= 2)
-            {
-                managedItemId = args[1];
-            }
-
-            var results = await _certifyClient.PerformManagedCertMaintenance(managedItemId);
+            var results = await _certifyClient.PerformManagedCertMaintenance();
 
             foreach (var result in results)
             {

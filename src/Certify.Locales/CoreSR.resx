@@ -127,20 +127,20 @@
     <value>Finish</value>
   </data>
   <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
-    <value>Validation failed: {0} 
+    <value>Domain validation failed: {0} 
 {1}</value>
   </data>
   <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
-    <value>Validation completed: {0}</value>
+    <value>Domain validation completed: {0}</value>
   </data>
   <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
-    <value>Identifier already has current authorization, skipping verification: {0}</value>
+    <value>Domain already has current authorization, skipping verification: {0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>Requesting certificate via Certificate Authority</value>
+    <value>Requesting Certificate via Certificate Authority</value>
   </data>
   <data name="CertifyManager_CompleteRequest" xml:space="preserve">
-    <value>Completed certificate request.</value>
+    <value>Completed Certificate Request.</value>
   </data>
   <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
     <value>Completed certificate request and automated bindings update (IIS)</value>
@@ -188,7 +188,7 @@ Check you have https SNI bindings for your site
     <value>Requesting Validation: {0}</value>
   </data>
   <data name="CertifyManager_AutoBinding" xml:space="preserve">
-    <value>Performing automated certificate binding</value>
+    <value>Performing Automated Certificate Binding</value>
   </data>
   <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
     <value>Skipping Renewal, existing certificate still OK. </value>

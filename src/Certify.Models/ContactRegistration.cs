@@ -1,4 +1,4 @@
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class ContactRegistration
     {
@@ -15,8 +15,5 @@ namespace Certify.Models
         public string? EabKey { get; set; }
         public string? EabKeyAlgorithm { get; set; }
         public string? PreferredChain { get; set; }
-
-        public string ImportedAccountURI { get; set; } = string.Empty;
-        public string ImportedAccountKey { get; set; } = string.Empty;
     }
 }

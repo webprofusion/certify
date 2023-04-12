@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Certify.Models
 {
-    [Obsolete("Legacy model, should not be referenced in new code")]
     public class RegistrationItem : VaultItem
     {
         public RegistrationItem() : base("registration")
@@ -13,7 +12,6 @@ namespace Certify.Models
         public IEnumerable<string> Contacts { get; set; } = new List<string>();
     }
 
-    [Obsolete("Legacy model, should not be referenced in new code")]
     public class IdentifierItem : VaultItem
     {
         public IdentifierItem() : base("identifier")
@@ -28,7 +26,6 @@ namespace Certify.Models
         public string ValidationErrorType { get; set; } = string.Empty;
     }
 
-    [Obsolete("Legacy model, should not be referenced in new code")]
     public class CertificateItem : VaultItem
     {
         public CertificateItem() : base("certificate")
@@ -36,7 +33,6 @@ namespace Certify.Models
         }
     }
 
-    [Obsolete("Legacy model, should not be referenced in new code")]
     public class VaultItem
     {
         public string? Id { get; set; }

@@ -94,7 +94,7 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
-        public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue, bool isTestMode)
+        public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue, bool isTestMode)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
             // creating the required TXT record
@@ -177,7 +177,7 @@ namespace Certify.Core.Management.Challenges
 
                 if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
                 {
-                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain.Value, txtRecordName, challengeConfig.ChallengeDelegationRule);
+                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain, txtRecordName, challengeConfig.ChallengeDelegationRule);
                     log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTXTRecordName} in place of {txtRecordName}.");
 
                     txtRecordName = delegatedTXTRecordName;
@@ -189,7 +189,7 @@ namespace Certify.Core.Management.Challenges
                     var result = await dnsAPIProvider.CreateRecord(new DnsRecord
                     {
                         RecordType = "TXT",
-                        TargetDomainName = domain.Value.Trim(),
+                        TargetDomainName = domain.Trim(),
                         RecordName = txtRecordName,
                         RecordValue = txtRecordValue,
                         ZoneId = zoneId
@@ -308,7 +308,7 @@ namespace Certify.Core.Management.Challenges
             return sourceChallengeTXTRecordName;
         }
 
-        public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue)
+        public async Task<DnsChallengeHelperResult> DeleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, string domain, string txtRecordName, string txtRecordValue)
         {
             // for a given managed site configuration, attempt to delete the TXT record created for
             // the challenge
@@ -401,7 +401,7 @@ namespace Certify.Core.Management.Challenges
 
                 if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
                 {
-                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain.Value, txtRecordName, challengeConfig.ChallengeDelegationRule);
+                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain, txtRecordName, challengeConfig.ChallengeDelegationRule);
                     log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTXTRecordName} in place of {txtRecordName}.");
 
                     txtRecordName = delegatedTXTRecordName;
@@ -413,7 +413,7 @@ namespace Certify.Core.Management.Challenges
                     var result = await dnsAPIProvider.DeleteRecord(new DnsRecord
                     {
                         RecordType = "TXT",
-                        TargetDomainName = domain.Value,
+                        TargetDomainName = domain,
                         RecordName = txtRecordName,
                         RecordValue = txtRecordValue,
                         ZoneId = zoneId

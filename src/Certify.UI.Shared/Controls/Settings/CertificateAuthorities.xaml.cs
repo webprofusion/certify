@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Certify.UI.Controls.Settings
 {
@@ -136,49 +134,6 @@ namespace Certify.UI.Controls.Settings
                 };
                 d.ShowDialog();
             }
-        }
-
-        private async void AccountList_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-
-            // copy account to clipboard
-            if (sender != null)
-            {
-                var item = (sender as StackPanel)?.DataContext as AccountDetails;
-                if (item != null)
-                {
-                    var text = $"Account URI: {item.AccountURI}\r\n" +
-                        $"Account Fingerprint: {item.AccountFingerprint}\r\n" +
-                        $"Account Key: \r\n{item.AccountKey}";
-
-                    var copiedOK = await WaitForClipboard(text);
-
-                    if (copiedOK)
-                    {
-                        ViewModel.AppViewModel.Current.ShowNotification("Account details have been copied to the clipboard.");
-                    }
-                }
-            }
-        }
-
-        private async Task<bool> WaitForClipboard(string text)
-        {
-            // if running under terminal services etc the clipboard can take multiple attempts to set
-            // https://stackoverflow.com/questions/68666/clipbrd-e-cant-open-error-when-setting-the-clipboard-from-net
-            for (var i = 0; i < 10; i++)
-            {
-                try
-                {
-                    Clipboard.SetText(text);
-
-                    return true;
-                }
-                catch { }
-
-                await Task.Delay(50);
-            }
-
-            return false;
         }
     }
 }

@@ -62,25 +62,10 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// ACME - supported challenge types 
         /// </summary>
-        public IEnumerable<string> ChallengeTypes
-        {
-            get
-            {
-                if (ParentManagedCertificate.RequestConfig.AuthorityTokens?.Any() == true)
-                {
-                    return new string[] {
-                        SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH
-                    };
-                }
-                else
-                {
-                    return new string[] {
-                        SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                        SupportedChallengeTypes.CHALLENGE_TYPE_DNS
-                    };
-                }
-            }
-        }
+        public IEnumerable<string> ChallengeTypes { get; set; } = new string[] {
+            SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
+            SupportedChallengeTypes.CHALLENGE_TYPE_DNS
+        };
 
         public bool UsesCredentials { get; set; }
         public bool ShowZoneLookup { get; set; }

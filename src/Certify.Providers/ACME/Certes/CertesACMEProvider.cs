@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,12 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
-using Certify.ACME.Anvil;
-using Certify.ACME.Anvil.Acme;
-using Certify.ACME.Anvil.Acme.Resource;
-using Certify.ACME.Anvil.Jws;
+using Certes;
+using Certes.Acme;
+using Certes.Acme.Resource;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -19,12 +18,75 @@ using Certify.Models.Shared;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.X509;
 
-namespace Certify.Providers.ACME.Anvil
+namespace Certify.Providers.ACME.Certes
 {
     /// <summary>
-    /// ACME Provider using Anvil https://github.com/webprofusion/anvil which is a fork based on https://github.com/fszlin/certes
+    /// Certes Provider settings for serialization
     /// </summary>
-    public class AnvilACMEProvider : IACMEClientProvider
+    public class CertesSettings
+    {
+        public string AccountEmail { get; set; }
+        public string AccountUri { get; set; }
+        public string AccountKey { get; set; }
+    }
+
+    public class DiagEcKey
+    {
+        public string kty { get; set; }
+        public string crv { get; set; }
+        public string x { get; set; }
+        public string y { get; set; }
+    }
+
+    // used to diagnose account key faults
+    public class DiagAccountInfo
+    {
+        public int ID { get; set; }
+        public DiagEcKey Key { get; set; }
+    }
+
+    public class LoggingHandler : DelegatingHandler
+    {
+        public DiagAccountInfo DiagAccountInfo { get; set; }
+        private ILog _log = null;
+
+        public LoggingHandler(HttpMessageHandler innerHandler, ILog log)
+            : base(innerHandler)
+        {
+            _log = log;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (_log != null)
+            {
+                _log.Debug($"Http Request: {request}");
+                if (request.Content != null)
+                {
+                    _log.Debug(await request.Content.ReadAsStringAsync());
+                }
+            }
+
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (_log != null)
+            {
+                _log.Debug($"Http Response: {response}");
+
+                if (response.Content != null)
+                {
+                    _log.Debug(await response.Content.ReadAsStringAsync());
+                }
+            }
+
+            return response;
+        }
+    }
+
+    /// <summary>
+    /// ACME Provider using certes https://github.com/fszlin/certes
+    /// </summary>
+    public class CertesACMEProvider : IACMEClientProvider
     {
         private AcmeContext _acme;
 
@@ -33,7 +95,7 @@ namespace Certify.Providers.ACME.Anvil
         private readonly string _settingsFolder = null;
         private readonly string _settingsBaseFolder = null;
 
-        private AnvilSettings _settings = null;
+        private CertesSettings _settings = null;
         private ConcurrentDictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
         private DateTime _lastInitDateTime = new DateTime();
@@ -42,7 +104,7 @@ namespace Certify.Providers.ACME.Anvil
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
 
-        private readonly string _userAgentName = "Certify Certificate Manager";
+        private readonly string _userAgentName = "Certify SSL Manager";
         private ILog _log = null;
 
         private List<byte[]> _issuerCertCache = new List<byte[]>();
@@ -69,7 +131,7 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         private AcmeDirectoryInfo _dir;
 
-        public AnvilACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
+        public CertesACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
         {
             _settingsFolder = settingsPath;
 
@@ -91,7 +153,7 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        public string GetProviderName() => "Anvil";
+        public string GetProviderName() => "Certes";
 
         public string GetAcmeBaseURI() => _serviceUri?.ToString();
 
@@ -140,20 +202,20 @@ namespace Certify.Providers.ACME.Anvil
                     var settingsFilePath = Path.Combine(_settingsFolder, "c-settings.json");
                     if (File.Exists(settingsFilePath))
                     {
-                        var json = File.ReadAllText(settingsFilePath);
-                        _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<AnvilSettings>(json);
+                        var json = System.IO.File.ReadAllText(settingsFilePath);
+                        _settings = Newtonsoft.Json.JsonConvert.DeserializeObject<CertesSettings>(json);
                     }
                     else
                     {
-                        _settings = new AnvilSettings();
+                        _settings = new CertesSettings();
                     }
 
                     if (!string.IsNullOrEmpty(_settings.AccountKey))
                     {
-                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
                             //remove legacy key info
-                            File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
+                            System.IO.File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
                         }
 
                         SetAcmeContextAccountKey(_settings.AccountKey);
@@ -161,16 +223,16 @@ namespace Certify.Providers.ACME.Anvil
                     else
                     {
                         // no account key in settings, check .key (legacy key file)
-                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (System.IO.File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
                         {
-                            var pem = File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
+                            var pem = System.IO.File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
                             SetAcmeContextAccountKey(pem);
                         }
                     }
                 }
                 else
                 {
-                    _settings = new AnvilSettings
+                    _settings = new CertesSettings
                     {
                         AccountEmail = account.Email,
                         AccountKey = account.AccountKey,
@@ -182,11 +244,6 @@ namespace Certify.Providers.ACME.Anvil
             else
             {
                 SetAcmeContextAccountKey(_settings.AccountKey);
-            }
-
-            if (!string.IsNullOrEmpty(_settings.AccountUri))
-            {
-                _acme.SetAccountUri(new Uri(_settings.AccountUri));
             }
 
             _currentOrders = new ConcurrentDictionary<string, IOrderContext>();
@@ -293,8 +350,7 @@ namespace Certify.Providers.ACME.Anvil
                             AccountKey = _settings.AccountKey,
                             Email = _settings.AccountEmail,
                             AccountURI = _settings.AccountUri,
-                            ID = _settings.AccountUri.Split('/').Last(),
-                            AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
+                            ID = _settings.AccountUri.Split('/').Last()
                         }
                     };
                 }
@@ -324,6 +380,7 @@ namespace Certify.Providers.ACME.Anvil
             else
             {
                 // allocate new key and inform LE of key change
+                // same default key type as certes
                 var newKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
 
                 await _acme.ChangeKey(newKey);
@@ -383,8 +440,7 @@ namespace Certify.Providers.ACME.Anvil
                     ID = _settings.AccountUri.Split('/').Last(),
                     AccountKey = _settings.AccountKey,
                     AccountURI = _settings.AccountUri,
-                    Email = _settings.AccountEmail,
-                    AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
+                    Email = _settings.AccountEmail
                 };
             }
             else
@@ -438,7 +494,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="email">  </param>
         /// <returns>  </returns>
-        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId = null, string eabKey = null, string eabKeyAlg = null, string importAccountURI = null, string importAccountKey = null)
+        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg)
         {
 
             try
@@ -450,33 +506,8 @@ namespace Certify.Providers.ACME.Anvil
                     accKey = KeyFactory.FromPem(_settings.AccountKey);
                 }
 
-                if (!string.IsNullOrEmpty(importAccountURI) && !string.IsNullOrEmpty(importAccountKey))
-                {
-                    // use imported account details
-
-                    SetAcmeContextAccountKey(importAccountKey);
-
-                    _settings.AccountUri = importAccountURI;
-                    _settings.AccountEmail = email;
-
-                    return new ActionResult<AccountDetails>
-                    {
-                        IsSuccess = true,
-                        Result = new AccountDetails
-                        {
-                            AccountKey = _settings.AccountKey,
-                            Email = _settings.AccountEmail,
-                            AccountURI = _settings.AccountUri,
-                            ID = _settings.AccountUri.Split('/').Last(),
-                            AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
-                        }
-                    };
-                }
-                else
-                {
-
-                    // start new account context, create new account (with new key, if not enabled)
-                _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
+                // start new account context, create new account (with new key, if not enabled)
+                _acme = new AcmeContext(_serviceUri, accKey, _httpClient);
 
                 try
                 {
@@ -503,26 +534,16 @@ namespace Certify.Providers.ACME.Anvil
                         AccountKey = _settings.AccountKey,
                         Email = _settings.AccountEmail,
                         AccountURI = _settings.AccountUri,
-                            ID = _settings.AccountUri.Split('/').Last(),
-                            AccountFingerprint = GetAccountFingerprintHex(accKey)
-                        }
-                    };
-                }
+                        ID = _settings.AccountUri.Split('/').Last()
+                    }
+                };
+
             }
             catch (Exception exp)
             {
                 log?.Error($"Failed to register account with certificate authority: {exp.Message}");
                 return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account with certificate authority: {exp.Message}" };
             }
-        }
-
-        private string GetAccountFingerprintHex(IKey accKey)
-        {
-            // populate account SHA256 fingerprint as hex e.g. SHA256 56:3E:CF:AE:83:CA:4D:15:B0:29:FF:1B:71:D3:BA:B9:19:81:F8:50:9B:DF:4A:D4:39:72:E2:B1:F0:B9:38:E3
-            // as used by some ACME extensions
-            var accountFingerprintBytes = JwsConvert.FromBase64String(accKey.Thumbprint());
-            var accountFingerprintHex = $"SHA256 {BitConverter.ToString(accountFingerprintBytes).Replace("-", ":").ToUpper()}";
-            return accountFingerprintHex;
         }
 
         private (bool exceptionHandled, bool abandonRequest, string message, Exception unwrappedException) HandleAndLogAcmeException(ILog itemLog, Exception exp)
@@ -633,15 +654,21 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var certificateIdentifiers = config.GetCertificateIdentifiers()
-                .Select(i => new Identifier
+            var certificateIdentifiers = new List<Identifier>();
+
+            // prepare list of identifiers on certs, which may be domains or ip addresses
+            foreach (var d in domainOrders.Where(i => i != null))
+            {
+                certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Dns, Value = d });
+            }
+
+            if (config.SubjectIPAddresses?.Any() == true)
+            {
+                foreach (var i in config.SubjectIPAddresses)
                 {
-                    Value = i.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(i.Value) : i.Value,
-                    Type = i.IdentifierType == CertIdentifierType.Dns ? IdentifierType.Dns :
-                        i.IdentifierType == CertIdentifierType.Ip ? IdentifierType.Ip :
-                        i.IdentifierType == CertIdentifierType.TnAuthList ? IdentifierType.TNAuthList :
-                        IdentifierType.Dns // default
-                }).ToList();
+                    certificateIdentifiers.Add(new Identifier { Type = IdentifierType.Ip, Value = i });
+                }
+            }
 
             try
             {
@@ -681,7 +708,7 @@ namespace Certify.Providers.ACME.Anvil
                                 // begin new order, with optional preference for the expiry
                                 var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
 
-                                order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter);
+                                order = await _acme.NewOrder(certificateIdentifiers, notAfter: notAfter);
                             }
 
                             if (order != null)
@@ -764,47 +791,35 @@ namespace Certify.Providers.ACME.Anvil
 
                 // handle order status 'Ready' if all authorizations are already valid
                 var requireAuthzFetch = true;
-                Order orderDetails;
+                var orderDetails = await order.Resource();
 
-                try
+                if (orderDetails.Status == OrderStatus.Ready)
                 {
-                    orderDetails = await order.Resource();
-
-                    if (orderDetails.Status == OrderStatus.Ready)
-                    {
-                        pendingOrder.IsPendingAuthorizations = false;
-                        requireAuthzFetch = false;
-                        log?.Information("Order is ready and valid. Auth challenges will not be re-attempted.");
-                    }
-                    else if (orderDetails.Status == OrderStatus.Valid)
-                    {
-                        pendingOrder.IsPendingAuthorizations = false;
-                        requireAuthzFetch = false;
-                        log?.Information("Order is already valid and cert previously issued. Auth challenges will not be re-attempted.");
-                    }
-
-                    if (_compatibilityMode == ACMECompatibilityMode.Standard)
-                    {
-                        if (orderDetails.Status == OrderStatus.Valid)
-                        {
-                            pendingOrder.IsPendingAuthorizations = false;
-                            requireAuthzFetch = false;
-                        }
-                    }
+                    pendingOrder.IsPendingAuthorizations = false;
+                    requireAuthzFetch = false;
+                    log?.Information("Order is ready and valid. Auth challenges will not be re-attempted.");
                 }
-                catch (AcmeRequestException ex)
+                else if (orderDetails.Status == OrderStatus.Valid)
                 {
-                    // order may no longer be valid
-                    pendingOrder.IsFailure = true;
-                    pendingOrder.FailureMessage = ex.Message;
-                    return pendingOrder;
+                    pendingOrder.IsPendingAuthorizations = false;
+                    requireAuthzFetch = false;
+                    log?.Information("Order is already valid and cert previously issued. Auth challenges will not be re-attempted.");
+                }
+
+                if (_compatibilityMode == ACMECompatibilityMode.Standard)
+                {
+                    if (orderDetails.Status == OrderStatus.Valid)
+                    {
+                        pendingOrder.IsPendingAuthorizations = false;
+                        requireAuthzFetch = false;
+                    }
                 }
 
                 if (requireAuthzFetch)
                 {
                     // get all required pending (or already valid) authorizations for this order
 
-                    log.Verbose($"Fetching Authorizations.");
+                    log.Information($"Fetching Authorizations.");
 
                     var orderAuthorizations = await order.Authorizations();
 
@@ -846,7 +861,6 @@ namespace Certify.Providers.ACME.Anvil
                         // determine if we are interested in each challenge type before fetching the challenge details, some APIs hang when you fetch a validated auth
                         var includeHttp01 = true;
                         var includeDns01 = true;
-                        var includeTkAuth01 = true;
 
                         if (_compatibilityMode == ACMECompatibilityMode.AltProvider1)
                         {
@@ -858,11 +872,6 @@ namespace Certify.Providers.ACME.Anvil
                             if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) != true)
                             {
                                 includeDns01 = false;
-                            }
-
-                            if (config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH) != true)
-                            {
-                                includeTkAuth01 = false;
                             }
 
                             if (includeDns01 == false && includeHttp01 == false)
@@ -915,7 +924,7 @@ namespace Certify.Providers.ACME.Anvil
                                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
                                         Key = httpChallenge.Token,
                                         Value = httpChallenge.KeyAuthz,
-                                        ChallengeContext = httpChallenge,
+                                        ChallengeData = httpChallenge,
                                         ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
                                         ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
                                         IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
@@ -966,7 +975,7 @@ namespace Certify.Providers.ACME.Anvil
                                     log?.Error($"DNS challenge has an invalid status");
                                 }
 
-                                var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token);
+                                var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
                                 var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
 
                                 challenges.Add(new AuthorizationChallengeItem
@@ -974,57 +983,8 @@ namespace Certify.Providers.ACME.Anvil
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                                     Key = dnsKey,
                                     Value = dnsValue,
-                                    ChallengeContext = dnsChallenge,
+                                    ChallengeData = dnsChallenge,
                                     IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
-                                });
-                            }
-                        }
-
-                        // add TkAuth challenge (if any)
-                        if (includeTkAuth01)
-                        {
-                            IChallengeContext tkAuthChallenge = null;
-
-                            try
-                            {
-                                var c = await authContext.Challenges();
-                                tkAuthChallenge = c.FirstOrDefault(ch => ch.Type == ChallengeTypes.TkAuth01);
-                            }
-                            catch (Exception)
-                            {
-                                log.Information("Could not fetch a tkauth-01 challenge for this identifier: " + authzDomain);
-                            }
-
-                            if (tkAuthChallenge != null)
-                            {
-                                Challenge authorityTokenChallenge;
-                                if (useAuthzForChallengeStatus)
-                                {
-                                    // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
-                                    authorityTokenChallenge = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.TkAuth01);
-                                }
-                                else
-                                {
-                                    // fetch status directly from /challenge/ api
-                                    authorityTokenChallenge = await tkAuthChallenge.Resource();
-                                }
-
-                                log.Information($"Got tkauth-01 challenge {authorityTokenChallenge.Url}");
-
-                                if (authorityTokenChallenge.Status == ChallengeStatus.Invalid)
-                                {
-                                    log?.Error($"tkauth-01 challenge has an invalid status");
-                                }
-
-                                var authToken = config.AuthorityTokens.FirstOrDefault(a => CertRequestConfig.GetParsedAtc(a.Token).TkValue == authzDomain);
-
-                                challenges.Add(new AuthorizationChallengeItem
-                                {
-                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH,
-                                    Key = authzDomain,
-                                    Value = authToken?.Token,
-                                    ChallengeContext = tkAuthChallenge,
-                                    IsValidated = (authorityTokenChallenge.Status == ChallengeStatus.Valid)
                                 });
                             }
                         }
@@ -1034,11 +994,11 @@ namespace Certify.Providers.ACME.Anvil
                          new PendingAuthorization
                          {
                              Challenges = challenges,
-                             Identifier = new CertIdentifierItem
+                             Identifier = new IdentifierItem
                              {
-                                 Value = (authIdentifierType == IdentifierType.Dns) ? authzDomain.Trim().ToLowerInvariant() : authzDomain,
-                                 IdentifierType = authIdentifierType.ToString(),
-                                 IsAuthorizationPending = !challenges.Any(c => c.IsValidated) // auth is pending if we have no challenges already validated
+                                 Dns = authzDomain,
+                                 ItemType = authIdentifierType == IdentifierType.Ip ? "ip" : "dns",
+                                 IsAuthorizationPending = !challenges.Any(c => c.IsValidated) //auth is pending if we have no challenges already validated
                              },
                              AuthorizationContext = authContext,
                              IsValidated = challenges.Any(c => c.IsValidated),
@@ -1097,19 +1057,11 @@ namespace Certify.Providers.ACME.Anvil
                     };
                 }
 
-                var challenge = pendingAuthorization.AttemptedChallenge.ChallengeContext as IChallengeContext;
+                var challenge = (IChallengeContext)pendingAuthorization.AttemptedChallenge.ChallengeData;
                 try
                 {
-                    object payload = null;
-
-                    // Authority Token challenge passes the original JWT as the payload
-                    if (pendingAuthorization.AttemptedChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH)
-                    {
-                        payload = new { atc = pendingAuthorization.AttemptedChallenge.Value };
-                    }
-
                     // submit challenge to ACME CA to validate
-                    var result = await challenge.Validate(payload);
+                    var result = await challenge.Validate();
 
                     return new StatusMessage
                     {
@@ -1213,6 +1165,8 @@ namespace Certify.Providers.ACME.Anvil
                     log.Warning("Failed to determine error message for failed authorization.");
                 }
 
+                pendingAuthorization.Identifier.ValidationError = "Failed";
+                pendingAuthorization.Identifier.ValidationErrorType = "Error";
                 pendingAuthorization.IsValidated = false;
             }
 
@@ -1224,9 +1178,11 @@ namespace Certify.Providers.ACME.Anvil
         /// request by submitting a Certificate Signing Request (CSR) to the CA
         /// </summary>
         /// <param name="log">  </param>
+        /// <param name="primaryDnsIdentifier">  </param>
+        /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1246,9 +1202,9 @@ namespace Certify.Providers.ACME.Anvil
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
-            // generate temp keypair for signing CSR, default to ECDSA 256
-            var keyAlg = KeyAlgorithm.ES256;
-            var rsaKeySize = 2048;
+            // generate temp keypair for signing CSR
+            var keyAlg = KeyAlgorithm.RS256;
+            var keySize = 2048;
 
             if (!string.IsNullOrEmpty(config.CSRKeyAlg))
             {
@@ -1259,12 +1215,12 @@ namespace Certify.Providers.ACME.Anvil
                 else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_3072)
                 {
                     keyAlg = KeyAlgorithm.RS256;
-                    rsaKeySize = 3072;
+                    keySize = 3072;
                 }
                 else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_4096)
                 {
                     keyAlg = KeyAlgorithm.RS256;
-                    rsaKeySize = 4096;
+                    keySize = 4096;
                 }
                 else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA256)
                 {
@@ -1280,7 +1236,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
+            var csrKey = KeyFactory.NewKey(keyAlg, keySize);
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1301,14 +1257,7 @@ namespace Certify.Providers.ACME.Anvil
 
             // generate cert
             CertificateChain certificateChain = null;
-            X509Certificate2 cert = null;
-
             DateTime? certExpiration = null;
-
-            if (config.AuthorityTokens?.Any() == true)
-            {
-                DefaultCertificateFormat = "all";
-            }
 
             try
             {
@@ -1335,37 +1284,15 @@ namespace Certify.Providers.ACME.Anvil
                     }
                     else
                     {
-                        if (config.AuthorityTokens?.Any() == true)
+                        order = await orderContext.Finalize(new CsrInfo
                         {
-                            // CSR is for TnAuthList
-                            var csrBuilder = await orderContext.CreateCsr(csrKey);
+                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
+                            RequireOcspMustStaple = config.RequireOcspMustStaple
+                        }, csrKey);
 
-                            foreach (var token in config.AuthorityTokens)
-                            {
-                                var parsedToken = CertRequestConfig.GetParsedAtc(token.Token);
-                                var tokenValueBytes = CertRequestConfig.GetAuthorityTokenValueBytes(token);
-                                if (tokenValueBytes != null)
-                                {
-                                    csrBuilder.CrlDistributionPoints.Add(new Uri(token.Crl));
-                                    csrBuilder.TnAuthList.Add(tokenValueBytes);
-                                }
-                            }
-
-                            var csrBytes = csrBuilder.Generate();
-
-                            order = await orderContext.Finalize(csrBytes);
-                        }
-                        else
-                        {
-                            order = await orderContext.Finalize(new CsrInfo
-                            {
-                                CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
-                                RequireOcspMustStaple = config.RequireOcspMustStaple
-                            }, csrKey);
-                        }
                     }
 
-                    //TODO: we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state.
+                    //TODO: we can remove this as certes now provides this functionality, so we shouldn't hit the Processing state.
                     if (order.Status == OrderStatus.Processing)
                     {
                         // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
@@ -1390,11 +1317,10 @@ namespace Certify.Providers.ACME.Anvil
 
                 }
 
-                cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
+                var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
 
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
-
             }
             catch (AcmeRequestException exp)
             {
@@ -1424,7 +1350,7 @@ namespace Certify.Providers.ACME.Anvil
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var domainAsPath = GetDomainAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
+            var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
 
             if (config.ReusePrivateKey)
             {
@@ -1432,6 +1358,11 @@ namespace Certify.Providers.ACME.Anvil
             }
 
             var primaryCertOutputFile = string.Empty;
+
+            if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
+            {
+                primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
+            }
 
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
             {
@@ -1443,35 +1374,14 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            try
-            {
-                if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
-                {
-                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (DefaultCertificateFormat == "all")
-                {
-                    // allow PFX build to fail but log it
-                    log?.Warning($"The PFX build process failed but the overall request completed OK. This problem should be investigate and resolved if PFX output is required: {ex}");
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
             return new ProcessStepResult
             {
                 IsSuccess = true,
-                Result = primaryCertOutputFile,
-                SupportingData = cert
+                Result = primaryCertOutputFile
             };
         }
 
-        private string GetDomainAsPath(string domain) => domain?.Replace("*", "_") ?? "";
+        private string GetDomainAsPath(string domain) => domain.Replace("*", "_");
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {
@@ -1512,7 +1422,7 @@ namespace Certify.Providers.ACME.Anvil
 
                     if (certAdded)
                     {
-                        return System.Text.Encoding.ASCII.GetBytes(writer.ToString());
+                        return System.Text.ASCIIEncoding.ASCII.GetBytes(writer.ToString());
                     }
                     else
                     {
@@ -1522,7 +1432,7 @@ namespace Certify.Providers.ACME.Anvil
             }
             catch (Exception exp)
             {
-                _log?.Error($"ACME Provider: failed to prepare CA issuer cache: {exp}");
+                _log?.Error($"CertesACMEProvider: failed to prepare CA issuer cache: {exp}");
                 return null;
             }
         }
@@ -1638,7 +1548,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
 
                 // well known CA certs
-                var knownCAs = CertificateAuthority.CoreCertificateAuthorities;
+                var knownCAs = Certify.Models.CertificateAuthority.CoreCertificateAuthorities;
                 foreach (var ca in knownCAs)
                 {
                     foreach (var cert in ca.TrustedRoots)
@@ -1766,11 +1676,11 @@ namespace Certify.Providers.ACME.Anvil
 
             if (useModernKeyAlgorithms)
             {
-                _log?.Verbose("PFX Build: using modern algorithms");
+                _log?.Information("PFX Build: using modern algorithms");
             }
             else
             {
-                _log?.Verbose("PFX Build: using legacy algorithms");
+                _log?.Information("PFX Build: using legacy algorithms");
             }
 
             byte[] pfxBytes;
@@ -1781,12 +1691,12 @@ namespace Certify.Providers.ACME.Anvil
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
                 pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
-                File.WriteAllBytes(pfxPath, pfxBytes);
+                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
             {
 
-                // if build failed, try refreshing issuer certs and rebuild
+                // if build failed, try refreshing issuer certs
                 RefreshIssuerCertCache();
 
                 var pfx = certificateChain.ToPfx(csrKey);
@@ -1801,14 +1711,12 @@ namespace Certify.Providers.ACME.Anvil
 
                 try
                 {
-                    // pfx.FullChain = true; // it's possible to build the PFX without a chain at all but we don't currently need to do that
-
                     pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
-                    File.WriteAllBytes(pfxPath, pfxBytes);
+                    System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"{failedBuildMsg} {ex.Message}");
+                    throw new Exception(failedBuildMsg + ex.Message);
                 }
             }
 
@@ -1837,12 +1745,12 @@ namespace Certify.Providers.ACME.Anvil
 
             if (!File.Exists(privateKeyPath))
             {
-                File.WriteAllText(privateKeyPath, csrKey.ToPem());
+                System.IO.File.WriteAllText(privateKeyPath, csrKey.ToPem());
             }
 
             // fullchain.pem - full chain without key
             var fullchainPath = Path.GetFullPath(Path.Combine(new string[] { storePath, "fullchain.pem" }));
-            File.WriteAllText(fullchainPath, certificateChain.ToPem());
+            System.IO.File.WriteAllText(fullchainPath, certificateChain.ToPem());
 
             return fullchainPath;
         }
@@ -1886,6 +1794,17 @@ namespace Certify.Providers.ACME.Anvil
             return new StatusMessage { IsOK = true, Message = "Certificate revoked" };
         }
 
+        public List<RegistrationItem> GetContactRegistrations()
+        {
+            var list = new List<RegistrationItem>();
+            if (IsAccountRegistered())
+            {
+                list.Add(new RegistrationItem { Name = _settings.AccountEmail });
+            }
+
+            return list;
+        }
+
         public Task<string> GetAcmeAccountStatus() => throw new NotImplementedException();
 
         public async Task<RenewalInfo> GetRenewalInfo(string certificateId)
@@ -1907,22 +1826,6 @@ namespace Certify.Providers.ACME.Anvil
             else
             {
                 return null;
-            }
-        }
-
-        public async Task UpdateRenewalInfo(string certificateId, bool replaced)
-        {
-            try
-            {
-                await _acme.UpdateRenewalInfo(certificateId, replaced);
-            }
-            catch (Exception ex)
-            {
-                // provider doesn't support ARI or update sent to CA failed, we fail silently because lack of ARI support is expected for many CAs
-                // and the response doesn't matter to our system
-#if DEBUG
-                _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex}");
-#endif
             }
         }
     }

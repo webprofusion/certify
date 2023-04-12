@@ -55,21 +55,28 @@ namespace Certify.Core.Management.Challenges
                 return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "There is no primary domain set for this certificate." } };
             }
 
-            var identifiers = managedCertificate.GetCertificateIdentifiers();
+            var domains = new List<string> { requestConfig.PrimaryDomain };
+
+            if (requestConfig.SubjectAlternativeNames != null)
+            {
+                domains.AddRange(requestConfig.SubjectAlternativeNames);
+            }
+
+            domains = domains.Distinct().ToList();
 
             // TODO: some of these checks can be moved/shared with general item validation 
 
             // if wildcard domain included, check first level labels not also specified, i.e.
             // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
             // test.wwww.example.com can
-            var invalidLabels = new List<CertIdentifierItem>();
-            if (identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
+            var invalidLabels = new List<string>();
+            if (domains.Any(d => d.StartsWith("*.")))
             {
-                foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
+                foreach (var wildcard in domains.Where(d => d.StartsWith("*.")))
                 {
-                    var rootDomain = wildcard.Value.Replace("*.", "");
-                    // add list of identifiers where label count exceeds root domain label count
-                    invalidLabels.AddRange(identifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith(rootDomain) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
+                    var rootDomain = wildcard.Replace("*.", "");
+                    // add list of domains where label count exceeds root domain label count
+                    invalidLabels.AddRange(domains.Where(domain => domain != wildcard && domain.EndsWith(rootDomain) && domain.Count(s => s == '.') == wildcard.Count(s => s == '.')));
 
                     if (invalidLabels.Any())
                     {
@@ -96,9 +103,9 @@ namespace Certify.Core.Management.Challenges
 
                     var tasks = new List<Task<List<ActionResult>>>();
 
-                    foreach (var d in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns))
+                    foreach (var d in domains)
                     {
-                        tasks.Add(_netUtil.CheckDNS(log, d.Value.Replace("*.", ""), includeIPResolution));
+                        tasks.Add(_netUtil.CheckDNS(log, d.Replace("*.", ""), includeIPResolution));
                     }
 
                     var allResults = await Task.WhenAll(tasks);
@@ -118,7 +125,7 @@ namespace Certify.Core.Management.Challenges
                     }
                 }
 
-                foreach (var domain in identifiers)
+                foreach (var domain in domains)
                 {
                     var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
@@ -131,8 +138,8 @@ namespace Certify.Core.Management.Challenges
 
                     if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
-                        // if dns validation not selected but one or more identifiers is a wildcard, reject
-                        if (domain.Value.StartsWith("*."))
+                        // if dns validation not selected but one or more domains is a wildcard, reject
+                        if (domain.StartsWith("*."))
                         {
                             results.Add(new StatusMessage { IsOK = false, Message = $"http-01 authorization cannot be used for wildcard domains: {domain}. Use DNS (dns-01) validation instead." });
                             return results;
@@ -300,8 +307,8 @@ namespace Certify.Core.Management.Challenges
         public async Task<PendingAuthorization> PrepareAutomatedChallengeResponse(ILog log, ITargetWebServer iisManager, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, ICredentialsManager credentialsManager)
         {
             var requestConfig = managedCertificate.RequestConfig;
-
-            var challengeConfig = managedCertificate.GetChallengeConfig(pendingAuth.Identifier);
+            var domain = pendingAuth.Identifier.Dns;
+            var challengeConfig = managedCertificate.GetChallengeConfig(domain);
 
             if (pendingAuth.Challenges != null)
             {
@@ -314,7 +321,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
                         // perform http-01 challenge response
-                        var check = await PerformChallengeResponse_Http01(log, iisManager, pendingAuth.Identifier, managedCertificate, pendingAuth);
+                        var check = await PerformChallengeResponse_Http01(log, iisManager, domain, managedCertificate, pendingAuth);
                         if (requestConfig.PerformExtensionlessConfigChecks)
                         {
                             pendingAuth.AttemptedChallenge.ConfigCheckedOK = check.IsSuccess;
@@ -324,7 +331,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
                     {
                         // perform tls-sni-01 challenge response
-                        var check = PrepareChallengeResponse_TlsSni01(log, iisManager, pendingAuth.Identifier, managedCertificate, pendingAuth);
+                        var check = PrepareChallengeResponse_TlsSni01(log, iisManager, domain, managedCertificate, pendingAuth);
                         if (requestConfig.PerformTlsSniBindingConfigChecks)
                         {
                             // set config check OK if all checks return true
@@ -335,27 +342,13 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response
-                        var check = await PerformChallengeResponse_Dns01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
+                        var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
                         pendingAuth.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";
-                    }
-
-                    if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH)
-                    {
-                        pendingAuth.AttemptedChallenge.ConfigCheckedOK = true;
-                        // perform tkauth-01 challenge response
-                        //var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
-                        /*
-                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
-                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
-                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
-                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
-                         pendingAuth.IsFailure = !check.Result.IsSuccess;
-                         pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";*/
                     }
                 }
             }
@@ -367,7 +360,7 @@ namespace Certify.Core.Management.Challenges
         /// Prepares IIS to respond to a http-01 challenge
         /// </summary>
         /// <returns> Test the challenge response locally. </returns>
-        private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ITargetWebServer iisManager, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private async Task<ActionResult> PerformChallengeResponse_Http01(ILog log, ITargetWebServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
             var httpChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP);
@@ -560,7 +553,7 @@ namespace Certify.Core.Management.Challenges
             }
         }
 
-        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ITargetWebServer iisManager, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
+        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ITargetWebServer iisManager, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
         {
             var requestConfig = managedCertificate.RequestConfig;
 
@@ -606,7 +599,7 @@ namespace Certify.Core.Management.Challenges
                 // managedCertificate.ServerSiteId, sni);
 
                 // add check to the queue
-                checkQueue.Add(() => _netUtil.CheckSNI(domain.Value, sni).Result);
+                checkQueue.Add(() => _netUtil.CheckSNI(domain, sni).Result);
 
                 // add cleanup actions to queue
                 cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate.ServerSiteId, sni));
@@ -624,7 +617,7 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, string domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 

@@ -162,17 +162,14 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (ItemViewModel.SelectedItem != null)
             {
-                // validate and save changes, if any
-                if (ItemViewModel.SelectedItem.IsChanged)
+
+                var savedOK = await ValidateAndSave();
+                if (!savedOK)
                 {
-                    var savedOK = await ValidateAndSave();
-                    if (!savedOK)
-                    {
-                        return;
-                    }
+                    return;
                 }
 
-                // if recently renewed, confirm user really wants to renew
+                //begin request
                 var renewalCheckWindow = ItemViewModel.SelectedItem.DateRenewed?.AddDays(2);
                 if (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && renewalCheckWindow > DateTime.Now)
                 {
@@ -184,7 +181,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                     }
                 }
 
-                //begin request
                 var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
                 if (result != null)
                 {

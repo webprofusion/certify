@@ -18,7 +18,7 @@ namespace Certify.Models.Providers
 
         Task<string> GetAcmeAccountStatus();
 
-        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId = null, string eabKey = null, string eabKeyAlg = null, string importAccountURI = null, string importAccountKey = null);
+        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg);
 
         Task<bool> DeactivateAccount(ILog log);
 
@@ -30,14 +30,12 @@ namespace Certify.Models.Providers
 
         Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs);
+        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
         Task<bool> ChangeAccountKey(ILog log);
 
         Task<RenewalInfo> GetRenewalInfo(string certificateId);
-
-        Task UpdateRenewalInfo(string certificateId, bool replaced);
     }
 }

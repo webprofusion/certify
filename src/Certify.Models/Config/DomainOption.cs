@@ -3,7 +3,7 @@
     public class DomainOption : BindableBase
     {
         /// <summary>
-        /// Domain/IP/value which is a candidate identifier for inclusion. Still called Domain to allow deserialization of existing config.
+        /// Domain name we are managing 
         /// </summary>
         public string? Domain { get; set; } = string.Empty;
 

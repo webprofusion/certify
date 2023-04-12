@@ -5,7 +5,6 @@ using Certify.Core.Management;
 using Certify.Datastore.SQLite;
 using Certify.Management;
 using Certify.Models;
-using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests
@@ -14,26 +13,11 @@ namespace Certify.Core.Tests
     public class MigrationManagerTests
     {
 
-        private IManagedItemStore GetManagedItemStore()
-        {
-
-            var itemManager = new SQLiteManagedItemStore();
-            itemManager.Init("", null);
-            return itemManager;
-        }
-
-        private ICredentialsManager GetCredentialsStore()
-        {
-            var itemManager = new SQLiteCredentialStore();
-            itemManager.Init("", useWindowsNativeFeatures: true, null);
-            return itemManager;
-        }
-
         [TestMethod, Description("Ensure managed cert and bundle exported")]
         public async Task TestPerformExport()
         {
             // setup
-            var migrationManager = new MigrationManager(GetManagedItemStore(), GetCredentialsStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteManagedItemStore(), new SQLiteCredentialStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // export
             var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);
@@ -55,7 +39,7 @@ namespace Certify.Core.Tests
         public void TestDecryptEncrypt()
         {
             // setup
-            var migrationManager = new MigrationManager(GetManagedItemStore(), GetCredentialsStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteManagedItemStore(), new SQLiteCredentialStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // encrypt
 
@@ -76,7 +60,7 @@ namespace Certify.Core.Tests
         public async Task TestDecryptExportedCerts()
         {
             // setup
-            var migrationManager = new MigrationManager(GetManagedItemStore(), GetCredentialsStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+            var migrationManager = new MigrationManager(new SQLiteManagedItemStore(), new SQLiteCredentialStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
 
             // export
             var export = await migrationManager.PerformExport(new ManagedCertificateFilter { }, new ExportSettings { EncryptionSecret = "secret" }, isPreview: false);

@@ -70,34 +70,31 @@ namespace Certify.Core.Tests.Unit
             var configMatch = managedCertificate.GetChallengeConfig(null);
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Blank domain should match blank domain match config");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, null));
-            Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Blank domain should match blank domain match config");
-
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "*.fred.com"));
+            configMatch = managedCertificate.GetChallengeConfig("*.fred.com");
             Assert.AreEqual("config-wildcard", configMatch.ChallengeCredentialKey, "Should match on wildcard");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "fred.com"));
+            configMatch = managedCertificate.GetChallengeConfig("fred.com");
             Assert.AreEqual("config2", configMatch.ChallengeCredentialKey, "Should match on domain");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "subdomain.example.com"));
+            configMatch = managedCertificate.GetChallengeConfig("subdomain.example.com");
             Assert.AreEqual("config3", configMatch.ChallengeCredentialKey, "Should match on domain");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "www.example.com"));
+            configMatch = managedCertificate.GetChallengeConfig("www.example.com");
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should match default");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "www.exaomple.com"));
+            configMatch = managedCertificate.GetChallengeConfig("www.exaomple.com");
             Assert.AreEqual("config4", configMatch.ChallengeCredentialKey, "Should match on domain");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "subdomain.exaomple1.com"));
+            configMatch = managedCertificate.GetChallengeConfig("subdomain.exaomple1.com");
             Assert.AreEqual("config4", configMatch.ChallengeCredentialKey, "Should match on domain wildcard");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "www.subdomain.exaomple1.com"));
+            configMatch = managedCertificate.GetChallengeConfig("www.subdomain.exaomple1.com");
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should not match on domain wildcard");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "example.com"));
+            configMatch = managedCertificate.GetChallengeConfig("example.com");
             Assert.AreEqual("config4", configMatch.ChallengeCredentialKey, "Should match on domain");
 
-            configMatch = managedCertificate.GetChallengeConfig(new CertIdentifierItem(CertIdentifierType.Dns, "www.microsoft.com"));
+            configMatch = managedCertificate.GetChallengeConfig("www.microsoft.com");
             Assert.AreEqual("config-default", configMatch.ChallengeCredentialKey, "Should match default");
         }
 

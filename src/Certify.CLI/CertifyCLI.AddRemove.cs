@@ -127,7 +127,7 @@ namespace Certify.CLI
                     }
                     else
                     {
-                        managedCert.DomainOptions.Add(new DomainOption { Domain = d, IsManualEntry = true, IsSelected = true, Type = CertIdentifierType.Dns });
+                        managedCert.DomainOptions.Add(new DomainOption { Domain = d, IsManualEntry = true, IsSelected = true, Type = "dns" });
                     }
 
                     if (!managedCert.RequestConfig.SubjectAlternativeNames.Contains(d))

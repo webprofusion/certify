@@ -112,6 +112,7 @@ namespace Certify.Server.API.Controllers
 
         }
 
+
         /// <summary>
         /// Download text log for the given managed certificate
         /// </summary>
@@ -161,8 +162,8 @@ namespace Certify.Server.API.Controllers
             {
                 Id = i.Id,
                 Title = i.Name,
-                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                Identifiers = i.GetCertificateIdentifiers(),
+                PrimaryIdentifier = new Identifier { Type = "dns", Value = i.RequestConfig.PrimaryDomain },
+                Identifiers = i.RequestConfig.SubjectAlternativeNames.Select(s => new Identifier { Type = "dns", Value = s }),
                 DateRenewed = i.DateRenewed,
                 DateExpiry = i.DateExpiry,
                 Comments = i.Comments,
