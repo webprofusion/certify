@@ -116,10 +116,10 @@ namespace Certify.Models.Shared.Validation
             }
 
             // update our list of selected subject ip addresses, if any
-            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip").Select(s => s.Domain).ToArray()))
+            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip).Select(s => s.Domain).ToArray()))
             {
 
-                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == "ip" && i.Domain != null)
+                config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip && i.Domain != null)
                                                               .Select(s => s.Domain ?? string.Empty)
                                                               .ToArray();
             }
@@ -228,7 +228,7 @@ namespace Certify.Models.Shared.Validation
                             }
                             else if (Uri.CheckHostName(domain) == UriHostNameType.IPv4 || Uri.CheckHostName(domain) == UriHostNameType.IPv6)
                             {
-                                option.Type = "ip";
+                                option.Type = CertIdentifierType.Ip;
                                 // add an IP address instead of a domain
                                 if (item.DomainOptions.Count == 0)
                                 {
@@ -266,54 +266,64 @@ namespace Certify.Models.Shared.Validation
 
                 if (string.IsNullOrEmpty(item.Name))
                 {
-
                     return new ValidationResult(false, SR.ManagedCertificateSettings_NameRequired, ValidationErrorCodes.REQUIRED_NAME.ToString());
                 }
 
-                // a primary subject domain must be set
-                if (GetPrimarySubjectDomain(item) == null)
+                bool validateDomains = true;
+                bool validateAuthorityTokens = false;
+
+                if (item.RequestConfig.AuthorityTokens?.Any() == true)
                 {
-                    // if we still can't decide on the primary domain ask user to define it
-                    return new ValidationResult(
-                        false,
-                        SR.ManagedCertificateSettings_NeedPrimaryDomain,
-                        ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString()
-                    );
+                    validateDomains = false;
                 }
 
-                if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
+                if (validateDomains)
                 {
-                    // validate hostnames
-                    if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                    // a primary subject domain must be set
+                    if (GetPrimarySubjectDomain(item) == null)
                     {
-                        // one or more selected domains does not include a label separator (is an internal host name) or end in .local
-
+                        // if we still can't decide on the primary domain ask user to define it
                         return new ValidationResult(
                             false,
-                            "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
-                            ValidationErrorCodes.INVALID_HOSTNAME.ToString()
+                            SR.ManagedCertificateSettings_NeedPrimaryDomain,
+                            ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString()
                         );
                     }
-                }
 
-                // if title still set to the default, automatically use the primary domain instead
-                if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
-                {
-                    item.Name = GetPrimarySubjectDomain(item)?.Domain;
-                }
+                    if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
+                    {
+                        // validate hostnames
+                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                        {
+                            // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 
-                // certificates cannot request wildcards unless they also use DNS validation
-                if (
-                    item.DomainOptions?.Any(d => d.IsSelected && d.Domain != null && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
-                    &&
-                    !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
-                    )
-                {
-                    return new ValidationResult(
-                        false,
-                        "Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.",
-                        ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
-                    );
+                            return new ValidationResult(
+                                false,
+                                "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
+                                ValidationErrorCodes.INVALID_HOSTNAME.ToString()
+                            );
+                        }
+                    }
+
+                    // if title still set to the default, automatically use the primary domain instead
+                    if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
+                    {
+                        item.Name = GetPrimarySubjectDomain(item)?.Domain;
+                    }
+
+                    // certificates cannot request wildcards unless they also use DNS validation
+                    if (
+                        item.DomainOptions?.Any(d => d.IsSelected && d.Domain != null && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
+                        &&
+                        !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                        )
+                    {
+                        return new ValidationResult(
+                            false,
+                            "Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.",
+                            ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
+                        );
+                    }
                 }
 
                 // TLS-SNI-01 (is now not supported)

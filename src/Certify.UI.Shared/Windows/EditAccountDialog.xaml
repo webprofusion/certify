@@ -3,14 +3,13 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
-
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit ACME Account"
     Width="514"
-    Height="450"
+    Height="416"
     BorderThickness="1"
     GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResizeWithGrip"
@@ -119,93 +118,135 @@
                 MinWidth="140"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced">
-                <DockPanel Margin="8,0,8,0">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Mode &amp; Preferences</TextBlock>
-                    <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Style="{StaticResource Instructions}">If you need to test certificate requests without affecting your CA rate limit you can use an account which only issues test (staging) certificates:</TextBlock>
-                        <CheckBox
-                            x:Name="IsStagingMode"
-                            Margin="4,4,0,4"
-                            Content="Use Staging (Test) Mode"
-                            IsChecked="{Binding Item.IsStaging}" />
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Style="{StaticResource Instructions}">The authority may offer an &quot;alternative chain&quot; using a different root certificate:</TextBlock>
-                        <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                <ScrollViewer MaxHeight="300">
+                    <DockPanel Margin="8,0,8,0">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Mode &amp; Preferences</TextBlock>
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock Style="{StaticResource Instructions}">If you need to test certificate requests without affecting your CA rate limit you can use an account which only issues test (staging) certificates:</TextBlock>
+                            <CheckBox
+                                x:Name="IsStagingMode"
+                                Margin="4,4,0,4"
+                                Content="Use Staging (Test) Mode"
+                                IsChecked="{Binding Item.IsStaging}" />
+                        </StackPanel>
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock Style="{StaticResource Instructions}">The authority may offer an &quot;alternative chain&quot; using a different root certificate:</TextBlock>
+                            <StackPanel Margin="0,0,0,4" Orientation="Horizontal">
+                                <Label
+                                    Width="120"
+                                    Margin="0,0,8,0"
+                                    VerticalAlignment="Top"
+                                    Content="Preferred Chain" />
+                                <TextBox
+                                    Width="300"
+                                    Height="23"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Top"
+                                    Controls:TextBoxHelper.Watermark="(optional) e.g. DST Root CA X3"
+                                    Text="{Binding Item.PreferredChain}"
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+
+
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">External Account Binding</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If required by your Certificate Authority, you can provide external account binding details here.</TextBlock>
+
+
+                        <StackPanel
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
                             <Label
                                 Width="120"
                                 Margin="0,0,8,0"
                                 VerticalAlignment="Top"
-                                Content="Preferred Chain" />
+                                Content="Key Id" />
                             <TextBox
                                 Width="300"
                                 Height="23"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
-                                Controls:TextBoxHelper.Watermark="(optional) e.g. DST Root CA X3"
-                                Text="{Binding Item.PreferredChain}"
+                                Text="{Binding Item.EabKeyId}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                    </StackPanel>
+                        <StackPanel
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label
+                                Width="120"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Top"
+                                Content="Key (HMAC)" />
+                            <TextBox
+                                Width="300"
+                                Height="23"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Text="{Binding Item.EabKey}"
+                                TextWrapping="NoWrap" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label
+                                Width="120"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Top"
+                                Content="Key Algorithm" />
+                            <TextBox
+                                Width="300"
+                                Height="23"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Controls:TextBoxHelper.Watermark="optional, e.g. HS256 (default), HS384 or HS512"
+                                Text="{Binding Item.EabKeyAlgorithm}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Import Account Details</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If you need to import an account from another client instead of registering a new account with the CA you can specify the Account URI and Account Key (PEM encoded private key):</TextBlock>
 
-
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">External Account Binding</TextBlock>
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If required by your Certificate Authority, you can provide external account binding details here.</TextBlock>
-
-
-                    <StackPanel
-                        Margin="0,0,0,4"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label
-                            Width="120"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Top"
-                            Content="Key Id" />
-                        <TextBox
-                            Width="300"
-                            Height="23"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Text="{Binding Item.EabKeyId}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                    <StackPanel
-                        Margin="0,0,0,4"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label
-                            Width="120"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Top"
-                            Content="Key (HMAC)" />
-                        <TextBox
-                            Width="300"
-                            Height="23"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Text="{Binding Item.EabKey}"
-                            TextWrapping="NoWrap" />
-                    </StackPanel>
-                    <StackPanel
-                        Margin="0,0,0,4"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label
-                            Width="120"
-                            Margin="0,0,8,0"
-                            VerticalAlignment="Top"
-                            Content="Key Algorithm" />
-                        <TextBox
-                            Width="300"
-                            Height="23"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Top"
-                            Controls:TextBoxHelper.Watermark="optional, e.g. HS256 (default), HS384 or HS512"
-                            Text="{Binding Item.EabKeyAlgorithm}"
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </DockPanel>
+                        <StackPanel
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label
+                                Width="120"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Top"
+                                Content="Account URI" />
+                            <TextBox
+                                x:Name="AccountURI"
+                                Width="300"
+                                Height="23"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Text="{Binding Item.ImportedAccountURI}"
+                                TextWrapping="WrapWithOverflow" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label
+                                Width="120"
+                                Margin="0,0,8,0"
+                                VerticalAlignment="Top"
+                                Content="Account Key" />
+                            <TextBox
+                                x:Name="AccountKey"
+                                Width="300"
+                                Height="48"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                AcceptsReturn="True"
+                                Text="{Binding Item.ImportedAccountKey}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DockPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
 

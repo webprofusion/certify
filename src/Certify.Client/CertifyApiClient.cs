@@ -534,9 +534,9 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<string[]>(response);
         }
 
-        public async Task<List<ActionResult>> PerformManagedCertMaintenance()
+        public async Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null)
         {
-            var result = await FetchAsync("managedcertificates/maintenance");
+            var result = await FetchAsync($"managedcertificates/maintenance/{id}");
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 

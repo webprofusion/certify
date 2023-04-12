@@ -10,7 +10,7 @@ namespace Certify.Models
     public class AuthorizationChallengeItem
     {
         public string? ChallengeType { get; set; }
-        public object? ChallengeData { get; set; }
+        public object? ChallengeContext { get; set; }
 
         public string? Key { get; set; }
         public string? Value { get; set; }
@@ -51,7 +51,7 @@ namespace Certify.Models
     }
 
     /// <summary>
-    /// Fora given (domain) identifier, list of Challenges we can satisfy to prove ownership/control 
+    /// For a given (domain) identifier, list of Challenges we can satisfy to prove ownership/control 
     /// </summary>
     public class PendingAuthorization
     {
@@ -61,9 +61,9 @@ namespace Certify.Models
         public List<AuthorizationChallengeItem>? Challenges { get; set; }
 
         /// <summary>
-        /// Identifier (Dns domain) we are attempting to get authorization for 
+        /// Identifier (Dns domain etc) we are attempting to get authorization for 
         /// </summary>
-        public IdentifierItem? Identifier { get; set; }
+        public CertIdentifierItem? Identifier { get; set; }
 
         public string? TempFilePath { get; set; }
 
