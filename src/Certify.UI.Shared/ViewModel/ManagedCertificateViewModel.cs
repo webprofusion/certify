@@ -363,31 +363,10 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return CalculateDateNextRenewalDue(SelectedItem, _appViewModel.Preferences?.RenewalIntervalMode, -Preferences.RenewalIntervalDays);
+                return ManagedCertificate.CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
             }
         }
 
-        public static DateTime? CalculateDateNextRenewalDue(ManagedCertificate item, string prefRenewalIntervalMode, int prefRenewalIntervalDays)
-        {
-            // for the simplest version based on preference for renewal interval this is
-            // DateRenewed + Interval more complicated would be based on last renewal attempt and
-            // number of attempts so far etc
-            if (item != null && item.DateRenewed.HasValue)
-            {
-                if (item.DateExpiry != null && prefRenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
-                {
-                    // Start renewing N days before expiry 
-                    return item.DateExpiry.Value.AddDays(-prefRenewalIntervalDays);
-                }
-                else
-                {
-                    // days since last renewal + preferred interval
-                    return item.DateRenewed.Value.AddDays(prefRenewalIntervalDays);
-                }
-            }
-
-            return null;
-        }
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
             get; set;

@@ -10,7 +10,7 @@ namespace Certify.Models
     public class AuthorizationChallengeItem
     {
         public string? ChallengeType { get; set; }
-        public object? ChallengeData { get; set; }
+        public object? ChallengeContext { get; set; }
 
         public string? Key { get; set; }
         public string? Value { get; set; }

@@ -1,5 +1,4 @@
 ﻿using System;
-using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -26,10 +25,11 @@ namespace Certify.Core.Tests.Unit
             };
 
             // perform check
-            var isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+            var renewalDueCheck
+                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
 
             // assert result
-            Assert.IsTrue(isRenewalRequired, "Renewal should be required");
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
 
             managedCertificate = new ManagedCertificate
             {
@@ -42,10 +42,10 @@ namespace Certify.Core.Tests.Unit
             };
 
             // perform check
-            isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
 
             // assert result
-            Assert.IsTrue(isRenewalRequired, "Site with no previous status - Renewal should be required");
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Site with no previous status - Renewal should be required");
         }
 
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal")]
@@ -58,10 +58,10 @@ namespace Certify.Core.Tests.Unit
             var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
-            Assert.IsTrue(isRenewalRequired, "Renewal should be required");
+            Assert.IsTrue(isRenewalRequired.IsRenewalDue, "Renewal should be required");
         }
 
         [TestMethod, Description("Ensure a site which should not be renewed correctly does not require renewal")]
@@ -75,10 +75,39 @@ namespace Certify.Core.Tests.Unit
             var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
-            Assert.IsFalse(isRenewalRequired, "Renewal should not be required");
+            Assert.IsFalse(isRenewalRequired.IsRenewalDue, "Renewal should not be required");
+        }
+
+        [TestMethod, Description("Ensure item which should not normally be renewed correctly requires renewal if DateNextScheduledRenewalAttempt is set and due")]
+        public void TestDateNextScheduledRenewalAttempt()
+        {
+            // setup : set renewal period to 30 days, last renewal 15 days ago.
+
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+
+            // set scheduled renewal so it should become due
+            managedCertificate.DateNextScheduledRenewalAttempt = DateTime.Now.AddDays(-0.1);
+
+            // perform check
+            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // assert result
+            Assert.IsTrue(isRenewalRequired.IsRenewalDue, "Renewal should be required due to scheduled date");
+
+            // set scheduled renewal so it should not become due
+            managedCertificate.DateNextScheduledRenewalAttempt = DateTime.Now.AddDays(45);
+
+            // perform check
+            isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // assert result
+            Assert.IsFalse(isRenewalRequired.IsRenewalDue, "Renewal should not be required due to scheduled date in future");
         }
 
         [TestMethod, Description("Ensure a site with unknown date for last renewal should require renewal")]
@@ -92,10 +121,10 @@ namespace Certify.Core.Tests.Unit
             var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateExpiry = DateTime.Now.AddDays(60) };
 
             // perform check
-            var isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
-            Assert.IsTrue(isRenewalRequired, "Renewal should be required");
+            Assert.IsTrue(isRenewalRequired.IsRenewalDue, "Renewal should be required");
         }
 
         [TestMethod, Description("Ensure a site with unknown date for last renewal should renew before expiry")]
@@ -121,29 +150,29 @@ namespace Certify.Core.Tests.Unit
             };
 
             // perform check
-            var isRenewalRequired = RenewalManager.IsRenewalRequired(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             if (renewalIntervalMode == RenewalIntervalModes.DaysAfterLastRenewal)
             {
                 if (daysSinceRenewed >= renewalPeriodDays)
                 {
-                    Assert.IsTrue(isRenewalRequired, $"Renewal should be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days since last renewed: {daysSinceRenewed}");
+                    Assert.IsTrue(isRenewalRequired.IsRenewalDue, $"Renewal should be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days since last renewed: {daysSinceRenewed}");
                 }
                 else
                 {
-                    Assert.IsFalse(isRenewalRequired, $"Renewal should not be required.  Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days since last renewed: {daysSinceRenewed}");
+                    Assert.IsFalse(isRenewalRequired.IsRenewalDue, $"Renewal should not be required.  Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days since last renewed: {daysSinceRenewed}");
                 }
             }
             else if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
             {
                 if (daysUntilExpiry <= renewalPeriodDays)
                 {
-                    Assert.IsTrue(isRenewalRequired, $"Renewal should be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days until expiry: {daysUntilExpiry}");
+                    Assert.IsTrue(isRenewalRequired.IsRenewalDue, $"Renewal should be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days until expiry: {daysUntilExpiry}");
                 }
                 else
                 {
-                    Assert.IsFalse(isRenewalRequired, $"Renewal should not be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days until expiry: {daysUntilExpiry}");
+                    Assert.IsFalse(isRenewalRequired.IsRenewalDue, $"Renewal should not be required. Renewal mode: {renewalIntervalMode}, renewal interval: {renewalPeriodDays}, days until expiry: {daysUntilExpiry}");
                 }
             }
         }

@@ -118,14 +118,16 @@ namespace Certify.Management
 
                 // determine if this site currently requires renewal for auto mode (or renewals due mode)
                 // In auto mode we skip if recent failures, in Renewals Due mode we ignore recent failures
-                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
+
+                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
+                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
                 var isRenewalOnHold = false;
 
                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                 {
                     //check if we have renewal failures, if so wait a bit longer.
-                    isRenewalOnHold = !IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
+                    isRenewalOnHold = !ManagedCertificate.IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
 
                     if (isRenewalOnHold)
                     {
@@ -237,70 +239,6 @@ namespace Certify.Management
 
                 return results;
             }
-        }
-
-        /// <summary>
-        /// if we know the last renewal date, check whether we should renew again, otherwise assume
-        /// it's more than 30 days ago by default and attempt renewal
-        /// </summary>
-        /// <param name="s">  </param>
-        /// <param name="renewalIntervalDays">  </param>
-        /// <param name="checkFailureStatus">  </param>
-        /// <returns>  </returns>
-        public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
-        {
-            var timeNow = DateTime.Now;
-
-            var timeSinceLastRenewal = (s.DateRenewed ?? timeNow.AddDays(-30)) - timeNow;
-
-            var timeToExpiry = (s.DateExpiry ?? timeNow) - timeNow;
-
-            var isRenewalRequired = false;
-
-            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
-            {
-                // is item expiring within N days
-                isRenewalRequired = Math.Abs(timeToExpiry.TotalDays) <= renewalIntervalDays;
-            }
-            else
-            {
-                // was item renewed more than N days ago
-                isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
-            }
-
-            // if we have never attempted renewal, renew now
-            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
-            {
-                isRenewalRequired = true;
-            }
-
-            // if renewal is required but we have previously failed, scale the frequency of renewal
-            // attempts to a minimum of once per 24hrs.
-            if (isRenewalRequired && checkFailureStatus)
-            {
-                if (s.LastRenewalStatus == RequestState.Error)
-                {
-                    // our last attempt failed, check how many failures we've had to decide whether
-                    // we should attempt now, Scale wait time based on how many attempts we've made.
-                    // Max 48hrs between attempts
-                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
-                    {
-                        var hoursWait = 48;
-                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
-                        {
-                            hoursWait = s.RenewalFailureCount;
-                        }
-
-                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
-                        if (DateTime.Now < nextAttemptByDate)
-                        {
-                            isRenewalRequired = false;
-                        }
-                    }
-                }
-            }
-
-            return isRenewalRequired;
         }
     }
 }

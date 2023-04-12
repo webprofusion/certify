@@ -31,6 +31,20 @@ namespace Certify.Models
         Error
     }
 
+    public class RenewalDueInfo
+    {
+        public DateTime? DateNextRenewalAttempt { get; set; }
+        public bool IsRenewalDue { get; set; }
+        public string Reason { get; set; }
+
+        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate)
+        {
+            Reason = reason;
+            IsRenewalDue = isRenewalDue;
+            DateNextRenewalAttempt = renewalAttemptDate;
+        }
+    }
+
     public class ManagedCertificate : BindableBase
     {
         public ManagedCertificate()
@@ -583,6 +597,181 @@ namespace Certify.Models
                     return default;
                 }
             }
+        }
+
+        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
+        {
+
+            if (s == null)
+            {
+                return null;
+            }
+
+            var isRenewalRequired = false;
+            var renewalStatusReason = "Not yet due for renewal.";
+            var nextRenewalAttemptDate = s.DateExpiry ?? DateTime.Now;
+
+            var timeNow = DateTime.Now;
+            var timeSinceLastRenewal = timeNow - (s.DateRenewed ?? timeNow.AddDays(-30));
+
+            var expiryDate = s.DateExpiry ?? timeNow;
+            var timeToExpiry = expiryDate - timeNow;
+
+            if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= timeNow)
+            {
+                return new RenewalDueInfo("Scheduled renewal is now due.", true, timeNow);
+            }
+
+            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+            {
+                var renewalDiffDays = timeToExpiry.TotalDays - renewalIntervalDays;
+
+                // is item expiring within N days
+                if (timeToExpiry.TotalDays <= renewalIntervalDays)
+                {
+                    isRenewalRequired = true;
+                    nextRenewalAttemptDate = timeNow;
+                    renewalStatusReason = "Item is due to expire soon based on default renewal interval";
+                }
+                else
+                {
+                    isRenewalRequired = false;
+                    nextRenewalAttemptDate = timeNow.AddDays(renewalDiffDays);
+                    renewalStatusReason = $"Item has {renewalDiffDays} remaining days before the default renewal interval occurs.";
+                }
+            }
+            else
+            {
+                // was item renewed more than N days ago
+                var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
+                var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalIntervalDays;
+
+                if (daysSinceLastRenewal >= renewalIntervalDays)
+                {
+                    //isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
+                    isRenewalRequired = true;
+                    nextRenewalAttemptDate = timeNow;
+                    renewalStatusReason = "Last renewal date is greater than the default renewal interval";
+                }
+                else
+                {
+                    isRenewalRequired = false;
+                    nextRenewalAttemptDate = timeNow.AddDays(renewalDiffDays);
+                    renewalStatusReason = "Last renewal date has not yet reached the default renewal interval";
+                }
+            }
+
+            // if we have never attempted renewal, renew now
+            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
+            {
+                isRenewalRequired = true;
+
+                renewalStatusReason = "Item has not yet been succesfully requested.";
+            }
+
+            // if renewal is required but we have previously failed, scale the frequency of renewal
+            // attempts to a minimum of once per 24hrs.
+            if (isRenewalRequired && checkFailureStatus)
+            {
+                if (s.LastRenewalStatus == RequestState.Error)
+                {
+                    // our last attempt failed, check how many failures we've had to decide whether
+                    // we should attempt now, Scale wait time based on how many attempts we've made.
+                    // Max 48hrs between attempts
+                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
+                    {
+                        var hoursWait = 48;
+                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
+                        {
+                            hoursWait = s.RenewalFailureCount;
+                        }
+
+                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
+
+                        if (timeNow < nextAttemptByDate)
+                        {
+                            isRenewalRequired = false;
+                            return new RenewalDueInfo("Item has previously failed renewal but next renewal attempt is not yet due", isRenewalRequired, nextAttemptByDate);
+                        }
+                        else
+                        {
+                            return new RenewalDueInfo("Item has previously failed renewal and next renewal attempt is now due", isRenewalRequired, timeNow);
+                        }
+                    }
+                }
+            }
+
+            if (!isRenewalRequired && s.DateNextScheduledRenewalAttempt.HasValue && s.DateNextScheduledRenewalAttempt < nextRenewalAttemptDate)
+            {
+                renewalStatusReason = "Item renewal is not yet required but is scheduled before normal renewal";
+                nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
+            }
+
+            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate);
+        }
+
+        /// <summary>
+        /// if we know the last renewal date, check whether we should renew again, otherwise assume
+        /// it's more than 30 days ago by default and attempt renewal
+        /// </summary>
+        /// <param name="s">  </param>
+        /// <param name="renewalIntervalDays">  </param>
+        /// <param name="checkFailureStatus">  </param>
+        /// <returns>  </returns>
+        public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
+        {
+            var timeNow = DateTime.Now;
+
+            var timeSinceLastRenewal = (s.DateRenewed ?? timeNow.AddDays(-30)) - timeNow;
+
+            var timeToExpiry = (s.DateExpiry ?? timeNow) - timeNow;
+
+            var isRenewalRequired = false;
+
+            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+            {
+                // is item expiring within N days
+                isRenewalRequired = Math.Abs(timeToExpiry.TotalDays) <= renewalIntervalDays;
+            }
+            else
+            {
+                // was item renewed more than N days ago
+                isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
+            }
+
+            // if we have never attempted renewal, renew now
+            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
+            {
+                isRenewalRequired = true;
+            }
+
+            // if renewal is required but we have previously failed, scale the frequency of renewal
+            // attempts to a minimum of once per 24hrs.
+            if (isRenewalRequired && checkFailureStatus)
+            {
+                if (s.LastRenewalStatus == RequestState.Error)
+                {
+                    // our last attempt failed, check how many failures we've had to decide whether
+                    // we should attempt now, Scale wait time based on how many attempts we've made.
+                    // Max 48hrs between attempts
+                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
+                    {
+                        var hoursWait = 48;
+                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
+                        {
+                            hoursWait = s.RenewalFailureCount;
+                        }
+
+                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
+                        if (DateTime.Now < nextAttemptByDate)
+                        {
+                            isRenewalRequired = false;
+                        }
+                    }
+                }
+            }
+
+            return isRenewalRequired;
         }
     }
 }
