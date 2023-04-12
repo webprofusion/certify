@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +14,7 @@ using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Providers;
-using Certify.Providers.ACME.Certes;
+using Certify.Providers.ACME.Anvil;
 using Serilog;
 
 namespace Certify.Management
@@ -109,8 +109,6 @@ namespace Certify.Management
         public CertifyManager(bool useWindowsNativeFeatures = true)
         {
             _useWindowsNativeFeatures = useWindowsNativeFeatures;
-
-           
         }
 
         public async Task Init()
@@ -348,6 +346,10 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// used to set a specific account for testing, instead of loading from config
+        /// </summary>
+        public AccountDetails ForceAccountDetails { get; set; }
+        /// <summary>
         /// Get the ACME client applicable for the given managed certificate
         /// </summary>
         /// <param name="managedItem"></param>
@@ -355,7 +357,7 @@ namespace Certify.Management
         public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
         {
             // determine account to use for the given managed cert
-            var acc = await GetAccountDetailsForManagedItem(managedItem);
+            var acc = ForceAccountDetails ?? await GetAccountDetailsForManagedItem(managedItem);
             if (acc != null)
             {
                 _certificateAuthorities.TryGetValue(acc.CertificateAuthorityId, out var ca);
@@ -399,7 +401,7 @@ namespace Certify.Management
                 var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
-                var newProvider = new CertesACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
+                var newProvider = new AnvilACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
 
                 if (!_useWindowsNativeFeatures)
                 {

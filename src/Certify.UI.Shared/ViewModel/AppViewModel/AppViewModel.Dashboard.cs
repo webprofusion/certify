@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Shared;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
@@ -64,7 +60,7 @@ namespace Certify.UI.ViewModel
         {
             var licensingManager = PluginManager?.LicensingManager;
 
-            var installDate = licensingManager.GetInstallDate(EnvironmentUtil.GetAppDataFolder());
+            var installDate = licensingManager?.GetInstallDate(EnvironmentUtil.GetAppDataFolder());
 
             if (installDate == null)
             {
@@ -74,7 +70,6 @@ namespace Certify.UI.ViewModel
             return installDate < target;
         }
 
-       
         /// <summary>
         /// If true, app is running in licensed mode
         /// </summary>

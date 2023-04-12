@@ -242,7 +242,7 @@ namespace Certify.UI.Tests.Integration
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= "ip"}
+                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type=  CertIdentifierType.Ip}
                 }
             };
 
@@ -254,7 +254,7 @@ namespace Certify.UI.Tests.Integration
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= "ip"}
+                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type=  CertIdentifierType.Ip}
                 }
             };
 
@@ -266,8 +266,8 @@ namespace Certify.UI.Tests.Integration
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= "ip"},
-                    new DomainOption{ Domain="www.test.com", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= "dns"}
+                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= CertIdentifierType.Ip},
+                    new DomainOption{ Domain="www.test.com", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= CertIdentifierType.Dns}
                 }
             };
 

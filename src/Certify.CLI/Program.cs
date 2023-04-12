@@ -124,7 +124,7 @@ namespace Certify.CLI
 
                 if (command == "maintenance")
                 {
-                    await p.RunCertMaintenanceTasks();
+                    await p.RunCertMaintenanceTasks(args);
                 }
 
                 if (command == "pending")

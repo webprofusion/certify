@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net7.0;net462;</TargetFrameworks>
     <Configurations>Debug;Release</Configurations>
@@ -112,7 +112,7 @@
     <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
     <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
     <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\..\Certify.Providers\ACME\Certes\Certify.Providers.ACME.Certes.csproj" />
+    <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
     <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
     <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
   </ItemGroup>

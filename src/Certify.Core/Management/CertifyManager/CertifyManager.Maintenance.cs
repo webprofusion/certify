@@ -7,9 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Models.Plugins;
-using Microsoft.IdentityModel.Abstractions;
-using Newtonsoft.Json;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
@@ -63,7 +61,7 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
-        public async Task<List<ActionResult>> PerformCertificateMaintenance()
+        public async Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null)
         {
             if (_isRenewAllInProgress)
             {
@@ -75,7 +73,7 @@ namespace Certify.Management
             using (var cancellationTokenSource = new CancellationTokenSource())
             {
                 cancellationTokenSource.CancelAfter(30 * 60 * 1000); // 30 min auto-cancellation
-                await PerformCertificateStatusChecks(cancellationTokenSource.Token);
+                await PerformCertificateStatusChecks(cancellationTokenSource.Token, managedItemId);
                 steps.Add(new ActionResult("Performed OCSP and ARI Checks", true));
             }
 
@@ -85,9 +83,9 @@ namespace Certify.Management
         private DateTime? _lastStatusCheckInProgress = null;
 
         /// <summary>
-        /// When called, perform OCSP checks and ACME Renewal Info (ARI) checks on all managed certs or a subsample
+        /// When called, perform OCSP checks and ACME Renewal Info (ARI) checks on all managed certs or a subsample, or a single item
         /// </summary>
-        private async Task PerformCertificateStatusChecks(CancellationToken cancelToken)
+        private async Task PerformCertificateStatusChecks(CancellationToken cancelToken, string managedItemId = null)
         {
             if (_lastStatusCheckInProgress != null)
             {
@@ -112,7 +110,7 @@ namespace Certify.Management
                 var batchSize = 100;
                 var checkThrottleMS = 2500;
                 var lastCheckOlderThanMinutes = 12 * 60;
-                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize });
+                var ocspItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastOCSPCheckMins = (managedItemId == null ? lastCheckOlderThanMinutes : (int?)null), MaxResults = batchSize, Id = managedItemId });
 
                 var completedOcspUpdateChecks = new List<string>();
                 var completedRenewalInfoChecks = new List<string>();
@@ -120,7 +118,7 @@ namespace Certify.Management
 
                 var itemsOcspRevoked = new List<string>();
                 var itemsOcspExpired = new List<string>();
-                var itemsViaARI = new List<string>();
+                var itemsViaARI = new Dictionary<string, DateTime>();
 
                 if (ocspItemsToCheck?.Any() == true)
                 {
@@ -174,10 +172,13 @@ namespace Certify.Management
 
                 if (!cancelToken.IsCancellationRequested)
                 {
-                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = lastCheckOlderThanMinutes, MaxResults = batchSize });
+                    var renewalInfoItemsToCheck = await _itemManager.Find(new ManagedCertificateFilter { LastRenewalInfoCheckMins = (managedItemId == null ? lastCheckOlderThanMinutes : (int?)null), MaxResults = batchSize, Id = managedItemId });
+
                     if (renewalInfoItemsToCheck?.Any() == true)
                     {
                         _serviceLog.Information("Performing Renewal Info checks");
+
+                        var directoryInfoCache = new Dictionary<string, AcmeDirectoryInfo>();
 
                         foreach (var item in renewalInfoItemsToCheck)
                         {
@@ -191,14 +192,30 @@ namespace Certify.Management
                                 var provider = await GetACMEProvider(item);
                                 if (provider != null)
                                 {
-                                    var directoryInfo = await provider?.GetAcmeDirectory();
+                                    var providerKey = provider.GetAcmeBaseURI();
+                                    directoryInfoCache.TryGetValue(providerKey, out var directoryInfo);
+
+                                    if (directoryInfo == null)
+                                    {
+                                        directoryInfo = await provider?.GetAcmeDirectory();
+
+                                        if (directoryInfo != null && directoryInfo.NewAccount != null)
+                                        {
+                                            try
+                                            {
+                                                directoryInfoCache.Add(providerKey, directoryInfo);
+                                            }
+                                            catch { }
+                                        }
+                                    }
+
                                     if (directoryInfo?.RenewalInfo != null)
                                     {
                                         if (item.CertificatePath != null)
                                         {
                                             _serviceLog.Verbose($"Checking renewal info for {item.Name}");
 
-                                            var certId = Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var certId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
                                             var info = await provider.GetRenewalInfo(certId);
 
                                             if (info != null && item.DateExpiry != null)
@@ -206,27 +223,38 @@ namespace Certify.Management
                                                 var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
                                                 if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
-                                                    if (!itemsWhichRequireRenewal.Contains(item.Id))
+                                                    var dateSpan = info.SuggestedWindow.End - info.SuggestedWindow.Start;
+                                                    var randomMinsInSlot = new Random().Next((int)dateSpan.Value.TotalMinutes);
+
+                                                    var scheduledRenewalDate = info.SuggestedWindow?.Start.Value.AddMinutes(randomMinsInSlot) ?? nextRenewal;
+
+                                                    _serviceLog.Information($"Random renewal date {scheduledRenewalDate} within ARI renewal window [{info.SuggestedWindow?.Start} to {info.SuggestedWindow?.End}] has been set for {item.Name} ");
+
+                                                    itemsViaARI.Add(item.Id, scheduledRenewalDate.LocalDateTime);
+
+                                                    var updateRenewalInfo = await provider.GetRenewalInfo(certId);
+
+                                                    if (scheduledRenewalDate < DateTimeOffset.Now)
                                                     {
-                                                        itemsWhichRequireRenewal.Add(item.Id);
-                                                        itemsViaARI.Add(item.Id);
+                                                        // item requires immediate renewal
+                                                        if (!itemsWhichRequireRenewal.Contains(item.Id))
+                                                        {
+                                                            itemsWhichRequireRenewal.Add(item.Id);
+
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                else
-                                {
-                                    _serviceLog.Warning("ACME Service Provider not available {itemName} : {exp}", item.Name);
-                                }
-
-                                completedRenewalInfoChecks.Add(item.Id);
                             }
                             catch (Exception ex)
                             {
-                                _serviceLog.Debug("Could not check item renewal info {itemName} : {exp}", item.Name, ex);
+                                _serviceLog.Warning("Failed to perform renewal info check for {itemName} : {ex}", item.Name, ex);
                             }
+
+                            completedRenewalInfoChecks.Add(item.Id);
 
                             await Task.Delay(checkThrottleMS);
                         }
@@ -252,30 +280,36 @@ namespace Certify.Management
                         item.DateLastRenewalInfoCheck = DateTime.Now;
                     }
 
-                    // if item requires renewal, force expiry to now so that next renewal process will attempt renewal.
+                    if (itemsViaARI.ContainsKey(item.Id))
+                    {
+                        item.DateNextScheduledRenewalAttempt = itemsViaARI[item.Id];
+                    }
+
+                    // if item requires renewal, schedule next renewal attempt.
                     if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
                     {
                         if (item.DateExpiry > DateTime.Now.AddHours(1))
                         {
                             var reason = "Expiry";
 
-                            if (itemsViaARI.Contains(item.Id))
+                            if (itemsViaARI.ContainsKey(item.Id))
                             {
                                 reason = "ARI Suggested Window";
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
                             else if (itemsOcspRevoked.Contains(item.Id))
                             {
                                 reason = "OCSP status (Revoked)";
                                 item.CertificateRevoked = true;
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
                             else if (itemsOcspExpired.Contains(item.Id))
                             {
                                 reason = "OCSP status (Expired)";
+                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
                             }
 
                             _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
-
-                            item.DateExpiry = DateTime.Now;
                         }
                     }
 

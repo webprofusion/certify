@@ -280,12 +280,12 @@ namespace Certify.Service.Controllers
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
-        [HttpGet, Route("maintenance")]
-        public async Task<List<ActionResult>> PerformCertMaintenanceTasks()
+        [HttpGet, Route("maintenance/{id?}")]
+        public async Task<List<ActionResult>> PerformCertMaintenanceTasks(string id = null)
         {
             DebugLog();
 
-            return await _certifyManager.PerformCertificateMaintenance();
+            return await _certifyManager.PerformCertificateMaintenance(id);
         }
 
         internal class ProgressLogSink : Serilog.Core.ILogEventSink

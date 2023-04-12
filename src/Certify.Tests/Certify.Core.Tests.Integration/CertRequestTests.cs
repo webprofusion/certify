@@ -1,12 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.ACME.Anvil.Crypto;
+using Certify.ACME.Anvil.Pkcs;
 using Certify.Management;
 using Certify.Management.Servers;
 using Certify.Models;
+using Certify.Providers.ACME.Anvil;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -144,10 +147,10 @@ namespace Certify.Core.Tests
             await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
         }
 
-        [TestMethod, TestCategory("MegaTest"), Ignore]
-        public async Task TestChallengeRequestHttp01IDN()
+        [TestMethod, TestCategory("MegaTest")]
+        public async Task TestChallengeRequestDnsIDN()
         {
-            var testIDNDomain = "å🤔." + PrimaryTestDomain;
+            var testIDNDomain = "å🤔🚀." + PrimaryTestDomain;
 
             var testSANList = new string[]
             {
@@ -171,13 +174,15 @@ namespace Certify.Core.Tests
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = testIDNDomain,
-                    Challenges = new ObservableCollection<CertRequestChallengeConfig>(
-                          new List<CertRequestChallengeConfig>
-                          {
-                            new CertRequestChallengeConfig{
-                                ChallengeType="http-01"
-                            }
-                          }),
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig{
+                            ChallengeType="dns-01",
+                            ChallengeProvider= "DNS01.API.Cloudflare",
+                            ChallengeCredentialKey=_testCredStorageKey,
+                            Parameters= new ObservableCollection<Models.Config.ProviderParameter>{ new Models.Config.ProviderParameter{ Key="propagationdelay", Value="10" } },
+                            ZoneId =  ConfigSettings["Cloudflare_ZoneId"]
+                        }
+                    },
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true,
                     PerformChallengeFileCopy = true,
