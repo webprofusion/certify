@@ -761,7 +761,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.Id, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
 
                 if (certRequestResult.IsSuccess)
                 {
@@ -791,6 +791,7 @@ namespace Certify.Management
                         managedCertificate.DateRenewed = DateTime.Now;
                         managedCertificate.DateLastOcspCheck = DateTime.Now;
                         managedCertificate.DateLastRenewalInfoCheck = DateTime.Now;
+                        managedCertificate.DateNextScheduledRenewalAttempt = null;
 
                         managedCertificate.CertificatePath = primaryCertFilePath;
                         managedCertificate.CertificatePreviousThumbprintHash = managedCertificate.CertificateThumbprintHash;
@@ -984,7 +985,7 @@ namespace Certify.Management
             foreach (var identifier in identifiers)
             {
 
-                var authKey = identifier.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(identifier.Value).ToLower() : identifier.Value.ToLower();
+                var authKey = identifier.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(identifier.Value).ToLower() : identifier.Value;
 
                 var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Value == authKey && a.Identifier?.IdentifierType.ToLower() == identifier.IdentifierType.ToLower());
 

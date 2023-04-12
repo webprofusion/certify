@@ -19,9 +19,9 @@
             Margin="0,16,0,0"
             DockPanel.Dock="Top"
             Style="{StaticResource Subheading}">
-            Telephone Number Authorization List
+            Authority Tokens
         </TextBlock>
-        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="To configure the TnAuthList identifiers to include on your certificate you can manually add an SPC token from a file and specify a CRL distribution point URL, or browse to an SPC json file containing both the token and the CRL url, or manually add the token and CRL url. " /></TextBlock>
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="To configure the identifiers to include on your certificate you can manually add an Authority Token from a file and specify a CRL distribution point URL, or browse to a json file containing both the token and the CRL url. Alternatively you can add the information manually. " /></TextBlock>
         <StackPanel DockPanel.Dock="Top">
             <Button
                 x:Name="AddFromFile"
@@ -48,7 +48,7 @@
             <TextBox
                 x:Name="Token"
                 Height="48"
-                Controls:TextBoxHelper.Watermark="SPC token as JWT"
+                Controls:TextBoxHelper.Watermark="Token"
                 Text="" />
             <TextBox
                 x:Name="CRL"

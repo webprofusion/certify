@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Windows;
@@ -40,6 +42,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                         CRL.Text = tokenWrapper.Crl;
                     }
                 }
+                else
+                {
+                    if (fileContent.Length < 8192)
+                    {
+                        Token.Text = fileContent.Trim();
+                    }
+                }
             }
         }
 
@@ -53,6 +62,28 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             if (string.IsNullOrEmpty(tokenWrapper.Token) || string.IsNullOrEmpty(tokenWrapper.Crl))
             {
+                MessageBox.Show("Both the authority token and CRL url are required.");
+                return;
+            }
+
+            var parsedJwt = new JwtSecurityToken(jwtEncodedString: tokenWrapper.Token);
+            if (parsedJwt == null)
+            {
+                MessageBox.Show("The Authority Token is not a valid JWT.");
+                return;
+            }
+
+            if (parsedJwt.ValidTo < DateTime.Now)
+            {
+                MessageBox.Show("The Authority Token has expired.");
+                return;
+            }
+
+            var parsedAtc = CertRequestConfig.GetParsedAtc(tokenWrapper.Token);
+
+            if (parsedAtc == null)
+            {
+                MessageBox.Show("Both the authority token and CRL url are required.");
                 return;
             }
 

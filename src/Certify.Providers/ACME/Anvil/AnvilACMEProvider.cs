@@ -42,7 +42,7 @@ namespace Certify.Providers.ACME.Anvil
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
 
-        private readonly string _userAgentName = "Certify SSL Manager";
+        private readonly string _userAgentName = "Certify Certificate Manager";
         private ILog _log = null;
 
         private List<byte[]> _issuerCertCache = new List<byte[]>();
@@ -915,7 +915,7 @@ namespace Certify.Providers.ACME.Anvil
                                         ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
                                         Key = httpChallenge.Token,
                                         Value = httpChallenge.KeyAuthz,
-                                        ChallengeData = httpChallenge,
+                                        ChallengeContext = httpChallenge,
                                         ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
                                         ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
                                         IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
@@ -966,7 +966,7 @@ namespace Certify.Providers.ACME.Anvil
                                     log?.Error($"DNS challenge has an invalid status");
                                 }
 
-                                var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token); //ComputeDnsValue(dnsChallenge, _acme.AccountKey);
+                                var dnsValue = _acme.AccountKey.DnsTxt(dnsChallenge.Token);
                                 var dnsKey = $"_acme-challenge.{authzDomain}".Replace("*.", "");
 
                                 challenges.Add(new AuthorizationChallengeItem
@@ -974,7 +974,7 @@ namespace Certify.Providers.ACME.Anvil
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                                     Key = dnsKey,
                                     Value = dnsValue,
-                                    ChallengeData = dnsChallenge,
+                                    ChallengeContext = dnsChallenge,
                                     IsValidated = (dnsChallengeStatus.Status == ChallengeStatus.Valid)
                                 });
                             }
@@ -997,34 +997,34 @@ namespace Certify.Providers.ACME.Anvil
 
                             if (tkAuthChallenge != null)
                             {
-                                Challenge tkChallengeStatus;
+                                Challenge authorityTokenChallenge;
                                 if (useAuthzForChallengeStatus)
                                 {
                                     // some ACME providers don't support /challenge/ to get challenge status so retrieve all from the /authz/ instead
-                                    tkChallengeStatus = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.TkAuth01);
+                                    authorityTokenChallenge = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.TkAuth01);
                                 }
                                 else
                                 {
                                     // fetch status directly from /challenge/ api
-                                    tkChallengeStatus = await tkAuthChallenge.Resource();
+                                    authorityTokenChallenge = await tkAuthChallenge.Resource();
                                 }
 
-                                log.Information($"Got tkauth-01 challenge {tkChallengeStatus.Url}");
+                                log.Information($"Got tkauth-01 challenge {authorityTokenChallenge.Url}");
 
-                                if (tkChallengeStatus.Status == ChallengeStatus.Invalid)
+                                if (authorityTokenChallenge.Status == ChallengeStatus.Invalid)
                                 {
                                     log?.Error($"tkauth-01 challenge has an invalid status");
                                 }
 
-                                var token = _acme.AccountKey.DnsTxt(tkAuthChallenge.Token);
+                                var authToken = config.AuthorityTokens.FirstOrDefault(a => CertRequestConfig.GetParsedAtc(a.Token).TkValue == authzDomain);
 
                                 challenges.Add(new AuthorizationChallengeItem
                                 {
                                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH,
-                                    Key = token,
-                                    Value = authzDomain,
-                                    ChallengeData = tkAuthChallenge,
-                                    IsValidated = (tkChallengeStatus.Status == ChallengeStatus.Valid)
+                                    Key = authzDomain,
+                                    Value = authToken?.Token,
+                                    ChallengeContext = tkAuthChallenge,
+                                    IsValidated = (authorityTokenChallenge.Status == ChallengeStatus.Valid)
                                 });
                             }
                         }
@@ -1097,17 +1097,19 @@ namespace Certify.Providers.ACME.Anvil
                     };
                 }
 
-                var challenge = (IChallengeContext)pendingAuthorization.AttemptedChallenge.ChallengeData;
+                var challenge = pendingAuthorization.AttemptedChallenge.ChallengeContext as IChallengeContext;
                 try
                 {
-                    var testPayload = new
+                    object payload = null;
+
+                    // Authority Token challenge passes the original JWT as the payload
+                    if (pendingAuthorization.AttemptedChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH)
                     {
-                        atc =
-                                    "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCIsIng1dSI6Imh0dHBzOi8vYXV0aGVudGljYXRlLWFwaS1zdGcuaWNvbmVjdGl2LmNvbS9kb3dubG9hZC92MS9jZXJ0aWZpY2F0ZS9jZXJ0aWZpY2F0ZUlkXzEwNDIxNS5jcnQifQ.eyJleHAiOjE3NDIzOTg3MTcsImp0aSI6IjQ0MzU1ODgxLTg1YTYtNDY4MC1hMTc0LTFlZDQ2YTcyNjYxYSIsImF0YyI6eyJ0a3R5cGUiOiJUTkF1dGhMaXN0IiwidGt2YWx1ZSI6Ik1BaWdCaFlFTnpBNVNnPT0iLCJjYSI6ZmFsc2UsImZpbmdlcnByaW50IjoiU0hBMjU2IEEwOkZCOjAyOjgzOjRFOjBGOkNCOjE0OkQyOkNCOjQ5OjExOjU1OjhFOkQ1OjkwOjRGOjA4OkJCOjU1OjM0OjU2OkM2OjMwOjg2OjA0OjNDOjFGOjg3OjNDOkJEOjA0In19.VRX5TqFcOpPYKFrvECUWf7Y-k-uFaZEauzT7AwQq-tMvn69nAggb5EgCNusvLsOLlMdYINdrxl4V_bYcf_3R5w"
-                    };
+                        payload = new { atc = pendingAuthorization.AttemptedChallenge.Value };
+                    }
 
                     // submit challenge to ACME CA to validate
-                    var result = await challenge.Validate(testPayload);
+                    var result = await challenge.Validate(payload);
 
                     return new StatusMessage
                     {
@@ -1222,11 +1224,9 @@ namespace Certify.Providers.ACME.Anvil
         /// request by submitting a Certificate Signing Request (CSR) to the CA
         /// </summary>
         /// <param name="log">  </param>
-        /// <param name="primaryDnsIdentifier">  </param>
-        /// <param name="alternativeDnsIdentifiers">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1424,7 +1424,7 @@ namespace Certify.Providers.ACME.Anvil
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var domainAsPath = GetDomainAsPath(config.AuthorityTokens?.Any() == true ? "authoritytoken" : config.PrimaryDomain);
+            var domainAsPath = GetDomainAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
 
             if (config.ReusePrivateKey)
             {

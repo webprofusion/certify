@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IdentityModel.Tokens.Jwt;
@@ -299,6 +299,7 @@ namespace Certify.Models
         /// If set, the preferred number of days the certificate should expire (e.g. 14 or 0.5). Support for this will vary by CA.
         /// </summary>
         public float? PreferredExpiryDays { get; set; }
+
         public void ApplyDeploymentOptionDefaults()
         {
             // if the selected mode is auto, discard settings which do not apply
@@ -377,15 +378,22 @@ namespace Certify.Models
 
         public static AtcClaim? GetParsedAtc(string jwt)
         {
-            var parsedJwt = new JwtSecurityToken(jwtEncodedString: jwt);
-
-            var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
-            if (atc != null)
+            try
             {
-                var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                return parsedAtc;
+                var parsedJwt = new JwtSecurityToken(jwtEncodedString: jwt);
+
+                var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
+                if (atc != null)
+                {
+                    var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return parsedAtc;
+                }
+                else
+                {
+                    return null;
+                }
             }
-            else
+            catch
             {
                 return null;
             }
