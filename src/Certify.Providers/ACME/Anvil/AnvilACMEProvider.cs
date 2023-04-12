@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -766,7 +766,7 @@ namespace Certify.Providers.ACME.Anvil
                 {
                     // get all required pending (or already valid) authorizations for this order
 
-                    log.Information($"Fetching Authorizations.");
+                    log.Verbose($"Fetching Authorizations.");
 
                     var orderAuthorizations = await order.Authorizations();
 

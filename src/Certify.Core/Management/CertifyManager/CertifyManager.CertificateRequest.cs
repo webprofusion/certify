@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -368,9 +368,9 @@ namespace Certify.Management
                 return result;
             }
 
-            log?.Information($"Beginning Certificate Request Process: {managedCertificate.Name} using ACME Provider:{_acmeClientProvider.GetProviderName()}");
+            log?.Information($"Beginning certificate request process: {managedCertificate.Name} using ACME provider {_acmeClientProvider.GetProviderName()}");
 
-            log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateDomains())}");
+            log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateIdentifiers())}");
 
             ReportProgress(progress,
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate, false), logThisEvent: false
@@ -614,7 +614,7 @@ namespace Certify.Management
 
                             if (authorization?.Identifier != null)
                             {
-                                var msg = $"Attempting Challenge Response Validation for Domain: {identifier}";
+                                var msg = $"Attempting challenge response validation for: {identifier}";
 
                                 log?.Information(msg);
 
@@ -627,7 +627,7 @@ namespace Certify.Management
                                     ReportProgress(progress,
                                         new RequestProgressState(
                                             RequestState.Running,
-                                            $"Checking automated challenge response for Domain: {identifier}",
+                                            $"Checking automated challenge response for: {identifier}",
                                             managedCertificate
                                         )
                                     );
@@ -650,7 +650,7 @@ namespace Certify.Management
                                             authorization.AttemptedChallenge = authorization.Challenges.FirstOrDefault(c => c.ChallengeType == challengeConfig.ChallengeType);
                                         }
 
-                                        log?.Information($"Submitting challenge for validation: {identifier} :: {authorization?.AttemptedChallenge?.ResourceUri}");
+                                        log?.Information($"Submitting challenge for validation: {identifier} {authorization?.AttemptedChallenge?.ResourceUri}");
 
                                         var submissionStatus = await _acmeClientProvider.SubmitChallenge(log, challengeConfig.ChallengeType, authorization);
 
@@ -714,7 +714,7 @@ namespace Certify.Management
                                     {
                                         var errorMsg = "Failed";
 
-                                        failureSummaryMessage = $"Domain validation failed: {identifier} \r\n{errorMsg}";
+                                        failureSummaryMessage = $"Validation failed: {identifier} \r\n{errorMsg}";
 
                                         log?.Error(failureSummaryMessage);
 
@@ -1036,7 +1036,7 @@ namespace Certify.Management
                     // authorization was reused
                     if (!authorization.IsValidated)
                     {
-                        var logmsg = $"Preparing automated challenge responses ({identifier})";
+                        var logmsg = $"Preparing automated challenge responses for: {identifier}";
 
                         log?.Information(logmsg);
 
