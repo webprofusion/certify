@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Shared;
 
@@ -18,7 +18,7 @@ namespace Certify.Models.Providers
 
         Task<string> GetAcmeAccountStatus();
 
-        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg);
+        Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId = null, string eabKey = null, string eabKeyAlg = null, string importAccountURI = null, string importAccountKey = null);
 
         Task<bool> DeactivateAccount(ILog log);
 

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.ACME.Anvil.Acme;
 using Certify.ACME.Anvil.Acme.Resource;
+using Certify.ACME.Anvil.Jws;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -292,7 +293,8 @@ namespace Certify.Providers.ACME.Anvil
                             AccountKey = _settings.AccountKey,
                             Email = _settings.AccountEmail,
                             AccountURI = _settings.AccountUri,
-                            ID = _settings.AccountUri.Split('/').Last()
+                            ID = _settings.AccountUri.Split('/').Last(),
+                            AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
                         }
                     };
                 }
@@ -381,7 +383,8 @@ namespace Certify.Providers.ACME.Anvil
                     ID = _settings.AccountUri.Split('/').Last(),
                     AccountKey = _settings.AccountKey,
                     AccountURI = _settings.AccountUri,
-                    Email = _settings.AccountEmail
+                    Email = _settings.AccountEmail,
+                    AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
                 };
             }
             else
@@ -435,7 +438,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="email">  </param>
         /// <returns>  </returns>
-        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId, string eabKey, string eabKeyAlg)
+        public async Task<ActionResult<AccountDetails>> AddNewAccountAndAcceptTOS(ILog log, string email, string eabKeyId = null, string eabKey = null, string eabKeyAlg = null, string importAccountURI = null, string importAccountKey = null)
         {
 
             try
@@ -447,7 +450,32 @@ namespace Certify.Providers.ACME.Anvil
                     accKey = KeyFactory.FromPem(_settings.AccountKey);
                 }
 
-                // start new account context, create new account (with new key, if not enabled)
+                if (!string.IsNullOrEmpty(importAccountURI) && !string.IsNullOrEmpty(importAccountKey))
+                {
+                    // use imported account details
+
+                    SetAcmeContextAccountKey(importAccountKey);
+
+                    _settings.AccountUri = importAccountURI;
+                    _settings.AccountEmail = email;
+
+                    return new ActionResult<AccountDetails>
+                    {
+                        IsSuccess = true,
+                        Result = new AccountDetails
+                        {
+                            AccountKey = _settings.AccountKey,
+                            Email = _settings.AccountEmail,
+                            AccountURI = _settings.AccountUri,
+                            ID = _settings.AccountUri.Split('/').Last(),
+                            AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
+                        }
+                    };
+                }
+                else
+                {
+
+                    // start new account context, create new account (with new key, if not enabled)
                 _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
 
                 try
@@ -475,16 +503,26 @@ namespace Certify.Providers.ACME.Anvil
                         AccountKey = _settings.AccountKey,
                         Email = _settings.AccountEmail,
                         AccountURI = _settings.AccountUri,
-                        ID = _settings.AccountUri.Split('/').Last()
-                    }
-                };
-
+                            ID = _settings.AccountUri.Split('/').Last(),
+                            AccountFingerprint = GetAccountFingerprintHex(accKey)
+                        }
+                    };
+                }
             }
             catch (Exception exp)
             {
                 log?.Error($"Failed to register account with certificate authority: {exp.Message}");
                 return new ActionResult<AccountDetails> { IsSuccess = false, Message = $"Failed to register account with certificate authority: {exp.Message}" };
             }
+        }
+
+        private string GetAccountFingerprintHex(IKey accKey)
+        {
+            // populate account SHA256 fingerprint as hex e.g. SHA256 56:3E:CF:AE:83:CA:4D:15:B0:29:FF:1B:71:D3:BA:B9:19:81:F8:50:9B:DF:4A:D4:39:72:E2:B1:F0:B9:38:E3
+            // as used by some ACME extensions
+            var accountFingerprintBytes = JwsConvert.FromBase64String(accKey.Thumbprint());
+            var accountFingerprintHex = $"SHA256 {BitConverter.ToString(accountFingerprintBytes).Replace("-", ":").ToUpper()}";
+            return accountFingerprintHex;
         }
 
         private (bool exceptionHandled, bool abandonRequest, string message, Exception unwrappedException) HandleAndLogAcmeException(ILog itemLog, Exception exp)

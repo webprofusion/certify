@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -185,7 +185,7 @@ namespace Certify.Management
 
                 _serviceLog?.Information($"Registering account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
 
-                var addedAccount = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress, reg.EabKeyId, reg.EabKey, reg.EabKeyAlgorithm);
+                var addedAccount = await acmeProvider.AddNewAccountAndAcceptTOS(_serviceLog, reg.EmailAddress, reg.EabKeyId, reg.EabKey, reg.EabKeyAlgorithm, reg.ImportedAccountURI, reg.ImportedAccountKey);
 
                 if (addedAccount.IsSuccess)
                 {
@@ -252,6 +252,7 @@ namespace Certify.Management
                     existingAccount.Email = reg.EmailAddress;
                     existingAccount.AccountKey = updatedAccount.Result.AccountKey;
                     existingAccount.PreferredChain = reg.PreferredChain;
+                    existingAccount.AccountFingerprint = updatedAccount.Result.AccountFingerprint;
 
                     await StoreAccountAsCredential(existingAccount);
                 }

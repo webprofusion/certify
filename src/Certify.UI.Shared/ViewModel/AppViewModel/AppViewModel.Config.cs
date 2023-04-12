@@ -77,9 +77,9 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshAllDataStoreItems()
         {
-            await RefreshAccountsList();
             await RefreshCertificateAuthorityList();
             await RefreshStoredCredentialsList();
+            await RefreshAccountsList();
             await RefreshManagedCertificates();
         }
         /// <summary>
@@ -162,7 +162,7 @@ namespace Certify.UI.ViewModel
 
             await RefreshAccountsList();
             RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
-
+            RaisePropertyChangedEvent(nameof(AccountDetails));
             return result;
         }
 
