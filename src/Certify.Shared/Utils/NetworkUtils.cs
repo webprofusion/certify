@@ -8,12 +8,15 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Management;
+#if NET6_0_OR_GREATER
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
+#endif
 using Certify.Models.Config;
 using Certify.Models.Providers;
 
-namespace Certify.Management
+namespace Certify.Shared.Core.Utils
 {
     public class NetworkUtils
     {
@@ -81,7 +84,7 @@ namespace Certify.Management
                 {
                     using (var client = new HttpClient())
                     {
-                        client.DefaultRequestHeaders.Add("User-Agent", Management.Util.GetUserAgent());
+                        client.DefaultRequestHeaders.Add("User-Agent", Certify.Management.Util.GetUserAgent());
 
                         var resp = await client.SendAsync(req);
                         // if the GET request succeeded, the Cert validation succeeded
@@ -221,6 +224,7 @@ namespace Certify.Management
 
         public async Task<string> GetDNSRecordTXT(ILog log, string fullyQualifiedRecordName)
         {
+#if NET6_0_OR_GREATER
             try
             {
                 // check TXT
@@ -241,6 +245,7 @@ namespace Certify.Management
             {
                 log.Error(exp, $"'{fullyQualifiedRecordName}' DNS error resolving TXT record ");
             }
+#endif
 
             return null;
         }
@@ -273,7 +278,7 @@ namespace Certify.Management
         public async Task<List<ActionResult>> CheckDNS(ILog log, string domain, bool? useProxyAPI = null, bool includeIPCheck = true)
         {
             var results = new List<ActionResult>();
-
+#if NET6_0_OR_GREATER
             log.Information("CheckDNS: performing DNS checks. This option can be disabled in Settings if required.");
 
             if (string.IsNullOrEmpty(domain))
@@ -418,7 +423,7 @@ namespace Certify.Management
                     Message = $"CheckDNS: '{domain}' DNS error resolving DnsSecRecursiveDnsResolver - {exp.Message}"
                 });
             }
-
+#endif
             return results;
         }
     }

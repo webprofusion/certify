@@ -97,23 +97,21 @@ namespace Certify.Shared.Core.Utils.PKI
         /// <returns></returns>
         public static string GetCertKeyPem(byte[] pfxData, string pwd)
         {
-            using (var s = new MemoryStream(pfxData))
+            var pkcsStore = new Pkcs12StoreBuilder().Build();
+            pkcsStore.Load(new MemoryStream(pfxData), pwd.ToCharArray());
+
+            var keyAlias = pkcsStore.Aliases
+                                    .OfType<string>()
+                                    .Where(a => pkcsStore.IsKeyEntry(a))
+                                    .FirstOrDefault();
+
+            var key = pkcsStore.GetKey(keyAlias).Key;
+
+            using (var writer = new StringWriter())
             {
-
-                var pkcsStore = new Pkcs12Store(s, pwd.ToCharArray());
-                var keyAlias = pkcsStore.Aliases
-                                        .OfType<string>()
-                                        .Where(a => pkcsStore.IsKeyEntry(a))
-                                        .FirstOrDefault();
-
-                var key = pkcsStore.GetKey(keyAlias).Key;
-
-                using (var writer = new StringWriter())
-                {
-                    new PemWriter(writer).WriteObject(key);
-                    writer.Flush();
-                    return writer.ToString();
-                }
+                new PemWriter(writer).WriteObject(key);
+                writer.Flush();
+                return writer.ToString();
             }
         }
 

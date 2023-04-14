@@ -1886,7 +1886,8 @@ namespace Certify.Providers.ACME.Anvil
             // get current PFX, extract DER bytes
             try
             {
-                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12Store(File.Open(managedCertificate.CertificatePath, FileMode.Open, FileAccess.Read), "".ToCharArray());
+                var pkcs = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
+                pkcs.Load(File.Open(managedCertificate.CertificatePath, FileMode.Open, FileAccess.Read), "".ToCharArray());
 
                 var certAliases = pkcs.Aliases.GetEnumerator();
                 certAliases.MoveNext();

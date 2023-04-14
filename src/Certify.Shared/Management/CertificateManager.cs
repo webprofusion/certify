@@ -19,7 +19,6 @@ using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
-using Org.BouncyCastle.X509.Extension;
 
 namespace Certify.Management
 {
@@ -79,7 +78,8 @@ namespace Certify.Management
         {
             // check subject alternate name (must have exactly 1, equal to sni)
             var x509 = DotNetUtilities.FromX509Certificate(certificate);
-            var sans = X509ExtensionUtilities.GetSubjectAlternativeNames(x509);
+
+            var sans = x509.GetSubjectAlternativeNames();
             if (sans.Count != 1)
             {
                 return false;

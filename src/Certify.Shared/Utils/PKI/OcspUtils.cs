@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -160,7 +159,7 @@ namespace Certify.Shared.Utils
             ocspRequestGenerator.AddRequest(id);
 
             var oids = new List<DerObjectIdentifier>();
-            var values = new Hashtable();
+            var values = new Dictionary<DerObjectIdentifier, X509Extension>();
 
             oids.Add(OcspObjectIdentifiers.PkixOcsp);
 

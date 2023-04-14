@@ -44,7 +44,7 @@ LightInject:
 	https://github.com/seesharper/LightInject
 BouncyCastle: 
 	MIT License
-	Copyright (c) 2000 - 2017 The Legion of the Bouncy Castle Inc.
+	Copyright (c) 2000 - 2023 The Legion of the Bouncy Castle Inc.
 	https://www.bouncycastle.org
 SignalR: 	
 	Apache License 2.0
