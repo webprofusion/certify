@@ -814,14 +814,18 @@ namespace Certify.Management
                         log?.Error("Failed to parse certificate dates.");
                     }
 
-                    // deploy certificate as required
-                    ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
 
                     // Install certificate into certificate store and bind to matching sites on server
                     var deploymentManager = new BindingDeploymentManager();
 
                     // select required target service provider (e.g. IIS)
                     var serverProvider = GetTargetServerProvider(managedCertificate);
+
+                    // deploy certificate as required
+                    if (managedCertificate.RequestConfig.DeploymentSiteOption != DeploymentOption.NoDeployment && managedCertificate.RequestConfig.DeploymentSiteOption != DeploymentOption.DeploymentStoreOnly)
+                    {
+                        ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_AutoBinding, managedCertificate));
+                    }
 
                     var actions = await deploymentManager.StoreAndDeploy(
                             serverProvider.GetDeploymentTarget(),
