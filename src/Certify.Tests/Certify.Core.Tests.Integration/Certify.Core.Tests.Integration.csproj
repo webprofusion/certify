@@ -91,7 +91,7 @@
     <PackageReference Include="System.Collections.Concurrent" Version="4.3.0" />
     <PackageReference Include="System.Console" Version="4.3.1" />
     <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.1" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
     <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.Tracing" Version="4.3.0" />
