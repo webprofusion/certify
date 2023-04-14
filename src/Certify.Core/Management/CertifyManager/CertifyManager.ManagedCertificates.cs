@@ -208,6 +208,14 @@ namespace Certify.Management
         {
             var results = new List<StatusMessage>();
 
+            if (managedCertificate.RequestConfig.AuthorityTokens?.Any() == true)
+            {
+                ReportProgress(progress,
+                   new RequestProgressState(RequestState.Success, "All Tests Completed OK", managedCertificate,
+                       isPreviewMode));
+                return results;
+            }
+
             var serverProvider = GetTargetServerProvider(managedCertificate);
 
             if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
