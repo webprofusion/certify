@@ -49,8 +49,11 @@ https://docs.certifytheweb.com
 
 ## Build
 
-Create a folder for the various repos to clone to, e.g. `C:\git\certify_dev` and clone the following repos into this folder:
+Create a directory for the various repos to clone to, e.g. `C:\git\certify_dev` and clone the following repos into this location:
 - https://github.com/webprofusion/certify.git
 - https://github.com/webprofusion/certify-plugins.git
+- Also, create a \libs subdirectory and clone https://github.com/webprofusion/anvil.git into that location.
 
-Run `dotnet build Certify.Core.Service.sln` and `dotnet build Certify.UI.sln` or open using Visual Studio. UI needs the service running to connect to for normal operation.
+Run `dotnet build Certify.Core.Service.sln` and `dotnet build Certify.UI.sln` or open using Visual Studio. The UI needs the service running to connect to for normal operation.
+
+When developing plugins, the plugin and dependencies of the plugin need to be copied to the debug \plugins\ location for the service to load them.

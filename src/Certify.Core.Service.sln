@@ -2,14 +2,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32519.379
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B92D2D90-CB9F-4ED7-BA98-EA3E1E4F8C56}"
-	ProjectSection(SolutionItems) = preProject
-		CertificateProcess.md = CertificateProcess.md
-		README.md = README.md
-		docs\roadmap.md = docs\roadmap.md
-		docs\tests.md = docs\tests.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3ABBE541-54AF-46CC-9BEA-EC7434DE59C6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ACME", "ACME", "{D2D146B6-E84E-4901-AAA9-DE3E199FD4EF}"
@@ -31,6 +23,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{12876723-F648-4E76-9242-110F5635A4B1}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		..\Directory.Build.props = ..\Directory.Build.props
+		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Providers", "Providers", "{CD13E130-E7D5-46F7-85C4-03ED3CA59CC3}"
