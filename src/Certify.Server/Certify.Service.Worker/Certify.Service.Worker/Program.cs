@@ -2,6 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Certify.Server.Core;
 using Microsoft.AspNetCore.Hosting;
@@ -42,6 +43,14 @@ namespace Certify.Service.Worker
                 .UseSystemd()
                 .ConfigureServices((hostContext, services) =>
                 {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        services.AddWindowsService(options =>
+                            options.ServiceName = "Certify Certificate Manager Background Service"
+
+                           );
+                    }
+
                     services.AddHostedService<Worker>();
                 })
                 .ConfigureWebHostDefaults(webBuilder =>
