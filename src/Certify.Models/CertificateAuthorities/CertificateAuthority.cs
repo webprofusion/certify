@@ -14,7 +14,10 @@ namespace Certify.Models
         DOMAIN_SINGLE,
         DOMAIN_SINGLE_PLUS_WWW,
         DOMAIN_MULTIPLE_SAN,
-        DOMAIN_WILDCARD
+        DOMAIN_WILDCARD,
+        IP_SINGLE,
+        IP_MULTIPLE,
+        TNAUTHLIST
     }
 
     public static class StandardCertAuthorities
@@ -74,7 +77,8 @@ namespace Certify.Models
             CertificateAuthorities.Definitions.Google.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoDV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoOV.GetDefinition(),
-            CertificateAuthorities.Definitions.SectigoEV.GetDefinition()
+            CertificateAuthorities.Definitions.SectigoEV.GetDefinition(),
+            CertificateAuthorities.Definitions.Martini.GetDefinition()
         };
 
         public string? Id { get; set; }
