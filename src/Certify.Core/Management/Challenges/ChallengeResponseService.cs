@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
+using Certify.Shared.Core.Utils;
 
 namespace Certify.Core.Management.Challenges
 {

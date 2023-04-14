@@ -3,7 +3,7 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal class SectigoDV
+    internal sealed class SectigoDV
     {
         public static CertificateAuthority GetDefinition()
         {
@@ -42,7 +42,7 @@ namespace Certify.CertificateAuthorities.Definitions
         }
     }
 
-    internal class SectigoOV
+    internal sealed class SectigoOV
     {
         public static CertificateAuthority GetDefinition()
         {
@@ -81,7 +81,7 @@ namespace Certify.CertificateAuthorities.Definitions
         }
     }
 
-    internal class SectigoEV
+    internal sealed class SectigoEV
     {
         public static CertificateAuthority GetDefinition()
         {

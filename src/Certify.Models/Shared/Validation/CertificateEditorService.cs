@@ -201,7 +201,7 @@ namespace Certify.Models.Shared.Validation
                 {
                     if (!string.IsNullOrEmpty(d.Trim()))
                     {
-                        var domain = d.ToLower().Trim();
+                        var domain = d.ToLowerInvariant().Trim();
                         if (domain != null && !item.DomainOptions.Any(o => o.Domain == domain))
                         {
                             var option = new DomainOption
@@ -269,8 +269,7 @@ namespace Certify.Models.Shared.Validation
                     return new ValidationResult(false, SR.ManagedCertificateSettings_NameRequired, ValidationErrorCodes.REQUIRED_NAME.ToString());
                 }
 
-                bool validateDomains = true;
-                bool validateAuthorityTokens = false;
+                var validateDomains = true;
 
                 if (item.RequestConfig.AuthorityTokens?.Any() == true)
                 {
@@ -293,7 +292,7 @@ namespace Certify.Models.Shared.Validation
                     if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                     {
                         // validate hostnames
-                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLower().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
                         {
                             // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 

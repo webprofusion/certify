@@ -3,7 +3,7 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal class ZeroSSL
+    internal sealed class ZeroSSL
     {
         public static CertificateAuthority GetDefinition()
         {

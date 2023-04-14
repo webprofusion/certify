@@ -4,7 +4,7 @@ using Certify.Models;
 namespace Certify.CertificateAuthorities.Definitions
 {
 
-    internal class Martini
+    internal sealed class Martini
     {
         public static CertificateAuthority GetDefinition()
         {

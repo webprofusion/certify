@@ -4,7 +4,7 @@ using Certify.Models;
 namespace Certify.CertificateAuthorities.Definitions
 {
 
-    internal class LetsEncrypt
+    internal sealed class LetsEncrypt
     {
         public static CertificateAuthority GetDefinition()
         {

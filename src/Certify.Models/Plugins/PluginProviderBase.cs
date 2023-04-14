@@ -12,7 +12,7 @@ namespace Certify.Plugins
         public TProviderInterface GetProvider(Type pluginType, string? id)
         {
 
-            id = id?.ToLower();
+            id = id?.ToLowerInvariant();
 
             var baseAssembly = pluginType.Assembly;
 
@@ -24,7 +24,7 @@ namespace Certify.Plugins
                 var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
                 if (def != null && def is ProviderDefinition)
                 {
-                    if ((def as ProviderDefinition)?.Id?.ToLower() == id)
+                    if ((def as ProviderDefinition)?.Id?.ToLowerInvariant() == id)
                     {
                         return (TProviderInterface)Activator.CreateInstance(t);
                     }

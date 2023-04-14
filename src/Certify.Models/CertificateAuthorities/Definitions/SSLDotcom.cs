@@ -3,7 +3,7 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal class SSLDotcom
+    internal sealed class SSLDotcom
     {
         public static CertificateAuthority GetDefinition()
         {

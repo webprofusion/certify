@@ -4,7 +4,7 @@ namespace Certify.Shared
 {
     public class ServiceConfig
     {
-        public static string DEFAULT_LOCALHOST = "127.0.0.2";
+        public const string DEFAULT_LOCALHOST = "127.0.0.2";
         public bool UseHTTPS { get; set; }
 #if DEBUG
         public int Port { get; set; } = 9695;

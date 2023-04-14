@@ -3,7 +3,7 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal class Google
+    internal sealed class Google
     {
         public static CertificateAuthority GetDefinition()
         {

@@ -3,7 +3,7 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal class BuyPass
+    internal sealed class BuyPass
     {
         public static CertificateAuthority GetDefinition()
         {

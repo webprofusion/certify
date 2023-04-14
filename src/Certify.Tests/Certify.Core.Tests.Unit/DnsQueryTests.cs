@@ -1,7 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Certify.Management;
 using Certify.Models;
+using Certify.Shared.Core.Utils;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 

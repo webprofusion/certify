@@ -385,7 +385,7 @@ namespace Certify.Models
                         }
 
                         // if exact match exists, use that
-                        var identifierKey = identifier.Value.ToLowerInvariant() ?? "";
+                        var identifierKey = identifier?.Value.ToLowerInvariant() ?? "";
                         if (configsPerDomain.TryGetValue(identifierKey, out var value))
                         {
                             return value;
@@ -402,7 +402,7 @@ namespace Certify.Models
 
                         foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
                         {
-                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifier.Value))
+                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifier?.Value))
                             {
                                 return configsPerDomain[wildcard];
                             }
@@ -410,7 +410,7 @@ namespace Certify.Models
 
                         foreach (var configDomain in allMatchingConfigKeys)
                         {
-                            if (configDomain.EndsWith(identifier.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
+                            if (configDomain.EndsWith(identifier?.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
                             {
                                 // use longest matching identifier (so subdomain.test.com takes priority
                                 // over test.com, )
@@ -511,13 +511,13 @@ namespace Certify.Models
         /// if true, *.test.com would match test.com (as well as www.test.com)
         /// </param>
         /// <returns>  </returns>
-        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string hostname, bool matchWildcardsToRootDomain = false)
+        public static bool IsDomainOrWildcardMatch(List<string> dnsNames, string? hostname, bool matchWildcardsToRootDomain = false)
         {
             var isMatch = false;
 
             if (!string.IsNullOrEmpty(hostname))
             {
-                hostname = hostname.ToLowerInvariant();
+                hostname = hostname?.ToLowerInvariant();
 
                 // list of dns anmes has an exact match
                 if (dnsNames.Contains(hostname))
