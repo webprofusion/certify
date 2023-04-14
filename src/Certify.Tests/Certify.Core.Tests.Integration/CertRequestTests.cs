@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -608,6 +608,109 @@ namespace Certify.Core.Tests
                     CertificateManager.RemoveCertificate(certInfo);
                 }
             }
+        }
+
+        [TestMethod]
+        public async Task TestRequestTnAuthCSR()
+        {
+            var pemKey = ConfigSettings["TestAuthTokenPrivateKey"];
+
+            var key = new KeyAlgorithmProvider().GetKey(pemKey);
+            var builder = new CertificationRequestBuilder(key);
+            builder.TnAuthList = new List<byte[]> {
+                Convert.FromBase64String(ConfigSettings["TestAuthTokenTnAuthList"])
+            };
+            builder.CrlDistributionPoints = new List<Uri> { new Uri("https://authenticate-api-stg.iconectiv.com/download/v1/crl") };
+
+            var der = builder.Generate();
+
+            System.IO.File.WriteAllBytes(ConfigSettings["TestAuthTokenCsrPath"], der);
+
+            Assert.IsTrue(System.IO.File.Exists(ConfigSettings["TestAuthTokenCsrPath"]));
+        }
+
+        [TestMethod]
+        public async Task TestRequestTnAuthList()
+        {
+
+            var apiEndpoint = ConfigSettings["TestAuthTokenEndpoint"];
+            var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
+            var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
+            var provider = new AnvilACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Certify.Management.Util.GetUserAgent());
+            var account = new AccountDetails
+            {
+                AccountKey = ConfigSettings["TestAuthTokenPrivateKey"],
+                AccountURI = ConfigSettings["TestAuthTokenAccountURI"],
+                Title = "Dev",
+                Email = "test@certifytheweb.com",
+                CertificateAuthorityId = ConfigSettings["TestAuthTokenCA"],
+                StorageKey = "dev"
+            };
+
+            certifyManager.ForceAccountDetails = account;
+            await provider.InitProvider(_log, account);
+
+            var acc = provider.GetCurrentAcmeAccount();
+
+            var dummyManagedCertificate = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "TN Auth Test",
+                UseStagingMode = true,
+                CertificateAuthorityId = ConfigSettings["TestAuthTokenCA"],
+                RequestConfig = new CertRequestConfig
+                {
+                    CSRKeyAlg = StandardKeyTypes.ECDSA256,
+                    AuthorityTokens = new ObservableCollection<TkAuthToken> {
+                        new TkAuthToken{
+                            Token = ConfigSettings["TestAuthToken"],
+                            Crl =ConfigSettings["TestAuthTokenCRL"]
+                        }
+                    },
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig> {
+                        new CertRequestChallengeConfig{
+                            ChallengeType="tkauth-01",
+                        }
+                    },
+                    DeploymentSiteOption = DeploymentOption.NoDeployment
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+
+            };
+
+            var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
+
+            //ensure cert request was successful
+            Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+
+            //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
+            var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { Id = dummyManagedCertificate.Id });
+            var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
+
+            //emsure we have a new managed site
+            Assert.IsNotNull(managedCertificate);
+
+            //have cert file details
+            Assert.IsNotNull(managedCertificate.CertificatePath);
+
+            var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
+            Assert.IsTrue(fileExists);
+
+            //check cert is correct
+            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+            Assert.IsNotNull(certInfo);
+
+            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            Assert.IsTrue(isRecentlyCreated);
+
+            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            Assert.IsTrue(expiresInFuture);
+
+            // remove managed site
+            await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+
+            // cleanup certificate
+            CertificateManager.RemoveCertificate(certInfo);
         }
     }
 }
