@@ -834,8 +834,6 @@ namespace Certify.Management
 
                     if (!actions.Any(a => a.HasError))
                     {
-                        // certificate deployment was completed, log success
-                        log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
 
                         await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
 
@@ -851,6 +849,11 @@ namespace Certify.Management
                         else if (managedCertificate.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                         {
                             result.Message = "New certificate received OK.";
+                        }
+                        else
+                        {
+                            // certificate deployment was completed, log success
+                            log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
                         }
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));

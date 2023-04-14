@@ -143,7 +143,7 @@
     <value>Completed certificate request.</value>
   </data>
   <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
-    <value>Completed certificate request and automated bindings update (IIS)</value>
+    <value>Completed certificate request and automated binding updates</value>
   </data>
   <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
     <value>Certificate installed and SSL bindings updated for {0}</value>
