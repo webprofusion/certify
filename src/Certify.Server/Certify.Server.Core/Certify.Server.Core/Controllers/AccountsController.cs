@@ -38,11 +38,23 @@ namespace Certify.Service.Controllers
             return await _certifyManager.UpdateAccountContact(storageKey, registration);
         }
 
-        [HttpDelete, Route("remove/{storageKey}")]
-        public async Task<Models.Config.ActionResult> RemoveAccount(string storageKey)
+        [HttpDelete, Route("remove/{storageKey}/{deactivate}")]
+        public async Task<Models.Config.ActionResult> RemoveAccount(string storageKey, bool deactivate)
         {
             DebugLog();
-            return await _certifyManager.RemoveAccount(storageKey);
+            return await _certifyManager.RemoveAccount(storageKey, deactivate);
+        }
+
+        public struct keyChange
+        {
+            public string newKeyPEM { get; set; }
+        }
+
+        [HttpPost, Route("changekey/{storageKey}")]
+        public async Task<Models.Config.ActionResult> ChangeKey(string storageKey, [FromBody] keyChange payload)
+        {
+            DebugLog();
+            return await _certifyManager.ChangeAccountKey(storageKey, payload.newKeyPEM);
         }
 
         [HttpGet, Route("authorities")]

@@ -50,7 +50,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("changekey/{storageKey}")]
-        public async Task<Models.Config.ActionResult> ChangeKey(string storageKey, [FromBody] keyChange payload )
+        public async Task<Models.Config.ActionResult> ChangeKey(string storageKey, [FromBody] keyChange payload)
         {
             DebugLog();
             return await _certifyManager.ChangeAccountKey(storageKey, payload.newKeyPEM);
