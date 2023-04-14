@@ -245,6 +245,20 @@
                                 Text="{Binding Item.ImportedAccountKey}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
+                        <StackPanel
+                            x:Name="AccountRollover"
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Account Key Rollover</TextBlock>
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">You can optionally change the keypair associated with your ACME account:</TextBlock>
+                            <Button
+                                x:Name="AccountKeyChange"
+                                Width="180"
+                                Margin="280,0,0,0"
+                                Click="AccountKeyChange_Click"
+                                Content="Change Account Key" />
+                        </StackPanel>
                     </DockPanel>
                 </ScrollViewer>
             </TabItem>

@@ -76,6 +76,7 @@
                 x:Name="AccountList"
                 Height="Auto"
                 d:ItemsSource="{d:SampleData ItemCount=5}"
+                SelectionChanged="AccountList_SelectionChanged"
                 SelectionMode="Single">
 
                 <ListView.ItemTemplate>
@@ -95,35 +96,58 @@
                                     Margin="0,6,0,0"
                                     DockPanel.Dock="Left"
                                     Text="{Binding Title}" />
-                                <TextBlock
-                                    Margin="0,0,0,0"
-                                    DockPanel.Dock="Left"
-                                    Style="{StaticResource Instructions}"
-                                    Text="{Binding Email}" />
+
 
                                 <Button
-                                    Margin="0,0,4,0"
+                                    x:Name="DeleteAccount"
+                                    Height="28"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Top"
                                     Click="Button_Delete"
-                                    DockPanel.Dock="Right">
-                                    Delete
+                                    CommandParameter="{Binding}"
+                                    DockPanel.Dock="Right"
+                                    ToolTip="Remove this account">
+                                    <StackPanel Orientation="Horizontal">
+                                        <fa:ImageAwesome
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                            Icon="Trash" />
+
+                                    </StackPanel>
                                 </Button>
                                 <Button
-                                    Margin="0,0,4,0"
+                                    Height="28"
+                                    Margin="8,0,0,0"
+                                    VerticalAlignment="Top"
                                     Click="Button_Edit"
-                                    DockPanel.Dock="Right">
-                                    Edit
+                                    CommandParameter="{Binding}"
+                                    DockPanel.Dock="Right"
+                                    ToolTip="Edit this account">
+                                    <StackPanel Orientation="Horizontal">
+                                        <fa:ImageAwesome
+                                            HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"
+                                            Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                            Icon="Edit" />
+
+                                    </StackPanel>
                                 </Button>
                             </DockPanel>
                             <StackPanel>
                                 <TextBlock
+                                    Margin="32,0,0,0"
+                                    Style="{StaticResource Info}"
+                                    Text="{Binding Email}" />
+                                <TextBlock
                                     MinWidth="200"
                                     Margin="32,0,0,0"
-                                    Style="{StaticResource Instructions}"
+                                    Style="{StaticResource Info}"
                                     Text="{Binding AccountURI}" />
                                 <TextBlock
                                     MinWidth="200"
                                     Margin="32,0,0,0"
-                                    Style="{StaticResource Instructions}"
+                                    Style="{StaticResource Info}"
                                     Text="{Binding AccountFingerprint}" />
 
                             </StackPanel>

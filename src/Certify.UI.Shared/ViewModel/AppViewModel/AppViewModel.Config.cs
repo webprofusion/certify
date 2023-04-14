@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -155,14 +155,21 @@ namespace Certify.UI.ViewModel
         /// Remove stored ACME account registration and refresh cached list
         /// </summary>
         /// <param name="storageKey"></param>
+        /// <param name="deactivate"></param>
         /// <returns></returns>
-        internal async Task<ActionResult> RemoveAccount(string storageKey)
+        internal async Task<ActionResult> RemoveAccount(string storageKey, bool deactivate)
         {
-            var result = await _certifyClient.RemoveAccount(storageKey);
+            var result = await _certifyClient.RemoveAccount(storageKey, deactivate);
 
             await RefreshAccountsList();
             RaisePropertyChangedEvent(nameof(HasRegisteredContacts));
             RaisePropertyChangedEvent(nameof(AccountDetails));
+            return result;
+        }
+
+        internal async Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPem)
+        {
+            var result = await _certifyClient.ChangeAccountKey(storageKey, newKeyPem);
             return result;
         }
 

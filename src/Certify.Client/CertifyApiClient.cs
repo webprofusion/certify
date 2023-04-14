@@ -579,9 +579,15 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> RemoveAccount(string storageKey)
+        public async Task<ActionResult> RemoveAccount(string storageKey, bool deactivate)
         {
-            var result = await DeleteAsync($"accounts/remove/{storageKey}");
+            var result = await DeleteAsync($"accounts/remove/{storageKey}/{deactivate}");
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM)
+        {
+            var result = await PostAsync($"accounts/changekey/{storageKey}", new { newKeyPem = newKeyPEM });
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 

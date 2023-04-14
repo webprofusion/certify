@@ -41,7 +41,16 @@
                 <Setter Property="HorizontalAlignment" Value="Stretch" />
                 <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
+            </Style>
 
+            <Style x:Key="Info" TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Padding" Value="0,2,0,2" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
+                <Setter Property="TextWrapping" Value="WrapWithOverflow" />
             </Style>
 
             <!--  brush color overrides (tab items and disabled buttons)  -->

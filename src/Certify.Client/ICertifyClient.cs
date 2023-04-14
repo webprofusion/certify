@@ -124,7 +124,8 @@ namespace Certify.Client
         Task<List<AccountDetails>> GetAccounts();
         Task<ActionResult> AddAccount(ContactRegistration contact);
         Task<ActionResult> UpdateAccountContact(ContactRegistration contact);
-        Task<ActionResult> RemoveAccount(string storageKey);
+        Task<ActionResult> RemoveAccount(string storageKey, bool deactivate);
+        Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM  = null);
 
         #endregion Accounts
     }

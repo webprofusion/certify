@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 using Certify.Providers.ACME.Anvil;
 using Newtonsoft.Json;
 
@@ -230,40 +231,37 @@ namespace Certify.Management
             // attempt to register the new contact
             if (reg.AgreedToTermsAndConditions)
             {
-                _certificateAuthorities.TryGetValue(reg.CertificateAuthorityId, out var certAuthority);
+                var (account, certAuthority, acmeProvider) = await GetAccountAndACMEProvider(storageKey);
 
-                if (certAuthority == null)
+                if (account != null)
                 {
-                    return new ActionResult("Invalid Certificate Authority specified.", false);
+                    _serviceLog?.Information($"Updating account with ACME CA {certAuthority.Title}]: {reg.EmailAddress}");
+
+                    var updatedAccount = await acmeProvider.UpdateAccount(_serviceLog, reg.EmailAddress, reg.AgreedToTermsAndConditions);
+
+                    if (account != null && updatedAccount.IsSuccess)
+                    {
+                        // store new account details as credentials
+                        account.Email = reg.EmailAddress;
+                        account.AccountKey = updatedAccount.Result.AccountKey;
+                        account.PreferredChain = reg.PreferredChain;
+                        account.AccountFingerprint = updatedAccount.Result.AccountFingerprint;
+
+                        await StoreAccountAsCredential(account);
+                    }
+
+                    // invalidate accounts cache
+                    lock (_accountsLock)
+                    {
+                        _accounts?.Clear();
+                    }
+
+                    return updatedAccount;
                 }
-
-                var existingAccounts = await GetAccountRegistrations();
-                var existingAccount = existingAccounts.FirstOrDefault(a => a.StorageKey == storageKey);
-
-                var acmeProvider = await GetACMEProvider(storageKey, reg.IsStaging ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint, existingAccount, certAuthority.AllowUntrustedTls);
-
-                _serviceLog?.Information($"Updating account with ACME CA {acmeProvider.GetAcmeBaseURI()}]: {reg.EmailAddress}");
-
-                var updatedAccount = await acmeProvider.UpdateAccount(_serviceLog, reg.EmailAddress, reg.AgreedToTermsAndConditions);
-
-                if (existingAccount != null && updatedAccount.IsSuccess)
+                else
                 {
-                    // store new account details as credentials
-                    existingAccount.Email = reg.EmailAddress;
-                    existingAccount.AccountKey = updatedAccount.Result.AccountKey;
-                    existingAccount.PreferredChain = reg.PreferredChain;
-                    existingAccount.AccountFingerprint = updatedAccount.Result.AccountFingerprint;
-
-                    await StoreAccountAsCredential(existingAccount);
+                    return new ActionResult("Account not found.", false);
                 }
-
-                // invalidate accounts cache
-                lock (_accountsLock)
-                {
-                    _accounts?.Clear();
-                }
-
-                return updatedAccount;
             }
             else
             {
@@ -293,11 +291,10 @@ namespace Certify.Management
         /// </summary>
         /// <param name="storageKey"></param>
         /// <returns></returns>
-        public async Task<ActionResult> RemoveAccount(string storageKey)
+        public async Task<ActionResult> RemoveAccount(string storageKey, bool includeAccountDeactivation = false)
         {
+            var (account, certAuthority, acmeProvider) = await GetAccountAndACMEProvider(storageKey);
 
-            var accounts = await GetAccountRegistrations();
-            var account = accounts.FirstOrDefault(a => a.StorageKey == storageKey);
             if (account != null)
             {
                 _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
@@ -310,11 +307,100 @@ namespace Certify.Management
                     _accounts?.Clear();
                 }
 
+                // attempt acme account deactivation
+                if (resultOk && includeAccountDeactivation && acmeProvider != null)
+                {
+                    try
+                    {
+                        var resultOK = await acmeProvider.DeactivateAccount(_serviceLog);
+
+                        if (!resultOK)
+                        {
+                            _serviceLog?.Error($"Error deactivating account with CA {storageKey} {certAuthority.Id} ");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _serviceLog?.Error(ex, $"Error deactivating account {storageKey}: " + ex.Message);
+                    }
+                }
+
                 return new ActionResult("RemoveAccount", resultOk);
             }
             else
             {
                 return new ActionResult("Account not found.", false);
+            }
+        }
+
+        /// <summary>
+        /// Return the account details and acme provider for the given account storage key
+        /// </summary>
+        /// <param name="storageKey"></param>
+        /// <returns></returns>
+        public async Task<(AccountDetails account, CertificateAuthority certAuthority, IACMEClientProvider acmeProvider)> GetAccountAndACMEProvider(string storageKey)
+        {
+            var accounts = await GetAccountRegistrations();
+
+            AccountDetails account = accounts.FirstOrDefault(a => a.StorageKey == storageKey);
+            IACMEClientProvider acmeProvider = null;
+            CertificateAuthority certAuthority = null;
+
+            if (account != null)
+            {
+                _certificateAuthorities.TryGetValue(account.CertificateAuthorityId, out certAuthority);
+
+                if (certAuthority != null)
+                {
+                    acmeProvider = await GetACMEProvider(storageKey, account.IsStagingAccount ? certAuthority.StagingAPIEndpoint : certAuthority.ProductionAPIEndpoint, account, certAuthority.AllowUntrustedTls);
+                }
+            }
+
+            return (account, certAuthority, acmeProvider);
+
+        }
+
+        public async Task<ActionResult<AccountDetails>> ChangeAccountKey(string storageKey, string newKeyPEM = null)
+        {
+            var (account, certAuthority, acmeProvider) = await GetAccountAndACMEProvider(storageKey);
+
+            if (account != null && acmeProvider != null)
+            {
+                // perform account key change
+                _serviceLog?.Information($"Changing account key for {storageKey}: " + account.AccountURI);
+
+                try
+                {
+                    var result = await acmeProvider.ChangeAccountKey(_serviceLog, newKeyPEM);
+
+                    if (!result.IsSuccess)
+                    {
+                        // failed
+                        _serviceLog?.Error(result.Message);
+                        return result;
+                    }
+                    else
+                    {
+                        // ok, store updated account details
+                        account.AccountFingerprint = result.Result.AccountFingerprint;
+                        account.AccountKey = result.Result.AccountKey;
+
+                        await StoreAccountAsCredential(account);
+
+                        result.Result = account;
+                        return result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var msg = $"Failed to performing account key rollover {storageKey}: " + ex.Message;
+                    _serviceLog?.Error(ex, msg);
+                    return new ActionResult<AccountDetails>(msg, false);
+                }
+            }
+            else
+            {
+                return new ActionResult<AccountDetails>("Failed to match account to known ACME provider", false);
             }
         }
 

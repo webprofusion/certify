@@ -38,6 +38,7 @@ namespace Certify.UI.Windows
                 IsStagingMode.IsEnabled = false;
                 AccountKey.IsEnabled = false;
                 AccountURI.IsEnabled = false;
+                AccountRollover.Visibility = Visibility.Visible;
             }
             else
             {
@@ -45,6 +46,7 @@ namespace Certify.UI.Windows
                 IsStagingMode.IsEnabled = true;
                 AccountKey.IsEnabled = true;
                 AccountURI.IsEnabled = true;
+                AccountRollover.Visibility = Visibility.Collapsed;
             }
         }
 
@@ -145,6 +147,19 @@ namespace Certify.UI.Windows
         private void CertificateAuthorityList_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
 
+        }
+
+        private async void AccountKeyChange_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await MainViewModel.ChangeAccountKey(Item.StorageKey, null);
+            if (result.IsSuccess)
+            {
+                MainViewModel.ShowNotification("Account key changed");
+            }
+            else
+            {
+                MainViewModel.ShowNotification(result.Message, Shared.NotificationType.Error);
+            }
         }
     }
 }

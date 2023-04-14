@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Certify.UI.Controls.Settings
 {
@@ -104,9 +103,11 @@ namespace Certify.UI.Controls.Settings
                 var button = sender as Button;
                 var account = button.DataContext as AccountDetails;
 
-                if (MessageBox.Show($"Remove this account? {account.AccountURI}", "Confirm Account Removal", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
+                var deactivate = MessageBox.Show($"Do you also wish to deactivate this account with the CA? {account.AccountURI} You should take care to only deactivate accounts which are not shared among instances.", "Confirm Account Deactivation", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+
+                if (MessageBox.Show($"Remove this account? {account.AccountURI} This action cannot be reversed once completed.", "Confirm Account Removal", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
                 {
-                    await EditModel.MainViewModel.RemoveAccount(string.IsNullOrEmpty(account.StorageKey) ? account.ID : account.StorageKey);
+                    await EditModel.MainViewModel.RemoveAccount(string.IsNullOrEmpty(account.StorageKey) ? account.ID : account.StorageKey, deactivate);
                 }
             }
         }
@@ -147,7 +148,9 @@ namespace Certify.UI.Controls.Settings
                 var item = (sender as StackPanel)?.DataContext as AccountDetails;
                 if (item != null)
                 {
-                    var text = $"Account URI: {item.AccountURI}\r\n" +
+                    var text =
+                        $"Account Email: {item.Email}\r\n" +
+                        $"Account URI: {item.AccountURI}\r\n" +
                         $"Account Fingerprint: {item.AccountFingerprint}\r\n" +
                         $"Account Key: \r\n{item.AccountKey}";
 
@@ -179,6 +182,11 @@ namespace Certify.UI.Controls.Settings
             }
 
             return false;
+        }
+
+        private void AccountList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -271,12 +271,10 @@ namespace Certify.Providers.ACME.Anvil
 
         public async Task<ActionResult<AccountDetails>> UpdateAccount(ILog log, string email, bool termsAgreed)
         {
-
-            var acc = await _acme.Account();
-
             log?.Information($"Updating account {email} with certificate authority");
             try
             {
+                var acc = await _acme.Account();
                 var results = await acc.Update(new string[] { (email.StartsWith("mailto:") ? email : "mailto:" + email) }, termsAgreed);
                 if (results.Status == AccountStatus.Valid)
                 {
@@ -313,24 +311,45 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        public async Task<bool> ChangeAccountKey(ILog log)
+        public async Task<ActionResult<AccountDetails>> ChangeAccountKey(ILog log, string newKeyPEM = null)
         {
-            if (_acme == null)
+            try
             {
-                log?.Error("No account context. Cannot update account key.");
 
-                return false;
-            }
-            else
-            {
                 // allocate new key and inform LE of key change
                 var newKey = KeyFactory.NewKey(KeyAlgorithm.ES256);
+
+                if (!string.IsNullOrEmpty(newKeyPEM))
+                {
+                    try
+                    {
+                        newKey = KeyFactory.FromPem(newKeyPEM);
+                    }
+                    catch
+                    {
+                        return new ActionResult<AccountDetails>("Failed to use provide key for account rollover", false);
+                    }
+                }
 
                 await _acme.ChangeKey(newKey);
 
                 await PopulateSettingsFromCurrentAccount();
 
-                return true;
+                return new ActionResult<AccountDetails>
+                {
+                    IsSuccess = true,
+                    Message = "Completed account key rollover",
+                    Result = new AccountDetails
+                    {
+                        AccountKey = newKey.ToPem(),
+                        AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
+                    }
+                };
+
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult<AccountDetails>($"Failed to perform account key rollover. {exp.Message}", false);
             }
         }
 
@@ -443,18 +462,27 @@ namespace Certify.Providers.ACME.Anvil
 
             try
             {
-                IKey accKey = null;
-
-                if (_newContactUseCurrentAccountKey && !string.IsNullOrEmpty(_settings.AccountKey))
+                if (
+                    (!string.IsNullOrEmpty(importAccountURI) && string.IsNullOrEmpty(importAccountKey))
+                    ||
+                    (string.IsNullOrEmpty(importAccountURI) && !string.IsNullOrEmpty(importAccountKey))
+                    )
                 {
-                    accKey = KeyFactory.FromPem(_settings.AccountKey);
+                    return new ActionResult<AccountDetails>("To import account details both the existing account URI and account key in PEM format are required. ", false);
                 }
 
                 if (!string.IsNullOrEmpty(importAccountURI) && !string.IsNullOrEmpty(importAccountKey))
                 {
                     // use imported account details
 
-                    SetAcmeContextAccountKey(importAccountKey);
+                    try
+                    {
+                        SetAcmeContextAccountKey(importAccountKey);
+                    }
+                    catch
+                    {
+                        return new ActionResult<AccountDetails>("The provided account key was invalid or not supported for import. A PEM (text) format RSA or ECDA private key is required.", false);
+                    }
 
                     _settings.AccountUri = importAccountURI;
                     _settings.AccountEmail = email;
@@ -474,37 +502,43 @@ namespace Certify.Providers.ACME.Anvil
                 }
                 else
                 {
+                    IKey accKey = null;
+
+                    if (_newContactUseCurrentAccountKey && !string.IsNullOrEmpty(_settings.AccountKey))
+                    {
+                        accKey = KeyFactory.FromPem(_settings.AccountKey);
+                    }
 
                     // start new account context, create new account (with new key, if not enabled)
-                _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
+                    _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
 
-                try
-                {
-                    _ = await _acme.GetDirectory(throwOnError: true);
-                }
-                catch
-                {
-                    return new ActionResult<AccountDetails>("Failed to communicate with the Certificate Authority. Check their status page for service announcements and ensure your system can make outgoing https requests.", false);
-                }
-
-                var account = await _acme.NewAccount(email, true, eabKeyId, eabKey, eabKeyAlg);
-
-                _settings.AccountEmail = email;
-
-                await PopulateSettingsFromCurrentAccount();
-
-                log?.Information($"Registering account {email} with certificate authority");
-
-                return new ActionResult<AccountDetails>
-                {
-                    IsSuccess = true,
-                    Result = new AccountDetails
+                    try
                     {
-                        AccountKey = _settings.AccountKey,
-                        Email = _settings.AccountEmail,
-                        AccountURI = _settings.AccountUri,
+                        _ = await _acme.GetDirectory(throwOnError: true);
+                    }
+                    catch
+                    {
+                        return new ActionResult<AccountDetails>("Failed to communicate with the Certificate Authority. Check their status page for service announcements and ensure your system can make outgoing https requests.", false);
+                    }
+
+                    var account = await _acme.NewAccount(email, true, eabKeyId, eabKey, eabKeyAlg);
+
+                    _settings.AccountEmail = email;
+
+                    await PopulateSettingsFromCurrentAccount();
+
+                    log?.Information($"Registering account {email} with certificate authority");
+
+                    return new ActionResult<AccountDetails>
+                    {
+                        IsSuccess = true,
+                        Result = new AccountDetails
+                        {
+                            AccountKey = _settings.AccountKey,
+                            Email = _settings.AccountEmail,
+                            AccountURI = _settings.AccountUri,
                             ID = _settings.AccountUri.Split('/').Last(),
-                            AccountFingerprint = GetAccountFingerprintHex(accKey)
+                            AccountFingerprint = GetAccountFingerprintHex(_acme.AccountKey)
                         }
                     };
                 }
@@ -1921,7 +1955,7 @@ namespace Certify.Providers.ACME.Anvil
                 // provider doesn't support ARI or update sent to CA failed, we fail silently because lack of ARI support is expected for many CAs
                 // and the response doesn't matter to our system
 #if DEBUG
-                _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex}");
+                _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex.Message}");
 #endif
             }
         }

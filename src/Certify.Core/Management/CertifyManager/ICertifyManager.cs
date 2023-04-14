@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -42,7 +42,8 @@ namespace Certify.Management
 
         Task<ActionResult> UpdateAccountContact(string storageKey, ContactRegistration contact);
 
-        Task<ActionResult> RemoveAccount(string storageKey);
+        Task<ActionResult> RemoveAccount(string storageKey, bool includeAccountDeactivation = false);
+        Task<ActionResult<AccountDetails>> ChangeAccountKey(string storageKey, string newKeyPEM = null);
 
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
         Task<List<ActionResult>> PerformServiceDiagnostics();

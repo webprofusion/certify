@@ -34,7 +34,7 @@ namespace Certify.Models.Providers
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
-        Task<bool> ChangeAccountKey(ILog log);
+        Task<ActionResult<AccountDetails>> ChangeAccountKey(ILog log, string newKeyPEM = null);
 
         Task<RenewalInfo> GetRenewalInfo(string certificateId);
 
