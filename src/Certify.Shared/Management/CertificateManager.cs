@@ -47,7 +47,7 @@ namespace Certify.Management
             certificateGenerator.SetNotBefore(dateFrom ?? DateTime.UtcNow);
             certificateGenerator.SetNotAfter(dateTo ?? DateTime.UtcNow.AddMinutes(5));
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, new DerSequence(new Asn1Encodable[] { new GeneralName(GeneralName.DnsName, domain) }));
-            certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeID[] { KeyPurposeID.IdKPServerAuth, KeyPurposeID.IdKPClientAuth }));
+            certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeID[] { KeyPurposeID.id_kp_serverAuth, KeyPurposeID.id_kp_clientAuth }));
             certificateGenerator.AddExtension(X509Extensions.KeyUsage, true, new KeyUsage(KeyUsage.KeyEncipherment | KeyUsage.DigitalSignature));
 
             var keyPair = keyPairGenerator.GenerateKeyPair();
