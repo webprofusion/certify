@@ -8,7 +8,7 @@ $Private = @( Get-ChildItem -Path $PoshACMERoot\Private\*.ps1 -ErrorAction Ignor
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 # Load Assembly without using Add-Type to avoid locking assembly dll
-$assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Crypto.dll")
+$assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Cryptography.dll")
 [System.Reflection.Assembly]::Load($assemblyBytes) | out-null
 
 # Dot source the files (in the same manner as Posh-ACME would)
