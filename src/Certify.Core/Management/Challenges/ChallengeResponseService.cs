@@ -135,11 +135,11 @@ namespace Certify.Core.Management.Challenges
                         // if dns validation not selected but one or more identifiers is a wildcard, reject
                         if (domain.Value.StartsWith("*."))
                         {
-                            results.Add(new StatusMessage { IsOK = false, Message = $"http-01 authorization cannot be used for wildcard domains: {domain}. Use DNS (dns-01) validation instead." });
+                            results.Add(new StatusMessage { IsOK = false, Message = $"http-01 authorization cannot be used for wildcard domains: {domain.Value}. Use DNS (dns-01) validation instead." });
                             return results;
                         }
 
-                        var challengeFileUrl = $"http://{domain}/.well-known/acme-challenge/configcheck";
+                        var challengeFileUrl = $"http://{domain.Value}/.well-known/acme-challenge/configcheck";
 
                         var simulatedAuthorization = new PendingAuthorization
                         {
@@ -164,7 +164,7 @@ namespace Certify.Core.Management.Challenges
                         {
                             var result = new StatusMessage();
                             result.IsOK = false;
-                            result.FailedItemSummary.Add($"Config checks failed to verify http://{domain} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
+                            result.FailedItemSummary.Add($"Config checks failed to verify http://{domain.Value} is both publicly accessible and can serve extensionless files e.g. {challengeFileUrl}");
                             result.Message = httpChallengeResult.Message;
                             results.Add(result);
 
@@ -188,13 +188,13 @@ namespace Certify.Core.Management.Challenges
                     }
                     else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
-                        var recordName = $"_acme-challenge-test.{domain}".Replace("*.", "");
+                        var recordName = $"_acme-challenge-test.{domain.Value}".Replace("*.", "");
 
                         // ISSUE: dependency on changing behavior for a specific plugin
                         if (challengeConfig.ChallengeProvider == "DNS01.API.AcmeDns" || challengeConfig.ChallengeProvider == "DNS01.API.CertifyDns")
                         {
                             // use real cname to avoid having to setup different records
-                            recordName = $"_acme-challenge.{domain}".Replace("*.", "");
+                            recordName = $"_acme-challenge.{domain.Value}".Replace("*.", "");
                         }
 
                         var simulatedAuthorization = new PendingAuthorization
