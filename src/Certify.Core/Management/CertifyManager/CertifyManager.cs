@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -282,7 +282,7 @@ namespace Certify.Management
                .CreateLogger()
                );
 
-            _serviceLog?.Information($"Logging started: {_loggingLevelSwitch.MinimumLevel}");
+            _serviceLog?.Information($"-------------------- Logging started: {_loggingLevelSwitch.MinimumLevel} --------------------");
         }
 
         /// <summary>

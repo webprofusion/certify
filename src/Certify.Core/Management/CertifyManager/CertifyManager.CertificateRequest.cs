@@ -814,7 +814,6 @@ namespace Certify.Management
                         log?.Error("Failed to parse certificate dates.");
                     }
 
-
                     // Install certificate into certificate store and bind to matching sites on server
                     var deploymentManager = new BindingDeploymentManager();
 
