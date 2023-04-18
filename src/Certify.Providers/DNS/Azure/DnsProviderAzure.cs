@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -210,7 +210,17 @@ namespace Certify.Providers.DNS.Azure
                 {
                     foreach (var record in currentRecord.TxtRecords)
                     {
-                        recordSetParams.TxtRecords.Add(record);
+                        // copy existing values to our update as long as we're not copying the challenge response value we've already added
+                        // record values are a list of strings, so we need to check each string in the list and avoid adding an empty record
+                        if (record.Value.Any(r => r == request.RecordValue))
+                        {
+                            record.Value.Remove(request.RecordValue);
+                        }
+
+                        if (record.Value.Any())
+                        {
+                            recordSetParams.TxtRecords.Add(record);
+                        }
                     }
                 }
             }
@@ -274,15 +284,15 @@ namespace Certify.Providers.DNS.Azure
                         p.Value = p.Value.Where(t => t != request.RecordValue).ToList();
                     }
 
-                    if (existing != null && currentRecord.TxtRecords.Count > 1)
+                    // remove any empty records from the patch set
+                    patchedRecord = patchedRecord.Where(p => p.Value.Any()).ToList();
+
+                    if (existing != null && patchedRecord.Any())
                     {
                         var recordSetParams = new RecordSet
                         {
                             TTL = 5,
-                            TxtRecords = new List<TxtRecord>
-                            {
-                                new TxtRecord(patchedRecord[0].Value)
-                            }
+                            TxtRecords = patchedRecord
                         };
 
                         // patch record to remove this value
