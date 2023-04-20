@@ -176,6 +176,7 @@ namespace Certify.Providers.ACME.Anvil
                         AccountKey = account.AccountKey,
                         AccountUri = account.AccountURI
                     };
+
                     SetAcmeContextAccountKey(_settings.AccountKey);
                 }
             }
@@ -358,7 +359,7 @@ namespace Certify.Providers.ACME.Anvil
             var pem = _acme.AccountKey.ToPem();
 
             _settings.AccountKey = pem;
-            _settings.AccountUri = (await _acme.Account()).Location.ToString();
+            _settings.AccountUri = (await _acme.GetAccountUri())?.ToString();
         }
 
         /// <summary>
@@ -696,7 +697,7 @@ namespace Certify.Providers.ACME.Anvil
                     {
                         var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, exp);
 
-                        return new PendingOrder($"Failed to begin certificate order: {message}");
+                        return new PendingOrder($"Failed to begin certificate order. The CA ACME directory was not accessible: {message}");
                     }
 
                     // attempt to start our certificate order
