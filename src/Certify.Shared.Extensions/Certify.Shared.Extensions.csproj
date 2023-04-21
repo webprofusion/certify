@@ -1,34 +1,36 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net462;netstandard2.0;</TargetFrameworks>
+        <TargetFrameworks>net462;netstandard2.0;net7.0</TargetFrameworks>
         <Platforms>AnyCPU</Platforms>
 
     </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1" />
-    <None Remove="Scripts\Internal\Script-Wrapper.ps1" />
-  </ItemGroup>
+    <ItemGroup>
+        <None Remove="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1" />
+        <None Remove="Scripts\Internal\Script-Wrapper.ps1" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Scripts\Internal\Script-Wrapper.ps1">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Scripts\Internal\Script-Wrapper.ps1">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
 
 
-  <ItemGroup>
-    <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
-    <PackageReference Include="System.Management.Automation" Version="7.2.1" Condition="'$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'netstandard2.0'" />
+    <ItemGroup>
+        <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
+        
+        <PackageReference Include="System.Management.Automation" Version="7.2.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+        <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies"  Version="1.1.0"  Condition="'$(TargetFramework)' != 'net7.0'" />
 
-		
         <!--package references used by other plugins, included here as a workaround to hook them into the app build-->
+        <!--
         <PackageReference Include="AWSSDK.Route53">
-            <Version>3.7.104.54</Version>
+            <Version>3.7.104.56</Version>
         </PackageReference>
         <PackageReference Include="Azure.Identity">
             <Version>1.8.2</Version>
@@ -45,9 +47,7 @@
         <PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent">
             <Version>1.38.1</Version>
         </PackageReference>
-		<PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies">
-			<Version>1.1.0</Version>
-		</PackageReference>
+
         <PackageReference Include="Microsoft.Rest.ClientRuntime.Azure.Authentication">
             <Version>2.4.1</Version>
         </PackageReference>
@@ -67,6 +67,7 @@
         <PackageReference Include="System.ServiceProcess.ServiceController">
             <Version>7.0.0</Version>
         </PackageReference>
+        -->
     </ItemGroup>
 
 
@@ -124,10 +125,10 @@
         </None>
         <None Update="Scripts\Web.config\Web.alt4.config">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="THIRD_PARTY_LICENSES.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+        </None>
+        <None Update="THIRD_PARTY_LICENSES.txt">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>

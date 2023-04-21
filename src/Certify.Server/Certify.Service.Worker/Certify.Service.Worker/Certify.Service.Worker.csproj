@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker;Microsoft.NET.Sdk.Publish">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker;Microsoft.NET.Sdk.Publish">
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <UserSecretsId>dotnet-Certify.Service.Worker-347A036F-C1EA-4D32-A163-DCB38C3CA53E</UserSecretsId>
@@ -17,7 +17,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
     <PackageReference Include="Polly" Version="7.2.3" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
   </ItemGroup>
+
 </Project>
