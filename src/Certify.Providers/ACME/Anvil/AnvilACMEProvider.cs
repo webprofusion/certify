@@ -132,7 +132,7 @@ namespace Certify.Providers.ACME.Anvil
 
             PreInitAcmeContext();
 
-            if (_settings == null)
+            if (_settings?.AccountKey == null)
             {
                 if (account == null)
                 {
@@ -178,6 +178,7 @@ namespace Certify.Providers.ACME.Anvil
                     };
 
                     SetAcmeContextAccountKey(_settings.AccountKey);
+                    
                 }
             }
             else
@@ -487,6 +488,8 @@ namespace Certify.Providers.ACME.Anvil
 
                     _settings.AccountUri = importAccountURI;
                     _settings.AccountEmail = email;
+                    
+                    _acme.SetAccountUri(new Uri(importAccountURI));
 
                     return new ActionResult<AccountDetails>
                     {
