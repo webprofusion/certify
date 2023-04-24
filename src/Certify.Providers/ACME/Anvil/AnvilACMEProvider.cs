@@ -178,7 +178,7 @@ namespace Certify.Providers.ACME.Anvil
                     };
 
                     SetAcmeContextAccountKey(_settings.AccountKey);
-                    
+
                 }
             }
             else
@@ -488,7 +488,7 @@ namespace Certify.Providers.ACME.Anvil
 
                     _settings.AccountUri = importAccountURI;
                     _settings.AccountEmail = email;
-                    
+
                     _acme.SetAccountUri(new Uri(importAccountURI));
 
                     return new ActionResult<AccountDetails>
@@ -1961,6 +1961,8 @@ namespace Certify.Providers.ACME.Anvil
                 // and the response doesn't matter to our system
 #if DEBUG
                 _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex.Message}");
+#else
+                _log?.Debug($"ARI Update Renewal Info Failed [{certificateId}] {ex.Message}");
 #endif
             }
         }
