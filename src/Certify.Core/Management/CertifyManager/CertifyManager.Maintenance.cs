@@ -105,7 +105,7 @@ namespace Certify.Management
             {
                 // perform OCSP checks for every active cert, possibly once per day. If revoked, immediately renew.
                 // perform ARI RenewalInfo checks (where supported by the CA), possibly once per day, if suggested renewal much less than planned renewal then set planned renewal date in window or immediate
-                _serviceLog.Information("Performing Certificate Status Checks");
+                _serviceLog.Verbose("Performing Certificate Status Checks");
 
                 var batchSize = 100;
                 var checkThrottleMS = 2500;
@@ -122,7 +122,7 @@ namespace Certify.Management
 
                 if (ocspItemsToCheck?.Any() == true)
                 {
-                    _serviceLog.Information($"Checking OCSP for {ocspItemsToCheck.Count} items");
+                    _serviceLog.Information(template: $"Checking OCSP for {ocspItemsToCheck.Count} items");
 
                     foreach (var item in ocspItemsToCheck)
                     {
@@ -176,7 +176,7 @@ namespace Certify.Management
 
                     if (renewalInfoItemsToCheck?.Any() == true)
                     {
-                        _serviceLog.Information("Performing Renewal Info checks");
+                        _serviceLog.Information($"Performing Renewal Info checks for {renewalInfoItemsToCheck.Count} items");
 
                         var directoryInfoCache = new Dictionary<string, AcmeDirectoryInfo>();
 
