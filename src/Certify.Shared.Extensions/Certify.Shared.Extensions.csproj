@@ -24,7 +24,7 @@
     <ItemGroup>
         <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
         
-        <PackageReference Include="System.Management.Automation" Version="7.2.1" Condition="'$(TargetFramework)' == 'net7.0'" />
+        <PackageReference Include="System.Management.Automation" Version="7.3.4" Condition="'$(TargetFramework)' == 'net7.0'" />
         <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies"  Version="1.1.0"  Condition="'$(TargetFramework)' != 'net7.0'" />
 
         <!--package references used by other plugins, included here as a workaround to hook them into the app build-->
