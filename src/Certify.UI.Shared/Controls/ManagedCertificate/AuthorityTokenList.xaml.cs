@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
@@ -7,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
 using Certify.UI.ViewModel;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -66,7 +66,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            var parsedJwt = new JwtSecurityToken(jwtEncodedString: tokenWrapper.Token);
+            var parsedJwt = new JsonWebToken(jwtEncodedString: tokenWrapper.Token);
             if (parsedJwt == null)
             {
                 MessageBox.Show("The Authority Token is not a valid JWT.");

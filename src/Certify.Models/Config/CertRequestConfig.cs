@@ -1,10 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Text.Json;
 using Certify.Models.Config;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -362,7 +362,7 @@ namespace Certify.Models
             {
                 foreach (var tnAuthToken in AuthorityTokens)
                 {
-                    var jwt = new JwtSecurityToken(jwtEncodedString: tnAuthToken.Token);
+                    var jwt = new JsonWebToken(jwtEncodedString: tnAuthToken.Token);
 
                     var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
                     if (atc != null)
@@ -380,7 +380,7 @@ namespace Certify.Models
         {
             try
             {
-                var parsedJwt = new JwtSecurityToken(jwtEncodedString: jwt);
+                var parsedJwt = new JsonWebToken(jwtEncodedString: jwt);
 
                 var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
                 if (atc != null)

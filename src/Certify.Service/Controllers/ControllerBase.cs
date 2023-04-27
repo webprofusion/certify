@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 namespace Certify.Service.Controllers
 {
@@ -64,13 +64,13 @@ namespace Certify.Service.Controllers
             return false;
         }
 
-        public static ClaimsPrincipal GetPrincipal(string token, string secret)
+        public static ClaimsIdentity GetClaimsIdentity(string token, string secret)
         {
             // adapted form https://stackoverflow.com/questions/40281050/jwt-authentication-for-asp-net-web-api
             try
             {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwtToken = tokenHandler.ReadToken(token) as JwtSecurityToken;
+                var tokenHandler = new JsonWebTokenHandler();
+                var jwtToken = tokenHandler.ReadToken(token) as JsonWebToken;
 
                 if (jwtToken == null)
                 {
@@ -87,10 +87,16 @@ namespace Certify.Service.Controllers
                     IssuerSigningKey = new SymmetricSecurityKey(symmetricKey)
                 };
 
-                SecurityToken securityToken;
-                var principal = tokenHandler.ValidateToken(token, validationParameters, out securityToken);
+                var result = tokenHandler.ValidateToken(token, validationParameters);
 
-                return principal;
+                if (result.IsValid)
+                {
+                    return result.ClaimsIdentity;
+                }
+                else
+                {
+                    return null;
+                }
             }
             catch (Exception)
             {
@@ -103,16 +109,9 @@ namespace Certify.Service.Controllers
         {
             username = null;
 
-            var simplePrinciple = GetPrincipal(token, secret);
+            var identity = GetClaimsIdentity(token, secret);
 
-            if (simplePrinciple?.Identity == null)
-            {
-                return false;
-            }
-
-            var identity = simplePrinciple.Identity as ClaimsIdentity;
-
-            if (!identity.IsAuthenticated)
+            if (identity == null || !identity.IsAuthenticated)
             {
                 return false;
             }
@@ -132,9 +131,8 @@ namespace Certify.Service.Controllers
 
         protected Task<IPrincipal> AuthenticateJwtToken(string token, string secret)
         {
-            string username;
 
-            if (ValidateToken(token, secret, out username))
+            if (ValidateToken(token, secret, out var username))
             {
                 // based on username to get more information from database 
                 // in order to build local identity
@@ -183,7 +181,7 @@ namespace Certify.Service.Controllers
         public static string GenerateJwt(string userid, string secretkey, int expireMinutes = 20)
         {
             var symmetricKey = Convert.FromBase64String(secretkey);
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenHandler = new JsonWebTokenHandler();
 
             var now = DateTime.UtcNow;
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -200,10 +198,7 @@ namespace Certify.Service.Controllers
                     SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var stoken = tokenHandler.CreateToken(tokenDescriptor);
-            var token = tokenHandler.WriteToken(stoken);
-
-            return token;
+            return tokenHandler.CreateToken(tokenDescriptor);
         }
     }
 }
