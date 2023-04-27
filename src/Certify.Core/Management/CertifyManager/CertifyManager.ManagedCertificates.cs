@@ -124,7 +124,7 @@ namespace Certify.Management
 
                 // failed to store update, e.g. database problem or disk space has run out
                 managedCertificate.LastRenewalStatus = RequestState.Error;
-                managedCertificate.RenewalFailureMessage = "Error: cannot store certificate status update to %ProgramData%\\Certify\\manageditems.db. Check there is enough disk space and permission for writes. If this problem persists, contact support. " + exp;
+                managedCertificate.RenewalFailureMessage = "Error: Cannot store certificate status update to the Data Store. Check there is enough disk space and permission for database writes. If this problem persists, contact support. " + exp;
             }
 
             // report request state to status hub clients
