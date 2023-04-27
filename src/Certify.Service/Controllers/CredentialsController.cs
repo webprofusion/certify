@@ -42,7 +42,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("{storageKey}/test")]
-        public async Task<ActionResult> TestCredentials(string storageKey)
+        public async Task<Models.Config.ActionResult> TestCredentials(string storageKey)
         {
             DebugLog();
 

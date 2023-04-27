@@ -84,8 +84,9 @@ namespace Certify.Server.API.Controllers
             var jwt = new Api.Public.Services.JwtService(_config);
 
             var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]).Parameter;
-            var principal = jwt.GetClaimsPrincipalFromToken(authToken, false);
-            var username = principal.Identity.Name;
+            var claimsIdentity = jwt.ClaimsIdentityFromToken(authToken, false);
+            var username = claimsIdentity.Name;
+
             // var savedRefreshToken = GetRefreshToken(username); //retrieve the refresh token from a data store
             // if (savedRefreshToken != refreshToken)
             // throw new SecurityTokenException("Invalid refresh token");

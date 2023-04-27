@@ -1,9 +1,9 @@
 ﻿using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Certify.Server.Api.Public.Services
@@ -54,7 +54,7 @@ namespace Certify.Server.Api.Public.Services
 
         public string GenerateSecurityToken(string identifier, double? expiryMinutes)
         {
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenHandler = new JsonWebTokenHandler();
             var key = Encoding.UTF8.GetBytes(_secret);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -68,10 +68,7 @@ namespace Certify.Server.Api.Public.Services
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-
-            return tokenHandler.WriteToken(token);
-
+            return tokenHandler.CreateToken(tokenDescriptor);
         }
         /// <summary>
         /// Parse a provided token and extract claims
@@ -80,7 +77,7 @@ namespace Certify.Server.Api.Public.Services
         /// <param name="validateTokenLifetime"></param>
         /// <returns></returns>
         /// <exception cref="SecurityTokenException"></exception>
-        public ClaimsPrincipal GetClaimsPrincipalFromToken(string token, bool validateTokenLifetime)
+        public ClaimsIdentity ClaimsIdentityFromToken(string token, bool validateTokenLifetime)
         {
             var key = Encoding.UTF8.GetBytes(_secret);
 
@@ -94,18 +91,17 @@ namespace Certify.Server.Api.Public.Services
                 ValidIssuer = _issuer
             };
 
-            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenHandler = new JsonWebTokenHandler();
 
-            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out var securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            var result = tokenHandler.ValidateToken(token, tokenValidationParameters);
+            if (result.IsValid)
+            {
+                return result.ClaimsIdentity;
+            }
+            else
             {
                 throw new SecurityTokenException("Invalid token");
             }
-
-            // principal.Identity.Name = jwtSecurityToken.Claims.First(c => c.Type == "name").Value;
-            return principal;
         }
     }
 }

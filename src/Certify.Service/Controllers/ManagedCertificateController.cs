@@ -281,7 +281,7 @@ namespace Certify.Service.Controllers
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
         [HttpGet, Route("maintenance/{id?}")]
-        public async Task<List<ActionResult>> PerformCertMaintenanceTasks(string id = null)
+        public async Task<List<Models.Config.ActionResult>> PerformCertMaintenanceTasks(string id = null)
         {
             DebugLog();
 
