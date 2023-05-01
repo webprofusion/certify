@@ -13,6 +13,24 @@
     d:DesignWidth="468"
     mc:Ignorable="d">
     <UserControl.Resources>
+        <DataTemplate x:Key="ProviderMultiLineStringParameter">
+
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <TextBox
+                    Width="250"
+                    Height="100"
+                    mah:TextBoxHelper.Watermark="{Binding Description}"
+                    AcceptsReturn="True"
+                    Text="{Binding Value}"
+                    ToolTip="{Binding Description}"
+                    VerticalScrollBarVisibility="Visible" />
+            </StackPanel>
+
+        </DataTemplate>
         <DataTemplate x:Key="ProviderStringParameter">
             <StackPanel
                 Margin="0,8,0,0"

@@ -46,7 +46,7 @@ namespace Certify.UI.Windows
             {
                 template = context.FindResource("ProviderDropDownParameter") as DataTemplate;
             }
-            else if (providerParameter.IsMultiLine)
+            else if (providerParameter.IsMultiLine || providerParameter.Type == OptionType.MultiLineText)
             {
                 template = context.FindResource("ProviderMultiLineStringParameter") as DataTemplate;
             }
