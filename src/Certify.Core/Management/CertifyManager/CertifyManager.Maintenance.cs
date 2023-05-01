@@ -232,8 +232,6 @@ namespace Certify.Management
 
                                                     itemsViaARI.Add(item.Id, scheduledRenewalDate.LocalDateTime);
 
-                                                    var updateRenewalInfo = await provider.GetRenewalInfo(certId);
-
                                                     if (scheduledRenewalDate < DateTimeOffset.Now)
                                                     {
                                                         // item requires immediate renewal
@@ -244,6 +242,10 @@ namespace Certify.Management
                                                         }
                                                     }
                                                 }
+                                            }
+                                            else
+                                            {
+                                                _serviceLog.Verbose($"Renewal info unavailable or not supported for {item.Name}");
                                             }
                                         }
                                     }
