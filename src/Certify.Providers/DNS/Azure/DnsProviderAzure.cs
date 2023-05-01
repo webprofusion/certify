@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
-using Azure.Core;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
@@ -13,7 +12,6 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Plugins;
-using Newtonsoft.Json.Linq;
 
 namespace Certify.Providers.DNS.Azure
 {
@@ -169,20 +167,6 @@ namespace Certify.Providers.DNS.Azure
 
         private ResourceGroupResource _resourceGroup = null;
 
-        private async Task<ResourceGroupResource> GetResourceGroup()
-        {
-            return null;
-            /*
-            if (_resourceGroup == null)
-            {
-                var subscription = await _azureClient.GetDefaultSubscriptionAsync();
-                _resourceGroup = await subscription.GetDnsZones(_credentials["resourcegroupname"]);
-                return _resourceGroup;
-            } else
-            {
-                return _resourceGroup;
-            }*/
-        }
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
@@ -254,7 +238,8 @@ namespace Certify.Providers.DNS.Azure
                             IsSuccess = true,
                             Message = $"DNS TXT Record Created: {recordName} in root domain {domainInfo.RootDomain} with value: {request.RecordValue} "
                         };
-                    } else
+                    }
+                    else
                     {
                         return new ActionResult
                         {
