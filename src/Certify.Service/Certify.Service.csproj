@@ -45,7 +45,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Azure.Core" Version="1.31.0" />
-        <PackageReference Include="Azure.ResourceManager" Version="1.4.0" />
+        <PackageReference Include="Azure.ResourceManager" Version="1.5.0" />
         <PackageReference Include="LightInject" Version="6.6.3" />
         <PackageReference Include="LightInject.WebApi" Version="2.0.0" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
