@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify SSL/TLS 证书管理器</value>
+    <value>Certify 证书管理器</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>警告：这是一个预发布版本，仅供测试或反馈，可能会遇到问题，不要在重要的生产站点上使用此版本。</value>
@@ -127,7 +127,7 @@
     <value>您正在使用最新版本。</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify SSL/TLS 证书管理器</value>
+    <value>Certify 证书管理器</value>
   </data>
   <data name="Credits" xml:space="preserve">
     <value>此软件提供为“AS-IS”并不提供任何形式的保证，无论明示或暗示，包括但不限于任何默认条件下，不间断的使用、适销性，针对特定用途的适用性或非侵权。

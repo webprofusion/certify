@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify SSL/TLS Sertifika Yöneticisi</value>
+    <value>Certify Sertifika Yöneticisi</value>
   </data>
   <data name="Credits" xml:space="preserve">
     <value>Yazılım, kesintisiz kullanım, satılabilirlik, belirli bir amaca uygunluk veya ihlal etmeme gibi zımni garantiler dahil, bunlarla sınırlı olmamak üzere açık veya zımni hiçbir garanti olmaksızın "olduğu gibi" sağlanır.
@@ -131,7 +131,7 @@ Bu yazılım, aşağıdaki Açık Kaynak yazılımlarını (veya önemli bölüm
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify SSL/TLS Sertifika Yöneticisi</value>
+    <value>Certify Sertifika Yöneticisi</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>En son sürümü kullanıyorsunuz.</value>

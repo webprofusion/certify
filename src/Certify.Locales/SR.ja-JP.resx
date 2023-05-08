@@ -520,7 +520,7 @@
     <value>このアイテムを削除してもよろしいですか？ アイテムを削除しても、IIS設定などには影響しません。</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
-    <value>Certify SSL マネージャー コントリビューター（https://certifytheweb.com）</value>
+    <value>Certify マネージャー コントリビューター（https://certifytheweb.com）</value>
   </data>
   <data name="ManagedCertificateSettings_ConfigurationCheckOk" xml:space="preserve">
     <value>構成チェック完了</value>

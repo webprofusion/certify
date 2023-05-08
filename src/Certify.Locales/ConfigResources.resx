@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify SSL/TLS Certificate Manager</value>
+    <value>Certify Certificate Manager</value>
   </data>
   <data name="Credits" xml:space="preserve">
     <value>The Software is provided "as is" without warranty of any kind, either express or implied, including without limitation any implied warranties of condition, uninterrupted use, merchantability, fitness for a particular purpose, or non-infringement.
@@ -131,7 +131,7 @@ This software uses the following Open Source software (or significant portions o
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify SSL/TLS Certificate Manager</value>
+    <value>Certify Certificate Manager</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>You are using the latest version.</value>

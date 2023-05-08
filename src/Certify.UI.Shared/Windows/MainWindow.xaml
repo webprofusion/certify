@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Certify.UI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    Title="Certify SSL/TLS Certificate Management"
+    Title="Certify Certificate Manager"
     Width="940"
     Height="640"
     MinWidth="680"
