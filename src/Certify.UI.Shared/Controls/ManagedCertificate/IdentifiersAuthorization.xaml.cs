@@ -5,14 +5,14 @@ using Certify.Models;
 namespace Certify.UI.Controls.ManagedCertificate
 {
     /// <summary>
-    /// Interaction logic for DomainAuthorization.xaml 
+    /// Interaction logic for IdentifierAuthorization.xaml 
     /// </summary>
-    public partial class DomainAuthorization : UserControl
+    public partial class IdentifierAuthorization : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        public DomainAuthorization()
+        public IdentifierAuthorization()
         {
             InitializeComponent();
         }

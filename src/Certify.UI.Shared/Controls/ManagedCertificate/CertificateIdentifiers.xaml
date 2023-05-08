@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Certify.UI.Controls.ManagedCertificate.CertificateDomains"
+    x:Class="Certify.UI.Controls.ManagedCertificate.CertificateIdentifiers"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
@@ -38,7 +38,7 @@
                 Header="Identifiers"
                 IsSelected="False">
 
-                <StackPanel>
+                <Grid>
                     <WrapPanel Orientation="Vertical" Visibility="{Binding UseAuthorityTokenListView, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
@@ -346,7 +346,8 @@
                     <WrapPanel Orientation="Vertical" Visibility="{Binding UseAuthorityTokenListView, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <managedcertificate:AuthorityTokenList />
                     </WrapPanel>
-                </StackPanel>
+                </Grid>
+
             </TabItem>
 
             <TabItem

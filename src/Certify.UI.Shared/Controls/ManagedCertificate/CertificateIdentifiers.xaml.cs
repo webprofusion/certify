@@ -12,12 +12,12 @@ namespace Certify.UI.Controls.ManagedCertificate
     /// <summary>
     /// Interaction logic for CertificateDomains.xaml 
     /// </summary>
-    public partial class CertificateDomains : UserControl
+    public partial class CertificateIdentifiers : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
         protected Certify.UI.ViewModel.AppViewModel AppViewModel => UI.ViewModel.AppViewModel.Current;
 
-        public CertificateDomains()
+        public CertificateIdentifiers()
         {
             InitializeComponent();
 

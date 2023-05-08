@@ -261,7 +261,7 @@
                             <managedcertificate:TabHeader HeaderText="Certificate" IconName="Globe" />
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
-                    <managedcertificate:CertificateDomains Margin="0,8,0,0" />
+                    <managedcertificate:CertificateIdentifiers Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem
@@ -275,7 +275,7 @@
                         </DataTemplate>
                     </TabItem.HeaderTemplate>
 
-                    <managedcertificate:DomainAuthorization Margin="0,8,0,0" />
+                    <managedcertificate:IdentifierAuthorization Margin="0,8,0,0" />
                 </TabItem>
 
                 <TabItem
