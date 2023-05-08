@@ -7,7 +7,6 @@ namespace Certify.CertificateAuthorities.Definitions
     {
         public static CertificateAuthority GetDefinition()
         {
-            var certs = GetKnownCertificates();
 
             return new CertificateAuthority
             {
@@ -47,14 +46,6 @@ namespace Certify.CertificateAuthorities.Definitions
                 {
                 }
             };
-        }
-
-        public static Dictionary<string, string> GetKnownCertificates()
-        {
-            var knownCerts = new Dictionary<string, string>
-            {
-            };
-            return knownCerts;
         }
     }
 }
