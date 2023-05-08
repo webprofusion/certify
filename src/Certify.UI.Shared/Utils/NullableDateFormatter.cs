@@ -12,7 +12,7 @@ namespace Certify.UI.Utils
                 return "";
             }
 
-            return ((DateTime)value).ToShortDateString();
+            return ((DateTime)value).ToString("yyyy-MM-dd");
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => null;
