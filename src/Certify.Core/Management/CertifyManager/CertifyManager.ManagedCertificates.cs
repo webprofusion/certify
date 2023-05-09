@@ -158,6 +158,11 @@ namespace Certify.Management
                     reportedCert.RequestConfig.CustomCSR = null;
                     reportedCert.RequestConfig.CustomPrivateKey = null;
 
+                    reportedCert.RequestConfig.Challenges
+                        .Where(c => c.ChallengeProvider == "DNS01.API.CertifyDns")
+                        .Select(s => s.Parameters
+                        .Where(p => p.Key == "credentials_json").Select(p => p.Value = null));
+
                     var report = new Models.Shared.RenewalStatusReport
                     {
                         InstanceId = CoreAppSettings.Current.InstanceId,
