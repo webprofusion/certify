@@ -163,6 +163,8 @@ namespace Certify.Management
         public bool UseModernPFXAlgs { get; set; }
 
         public string ConfigDataStoreConnectionId { get; set; }
+
+        public string CurrentServiceVersion { get; set; }
     }
 
     public class SettingsManager

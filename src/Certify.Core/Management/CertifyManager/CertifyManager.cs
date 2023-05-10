@@ -191,6 +191,21 @@ namespace Certify.Management
 
             _serviceLog?.Information("Certify Manager Started");
 
+            var systemVersion = Util.GetAppVersion().ToString();
+            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
+            {
+                // service has been updated, run any required migrations
+                await PerformServiceUpgrades();
+
+                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
+                SettingsManager.SaveAppSettings();
+            }
+        }
+
+        private async Task PerformServiceUpgrades()
+        {
+            _serviceLog?.Error($"Service version has changed. Performing upgrade checks.");
+
             try
             {
                 await PerformAccountUpgrades();
@@ -202,7 +217,7 @@ namespace Certify.Management
 
             await PerformManagedCertificateMigrations();
 
-            PerformCAMaintenance();
+            // PerformCAMaintenance();
         }
 
         private async Task InitDataStore()

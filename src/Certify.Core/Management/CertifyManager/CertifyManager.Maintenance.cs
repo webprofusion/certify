@@ -44,7 +44,7 @@ namespace Certify.Management
                 // perform item db maintenance
                 await _itemManager.PerformMaintenance();
 
-                PerformCAMaintenance();
+                // PerformCAMaintenance();
 
                 ApplyLatestAutoUpdateScript();
 
