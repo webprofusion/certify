@@ -189,7 +189,9 @@ namespace Certify.Management
 
                             try
                             {
-                                var provider = await GetACMEProvider(item);
+                                var caAccount = await GetAccountDetails(item, allowFailover: false);
+                                var provider = await GetACMEProvider(item, caAccount);
+
                                 if (provider != null)
                                 {
                                     var providerKey = provider.GetAcmeBaseURI();
@@ -455,7 +457,7 @@ namespace Certify.Management
                 var diagnosticResults = await PerformServiceDiagnostics();
                 if (diagnosticResults.Any(d => d.IsSuccess == false))
                 {
-                    var reportingEmail = (await GetAccountDetailsForManagedItem(null))?.Email;
+                    var reportingEmail = (await GetAccountDetails(null))?.Email;
 
                     foreach (var d in diagnosticResults.Where(di => di.IsSuccess == false && di.Result != null))
                     {

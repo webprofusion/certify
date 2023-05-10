@@ -173,6 +173,11 @@ namespace Certify.Models
         public RequestState? LastRenewalStatus { get; set; }
 
         /// <summary>
+        /// ID of last attempted CA, used to decide if we should attempt failover to another CA
+        /// </summary>
+        public string? LastAttemptedCA { get; set; }
+
+        /// <summary>
         /// Count of renewal failures since last success
         /// </summary>
         public int RenewalFailureCount { get; set; }
@@ -459,6 +464,7 @@ namespace Certify.Models
             managedCert.CertificateThumbprintHash = null;
             managedCert.CertificatePreviousThumbprintHash = null;
             managedCert.CurrentOrderUri = null;
+            managedCert.LastAttemptedCA = null;
             managedCert.SourceId = null;
             managedCert.SourceName = null;
             managedCert.RenewalFailureCount = 0;

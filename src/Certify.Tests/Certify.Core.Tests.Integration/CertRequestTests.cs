@@ -647,7 +647,7 @@ namespace Certify.Core.Tests
                 StorageKey = "dev"
             };
 
-            certifyManager.ForceAccountDetails = account;
+            certifyManager.OverrideAccountDetails = account;
             await provider.InitProvider(_log, account);
 
             var acc = provider.GetCurrentAcmeAccount();

@@ -289,7 +289,8 @@ namespace Certify.CLI
 
                     var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = url, UseStagingMode = false });
                     // get 
-                    var acmeClient = await c.GetACMEProvider(dummyManagedCert);
+                    var caAccount = await c.GetAccountDetails(dummyManagedCert);
+                    var acmeClient = await c.GetACMEProvider(dummyManagedCert, caAccount);
 
                     var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert.RequestConfig, url);
 

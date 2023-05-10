@@ -190,7 +190,7 @@ namespace Certify.Management
                             else
                             {
                                 // perform normal certificate challenge/response/renewal (acme-dns etc)
-                                result = await PerformCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
+                                result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
                             }
 
                             // copy result from sub-request, preserve existing logged actions
@@ -202,7 +202,7 @@ namespace Certify.Management
                             if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                             {
                                 // perform normal certificate challenge/response/renewal
-                                var result = await PerformCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
+                                var result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
                                 requestResult.ApplyChanges(result);
                             }
                             else
@@ -352,14 +352,17 @@ namespace Certify.Management
         /// <param name="config"></param>
         /// <param name="isInteractive"></param>
         /// <returns></returns>
-        private async Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
+        private async Task<CertificateRequestResult> PerformCoreCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
         {
-            //primary identifier and each subject alternative name must now be registered as an identifier with ACEM CA and validated
+            //primary identifier and each subject alternative name must now be registered as an identifier with ACME CA and validated
             log?.Information($"{Util.GetUserAgent()}");
 
-            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
+            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: CoreAppSettings.Current.EnableAutomaticCAFailover);
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
-            if (_acmeClientProvider == null)
+            _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var certAuthority);
+
+            if (caAccount == null || _acmeClientProvider == null)
             {
                 result.IsSuccess = false;
                 result.Abort = true;
@@ -369,6 +372,15 @@ namespace Certify.Management
             }
 
             log?.Information($"Beginning certificate request process: {managedCertificate.Name} using ACME provider {_acmeClientProvider.GetProviderName()}");
+
+            if (caAccount.IsFailoverSelection)
+            {
+                log?.Warning($"Due to previous renewal failures an alternative CA account has been selected for failover: {certAuthority?.Title}");
+            }
+            else
+            {
+                log?.Information($"The default or selected Certificate Authority is: {certAuthority?.Title}");
+            }
 
             log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateIdentifiers())}");
 
@@ -390,7 +402,7 @@ namespace Certify.Management
 
             var identifierAuthorizations = new List<PendingAuthorization>();
 
-            // start the validation process for each identifier
+            managedCertificate.LastAttemptedCA = caAccount.CertificateAuthorityId;
 
             // begin authorization by registering the cert order. The response will include a list of
             // authorizations per identifier. Authorizations may already be validated or we may still
@@ -468,7 +480,7 @@ namespace Certify.Management
                                     ActionType = "manualdns",
                                     InstanceTitle = Environment.MachineName,
                                     Message = instructions,
-                                    NotificationEmail = (await GetAccountDetailsForManagedItem(managedCertificate))?.Email,
+                                    NotificationEmail = (await GetAccountDetails(managedCertificate))?.Email,
                                     AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
                                 });
                             }
@@ -562,12 +574,16 @@ namespace Certify.Management
         {
             var result = new CertificateRequestResult(managedCertificate);
 
-            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
+            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
+
+            _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var certAuthority);
+
+            log?.Information($"Resuming certificate request using CA: {certAuthority?.Title}");
 
             // if we don't have a pending order, load the details of the most recent order (can be used to re-fetch the existing cert)
             if (pendingOrder == null && managedCertificate.CurrentOrderUri != null)
             {
-
                 pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate.RequestConfig, managedCertificate.CurrentOrderUri);
 
                 if (pendingOrder.IsFailure)
@@ -742,16 +758,14 @@ namespace Certify.Management
                 // all identifiers validated, request the certificate
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
-                var acc = await GetAccountDetailsForManagedItem(managedCertificate);
-                var currentCaId = GetCurrentCAId(managedCertificate);
-                _certificateAuthorities.TryGetValue(currentCaId, out var certAuthority);
+
 
                 // check item or settings for preferred chain option, prefer most specific first in order of: Managed Cert config, Account Settings config, CA Default config
                 var preferredChain = managedCertificate.RequestConfig.PreferredChain;
 
-                if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(acc?.PreferredChain))
+                if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(caAccount.PreferredChain))
                 {
-                    preferredChain = acc.PreferredChain;
+                    preferredChain = caAccount.PreferredChain;
                 }
 
                 if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(certAuthority?.DefaultPreferredChain))
@@ -1332,7 +1346,9 @@ namespace Certify.Management
 
             log?.Warning($"Revoking certificate: {managedCertificate.Name}");
 
-            var _acmeClientProvider = await GetACMEProvider(managedCertificate);
+            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
+            var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
+
             if (_acmeClientProvider == null)
             {
                 log?.Error($"Could not revoke certificate as no matching valid ACME account could be found.");

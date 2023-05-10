@@ -1,4 +1,6 @@
-﻿namespace Certify.Models
+﻿using Newtonsoft.Json;
+
+namespace Certify.Models
 {
     public class AccountDetails
     {
@@ -17,5 +19,11 @@
         public string? EabKey { get; set; }
         public string? EabKeyAlgorithm { get; set; }
         public string? PreferredChain { get; set; }
+
+        /// <summary>
+        /// If true, account was selected based on fallback/failover criteria
+        /// </summary>
+        [JsonIgnore]
+        public bool IsFailoverSelection { get; set; }
     }
 }

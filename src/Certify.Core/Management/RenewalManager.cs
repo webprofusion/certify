@@ -240,5 +240,100 @@ namespace Certify.Management
                 return results;
             }
         }
+
+        /// <summary>
+        /// Select subset of CA accounts which support the required features for this certificate (or have unknown features)
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="defaultCA"></param>
+        /// <param name="certificateAuthorities"></param>
+        /// <param name="accounts"></param>
+        /// <returns></returns>
+        private static List<AccountDetails> GetAccountsWithRequiredCAFeatures(ManagedCertificate item, string defaultCA, ICollection<CertificateAuthority> certificateAuthorities, List<AccountDetails> accounts)
+        {
+            var requiredCAFeatures = new List<CertAuthoritySupportedRequests>();
+            var identifiers = item.GetCertificateIdentifiers();
+
+            if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns && i.Value.StartsWith("*")))
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
+            }
+
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) > 2)
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
+            }
+
+            if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Ip))
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.IP_SINGLE);
+            }
+
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Ip) > 1)
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.IP_MULTIPLE);
+            }
+
+            if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.TnAuthList))
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.TNAUTHLIST);
+            }
+
+            var fallbackCandidateAccounts = accounts.Where(a => a.CertificateAuthorityId != defaultCA && a.IsStagingAccount == item.UseStagingMode);
+            var fallbackAccounts = new List<AccountDetails>();
+
+            if (fallbackCandidateAccounts.Any())
+            {
+                // select a candidate based on features required by the certificate. If a CA has no known features we assume it supports all the ones we might be interested in
+                foreach (var ca in certificateAuthorities)
+                {
+                    if (!ca.SupportedFeatures.Any() || requiredCAFeatures.All(r => ca.SupportedFeatures.Contains(r.ToString())))
+                    {
+                        fallbackAccounts.AddRange(fallbackCandidateAccounts.Where(f => f.CertificateAuthorityId == ca.Id));
+                    }
+                }
+            }
+
+            return fallbackAccounts;
+        }
+
+        /// <summary>
+        /// select certificate authority account for fallback if required, based on type of certificate being request and CA features
+        /// </summary>
+        /// <param name="accounts"></param>
+        /// <param name="item"></param>
+        /// <param name="defaultMatchingAccount"></param>
+        /// <returns></returns>
+        public static AccountDetails SelectCAWithFailover(ICollection<CertificateAuthority> certificateAuthorities, List<AccountDetails> accounts, ManagedCertificate item, AccountDetails defaultMatchingAccount)
+        {
+            if (accounts.Count == 1)
+            {
+                // nothing else to choose from, can't perform failover
+                return defaultMatchingAccount;
+            }
+
+            // If item has been failing recently, decide if we should attempt failover to a fallback account with another CA
+
+            if (item.LastRenewalStatus == RequestState.Error && item.RenewalFailureCount > 2)
+            {
+                // decide features we prefer the target CA to support
+                var fallbackAccounts = GetAccountsWithRequiredCAFeatures(item, defaultMatchingAccount.CertificateAuthorityId, certificateAuthorities, accounts);
+
+                if (fallbackAccounts.Any())
+                {
+                    // use the next suitable fallback account
+                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA && f.CertificateAuthorityId != defaultMatchingAccount.CertificateAuthorityId);
+
+                    if (nextFallback != null)
+                    {
+                        nextFallback.IsFailoverSelection = true;
+                        return nextFallback;
+                    }
+                }
+            }
+
+            // no fallback required/possible, use default
+            return defaultMatchingAccount;
+        }
     }
 }

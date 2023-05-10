@@ -29,7 +29,10 @@ namespace Certify.CertificateAuthorities.Definitions
                 SupportedFeatures =
                     new List<string>
                     {
-                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(), CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(), CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
+                        CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
+                        CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
+                        CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString(),
+                        CertAuthoritySupportedRequests.OPTIONAL_LIFETIME_DAYS.ToString()
                     },
                 SupportedKeyTypes =
                     new List<string>

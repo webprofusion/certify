@@ -348,25 +348,25 @@ namespace Certify.Management
         /// <summary>
         /// used to set a specific account for testing, instead of loading from config
         /// </summary>
-        public AccountDetails ForceAccountDetails { get; set; }
+        public AccountDetails OverrideAccountDetails { get; set; }
         /// <summary>
         /// Get the ACME client applicable for the given managed certificate
         /// </summary>
         /// <param name="managedItem"></param>
         /// <returns></returns>
-        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem)
+        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
         {
             // determine account to use for the given managed cert
-            var acc = ForceAccountDetails ?? await GetAccountDetailsForManagedItem(managedItem);
-            if (acc != null)
+
+            if (caAccount != null)
             {
-                _certificateAuthorities.TryGetValue(acc.CertificateAuthorityId, out var ca);
+                _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var ca);
 
                 if (ca != null)
                 {
                     var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
 
-                    return await GetACMEProvider(acc.StorageKey, acmeBaseUrl, acc, ca.AllowUntrustedTls);
+                    return await GetACMEProvider(caAccount.StorageKey, acmeBaseUrl, caAccount, ca.AllowUntrustedTls);
                 }
                 else
                 {

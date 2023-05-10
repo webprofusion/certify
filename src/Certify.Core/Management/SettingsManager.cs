@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Certify.Models;
@@ -31,7 +31,7 @@ namespace Certify.Management
             InstanceId = null;
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
-            EnableAutomaticCAFailover = false;
+            EnableAutomaticCAFailover = true;
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";

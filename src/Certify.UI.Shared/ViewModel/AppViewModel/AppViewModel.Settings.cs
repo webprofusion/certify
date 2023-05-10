@@ -30,8 +30,9 @@ namespace Certify.UI.ViewModel
             FeatureFlags.PRIVKEY_PWD,
 #if DEBUG
             FeatureFlags.SERVER_CONNECTIONS,
-#endif
             FeatureFlags.IMPORT_EXPORT,
+#endif
+            FeatureFlags.CA_FAILOVER,
             FeatureFlags.CA_EDITOR
         };
 

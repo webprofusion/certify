@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,13 +14,21 @@ namespace Certify.Management
     {
         private static object _accountsLock = new object();
         private List<AccountDetails> _accounts;
+
         /// <summary>
         /// Get the applicable Account Details for this managed item
         /// </summary>
-        /// <param name="item"></param>
+        /// <param name="item">managed certificate to determine account details for</param>
+        /// <param name="allowCache">if true, allow use of cached account list</param>
+        /// <param name="allowFailover">if true, select a fallback CA account if item has recently failed renewal, if false use same account as last renewal/attempt</param>
         /// <returns>Account Details or null if there is no matching account</returns>
-        private async Task<AccountDetails> GetAccountDetailsForManagedItem(ManagedCertificate item, bool allowCache = true)
+        public async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false)
         {
+            if (OverrideAccountDetails != null)
+            {
+                return OverrideAccountDetails;
+            }
+
             List<AccountDetails> accounts = null;
 
             if (allowCache)
@@ -66,17 +74,44 @@ namespace Certify.Management
             }
 
             var currentCA = GetCurrentCAId(item);
+            var reusingLastCA = false;
+
+            if (!allowFailover && !string.IsNullOrEmpty(item.LastAttemptedCA) && currentCA != item.LastAttemptedCA)
+            {
+                // if we have a last attempted CA and we are not looking to failover, use the same CA as last time (e.g. when resuming orders after completing challenges)
+                currentCA = item.LastAttemptedCA;
+                reusingLastCA = true;
+            }
 
             // get current account details for this CA (depending on whether this managed certificate uses staging mode or not)
-            var matchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
+            var defaultMatchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
 
-            if (matchingAccount == null)
+            if (defaultMatchingAccount == null && reusingLastCA)
+            {
+                // CA used last no longer has an account, determne defualt
+                currentCA = GetCurrentCAId(item);
+                defaultMatchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
+            }
+
+            if (defaultMatchingAccount == null)
             {
                 var log = ManagedCertificateLog.GetLogger(item.Id, new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error));
                 log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode ? "[Staging Mode]" : "[Production]")}");
+                return null;
             }
+            else
+            {
+                // We have a matching CA account. If failover enabled check if we want to use this or a fallback account
 
-            return matchingAccount;
+                if (CoreAppSettings.Current.EnableAutomaticCAFailover && allowFailover)
+                {
+                    return RenewalManager.SelectCAWithFailover(_certificateAuthorities.Values, accounts, item, defaultMatchingAccount);
+                }
+                else
+                {
+                    return defaultMatchingAccount;
+                }
+            }
         }
 
         private string GetCurrentCAId(ManagedCertificate item)

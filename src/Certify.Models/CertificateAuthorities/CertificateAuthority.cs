@@ -11,13 +11,38 @@ namespace Certify.Models
 
     public enum CertAuthoritySupportedRequests
     {
+        /// <summary>
+        /// CA supports single domain certificates
+        /// </summary>
         DOMAIN_SINGLE,
+        /// <summary>
+        /// CA supports single domain + www certificates
+        /// </summary>
         DOMAIN_SINGLE_PLUS_WWW,
+        /// <summary>
+        /// CA support certificates with multiple SAN entries
+        /// </summary>
         DOMAIN_MULTIPLE_SAN,
+        /// <summary>
+        /// CA supports wildcard certificates
+        /// </summary>
         DOMAIN_WILDCARD,
+        /// <summary>
+        /// CA supports single IP address certificates
+        /// </summary>
         IP_SINGLE,
+        /// <summary>
+        /// CA supports multiple IP address certificates
+        /// </summary>
         IP_MULTIPLE,
-        TNAUTHLIST
+        /// <summary>
+        /// CA supports TnAuthList certificates
+        /// </summary>
+        TNAUTHLIST,
+        /// <summary>
+        /// CA supports optional lifetime/expiry days
+        /// </summary>
+        OPTIONAL_LIFETIME_DAYS
     }
 
     public static class StandardCertAuthorities
