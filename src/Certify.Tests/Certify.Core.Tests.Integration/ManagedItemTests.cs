@@ -111,6 +111,32 @@ namespace Certify.Core.Tests
             }
         }
 
+        [TestMethod, Description("Ensure rapid update succeeds and increments version")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestRapidUpdateManagedCertificates(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var testCert = BuildTestManagedCertificate();
+            try
+            {
+                var managedCertificate = await itemManager.Update(testCert);
+
+                for (var i = 0; i < 10; i++)
+                {
+                    await itemManager.Update(managedCertificate);
+                }
+
+                var managedCertificates = await itemManager.Find(new ManagedCertificateFilter { Id = managedCertificate.Id });
+                Assert.IsTrue(managedCertificates.Count == 1);
+                Assert.IsTrue(managedCertificates[0].Version == 10);
+            }
+            finally
+            {
+                await itemManager.Delete(testCert);
+            }
+        }
+
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
         [DynamicData(nameof(TestDataStores))]
         public async Task TestCreateDeleteManagedCertificate(string storeType = null)
@@ -161,8 +187,6 @@ namespace Certify.Core.Tests
 
             // now check site has been delete
             Assert.IsNull(managedCertificate, "Managed site deleted");
-
-
         }
 
         [TestMethod, Description("Ensure managed site can be created, retrieved and deleted")]
