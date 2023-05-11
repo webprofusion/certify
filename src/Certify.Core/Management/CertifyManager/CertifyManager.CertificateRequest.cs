@@ -758,8 +758,6 @@ namespace Certify.Management
                 // all identifiers validated, request the certificate
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
-
-
                 // check item or settings for preferred chain option, prefer most specific first in order of: Managed Cert config, Account Settings config, CA Default config
                 var preferredChain = managedCertificate.RequestConfig.PreferredChain;
 

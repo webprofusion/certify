@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net462</TargetFramework>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -44,9 +44,9 @@
         <Content Include="icon.ico" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Azure.Core" Version="1.31.0" />
-        <PackageReference Include="Azure.ResourceManager" Version="1.4.0" />
-        <PackageReference Include="LightInject" Version="6.6.3" />
+        <PackageReference Include="Azure.Core" Version="1.32.0" />
+        <PackageReference Include="Azure.ResourceManager" Version="1.5.0" />
+        <PackageReference Include="LightInject" Version="6.6.4" />
         <PackageReference Include="LightInject.WebApi" Version="2.0.0" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" />
