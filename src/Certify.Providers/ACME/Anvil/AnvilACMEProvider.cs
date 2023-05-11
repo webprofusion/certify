@@ -64,6 +64,8 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         public string DefaultCertificateFormat { get; set; } = "pfx";
 
+        private bool _enableIssuerCache { get; set; } = false;
+
         /// <summary>
         /// Cache for last retrieved copy of ACME drectory info
         /// </summary>
@@ -1652,52 +1654,55 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         private void RefreshIssuerCertCache()
         {
-            try
+            if (_enableIssuerCache)
             {
-                _issuerCertCache = new List<byte[]>();
-
-                var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
-                if (rootCAs != null)
+                try
                 {
-                    _issuerCertCache.Add(rootCAs);
-                }
+                    _issuerCertCache = new List<byte[]>();
 
-                var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
-                if (intermediates != null)
-                {
-                    _issuerCertCache.Add(intermediates);
-                }
-
-                // custom CA roots
-                var customCARoots = GetCustomCaCertsFromFileStore();
-                if (customCARoots != null)
-                {
-                    _issuerCertCache.Add(customCARoots);
-                }
-
-                // well known CA certs
-                var knownCAs = CertificateAuthority.CoreCertificateAuthorities;
-                foreach (var ca in knownCAs)
-                {
-                    foreach (var cert in ca.TrustedRoots)
+                    var rootCAs = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.Root);
+                    if (rootCAs != null)
                     {
+                        _issuerCertCache.Add(rootCAs);
+                    }
 
-                        using (TextReader textReader = new StringReader(cert.Value))
+                    var intermediates = GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName.CertificateAuthority);
+                    if (intermediates != null)
+                    {
+                        _issuerCertCache.Add(intermediates);
+                    }
+
+                    // custom CA roots
+                    var customCARoots = GetCustomCaCertsFromFileStore();
+                    if (customCARoots != null)
+                    {
+                        _issuerCertCache.Add(customCARoots);
+                    }
+
+                    // well known CA certs
+                    var knownCAs = CertificateAuthority.CoreCertificateAuthorities;
+                    foreach (var ca in knownCAs)
+                    {
+                        foreach (var cert in ca.TrustedRoots)
                         {
-                            var pemReader = new PemReader(textReader);
 
-                            var pemObj = pemReader.ReadPemObject();
+                            using (TextReader textReader = new StringReader(cert.Value))
+                            {
+                                var pemReader = new PemReader(textReader);
 
-                            var certBytes = pemObj.Content;
-                            _issuerCertCache.Add(certBytes);
+                                var pemObj = pemReader.ReadPemObject();
+
+                                var certBytes = pemObj.Content;
+                                _issuerCertCache.Add(certBytes);
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception)
-            {
-                //TODO: log
-                System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
+                catch (Exception)
+                {
+                    //TODO: log
+                    System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
+                }
             }
         }
 
@@ -1839,8 +1844,6 @@ namespace Certify.Providers.ACME.Anvil
 
                 try
                 {
-                    // pfx.FullChain = true; // it's possible to build the PFX without a chain at all but we don't currently need to do that
-
                     pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
                     File.WriteAllBytes(pfxPath, pfxBytes);
                 }
