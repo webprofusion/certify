@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net462</TargetFramework>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
         <Configurations>Debug;Release;</Configurations>
-        <AssemblyName>CertifySSLManager.Service</AssemblyName>
+        <AssemblyName>Certify.Service</AssemblyName>
         <OutputType>Exe</OutputType>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <ApplicationIcon>icon.ico</ApplicationIcon>

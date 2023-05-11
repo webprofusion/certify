@@ -356,7 +356,7 @@ namespace Certify.Management
                 }
 
                 //https://github.com/dotnet/corefx/issues/6849
-                var tempFile = Path.Combine(new string[] { updatePath, "CertifySSL_" + result.Version.ToString() + "_Setup.tmp" });
+                var tempFile = Path.Combine(new string[] { updatePath, "Certify_" + result.Version.ToString() + "_Setup.tmp" });
                 var setupFile = tempFile.Replace(".tmp", ".exe");
 
                 var downloadVerified = false;

@@ -28,8 +28,6 @@ namespace Certify.Service
                 });
 #if DEBUG
                 x.SetInstanceName("Debug");
-#else
-                // x.SetInstanceName("CertifySSLManager.Service");
 #endif
 
                 // FIXME: we should offer option during setup to configure this as a service account
