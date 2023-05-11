@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Web.Http;
 using LightInject;
 using Microsoft.AspNet.SignalR;
@@ -49,7 +49,9 @@ namespace Certify.Service
 
             _container = new ServiceContainer();
 
-            _container.RegisterApiControllers();
+            /// restrict type we will load controller from to only our service assembly
+            _container.RegisterApiControllers(this.GetType().Assembly);
+
             _container.EnableWebApi(config);
 
             // inject single CertifyManager for service to use
