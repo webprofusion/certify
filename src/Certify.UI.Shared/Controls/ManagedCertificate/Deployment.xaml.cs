@@ -31,7 +31,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     Description="Automatic Deployment, Use Defaults"
                 },
                 new ListOption{
-                    Title ="Single Site (selected in Domains tab)",
+                    Title ="Single Site (selected in Certificate tab)",
                     Value = Models.DeploymentOption.SingleSite,
                     Description="Only update bindings for the selected website."
                 },
