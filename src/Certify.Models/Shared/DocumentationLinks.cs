@@ -8,6 +8,6 @@
         public const string ABOUT_LETSENCRYPT = DOCS_BASE + "/letsencrypt";
 
         public const string ABOUT_VALIDATION_HTTP = DOCS_BASE + "/http-validation";
-        public const string ABOUT_VALIDATION_DNS = DOCS_BASE + "/dns-validation";
+        public const string ABOUT_VALIDATION_DNS = DOCS_BASE + "/dns/validation";
     }
 }

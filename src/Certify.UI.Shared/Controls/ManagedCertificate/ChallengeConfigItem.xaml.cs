@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Shared;
 using Certify.UI.ViewModel;
 using WinForms = System.Windows.Forms;
 
@@ -108,7 +109,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (challengeProviderType == "DNS01.Manual")
             {
                 MessageBox.Show(
-                    "You have selected the Manual DNS method. This option is provided for testing and is often the most difficult to get working. Do not rely on Manual DNS for normal certificate renewal as the manual process must be repeated for every renewal. Consider other automated options such as acme-dns: https://docs.certifytheweb.com/docs/dns-validation",
+                    "You have selected the Manual DNS method. This option is provided for testing and is often the most difficult to get working. Do not rely on Manual DNS for normal certificate renewal as the manual process must be repeated for every renewal. Consider other automated options such as Certify DNS : " + DocumentationLinks.ABOUT_VALIDATION_DNS,
                     "Warning", MessageBoxButton.OK, MessageBoxImage.Exclamation
                     );
             }
