@@ -121,7 +121,24 @@ namespace Certify.Server.API
 #endif
             // connect to certify service 
             var configManager = new ServiceConfigManager();
-            var defaultConnectionConfig = new Shared.ServerConnection(configManager.GetServiceConfig());
+            var serviceConfig = configManager.GetServiceConfig();
+
+            var serviceHostEnv = Environment.GetEnvironmentVariable("CERTIFY_SERVER_HOST");
+            var servicePortEnv = Environment.GetEnvironmentVariable("CERTIFY_SERVER_PORT");
+
+            if (!string.IsNullOrEmpty(serviceHostEnv))
+            {
+                serviceConfig.Host = serviceHostEnv;
+            }
+
+            if (!string.IsNullOrEmpty(servicePortEnv) && int.TryParse(servicePortEnv, out var tryServicePort))
+            { 
+                serviceConfig.Port = tryServicePort;
+            }
+
+            var defaultConnectionConfig = new Shared.ServerConnection(serviceConfig);
+            System.Diagnostics.Debug.WriteLine($"Public API: conecting to background service {serviceConfig:Host}:{serviceConfig.Port}");
+
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
 
