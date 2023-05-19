@@ -2,12 +2,12 @@
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net7.0-windows</TargetFramework>
+        <TargetFramework>net8.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
         <UseWindowsForms>true</UseWindowsForms>
         <ApplicationIcon>icon.ico</ApplicationIcon>
         <StartupObject>Certify.UI.App</StartupObject>
-        <Platforms>AnyCPU;x64</Platforms>
+        <Platforms>AnyCPU;</Platforms>
         <XamlDebuggingInformation>True</XamlDebuggingInformation>
     </PropertyGroup>
 
