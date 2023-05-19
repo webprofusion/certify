@@ -137,7 +137,7 @@ namespace Certify.Server.API
             }
 
             var defaultConnectionConfig = new Shared.ServerConnection(serviceConfig);
-            System.Diagnostics.Debug.WriteLine($"Public API: conecting to background service {serviceConfig:Host}:{serviceConfig.Port}");
+            System.Diagnostics.Debug.WriteLine($"Public API: connecting to background service {serviceConfig:Host}:{serviceConfig.Port}");
 
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
