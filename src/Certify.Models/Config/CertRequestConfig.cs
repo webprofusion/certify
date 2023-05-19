@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -350,7 +350,7 @@ namespace Certify.Models
                 identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
             }
 
-            if (SubjectIPAddresses?.Any() == true)
+            if (SubjectIPAddresses?.Length>0)
             {
                 foreach (var ip in SubjectIPAddresses)
                 {
