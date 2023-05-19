@@ -192,10 +192,13 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task DeleteManagedCertificate(string id)
         {
-            var site = await _itemManager.GetById(id);
-            if (site != null)
+            if (!string.IsNullOrEmpty(id))
             {
-                await _itemManager.Delete(site);
+                var item = await _itemManager.GetById(id);
+                if (item != null)
+                {
+                    await _itemManager.Delete(item);
+                }
             }
         }
 
