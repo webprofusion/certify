@@ -1,5 +1,12 @@
+﻿using System;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Formatting;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
+using System.Web.Http.ExceptionHandling;
+using System.Web.Http.Results;
 using LightInject;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Serialization;
@@ -8,6 +15,24 @@ using Swashbuckle.Application;
 
 namespace Certify.Service
 {
+    public class CustomExceptionHandler : IExceptionHandler
+    {
+        public Task HandleAsync(ExceptionHandlerContext context, CancellationToken cancellationToken)
+        {
+            context.Result = new ResponseMessageResult(
+                context.Request.CreateResponse(HttpStatusCode.InternalServerError,
+                new
+                {
+                    Message = $"An internal error has occurred. If this problem happens regularly please report it to support@certifytheweb.com: {context.Exception?.Message} {context.Exception.Source} {context.Exception.StackTrace}",
+                    Exception = context.Exception
+                },
+                JsonMediaTypeFormatter.DefaultMediaType
+            ));
+
+            return Task.FromResult(0);
+        }
+    }
+
     public partial class APIHost
     {
         private System.Timers.Timer _frequentTimer;
@@ -18,7 +43,10 @@ namespace Certify.Service
 
         public void Configuration(IAppBuilder appBuilder)
         {
+
             var config = new HttpConfiguration();
+
+            config.Services.Replace(typeof(IExceptionHandler), new CustomExceptionHandler());
 
             // enable windows auth credentials
 

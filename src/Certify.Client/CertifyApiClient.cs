@@ -45,7 +45,7 @@ namespace Certify.Client
             Policy
                 .Handle<HttpRequestException>()
                 .Or<TaskCanceledException>()
-                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest)
+                .OrResult<HttpResponseMessage>(x => !x.IsSuccessStatusCode && x.StatusCode != HttpStatusCode.BadRequest && x.StatusCode != HttpStatusCode.InternalServerError)
                 .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(1))
                 .ExecuteAsync(() =>
                     base.SendAsync(request, cancellationToken)
@@ -153,6 +153,11 @@ namespace Certify.Client
             }
         }
 
+        public class ServerErrorMsg
+        {
+            public string Message;
+        }
+
         private async Task<HttpResponseMessage> PostAsync(string endpoint, object data)
         {
             if (data != null)
@@ -169,7 +174,7 @@ namespace Certify.Client
                     }
                     else
                     {
-                        var error = await response.Content.ReadAsStringAsync();
+                        var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                         if (response.StatusCode == HttpStatusCode.Unauthorized)
                         {
@@ -177,7 +182,16 @@ namespace Certify.Client
                         }
                         else
                         {
-                            throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+
+                            if (response.StatusCode == HttpStatusCode.InternalServerError && error.Contains("\"message\""))
+                            {
+                                var err = JsonConvert.DeserializeObject<ServerErrorMsg>(error);
+                                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {err.Message}");
+                            }
+                            else
+                            {
+                                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                            }
                         }
                     }
                 }
