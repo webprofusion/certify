@@ -12,7 +12,10 @@ $scriptName = "[Certify The Web - App Update Script]"
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-$updateInfo = Invoke-WebRequest -Uri https://api.certifytheweb.com/v1/update -UseBasicParsing | ConvertFrom-Json
+$installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -Match "^Certify The Web.*"
+$apiUrl = "https://api.certifytheweb.com/v1/update?version=" + $installedVersion.DisplayVersion
+
+$updateInfo = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing | ConvertFrom-Json
 $versionMajor = $updateInfo.version.major
 $versionMinor = $updateInfo.version.minor
 $versionPatch = $updateInfo.version.patch
@@ -26,9 +29,8 @@ $releaseDate = [datetime]::ParseExact($releaseDateString, 'yyyy/MM/dd', $null)
 $updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
 
 # got update info, check our installed version
-$installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -Match "^Certify The Web.*"
-
 # if the installed version is different from the available stable update (or force install is enabled) proceed with update
+
 if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionString -and $updateDateIsStable) -or $forceInstall ) {
     $installedVersionString = $installedVersion.DisplayVersion
     if ($forceInstall -eq $True) {
