@@ -207,8 +207,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void HelpUrl_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
             e.Handled = true;
-
-            Utils.Helpers.LaunchBrowser(e.Uri.AbsoluteUri);
+            if (e.Uri != null && e.Uri.IsAbsoluteUri)
+            {
+                Utils.Helpers.LaunchBrowser(e.Uri.AbsoluteUri);
+            }
         }
 
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)

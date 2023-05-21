@@ -117,7 +117,14 @@ namespace Certify.UI.Windows
 
         private void Cancel_Click(object sender, RoutedEventArgs e) => Close();
 
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e) => Utils.Helpers.LaunchBrowser(e.Uri.ToString());
+        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        {
+            e.Handled = true;
+            if (e.Uri != null && e.Uri.IsAbsoluteUri)
+            {
+                Utils.Helpers.LaunchBrowser(e.Uri.ToString());
+            }
+        }
 
         private async void Deactivate_Click(object sender, RoutedEventArgs e)
         {
