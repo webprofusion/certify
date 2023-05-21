@@ -607,7 +607,7 @@ namespace Certify.Core.Management.Challenges.DNS
             new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.HurricaneElectric",
-                Title = "Hurricane Electric DNS API",
+                Title = "Hurricane Electric DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
                 HelpUrl = "https://poshac.me/docs/v4/Plugins/HurricaneElectric/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
