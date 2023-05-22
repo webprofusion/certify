@@ -13,7 +13,7 @@ $scriptName = "[Certify The Web - App Update Script]"
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 $installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -Match "^Certify The Web.*"
-$apiUrl = "https://api.certifytheweb.com/v1/update?version=" + $installedVersion.DisplayVersion
+$apiUrl = "https://api.certifytheweb.com/v1/update?context=autoupdate&version=" + $installedVersion.DisplayVersion
 
 $updateInfo = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing | ConvertFrom-Json
 $versionMajor = $updateInfo.version.major
