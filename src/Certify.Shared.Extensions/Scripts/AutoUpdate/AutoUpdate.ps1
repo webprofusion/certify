@@ -6,14 +6,20 @@
 $installAfterNDays = $Days
 $forceInstall = $Force
 $scriptName = "[Certify The Web - App Update Script]"
+$eventLogAppName = "Certify The Web - Auto Update"
 
+New-EventLog –LogName "Application" –Source $eventLogAppName -ErrorAction SilentlyContinue
 
 # default to TLS 1.2
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
 $installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -Match "^Certify The Web.*"
-$apiUrl = "https://api.certifytheweb.com/v1/update?context=autoupdate&version=" + $installedVersion.DisplayVersion
+$installedVersionString = $installedVersion.DisplayVersion
+
+$apiUrl = "https://api.certifytheweb.com/v1/update?context=autoupdate&version=" + $installedVersionString
+
+Write-EventLog –LogName "Application" –Source $eventLogAppName –EntryType Information –EventID 1 –Message "Checking for update. Installed version is $installedVersionString" -ErrorAction SilentlyContinue
 
 $updateInfo = Invoke-WebRequest -Uri $apiUrl -UseBasicParsing | ConvertFrom-Json
 $versionMajor = $updateInfo.version.major
@@ -32,12 +38,13 @@ $updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
 # if the installed version is different from the available stable update (or force install is enabled) proceed with update
 
 if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionString -and $updateDateIsStable) -or $forceInstall ) {
-    $installedVersionString = $installedVersion.DisplayVersion
+
     if ($forceInstall -eq $True) {
         Write-Output "$scriptName : Forced install, update may not be required."
     }
     else {
         Write-Output "$scriptName : Update required. Performing update from  v${installedVersionString} to v${updateVersionString}"
+        Write-EventLog –LogName "Application" –Source $eventLogAppName –EntryType Information –EventID 1 –Message "Performing update from v${installedVersionString} to v${updateVersionString}" -ErrorAction SilentlyContinue
     }
 
     # download update to current users downloads folder
@@ -72,7 +79,9 @@ if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionS
         Remove-Item -Path $setupFile
         Remove-Item -Path $randomTempFolder
 
-        Write-Output "$scriptName : Update completed to v${updateVersionString}"
+        Write-Output "$scriptName : Update completed for v${updateVersionString}"
+        Write-EventLog –LogName "Application" –Source $eventLogAppName –EntryType Information –EventID 1 –Message "Update completed for v${updateVersionString}" -ErrorAction SilentlyContinue
+
     }
     else {
         Write-Error "$scriptName : Download checksum does not match published version. Update will not continue."
