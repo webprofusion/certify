@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Core.Tests
 {
     [TestClass]
-    public class ManagedItemTests
+    public class ManagedItemDataStoreTests
     {
         private string _storeType = "postgres";
 
@@ -33,7 +33,7 @@ namespace Certify.Core.Tests
             }
         }
 
-        public ManagedItemTests()
+        public ManagedItemDataStoreTests()
         {
 
         }

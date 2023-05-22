@@ -11,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Core.Tests
 {
     [TestClass]
-    public class StoredCredentialsTest
+    public class StoredCredentialsDataStoreTests
     {
         private string _storeType = "postgres";
         private const string TEST_PATH = "Tests\\credentials";
