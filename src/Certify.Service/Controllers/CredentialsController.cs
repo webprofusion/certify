@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
@@ -46,7 +46,7 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return await _credentialsManager.TestCredentials(storageKey);
+            return await _certifyManager.TestCredentials(storageKey);
         }
     }
 }

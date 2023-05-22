@@ -18,6 +18,5 @@ namespace Certify.Management
         Task<string> GetUnlockedCredential(string storageKey);
         Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey);
         Task<StoredCredential> Update(StoredCredential credentialInfo);
-        Task<ActionResult> TestCredentials(string storageKey);
     }
 }

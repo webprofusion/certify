@@ -51,47 +51,6 @@ namespace Certify.Management
         }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 
-        public async Task<ActionResult> TestCredentials(string storageKey)
-        {
-            // create instance of provider type then test credentials
-            var storedCredential = await GetCredential(storageKey);
-
-            if (storedCredential == null)
-            {
-                return new ActionResult { IsSuccess = false, Message = "No credentials found." };
-            }
-
-            var credentials = await GetUnlockedCredentialsDictionary(storedCredential.StorageKey);
-
-            if (credentials == null)
-            {
-                return new ActionResult { IsSuccess = false, Message = "Failed to retrieve decrypted credentials." };
-            }
-
-            /*if (storedCredential.ProviderType.StartsWith("DNS"))
-            {
-                try
-                {
-                    var dnsProvider = await ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
-
-                    if (dnsProvider == null)
-                    {
-                        return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
-                    }
-
-                    return await dnsProvider.Test();
-                }
-                catch (Exception exp)
-                {
-                    return new ActionResult { IsSuccess = false, Message = "Failed to init DNS Provider " + storedCredential.ProviderType + " :: " + exp.Message };
-                }
-            }
-            else*/
-            {
-                return new ActionResult { IsSuccess = true, Message = "No test available." };
-            }
-        }
-
         /// <summary>
         /// Get protected version of a secret 
         /// </summary>
