@@ -88,6 +88,9 @@ namespace Certify.UI.Windows
                 }
                 else
                 {
+                    // refresh settings not that default data store has been updated
+                    await ViewModel.AppViewModel.Current.LoadSettingsAsync();
+
                     Close();
                 }
             }
