@@ -52,9 +52,9 @@ namespace Certify.Providers.DNS.Azure
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany; usgov=Azure US Government" },
-                        new ProviderParameter{ Key="tenantid", Name="Tenant Id", IsRequired=false },
-                        new ProviderParameter{ Key="clientid", Name="Application Id", IsRequired=false },
-                        new ProviderParameter{ Key="secret",Name="Svc Principal Secret", IsRequired=true , IsPassword=true},
+                        new ProviderParameter{ Key="tenantid", Name="Directory (tenant) Id", IsRequired=false },
+                        new ProviderParameter{ Key="clientid", Name="Application (client) Id", IsRequired=false },
+                        new ProviderParameter{ Key="secret",Name="Client Secret", IsRequired=true , IsPassword=true},
                         new ProviderParameter{ Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
                         new ProviderParameter{ Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
