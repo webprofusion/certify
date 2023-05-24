@@ -529,14 +529,14 @@ namespace Certify.Management
                 {
                     try
                     {
-                         var dnsProvider = await Core.Management.Challenges.ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
+                        var dnsProvider = await Core.Management.Challenges.ChallengeProviders.GetDnsProvider(storedCredential.ProviderType, credentials, new Dictionary<string, string> { });
 
-                         if (dnsProvider == null)
-                         {
-                             return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
-                         }
+                        if (dnsProvider == null)
+                        {
+                            return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
+                        }
 
-                         return await dnsProvider.Test();
+                        return await dnsProvider.Test();
                     }
                     catch (Exception exp)
                     {
