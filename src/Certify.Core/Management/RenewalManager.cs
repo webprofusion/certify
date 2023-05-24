@@ -259,6 +259,11 @@ namespace Certify.Management
                 requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
             }
 
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) == 1)
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
+            }
+
             if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) > 2)
             {
                 requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
