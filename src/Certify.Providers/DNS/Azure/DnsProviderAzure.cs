@@ -200,8 +200,9 @@ namespace Certify.Providers.DNS.Azure
                     }
                     else
                     {
-                        existing.Data.DnsTxtRecords.FirstOrDefault()?.Values.Add(request.RecordValue);
-
+                        var txtRecordInfo = new DnsTxtRecordInfo();
+                        txtRecordInfo.Values.Add(request.RecordValue);
+                        existing.Data.DnsTxtRecords.Add(txtRecordInfo);
                     }
 
                     var result = await existing.UpdateAsync(existing.Data);
@@ -280,9 +281,17 @@ namespace Certify.Providers.DNS.Azure
                 // if a TXT record existis with the same name and multiple values either remove the target value or remove the whole record is no more values present
                 if (existing.HasData)
                 {
-                    // delete existing
-                    existing.Data.DnsTxtRecords.FirstOrDefault()?.Values.Remove(request.RecordValue);
-                    if (existing.Data.DnsTxtRecords.FirstOrDefault()?.Values.Any() == false)
+                    // delete existing entry
+                    var toRemove = existing.Data.DnsTxtRecords
+                        .Where(r => r.Values.Contains(request.RecordValue))
+                        .ToList();
+
+                    foreach (var t in toRemove)
+                    {
+                        existing.Data.DnsTxtRecords.Remove(t);
+                    }
+
+                    if (existing.Data.DnsTxtRecords.Any() == false)
                     {
                         // no more values, delete the record
                         await existing.DeleteAsync(WaitUntil.Completed);
@@ -298,7 +307,7 @@ namespace Certify.Providers.DNS.Azure
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record '{recordName}' Delete failed: " + exp.InnerException.Message };
+                return new ActionResult { IsSuccess = false, Message = "DNS TXT Record '{recordName}' Delete failed: " + exp.InnerException?.Message ?? exp.Message };
             }
 
             return new ActionResult { IsSuccess = true, Message = $"DNS TXT Record '{recordName}' delete not required" };
