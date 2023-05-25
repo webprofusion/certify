@@ -10,8 +10,6 @@
     Title="Edit ACME Account"
     Width="514"
     Height="416"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

@@ -10,8 +10,6 @@
     Title="Edit Deployment Task"
     Width="480"
     Height="460"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

@@ -11,8 +11,6 @@
     Title="Edit Server Connection"
     Width="522"
     Height="276"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

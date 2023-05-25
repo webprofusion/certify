@@ -10,8 +10,6 @@
     Title="{x:Static res:SR.GettingStarted_AddToDashboard}"
     Width="430"
     Height="288"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="NoResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

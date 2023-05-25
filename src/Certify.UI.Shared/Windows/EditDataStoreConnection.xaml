@@ -9,8 +9,6 @@
     Title="Edit Data Store Connection"
     Width="522"
     Height="276"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"

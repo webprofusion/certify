@@ -14,8 +14,6 @@
     Height="423"
     MinWidth="300"
     MinHeight="300"
-    BorderThickness="1"
-    GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
     IsVisibleChanged="UserControl_IsVisibleChanged"
     ShowMaxRestoreButton="False"
     ShowMinButton="False"

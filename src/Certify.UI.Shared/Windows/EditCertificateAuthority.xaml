@@ -11,8 +11,6 @@
     Title="Edit Certificate Authority"
     Width="580"
     Height="430"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="CanResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

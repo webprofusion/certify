@@ -17,13 +17,10 @@
     MinHeight="400"
     d:DataContext="{d:DesignInstance Type=local:AppDesignViewModel,
                                      IsDesignTimeCreatable=True}"
-    BorderThickness="1"
     Closing="MetroWindow_Closing"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     Loaded="Window_Loaded"
     TitleCharacterCasing="Normal"
     WindowButtonCommandsOverlayBehavior="Never"
-    WindowStyle="ToolWindow"
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 

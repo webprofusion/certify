@@ -9,7 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Server Connections"
     Width="384"
-    Height="773"
+    Height="500"
     Closing="MetroWindow_Closing"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

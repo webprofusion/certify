@@ -11,8 +11,6 @@
     Title="{x:Static res:SR.Registration}"
     Width="421.946"
     Height="255.15"
-    BorderThickness="1"
-    GlowBrush="{StaticResource MahApps.Brushes.Accent}"
     ResizeMode="NoResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
