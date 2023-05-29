@@ -33,13 +33,21 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 if (fileContent.Trim().StartsWith("{"))
                 {
-
-                    var tokenWrapper = JsonSerializer.Deserialize<TkAuthToken>(fileContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                    if (tokenWrapper != null)
+                    try
                     {
-                        Token.Text = tokenWrapper.Token;
-                        CRL.Text = tokenWrapper.Crl;
+
+                        var tokenWrapper = JsonSerializer.Deserialize<TkAuthToken>(fileContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        if (tokenWrapper != null)
+                        {
+                            Token.Text = tokenWrapper.Token;
+                            CRL.Text = tokenWrapper.Crl;
+                        }
+                    }
+                    catch
+                    {
+                        MessageBox.Show("The file provided does not appear to be either a valid token or a json token wrapper.");
+                        return;
                     }
                 }
                 else
@@ -66,10 +74,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            var parsedJwt = new JsonWebToken(jwtEncodedString: tokenWrapper.Token);
+            JsonWebToken parsedJwt = null;
+
+            try
+            {
+                parsedJwt = new JsonWebToken(jwtEncodedString: tokenWrapper.Token);
+            }
+            catch
+            { }
+
             if (parsedJwt == null)
             {
-                MessageBox.Show("The Authority Token is not a valid JWT.");
+                MessageBox.Show("The Authority Token supplied is not a valid JWT (JSON Web Token).");
                 return;
             }
 
