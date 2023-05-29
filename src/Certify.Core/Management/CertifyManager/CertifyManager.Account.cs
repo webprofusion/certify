@@ -383,7 +383,7 @@ namespace Certify.Management
 
             if (account != null)
             {
-                _certificateAuthorities.TryGetValue(account.CertificateAuthorityId, out certAuthority);
+                _certificateAuthorities.TryGetValue(account?.CertificateAuthorityId, out certAuthority);
 
                 if (certAuthority != null)
                 {

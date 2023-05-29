@@ -322,7 +322,7 @@ namespace Certify.Management
             if (item.LastRenewalStatus == RequestState.Error && item.RenewalFailureCount > 2)
             {
                 // decide features we prefer the target CA to support
-                var fallbackAccounts = GetAccountsWithRequiredCAFeatures(item, defaultMatchingAccount.CertificateAuthorityId, certificateAuthorities, accounts);
+                var fallbackAccounts = GetAccountsWithRequiredCAFeatures(item, defaultMatchingAccount?.CertificateAuthorityId, certificateAuthorities, accounts);
 
                 if (fallbackAccounts.Any())
                 {

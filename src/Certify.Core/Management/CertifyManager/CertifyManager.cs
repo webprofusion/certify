@@ -375,7 +375,7 @@ namespace Certify.Management
 
             if (caAccount != null)
             {
-                _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var ca);
+                _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var ca);
 
                 if (ca != null)
                 {

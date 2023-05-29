@@ -360,8 +360,6 @@ namespace Certify.Management
             var caAccount = await GetAccountDetails(managedCertificate, allowFailover: CoreAppSettings.Current.EnableAutomaticCAFailover);
             var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
-            _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var certAuthority);
-
             if (caAccount == null || _acmeClientProvider == null)
             {
                 result.IsSuccess = false;
@@ -372,6 +370,8 @@ namespace Certify.Management
             }
 
             log?.Information($"Beginning certificate request process: {managedCertificate.Name} using ACME provider {_acmeClientProvider.GetProviderName()}");
+
+            _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var certAuthority);
 
             if (caAccount.IsFailoverSelection)
             {
@@ -577,7 +577,7 @@ namespace Certify.Management
             var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
             var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
-            _certificateAuthorities.TryGetValue(caAccount.CertificateAuthorityId, out var certAuthority);
+            _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var certAuthority);
 
             log?.Information($"Resuming certificate request using CA: {certAuthority?.Title}");
 
