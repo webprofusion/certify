@@ -54,7 +54,7 @@
         <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.2.9" />
         <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.2.9" />
         <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.9" />
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.54.0" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.54.1" />
         <PackageReference Include="Microsoft.Owin" Version="4.2.2" />
         <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.2" />
         <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.2.2" />
