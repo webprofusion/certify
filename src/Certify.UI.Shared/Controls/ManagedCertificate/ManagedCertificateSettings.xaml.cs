@@ -124,7 +124,14 @@ namespace Certify.UI.Controls.ManagedCertificate
                 }
 
                 //create/update managed item
-                return await ItemViewModel.SaveManagedCertificateChanges();
+                var savedOK = await ItemViewModel.SaveManagedCertificateChanges();
+
+                if (!savedOK)
+                {
+                    MessageBox.Show("There was problem saving the changes for this managed certificate. Please review and try again.");
+                }
+
+                return savedOK;
             }
         }
 

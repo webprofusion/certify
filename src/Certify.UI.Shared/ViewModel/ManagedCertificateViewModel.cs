@@ -306,17 +306,23 @@ namespace Certify.UI.ViewModel
 
         internal async Task<bool> SaveManagedCertificateChanges()
         {
-
-            var updatedOK = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
-
-            if (updatedOK)
+            if (SelectedItem != null)
             {
-                SelectedItem.IsChanged = false;
+                var updatedOK = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
+
+                if (updatedOK && SelectedItem != null)
+                {
+                    SelectedItem.IsChanged = false;
+                }
+
+                RaiseSelectedItemChanges();
+
+                return updatedOK;
             }
-
-            RaiseSelectedItemChanges();
-
-            return updatedOK;
+            else
+            {
+                return false;
+            }
         }
 
         public IEnumerable<string> WebhookTriggerTypes => Webhook.TriggerTypes;
