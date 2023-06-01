@@ -132,7 +132,7 @@ namespace Certify.Server.API
             }
 
             if (!string.IsNullOrEmpty(servicePortEnv) && int.TryParse(servicePortEnv, out var tryServicePort))
-            { 
+            {
                 serviceConfig.Port = tryServicePort;
             }
 
