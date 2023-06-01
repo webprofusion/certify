@@ -41,7 +41,7 @@ namespace Certify.Server.API.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpGet]
         [Route("status")]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> CheckAuthStatus()
         {
             return await Task.FromResult(new OkResult());
         }
