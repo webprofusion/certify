@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models.Config;
@@ -89,14 +88,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
             public List<ChallengeProviderDefinition> GetProviders(Type pluginType)
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                {
-                    return ExtendedProviders.ToList();
-                }
-                else
-                {
-                    return new List<ChallengeProviderDefinition>();
-                }
+                return ExtendedProviders.ToList();
             }
         }
 
