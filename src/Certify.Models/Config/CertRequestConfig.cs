@@ -350,7 +350,7 @@ namespace Certify.Models
                 identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
             }
 
-            if (SubjectIPAddresses?.Length>0)
+            if (SubjectIPAddresses?.Length > 0)
             {
                 foreach (var ip in SubjectIPAddresses)
                 {
