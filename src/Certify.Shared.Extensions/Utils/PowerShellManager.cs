@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -383,13 +384,17 @@ namespace Certify.Management
                 executionPolicy = parameters.FirstOrDefault(p => p.Key.ToLower() == "executionpolicy").Value?.ToString();
             }
 
-            if (!string.IsNullOrEmpty(executionPolicy))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                shell.AddCommand("Set-ExecutionPolicy")
-                        .AddParameter("ExecutionPolicy", executionPolicy)
-                        .AddParameter("Scope", "Process")
-                        .AddParameter("Force")
-                        .Invoke();
+                // on windows we may need to set execution policy depending on user preferences
+                if (!string.IsNullOrEmpty(executionPolicy))
+                {
+                    shell.AddCommand("Set-ExecutionPolicy")
+                            .AddParameter("ExecutionPolicy", executionPolicy)
+                            .AddParameter("Scope", "Process")
+                            .AddParameter("Force")
+                            .Invoke();
+                }
             }
 
             // add script command to invoke
