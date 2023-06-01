@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
