@@ -15,7 +15,18 @@ try {
 # iwr https://tls13.1d.pw # TLS 1.3 test
 
 # Load Assembly without using Add-Type to avoid locking assembly dll
-$assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Cryptography.dll")
+$bcPath = "$($PoshACMERoot)/../../../BouncyCastle.Cryptography.dll"
+If (Test-Path -Path $bcPath -PathType Leaf -ne $true)
+{
+    $bcPath =   "$($PoshACMERoot)\lib\BC.Crypto.1.8.8.2-netstandard2.0.dll"
+
+    If (Test-Path -Path $bcPath -PathType Leaf -ne $true){
+        Write-Error "Unable to find BouncyCastle dll at $bcPath"
+        Exit 1
+    }
+}
+
+$assemblyBytes = [System.IO.File]::ReadAllBytes($bcPath)
 [System.Reflection.Assembly]::Load($assemblyBytes) | out-null
 
 # Dot source the files (in the same manner as Posh-ACME would)
