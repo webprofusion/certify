@@ -46,5 +46,25 @@ namespace Certify.Server.API.Controllers
             var list = await _client.GetCredentials();
             return new OkObjectResult(list);
         }
+
+        /// <summary>
+        /// Add/Update a stored credential
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.Config.StoredCredential))]
+        public async Task<IActionResult> UpdateStoredCredential(Models.Config.StoredCredential credential)
+        {
+            var update = await _client.UpdateCredentials(credential);
+            if (update != null)
+            {
+                return new OkObjectResult(update);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }
