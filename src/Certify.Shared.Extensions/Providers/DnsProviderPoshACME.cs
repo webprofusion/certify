@@ -229,6 +229,25 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.Aliyun",
+                Title = "Aliyun (Alibaba Cloud) DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/Aliyun/",
+                PropagationDelaySeconds = 120,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "AliKeyId", Name = "Access Key ID", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "AliSecret", Name = "Access Key Secret", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Aliyun",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.AutoDNS",
                 Title = "AutoDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -346,8 +365,8 @@ namespace Certify.Core.Management.Challenges.DNS
             new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.PoshACME.DNSPod",
-                Title = "DNSPod DNS API (Deprecated - use v2 instead)",
-                Description = "Validates via DNS API using credentials",
+                Title = "DNSPod DNS API (Deprecated - Use v2 instead)",
+                Description = "Validates via DNS API using credentials. This provider is deprecated and you should switch to the V2 version.",
                 HelpUrl = "https://poshac.me/docs/v4/Plugins/DNSPod/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>

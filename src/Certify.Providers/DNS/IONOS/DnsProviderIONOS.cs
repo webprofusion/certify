@@ -27,8 +27,8 @@ namespace Certify.Providers.DNS.IONOS
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
             Id = "DNS01.API.IONOS",
-            Title = "IONOS DNS API",
-            Description = "Validates via IONOS DNS APIs using keys",
+            Title = "IONOS DNS API (Deprecated - Use Posh-ACME version instead)",
+            Description = "Validates via IONOS DNS APIs using keys. This provider is deprecated and you should switch to the Posh-ACME version.",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>
             {

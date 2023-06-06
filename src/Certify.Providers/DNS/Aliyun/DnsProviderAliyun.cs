@@ -44,8 +44,8 @@ namespace Certify.Providers.DNS.Aliyun
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
             Id = "DNS01.API.Aliyun",
-            Title = "Aliyun (Alibaba Cloud) DNS API",
-            Description = "Validates via Aliyun DNS APIs using api key and secret",
+            Title = "Aliyun DNS API (Deprecated - Use Posh-ACME version instead)",
+            Description = "Validates via Aliyun DNS APIs using api key and secret. This provider is deprecated and you should switch to the Posh-ACME version.",
             HelpUrl = "https://help.aliyun.com/document_detail/29739.html",
             PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>

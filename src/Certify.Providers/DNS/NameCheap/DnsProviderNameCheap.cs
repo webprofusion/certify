@@ -46,8 +46,8 @@ namespace Certify.Providers.DNS.NameCheap
             Definition = new ChallengeProviderDefinition
             {
                 Id = "DNS01.API.NameCheap",
-                Title = "NameCheap DNS API (Deprecated)",
-                Description = "Validates via NameCheap APIs",
+                Title = "NameCheap DNS API (Deprecated - Use Posh-ACME version instead)",
+                Description = "Validates via NameCheap APIs. This provider is deprecated and you should switch to the Posh-ACME version.",
                 HelpUrl = "https://www.namecheap.com/support/api/intro/",
                 PropagationDelaySeconds = 120,
 
