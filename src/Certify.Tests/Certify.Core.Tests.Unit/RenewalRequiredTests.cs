@@ -238,8 +238,8 @@ namespace Certify.Core.Tests.Unit
         [DataRow(true, 31, 90, 30, RenewalIntervalModes.DaysAfterLastRenewal, true, "90 day cert renewing at 30 days after last renewal, due for renewal")]
         [DataRow(true, 5, 90, 30, RenewalIntervalModes.DaysAfterLastRenewal, false, "90 day cert renewing at 30 days after last renewal, not for renewal")]
         [DataRow(true, 5, 7, 30, RenewalIntervalModes.DaysAfterLastRenewal, false, "7 day cert renewing at *30 days after last renewal*, due for renewal due to short lifetime")]
-        [DataRow(true, 6, 7, 1, RenewalIntervalModes.DaysBeforeExpiry, false, "7 day cert renewing at *1 days before renewal*, due for renewal due to short lifetime")]
-
+        [DataRow(true, 6, 7, 1, RenewalIntervalModes.DaysBeforeExpiry, true, "7 day cert renewing at *1 days before renewal*, due for renewal due to short lifetime")]
+        [DataRow(true, 5, 7, 1, RenewalIntervalModes.DaysBeforeExpiry, false, "7 day cert renewing at *1 days before renewal*, not due for renewal")]
         public void TestAutoRenewalWithIntervalMode(
            bool previouslyRenewed, float daysElapsed, float lifetimeDays,  int renewalInterval, string renewalIntervalMode,
            bool renewalExpected, string testDescription)
