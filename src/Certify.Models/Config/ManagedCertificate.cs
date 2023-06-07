@@ -34,14 +34,16 @@ namespace Certify.Models
     public class RenewalDueInfo
     {
         public DateTime? DateNextRenewalAttempt { get; set; }
+        public TimeSpan? CertLifetime { get; set; }
         public bool IsRenewalDue { get; set; }
         public string Reason { get; set; }
 
-        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate)
+        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate, TimeSpan? certLifetime)
         {
             Reason = reason;
             IsRenewalDue = isRenewalDue;
             DateNextRenewalAttempt = renewalAttemptDate;
+            CertLifetime = certLifetime;
         }
     }
 
@@ -139,7 +141,7 @@ namespace Certify.Models
         public string? Comments { get; set; }
 
         /// <summary>
-        /// Specific type of item we are managing, affects the renewal/rewuest operations required
+        /// Specific type of item we are managing, affects the renewal/request operations required
         /// </summary>
         public ManagedCertificateType ItemType { get; set; }
 
@@ -208,6 +210,16 @@ namespace Certify.Models
         /// If true, pre/post request tasks will run for renewal but the certificate order won't be performed (used for testing).
         /// </summary>
         public bool? SkipCertificateRequest { get; set; } = false;
+
+        /// <summary>
+        /// If specified this is the days or percentage target for renewal, depending on the renewal mode
+        /// </summary>
+        public float? CustomRenewalTarget { get; set; }
+
+        /// <summary>
+        /// If specified, custom renewal interval mode (DaysBeforeExpiry, DaysAfterRenewal, PercentageLifetime)
+        /// </summary>
+        public string CustomRenewalIntervalMode { get; set; }
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
@@ -605,7 +617,7 @@ namespace Certify.Models
             }
         }
 
-        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
+        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, bool checkFailureStatus = false, DateTime? testDateTime = null)
         {
 
             if (s == null)
@@ -613,57 +625,107 @@ namespace Certify.Models
                 return null;
             }
 
-            var isRenewalRequired = false;
-            var renewalStatusReason = "Not yet due for renewal.";
             var nextRenewalAttemptDate = s.DateExpiry ?? DateTime.Now;
 
-            var timeNow = DateTime.Now;
-            var timeSinceLastRenewal = timeNow - (s.DateRenewed ?? timeNow.AddDays(-30));
+            var checkDate = DateTime.Now;
 
-            var expiryDate = s.DateExpiry ?? timeNow;
-            var timeToExpiry = expiryDate - timeNow;
-
-            if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= timeNow)
+            if (testDateTime.HasValue)
             {
-                return new RenewalDueInfo("Scheduled renewal is now due.", true, timeNow);
+                checkDate = testDateTime.Value;
             }
 
-            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
-            {
-                var renewalDiffDays = timeToExpiry.TotalDays - renewalIntervalDays;
+            var isRenewalRequired = false;
+            var renewalStatusReason = " Item not due for renewal";
+            TimeSpan? certLifetime = null;
 
-                // is item expiring within N days
-                if (timeToExpiry.TotalDays <= renewalIntervalDays)
+            // use default renewal interval and mode, or prefer custom if specified
+            var selectedRenewalIntervalMode = s.CustomRenewalIntervalMode ?? renewalIntervalMode;
+            var selectedRenewalInterval = s.CustomRenewalTarget ?? (float)renewalInterval;
+
+            // if cert has previously been renewed, calculate next renewal, otherwise renewal will be immediately due unless renewal has been failing
+            if (s.DateRenewed.HasValue)
+            {
+                var timeSinceLastRenewal = checkDate - s.DateRenewed.Value;
+
+                var expiryDate = s.DateExpiry ?? checkDate;
+                var timeToExpiry = expiryDate - checkDate;
+                certLifetime = s.DateExpiry - s.DateStart;
+
+                if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= checkDate)
                 {
-                    isRenewalRequired = true;
-                    nextRenewalAttemptDate = timeNow;
-                    renewalStatusReason = "Item is due to expire soon based on default renewal interval";
+                    return new RenewalDueInfo("Scheduled renewal is now due.", true, checkDate, certLifetime: certLifetime);
+                }
+
+                // strategy if cert lifetime is less than the standard renewal interval allows or the renewal mode is based on percentage lifetime
+                if (certLifetime.HasValue && (certLifetime.Value.TotalDays < renewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
+                {
+                    // cert has a shorter lifetime than the renewal interval. Switch to a percentage based renewal 
+                    float targetRenewalPercentage = 75;
+
+                    if (selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime && selectedRenewalInterval > 0)
+                    {
+                        targetRenewalPercentage = selectedRenewalInterval;
+
+                        if (targetRenewalPercentage > 100) { targetRenewalPercentage = 100; }
+                    }
+
+                    var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
+                    var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
+                    nextRenewalAttemptDate = targetRenewalDate;
+
+                    if (targetRenewalDate <= checkDate)
+                    {
+                        isRenewalRequired = true;
+                        renewalStatusReason = $"Cert has exceeded {targetRenewalPercentage}% of its lifetime.";
+                    }
+                    else
+                    {
+                        isRenewalRequired = false;
+                        renewalStatusReason = $"Cert has not yet exceeded {targetRenewalPercentage}% of its lifetime.";
+                    }
                 }
                 else
                 {
-                    isRenewalRequired = false;
-                    nextRenewalAttemptDate = timeNow.AddDays(renewalDiffDays);
-                    renewalStatusReason = $"Item has {renewalDiffDays} remaining days before the default renewal interval occurs.";
-                }
-            }
-            else
-            {
-                // was item renewed more than N days ago
-                var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
-                var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalIntervalDays;
+                    // calculate renewal for non-percentage based strategies
 
-                if (daysSinceLastRenewal >= renewalIntervalDays)
-                {
-                    //isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
-                    isRenewalRequired = true;
-                    nextRenewalAttemptDate = timeNow;
-                    renewalStatusReason = "Last renewal date is greater than the default renewal interval";
-                }
-                else
-                {
-                    isRenewalRequired = false;
-                    nextRenewalAttemptDate = timeNow.AddDays(renewalDiffDays);
-                    renewalStatusReason = "Last renewal date has not yet reached the default renewal interval";
+                    if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                    {
+                        var renewalDiffDays = timeToExpiry.TotalDays - renewalInterval;
+
+                        // is item expiring within N days
+                        if (timeToExpiry.TotalDays <= renewalInterval)
+                        {
+
+                            isRenewalRequired = true;
+                            nextRenewalAttemptDate = checkDate;
+                            renewalStatusReason = "Item is due to expire soon based on default renewal interval";
+                        }
+                        else
+                        {
+                            isRenewalRequired = false;
+                            nextRenewalAttemptDate = checkDate.AddDays(renewalDiffDays);
+                            renewalStatusReason = $"Item has {renewalDiffDays} remaining days before the default renewal interval occurs.";
+                        }
+                    }
+                    else
+                    {
+                        // was item renewed more than N days ago
+                        var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
+                        var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalInterval;
+
+                        if (daysSinceLastRenewal >= renewalInterval)
+                        {
+                            isRenewalRequired = true;
+                            nextRenewalAttemptDate = checkDate;
+                            renewalStatusReason = "Last renewal date is greater than the default renewal interval";
+                        }
+                        else
+                        {
+                            isRenewalRequired = false;
+                            nextRenewalAttemptDate = checkDate.AddDays(-renewalDiffDays);
+                            renewalStatusReason = "Last renewal date has not yet reached the default renewal interval";
+                        }
+                    }
                 }
             }
 
@@ -671,8 +733,7 @@ namespace Certify.Models
             if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
             {
                 isRenewalRequired = true;
-
-                renewalStatusReason = "Item has not yet been succesfully requested.";
+                renewalStatusReason = "Item has not yet been successfully requested.";
             }
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
@@ -694,14 +755,14 @@ namespace Certify.Models
 
                         var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
 
-                        if (timeNow < nextAttemptByDate)
+                        if (checkDate < nextAttemptByDate)
                         {
                             isRenewalRequired = false;
-                            return new RenewalDueInfo("Item has previously failed renewal but next renewal attempt is not yet due", isRenewalRequired, nextAttemptByDate);
+                            return new RenewalDueInfo("Item has previously failed renewal but next renewal attempt is not yet due", isRenewalRequired, nextAttemptByDate, certLifetime);
                         }
                         else
                         {
-                            return new RenewalDueInfo("Item has previously failed renewal and next renewal attempt is now due", isRenewalRequired, timeNow);
+                            return new RenewalDueInfo("Item has previously failed renewal and next renewal attempt is now due", isRenewalRequired, checkDate, certLifetime);
                         }
                     }
                 }
@@ -713,7 +774,7 @@ namespace Certify.Models
                 nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
             }
 
-            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate);
+            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
         }
 
         /// <summary>

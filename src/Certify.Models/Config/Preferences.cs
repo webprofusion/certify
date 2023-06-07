@@ -1,4 +1,4 @@
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public enum CertificateCleanupMode
     {
@@ -28,6 +28,11 @@ namespace Certify.Models
         /// Renew certs N days before expiry
         /// </summary>
         public const string DaysBeforeExpiry = "DaysBeforeExpiry";
+
+        /// <summary>
+        /// Renews after n% of certificate lifetime has elapsed
+        /// </summary>
+        public const string PercentageLifetime = "PercentageLifetime";
     }
 
     /// <summary>
