@@ -214,3 +214,5 @@ src/Certify.UI/Plugins/*.dll
 src/Certify.Server/Certify.Service.Worker/Certify.Service.Worker/plugins/
 
 src/Certify.Tests/Certify.Core.Tests.Integration/plugins/
+
+.vscode/
