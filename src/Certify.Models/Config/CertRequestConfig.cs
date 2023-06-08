@@ -78,6 +78,7 @@ namespace Certify.Models
         /// <summary>
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
+        [Obsolete("Populate the zone id parameter in the Parameters collection instead")]
         public string? ZoneId { get; set; }
 
         /// <summary>
