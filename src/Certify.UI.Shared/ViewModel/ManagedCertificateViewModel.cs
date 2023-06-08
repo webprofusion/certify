@@ -72,6 +72,10 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(IsEditable));
 
             RaisePropertyChangedEvent(nameof(ParsedTokenList));
+
+            RaisePropertyChangedEvent(nameof(CertificateAuthorityTitle));
+            RaisePropertyChangedEvent(nameof(CertificateAuthorityDescription));
+            RaisePropertyChangedEvent(nameof(LastAttemptedCertificateAuthority));
         }
 
         public string CertificateAuthorityDescription
@@ -91,6 +95,42 @@ namespace Certify.UI.ViewModel
                 else
                 {
                     return "None";
+                }
+            }
+        }
+
+        public string CertificateAuthorityTitle
+        {
+            get
+            {
+                if (SelectedItem != null)
+                {
+                    if (SelectedItem.CertificateAuthorityId == "")
+                    {
+                        SelectedItem.CertificateAuthorityId = null;
+                    }
+
+                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.CertificateAuthorityId);
+                    return ca?.Title.AsNullWhenBlank() ?? "(Default)";
+                }
+                else
+                {
+                    return "None";
+                }
+            }
+        }
+        public string LastAttemptedCertificateAuthority
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(SelectedItem?.LastAttemptedCA))
+                {
+                    var ca = CertificateAuthorities.FirstOrDefault(c => c.Id == SelectedItem.LastAttemptedCA);
+                    return ca?.Title.AsNullWhenBlank() ?? "(Not Attempted)";
+                }
+                else
+                {
+                    return CertificateAuthorityTitle;
                 }
             }
         }

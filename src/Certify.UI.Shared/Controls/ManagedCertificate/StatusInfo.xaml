@@ -171,6 +171,14 @@
                         <Label Width="160" Content="Next Planned Renewal:" />
                         <Label Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}" ContentStringFormat="d" />
                     </StackPanel>
+                    <!--<StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Certificate Authority:" />
+                        <Label Content="{Binding Path=CertificateAuthorityTitle}" />
+                    </StackPanel>-->
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Last Attempted CA:" />
+                        <Label Content="{Binding Path=LastAttemptedCertificateAuthority}" />
+                    </StackPanel>
                 </StackPanel>
             </StackPanel>
 
