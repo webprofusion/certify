@@ -75,6 +75,10 @@ namespace Certify.UI.Controls.Settings
             {
                 RenewalIntervalMode_DaysBeforeExpiry.IsChecked = true;
             }
+            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.PercentageLifetime)
+            {
+                RenewalIntervalMode_PercentageLifetime.IsChecked = true;
+            }
             else
             {
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
@@ -138,6 +142,11 @@ namespace Certify.UI.Controls.Settings
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
                     RefreshRewalIntervalLimits();
                 }
+                else if (RenewalIntervalMode_PercentageLifetime.IsChecked == true)
+                {
+                    EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
+                    RefreshRewalIntervalLimits();
+                }
                 else
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysBeforeExpiry;
@@ -151,7 +160,7 @@ namespace Certify.UI.Controls.Settings
         }
 
         /// <summary>
-        /// Apply min/max setting to interval days input for the given mode
+        /// Apply min/max setting to interval days (or percentage) input for the given mode
         /// </summary>
         private void RefreshRewalIntervalLimits()
         {
@@ -164,6 +173,11 @@ namespace Certify.UI.Controls.Settings
             {
                 RenewalIntervalDays.Minimum = 14;
                 RenewalIntervalDays.Maximum = 180;
+            }
+            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.PercentageLifetime)
+            {
+                RenewalIntervalDays.Minimum = 1;
+                RenewalIntervalDays.Maximum = 99;
             }
 
             if (EditModel.Prefs.RenewalIntervalDays < RenewalIntervalDays.Minimum)

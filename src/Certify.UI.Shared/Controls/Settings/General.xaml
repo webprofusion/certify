@@ -40,37 +40,24 @@
                         <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
 
                         <DockPanel>
-                            <StackPanel
-                                Width="348                                 "
-                                Margin="0,0"
-                                DockPanel.Dock="Left"
-                                Orientation="Vertical">
 
-                                <Label
-                                    Width="280"
-                                    Margin="0,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Content="{x:Static res:SR.Settings_AutoRenewalInterval}" />
-
-                                <Controls:NumericUpDown
-                                    x:Name="RenewalIntervalDays"
-                                    Width="100"
-                                    Margin="4,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Interval="1"
-                                    Maximum="60"
-                                    Minimum="1"
-                                    Value="{Binding Prefs.RenewalIntervalDays}" />
-
-                            </StackPanel>
                             <StackPanel
                                 Margin="0,0,0,0"
-                                DockPanel.Dock="Right"
+                                DockPanel.Dock="Left"
                                 Orientation="Vertical">
                                 <Label
                                     Width="180"
                                     HorizontalAlignment="Left"
                                     Content="Renewal Mode" />
+                                <Controls:NumericUpDown
+                                    x:Name="RenewalIntervalDays"
+                                    Width="100"
+                                    Margin="8,0,0,4"
+                                    HorizontalAlignment="Left"
+                                    Interval="1"
+                                    Maximum="60"
+                                    Minimum="1"
+                                    Value="{Binding Prefs.RenewalIntervalDays}" />
                                 <RadioButton
                                     x:Name="RenewalIntervalMode_DaysAfterLastRenewal"
                                     Margin="8,0,0,4"
@@ -85,23 +72,33 @@
                                     Content="Days Before Expiry"
                                     GroupName="RenewalIntervalMode"
                                     Unchecked="SettingsUpdated" />
+                                <RadioButton
+                                    x:Name="RenewalIntervalMode_PercentageLifetime"
+                                    Margin="8,0,0,4"
+                                    Checked="SettingsUpdated"
+                                    Content="Percentage of Elapsed Lifetime"
+                                    GroupName="RenewalIntervalMode"
+                                    Unchecked="SettingsUpdated" />
+                            </StackPanel>
+
+                            <StackPanel
+                                Width="348"
+                                Margin="0,0"
+                                DockPanel.Dock="Right"
+                                Orientation="Vertical">
+                                <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
+                                <Controls:NumericUpDown
+                                    x:Name="RenewalMaxRequests"
+                                    Width="100"
+                                    Margin="4,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Interval="1"
+                                    Maximum="100"
+                                    Minimum="0"
+                                    Value="{Binding Prefs.MaxRenewalRequests}" />
                             </StackPanel>
                         </DockPanel>
 
-
-                        <StackPanel Orientation="Vertical">
-                            <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
-                            <Controls:NumericUpDown
-                                x:Name="RenewalMaxRequests"
-                                Width="100"
-                                Margin="4,0,0,0"
-                                HorizontalAlignment="Left"
-                                Interval="1"
-                                Maximum="100"
-                                Minimum="0"
-                                Value="{Binding Prefs.MaxRenewalRequests}" />
-
-                        </StackPanel>
                         <DockPanel Margin="0,0,0,0" LastChildFill="False">
                             <TextBlock
                                 Margin="0,8,0,8"
