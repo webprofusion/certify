@@ -59,7 +59,7 @@ namespace Certify.Management
                 prefs,
                 BeginTrackingProgress,
                 ReportProgress, IsManagedCertificateRunning,
-                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview) => { return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview); },
+                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) => { return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason); },
                 progressTrackers);
 
             _isRenewAllInProgress = false;
@@ -109,7 +109,8 @@ namespace Certify.Management
                 bool skipRequest = false,
                 bool failOnSkip = false,
                 bool skipTasks = false,
-                bool isInteractive = false
+                bool isInteractive = false,
+                string reason = null
             )
         {
             _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
@@ -122,6 +123,11 @@ namespace Certify.Management
             }
 
             log.Information($"---- Beginning Request [{managedCertificate.Name}] ----");
+
+            if (reason != null)
+            {
+                log.Information($"{reason}");
+            }
 
             // start with a failure result, set to success when succeeding
             var requestResult = new CertificateRequestResult(managedCertificate);

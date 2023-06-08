@@ -26,7 +26,7 @@ namespace Certify.Management
             Action<RequestProgressState> BeginTrackingProgress,
             Action<IProgress<RequestProgressState>, RequestProgressState, bool> ReportProgress,
             Func<string, Task<bool>> IsManagedCertificateRunning,
-            Func<ManagedCertificate, IProgress<RequestProgressState>, bool, Task<CertificateRequestResult>> PerformCertificateRequest,
+            Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> PerformCertificateRequest,
             Dictionary<string, Progress<RequestProgressState>> progressTrackers = null
             )
         {
@@ -123,6 +123,7 @@ namespace Certify.Management
                 var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
                 var isRenewalOnHold = false;
+                var renewalReason = renewalDueCheck.Reason;
 
                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                 {
@@ -139,6 +140,7 @@ namespace Certify.Management
                 {
                     // on all mode, everything gets an attempted renewal
                     isRenewalRequired = true;
+                    renewalReason="Renewal Mode is set to All";
                 }
 
                 //if we care about stopped sites being stopped, check for that if a specific site is selected
@@ -164,7 +166,7 @@ namespace Certify.Management
 
                         renewalTasks.Add(
                            new Task<CertificateRequestResult>(
-                            () => PerformCertificateRequest(managedCertificate, tracker, settings.IsPreviewMode).Result,
+                            () => PerformCertificateRequest(managedCertificate, tracker, settings.IsPreviewMode, renewalReason).Result,
                             TaskCreationOptions.LongRunning
                        ));
 
@@ -184,7 +186,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    var msg = CoreSR.CertifyManager_SkipRenewalOk;
+                    var msg = renewalDueCheck.Reason;// CoreSR.CertifyManager_SkipRenewalOk;
                     var logThisEvent = false;
 
                     if (isRenewalRequired && !isSiteRunning)
