@@ -1,5 +1,5 @@
 <UserControl
-    x:Class="Certify.UI.Controls.ManagedCertificate.MiscOptions"
+    x:Class="Certify.UI.Controls.ManagedCertificate.AdvancedOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
@@ -229,6 +229,18 @@
                                     Click="AddStoredCredential_Click"
                                     Content="New" />
                             </StackPanel>
+                            <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order (or return a related error) if they don't support this feature:</TextBlock>
+
+                            <Controls:NumericUpDown
+                                x:Name="PreferredExpiryDays"
+                                Width="100"
+                                Margin="8,0,0,4"
+                                HorizontalAlignment="Left"
+                                Interval="0.5"
+                                Maximum="365"
+                                Minimum="0"
+                                Value="{Binding SelectedItem.RequestConfig.PreferredExpiryDays}" />
+
                         </StackPanel>
 
 

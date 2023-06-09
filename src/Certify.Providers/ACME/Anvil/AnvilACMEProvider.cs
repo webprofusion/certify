@@ -719,7 +719,14 @@ namespace Certify.Providers.ACME.Anvil
                             else
                             {
                                 // begin new order, with optional preference for the expiry
-                                var notAfter = (config.PreferredExpiryDays != null ? (DateTimeOffset?)DateTimeOffset.UtcNow.AddDays((float)config.PreferredExpiryDays) : null);
+
+                                DateTimeOffset? notAfter = null;
+                                if (config.PreferredExpiryDays > 0)
+                                {
+                                    // some CAs like BuyPass reject notAfter if it includes minutes (fractions of an hour).
+                                    var notAfterDate = DateTime.UtcNow.AddDays(config.PreferredExpiryDays.Value);
+                                    notAfter = new DateTimeOffset(notAfterDate.Year, notAfterDate.Month, notAfterDate.Day, notAfterDate.Hour, 0, 0, TimeSpan.Zero);
+                                }
 
                                 order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter);
                             }

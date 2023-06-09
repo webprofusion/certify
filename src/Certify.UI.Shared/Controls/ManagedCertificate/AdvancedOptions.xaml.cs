@@ -10,11 +10,11 @@ using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
-    public partial class MiscOptions : UserControl
+    public partial class AdvancedOptions : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
-        public MiscOptions()
+        public AdvancedOptions()
         {
             InitializeComponent();
         }
