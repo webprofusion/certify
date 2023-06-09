@@ -355,7 +355,7 @@
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
                 IsSelected="False">
-                <managedcertificate:MiscOptions />
+                <managedcertificate:AdvancedOptions />
             </TabItem>
         </TabControl>
     </DockPanel>
