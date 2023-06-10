@@ -298,11 +298,11 @@ namespace Certify.Management.Servers
                                     Id = site.Id.ToString(),
                                     Name = site.Name
                                 };
-
-                                b.Path = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
-
+                             
                                 try
                                 {
+                                    b.Path = site.Applications["/"]?.VirtualDirectories["/"]?.PhysicalPath;
+
                                     if (site.Bindings?.Any(ftp => ftp.Protocol == "ftp") == true)
                                     {
                                         //site is ftp site, have to check for state differently
@@ -911,7 +911,7 @@ namespace Certify.Management.Servers
 
                 try
                 {
-                    s.Path = site.Applications["/"].VirtualDirectories["/"].PhysicalPath;
+                    s.Path = site.Applications["/"]?.VirtualDirectories["/"]?.PhysicalPath;
                 }
                 catch { }
 
