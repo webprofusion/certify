@@ -229,17 +229,15 @@
                                     Click="AddStoredCredential_Click"
                                     Content="New" />
                             </StackPanel>
-                            <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order (or return a related error) if they don't support this feature:</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order if they don't support this feature:</TextBlock>
 
-                            <Controls:NumericUpDown
-                                x:Name="PreferredExpiryDays"
-                                Width="100"
-                                Margin="8,0,0,4"
-                                HorizontalAlignment="Left"
-                                Interval="0.5"
-                                Maximum="365"
-                                Minimum="0"
-                                Value="{Binding SelectedItem.RequestConfig.PreferredExpiryDays}" />
+                            <TextBox
+                                Width="180"
+                                Margin="8,0,4,0"
+                                HorizontalAlignment="left"
+                                Controls:TextBoxHelper.Watermark="e.g. 0.5 or 30. Blank for none."
+                                InputScope="Number"
+                                Text="{Binding SelectedItem.RequestConfig.PreferredExpiryDays, Converter={StaticResource NullValueConverter}}" />
 
                         </StackPanel>
 
