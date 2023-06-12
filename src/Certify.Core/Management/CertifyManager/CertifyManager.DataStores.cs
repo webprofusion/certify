@@ -100,6 +100,13 @@ namespace Certify.Management
         public async Task<bool> SelectManagedItemStore(string dataStoreId)
         {
             var dataStore = await GetDataStore(dataStoreId);
+
+            if (dataStore == null)
+            {
+                _serviceLog.Error($"Could not match data store connection information to the specified store id: {dataStore.Id}");
+                return false;
+            }
+
             var provider = await GetManagedItemStoreProvider(dataStore);
 
             if (provider == null)
