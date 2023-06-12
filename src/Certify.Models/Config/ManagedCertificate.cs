@@ -629,7 +629,7 @@ namespace Certify.Models
 
             var checkDate = DateTime.Now;
 
-            if (testDateTime.HasValue)
+            if (testDateTime != null)
             {
                 checkDate = testDateTime.Value;
             }

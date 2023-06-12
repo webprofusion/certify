@@ -409,7 +409,8 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return ManagedCertificate.CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
+                return ManagedCertificate
+                    .CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
             }
         }
 
