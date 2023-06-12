@@ -114,6 +114,12 @@
         /// Id of the data store conenction configuration to use. 0 is the default scheme using local SQLite
         /// </summary>
         public string ConfigDataStoreConnectionId { get; set; } = "0";
+
+
+        /// <summary>
+        /// If set, defines the default key type used for private keys
+        /// </summary>
+        public string? DefaultKeyType { get; set; }
     }
 
     public static class FeatureFlags

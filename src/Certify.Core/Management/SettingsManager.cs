@@ -35,6 +35,7 @@ namespace Certify.Management
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
+            DefaultKeyType = "EC256";
         }
 
         public static CoreAppSettings Current
@@ -163,6 +164,7 @@ namespace Certify.Management
         public bool UseModernPFXAlgs { get; set; }
 
         public string ConfigDataStoreConnectionId { get; set; }
+        public string DefaultKeyType { get; set; }
 
         public string CurrentServiceVersion { get; set; }
     }
@@ -215,6 +217,7 @@ namespace Certify.Management
 
             CoreAppSettings.Current.ConfigDataStoreConnectionId = prefs.ConfigDataStoreConnectionId;
 
+            CoreAppSettings.Current.DefaultKeyType = prefs.DefaultKeyType;
             return true;
         }
 
@@ -248,7 +251,8 @@ namespace Certify.Management
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
                 NtpServer = CoreAppSettings.Current.NtpServer,
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
-                ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId
+                ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId,
+                DefaultKeyType = CoreAppSettings.Current.DefaultKeyType
             };
 
             return prefs;

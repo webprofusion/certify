@@ -175,6 +175,15 @@
                                     </ComboBox>
 
                                 </StackPanel>
+
+                                <Label Content="Default Private Key Type" />
+                                <StackPanel Margin="8,0,0,0">
+                                    <ComboBox x:Name="DefaultKeyType" SelectedValue="{Binding Prefs.DefaultKeyType}">
+                                        <ComboBoxItem Name="ES256">ECDSA 256 (Default)</ComboBoxItem>
+                                        <ComboBoxItem Name="RSA2048">RSA 2048 256</ComboBoxItem>
+
+                                    </ComboBox>
+                                </StackPanel>
                             </StackPanel>
 
                             <!--  Cert Cleanup Options  -->
