@@ -95,7 +95,8 @@ namespace Certify.UI.Windows
                 }
             }
 
-            if (ca.RequiresExternalAccountBinding)
+            // if EAB is required and not importing an existing account, show CA specific instructions or general prompt for EAB
+            if (ca.RequiresExternalAccountBinding && (string.IsNullOrEmpty(Item.ImportedAccountKey) || string.IsNullOrEmpty(Item.ImportedAccountURI)))
             {
                 if (string.IsNullOrEmpty(Item.EabKeyId) || string.IsNullOrEmpty(Item.EabKey))
                 {
