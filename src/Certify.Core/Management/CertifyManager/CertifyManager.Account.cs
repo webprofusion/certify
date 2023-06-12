@@ -79,6 +79,7 @@ namespace Certify.Management
             if (!allowFailover && !string.IsNullOrEmpty(item.LastAttemptedCA) && currentCA != item.LastAttemptedCA)
             {
                 // if we have a last attempted CA and we are not looking to failover, use the same CA as last time (e.g. when resuming orders after completing challenges)
+                // TODO: if item has previously failed over the CA will stick with the last one rather than the default.
                 currentCA = item.LastAttemptedCA;
                 reusingLastCA = true;
             }
@@ -88,7 +89,7 @@ namespace Certify.Management
 
             if (defaultMatchingAccount == null && reusingLastCA)
             {
-                // CA used last no longer has an account, determne defualt
+                // CA used last no longer has an account, determine default
                 currentCA = GetCurrentCAId(item);
                 defaultMatchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
             }
