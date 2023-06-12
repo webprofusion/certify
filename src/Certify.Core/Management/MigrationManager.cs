@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -309,7 +309,6 @@ namespace Certify.Core.Management
                 if (package.SystemVersion == null || AppVersion.IsOtherVersionNewer(AppVersion.FromVersion(package.SystemVersion.ToVersion()), AppVersion.FromVersion(currentAppVersion)))
                 {
                     steps.Add(new ActionStep { Title = "Version Check", Category = "Import", Key = "Version", HasWarning = true, Description = "This import uses a different app/system version." });
-
                 }
             }
             else
@@ -359,7 +358,7 @@ namespace Certify.Core.Management
 
                     var existing = await _credentialsManager.GetCredential(c.StorageKey);
 
-                    if (existing == null)
+                    if (existing == null || settings.OverwriteExisting)
                     {
                         if (!isPreviewMode)
                         {
@@ -409,7 +408,7 @@ namespace Certify.Core.Management
             foreach (var c in package.Content.ManagedCertificates)
             {
                 var existing = await _itemManager.GetById(c.Id);
-                if (existing == null)
+                if (existing == null || settings.OverwriteExisting)
                 {
 
                     // check if item is auto deployment or single site, if single site warn if we don't have an exact match (convert to Auto)
@@ -441,15 +440,10 @@ namespace Certify.Core.Management
                         }
                         else
                         {
-                            // no exact site id match, check if a different site is an exact match, if so migrate site id
-
-                            // if no exact match, change to auto 
+                            hasUnmatchedTargets = true;
+                            warningMsg += $"IIS SiteID {c.ServerSiteId} could not be matched for Single Site deployment mode. Deployment switched to Auto mode.";
+                            c.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
                         }
-                    }
-                    else
-                    {
-                        // auto deploy, site id only used for IIS site selection in UI
-
                     }
 
                     if (!isPreviewMode)
@@ -531,7 +525,7 @@ namespace Certify.Core.Management
 
                     var isVerified = cert.Verify();
 
-                    if (!System.IO.File.Exists(c.Filename))
+                    if (!System.IO.File.Exists(c.Filename) || settings.OverwriteExisting)
                     {
 
                         if (!isPreviewMode)
@@ -544,7 +538,7 @@ namespace Certify.Core.Management
                                 pathInfo.Directory.Create();
 
                                 // write cert file
-                                System.IO.File.WriteAllBytes(c.Filename, c.Content);
+                                System.IO.File.WriteAllBytes(c.Filename, pfxBytes);
 
                                 certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
                             }

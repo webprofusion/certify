@@ -67,6 +67,7 @@ namespace Certify.UI.Windows
                     return;
                 }
 
+                Model.ImportSettings.OverwriteExisting = (OverwriteExisting.IsChecked == true);
                 Model.ImportSettings.EncryptionSecret = txtSecret.Password;
                 Model.InProgress = true;
 

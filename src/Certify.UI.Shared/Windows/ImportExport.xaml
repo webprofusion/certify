@@ -42,6 +42,11 @@
         <DockPanel Margin="0,16,0,0" DockPanel.Dock="Top">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Import</TextBlock>
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
+            <CheckBox
+                x:Name="OverwriteExisting"
+                Margin="0,4,4,4"
+                Content="Overwrite Existing"
+                DockPanel.Dock="Top" />
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                 <Button
                     x:Name="Import"
@@ -51,6 +56,8 @@
                     DockPanel.Dock="Top">
                     Preview Import..
                 </Button>
+
+
                 <Button
                     x:Name="CompleteImport"
                     Width="120"
