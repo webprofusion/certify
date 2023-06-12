@@ -108,6 +108,9 @@ namespace Certify.UI.Windows
 
                 PrepareImportSummary(false, results);
                 Model.InProgress = false;
+
+                // refresh managed certs etc
+                await MainViewModel.RefreshAllDataStoreItems();
             }
         }
 

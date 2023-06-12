@@ -75,7 +75,7 @@ namespace Certify.Config.Migration
 
     public class ExportSettings
     {
-        public bool ExportAllStoredCredentials { get; set; }
+        public bool ExportAllStoredCredentials { get; set; } = true;
         public string? EncryptionSecret { get; set; } = string.Empty;
     }
 
