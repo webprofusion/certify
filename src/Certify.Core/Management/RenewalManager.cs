@@ -140,7 +140,7 @@ namespace Certify.Management
                 {
                     // on all mode, everything gets an attempted renewal
                     isRenewalRequired = true;
-                    renewalReason="Renewal Mode is set to All";
+                    renewalReason = "Renewal Mode is set to All";
                 }
 
                 //if we care about stopped sites being stopped, check for that if a specific site is selected

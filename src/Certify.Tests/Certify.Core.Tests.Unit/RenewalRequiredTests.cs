@@ -241,11 +241,11 @@ namespace Certify.Core.Tests.Unit
         [DataRow(true, 6, 7, 1, RenewalIntervalModes.DaysBeforeExpiry, true, "7 day cert renewing at *1 days before renewal*, due for renewal due to short lifetime")]
         [DataRow(true, 5, 7, 1, RenewalIntervalModes.DaysBeforeExpiry, false, "7 day cert renewing at *1 days before renewal*, not due for renewal")]
         public void TestAutoRenewalWithIntervalMode(
-           bool previouslyRenewed, float daysElapsed, float lifetimeDays,  int renewalInterval, string renewalIntervalMode,
+           bool previouslyRenewed, float daysElapsed, float lifetimeDays, int renewalInterval, string renewalIntervalMode,
            bool renewalExpected, string testDescription)
         {
             // setup 
-     
+
             var startDate = DateTime.Now.AddDays(-daysElapsed);
 
             var managedCertificate = new ManagedCertificate
