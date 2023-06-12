@@ -384,7 +384,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
             var credentialError = $"{ProviderTitle} requires either an API Token or an Email Address + AuthKey";
 
-            if (!credentials?.Any() == true)
+            if (credentials == null || credentials?.Any() == false)
             {
                 throw new ArgumentException(credentialError);
             };
