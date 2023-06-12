@@ -286,6 +286,11 @@ namespace Certify.Management
                 requiredCAFeatures.Add(CertAuthoritySupportedRequests.TNAUTHLIST);
             }
 
+            if (item.RequestConfig.PreferredExpiryDays > 0)
+            {
+                requiredCAFeatures.Add(CertAuthoritySupportedRequests.OPTIONAL_LIFETIME_DAYS);
+            }
+
             var fallbackCandidateAccounts = accounts.Where(a => a.CertificateAuthorityId != defaultCA && a.IsStagingAccount == item.UseStagingMode);
             var fallbackAccounts = new List<AccountDetails>();
 

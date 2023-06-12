@@ -25,7 +25,8 @@ namespace Certify.CertificateAuthorities.Definitions
                 RequiresEmailAddress = true,
                 SupportsCachedValidations = false,
                 SupportedFeatures = new List<string>{
-                    CertAuthoritySupportedRequests.TNAUTHLIST.ToString()
+                    CertAuthoritySupportedRequests.TNAUTHLIST.ToString(),
+                    CertAuthoritySupportedRequests.OPTIONAL_LIFETIME_DAYS.ToString()
                 },
                 SupportedKeyTypes = new List<string>{
                     StandardKeyTypes.ECDSA256

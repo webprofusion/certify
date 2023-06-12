@@ -385,7 +385,13 @@ namespace Certify.Management
             }
             else
             {
-                log?.Information($"The default or selected Certificate Authority is: {certAuthority?.Title}");
+                log?.Information($"The selected Certificate Authority is: {certAuthority?.Title}");
+            }
+
+            if (managedCertificate.RequestConfig.PreferredExpiryDays > 0)
+            {
+                log?.Information($"Requested certificate lifetime is {managedCertificate.RequestConfig.PreferredExpiryDays} days.");
+
             }
 
             log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateIdentifiers())}");
