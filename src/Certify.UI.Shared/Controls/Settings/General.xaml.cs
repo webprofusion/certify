@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
@@ -17,6 +19,15 @@ namespace Certify.UI.Controls.Settings
             public Models.Preferences Prefs => MainViewModel.Preferences;
 
             public bool SettingsInitialised { get; set; }
+
+            public KeyValuePair<string, string>[] KeyTypeList = new KeyValuePair<string, string>[] {
+                new KeyValuePair<string,string>("ECDSA256", "ECDSA 256 (Default)" ),
+                new KeyValuePair<string,string>("ECDSA384", "ECDSA 384" ),
+                new KeyValuePair<string,string>("ECDSA521", "ECDSA 521" ),
+                new KeyValuePair<string,string>("RS256", "RSA256 2048" ),
+                new KeyValuePair<string,string>("RS256_3072", "RSA256 3072" ),
+                new KeyValuePair<string,string>("RS256_4096", "RSA256 4096" )
+            };
         }
         public Model EditModel { get; set; } = new Model();
 
@@ -82,6 +93,17 @@ namespace Certify.UI.Controls.Settings
             else
             {
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
+            }
+
+            DefaultKeyType.ItemsSource = EditModel.KeyTypeList;
+           
+            if (string.IsNullOrEmpty(EditModel.Prefs.DefaultKeyType))
+            {
+                DefaultKeyType.SelectedValue = StandardKeyTypes.ECDSA256;
+            }
+            else
+            {
+                DefaultKeyType.SelectedValue = EditModel.Prefs.DefaultKeyType;
             }
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;

@@ -168,7 +168,7 @@
                                 DockPanel.Dock="Left"
                                 Orientation="Vertical">
                                 <Label Content="Certificate Store " />
-                                <StackPanel Margin="8,0,0,0">
+                                <StackPanel Margin="8,0,8,0">
                                     <ComboBox x:Name="CertStoreSelector" SelectionChanged="SettingsUpdated">
                                         <ComboBoxItem Name="My">Default (My)</ComboBoxItem>
                                         <ComboBoxItem Name="WebHosting">Web Hosting</ComboBoxItem>
@@ -178,11 +178,11 @@
 
                                 <Label Content="Default Private Key Type" />
                                 <StackPanel Margin="8,0,0,0">
-                                    <ComboBox x:Name="DefaultKeyType" SelectedValue="{Binding Prefs.DefaultKeyType}">
-                                        <ComboBoxItem Name="ES256">ECDSA 256 (Default)</ComboBoxItem>
-                                        <ComboBoxItem Name="RSA2048">RSA 2048 256</ComboBoxItem>
-
-                                    </ComboBox>
+                                    <ComboBox
+                                        x:Name="DefaultKeyType"
+                                        DisplayMemberPath="Value"
+                                        SelectedValue="{Binding Prefs.DefaultKeyType}"
+                                        SelectedValuePath="Key" />
                                 </StackPanel>
                             </StackPanel>
 
@@ -224,8 +224,6 @@
                                         Unchecked="SettingsUpdated" />
 
                                 </StackPanel>
-
-
                             </StackPanel>
 
                         </DockPanel>
@@ -342,7 +340,6 @@
                     <StackPanel Margin="16,0" DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource Subheading}">User Interface Settings</TextBlock>
 
-
                         <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="Language" />
                             <ComboBox
@@ -364,7 +361,6 @@
                                 SelectionChanged="ThemeSelector_Selected" />
 
                         </StackPanel>
-
 
                         <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="Text/UI Size" />

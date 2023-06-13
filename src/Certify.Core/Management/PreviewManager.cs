@@ -43,13 +43,18 @@ namespace Certify.Management
             {
                 var allCredentials = await credentialsManager.GetCredentials();
 
-                var alldentifiers = item.GetCertificateIdentifiers();
+                var allIdentifiers = item.GetCertificateIdentifiers();
 
                 // certificate summary
                 var certDescription = new StringBuilder();
                 var ca = certificateAuthorities.FirstOrDefault(c => c.Id == item.CertificateAuthorityId);
 
                 certDescription.AppendLine($"A new certificate will be requested from the **{ca?.Title.AsNullWhenBlank() ?? "Default"}** certificate authority for the following identifiers:");
+
+                if (item.RequestConfig?.PreferredExpiryDays > 0)
+                {
+                    certDescription.AppendLine($"The certificate will be requested with a custom lifetime of **{item.RequestConfig.PreferredExpiryDays}** days.");
+                }
 
                 if (identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns))
                 {
@@ -92,7 +97,7 @@ namespace Certify.Management
                         newLine
                         );
 
-                    var matchingDomains = item.GetChallengeConfigDomainMatches(challengeConfig, alldentifiers);
+                    var matchingDomains = item.GetChallengeConfigDomainMatches(challengeConfig, allIdentifiers);
                     if (matchingDomains.Any())
                     {
                         challengeInfo.AppendLine(
@@ -104,7 +109,7 @@ namespace Certify.Management
                             challengeInfo.AppendLine($"{newLine} * {d}");
                         }
 
-                        if (alldentifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns))
+                        if (allIdentifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns))
                         {
                             challengeInfo.AppendLine(
                                $"{newLine}**Please review the Deployment section below to ensure this certificate will be applied to the expected website bindings (if any).**" + newLine
@@ -179,7 +184,7 @@ namespace Certify.Management
                             else
                             {
                                 challengeInfo.AppendLine(
-                                    $"**Invalid credential settngs.**  The currently selected credential does not exist."
+                                    $"**Invalid credential settings.**  The currently selected credential does not exist."
                                     );
                             }
                         }
@@ -241,8 +246,15 @@ namespace Certify.Management
                 }
 
                 // cert request step
+
+                var preferredKeyType = !string.IsNullOrEmpty(item.RequestConfig.CSRKeyAlg) ? item.RequestConfig.CSRKeyAlg : CoreAppSettings.Current.DefaultKeyType;
+                if (string.IsNullOrEmpty(preferredKeyType))
+                {
+                    preferredKeyType = StandardKeyTypes.ECDSA256;
+                }
+
                 var certRequest =
-                    $"A Certificate Signing Request (CSR) will be submitted to the Certificate Authority, using the **{item.RequestConfig.CSRKeyAlg}** signing algorithm.";
+                    $"A Certificate Signing Request (CSR) will be submitted to the Certificate Authority, using the **{preferredKeyType}** signing algorithm.";
                 steps.Add(new ActionStep
                 {
                     Title = $"{stepIndex}. Certificate Request",

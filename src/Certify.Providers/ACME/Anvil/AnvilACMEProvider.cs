@@ -1273,7 +1273,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
         {
             var orderContext = _currentOrders[orderId];
 
@@ -1297,31 +1297,34 @@ namespace Certify.Providers.ACME.Anvil
             var keyAlg = KeyAlgorithm.ES256;
             var rsaKeySize = 2048;
 
-            if (!string.IsNullOrEmpty(config.CSRKeyAlg))
+            // use item specific key type if set, or global default key type setting if present 
+            var preferredKeyType = !string.IsNullOrEmpty(config.CSRKeyAlg) ? config.CSRKeyAlg : defaultKeyType;
+
+            if (!string.IsNullOrEmpty(preferredKeyType))
             {
-                if (config.CSRKeyAlg == StandardKeyTypes.RSA256)
+                if (preferredKeyType == StandardKeyTypes.RSA256)
                 {
                     keyAlg = KeyAlgorithm.RS256;
                 }
-                else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_3072)
+                else if (preferredKeyType == StandardKeyTypes.RSA256_3072)
                 {
                     keyAlg = KeyAlgorithm.RS256;
                     rsaKeySize = 3072;
                 }
-                else if (config.CSRKeyAlg == StandardKeyTypes.RSA256_4096)
+                else if (preferredKeyType == StandardKeyTypes.RSA256_4096)
                 {
                     keyAlg = KeyAlgorithm.RS256;
                     rsaKeySize = 4096;
                 }
-                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA256)
+                else if (preferredKeyType == StandardKeyTypes.ECDSA256)
                 {
                     keyAlg = KeyAlgorithm.ES256;
                 }
-                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA384)
+                else if (preferredKeyType == StandardKeyTypes.ECDSA384)
                 {
                     keyAlg = KeyAlgorithm.ES384;
                 }
-                else if (config.CSRKeyAlg == StandardKeyTypes.ECDSA521)
+                else if (preferredKeyType == StandardKeyTypes.ECDSA521)
                 {
                     keyAlg = KeyAlgorithm.ES512;
                 }

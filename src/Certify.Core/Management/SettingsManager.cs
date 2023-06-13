@@ -35,7 +35,6 @@ namespace Certify.Management
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
-            DefaultKeyType = "EC256";
         }
 
         public static CoreAppSettings Current
