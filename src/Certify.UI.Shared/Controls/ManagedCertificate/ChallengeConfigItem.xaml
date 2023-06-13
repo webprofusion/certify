@@ -229,15 +229,6 @@
                 </StackPanel>
             </StackPanel>
 
-            <ItemsControl
-                MinHeight="30"
-                DockPanel.Dock="Top"
-                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
-                <ItemsControl.ItemTemplateSelector>
-                    <local:ControlTemplateSelector />
-                </ItemsControl.ItemTemplateSelector>
-            </ItemsControl>
-
             <StackPanel Margin="160,8,0,0" Orientation="Horizontal">
                 <StackPanel.Style>
                     <Style>
@@ -272,6 +263,16 @@
                 </StackPanel>
 
             </StackPanel>
+
+            <ItemsControl
+                MinHeight="30"
+                DockPanel.Dock="Top"
+                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
+                <ItemsControl.ItemTemplateSelector>
+                    <local:ControlTemplateSelector />
+                </ItemsControl.ItemTemplateSelector>
+            </ItemsControl>
+
             <StackPanel>
                 <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                     <Label Width="160" Content="CNAME Delegation Rule" />

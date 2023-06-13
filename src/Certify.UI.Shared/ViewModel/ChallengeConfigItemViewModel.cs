@@ -211,7 +211,16 @@ namespace Certify.UI.ViewModel
                 }
 
                 // add or update provider parameters (if any) TODO: remove unused params
-                var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false);
+                var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false).ToList();
+
+                if (providerParams.Any(p => p.Key == "zoneid"))
+                {
+                    // move zone id to first param in list for benefit of UI layout
+                    var z = providerParams.Find(p => p.Key == "zoneid");
+                    providerParams.Remove(z);
+                    providerParams.Insert(0, z);
+                }
+
                 foreach (var pa in providerParams)
                 {
                     // if zoneid previously stored, migrate to provider param
