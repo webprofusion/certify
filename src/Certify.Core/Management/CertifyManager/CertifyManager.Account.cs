@@ -140,7 +140,7 @@ namespace Certify.Management
         {
             var json = await _credentialsManager.GetUnlockedCredential(credential.StorageKey);
 
-            if (json != null)
+            if (!string.IsNullOrEmpty(json))
             {
                 var account = JsonConvert.DeserializeObject<AccountDetails>(json);
 
