@@ -298,7 +298,7 @@ namespace Certify.Management.Servers
                                     Id = site.Id.ToString(),
                                     Name = site.Name
                                 };
-                             
+
                                 try
                                 {
                                     b.Path = site.Applications["/"]?.VirtualDirectories["/"]?.PhysicalPath;

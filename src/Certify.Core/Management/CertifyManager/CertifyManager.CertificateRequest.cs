@@ -585,7 +585,7 @@ namespace Certify.Management
         private async Task<CertificateRequestResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, PendingOrder pendingOrder)
         {
             var result = new CertificateRequestResult(managedCertificate);
-            
+
             var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
             var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 

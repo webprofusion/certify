@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
@@ -96,7 +95,7 @@ namespace Certify.UI.Controls.Settings
             }
 
             DefaultKeyType.ItemsSource = EditModel.KeyTypeList;
-           
+
             if (string.IsNullOrEmpty(EditModel.Prefs.DefaultKeyType))
             {
                 DefaultKeyType.SelectedValue = StandardKeyTypes.ECDSA256;
