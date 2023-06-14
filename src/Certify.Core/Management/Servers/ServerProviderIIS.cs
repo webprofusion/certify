@@ -875,6 +875,11 @@ namespace Certify.Management.Servers
         {
             using (var iisManager = await GetDefaultServerManager())
             {
+                if (iisManager == null)
+                {
+                    return false;
+                }
+
                 return (iisManager.Sites[siteName] != null);
             }
         }
