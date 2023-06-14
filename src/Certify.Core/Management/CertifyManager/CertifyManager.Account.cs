@@ -94,6 +94,12 @@ namespace Certify.Management
                 defaultMatchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
             }
 
+            if (CoreAppSettings.Current.EnableAutomaticCAFailover && allowFailover)
+            {
+                //If failover enabled check if we want to use this or a fallback account
+                defaultMatchingAccount = RenewalManager.SelectCAWithFailover(_certificateAuthorities.Values, accounts, item, defaultMatchingAccount);
+            }
+
             if (defaultMatchingAccount == null)
             {
                 var log = ManagedCertificateLog.GetLogger(item.Id, new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error));
@@ -102,16 +108,9 @@ namespace Certify.Management
             }
             else
             {
-                // We have a matching CA account. If failover enabled check if we want to use this or a fallback account
+                // We have a matching CA account. 
 
-                if (CoreAppSettings.Current.EnableAutomaticCAFailover && allowFailover)
-                {
-                    return RenewalManager.SelectCAWithFailover(_certificateAuthorities.Values, accounts, item, defaultMatchingAccount);
-                }
-                else
-                {
-                    return defaultMatchingAccount;
-                }
+                return defaultMatchingAccount;
             }
         }
 
