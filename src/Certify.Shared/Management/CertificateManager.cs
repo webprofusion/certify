@@ -546,6 +546,11 @@ namespace Certify.Management
                 // TODO: reinstate once we have reliable binding info (also some users get an FileNotFound dll loading exception accessing this functionality):
                 // if (checkBindings) allCertBindings =  Certify.Utils.Networking.GetCertificateBindings();
 
+                if (string.IsNullOrEmpty(storeName))
+                {
+                    storeName = DEFAULT_STORE_NAME;
+                }
+
                 // get all certificates
                 using (var store = GetMachineStore(storeName))
                 {

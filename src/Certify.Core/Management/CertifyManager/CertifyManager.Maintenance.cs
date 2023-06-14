@@ -553,7 +553,8 @@ namespace Certify.Management
                             DateTime.Now,
                             matchingName: null,
                             excludedThumbprints: excludedCertThumprints,
-                            log: _serviceLog
+                            log: _serviceLog,
+                            CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME
                         );
                 }
             }

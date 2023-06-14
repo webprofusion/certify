@@ -204,10 +204,77 @@ namespace Certify.Core.Tests
             }
         }
 
-        public X509Certificate2 CreateAndStoreTestCertificate(string domain, DateTime dateFrom, DateTime dateTo)
+        [TestMethod]
+        public async Task TestCertCleanupAfterRenewal()
+        {
+            var targetStore = CertificateManager.WEBHOSTING_STORE_NAME;
+
+            // create and store a number of test certificates
+            var cert1 = CreateAndStoreTestCertificate("cert-test1.example.com", new DateTime(1935, 01, 01), new DateTime(1935, 03, 01), storeName: targetStore);
+            var cert2 = CreateAndStoreTestCertificate("cert-test2.example.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01), storeName: targetStore);
+            var cert3 = CreateAndStoreTestCertificate("cert-test2.example.com", new DateTime(1936, 01, 01), new DateTime(1938, 03, 01), storeName: targetStore);
+
+            // create test site for bindings, add bindings
+            var iisManager = new ServerProviderIIS();
+
+            var testSiteDomain = "cert-test.example.com";
+            if (await iisManager.SiteExists(testSiteDomain))
+            {
+                await iisManager.DeleteSite(testSiteDomain);
+            }
+
+            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+
+            await iisManager.AddOrUpdateSiteBinding(
+                new Models.BindingInfo
+                {
+                    SiteId = site.Id.ToString(),
+                    Host = testSiteDomain,
+                    CertificateHash = cert2.Thumbprint,
+                    CertificateStore = targetStore,
+                    IsSNIEnabled = false,
+                    Port = 443,
+                    Protocol = "https"
+                }, addNew: true
+                );
+
+            // run cleanup process, removes certs by name, excluding the given thumbprints
+
+            CertificateManager.PerformCertificateStoreCleanup(
+                Models.CertificateCleanupMode.AfterRenewal,
+                new DateTime(1936, 06, 01),
+                matchingName: "cert-test2.example.com",
+                excludedThumbprints: new List<string> { cert3.Thumbprint },
+                storeName: targetStore
+                );
+
+            // check the correct certificates have been removed
+            try
+            {
+                // check cert test 1 not removed (does not match)
+                Assert.IsTrue(CertificateManager.IsCertificateInStore(cert1, targetStore), "Cert 1 Should Not Be Removed");
+
+                // check cert test 2 removed (does match)
+                Assert.IsFalse(CertificateManager.IsCertificateInStore(cert2,targetStore), "Cert 2 Should Be Removed");
+
+                // check cert test 3 exists (matches but is excluded by thumbprint)
+                Assert.IsTrue(CertificateManager.IsCertificateInStore(cert3, targetStore), "Cert 3 Should Not Be Removed");
+
+            }
+            finally
+            {
+                // clean up after test
+                await iisManager.DeleteSite(site.Name);
+
+                CertificateManager.RemoveCertificate(cert1, targetStore);
+                CertificateManager.RemoveCertificate(cert2, targetStore);
+                CertificateManager.RemoveCertificate(cert3, targetStore);
+            }
+        }
+        public X509Certificate2 CreateAndStoreTestCertificate(string domain, DateTime dateFrom, DateTime dateTo, string storeName = CertificateManager.DEFAULT_STORE_NAME)
         {
             var cert = CertificateManager.GenerateSelfSignedCertificate(domain, dateFrom, dateTo);
-            CertificateManager.StoreCertificate(cert);
+            cert = CertificateManager.StoreCertificate(cert, storeName);
             return cert;
         }
     }
