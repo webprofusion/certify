@@ -76,6 +76,7 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(CertificateAuthorityTitle));
             RaisePropertyChangedEvent(nameof(CertificateAuthorityDescription));
             RaisePropertyChangedEvent(nameof(LastAttemptedCertificateAuthority));
+            RaisePropertyChangedEvent(nameof(PercentageLifetimeElapsed));
         }
 
         public string CertificateAuthorityDescription
@@ -421,6 +422,13 @@ namespace Certify.UI.ViewModel
 
         public string ValidationError { get; set; }
 
+        public int? PercentageLifetimeElapsed
+        {
+            get
+            {
+                return SelectedItem?.GetPercentageLifetimeElapsed(DateTime.UtcNow);
+            }
+        }
         /// <summary>
         /// If true, the UI will show the TnAuth list view, otherwise the standard domain list view
         /// </summary>

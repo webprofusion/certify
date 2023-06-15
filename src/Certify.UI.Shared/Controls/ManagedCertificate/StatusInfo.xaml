@@ -91,6 +91,16 @@
                     <StackPanel Orientation="Horizontal">
                         <Label
                             Width="160"
+                            Content="Elapsed Lifetime:"
+                            FontWeight="Bold" />
+                        <Label
+                            Content="{Binding Path=PercentageLifetimeElapsed, Mode=OneWay}"
+                            ContentStringFormat="{}{0} %"
+                            FontWeight="Bold" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label
+                            Width="160"
                             Content="Next Renewal Due:"
                             FontWeight="Bold" />
                         <Label
@@ -166,6 +176,10 @@
                     <StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Days Remaining:" />
                         <Label Content="{Binding DaysRemaining}" Foreground="{Binding Path=SelectedItem.DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Label Width="160" Content="Elapsed Lifetime:" />
+                        <Label Content="{Binding Path=PercentageLifetimeElapsed, Mode=OneWay}" ContentStringFormat="{}{0} %" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Next Planned Renewal:" />
