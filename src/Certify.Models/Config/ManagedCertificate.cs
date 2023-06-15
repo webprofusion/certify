@@ -226,14 +226,55 @@ namespace Certify.Models
         [JsonIgnore]
         public bool Deleted { get; set; } // do not serialize to settings
 
+        /// <summary>
+        /// Get the percentage of the certificate lifetime elapsed, if known
+        /// </summary>
+        /// <param name="testDateTime"></param>
+        /// <returns></returns>
+        public int? GetPercentageLifetimeElapsed(DateTime testDateTime)
+        {
+            if (DateStart == null || DateExpiry == null)
+            {
+                return null;
+            }
+
+            var certLifetime = (DateTime)DateExpiry - (DateTime)DateStart;
+
+            if (certLifetime.TotalMinutes <= 0)
+            {
+                return 100;
+            }
+
+            var certElapsed = testDateTime - (DateTime)DateStart;
+            var elapsedMinutes = certLifetime.TotalMinutes - (certLifetime.TotalMinutes - certElapsed.TotalMinutes);
+
+            if (elapsedMinutes > 0)
+            {
+                if (elapsedMinutes >= certLifetime.TotalMinutes)
+                {
+                    return 100;
+                }
+                else
+                {
+                    return (int)(elapsedMinutes / certLifetime.TotalMinutes * 100);
+                }
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         [JsonIgnore]
         public ManagedCertificateHealth Health
         {
             get
             {
+                var percentageElapsed = GetPercentageLifetimeElapsed(DateTime.Now);
+
                 if (LastRenewalStatus == RequestState.Error)
                 {
-                    if (RenewalFailureCount > 3 || DateExpiry < DateTime.Now.AddHours(12))
+                    if (RenewalFailureCount > 3 || percentageElapsed > 90)
                     {
                         return ManagedCertificateHealth.Error;
                     }
@@ -259,11 +300,11 @@ namespace Certify.Models
                             else
                             {
                                 // if cert is otherwise OK but is expiring soon, report health as warning or error (expired)
-                                if (DateExpiry < DateTime.Now.AddHours(12))
+                                if (percentageElapsed > 95)
                                 {
                                     return ManagedCertificateHealth.Error;
                                 }
-                                else if (DateExpiry < DateTime.Now.AddDays(14))
+                                else if (percentageElapsed > 75)
                                 {
                                     return ManagedCertificateHealth.Warning;
                                 }

@@ -341,5 +341,36 @@ namespace Certify.Core.Tests.Unit
                 }
             }
         }
+
+        [TestMethod, Description("Check Percentage Lifetime Elapsed calc, allowing for nulls etc")]
+        [DataTestMethod]
+        [DataRow(null, null, null)]
+        [DataRow(14f, 90f, 15)]
+        [DataRow(0.5f, 1f, 50)]
+        [DataRow(0f, 1f, 0)]
+        [DataRow(365f, 90f, 100)]
+        public void TestCheckPercentageLifetimeElapsed(float? daysSinceRenewed, float? lifetimeDays, int? expectedPercentage)
+        {
+            var managedCertificate = new ManagedCertificate();
+
+            var testDate = DateTime.UtcNow;
+
+            if (daysSinceRenewed.HasValue && lifetimeDays.HasValue)
+            {
+                var dateLastRenewed = testDate.AddDays(-daysSinceRenewed.Value);
+
+                managedCertificate = new ManagedCertificate
+                {
+                    DateRenewed = dateLastRenewed,
+                    DateLastRenewalAttempt = dateLastRenewed,
+                    DateStart = dateLastRenewed,
+                    DateExpiry = dateLastRenewed.AddDays(lifetimeDays.Value)
+                };
+            }
+
+            var percentageElapsed = managedCertificate.GetPercentageLifetimeElapsed(testDate);
+            
+            Assert.AreEqual(expectedPercentage, percentageElapsed);
+        }
     }
 }
