@@ -355,5 +355,47 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsTrue(results.Any());
         }
+
+        [TestMethod, Description("Test that duplicate https bindings are not created when multiple non-port 443 same-hostname bindings exist")]
+        public async Task MixedPortMixedSiteTest()
+        {
+
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{  Host="example.test.com", IP="*", Port=80, Protocol="http", SiteId="1"}, // an http site setup just for redirects
+                new BindingInfo{  Host="example.test.com", IP="*", Port=81, Protocol="http", SiteId="2"}, // an http site setup as demo
+                new BindingInfo{  Host="example.test.com", IP="*", Port=443, Protocol="https", SiteId="3"}, // the real https site
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "example.test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            // this test will currently fail because we are not looking at all sites to prevent duplicate bindings
+            Assert.AreEqual(1, results.Count);
+        }
     }
 }
