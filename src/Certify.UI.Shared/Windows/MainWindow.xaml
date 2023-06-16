@@ -161,8 +161,10 @@
         <TabControl
             x:Name="MainTabControl"
             Grid.Row="1"
+            Width="auto"
             Height="auto"
             Margin="8,8,8,8"
+            HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
             Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
@@ -174,7 +176,6 @@
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
-                Controls:HeaderedControlHelper.HeaderForeground="Blue"
                 Header="{x:Static res:SR.Managed_Certificates}"
                 IsSelected="True">
                 <CustomControls:ManagedCertificates
