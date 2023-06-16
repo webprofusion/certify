@@ -239,7 +239,6 @@
                     x:Name="TabStatusInfo"
                     MinWidth="100"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
-                    Controls:TabControlHelper.UnderlineBrush="White"
                     AutomationProperties.Name="Status">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
