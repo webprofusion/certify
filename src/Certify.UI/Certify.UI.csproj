@@ -158,7 +158,6 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>2.4.10</Version>
       <Version>3.0.0-alpha0457</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
