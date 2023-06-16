@@ -171,6 +171,8 @@
 
             <TabItem
                 MinWidth="100"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Controls:HeaderedControlHelper.HeaderForeground="Blue"
                 Header="{x:Static res:SR.Managed_Certificates}"
