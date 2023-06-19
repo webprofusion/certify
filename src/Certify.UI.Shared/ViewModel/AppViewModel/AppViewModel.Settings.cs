@@ -28,9 +28,9 @@ namespace Certify.UI.ViewModel
         public string[] StandardFeatures = {
             FeatureFlags.EXTERNAL_CERT_MANAGERS,
             FeatureFlags.PRIVKEY_PWD,
+            FeatureFlags.IMPORT_EXPORT,
 #if DEBUG
             FeatureFlags.SERVER_CONNECTIONS,
-            FeatureFlags.IMPORT_EXPORT,
 #endif
             FeatureFlags.CA_FAILOVER,
             FeatureFlags.CA_EDITOR
