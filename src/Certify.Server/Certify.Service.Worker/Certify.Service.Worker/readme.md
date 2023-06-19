@@ -1,5 +1,13 @@
 ﻿Certify Service Worker (Cross Platform)
 -----------------
+
+# Architecture
+- Certify.Server.Core, running as a hosted internal API app within a Worker (Certify.Service.Worker). This is a re-implementation of the original service usedby the desktop UI.
+- Certify.Server.Api.Public, running as a API for public consumption, wrapping calls to the core internal API
+
+The advantage of this structure is that the public API can be exposed to the network for Web UI access, without client machines talking directly to the core service. The public API can run as the least prvilelged service user, while the core service may require elevated privileges depending on how it is used.
+
+
 Development workflow
 
 
