@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,11 @@ namespace Certify.Server.Api.Public.Middleware
         public static IServiceCollection AddTokenAuthentication(this IServiceCollection services, IConfiguration config)
         {
             var secret = config.GetSection("JwtSettings").GetSection("secret").Value;
+
+            if (secret == null)
+            {
+                throw new ArgumentNullException("Token authentication requires JwtSettings > Secret to be set in order to perform JWT operations");
+            }
 
             var key = Encoding.ASCII.GetBytes(secret);
             services.AddAuthentication(x =>
