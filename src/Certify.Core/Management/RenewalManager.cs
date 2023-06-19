@@ -334,7 +334,7 @@ namespace Certify.Management
                 if (fallbackAccounts.Any())
                 {
                     // use the next suitable fallback account
-                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA && f.CertificateAuthorityId != defaultMatchingAccount.CertificateAuthorityId);
+                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA && f.CertificateAuthorityId != defaultMatchingAccount?.CertificateAuthorityId);
 
                     if (nextFallback != null)
                     {
