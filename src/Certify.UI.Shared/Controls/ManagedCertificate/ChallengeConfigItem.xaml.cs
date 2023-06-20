@@ -220,7 +220,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     // default dns challenges to certify-dns
                     EditModel.SelectedItem.ChallengeProvider = "DNS01.API.CertifyDns";
-                    await EditModel.RefreshAllOptions(StoredCredentialList);
+                    ChallengeAPIProviderList.SelectedValue = EditModel.SelectedItem.ChallengeProvider;
                 }
             }
         }
