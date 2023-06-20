@@ -161,9 +161,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var apiPrefix = "";
 
-            if (_parameters["api"] != null)
+            if (_parameters.TryGetValue("api", out var apiBase))
             {
-                _apiBaseUri = new System.Uri(_parameters["api"]);
+                _apiBaseUri = new System.Uri(apiBase);
 
                 if (!_apiBaseUri.ToString().EndsWith("/"))
                 {
@@ -178,10 +178,9 @@ namespace Certify.Providers.DNS.AcmeDns
             }
 
             // optionally load and use an existing registration from provided json
-            if (_parameters["credentials_json"] != null)
+            if (_parameters.TryGetValue("credentials_json", out var credentialsJson))
             {
                 // use an existing registration credentials file
-                var credentialsJson = _parameters["credentials_json"];
                 try
                 {
                     var reg = JsonConvert.DeserializeObject<AcmeDnsRegistration>(credentialsJson);
@@ -212,9 +211,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var registration = new AcmeDns.AcmeDnsRegistration();
 
-            if (_parameters.ContainsKey("allowfrom") && _parameters["allowfrom"] != null)
+            if (_parameters.TryGetValue("allowfrom", out var allowFrom))
             {
-                var rules = _parameters["allowfrom"].Split(';');
+                var rules = allowFrom.Split(';');
                 registration.allowfrom = new List<string>();
                 foreach (var r in rules)
                 {
