@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -250,7 +250,7 @@ namespace Certify.Management
                 var preferredKeyType = !string.IsNullOrEmpty(item.RequestConfig.CSRKeyAlg) ? item.RequestConfig.CSRKeyAlg : CoreAppSettings.Current.DefaultKeyType;
                 if (string.IsNullOrEmpty(preferredKeyType))
                 {
-                    preferredKeyType = StandardKeyTypes.ECDSA256;
+                    preferredKeyType = StandardKeyTypes.RSA256; // MS Exchange etc do not support ECDSA key types so we default to RSA
                 }
 
                 var certRequest =

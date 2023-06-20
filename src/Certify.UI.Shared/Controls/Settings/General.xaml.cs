@@ -98,7 +98,7 @@ namespace Certify.UI.Controls.Settings
 
             if (string.IsNullOrEmpty(EditModel.Prefs.DefaultKeyType))
             {
-                DefaultKeyType.SelectedValue = StandardKeyTypes.ECDSA256;
+                DefaultKeyType.SelectedValue = StandardKeyTypes.RSA256; // MS Exchange etc do not support ECDSA key types so we default to RSA 2048
             }
             else
             {

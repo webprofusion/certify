@@ -1293,8 +1293,8 @@ namespace Certify.Providers.ACME.Anvil
                 return new ProcessStepResult { IsSuccess = false, ErrorMessage = "Certificate Request did not complete. Order did not reach Ready status in the time allowed.", Result = order };
             }
 
-            // generate temp keypair for signing CSR, default to ECDSA 256
-            var keyAlg = KeyAlgorithm.ES256;
+            // generate temp keypair for signing CSR, default to RSA 256, 2048. Popular Microsoft products such as Exchange do not support ECDSA keys
+            var keyAlg = KeyAlgorithm.RS256;
             var rsaKeySize = 2048;
 
             // use item specific key type if set, or global default key type setting if present 

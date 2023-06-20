@@ -161,7 +161,7 @@
                                     <RadioButton
                                         x:Name="CSROption_ECDSA256"
                                         Margin="8,0,0,4"
-                                        Content="ECDSA P-256 (Default)"
+                                        Content="ECDSA P-256"
                                         GroupName="CSRAlg"
                                         IsChecked="{Binding SelectedItem.RequestConfig.CSRKeyAlg, Converter={StaticResource CSRCheckedConverter}, ConverterParameter=ECDSA256}" />
                                     <RadioButton
