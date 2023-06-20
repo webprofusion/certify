@@ -20,7 +20,7 @@ namespace Certify.UI.Controls.Settings
             public bool SettingsInitialised { get; set; }
 
             public KeyValuePair<string, string>[] KeyTypeList = new KeyValuePair<string, string>[] {
-                new KeyValuePair<string,string>("ECDSA256", "ECDSA 256 (Default)" ),
+                new KeyValuePair<string,string>("ECDSA256", "ECDSA 256" ),
                 new KeyValuePair<string,string>("ECDSA384", "ECDSA 384" ),
                 new KeyValuePair<string,string>("ECDSA521", "ECDSA 521" ),
                 new KeyValuePair<string,string>("RS256", "RSA256 2048" ),
