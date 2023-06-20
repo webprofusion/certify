@@ -38,7 +38,7 @@ namespace Certify.Models
         /// when the requested certificate is not intended to be a CA cert, only an end-entity certificate.
         /// "ca" is an optional key, if not included the "ca" value is considered false by default.
         /// </summary>
-        [JsonProperty(propertyName: "ca")]
+        [JsonProperty(propertyName: nameof(ca))]
         public bool? ca { get; set; }
 
         /// <summary>
@@ -166,7 +166,7 @@ namespace Certify.Models
         public bool PerformAutomatedCertBinding { get; set; } = true;
 
         /// <summary>
-        /// If true, existings https bindings for the cert we are renewing will be removed and replaced 
+        /// If true, existing https bindings for the cert we are renewing will be removed and replaced 
         /// </summary>
         public bool AlwaysRecreateBindings { get; set; }
 
