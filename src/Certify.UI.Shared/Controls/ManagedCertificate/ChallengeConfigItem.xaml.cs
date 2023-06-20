@@ -120,8 +120,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        private void ParameterInput_KeyUp(object sender, System.Windows.Input.KeyEventArgs e) => EditModel.SelectedItem.IsChanged = true;
-
         private void DeleteAuth_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to delete this configuration?", "Confirm Delete", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
@@ -221,8 +219,18 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
                     // default dns challenges to certify-dns
-                    await SetChallengeProvider("DNS01.API.CertifyDns");
+                    EditModel.SelectedItem.ChallengeProvider = "DNS01.API.CertifyDns";
+                    await EditModel.RefreshAllOptions(StoredCredentialList);
                 }
+            }
+        }
+
+        private void OnParameterModified(object sender, RoutedEventArgs e)
+        {
+            // when parameter settings changed, force higher level model to be marked as changed
+            if (!EditModel.ParentManagedCertificate.RequestConfig.IsChanged)
+            {
+                EditModel.ParentManagedCertificate.RequestConfig.IsChanged = true;
             }
         }
     }

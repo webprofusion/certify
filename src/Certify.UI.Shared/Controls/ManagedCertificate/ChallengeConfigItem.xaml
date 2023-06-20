@@ -25,6 +25,7 @@
                     Height="100"
                     mah:TextBoxHelper.Watermark="{Binding Description}"
                     AcceptsReturn="True"
+                    KeyUp="OnParameterModified"
                     Text="{Binding Value}"
                     ToolTip="{Binding Description}"
                     VerticalScrollBarVisibility="Visible" />
@@ -40,7 +41,7 @@
                 <TextBox
                     Width="250"
                     mah:TextBoxHelper.Watermark="{Binding Description}"
-                    KeyUp="ParameterInput_KeyUp"
+                    KeyUp="OnParameterModified"
                     Text="{Binding Value}" />
                 <Button
                     x:Name="ShowParamLookup"
@@ -71,7 +72,8 @@
                     DisplayMemberPath="Value"
                     ItemsSource="{Binding Options}"
                     SelectedValue="{Binding Value}"
-                    SelectedValuePath="Key" />
+                    SelectedValuePath="Key"
+                    SelectionChanged="OnParameterModified" />
             </StackPanel>
 
         </DataTemplate>
@@ -84,7 +86,8 @@
                 <PasswordBox
                     Width="250"
                     local:PasswordBoxAssistant.BindPassword="True"
-                    local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}" />
+                    local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}"
+                    KeyUp="OnParameterModified" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderHiddenParameter" />
@@ -95,7 +98,10 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}" />
+                <CheckBox
+                    Checked="OnParameterModified"
+                    IsChecked="{Binding Value, Mode=TwoWay}"
+                    Unchecked="OnParameterModified" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>
