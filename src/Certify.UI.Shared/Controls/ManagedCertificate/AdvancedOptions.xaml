@@ -229,7 +229,7 @@
                                     Click="AddStoredCredential_Click"
                                     Content="New" />
                             </StackPanel>
-                            <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order if they don't support this feature:</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime (in Days) of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order if they don't support this feature:</TextBlock>
 
                             <TextBox
                                 Width="180"
