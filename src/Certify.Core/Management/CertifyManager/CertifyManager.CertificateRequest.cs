@@ -191,7 +191,6 @@ namespace Certify.Management
                             {
                                 // resume manual dns requests etc
                                 result = await CompleteCertificateRequest(log, managedCertificate, progress, null);
-
                             }
                             else
                             {
@@ -222,7 +221,7 @@ namespace Certify.Management
                     }
                     else
                     {
-                        // caller asked to skip the actual certicate request (e.g. unit testing)
+                        // caller asked to skip the actual certificate request (e.g. unit testing)
 
                         if (failOnSkip)
                         {
@@ -543,7 +542,7 @@ namespace Certify.Management
                            );
             }
 
-            // store the Order Uri so we can refer to the order later if required
+            // store the Order Uri, so we can refer to the order later if required
             if (!string.IsNullOrEmpty(pendingOrder.OrderUri))
             {
                 managedCertificate.CurrentOrderUri = pendingOrder.OrderUri;
@@ -602,6 +601,9 @@ namespace Certify.Management
                 {
                     result.IsSuccess = false;
                     result.Message = pendingOrder.FailureMessage;
+
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    
                     return result;
                 }
             }

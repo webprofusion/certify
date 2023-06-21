@@ -648,6 +648,7 @@ namespace Certify.Providers.ACME.Anvil
                 await InitProvider(_log);
             }
 
+            var isResumedOrder = false;
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
 
             // prepare a list of all pending authorization we need to complete, or those we have already satisfied
@@ -715,9 +716,12 @@ namespace Certify.Providers.ACME.Anvil
                             if (orderUri != null)
                             {
                                 order = _acme.Order(new Uri(orderUri));
+                                isResumedOrder = true;
                             }
                             else
                             {
+                                isResumedOrder = false;
+
                                 // begin new order, with optional preference for the expiry
 
                                 DateTimeOffset? notAfter = null;
@@ -803,7 +807,7 @@ namespace Certify.Providers.ACME.Anvil
 
                 pendingOrder.OrderUri = orderUri;
 
-                log.Information($"Created ACME Order: {orderUri}");
+                log.Information($"{(isResumedOrder ? "Resumed" : "Created")} ACME Order: {orderUri}");
 
                 // track order in memory, keyed on order Uri
                 _currentOrders.TryRemove(orderUri, out var existingOrderContext);
@@ -844,6 +848,9 @@ namespace Certify.Providers.ACME.Anvil
                     // order may no longer be valid
                     pendingOrder.IsFailure = true;
                     pendingOrder.FailureMessage = ex.Message;
+
+                    log.Warning($"Order {orderUri} could not be retrieved. Order may have expired or the order URI is invalid for this account.");
+
                     return pendingOrder;
                 }
 
