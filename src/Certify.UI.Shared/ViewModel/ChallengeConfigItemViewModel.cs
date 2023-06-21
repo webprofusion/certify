@@ -249,7 +249,7 @@ namespace Certify.UI.ViewModel
             }
             else
             {
-                //if definition has change to a type with no parameters, reset the parameters collection.
+                //if definition has changed to a type with no parameters, reset the parameters collection.
                 if (SelectedItem.Parameters?.Any() == true)
                 {
                     SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -114,6 +114,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     );
             }
 
+            // update our dropdown if not currently showing this selection. This is surpressed if we are calling this from onchange
             if (ChallengeAPIProviderList.SelectedValue?.ToString() != challengeProviderType)
             {
                 ChallengeAPIProviderList.SelectedValue = challengeProviderType;
@@ -211,16 +212,23 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        bool _defaultDnsProviderSet = false;
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
             if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
             {
-                if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
+                if (!_defaultDnsProviderSet)
                 {
-                    // default dns challenges to certify-dns
-                    EditModel.SelectedItem.ChallengeProvider = "DNS01.API.CertifyDns";
-                    ChallengeAPIProviderList.SelectedValue = EditModel.SelectedItem.ChallengeProvider;
+                    if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
+                    {
+                        // default dns challenges to certify-dns
+                        _defaultDnsProviderSet = true;
+                        await Dispatcher.InvokeAsync(new Action(async () =>
+                        {
+                            await SetChallengeProvider("DNS01.API.CertifyDns");
+                        }));
+                    }
                 }
             }
         }
