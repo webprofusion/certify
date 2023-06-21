@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -115,11 +115,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                     );
             }
 
-            // update our dropdown if not currently showing this selection. This is suppressed if we are calling this from onchange
+            // update our dropdown if not currently showing this selection. 
             if (ChallengeAPIProviderList.SelectedValue?.ToString() != challengeProviderType)
             {
                 _suppressChallengeProviderListChanges = true;
-                Dispatcher.Invoke(() =>{
+
+                Dispatcher.Invoke(() =>
+                {
                     ChallengeAPIProviderList.SelectedValue = challengeProviderType;
                 });
 
@@ -218,23 +220,18 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        bool _defaultDnsProviderSet = false;
         private async void ChallengeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
 
             if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
             {
-                if (!_defaultDnsProviderSet)
+                if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
-                    if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
+                    // default dns challenges to certify-dns
+                    await Dispatcher.InvokeAsync(new Action(async () =>
                     {
-                        // default dns challenges to certify-dns
-                        _defaultDnsProviderSet = true;
-                        await Dispatcher.InvokeAsync(new Action(async () =>
-                        {
-                            await SetChallengeProvider("DNS01.API.CertifyDns");
-                        }));
-                    }
+                        await SetChallengeProvider("DNS01.API.CertifyDns");
+                    }));
                 }
             }
         }

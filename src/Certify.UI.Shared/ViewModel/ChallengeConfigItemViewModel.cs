@@ -142,6 +142,8 @@ namespace Certify.UI.ViewModel
             }
 
             RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
+            SelectedItem.RaisePropertyChangedEvent(nameof(SelectedItem.Parameters));
+
         }
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)
