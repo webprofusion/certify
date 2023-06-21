@@ -101,111 +101,115 @@ namespace Certify.Management
 
             foreach (var managedCertificate in managedCertificates)
             {
-                var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
-                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-
-                try
+                // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks
+                if (managedCertificate.LastRenewalStatus != RequestState.Paused)
                 {
-                    progressTrackers.Add(managedCertificate.Id, progressIndicator);
-                }
-                catch
-                {
-                    _serviceLog?.Error($"Failed to add progress tracker for {managedCertificate.Id}. Likely concurrency issue, skipping this managed cert during this run.");
-                    continue;
-                }
+                    var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCertificate);
+                    var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
-                BeginTrackingProgress(progressState);
-
-                // determine if this site currently requires renewal for auto mode (or renewals due mode)
-                // In auto mode we skip if recent failures, in Renewals Due mode we ignore recent failures
-
-                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
-                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
-
-                var isRenewalOnHold = false;
-                var renewalReason = renewalDueCheck.Reason;
-
-                if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
-                {
-                    //check if we have renewal failures, if so wait a bit longer.
-                    isRenewalOnHold = !ManagedCertificate.IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
-
-                    if (isRenewalOnHold)
+                    try
                     {
-                        isRenewalRequired = false;
+                        progressTrackers.Add(managedCertificate.Id, progressIndicator);
                     }
-                }
-
-                if (settings.Mode == RenewalMode.All)
-                {
-                    // on all mode, everything gets an attempted renewal
-                    isRenewalRequired = true;
-                    renewalReason = "Renewal Mode is set to All";
-                }
-
-                //if we care about stopped sites being stopped, check for that if a specific site is selected
-                var isSiteRunning = true;
-                if (prefs.IncludeStoppedSites && !string.IsNullOrEmpty(managedCertificate.ServerSiteId))
-                {
-                    isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
-                }
-
-                if ((isRenewalRequired && isSiteRunning) && !testModeOnly)
-                {
-                    //get matching progress tracker for this site
-                    IProgress<RequestProgressState> tracker = null;
-                    if (progressTrackers != null)
+                    catch
                     {
-                        tracker = progressTrackers[managedCertificate.Id];
+                        _serviceLog?.Error($"Failed to add progress tracker for {managedCertificate.Id}. Likely concurrency issue, skipping this managed cert during this run.");
+                        continue;
                     }
 
-                    // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
-                    if ((maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
-                        || (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS))
+                    BeginTrackingProgress(progressState);
+
+                    // determine if this site currently requires renewal for auto mode (or renewals due mode)
+                    // In auto mode we skip if recent failures, in Renewals Due mode we ignore recent failures
+
+                    var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
+                    var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
+
+                    var isRenewalOnHold = false;
+                    var renewalReason = renewalDueCheck.Reason;
+
+                    if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                     {
+                        //check if we have renewal failures, if so wait a bit longer.
+                        isRenewalOnHold = !ManagedCertificate.IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
 
-                        renewalTasks.Add(
-                           new Task<CertificateRequestResult>(
-                            () => PerformCertificateRequest(managedCertificate, tracker, settings.IsPreviewMode, renewalReason).Result,
-                            TaskCreationOptions.LongRunning
-                       ));
+                        if (isRenewalOnHold)
+                        {
+                            isRenewalRequired = false;
+                        }
+                    }
 
+                    if (settings.Mode == RenewalMode.All)
+                    {
+                        // on all mode, everything gets an attempted renewal
+                        isRenewalRequired = true;
+                        renewalReason = "Renewal Mode is set to All";
+                    }
+
+                    //if we care about stopped sites being stopped, check for that if a specific site is selected
+                    var isSiteRunning = true;
+                    if (prefs.IncludeStoppedSites && !string.IsNullOrEmpty(managedCertificate.ServerSiteId))
+                    {
+                        isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
+                    }
+
+                    if ((isRenewalRequired && isSiteRunning) && !testModeOnly)
+                    {
+                        //get matching progress tracker for this site
+                        IProgress<RequestProgressState> tracker = null;
+                        if (progressTrackers != null)
+                        {
+                            tracker = progressTrackers[managedCertificate.Id];
+                        }
+
+                        // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
+                        if ((maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
+                            || (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS))
+                        {
+
+                            renewalTasks.Add(
+                               new Task<CertificateRequestResult>(
+                                () => PerformCertificateRequest(managedCertificate, tracker, settings.IsPreviewMode, renewalReason).Result,
+                                TaskCreationOptions.LongRunning
+                           ));
+
+                        }
+                        else
+                        {
+                            //send progress back to report skip
+                            var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                            ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
+                        }
+
+                        // track number of tasks being attempted, not counting failures (otherwise cumulative failures can eventually exhaust allowed number of task)
+                        if (managedCertificate.LastRenewalStatus != RequestState.Error)
+                        {
+                            numRenewalTasks++;
+                        }
                     }
                     else
                     {
-                        //send progress back to report skip
-                        var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                        ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
-                    }
+                        var msg = renewalDueCheck.Reason;// CoreSR.CertifyManager_SkipRenewalOk;
+                        var logThisEvent = false;
 
-                    // track number of tasks being attempted, not counting failures (otherwise cumulative failures can eventually exhaust allowed number of task)
-                    if (managedCertificate.LastRenewalStatus != RequestState.Error)
-                    {
-                        numRenewalTasks++;
-                    }
-                }
-                else
-                {
-                    var msg = renewalDueCheck.Reason;// CoreSR.CertifyManager_SkipRenewalOk;
-                    var logThisEvent = false;
+                        if (isRenewalRequired && !isSiteRunning)
+                        {
+                            //TODO: show this as warning rather than success
+                            msg = CoreSR.CertifyManager_SiteStopped;
+                        }
 
-                    if (isRenewalRequired && !isSiteRunning)
-                    {
-                        //TODO: show this as warning rather than success
-                        msg = CoreSR.CertifyManager_SiteStopped;
-                    }
+                        if (isRenewalOnHold)
+                        {
+                            msg = string.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
+                            logThisEvent = true;
+                        }
 
-                    if (isRenewalOnHold)
-                    {
-                        msg = string.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
-                        logThisEvent = true;
-                    }
-
-                    if (progressTrackers != null)
-                    {
-                        //send progress back to report skip
-                        var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
+                        if (progressTrackers != null)
+                        {
+                            //send progress back to report skip
+                            var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                            ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
+                        }
                     }
                 }
             }
