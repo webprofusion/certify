@@ -82,11 +82,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
+        bool _suppressChallengeProviderListChanges = false;
         private async void ChallengeAPIProviderList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             var challengeProviderType = (sender as ComboBox)?.SelectedValue?.ToString();
 
-            if (challengeProviderType != null)
+            if (challengeProviderType != null && !_suppressChallengeProviderListChanges)
             {
                 await SetChallengeProvider(challengeProviderType);
             }
@@ -114,10 +115,15 @@ namespace Certify.UI.Controls.ManagedCertificate
                     );
             }
 
-            // update our dropdown if not currently showing this selection. This is surpressed if we are calling this from onchange
+            // update our dropdown if not currently showing this selection. This is suppressed if we are calling this from onchange
             if (ChallengeAPIProviderList.SelectedValue?.ToString() != challengeProviderType)
             {
-                ChallengeAPIProviderList.SelectedValue = challengeProviderType;
+                _suppressChallengeProviderListChanges = true;
+                Dispatcher.Invoke(() =>{
+                    ChallengeAPIProviderList.SelectedValue = challengeProviderType;
+                });
+
+                _suppressChallengeProviderListChanges = false;
             }
         }
 
