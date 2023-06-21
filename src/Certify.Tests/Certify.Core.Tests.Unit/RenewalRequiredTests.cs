@@ -369,7 +369,7 @@ namespace Certify.Core.Tests.Unit
             }
 
             var percentageElapsed = managedCertificate.GetPercentageLifetimeElapsed(testDate);
-            
+
             Assert.AreEqual(expectedPercentage, percentageElapsed);
         }
     }

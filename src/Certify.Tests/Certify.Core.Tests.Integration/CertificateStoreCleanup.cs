@@ -255,7 +255,7 @@ namespace Certify.Core.Tests
                 Assert.IsTrue(CertificateManager.IsCertificateInStore(cert1, targetStore), "Cert 1 Should Not Be Removed");
 
                 // check cert test 2 removed (does match)
-                Assert.IsFalse(CertificateManager.IsCertificateInStore(cert2,targetStore), "Cert 2 Should Be Removed");
+                Assert.IsFalse(CertificateManager.IsCertificateInStore(cert2, targetStore), "Cert 2 Should Be Removed");
 
                 // check cert test 3 exists (matches but is excluded by thumbprint)
                 Assert.IsTrue(CertificateManager.IsCertificateInStore(cert3, targetStore), "Cert 3 Should Not Be Removed");
