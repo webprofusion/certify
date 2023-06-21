@@ -167,7 +167,7 @@ namespace Certify.Management
                         await Task.Delay(checkThrottleMS);
                     }
 
-                    _serviceLog.Information("Completed OCSP status checks");
+                    _serviceLog.Verbose("Completed OCSP status checks");
                 }
 
                 if (!cancelToken.IsCancellationRequested)
@@ -321,7 +321,7 @@ namespace Certify.Management
                 }
 
                 _lastStatusCheckInProgress = null;
-                _serviceLog.Information("Completed Certificate Status Checks");
+                _serviceLog.Verbose("Completed Certificate Status Checks");
             }
             catch (Exception ex)
             {
