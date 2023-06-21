@@ -37,8 +37,18 @@ namespace Certify.Management
 
                             if (!await pr.IsInitialised())
                             {
+                                _tc?.TrackEvent("DataStore_Init_Failed", new Dictionary<string, string> {
+                                    { "provider", provider.Id }
+                                });
+
                                 _serviceLog.Error($"Managed item data store failed to initialise {dataStore.Id} : {dataStore.Title}");
                                 return null;
+                            }
+                            else
+                            {
+                                _tc?.TrackEvent("DataStore_Init", new Dictionary<string, string> {
+                                    { "provider", provider.Id }
+                                });
                             }
 
                             return pr;

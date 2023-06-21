@@ -192,8 +192,15 @@ namespace Certify.Management
             _serviceLog?.Information("Certify Manager Started");
 
             var systemVersion = Util.GetAppVersion().ToString();
+            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
+
             if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
             {
+                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
+                    { "previousVersion", previousVersion },
+                    { "currentVersion", systemVersion }
+                });
+
                 // service has been updated, run any required migrations
                 await PerformServiceUpgrades();
 
@@ -557,6 +564,8 @@ namespace Certify.Management
             var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
 
             // store and apply certs if we have no errors
+
+            var hasError = false;
             if (!importResult.Any(i => i.HasError))
             {
 
@@ -575,6 +584,14 @@ namespace Certify.Management
 
                 importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
             }
+            else
+            {
+                hasError = true;
+            }
+
+            _tc?.TrackEvent("Import" + (importRequest.IsPreviewMode ? "_Preview" : ""), new Dictionary<string, string> {
+                { "hasErrors", hasError.ToString() }
+            });
 
             return importResult;
         }
@@ -586,6 +603,8 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
+            _tc?.TrackEvent("Export" + (exportRequest.IsPreviewMode ? "_Preview" : ""));
+
             var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
             return await migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
         }
