@@ -158,10 +158,9 @@ namespace Certify.Providers.DNS.AcmeDns
 
         private async Task<(AcmeDnsRegistration registration, bool isNewRegistration)> Register(string settingsPath, string domainId)
         {
-
             var apiPrefix = "";
 
-            if (_parameters.TryGetValue("api", out var apiBase))
+            if (_parameters.TryGetValue("api", out var apiBase) && !string.IsNullOrWhiteSpace(apiBase))
             {
                 _apiBaseUri = new System.Uri(apiBase);
 
@@ -176,9 +175,14 @@ namespace Certify.Providers.DNS.AcmeDns
                 // only useful on the target API, changing the api should change all settings
                 apiPrefix = ToUrlSafeBase64String(_client.BaseAddress.Host);
             }
+            else
+            {
+                _log.Error("acme-dns requires a valid API URL.");
+                return (null, false);
+            }
 
             // optionally load and use an existing registration from provided json
-            if (_parameters.TryGetValue("credentials_json", out var credentialsJson))
+            if (_parameters.TryGetValue("credentials_json", out var credentialsJson) && !string.IsNullOrWhiteSpace(credentialsJson))
             {
                 // use an existing registration credentials file
                 try
@@ -196,7 +200,10 @@ namespace Certify.Providers.DNS.AcmeDns
                 }
                 catch
                 {
-                    _log.Error("Failed to parse credentials JSON");
+                    _log.Error("Failed to parse credentials JSON. Leave the Credentials JSON blank if not known/required.");
+                    _log?.Information("acme-dns API registration failed.");
+
+                    return (null, false);
                 }
             }
 
@@ -211,7 +218,7 @@ namespace Certify.Providers.DNS.AcmeDns
 
             var registration = new AcmeDns.AcmeDnsRegistration();
 
-            if (_parameters.TryGetValue("allowfrom", out var allowFrom))
+            if (_parameters.TryGetValue("allowfrom", out var allowFrom) && !string.IsNullOrWhiteSpace(allowFrom))
             {
                 var rules = allowFrom.Split(';');
                 registration.allowfrom = new List<string>();

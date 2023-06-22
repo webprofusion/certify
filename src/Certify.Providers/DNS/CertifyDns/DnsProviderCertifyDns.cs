@@ -178,7 +178,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
             var apiPrefix = "";
 
-            if (_parameters.TryGetValue("api", out var apiBase))
+            if (_parameters.TryGetValue("api", out var apiBase) && !string.IsNullOrWhiteSpace(apiBase))
             {
                 _apiBaseUri = new System.Uri(apiBase);
 
@@ -216,7 +216,7 @@ namespace Certify.Providers.DNS.CertifyDns
             _settingsStoreName = "certifydns";
             var registration = new AcmeDnsRegistration();
 
-            if (_parameters.TryGetValue("allowfrom", out var allowFrom))
+            if (_parameters.TryGetValue("allowfrom", out var allowFrom) && !string.IsNullOrWhiteSpace(allowFrom))
             {
                 var rules = allowFrom.Split(';');
                 registration.allowfrom = new List<string>();
