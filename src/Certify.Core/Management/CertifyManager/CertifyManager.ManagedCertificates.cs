@@ -471,7 +471,7 @@ namespace Certify.Management
         {
             if (!await IsHttpChallengeProcessStarted())
             {
-                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory,"certify.exe");
+                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, "certify.exe");
                 _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
                 {
                     RedirectStandardInput = true,

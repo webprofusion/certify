@@ -603,7 +603,7 @@ namespace Certify.Management
                     result.Message = pendingOrder.FailureMessage;
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
-                    
+
                     return result;
                 }
             }
