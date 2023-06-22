@@ -273,7 +273,7 @@
             <ItemsControl
                 MinHeight="30"
                 DockPanel.Dock="Top"
-                ItemsSource="{Binding SelectedItem.Parameters, UpdateSourceTrigger=PropertyChanged}">
+                ItemsSource="{Binding ProviderParameters, UpdateSourceTrigger=PropertyChanged}">
                 <ItemsControl.ItemTemplateSelector>
                     <local:ControlTemplateSelector />
                 </ItemsControl.ItemTemplateSelector>

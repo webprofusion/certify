@@ -41,11 +41,20 @@ namespace Certify.UI.ViewModel
                 {
                     if (SelectedItem.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
                     {
-                        SelectedItem.PauseChangeEvents();
-                        SelectedItem.ChallengeProvider = null;
-                        SelectedItem.ChallengeCredentialKey = null;
-                        SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
-                        SelectedItem.ResumeChangeEvents();
+                        if (SelectedItem.ChallengeProvider != null)
+                        {
+                            SelectedItem.ChallengeProvider = null;
+                        }
+
+                        if (SelectedItem.ChallengeCredentialKey != null)
+                        {
+                            SelectedItem.ChallengeCredentialKey = null;
+                        }
+
+                        if (SelectedItem.Parameters?.Count() > 0)
+                        {
+                            SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                        }
                     }
                 }
             }
@@ -125,6 +134,7 @@ namespace Certify.UI.ViewModel
 
         internal async Task RefreshAllOptions(ComboBox storedCredentialsList)
         {
+
             RefreshParameters();
 
             await RefreshCredentialOptions(storedCredentialsList);
@@ -142,15 +152,21 @@ namespace Certify.UI.ViewModel
             }
 
             RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
-            SelectedItem.RaisePropertyChangedEvent(nameof(SelectedItem.Parameters));
+            RaisePropertyChangedEvent(nameof(ProviderParameters));
 
+        }
+
+        public ObservableCollection<ProviderParameter> ProviderParameters
+        {
+            get
+            {
+                return SelectedItem?.Parameters;
+            }
         }
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)
         {
-
             PauseChangeEvents();
-            SelectedItem.PauseChangeEvents();
 
             var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
 
@@ -182,8 +198,6 @@ namespace Certify.UI.ViewModel
             storedCredentialsList.SelectedValue = SelectedItem.ChallengeCredentialKey;
 
             ResumeChangeEvents();
-            SelectedItem.ResumeChangeEvents();
-
         }
 
         private void RefreshParameters()

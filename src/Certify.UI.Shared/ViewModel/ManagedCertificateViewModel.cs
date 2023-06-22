@@ -225,19 +225,28 @@ namespace Certify.UI.ViewModel
         public ManagedCertificate SelectedItem
         {
             get => _appViewModel.SelectedItem;
-            set => _appViewModel.SelectedItem = value;
+            set
+            {
+                _appViewModel.SelectedItem = value;
+            }
         }
 
+        private ObservableCollection<ChallengeConfigItemViewModel> _challengeConfigViewModels = new ObservableCollection<ChallengeConfigItemViewModel>();
+        private string challengeConfigViewModelCacheId = string.Empty;
         public ObservableCollection<ChallengeConfigItemViewModel> ChallengeConfigViewModels
         {
             get
             {
                 if (SelectedItem != null)
                 {
-                    if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
+                    if (challengeConfigViewModelCacheId != SelectedItem.Id)
                     {
-                        // populate challenge config info
-                        SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        challengeConfigViewModelCacheId = SelectedItem.Id;
+                        _challengeConfigViewModels.Clear();
+                        if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
+                        {
+                            // populate challenge config info
+                            SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>
                         {
                             new CertRequestChallengeConfig
                             {
@@ -246,18 +255,22 @@ namespace Certify.UI.ViewModel
 #pragma warning restore CS0618 // Type or member is obsolete
                             }
                         };
+                        }
+
+                        // setup view models for each existing challenge config
+                        foreach (var conf in SelectedItem.RequestConfig.Challenges)
+                        {
+                            _challengeConfigViewModels.Add(new ChallengeConfigItemViewModel(conf));
+                        }
                     }
-
-                    return new ObservableCollection<ChallengeConfigItemViewModel>(
-
-                      SelectedItem.RequestConfig.Challenges.Select(c => new ChallengeConfigItemViewModel(c))
-
-                      );
                 }
                 else
                 {
-                    return new ObservableCollection<ChallengeConfigItemViewModel> { };
+                    challengeConfigViewModelCacheId = null;
+                    _challengeConfigViewModels.Clear();
                 }
+
+                return _challengeConfigViewModels;
             }
         }
 
