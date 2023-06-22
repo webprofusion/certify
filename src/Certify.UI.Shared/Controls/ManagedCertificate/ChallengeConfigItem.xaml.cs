@@ -108,6 +108,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
+            // Do we still need to reset the credential key here?
             //EditModel.SelectedItem.ChallengeCredentialKey = null;
 
             await EditModel.RefreshAllOptions(StoredCredentialList);

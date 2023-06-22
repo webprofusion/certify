@@ -26,15 +26,6 @@ namespace Certify.UI.ViewModel
 
         public ManagedCertificateViewModel()
         {
-            _appViewModel.PropertyChanged += _appViewModel_PropertyChanged;
-        }
-
-        private void _appViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            /*if (e.PropertyName == nameof(_appViewModel.SelectedItem))
-            {
-                RaiseSelectedItemChanges();
-            }*/
         }
 
         public void RaiseSelectedItemChanges()
