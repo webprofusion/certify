@@ -146,6 +146,16 @@ namespace Certify.Models
         private bool isChanged;
 
         /// <summary>
+        /// If an action/event will have modified IsChanged but the change should be ignored, reset the value without firing events
+        /// </summary>
+        /// <param name="val"></param>
+        public void ResetIsChanged(bool val)
+        {
+            isChanged = val;
+            RaisePropertyChangedEvent(nameof(isChanged));
+        }
+
+        /// <summary>
         /// recursively unsets IsChanged on a BindableBase object, any property on the object of type
         /// BindableBase, and any BindableBase objects nested in ICollection properties
         /// </summary>

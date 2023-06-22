@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -39,6 +39,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             // generate preview
             if (ItemViewModel.SelectedItem != null)
             {
+                var savedIsChangedState = ItemViewModel.SelectedItem.IsChanged;
                 try
                 {
                     var cssPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Assets", "CSS", "markdown.css");
@@ -60,11 +61,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 try
                 {
                     // save and restore changed flag as validation may autoconfigure defaults.
-                    var isChangedBeforePreview = ItemViewModel.SelectedItem.IsChanged;
 
                     var validationResult = ItemViewModel.Validate(applyAutoConfiguration: true);
-
-                    ItemViewModel.SelectedItem.IsChanged = isChangedBeforePreview;
 
                     if (!validationResult.IsValid)
                     {
@@ -85,6 +83,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                 var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
                 result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                         "<style>" + _css + "</style></head><body>" + result + "</body></html>";
+
+                if (savedIsChangedState != ItemViewModel.SelectedItem.IsChanged)
+                {
+                    ItemViewModel.SelectedItem.ResetIsChanged(savedIsChangedState);
+                }
+
                 return result;
 
             }
