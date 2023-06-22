@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -26,15 +26,6 @@ namespace Certify.UI.ViewModel
 
         public ManagedCertificateViewModel()
         {
-            _appViewModel.PropertyChanged += _appViewModel_PropertyChanged;
-        }
-
-        private void _appViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == nameof(_appViewModel.SelectedItem))
-            {
-                RaiseSelectedItemChanges();
-            }
         }
 
         public void RaiseSelectedItemChanges()
@@ -49,6 +40,10 @@ namespace Certify.UI.ViewModel
             {
                 HasInvalidPrimaryDomainConfig = false;
             }
+
+            // start a new cache of challenge config models when item changes
+            challengeConfigViewModelCacheId = "none";
+            _challengeConfigViewModels.Clear();
 
             RaisePropertyChangedEvent(nameof(HasInvalidPrimaryDomainConfig));
 
@@ -232,30 +227,32 @@ namespace Certify.UI.ViewModel
         }
 
         private ObservableCollection<ChallengeConfigItemViewModel> _challengeConfigViewModels = new ObservableCollection<ChallengeConfigItemViewModel>();
-        private string challengeConfigViewModelCacheId = string.Empty;
+        private string challengeConfigViewModelCacheId = "none";
         public ObservableCollection<ChallengeConfigItemViewModel> ChallengeConfigViewModels
         {
             get
             {
                 if (SelectedItem != null)
                 {
-                    if (challengeConfigViewModelCacheId != SelectedItem.Id)
+                    // setup default challenge type
+                    if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
+                    {
+                        // populate challenge config info
+                        SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                                                                    {
+                                                                        new CertRequestChallengeConfig
+                                                                        {
+                                                                            #pragma warning disable CS0618 // Type or member is obsolete
+                                                                            ChallengeType = SelectedItem.RequestConfig.ChallengeType
+                                                                            #pragma warning restore CS0618 // Type or member is obsolete
+                                                                        }
+                                                                    };
+                    }
+
+                    if (challengeConfigViewModelCacheId != SelectedItem.Id || _challengeConfigViewModels.Count != SelectedItem.RequestConfig.Challenges.Count())
                     {
                         challengeConfigViewModelCacheId = SelectedItem.Id;
                         _challengeConfigViewModels.Clear();
-                        if (SelectedItem.RequestConfig.Challenges == null || !SelectedItem.RequestConfig.Challenges.Any())
-                        {
-                            // populate challenge config info
-                            SelectedItem.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>
-                        {
-                            new CertRequestChallengeConfig
-                            {
-#pragma warning disable CS0618 // Type or member is obsolete
-                                ChallengeType = SelectedItem.RequestConfig.ChallengeType
-#pragma warning restore CS0618 // Type or member is obsolete
-                            }
-                        };
-                        }
 
                         // setup view models for each existing challenge config
                         foreach (var conf in SelectedItem.RequestConfig.Challenges)
@@ -266,7 +263,7 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    challengeConfigViewModelCacheId = null;
+                    challengeConfigViewModelCacheId = "none";
                     _challengeConfigViewModels.Clear();
                 }
 

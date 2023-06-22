@@ -27,9 +27,13 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             DataContextChanged -= ChallengeConfigItem_DataContextChanged;
             DataContextChanged += ChallengeConfigItem_DataContextChanged;
+
         }
 
-        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) => await EditModel.RefreshAllOptions(StoredCredentialList);
+        private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            await EditModel.RefreshAllOptions(StoredCredentialList);
+        }
 
         private ChallengeConfigItemViewModel EditModel => (ChallengeConfigItemViewModel)DataContext;
 
@@ -95,6 +99,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async Task SetChallengeProvider(string challengeProviderType)
         {
+
             var previousSelection = EditModel.SelectedItem.ChallengeProvider;
             if (previousSelection != null && previousSelection != challengeProviderType)
             {
@@ -103,7 +108,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
-            EditModel.SelectedItem.ChallengeCredentialKey = null;
+            // Do we still need to reset the credential key here?
+            //EditModel.SelectedItem.ChallengeCredentialKey = null;
 
             await EditModel.RefreshAllOptions(StoredCredentialList);
 
@@ -191,8 +197,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (param != null)
                 {
                     param.Value = DnsZoneList.SelectedValue.ToString();
+
                     EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>(EditModel.SelectedItem.Parameters);
                     EditModel.ShowZoneLookup = false;
+                    EditModel.RaisePropertyChangedEvent(nameof(EditModel.ProviderParameters));
                 }
             }
         }
@@ -239,10 +247,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         private void OnParameterModified(object sender, RoutedEventArgs e)
         {
             // when parameter settings changed, force higher level model to be marked as changed
-            if (!EditModel.ParentManagedCertificate.RequestConfig.IsChanged)
-            {
-                EditModel.ParentManagedCertificate.RequestConfig.IsChanged = true;
-            }
+            EditModel.ParentManagedCertificate.RequestConfig.IsChanged = true;
+            EditModel.ParentManagedCertificate.IsChanged = true;
         }
     }
 }

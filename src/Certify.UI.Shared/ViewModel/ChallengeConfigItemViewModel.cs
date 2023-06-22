@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -11,7 +11,11 @@ namespace Certify.UI.ViewModel
 {
     public class ChallengeConfigItemViewModel : BindableBase
     {
-
+        /// <summary>
+        /// Note: this view model has a complex binding relationship with the parent managed certificate view model. 
+        /// Work is done in multiple places to ensure the IsChanged property is appropriately set and preserved.
+        /// </summary>
+        /// 
         private AppViewModel _appViewModel => AppViewModel.Current;
 
         public CertRequestChallengeConfig SelectedItem
@@ -56,6 +60,11 @@ namespace Certify.UI.ViewModel
                             SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
                         }
                     }
+                }
+
+                if (SelectedItem.IsChanged && !_appViewModel.SelectedItem.IsChanged)
+                {
+                    ParentManagedCertificate.ResetIsChanged(true);
                 }
             }
         }
@@ -137,7 +146,9 @@ namespace Certify.UI.ViewModel
 
             RefreshParameters();
 
+            var currentIsChanged = ParentManagedCertificate.IsChanged;
             await RefreshCredentialOptions(storedCredentialsList);
+            ParentManagedCertificate.ResetIsChanged(currentIsChanged);
 
             // if we need to migrate WebsiteRootPath, apply it here
             if (ParentManagedCertificate != null)
@@ -166,6 +177,7 @@ namespace Certify.UI.ViewModel
 
         public async Task RefreshCredentialOptions(ComboBox storedCredentialsList)
         {
+            var currentIsChanged = _appViewModel.SelectedItem.IsChanged;
             PauseChangeEvents();
 
             var currentSelectedValue = SelectedItem.ChallengeCredentialKey;
@@ -180,7 +192,7 @@ namespace Certify.UI.ViewModel
             // this will in turn cause our model to be marked as changed even if it wasn't before (this is why we pause and resume change events in this method)         
             storedCredentialsList.ItemsSource = credentials;
 
-            if (currentSelectedValue != null)
+            if (currentSelectedValue != null && SelectedItem.ChallengeCredentialKey != currentSelectedValue)
             {
                 SelectedItem.ChallengeCredentialKey = currentSelectedValue;
             }
@@ -195,9 +207,13 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            storedCredentialsList.SelectedValue = SelectedItem.ChallengeCredentialKey;
+            if (storedCredentialsList.SelectedValue?.ToString() != SelectedItem.ChallengeCredentialKey)
+            {
+                storedCredentialsList.SelectedValue = SelectedItem.ChallengeCredentialKey;
+            }
 
             ResumeChangeEvents();
+            ParentManagedCertificate.ResetIsChanged(currentIsChanged);
         }
 
         private void RefreshParameters()
