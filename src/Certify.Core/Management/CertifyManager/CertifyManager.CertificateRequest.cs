@@ -893,10 +893,13 @@ namespace Certify.Management
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
                         // perform cert cleanup (if enabled)
+                        var cleanupStore = CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME;
+                        log.Information($"Cleanup processing: Windows {_useWindowsNativeFeatures} Enabled {CoreAppSettings.Current.EnableCertificateCleanup} Current Thumbprint {managedCertificate.CertificateThumbprintHash} Cleanup Name: {certCleanupName} CleanupStore: {cleanupStore}");
                         if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
                         {
                             try
                             {
+                                _serviceLog.Information($"Checking for previous certs matching cleanup mode.");
                                 var mode = CoreAppSettings.Current.CertificateCleanupMode;
 
                                 // default to After Expiry cleanup if no preference specified
@@ -917,7 +920,8 @@ namespace Certify.Management
                                     DateTime.Now,
                                     matchingName: certCleanupName,
                                     excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
-                                    log: _serviceLog, CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME
+                                    log: _serviceLog,
+                                    storeName: cleanupStore
                                 );
 
                                 if (certsRemoved.Any())
@@ -926,6 +930,11 @@ namespace Certify.Management
                                     {
                                         _serviceLog.Information($"Cleanup removed cert: {c}");
                                     }
+                                }
+                                else
+                                {
+                                    _serviceLog.Information($"No previous certs removed during cleanup.");
+                                    log.Information($"No previous certs removed during cleanup.");
                                 }
                             }
                             catch (Exception exp)
