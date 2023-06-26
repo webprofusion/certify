@@ -866,6 +866,8 @@ namespace Certify.Management
                             CoreAppSettings.Current.DefaultCertificateStore
                         );
 
+                    log?.Debug("Performing post request cleanup as required");
+
                     if (!actions.Any(a => a.HasError))
                     {
 
@@ -894,7 +896,7 @@ namespace Certify.Management
 
                         // perform cert cleanup (if enabled)
                         var cleanupStore = CoreAppSettings.Current.DefaultCertificateStore ?? CertificateManager.DEFAULT_STORE_NAME;
-                        log.Information($"Cleanup processing: Windows {_useWindowsNativeFeatures} Enabled {CoreAppSettings.Current.EnableCertificateCleanup} Current Thumbprint {managedCertificate.CertificateThumbprintHash} Cleanup Name: {certCleanupName} CleanupStore: {cleanupStore}");
+                        log?.Debug($"Cleanup processing: Windows {_useWindowsNativeFeatures} Enabled {CoreAppSettings.Current.EnableCertificateCleanup} Current Thumbprint {managedCertificate.CertificateThumbprintHash} Cleanup Name: {certCleanupName} CleanupStore: {cleanupStore}");
                         if (_useWindowsNativeFeatures && CoreAppSettings.Current.EnableCertificateCleanup && !string.IsNullOrEmpty(managedCertificate.CertificateThumbprintHash))
                         {
                             try
@@ -928,13 +930,13 @@ namespace Certify.Management
                                 {
                                     foreach (var c in certsRemoved)
                                     {
-                                        _serviceLog.Information($"Cleanup removed cert: {c}");
+                                        _serviceLog?.Information($"Cleanup removed cert: {c}");
                                     }
                                 }
                                 else
                                 {
-                                    _serviceLog.Information($"No previous certs removed during cleanup.");
-                                    log.Information($"No previous certs removed during cleanup.");
+                                    _serviceLog?.Debug($"No previous certs removed during cleanup.");
+                                    log?.Debug($"No previous certs removed during cleanup.");
                                 }
                             }
                             catch (Exception exp)
@@ -950,6 +952,8 @@ namespace Certify.Management
                     }
                     else
                     {
+                        log?.Debug($"One or more failures. Cleanup skipped.");
+
                         // we failed to install this cert or create/update the https binding
                         var msg = string.Join("\r\n",
                             actions.Where(s => s.HasError)
@@ -965,6 +969,8 @@ namespace Certify.Management
                 }
                 else
                 {
+                    log?.Debug($"Request Failed. Cleanup skipped.");
+
                     // certificate request failed
                     result.IsSuccess = false;
                     result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
@@ -978,6 +984,7 @@ namespace Certify.Management
             }
             else
             {
+                log?.Debug($"Failed to validate. Cleanup skipped.");
 
                 //failed to validate all identifiers
                 result.IsSuccess = false;
@@ -989,6 +996,8 @@ namespace Certify.Management
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
             }
+
+            log?.Debug($"End of CompleteCertificateRequest.");
 
             return result;
         }
