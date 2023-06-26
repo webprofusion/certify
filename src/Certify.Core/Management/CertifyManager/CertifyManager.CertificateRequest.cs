@@ -934,6 +934,10 @@ namespace Certify.Management
                                 _serviceLog?.Error("Failed to perform certificate cleanup: " + exp.ToString());
                             }
                         }
+                        else
+                        {
+                            _serviceLog?.Warning("Certificate cleanup on renewal is not enabled.");
+                        }
                     }
                     else
                     {
