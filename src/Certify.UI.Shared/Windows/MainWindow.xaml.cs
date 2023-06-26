@@ -344,6 +344,8 @@ namespace Certify.UI.Windows
                 _appViewModel.IsLicenseExpired = await _appViewModel.CheckLicenseIsActive() == false;
             }
 
+            Title = $"{Title} {Management.Util.GetAppVersion()}";
+
             _periodicCheckTimer = new System.Timers.Timer(60 * 60 * 1000); // every hour
             _periodicCheckTimer.Elapsed += _periodicCheckTimer_Elapsed;
             _periodicCheckTimer.Start();
