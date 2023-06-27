@@ -36,6 +36,25 @@
 
                 </TextBlock>
 
+                <GroupBox
+                    x:Name="CommunityEdition"
+                    Margin="0,16,0,0"
+                    Background="{DynamicResource ErrorColorBrush}"
+                    BorderThickness="0"
+                    Header="License Required"
+                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+                    <StackPanel>
+
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
+                            Style="{StaticResource Instructions}">
+                            <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation you are required to purchase a license key, then use About &gt; Enter Key.. to activate. Visit certifytheweb.com/register for more information." />
+
+                        </TextBlock>
+                    </StackPanel>
+                </GroupBox>
+
                 <StackPanel
                     x:Name="ExpiredLicense"
                     Margin="0,16,16,8"
@@ -218,27 +237,12 @@
 
                 <managed:Dashboard Margin="0,16,0,0" FilterApplied="Dashboard_FilterApplied" />
 
-                <GroupBox
-                    x:Name="CommunityEdition"
-                    Margin="0,16,0,0"
-                    Background="{DynamicResource InformationColorBrush}"
-                    Header="License Upgrade Recommended"
-                    Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
-                    <StackPanel>
 
-                        <TextBlock
-                            Margin="8"
-                            Foreground="{DynamicResource MahApps.Brushes.IdealForeground}"
-                            Style="{StaticResource Instructions}">
-                            <Run Text="You are using the Community Edition. If you are using this application within a business or funded organisation (beyond a temporary evaluation) you are required to purchase a license key. Visit https://certifytheweb.com/register for more information." />
-
-                        </TextBlock>
-                    </StackPanel>
-                </GroupBox>
 
                 <GroupBox
                     x:Name="Dashboard"
                     Margin="0,16,0,0"
+                    BorderThickness="0"
                     Header="{x:Static res:SR.GettingStarted_Dashboard}">
 
                     <GroupBox.Style>

@@ -44,7 +44,7 @@
     </UserControl.Resources>
     <StackPanel>
 
-        <GroupBox Header="Summary">
+        <GroupBox BorderThickness="0" Header="Summary">
             <StackPanel Margin="16,8,0,8" Orientation="Horizontal">
 
                 <StackPanel Width="220">
