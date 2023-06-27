@@ -219,7 +219,7 @@ namespace Certify.Models
         /// <summary>
         /// If specified, custom renewal interval mode (DaysBeforeExpiry, DaysAfterRenewal, PercentageLifetime)
         /// </summary>
-        public string CustomRenewalIntervalMode { get; set; }
+        public string? CustomRenewalIntervalMode { get; set; }
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
