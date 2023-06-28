@@ -34,6 +34,14 @@ namespace Certify.Service.Controllers
             return await _certifyManager.GetManagedCertificates(filter);
         }
 
+        // Get List of Top N Managed Certificates, filtered by title, as a Search Result with total count
+        [HttpPost, Route("results")]
+        public async Task<ManagedCertificateSearchResult> GetResults(ManagedCertificateFilter filter)
+        {
+            DebugLog();
+            return await _certifyManager.GetManagedCertificateResults(filter);
+        }
+
         [HttpGet, Route("{id}")]
         public async Task<ManagedCertificate> GetById(string id)
         {

@@ -53,4 +53,12 @@ namespace Certify.Models.API
         /// </summary>
         public bool HasCertificate { get; set; }
     }
+
+    public class ManagedCertificateSummaryResult
+    {
+        public IEnumerable<ManagedCertificateSummary> Results { get; set; } = new List<ManagedCertificateSummary>();
+        public int TotalResults { get; set; }
+        public int PageIndex { get; set; }
+        public int PageSize { get; set; }
+    }
 }

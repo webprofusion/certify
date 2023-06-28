@@ -27,6 +27,7 @@ namespace Certify.Management
         Task<ManagedCertificate> GetManagedCertificate(string id);
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null);
+        Task<ManagedCertificateSearchResult> GetManagedCertificateResults(ManagedCertificateFilter filter = null);
 
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 
