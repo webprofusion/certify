@@ -110,6 +110,18 @@ namespace Certify.Models
         }
     }
 
+    public class ManagedCertificateSearchResult
+    {
+        /// <summary>
+        /// Results in this search (may be a paged subset)
+        /// </summary>
+        public IEnumerable<ManagedCertificate> Results { get; set; } = Enumerable.Empty<ManagedCertificate>();
+        /// <summary>
+        /// Total results available
+        /// </summary>
+        public int TotalResults { get; set; }
+    }
+
     public class ManagedCertificate : BindableBase
     {
         public ManagedCertificate()
