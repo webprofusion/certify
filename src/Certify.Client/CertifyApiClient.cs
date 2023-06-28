@@ -379,6 +379,24 @@ namespace Certify.Client
             }
         }
 
+        /// <summary>
+        /// Get search results, same as GetManagedCertificates but result has count of total results available as used when paging
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public async Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter)
+        {
+            var response = await PostAsync("managedcertificates/results/", filter);
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
+            {
+                var result = serializer.Deserialize<ManagedCertificateSearchResult>(reader);
+                return result;
+            }
+        }
+
         public async Task<ManagedCertificate> GetManagedCertificate(string managedItemId)
         {
             var result = await FetchAsync($"managedcertificates/{managedItemId}");
