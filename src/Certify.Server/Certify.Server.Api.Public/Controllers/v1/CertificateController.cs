@@ -149,15 +149,19 @@ namespace Certify.Server.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedCertificateSummary>))]
-        public async Task<IActionResult> GetManagedCertificates(string keyword)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
+        public async Task<IActionResult> GetManagedCertificates(string keyword, int? page = null, int? pageSize = null)
         {
 
-            var managedCerts = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { Keyword = keyword });
+            var managedCertResult = await _client.GetManagedCertificateSearchResult(
+                new Models.ManagedCertificateFilter
+                {
+                    Keyword = keyword,
+                    PageIndex = page,
+                    PageSize = pageSize
+                });
 
-            //TODO: this assumes all identifiers are DNS, may be IPs in the future.
-
-            var list = managedCerts.Select(i => new ManagedCertificateSummary
+            var list = managedCertResult.Results.Select(i => new ManagedCertificateSummary
             {
                 Id = i.Id,
                 Title = i.Name,
@@ -170,7 +174,14 @@ namespace Certify.Server.API.Controllers
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
             }).OrderBy(a => a.Title);
 
-            return new OkObjectResult(list);
+            var result = new ManagedCertificateSummaryResult { 
+                Results = list, 
+                TotalResults = managedCertResult.TotalResults, 
+                PageIndex = page ?? 0, 
+                PageSize = pageSize ?? list.Count()
+            };
+
+            return new OkObjectResult(result);
         }
 
         /// <summary>

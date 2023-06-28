@@ -70,6 +70,29 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Get list of managed certificates based on then given filter criteria, as search result with total count
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public async Task<ManagedCertificateSearchResult> GetManagedCertificateResults(ManagedCertificateFilter filter)
+        {
+            var result = new ManagedCertificateSearchResult();
+
+            var list = await _itemManager.Find(filter);
+            if (filter.PageSize > 0)
+            {
+                // TODO: implement count on provider directly
+                filter.PageSize = null;
+                filter.PageIndex = null;
+                var all = await _itemManager.Find(filter);
+                result.TotalResults = all.Count;
+            }
+            
+            result.Results = list;
+
+            return result;
+        }
+        /// <summary>
         /// Update the stored details for the given managed certificate and report update to client(s)
         /// </summary>
         /// <param name="managedCert"></param>
