@@ -76,6 +76,7 @@ namespace Certify.Client
         #region Managed Certificates
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter);
+        Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter);
 
         Task<ManagedCertificate> GetManagedCertificate(string managedItemId);
 
