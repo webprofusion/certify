@@ -315,6 +315,12 @@ namespace Certify.UI.ViewModel
         /// <param name="settings"></param>
         public async void RenewAll(RenewalSettings settings)
         {
+
+            if (_certifyClient == null)
+            {
+                return;
+            }
+
             //FIXME: currently user can run renew all again while renewals are still in progress
 
             var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
