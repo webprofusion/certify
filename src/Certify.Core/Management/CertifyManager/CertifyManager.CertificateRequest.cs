@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -585,7 +585,7 @@ namespace Certify.Management
         {
             var result = new CertificateRequestResult(managedCertificate);
 
-            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
+            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false, isResumedOrder: true);
             var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
             _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var certAuthority);
@@ -1385,7 +1385,7 @@ namespace Certify.Management
 
             log?.Warning($"Revoking certificate: {managedCertificate.Name}");
 
-            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false);
+            var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false, isResumedOrder: true);
             var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
             if (_acmeClientProvider == null)

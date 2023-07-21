@@ -22,7 +22,7 @@ namespace Certify.Management
         /// <param name="allowCache">if true, allow use of cached account list</param>
         /// <param name="allowFailover">if true, select a fallback CA account if item has recently failed renewal, if false use same account as last renewal/attempt</param>
         /// <returns>Account Details or null if there is no matching account</returns>
-        public async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false)
+        public async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false, bool isResumedOrder = false)
         {
             if (OverrideAccountDetails != null)
             {
@@ -76,7 +76,7 @@ namespace Certify.Management
             var currentCA = GetCurrentCAId(item);
             var reusingLastCA = false;
 
-            if (!allowFailover && !string.IsNullOrEmpty(item.LastAttemptedCA) && currentCA != item.LastAttemptedCA)
+            if (isResumedOrder && !allowFailover && !string.IsNullOrEmpty(item.LastAttemptedCA) && currentCA != item.LastAttemptedCA)
             {
                 // if we have a last attempted CA and we are not looking to failover, use the same CA as last time (e.g. when resuming orders after completing challenges)
                 // TODO: if item has previously failed over the CA will stick with the last one rather than the default.

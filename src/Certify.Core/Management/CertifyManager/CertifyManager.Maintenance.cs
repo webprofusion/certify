@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -189,7 +189,7 @@ namespace Certify.Management
 
                             try
                             {
-                                var caAccount = await GetAccountDetails(item, allowFailover: false);
+                                var caAccount = await GetAccountDetails(item, allowFailover: false, isResumedOrder: true);
                                 var provider = await GetACMEProvider(item, caAccount);
 
                                 if (provider != null)
