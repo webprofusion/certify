@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
-    <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="Polly" Version="7.2.4" />
   </ItemGroup>
   
   <ItemGroup>
