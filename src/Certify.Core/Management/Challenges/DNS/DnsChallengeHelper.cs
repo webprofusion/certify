@@ -183,7 +183,7 @@ namespace Certify.Core.Management.Challenges
                     txtRecordName = delegatedTXTRecordName;
                 }
 
-                log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
+                log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', [{domain.Value}] {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
                     var result = await dnsAPIProvider.CreateRecord(new DnsRecord
@@ -407,7 +407,7 @@ namespace Certify.Core.Management.Challenges
                     txtRecordName = delegatedTXTRecordName;
                 }
 
-                log.Information($"DNS: Deleting TXT Record '{txtRecordName}', {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
+                log.Information($"DNS: Deleting TXT Record '{txtRecordName}' :'{txtRecordValue}', [{domain.Value}] {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
                 try
                 {
                     var result = await dnsAPIProvider.DeleteRecord(new DnsRecord
