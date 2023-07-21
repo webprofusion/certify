@@ -350,13 +350,16 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            if (DeploymentProvider?.ExternalCredentialType == null)
+            if (DeploymentProvider?.ExternalCredentialType == null && DeploymentProvider.SupportsRemoteTarget)
             {
                 // if remote target, check target specified. TODO: Could also check host resolves.
+                // we allow windows auth to skip this check as user may be targeting local
+
                 if (!string.IsNullOrEmpty(SelectedItem.ChallengeProvider)
                     && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL
                     && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER
                     && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_PROVIDER_SPECIFIED
+                    && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_WINDOWS
                     && string.IsNullOrEmpty(SelectedItem.TargetHost)
                     )
                 {

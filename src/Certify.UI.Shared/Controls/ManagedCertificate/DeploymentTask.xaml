@@ -374,7 +374,7 @@
                                 x:Name="TargetHost"
                                 Width="225"
                                 Margin="0,0,8,0"
-                                Controls:TextBoxHelper.Watermark="IP or hostname to connect to"
+                                Controls:TextBoxHelper.Watermark="(optional, blank for local) IP or hostname to connect to"
                                 Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
 
