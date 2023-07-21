@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -52,6 +53,10 @@ namespace Certify.Providers.DNS.Cloudflare
         public string Type { get; set; }
         public string Name { get; set; }
         public string Content { get; set; }
+        public string Comment { get; set; }
+
+        [JsonProperty("modified_on")]
+        public DateTime Modified { get; set; }
     }
 
     internal class DnsResultCloudflare
@@ -209,7 +214,7 @@ namespace Certify.Providers.DNS.Cloudflare
                     type = "TXT",
                     name = name,
                     content = value,
-                    ttl = 120
+                    ttl = 60
                 })
                 );
 
@@ -244,7 +249,7 @@ namespace Certify.Providers.DNS.Cloudflare
                     type = "TXT",
                     name = record.Name,
                     content = value,
-                    ttl = 120
+                    ttl = 60
                 })
                 );
 
@@ -278,10 +283,19 @@ namespace Certify.Providers.DNS.Cloudflare
                     {
                         return new ActionResult("Record with required value exists, OK", true);
                     }
-                    else if (records.Count(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower()) >= 2)
+                    else
                     {
-                        // delete old record with different value before adding
-                        _ = await DeleteRecord(request, false);
+                        // if more than 2 already existing records with same name, remove all but the last 2 to allow for domain + wildcard validation
+                        var existing = records.Where(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower()).OrderBy(r => r.Modified);
+
+                        if (existing.Count() >= 2)
+                        {
+                            // delete old records before adding
+                            foreach (var oldRecord in existing.Take(existing.Count() - 2))
+                            {
+                                _ = await DeleteRecord(new DnsRecord { RecordId = oldRecord.Id, RecordName = request.RecordName, RecordType = request.RecordType, ZoneId = request.ZoneId, RecordValue = oldRecord.Content }, requireSameValue: true);
+                            }
+                        }
                     }
                 }
                 catch { }
@@ -297,7 +311,7 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
-            return await DeleteRecord(request, false);
+            return await DeleteRecord(request, requireSameValue: true);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request, bool requireSameValue)
@@ -308,28 +322,45 @@ namespace Certify.Providers.DNS.Cloudflare
                 return new ActionResult("Cannot delete a record with no dns name", false);
             }
 
-            var records = await GetDnsRecords(request.ZoneId);
-            var recordsToDelete = records.Where(x => x.Name == request.RecordName && (requireSameValue == false || (requireSameValue == true && x.Content == request.RecordValue && x.Type.ToLower() == "txt")));
-
-            if (!recordsToDelete.Any())
+            if (!string.IsNullOrWhiteSpace(request.RecordId))
             {
-                return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
-            }
 
-            var itemError = "";
-
-            // when deleting a TXT record with multiple values several records will be returned but
-            // only the first delete will succeed (removing all values) for this reason we return a
-            // success state even if the delete failed
-            foreach (var r in recordsToDelete)
-            {
-                var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, r.Id));
+                // delete based on known recordId
+                var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, request.RecordId));
 
                 var result = await _client.SendAsync(req);
                 if (!result.IsSuccessStatusCode)
                 {
-                    itemError += " " + await result.Content.ReadAsStringAsync();
-                    return new ActionResult { IsSuccess = false, Message = $"DNS record delete failed: {request.RecordName}" };
+                    var err = await result.Content.ReadAsStringAsync();
+                    return new ActionResult { IsSuccess = false, Message = $"DNS record delete failed: {request.RecordName}: {err}" };
+                }
+            }
+            else
+            {
+                // query matching records to delete
+                var records = await GetDnsRecords(request.ZoneId);
+                var recordsToDelete = records.Where(x => x.Name == request.RecordName && (requireSameValue == false || (requireSameValue == true && x.Content == request.RecordValue && x.Type.ToLower() == "txt")));
+
+                if (!recordsToDelete.Any())
+                {
+                    return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
+                }
+
+                var itemError = "";
+
+                // when deleting a TXT record with multiple values several records will be returned but
+                // only the first delete will succeed (removing all values) for this reason we return a
+                // success state even if the delete failed
+                foreach (var r in recordsToDelete)
+                {
+                    var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, request.ZoneId, r.Id));
+
+                    var result = await _client.SendAsync(req);
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        itemError += " " + await result.Content.ReadAsStringAsync();
+                        return new ActionResult { IsSuccess = false, Message = $"DNS record delete failed: {request.RecordName}" };
+                    }
                 }
             }
 
