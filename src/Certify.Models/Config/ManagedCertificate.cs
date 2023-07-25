@@ -818,68 +818,50 @@ namespace Certify.Models
             return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
         }
 
-        /// <summary>
-        /// if we know the last renewal date, check whether we should renew again, otherwise assume
-        /// it's more than 30 days ago by default and attempt renewal
-        /// </summary>
-        /// <param name="s">  </param>
-        /// <param name="renewalIntervalDays">  </param>
-        /// <param name="checkFailureStatus">  </param>
-        /// <returns>  </returns>
-        public static bool IsRenewalRequired(ManagedCertificate s, int renewalIntervalDays, string renewalIntervalMode, bool checkFailureStatus = false)
+        public static bool IsRenewalOnHoldForFailures(ManagedCertificate s, RenewalDueInfo renewalDueInfo)
         {
-            var timeNow = DateTime.Now;
-
-            var timeSinceLastRenewal = (s.DateRenewed ?? timeNow.AddDays(-30)) - timeNow;
-
-            var timeToExpiry = (s.DateExpiry ?? timeNow) - timeNow;
-
-            var isRenewalRequired = false;
-
-            if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
-            {
-                // is item expiring within N days
-                isRenewalRequired = Math.Abs(timeToExpiry.TotalDays) <= renewalIntervalDays;
-            }
-            else
-            {
-                // was item renewed more than N days ago
-                isRenewalRequired = Math.Abs(timeSinceLastRenewal.TotalDays) > renewalIntervalDays;
-            }
-
-            // if we have never attempted renewal, renew now
-            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
-            {
-                isRenewalRequired = true;
-            }
-
             // if renewal is required but we have previously failed, scale the frequency of renewal
-            // attempts to a minimum of once per 24hrs.
-            if (isRenewalRequired && checkFailureStatus)
-            {
-                if (s.LastRenewalStatus == RequestState.Error)
-                {
-                    // our last attempt failed, check how many failures we've had to decide whether
-                    // we should attempt now, Scale wait time based on how many attempts we've made.
-                    // Max 48hrs between attempts
-                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
-                    {
-                        var hoursWait = 48;
-                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
-                        {
-                            hoursWait = s.RenewalFailureCount;
-                        }
+            // attempts based on last certificate lifetime or custom lifetime.
 
-                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
+            var isOnHold = false;
+
+            if (s.LastRenewalStatus == RequestState.Error)
+            {
+                // our last attempt failed, check how many failures we've had to decide whether
+                // we should attempt now, Scale wait time based on how many attempts we've made.
+                // Max 48hrs between attempts or 90% of lifetime (if known)
+                if (s.RenewalFailureCount > 0)
+                {
+                    var maxWaitHrs = 48f;
+
+                    if (s.RequestConfig.PreferredExpiryDays != null)
+                    {
+                        maxWaitHrs = ((float)s.RequestConfig.PreferredExpiryDays * 24) * 0.9f;
+                    }
+
+                    if (s.GetPercentageLifetimeElapsed(DateTime.UtcNow) > 90)
+                    {
+                        maxWaitHrs = 0.5f;
+                    }
+
+                    if (s.DateLastRenewalAttempt != null)
+                    {
+                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(maxWaitHrs);
+
                         if (DateTime.Now < nextAttemptByDate)
                         {
-                            isRenewalRequired = false;
+                            isOnHold = false;
                         }
+                    }
+                    else
+                    {
+                        // never attempted, can't be put on hold
+                        isOnHold = false;
                     }
                 }
             }
 
-            return isRenewalRequired;
+            return isOnHold;
         }
     }
 }

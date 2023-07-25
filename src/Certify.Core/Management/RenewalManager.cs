@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -126,12 +126,13 @@ namespace Certify.Management
                     var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
                     var isRenewalOnHold = false;
+
                     var renewalReason = renewalDueCheck.Reason;
 
                     if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
                     {
-                        //check if we have renewal failures, if so wait a bit longer.
-                        isRenewalOnHold = !ManagedCertificate.IsRenewalRequired(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: true);
+                        // check if we have renewal failures, if so wait a bit longer. TODO: explain on hold reason and hold duration
+                        isRenewalOnHold = ManagedCertificate.IsRenewalOnHoldForFailures(managedCertificate, renewalDueCheck);
 
                         if (isRenewalOnHold)
                         {
