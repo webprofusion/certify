@@ -165,6 +165,15 @@ namespace Certify.Management
         public string ConfigDataStoreConnectionId { get; set; }
         public string DefaultKeyType { get; set; }
 
+        /// <summary>
+        /// If true, renewal tasks in batch will run simultaneously
+        /// </summary>
+        public bool PerformParallelRenewals { get; set; }
+    
+        /// <summary>
+        /// If true, challenge cleanup will only happen after all auth challenges in an order have been processed
+        /// </summary>
+        public bool PerformChallengeCleanupsLast { get; set; }
         public string CurrentServiceVersion { get; set; }
     }
 

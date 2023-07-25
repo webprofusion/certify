@@ -49,7 +49,9 @@ namespace Certify.Management
                 MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
                 RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
                 RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
-                IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites
+                IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
+                SuppressSkippedItems = true,
+                PerformParallelRenewals = CoreAppSettings.Current.PerformParallelRenewals
             };
 
             var results = await RenewalManager.PerformRenewAll(
@@ -617,6 +619,7 @@ namespace Certify.Management
 
             var validationFailed = false;
             var failureSummaryMessage = "";
+            var cleanupChallengesLast = CoreAppSettings.Current.PerformChallengeCleanupsLast;
 
             if (pendingOrder.IsPendingAuthorizations)
             {
@@ -727,7 +730,7 @@ namespace Certify.Management
                                         // clean up challenge answers (.well-known/acme-challenge/* files or DNS entries)
                                         // for http-01 or dns-01)
 
-                                        if (authorization.Cleanup != null)
+                                        if (authorization.Cleanup != null && !cleanupChallengesLast)
                                         {
                                             await authorization.Cleanup();
                                         }
@@ -761,6 +764,20 @@ namespace Certify.Management
                                 failureSummaryMessage = $"[{identifier}] : {authorization?.AuthorizationError}";
 
                                 validationFailed = true;
+                            }
+                        }
+                    }
+
+                    if (cleanupChallengesLast)
+                    {
+                        // perform cleanups as batch
+                        log?.Information($"Performing challenge cleanups.");
+
+                        foreach (var authCleanup in authorizations)
+                        {
+                            if (authCleanup.Cleanup != null)
+                            {
+                                await authCleanup.Cleanup();
                             }
                         }
                     }

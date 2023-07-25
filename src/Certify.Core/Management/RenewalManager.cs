@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -221,16 +221,13 @@ namespace Certify.Management
                 return new List<CertificateRequestResult>();
             }
 
-            if (performRequestsInParallel)
+            if (prefs.PerformParallelRenewals)
             {
-                var results = new List<CertificateRequestResult>();
-                foreach (var t in renewalTasks)
-                {
-                    t.Start();
-                    results.Add(await t);
-                }
+                renewalTasks.ForEach(t => t.Start());
 
-                return results.ToList();
+                var allTaskResults = await Task.WhenAll(renewalTasks);
+
+                return allTaskResults.ToList();
             }
             else
             {

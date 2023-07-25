@@ -44,5 +44,15 @@ namespace Certify.Models
         public string RenewalIntervalMode { get; set; } = string.Empty;
         public int MaxRenewalRequests { get; set; }
         public bool IncludeStoppedSites { get; set; }
+
+        /// <summary>
+        ///  If true, don't send status UI messages for skipped items (items not due for renewal)
+        /// </summary>
+        public bool SuppressSkippedItems { get; set; }
+
+        /// <summary>
+        /// If true, perform batches of items in parallel
+        /// </summary>
+        public bool PerformParallelRenewals{ get; set; }
     }
 }
