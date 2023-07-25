@@ -218,7 +218,7 @@ namespace Certify.Shared.Core.Utils
             finally
             {
                 // reset callback for other requests to validate using default behavior
-                ServicePointManager.ServerCertificateValidationCallback = null;
+                //ServicePointManager.ServerCertificateValidationCallback = null;
             }
         }
 
