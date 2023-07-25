@@ -115,7 +115,6 @@
         /// </summary>
         public string ConfigDataStoreConnectionId { get; set; } = "0";
 
-
         /// <summary>
         /// If set, defines the default key type used for private keys
         /// </summary>
