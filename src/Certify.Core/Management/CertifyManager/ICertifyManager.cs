@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -69,7 +70,7 @@ namespace Certify.Management
 
         Task<List<DomainOption>> GetDomainOptionsFromSite(StandardServerTypes serverType, string siteId);
 
-        Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
+        Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
         RequestProgressState GetRequestProgressState(string managedItemId);
 

@@ -315,40 +315,24 @@ namespace Certify.UI.ViewModel
         /// <param name="settings"></param>
         public async void RenewAll(RenewalSettings settings)
         {
-
             if (_certifyClient == null)
             {
                 return;
             }
 
-            //FIXME: currently user can run renew all again while renewals are still in progress
-
-            var itemTrackers = new Dictionary<string, Progress<RequestProgressState>>();
-            foreach (var s in ManagedCertificates)
-            {
-                if (string.IsNullOrEmpty(s.SourceId))
-                {
-                    if ((settings.Mode == RenewalMode.Auto && s.IncludeInAutoRenew) || settings.Mode != RenewalMode.Auto)
-                    {
-                        var progressState = new RequestProgressState(RequestState.Running, "Starting..", s);
-                        if (!itemTrackers.ContainsKey(s.Id))
-                        {
-                            itemTrackers.Add(s.Id, new Progress<RequestProgressState>(progressState.ProgressReport));
-
-                            //begin monitoring progress
-                            UpdateRequestTrackingProgress(progressState);
-                        }
-                    }
-                }
-            }
-
             try
             {
-                await _certifyClient.BeginAutoRenewal(settings);
+                ProgressResults.Clear();
+                var results = await _certifyClient.BeginAutoRenewal(settings);
+
+                if (!results.Any())
+                {
+                    ShowNotification("No items are currently due for renewal.", NotificationType.Info);
+                }
             }
             catch (TaskCanceledException exp)
             {
-                // very long running renewal may time out on task await
+                // very long running renewal may timeout on task await
                 Log?.Warning("Auto Renewal UI task cancelled (timeout) " + exp.ToString());
             }
         }

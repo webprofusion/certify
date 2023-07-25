@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -30,7 +31,7 @@ namespace Certify.Management
         /// <param name="autoRenewalOnly">  </param>
         /// <param name="progressTrackers">  </param>
         /// <returns>  </returns>
-        public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null)
+        public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null)
         {
             if (_isRenewAllInProgress)
             {

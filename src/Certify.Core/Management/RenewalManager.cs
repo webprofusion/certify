@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,11 +28,10 @@ namespace Certify.Management
             Action<IProgress<RequestProgressState>, RequestProgressState, bool> ReportProgress,
             Func<string, Task<bool>> IsManagedCertificateRunning,
             Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> PerformCertificateRequest,
-            Dictionary<string, Progress<RequestProgressState>> progressTrackers = null
+            ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null
             )
         {
             // we can perform request in parallel but if processing many requests this can cause issues committing IIS bindings etc
-            var performRequestsInParallel = false;
 
             var testModeOnly = false;
 
@@ -91,7 +91,7 @@ namespace Certify.Management
 
             if (progressTrackers == null)
             {
-                progressTrackers = new Dictionary<string, Progress<RequestProgressState>>();
+                progressTrackers = new ConcurrentDictionary<string, Progress<RequestProgressState>>();
             }
 
             if (managedCertificates.Count(c => c.LastRenewalStatus == RequestState.Error) > MAX_CERTIFICATE_REQUEST_TASKS)
@@ -109,7 +109,7 @@ namespace Certify.Management
 
                     try
                     {
-                        progressTrackers.Add(managedCertificate.Id, progressIndicator);
+                        progressTrackers.TryAdd(managedCertificate.Id, progressIndicator);
                     }
                     catch
                     {
@@ -206,9 +206,16 @@ namespace Certify.Management
 
                         if (progressTrackers != null)
                         {
-                            //send progress back to report skip
-                            var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                            ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
+                            if (!renewalDueCheck.IsRenewalDue && prefs.SuppressSkippedItems)
+                            {
+                                _serviceLog.Debug($"Skipping item {managedCertificate.Id}:{managedCertificate.Name}, UI reporting suppressed: {msg}");
+                            }
+                            else
+                            {
+                                //send progress back to report skip
+                                var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                                ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
+                            }
                         }
                     }
                 }
