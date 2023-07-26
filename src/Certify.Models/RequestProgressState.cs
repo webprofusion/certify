@@ -25,7 +25,12 @@
         /// <summary>
         /// Request is waiting on user input 
         /// </summary>
-        Paused = 4
+        Paused = 4,
+
+        /// <summary>
+        /// Request has been skipped due to temporary condition 
+        /// </summary>
+        Warning = 5,
     }
 
     public class RequestProgressState : BindableBase

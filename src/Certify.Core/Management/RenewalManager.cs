@@ -124,21 +124,8 @@ namespace Certify.Management
 
                     var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
                     var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
-
-                    var isRenewalOnHold = false;
-
+                   
                     var renewalReason = renewalDueCheck.Reason;
-
-                    if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
-                    {
-                        // check if we have renewal failures, if so wait a bit longer. TODO: explain on hold reason and hold duration
-                        isRenewalOnHold = ManagedCertificate.IsRenewalOnHoldForFailures(managedCertificate, renewalDueCheck);
-
-                        if (isRenewalOnHold)
-                        {
-                            isRenewalRequired = false;
-                        }
-                    }
 
                     if (settings.Mode == RenewalMode.All)
                     {
@@ -154,7 +141,7 @@ namespace Certify.Management
                         isSiteRunning = await IsManagedCertificateRunning(managedCertificate.Id);
                     }
 
-                    if ((isRenewalRequired && isSiteRunning) && !testModeOnly)
+                    if (!renewalDueCheck.IsRenewalOnHold && isRenewalRequired && isSiteRunning && !testModeOnly)
                     {
                         //get matching progress tracker for this site
                         IProgress<RequestProgressState> tracker = null;
@@ -177,9 +164,16 @@ namespace Certify.Management
                         }
                         else
                         {
-                            //send progress back to report skip
-                            var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                            ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
+                            if (!prefs.SuppressSkippedItems)
+                            {
+                                //send progress back to report skip
+                                var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                                ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
+                            }
+                            else
+                            {
+                                _serviceLog.Debug($"Skipping item {managedCertificate.Id}:{managedCertificate.Name}, max batch size exceeded.");
+                            }
                         }
 
                         // track number of tasks being attempted, not counting failures (otherwise cumulative failures can eventually exhaust allowed number of task)
@@ -190,18 +184,21 @@ namespace Certify.Management
                     }
                     else
                     {
-                        var msg = renewalDueCheck.Reason;// CoreSR.CertifyManager_SkipRenewalOk;
+                        var msg = renewalDueCheck.Reason;
+                        var requestState = RequestState.Success;
+
                         var logThisEvent = false;
 
                         if (isRenewalRequired && !isSiteRunning)
                         {
-                            //TODO: show this as warning rather than success
                             msg = CoreSR.CertifyManager_SiteStopped;
+                            requestState = RequestState.Warning;
                         }
 
-                        if (isRenewalOnHold)
+                        if (renewalDueCheck.IsRenewalOnHold)
                         {
                             msg = string.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
+                            requestState = RequestState.Warning;
                             logThisEvent = true;
                         }
 
@@ -215,7 +212,7 @@ namespace Certify.Management
                             {
                                 //send progress back to report skip
                                 var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                                ReportProgress(progress, new RequestProgressState(RequestState.Success, msg, managedCertificate), logThisEvent);
+                                ReportProgress(progress, new RequestProgressState(requestState, msg, managedCertificate), logThisEvent);
                             }
                         }
                     }

@@ -268,9 +268,17 @@ namespace Certify.Core.Tests.Unit
 
         [TestMethod, Description("Cert with custom percentage lifetime, not yet successfully ordered")]
         [DataTestMethod]
-        [DataRow(false, 0, 30, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "30 day cert renewing at 50% lifetime, not yet created, due for first order")]
+        [DataRow(0, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, due for first order")]
+        [DataRow(1, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted once")]
+        [DataRow(5, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 5 times")]
+        [DataRow(10, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 10 times")]
+        [DataRow(15, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 15 times")]
+        [DataRow(0, 0f, 0.01f, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "0.01 day cert renewing at 50% lifetime, not yet created, due for first order")]
+        [DataRow(25, 48f, 90f, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "90 day cert renewing at 50% lifetime, not yet created, due for first order")]
+        [DataRow(5, 29f, 90f, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "90 day cert renewing at 50% lifetime, not yet created, due for first order")]
+
         public void TestAutoStartNewCert(
-            bool previouslyRenewed, float daysElapsed, float lifetimeDays, float customRenewalPercentage, int renewalInterval, string customIntervalMode,
+            int previousAttempts, float holdHrsExpected, float lifetimeDays, float customRenewalPercentage, int renewalInterval, string customIntervalMode,
             bool renewalExpected, string testDescription)
         {
             // setup 
@@ -283,11 +291,27 @@ namespace Certify.Core.Tests.Unit
                 CustomRenewalIntervalMode = customIntervalMode
             };
 
+            if (lifetimeDays > 0)
+            {
+                managedCertificate.RequestConfig.PreferredExpiryDays = lifetimeDays;
+            }
+
+            if (previousAttempts > 0)
+            {
+                managedCertificate.DateLastRenewalAttempt = DateTime.Now.AddHours(-0.01);
+                managedCertificate.RenewalFailureCount = previousAttempts;
+
+            }
+
             // perform check
-            var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalInterval, renewalIntervalMode);
+            var renewalCheckResult = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalInterval, renewalIntervalMode);
 
             // assert result
-            Assert.AreEqual(isRenewalRequired.IsRenewalDue, renewalExpected, $"Renewal expected: {renewalExpected} : {testDescription}");
+            Assert.AreEqual(renewalExpected, renewalCheckResult.IsRenewalDue, $"Renewal expected: {renewalExpected} : {testDescription}");
+
+            Assert.AreEqual(holdHrsExpected, renewalCheckResult.HoldHrs, $"Renewal hold expected: {holdHrsExpected} : {testDescription}");
+
+            Assert.AreEqual(holdHrsExpected > 0, renewalCheckResult.IsRenewalOnHold, $"Renewal hold expected : {testDescription}");
 
         }
 

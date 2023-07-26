@@ -36,14 +36,22 @@ namespace Certify.Models
         public DateTime? DateNextRenewalAttempt { get; set; }
         public TimeSpan? CertLifetime { get; set; }
         public bool IsRenewalDue { get; set; }
+        public bool IsRenewalOnHold { get; set; }
         public string Reason { get; set; }
 
-        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate, TimeSpan? certLifetime)
+        /// <summary>
+        /// If set, the current number of hrs we will wait before next attempt
+        /// </summary>
+        public float HoldHrs { get; set; }
+
+        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate, TimeSpan? certLifetime, bool isRenewalOnHold = false, float holdHrs = 0)
         {
             Reason = reason;
             IsRenewalDue = isRenewalDue;
             DateNextRenewalAttempt = renewalAttemptDate;
             CertLifetime = certLifetime;
+            IsRenewalOnHold = isRenewalOnHold;
+            HoldHrs = holdHrs;
         }
     }
 
@@ -310,7 +318,14 @@ namespace Certify.Models
                                 }
                                 else
                                 {
-                                    return ManagedCertificateHealth.OK;
+                                    if (LastRenewalStatus == RequestState.Warning)
+                                    {
+                                        return ManagedCertificateHealth.Warning;
+                                    }
+                                    else
+                                    {
+                                        return ManagedCertificateHealth.OK;
+                                    }
                                 }
                             }
                         }
@@ -770,8 +785,8 @@ namespace Certify.Models
                 }
             }
 
-            // if we have never attempted renewal, renew now
-            if (!isRenewalRequired && (s.DateLastRenewalAttempt == null && s.DateRenewed == null))
+            // if we have never achieved renewal, renew now
+            if (!isRenewalRequired && s.DateRenewed == null)
             {
                 isRenewalRequired = true;
                 renewalStatusReason = "Certificate has not yet been successfully requested, so a renewal attempt is required.";
@@ -779,32 +794,81 @@ namespace Certify.Models
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
-            if (isRenewalRequired && checkFailureStatus)
+            if (isRenewalRequired && (s.LastRenewalStatus == RequestState.Error || s.RenewalFailureCount > 0))
             {
-                if (s.LastRenewalStatus == RequestState.Error)
+                // our last attempt failed, check how many failures we've had to decide whether
+                // we should attempt now or scale wait time based on how many attempts we've made.
+                // Max 48hrs between attempts or 90% of lifetime (if known)
+
+                if (s.RenewalFailureCount < 4)
                 {
-                    // our last attempt failed, check how many failures we've had to decide whether
-                    // we should attempt now, Scale wait time based on how many attempts we've made.
-                    // Max 48hrs between attempts
-                    if (s.DateLastRenewalAttempt != null && s.RenewalFailureCount > 0)
+                    return new RenewalDueInfo(
+                                reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and is not yet subject to limited attempts.",
+                                isRenewalDue: true,
+                                checkDate,
+                                certLifetime,
+                                isRenewalOnHold: false
+                                );
+                }
+                else
+                {
+
+                    if (s.DateLastRenewalAttempt != null)
                     {
-                        var hoursWait = 48;
-                        if (s.RenewalFailureCount > 0 && s.RenewalFailureCount < 48)
+                        var maxWaitHrsLimit = 48f; // absolute max wait time if cert lifetime not known
+                        var maxWaitHrs = maxWaitHrsLimit;
+
+                        // prefer max hold wait of 10% of lifetime, particularly useful for short lifetime certs
+                        if (s.RequestConfig.PreferredExpiryDays != null)
                         {
-                            hoursWait = s.RenewalFailureCount;
+                            maxWaitHrs = ((float)s.RequestConfig.PreferredExpiryDays * 24) * 0.1f;
+                        }
+                        else if (s.DateExpiry != null && s.DateStart != null)
+                        {
+                            var lifetime = s.DateExpiry - s.DateStart;
+                            maxWaitHrs = (float)lifetime.Value.TotalHours * 0.1f;
                         }
 
-                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(hoursWait);
+                        // set ceiling for max hold wait time
+                        maxWaitHrs = Math.Min(maxWaitHrs, maxWaitHrsLimit);
 
-                        if (checkDate < nextAttemptByDate)
+                        // calculate exponential back off, increasing 10% with retries to a max wait based on lifetime
+                        var factor = 1 + (maxWaitHrs / 10);
+                        var minWaitHrs = 1;
+
+                        var calcWaitHrs = (float)Math.Min(minWaitHrs * (factor * s.RenewalFailureCount), maxWaitHrs);
+                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(calcWaitHrs);
+
+                        if (DateTime.Now < nextAttemptByDate)
                         {
-                            isRenewalRequired = false;
-                            return new RenewalDueInfo("Certificate has previously failed renewal but next renewal attempt is not yet due.", isRenewalRequired, nextAttemptByDate, certLifetime);
+                            return new RenewalDueInfo(
+                                    reason: $"Renewal attempt is on hold for {calcWaitHrs}hrs, item has failed multiple times and attempts are subject to periodic limits.",
+                                    isRenewalDue: true,
+                                    nextAttemptByDate, certLifetime,
+                                    isRenewalOnHold: true,
+                                    holdHrs: calcWaitHrs
+                                    );
                         }
                         else
                         {
-                            return new RenewalDueInfo("Certificate has previously failed renewal and next renewal attempt is now due.", isRenewalRequired, checkDate, certLifetime);
+                            return new RenewalDueInfo(
+                                   reason: $"Renewal attempt is due, item has failed multiple times and renewal will be periodically attempted. Hold skipped as attempt is already due.",
+                                   isRenewalDue: true,
+                                   nextAttemptByDate, certLifetime,
+                                   isRenewalOnHold: false
+                                   );
                         }
+                    }
+                    else
+                    {
+                        // never attempted, can't be put on hold
+                        return new RenewalDueInfo(
+                                  reason: $"Renewal attempt is due, item has not yet been attempted.",
+                                  isRenewalDue: true,
+                                  checkDate,
+                                  certLifetime,
+                                  isRenewalOnHold: false
+                                  );
                     }
                 }
             }
@@ -816,52 +880,6 @@ namespace Certify.Models
             }
 
             return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
-        }
-
-        public static bool IsRenewalOnHoldForFailures(ManagedCertificate s, RenewalDueInfo renewalDueInfo)
-        {
-            // if renewal is required but we have previously failed, scale the frequency of renewal
-            // attempts based on last certificate lifetime or custom lifetime.
-
-            var isOnHold = false;
-
-            if (s.LastRenewalStatus == RequestState.Error)
-            {
-                // our last attempt failed, check how many failures we've had to decide whether
-                // we should attempt now, Scale wait time based on how many attempts we've made.
-                // Max 48hrs between attempts or 90% of lifetime (if known)
-                if (s.RenewalFailureCount > 0)
-                {
-                    var maxWaitHrs = 48f;
-
-                    if (s.RequestConfig.PreferredExpiryDays != null)
-                    {
-                        maxWaitHrs = ((float)s.RequestConfig.PreferredExpiryDays * 24) * 0.9f;
-                    }
-
-                    if (s.GetPercentageLifetimeElapsed(DateTime.UtcNow) > 90)
-                    {
-                        maxWaitHrs = 0.5f;
-                    }
-
-                    if (s.DateLastRenewalAttempt != null)
-                    {
-                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(maxWaitHrs);
-
-                        if (DateTime.Now < nextAttemptByDate)
-                        {
-                            isOnHold = false;
-                        }
-                    }
-                    else
-                    {
-                        // never attempted, can't be put on hold
-                        isOnHold = false;
-                    }
-                }
-            }
-
-            return isOnHold;
         }
     }
 }
