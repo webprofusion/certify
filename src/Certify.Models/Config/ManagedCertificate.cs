@@ -794,7 +794,7 @@ namespace Certify.Models
 
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
-            if (isRenewalRequired && (s.LastRenewalStatus == RequestState.Error || s.RenewalFailureCount > 0))
+            if (isRenewalRequired && (s.LastRenewalStatus == RequestState.Error || s.LastRenewalStatus == RequestState.Warning || s.RenewalFailureCount > 0))
             {
                 // our last attempt failed, check how many failures we've had to decide whether
                 // we should attempt now or scale wait time based on how many attempts we've made.

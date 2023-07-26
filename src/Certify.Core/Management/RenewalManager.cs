@@ -192,13 +192,10 @@ namespace Certify.Management
                         if (isRenewalRequired && !isSiteRunning)
                         {
                             msg = CoreSR.CertifyManager_SiteStopped;
-                            requestState = RequestState.Warning;
                         }
 
                         if (renewalDueCheck.IsRenewalOnHold)
                         {
-                            msg = string.Format(CoreSR.CertifyManager_RenewalOnHold, managedCertificate.RenewalFailureCount);
-                            requestState = RequestState.Warning;
                             logThisEvent = true;
                         }
 

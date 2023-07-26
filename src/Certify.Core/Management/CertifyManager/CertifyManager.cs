@@ -478,7 +478,7 @@ namespace Certify.Management
                 progress.Report(state);
             }
 
-            // report request state to staus hub clients
+            // report request state to status hub clients
 
             _statusReporting?.ReportRequestProgress(state);
 
