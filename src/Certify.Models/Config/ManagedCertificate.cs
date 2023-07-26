@@ -828,6 +828,12 @@ namespace Certify.Models
                             var lifetime = s.DateExpiry - s.DateStart;
                             maxWaitHrs = (float)lifetime.Value.TotalHours * 0.1f;
                         }
+                        else
+                        {
+                            // cert lifetime is unknown, if not yet requested default to a short retry interval
+                            maxWaitHrs = Math.Max(0.25f * s.RenewalFailureCount, 1f);
+                           
+                        }
 
                         // set ceiling for max hold wait time
                         maxWaitHrs = Math.Min(maxWaitHrs, maxWaitHrsLimit);
@@ -842,7 +848,7 @@ namespace Certify.Models
                         if (DateTime.Now < nextAttemptByDate)
                         {
                             return new RenewalDueInfo(
-                                    reason: $"Renewal attempt is on hold for {calcWaitHrs}hrs, item has failed multiple times and attempts are subject to periodic limits.",
+                                    reason: $"Renewal attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs, item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",
                                     isRenewalDue: true,
                                     nextAttemptByDate, certLifetime,
                                     isRenewalOnHold: true,

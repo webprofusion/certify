@@ -270,6 +270,7 @@ namespace Certify.Core.Tests.Unit
         [DataTestMethod]
         [DataRow(0, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, due for first order")]
         [DataRow(1, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted once")]
+        [DataRow(4, 1f, 0, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "Unknown lifetime cert renewing at 50% lifetime, not yet created, attempted 5 times")]
         [DataRow(5, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 5 times")]
         [DataRow(10, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 10 times")]
         [DataRow(15, 2.4f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted 15 times")]
