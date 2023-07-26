@@ -193,7 +193,10 @@ namespace Certify.Providers.ACME.Anvil
                 _acme.SetAccountUri(new Uri(_settings.AccountUri));
             }
 
-            _currentOrders = new ConcurrentDictionary<string, IOrderContext>();
+            if (_currentOrders == null)
+            {
+                _currentOrders = new ConcurrentDictionary<string, IOrderContext>();
+            }
 
             RefreshIssuerCertCache();
 
@@ -809,9 +812,22 @@ namespace Certify.Providers.ACME.Anvil
 
                 log.Information($"{(isResumedOrder ? "Resumed" : "Created")} ACME Order: {orderUri}");
 
-                // track order in memory, keyed on order Uri
-                _currentOrders.TryRemove(orderUri, out var existingOrderContext);
-                _currentOrders.TryAdd(orderUri, order);
+                // track current order in memory, keyed on order Uri
+                try
+                {
+                    _currentOrders.AddOrUpdate(orderUri, order, (key, oldValue) => order);
+                }
+                catch (Exception)
+                {
+                    pendingOrder.IsFailure = true;
+                    pendingOrder.FailureMessage = $"Could not begin tracking order {orderUri}. Please retry. If running in parallel consider limiting items in batch.";
+
+                    log.Warning(pendingOrder.FailureMessage);
+
+                    _currentOrders.TryRemove(orderUri, out var existingOrderContext);
+
+                    return pendingOrder;
+                }
 
                 // handle order status 'Ready' if all authorizations are already valid
                 var requireAuthzFetch = true;
@@ -851,6 +867,7 @@ namespace Certify.Providers.ACME.Anvil
 
                     log.Warning($"Order {orderUri} could not be retrieved. Order may have expired or the order URI is invalid for this account.");
 
+                    _currentOrders.TryRemove(orderUri, out var existingOrderContext);
                     return pendingOrder;
                 }
 
@@ -981,6 +998,7 @@ namespace Certify.Providers.ACME.Anvil
 
                                     log?.Error(msg);
 
+                                    _currentOrders.TryRemove(orderUri, out var existingOrderContext);
                                     return new PendingOrder(msg);
                                 }
                             }
@@ -1114,6 +1132,7 @@ namespace Certify.Providers.ACME.Anvil
 
                 log?.Error(msg);
 
+                _currentOrders.TryRemove(orderUri, out var existingOrderContext);
                 return new PendingOrder(msg);
             }
         }
