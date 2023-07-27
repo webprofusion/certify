@@ -378,7 +378,7 @@ namespace Certify.Core.Tests.Unit
         {
             var managedCertificate = new ManagedCertificate();
 
-            var testDate = DateTime.UtcNow;
+            var testDate = DateTime.Now;
 
             if (daysSinceRenewed.HasValue && lifetimeDays.HasValue)
             {

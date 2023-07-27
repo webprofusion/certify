@@ -94,7 +94,7 @@ namespace Certify.Management
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
             string msg = null)
         {
-            managedCertificate.DateLastRenewalAttempt = DateTime.UtcNow;
+            managedCertificate.DateLastRenewalAttempt = DateTime.Now;
 
             if (status == RequestState.Success)
             {
