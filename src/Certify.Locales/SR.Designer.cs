@@ -313,11 +313,20 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expired {0} Days Ago.
+        ///   Looks up a localized string similar to Expired {0} days ago.
         /// </summary>
         public static string ExpiryDateConverter_CertificateExpiredNDaysAgo {
             get {
                 return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiredNDaysAgo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expired {0} hours ago.
+        /// </summary>
+        public static string ExpiryDateConverter_CertificateExpiredNHoursAgo {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiredNHoursAgo", resourceCulture);
             }
         }
         
@@ -327,6 +336,15 @@ namespace Certify.Locales {
         public static string ExpiryDateConverter_CertificateExpiresIn {
             get {
                 return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiresIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expires in {0} hours.
+        /// </summary>
+        public static string ExpiryDateConverter_CertificateExpiresInNHours {
+            get {
+                return ResourceManager.GetString("ExpiryDateConverter_CertificateExpiresInNHours", resourceCulture);
             }
         }
         

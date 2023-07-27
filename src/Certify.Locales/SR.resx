@@ -666,7 +666,7 @@
     <value>Your license key has expired or is no longer active.</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
-    <value>Expired {0} Days Ago</value>
+    <value>Expired {0} days ago</value>
   </data>
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
     <value>Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab.</value>
@@ -691,5 +691,11 @@
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
     <value>Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account under Settings for each (ACME) Certificate Authority you wish to use.</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresInNHours" xml:space="preserve">
+    <value>Expires in {0} hours</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiredNHoursAgo" xml:space="preserve">
+    <value>Expired {0} hours ago</value>
   </data>
 </root>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Data;
 using Certify.Locales;
+using Certify.Models;
 
 namespace Certify.UI.Utils
 {
@@ -8,7 +9,7 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            return GetDescription((DateTime?)value);
+            return GetDescription((Lifetime)value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -16,22 +17,40 @@ namespace Certify.UI.Utils
             return null;
         }
 
-        public static string GetDescription(DateTime? expiry)
+        public static string GetDescription(Lifetime lifetime)
         {
-            if (expiry == null)
+            if (lifetime == null)
             {
                 return SR.ExpiryDateConverter_NoCurrentCertificate;
             }
 
-            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
+            var ageSpan = lifetime.DateEnd - DateTime.Now;
+            var days = (int)ageSpan.TotalDays;
 
-            if (days < 0)
+            if (ageSpan.TotalHours < 0)
             {
-                return string.Format(SR.ExpiryDateConverter_CertificateExpiredNDaysAgo, -days);
+                if (ageSpan.TotalHours < -24)
+                {
+                    return string.Format(SR.ExpiryDateConverter_CertificateExpiredNDaysAgo, -days);
+                }
+                else
+                {
+                    return string.Format(SR.ExpiryDateConverter_CertificateExpiredNHoursAgo, Math.Round(-ageSpan.TotalHours, 1));
+                }
             }
             else
             {
-                return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+                if (ageSpan.TotalHours < 24)
+                {
+                    // hrs
+                    return string.Format(SR.ExpiryDateConverter_CertificateExpiresInNHours, Math.Round(ageSpan.TotalHours, 1));
+                }
+                else
+                {
+
+                    // days
+                    return string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, days);
+                }
             }
         }
     }
@@ -40,7 +59,7 @@ namespace Certify.UI.Utils
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            return GetColour((DateTime?)value);
+            return GetColour((Lifetime)value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -48,24 +67,21 @@ namespace Certify.UI.Utils
             return null;
         }
 
-        public static System.Windows.Media.Brush GetColour(DateTime? expiry)
+        public static System.Windows.Media.Brush GetColour(Lifetime lifetime)
         {
-            if (expiry == null)
+
+            if (lifetime == null)
             {
                 return System.Windows.Media.Brushes.SlateGray;
             }
 
-            var days = (int)(expiry - DateTime.Now).Value.TotalDays;
+            var percentageElapsed = lifetime?.GetPercentageElapsed(DateTime.Now);
 
-            if (days < 0)
+            if (percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
             {
                 return System.Windows.Media.Brushes.DarkRed;
             }
-            else if (days < 7)
-            {
-                return System.Windows.Media.Brushes.IndianRed;
-            }
-            else if (days < 30)
+            else if (percentageElapsed > LifetimeHealthThresholds.PercentageWarning)
             {
                 return System.Windows.Media.Brushes.Chocolate;
             }

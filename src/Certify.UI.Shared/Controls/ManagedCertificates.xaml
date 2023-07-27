@@ -162,8 +162,8 @@
                                     <TextBlock
                                         Margin="0,0,0,0"
                                         FontSize="10"
-                                        Foreground="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateColourConverter}}"
-                                        Text="{Binding Path=DateExpiry, Converter={StaticResource ExpiryDateConverter}}" />
+                                        Foreground="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateColourConverter}}"
+                                        Text="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateConverter}}" />
 
                                     <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
                                         <TextBlock

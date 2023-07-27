@@ -55,6 +55,61 @@ namespace Certify.Models
         }
     }
 
+    public static class LifetimeHealthThresholds
+    {
+        public const int PercentageDanger = 95;
+        public const int PercentageWarning = 75;
+
+        public const int FailureWarning = 3;
+        public const int FailureDanger = 5;
+        public const int FailureTerminal = 10;
+    }
+
+    public class Lifetime
+    {
+        public Lifetime(DateTime dateStart, DateTime dateEnd)
+        {
+            DateStart = dateStart;
+            DateEnd = dateEnd;
+        }
+        public DateTime DateStart { get; }
+        public DateTime DateEnd { get; }
+
+        public int? GetPercentageElapsed(DateTime testDateTime)
+        {
+            if (DateStart == null || DateEnd == null)
+            {
+                return null;
+            }
+
+            var lifetime = (DateTime)DateEnd - (DateTime)DateStart;
+
+            if (lifetime.TotalMinutes <= 0)
+            {
+                return 100;
+            }
+
+            var certElapsed = testDateTime - (DateTime)DateStart;
+            var elapsedMinutes = lifetime.TotalMinutes - (lifetime.TotalMinutes - certElapsed.TotalMinutes);
+
+            if (elapsedMinutes > 0)
+            {
+                if (elapsedMinutes >= lifetime.TotalMinutes)
+                {
+                    return 100;
+                }
+                else
+                {
+                    return (int)(elapsedMinutes / lifetime.TotalMinutes * 100);
+                }
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+
     public class ManagedCertificate : BindableBase
     {
         public ManagedCertificate()
@@ -234,6 +289,22 @@ namespace Certify.Models
         [JsonIgnore]
         public bool Deleted { get; set; } // do not serialize to settings
 
+        [JsonIgnore]
+        public Lifetime? CertificateLifetime
+        {
+            get
+            {
+                if (DateStart.HasValue && DateExpiry.HasValue)
+                {
+                    return new Lifetime(DateStart.Value, DateExpiry.Value);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+
         /// <summary>
         /// Get the percentage of the certificate lifetime elapsed, if known
         /// </summary>
@@ -241,36 +312,7 @@ namespace Certify.Models
         /// <returns></returns>
         public int? GetPercentageLifetimeElapsed(DateTime testDateTime)
         {
-            if (DateStart == null || DateExpiry == null)
-            {
-                return null;
-            }
-
-            var certLifetime = (DateTime)DateExpiry - (DateTime)DateStart;
-
-            if (certLifetime.TotalMinutes <= 0)
-            {
-                return 100;
-            }
-
-            var certElapsed = testDateTime - (DateTime)DateStart;
-            var elapsedMinutes = certLifetime.TotalMinutes - (certLifetime.TotalMinutes - certElapsed.TotalMinutes);
-
-            if (elapsedMinutes > 0)
-            {
-                if (elapsedMinutes >= certLifetime.TotalMinutes)
-                {
-                    return 100;
-                }
-                else
-                {
-                    return (int)(elapsedMinutes / certLifetime.TotalMinutes * 100);
-                }
-            }
-            else
-            {
-                return 0;
-            }
+            return CertificateLifetime?.GetPercentageElapsed(testDateTime);
         }
 
         [JsonIgnore]
@@ -282,7 +324,7 @@ namespace Certify.Models
 
                 if (LastRenewalStatus == RequestState.Error)
                 {
-                    if (RenewalFailureCount > 3 || percentageElapsed > 90)
+                    if (RenewalFailureCount > LifetimeHealthThresholds.FailureDanger || percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
                     {
                         return ManagedCertificateHealth.Error;
                     }
@@ -308,11 +350,11 @@ namespace Certify.Models
                             else
                             {
                                 // if cert is otherwise OK but is expiring soon, report health as warning or error (expired)
-                                if (percentageElapsed > 95)
+                                if (percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
                                 {
                                     return ManagedCertificateHealth.Error;
                                 }
-                                else if (percentageElapsed > 75)
+                                else if (percentageElapsed > LifetimeHealthThresholds.PercentageWarning)
                                 {
                                     return ManagedCertificateHealth.Warning;
                                 }
@@ -339,7 +381,7 @@ namespace Certify.Models
         }
 
         /// <summary>
-        /// get distrinct list of certificate identifiers for this managed cert
+        /// get distinct list of certificate identifiers for this managed cert
         /// </summary>
         /// <returns></returns>
         public List<CertIdentifierItem> GetCertificateIdentifiers()
@@ -803,7 +845,7 @@ namespace Certify.Models
                 if (s.RenewalFailureCount < 4)
                 {
                     return new RenewalDueInfo(
-                                reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and is not yet subject to limited attempts.",
+                                reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times.",
                                 isRenewalDue: true,
                                 checkDate,
                                 certLifetime,
@@ -832,7 +874,7 @@ namespace Certify.Models
                         {
                             // cert lifetime is unknown, if not yet requested default to a short retry interval
                             maxWaitHrs = Math.Max(0.25f * s.RenewalFailureCount, 1f);
-                           
+
                         }
 
                         // set ceiling for max hold wait time
@@ -848,7 +890,7 @@ namespace Certify.Models
                         if (DateTime.Now < nextAttemptByDate)
                         {
                             return new RenewalDueInfo(
-                                    reason: $"Renewal attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs, item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",
+                                    reason: $"Renewal attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs because item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",
                                     isRenewalDue: true,
                                     nextAttemptByDate, certLifetime,
                                     isRenewalOnHold: true,
@@ -858,7 +900,7 @@ namespace Certify.Models
                         else
                         {
                             return new RenewalDueInfo(
-                                   reason: $"Renewal attempt is due, item has failed multiple times and renewal will be periodically attempted. Hold skipped as attempt is already due.",
+                                   reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and renewal will be periodically attempted.",
                                    isRenewalDue: true,
                                    nextAttemptByDate, certLifetime,
                                    isRenewalOnHold: false

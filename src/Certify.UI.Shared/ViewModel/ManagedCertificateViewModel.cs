@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -436,7 +436,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return SelectedItem?.GetPercentageLifetimeElapsed(DateTime.UtcNow);
+                return SelectedItem?.GetPercentageLifetimeElapsed(DateTime.Now);
             }
         }
         /// <summary>

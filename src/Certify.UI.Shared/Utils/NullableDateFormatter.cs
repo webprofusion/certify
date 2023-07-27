@@ -9,7 +9,7 @@ namespace Certify.UI.Utils
         {
             if (value == null)
             {
-                return "";
+                return "<not set>";
             }
 
             return ((DateTime)value).ToString("yyyy-MM-dd");
