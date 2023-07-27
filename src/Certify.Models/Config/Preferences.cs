@@ -50,7 +50,7 @@
 
         public bool EnableDNSValidationChecks { get; set; }
 
-        public string? RenewalIntervalMode { get; set; } = RenewalIntervalModes.DaysAfterLastRenewal;
+        public string? RenewalIntervalMode { get; set; } = RenewalIntervalModes.PercentageLifetime;
 
         public int RenewalIntervalDays { get; set; }
 
@@ -119,6 +119,8 @@
         /// If set, defines the default key type used for private keys
         /// </summary>
         public string? DefaultKeyType { get; set; }
+
+        public bool EnableParallelRenewals { get; set; }
     }
 
     public static class FeatureFlags

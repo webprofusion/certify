@@ -21,8 +21,9 @@ namespace Certify.Management
             EnableAppTelematics = true;
             EnableEFS = false;
             EnableDNSValidationChecks = false;
-            RenewalIntervalDays = 30;
-            RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+            RenewalIntervalDays = 75;
+            RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
+            DefaultKeyType = StandardKeyTypes.RSA256;
             MaxRenewalRequests = 0;
             EnableHttpChallengeServer = true;
             LegacySettingsUpgraded = false;
@@ -168,7 +169,7 @@ namespace Certify.Management
         /// <summary>
         /// If true, renewal tasks in batch will run simultaneously
         /// </summary>
-        public bool PerformParallelRenewals { get; set; }
+        public bool EnableParallelRenewals { get; set; }
     
         /// <summary>
         /// If true, challenge cleanup will only happen after all auth challenges in an order have been processed
@@ -226,6 +227,8 @@ namespace Certify.Management
             CoreAppSettings.Current.ConfigDataStoreConnectionId = prefs.ConfigDataStoreConnectionId;
 
             CoreAppSettings.Current.DefaultKeyType = prefs.DefaultKeyType;
+
+            CoreAppSettings.Current.EnableParallelRenewals = prefs.EnableParallelRenewals;
             return true;
         }
 
@@ -260,7 +263,8 @@ namespace Certify.Management
                 NtpServer = CoreAppSettings.Current.NtpServer,
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
                 ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId,
-                DefaultKeyType = CoreAppSettings.Current.DefaultKeyType
+                DefaultKeyType = CoreAppSettings.Current.DefaultKeyType,
+                EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
             };
 
             return prefs;

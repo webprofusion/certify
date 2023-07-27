@@ -155,6 +155,11 @@
                                     Content="Enable Results From External Certificate Managers"
                                     IsChecked="{Binding Prefs.EnableExternalCertManagers}" />
                                 <CheckBox
+                                    x:Name="EnableParallelRenewals"
+                                    Margin="0,4,0,0"
+                                    Content="Enable Parallel Renewals"
+                                    IsChecked="{Binding Prefs.EnableParallelRenewals}" />
+                                <CheckBox
                                     x:Name="UseModernPFXAlgs"
                                     Margin="0,4,0,0"
                                     Content="Enable Modern PFX Alg (OpenSSL 3.0+ compatibility etc)"

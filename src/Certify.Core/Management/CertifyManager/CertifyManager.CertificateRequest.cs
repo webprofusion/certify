@@ -52,7 +52,7 @@ namespace Certify.Management
                 RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
                 IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
                 SuppressSkippedItems = true,
-                PerformParallelRenewals = CoreAppSettings.Current.PerformParallelRenewals
+                PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
             };
 
             var results = await RenewalManager.PerformRenewAll(
