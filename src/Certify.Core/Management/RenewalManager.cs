@@ -161,6 +161,8 @@ namespace Certify.Management
                                 TaskCreationOptions.LongRunning
                            ));
 
+                            ReportProgress((IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id], new RequestProgressState(RequestState.Queued, $"Queued for renewal: {renewalDueCheck.Reason}", managedCertificate), false);
+
                         }
                         else
                         {

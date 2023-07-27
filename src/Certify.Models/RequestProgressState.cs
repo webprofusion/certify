@@ -8,6 +8,11 @@
         NotRunning = 0,
 
         /// <summary>
+        /// Request is queued for renewal attempt
+        /// </summary>
+        Queued = 6,
+
+        /// <summary>
         /// Request is in progress 
         /// </summary>
         Running = 1,
