@@ -61,7 +61,7 @@
                         VerticalAlignment="Center"
                         Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
                         Style="{StaticResource Subheading}"
-                        Text="Renewal Failure" />
+                        Text="Renewal Required" />
                 </StackPanel>
                 <!--  Renewal warning messages  -->
                 <StackPanel MinHeight="80" Margin="0,16">
