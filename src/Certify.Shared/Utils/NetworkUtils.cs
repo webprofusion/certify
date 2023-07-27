@@ -15,6 +15,8 @@ using ARSoft.Tools.Net.Dns;
 #endif
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Certify.Shared.Core.Utils
 {
@@ -136,6 +138,11 @@ namespace Certify.Shared.Core.Utils
             // remote API rather than directly on the servers
             var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
 
+            RemoteCertificateValidationCallback ignoreTlsValidation = delegate (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+            {
+                return true;
+            };
+
             //check http request to test path works
             try
             {
@@ -144,11 +151,7 @@ namespace Certify.Shared.Core.Utils
 
                 request.Timeout = 5000;
 
-                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
-                {
-                    // ignore all cert errors when validating URL response
-                    return true;
-                };
+                ServicePointManager.ServerCertificateValidationCallback += ignoreTlsValidation;
 
                 log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {request.Timeout}ms]");
 
@@ -217,8 +220,7 @@ namespace Certify.Shared.Core.Utils
             }
             finally
             {
-                // reset callback for other requests to validate using default behavior
-                //ServicePointManager.ServerCertificateValidationCallback = null;
+                ServicePointManager.ServerCertificateValidationCallback -= ignoreTlsValidation;
             }
         }
 
