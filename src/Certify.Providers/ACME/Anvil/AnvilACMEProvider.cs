@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -442,10 +442,10 @@ namespace Certify.Providers.ACME.Anvil
                     KeyChange = dir.KeyChange,
                     Meta = new AcmeDirectoryInfo.AcmeDirectoryMeta
                     {
-                        TermsOfService = dir.Meta.TermsOfService,
-                        Website = dir.Meta.Website,
-                        CaaIdentities = dir.Meta.CaaIdentities,
-                        ExternalAccountRequired = dir.Meta.ExternalAccountRequired
+                        TermsOfService = dir.Meta?.TermsOfService,
+                        Website = dir.Meta?.Website,
+                        CaaIdentities = dir.Meta?.CaaIdentities,
+                        ExternalAccountRequired = dir.Meta?.ExternalAccountRequired
                     },
                     RenewalInfo = dir.RenewalInfo
                 };
