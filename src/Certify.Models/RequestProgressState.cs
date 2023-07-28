@@ -41,20 +41,21 @@
     public class RequestProgressState : BindableBase
     {
         public bool IsPreviewMode { get; set; }
+        public bool IsSkipped { get; set; }
         public ManagedCertificate? ManagedCertificate { get; set; }
 
-        public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false)
+        public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false, bool isSkipped = false)
         {
             CurrentState = currentState;
             Message = msg;
             ManagedCertificate = item;
             IsPreviewMode = isPreviewMode;
+            IsSkipped = isSkipped;
         }
 
         public RequestProgressState()
         {
             CurrentState = RequestState.NotRunning;
-
         }
 
         public bool IsRunning => CurrentState == RequestState.Running ? true : false;

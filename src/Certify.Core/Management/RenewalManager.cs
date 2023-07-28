@@ -124,7 +124,7 @@ namespace Certify.Management
 
                     var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
                     var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
-                   
+
                     var renewalReason = renewalDueCheck.Reason;
 
                     if (settings.Mode == RenewalMode.All)
@@ -170,7 +170,7 @@ namespace Certify.Management
                             {
                                 //send progress back to report skip
                                 var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                                ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate), true);
+                                ReportProgress(progress, new RequestProgressState(RequestState.NotRunning, "Skipped renewal because the max requests per batch has been reached. This request will be attempted again later.", managedCertificate, isSkipped: true), true);
                             }
                             else
                             {
@@ -203,15 +203,15 @@ namespace Certify.Management
 
                         if (progressTrackers != null)
                         {
-                            if (!renewalDueCheck.IsRenewalDue && prefs.SuppressSkippedItems)
+                            if (!renewalDueCheck.IsRenewalDue || renewalDueCheck.IsRenewalOnHold && prefs.SuppressSkippedItems)
                             {
                                 _serviceLog.Debug($"Skipping item {managedCertificate.Id}:{managedCertificate.Name}, UI reporting suppressed: {msg}");
                             }
                             else
                             {
                                 //send progress back to report skip
-                                var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                                ReportProgress(progress, new RequestProgressState(requestState, msg, managedCertificate), logThisEvent);
+                               /* var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                                ReportProgress(progress, new RequestProgressState(requestState, msg, managedCertificate, isSkipped: true), logThisEvent);*/
                             }
                         }
                     }
