@@ -116,20 +116,10 @@ namespace Certify.Core.Management.Challenges
             {
                 //could not start listener, port may be in use
                 System.Diagnostics.Debug.WriteLine($"Http Challenge server error: {exp}");
-                try
-                {
-                    // try to stop the listener, if a collision on port etc then listener will already be disposed
-                    _httpListener.Stop();
-                }
-                catch { }
 
-                _httpListener.Close();
-                _httpListener = null;
+                Stop();
 
-                _apiClient.Dispose();
-                _apiClient = null;
-
-                Log("Failed to Start Http Challenge Server");
+                Log($"Failed to Start Http Challenge Server: {exp.Message}");
             }
 
             return false;
@@ -290,18 +280,36 @@ namespace Certify.Core.Management.Challenges
         public void Stop()
         {
             Log("Stopping Server");
-            if (_httpListener != null)
+
+            try
             {
-                try
+                if (_httpListener != null)
                 {
-                    _httpListener.Stop();
-                }
-                catch
-                {
+                    try
+                    {
+                        try
+                        {
+                            // try to stop the listener, if a collision on port etc then listener will already be disposed
+                            _httpListener?.Stop();
+                            _httpListener?.Close();
+                        }
+                        catch
+                        {
+                            _httpListener?.Abort();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log("Failed to properly shut down http listener " + ex.Message);
+                    }
                 }
 
-                _httpListener.Close();
+                _apiClient?.Dispose();
+            }
+            finally
+            {
                 _httpListener = null;
+                _apiClient = null;
             }
         }
     }
