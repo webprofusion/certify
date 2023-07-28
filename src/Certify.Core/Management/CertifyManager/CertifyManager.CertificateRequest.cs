@@ -1085,9 +1085,17 @@ namespace Certify.Management
                         }
                         else
                         {
-                            _httpChallengeServerAvailable = await StartHttpChallengeServer();
+                            if (!_httpChallengeServerAvailable)
+                            {
+                                _httpChallengeServerAvailable = await StartHttpChallengeServer();
 
-                            _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
+                                _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
+                            }
+                            else
+                            {
+                                // already started
+                                log?.Debug($"Http Challenge Server process already started.");
+                            }
                         }
 
                         if (_httpChallengeServerAvailable)
