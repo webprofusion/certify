@@ -326,6 +326,8 @@ namespace Certify.UI.ViewModel
             {
                 ClearRequestProgressResults();
 
+                settings.AwaitResults = false;
+
                 _ = await _certifyClient.BeginAutoRenewal(settings);
             }
             catch (TaskCanceledException exp)

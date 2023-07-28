@@ -56,10 +56,18 @@ namespace Certify.CLI
             }
 
             var isPreviewMode = false;
+            var awaitResults = true;
+
             if (args.Contains("--preview"))
             {
                 // don't perform real requests
                 isPreviewMode = true;
+            }
+
+            if (args.Contains("--nowait"))
+            {
+                // don't wait for results
+                awaitResults = false;
             }
 
             if (_tc == null)
@@ -80,42 +88,50 @@ namespace Certify.CLI
             }
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { Mode = renewalMode, IsPreviewMode = isPreviewMode, TargetManagedCertificates = targetItemIds.Any() ? targetItemIds : null });
+            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { AwaitResults = awaitResults, Mode = renewalMode, IsPreviewMode = isPreviewMode, TargetManagedCertificates = targetItemIds.Any() ? targetItemIds : null });
 
-            Console.ForegroundColor = ConsoleColor.White;
-
-            foreach (var r in results)
+            if (awaitResults)
             {
-                if (r.ManagedItem != null)
-                {
-                    System.Console.WriteLine("--------------------------------------");
-                    if (r.IsSuccess)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        System.Console.WriteLine(r.ManagedItem.Name);
-                    }
-                    else
-                    {
-                        Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        System.Console.WriteLine(r.ManagedItem.Name);
 
-                        if (r.Message != null)
+                Console.ForegroundColor = ConsoleColor.White;
+
+                foreach (var r in results)
+                {
+                    if (r.ManagedItem != null)
+                    {
+                        System.Console.WriteLine("--------------------------------------");
+                        if (r.IsSuccess)
                         {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            System.Console.WriteLine(r.Message);
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            System.Console.WriteLine(r.ManagedItem.Name);
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkYellow;
+                            System.Console.WriteLine(r.ManagedItem.Name);
+
+                            if (r.Message != null)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                System.Console.WriteLine(r.Message);
+                            }
                         }
                     }
                 }
-            }
 
-            Console.ForegroundColor = ConsoleColor.White;
-
-            System.Console.WriteLine("Completed:" + results.Where(r => r.IsSuccess == true).Count());
-            if (results.Any(r => r.IsSuccess == false))
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                System.Console.WriteLine("Failed:" + results.Where(r => r.IsSuccess == false).Count());
                 Console.ForegroundColor = ConsoleColor.White;
+
+                System.Console.WriteLine("Completed:" + results.Where(r => r.IsSuccess == true).Count());
+                if (results.Any(r => r.IsSuccess == false))
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine("Failed:" + results.Where(r => r.IsSuccess == false).Count());
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
+            }
+            else
+            {
+                System.Console.WriteLine("Renew All Requested.");
             }
         }
 

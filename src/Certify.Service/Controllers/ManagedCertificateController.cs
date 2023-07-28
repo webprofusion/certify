@@ -137,7 +137,17 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return await _certifyManager.PerformRenewAll(settings, null);
+            if (settings.AwaitResults)
+            {
+                return await _certifyManager.PerformRenewAll(settings, null);
+            }
+            else
+            {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                _certifyManager.PerformRenewAll(settings, null);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                return await Task.FromResult(new List<CertificateRequestResult>());
+            }
         }
 
         [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}/{isInteractive}")]
