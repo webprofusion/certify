@@ -203,6 +203,8 @@ namespace Certify.UI.ViewModel
             {
                 MainUITabIndex = (int)PrimaryUITabs.CurrentProgress;
 
+                ClearRequestProgressResults();
+
                 TrackProgress(managedCertificate);
 
                 // start request (interactive)
@@ -322,13 +324,9 @@ namespace Certify.UI.ViewModel
 
             try
             {
-                ProgressResults.Clear();
-                var results = await _certifyClient.BeginAutoRenewal(settings);
+                ClearRequestProgressResults();
 
-                if (!results.Any())
-                {
-                    ShowNotification("No items are currently due for renewal.", NotificationType.Info);
-                }
+                _ = await _certifyClient.BeginAutoRenewal(settings);
             }
             catch (TaskCanceledException exp)
             {
