@@ -210,8 +210,8 @@ namespace Certify.Management
                             else
                             {
                                 //send progress back to report skip
-                               /* var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
-                                ReportProgress(progress, new RequestProgressState(requestState, msg, managedCertificate, isSkipped: true), logThisEvent);*/
+                                /* var progress = (IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id];
+                                 ReportProgress(progress, new RequestProgressState(requestState, msg, managedCertificate, isSkipped: true), logThisEvent);*/
                             }
                         }
                     }
@@ -223,6 +223,10 @@ namespace Certify.Management
                 //nothing to do
 
                 return new List<CertificateRequestResult>();
+            }
+            else
+            {
+                _serviceLog.Information($"Attempting {renewalTasks.Count} renewal tasks. Max renewal tasks is set to {maxRenewalTasks}, max supported tasks is {MAX_CERTIFICATE_REQUEST_TASKS}");
             }
 
             if (prefs.PerformParallelRenewals)
