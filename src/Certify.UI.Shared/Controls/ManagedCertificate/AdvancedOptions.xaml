@@ -400,6 +400,13 @@
                                 Click="RefetchCertificate_Click">
                                 Re-fetch Latest Certificate
                             </Button>
+                            <Button
+                                x:Name="ResetFailureInfo"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left" Click="ResetFailureInfo_Click">
+                                Reset Failure Status
+                            </Button>
                         </StackPanel>
 
                         <StackPanel DockPanel.Dock="Top">

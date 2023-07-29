@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Management;
+using Certify.UI.ViewModel;
 using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -268,6 +269,17 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContext = ItemViewModel;
 
             ItemViewModel.RaisePropertyChangedEvent(null);
+        }
+
+        private void ResetFailureInfo_Click(object sender, RoutedEventArgs e)
+        {
+            ItemViewModel.SelectedItem.RenewalFailureCount = 0;
+            ItemViewModel.SelectedItem.RenewalFailureMessage = null;
+            ItemViewModel.SelectedItem.LastAttemptedCA = null;
+            ItemViewModel.SelectedItem.CurrentOrderUri = null;
+            ItemViewModel.SelectedItem.LastRenewalStatus = Models.RequestState.Success;
+            ItemViewModel.SelectedItem.DateLastRenewalAttempt = null;
+
         }
     }
 }
