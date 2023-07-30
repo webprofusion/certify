@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,6 +85,7 @@ namespace Certify.Management
             var renewalIntervalMode = prefs.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
 
             var numRenewalTasks = 0;
+
             var maxRenewalTasks = prefs.MaxRenewalRequests;
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
@@ -151,8 +152,11 @@ namespace Certify.Management
                         }
 
                         // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
-                        if ((maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
-                            || (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS))
+                        if (
+                            (maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
+                            ||
+                            (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS)
+                            )
                         {
 
                             renewalTasks.Add(
@@ -178,11 +182,9 @@ namespace Certify.Management
                             }
                         }
 
-                        // track number of tasks being attempted, not counting failures (otherwise cumulative failures can eventually exhaust allowed number of task)
-                        if (managedCertificate.LastRenewalStatus != RequestState.Error)
-                        {
-                            numRenewalTasks++;
-                        }
+                        // track number of tasks being attempted
+                        numRenewalTasks++;
+
                     }
                     else
                     {
