@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -80,8 +81,40 @@ namespace Certify.UI.ViewModel
 
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
             ManagedCertificates = new ObservableCollection<ManagedCertificate>();
+
+            StartProgressCleanupTask();
+
         }
 
+        /// <summary>
+        /// Continuous clean of success items, this is because if the UI is left open it will continue to receive messages
+        /// </summary>
+        public void StartProgressCleanupTask()
+        {
+            var progressCleanup = new Task(async () =>
+            {
+                var waitMS = 5 * 60 * 1000; // cleanup all old progress messages every 5 mins
+                while (true)
+                {
+                    await Task.Delay(waitMS);
+                    var now = DateTime.UtcNow;
+                    var items = ProgressResults.Where(p => p.MessageCreated < DateTime.UtcNow.AddMilliseconds(-waitMS));
+
+                    if (items.Any())
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            foreach (var item in items.ToList())
+                            {
+                                ProgressResults.Remove(item);
+                            };
+                        });
+                    }
+                }
+            }, TaskCreationOptions.LongRunning);
+
+            progressCleanup.Start();
+        }
         /// <summary>
         /// Log for general app events
         /// </summary>

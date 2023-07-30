@@ -1,4 +1,6 @@
-﻿namespace Certify.Models
+﻿using System;
+
+namespace Certify.Models
 {
     public enum RequestState
     {
@@ -38,24 +40,37 @@
         Warning = 5,
     }
 
+    public class RequestProgressManagedItem
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public RequestProgressManagedItem(string? id, string? name)
+        {
+            Id = id ?? "";
+            Name = name ?? "";
+        }
+    }
+
     public class RequestProgressState : BindableBase
     {
         public bool IsPreviewMode { get; set; }
         public bool IsSkipped { get; set; }
-        public ManagedCertificate? ManagedCertificate { get; set; }
+        public RequestProgressManagedItem? ManagedCertificate { get; set; }
 
         public RequestProgressState(RequestState currentState, string msg, ManagedCertificate item, bool isPreviewMode = false, bool isSkipped = false)
         {
             CurrentState = currentState;
             Message = msg;
-            ManagedCertificate = item;
+            ManagedCertificate = new RequestProgressManagedItem(item.Id, item.Name);
             IsPreviewMode = isPreviewMode;
             IsSkipped = isSkipped;
+            MessageCreated = DateTime.UtcNow;
         }
 
         public RequestProgressState()
         {
             CurrentState = RequestState.NotRunning;
+            MessageCreated = DateTime.UtcNow;
         }
 
         public bool IsRunning => CurrentState == RequestState.Running ? true : false;
@@ -64,6 +79,7 @@
 
         public string? Message { get; set; }
 
+        public DateTime MessageCreated { get; set; }
         public object? Result { get; set; }
 
         public string Id
