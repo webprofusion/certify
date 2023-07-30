@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1085,17 +1085,7 @@ namespace Certify.Management
                         }
                         else
                         {
-                            if (!_httpChallengeServerAvailable)
-                            {
-                                _httpChallengeServerAvailable = await StartHttpChallengeServer();
-
-                                _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
-                            }
-                            else
-                            {
-                                // already started
-                                log?.Debug($"Http Challenge Server process already started.");
-                            }
+                            _httpChallengeServerAvailable = await StartHttpChallengeServer();
                         }
 
                         if (_httpChallengeServerAvailable)

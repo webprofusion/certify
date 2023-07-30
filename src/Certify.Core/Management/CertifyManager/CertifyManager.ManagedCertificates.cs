@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
@@ -431,7 +433,7 @@ namespace Certify.Management
         /// Check if our temporary http challenge response service is running locally
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> IsHttpChallengeProcessStarted()
+        private async Task<bool> IsHttpChallengeProcessStarted(bool allowRetry=false)
         {
             if (_httpChallengeServerClient != null)
             {
@@ -439,15 +441,22 @@ namespace Certify.Management
 
                 try
                 {
-                    var response = await _httpChallengeServerClient.GetAsync(testUrl);
-                    if (response.IsSuccessStatusCode)
+                    var attempts = 3;
+                    while (attempts>0)
                     {
-                        var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
-
-                        if (status == "OK")
+                        var response = await _httpChallengeServerClient.GetAsync(testUrl);
+                        if (response.IsSuccessStatusCode)
                         {
-                            return true;
+                            var status = await _httpChallengeServerClient.GetStringAsync(testUrl);
+
+                            if (status == "OK")
+                            {
+                                return true;
+                            }
                         }
+
+                        attempts--;
+                        await Task.Delay(1000);
                     }
 
                     return false;
@@ -469,8 +478,10 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task<bool> StartHttpChallengeServer()
         {
-            if (!await IsHttpChallengeProcessStarted())
+            if (!await IsHttpChallengeProcessStarted(true))
             {
+                _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
+
                 var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, "certify.exe");
                 _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
                 {
@@ -502,7 +513,7 @@ namespace Certify.Management
                     _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent() + " CertifyManager");
                 }
 
-                return await IsHttpChallengeProcessStarted();
+                return await IsHttpChallengeProcessStarted(true);
             }
             else
             {
