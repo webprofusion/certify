@@ -143,6 +143,7 @@ namespace Certify.Shared.Core.Utils
                 return true;
             };
 
+            var tlsCallBackApplied = false;
             //check http request to test path works
             try
             {
@@ -151,7 +152,11 @@ namespace Certify.Shared.Core.Utils
 
                 request.Timeout = 5000;
 
-                ServicePointManager.ServerCertificateValidationCallback += ignoreTlsValidation;
+                if (ServicePointManager.ServerCertificateValidationCallback == null)
+                {
+                    tlsCallBackApplied = true;
+                    ServicePointManager.ServerCertificateValidationCallback += ignoreTlsValidation;
+                }
 
                 log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {request.Timeout}ms]");
 
@@ -220,7 +225,10 @@ namespace Certify.Shared.Core.Utils
             }
             finally
             {
-                ServicePointManager.ServerCertificateValidationCallback -= ignoreTlsValidation;
+                if (tlsCallBackApplied)
+                {
+                    ServicePointManager.ServerCertificateValidationCallback -= ignoreTlsValidation;
+                }
             }
         }
 
