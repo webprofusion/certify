@@ -145,5 +145,7 @@ namespace Certify.Client
         Task ConnectStatusStreamAsync();
 
         Shared.ServerConnection GetConnectionInfo();
+
+        Task<bool> EnsureServiceHubConnected();
     }
 }

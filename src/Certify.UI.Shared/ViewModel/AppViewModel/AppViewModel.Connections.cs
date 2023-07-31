@@ -211,6 +211,7 @@ namespace Certify.UI.ViewModel
             try
             {
                 await clientConnection.ConnectStatusStreamAsync();
+               
             }
             catch (Exception exp)
             {

@@ -113,6 +113,36 @@ namespace Certify.Client
             }
         }
 
+        public async Task<bool> EnsureServiceHubConnected()
+        {
+            var isConnected = false;
+            if (connection != null)
+            {
+                isConnected = connection.State == HubConnectionState.Connected || connection.State == HubConnectionState.Reconnecting;
+            }
+            else if (_legacyConnection != null)
+            {
+                isConnected = _legacyConnection.State == ConnectionState.Connected || _legacyConnection.State == ConnectionState.Reconnecting;
+            }
+
+            if (!isConnected)
+            {
+                try
+                {
+                    await ConnectStatusStreamAsync();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         public ServerConnection GetConnectionInfo()
         {
             return _connectionConfig;

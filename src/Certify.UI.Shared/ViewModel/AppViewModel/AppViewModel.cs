@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -109,6 +108,11 @@ namespace Certify.UI.ViewModel
                                 ProgressResults.Remove(item);
                             };
                         });
+                    }
+
+                    if (_certifyClient != null)
+                    {
+                        await _certifyClient.EnsureServiceHubConnected();
                     }
                 }
             }, TaskCreationOptions.LongRunning);
