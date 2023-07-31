@@ -113,16 +113,16 @@
                                 Orientation="Vertical">
 
                                 <CheckBox
-                                    x:Name="EnableProxyAPICheckbox"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
-                                    IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
-
-                                <CheckBox
                                     x:Name="IgnoreStoppedSites"
                                     Margin="0,4,0,0"
                                     Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
                                     IsChecked="{Binding Prefs.IgnoreStoppedSites}" />
+
+                                <CheckBox
+                                    x:Name="EnableProxyAPICheckbox"
+                                    Margin="0,4,0,0"
+                                    Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
+                                    IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
 
                                 <CheckBox
                                     x:Name="EnableDNSValidationChecks"
@@ -137,6 +137,12 @@
                                     IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
 
 
+
+                                <CheckBox
+                                    x:Name="EnableParallelRenewals"
+                                    Margin="0,4,0,0"
+                                    Content="Enable Parallel Renewals"
+                                    IsChecked="{Binding Prefs.EnableParallelRenewals}" />
                                 <CheckBox
                                     x:Name="EnableExternalPlugins"
                                     Margin="0,4,0,0"
@@ -154,11 +160,6 @@
                                     Margin="0,4,0,0"
                                     Content="Enable Results From External Certificate Managers"
                                     IsChecked="{Binding Prefs.EnableExternalCertManagers}" />
-                                <CheckBox
-                                    x:Name="EnableParallelRenewals"
-                                    Margin="0,4,0,0"
-                                    Content="Enable Parallel Renewals"
-                                    IsChecked="{Binding Prefs.EnableParallelRenewals}" />
                                 <CheckBox
                                     x:Name="UseModernPFXAlgs"
                                     Margin="0,4,0,0"

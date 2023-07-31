@@ -307,10 +307,10 @@
     <value>Check for updates automatically</value>
   </data>
   <data name="Settings_EnableTelemetry" xml:space="preserve">
-    <value>Enable app telemetry (feature usage reporting)</value>
+    <value>Enable App Telemetry (feature usage reporting)</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>Enable proxy API for domain config checks</value>
+    <value>Enable Proxy API for Domain Config Checks</value>
   </data>
   <data name="Settings_EnableEFS" xml:space="preserve">
     <value>Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows.</value>
@@ -319,7 +319,7 @@
     <value>Ignore stopped IIS sites for new certificates and renewals</value>
   </data>
   <data name="Settings_EnableDnsValidation" xml:space="preserve">
-    <value>Enable DNS Validations checks (Resolution, CAA, DNSSEC)</value>
+    <value>Enable DNS Validation Checks (Resolution, CAA, DNSSEC)</value>
   </data>
   <data name="SaveChanges" xml:space="preserve">
     <value>Save Changes</value>

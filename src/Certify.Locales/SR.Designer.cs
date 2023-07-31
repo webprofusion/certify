@@ -1638,7 +1638,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable DNS Validations checks (Resolution, CAA, DNSSEC).
+        ///   Looks up a localized string similar to Enable DNS Validation Checks (Resolution, CAA, DNSSEC).
         /// </summary>
         public static string Settings_EnableDnsValidation {
             get {
@@ -1665,7 +1665,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable proxy API for domain config checks.
+        ///   Looks up a localized string similar to Enable Proxy API for Domain Config Checks.
         /// </summary>
         public static string Settings_EnableProxyApiForDomainConfig {
             get {
@@ -1683,7 +1683,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable app telemetry (feature usage reporting).
+        ///   Looks up a localized string similar to Enable App Telemetry (feature usage reporting).
         /// </summary>
         public static string Settings_EnableTelemetry {
             get {
