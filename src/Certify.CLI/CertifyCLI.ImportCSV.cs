@@ -59,7 +59,8 @@ namespace Certify.CLI
                  webhookMethodIdx = null,
                  webhookUrlIdx = null,
                  webhookContentTypeIdx = null,
-                 webhookContentBodyIdx = null;
+                 webhookContentBodyIdx = null,
+                 deploymentSiteOptionIdx = null;
 
             foreach (var row in rows)
             {
@@ -68,7 +69,7 @@ namespace Certify.CLI
                     try
                     {
                         // does the first row contain headers in the csv file?
-                        if ((rowID == 0) && row.Contains("siteid") && row.Contains("domains"))
+                        if ((rowID == 0) && ((row.Contains("siteid") || row.Contains("name")) && row.Contains("domains")))
                         {
                             csvHasHeaders = true;
                         }
@@ -159,6 +160,10 @@ namespace Certify.CLI
                                     case "webhookcontentbody":
                                         webhookContentBodyIdx = colID;
                                         break;
+
+                                    case "deploymentsiteoption":
+                                        deploymentSiteOptionIdx = colID;
+                                        break;
                                 }
 
                                 colID++;
@@ -188,6 +193,7 @@ namespace Certify.CLI
                                    WebhookUrl = "",
                                    WebhookContentType = "",
                                    WebhookContentBody = "";
+                            DeploymentOption? deploymentOption = DeploymentOption.Auto;
 
                             if (primaryDomainIdx != null)
                             {
@@ -237,6 +243,11 @@ namespace Certify.CLI
                             if (postRequestPowerShellScriptIdx != null)
                             {
                                 PostRequestPowerShellScript = values[(int)postRequestPowerShellScriptIdx].Trim();
+                            }
+
+                            if (deploymentSiteOptionIdx != null)
+                            {
+                                deploymentOption = (DeploymentOption)int.Parse(values[(int)deploymentSiteOptionIdx].Trim());
                             }
 
                             if (webhookTriggerIdx != null)
@@ -314,7 +325,7 @@ namespace Certify.CLI
                             }
                             });
 
-                            newManagedCertificate.RequestConfig.DeploymentSiteOption = (siteId == "auto" ? DeploymentOption.Auto : DeploymentOption.SingleSite);
+                            newManagedCertificate.RequestConfig.DeploymentSiteOption = (DeploymentOption)(deploymentOption != null ? deploymentOption : (siteId == "auto" ? DeploymentOption.Auto : DeploymentOption.SingleSite));
                             newManagedCertificate.RequestConfig.PerformAutoConfig = PerformAutoConfig;
                             newManagedCertificate.RequestConfig.PerformChallengeFileCopy = PerformChallengeFileCopy;
                             newManagedCertificate.RequestConfig.PerformExtensionlessConfigChecks = PerformExtensionlessConfigChecks;
