@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -273,51 +273,58 @@ namespace Certify.Management
                 {
                     var item = await _itemManager.GetById(i);
 
-                    // remember that we have checked these items recently
-                    if (completedOcspUpdateChecks.Contains(i))
+                    if (item != null)
                     {
-                        item.DateLastOcspCheck = DateTime.Now;
-                    }
-
-                    if (completedRenewalInfoChecks.Contains(i))
-                    {
-                        item.DateLastRenewalInfoCheck = DateTime.Now;
-                    }
-
-                    if (itemsViaARI.ContainsKey(item.Id))
-                    {
-                        item.DateNextScheduledRenewalAttempt = itemsViaARI[item.Id];
-                    }
-
-                    // if item requires renewal, schedule next renewal attempt.
-                    if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
-                    {
-                        if (item.DateExpiry > DateTime.Now.AddHours(1))
+                        // remember that we have checked these items recently
+                        if (completedOcspUpdateChecks.Contains(i))
                         {
-                            var reason = "Expiry";
-
-                            if (itemsViaARI.ContainsKey(item.Id))
-                            {
-                                reason = "ARI Suggested Window";
-                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
-                            }
-                            else if (itemsOcspRevoked.Contains(item.Id))
-                            {
-                                reason = "OCSP status (Revoked)";
-                                item.CertificateRevoked = true;
-                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
-                            }
-                            else if (itemsOcspExpired.Contains(item.Id))
-                            {
-                                reason = "OCSP status (Expired)";
-                                item.DateNextScheduledRenewalAttempt = DateTime.Now;
-                            }
-
-                            _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
+                            item.DateLastOcspCheck = DateTime.Now;
                         }
-                    }
 
-                    await _itemManager.Update(item);
+                        if (completedRenewalInfoChecks.Contains(i))
+                        {
+                            item.DateLastRenewalInfoCheck = DateTime.Now;
+                        }
+
+                        if (itemsViaARI.ContainsKey(item.Id))
+                        {
+                            item.DateNextScheduledRenewalAttempt = itemsViaARI[item.Id];
+                        }
+
+                        // if item requires renewal, schedule next renewal attempt.
+                        if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
+                        {
+                            if (item.DateExpiry > DateTime.Now.AddHours(1))
+                            {
+                                var reason = "Expiry";
+
+                                if (itemsViaARI.ContainsKey(item.Id))
+                                {
+                                    reason = "ARI Suggested Window";
+                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                }
+                                else if (itemsOcspRevoked.Contains(item.Id))
+                                {
+                                    reason = "OCSP status (Revoked)";
+                                    item.CertificateRevoked = true;
+                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                }
+                                else if (itemsOcspExpired.Contains(item.Id))
+                                {
+                                    reason = "OCSP status (Expired)";
+                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                }
+
+                                _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
+                            }
+                        }
+
+                        await _itemManager.Update(item);
+                    }
+                    else
+                    {
+                        _serviceLog.Warning($"Status Checks: Item {i} was not present in database for update. ");
+                    }
                 }
 
                 _lastStatusCheckInProgress = null;
