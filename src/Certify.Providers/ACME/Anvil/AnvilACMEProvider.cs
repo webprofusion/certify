@@ -701,12 +701,22 @@ namespace Certify.Providers.ACME.Anvil
                     try
                     {
                         _ = await _acme.GetDirectory(throwOnError: true);
+
                     }
                     catch (Exception exp)
                     {
                         var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, exp);
 
                         return new PendingOrder($"Failed to begin certificate order. The CA ACME directory was not accessible: {message}");
+                    }
+
+                    try
+                    {
+                        await _acme.HttpClient.ConsumeNonce();
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Information($"Error consuming replay none during new order. {ex.Message}");
                     }
 
                     // attempt to start our certificate order
@@ -1301,13 +1311,13 @@ namespace Certify.Providers.ACME.Anvil
         /// <returns>  </returns>
         public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
         {
-            if(!_currentOrders.TryGetValue(orderId, out var orderContext))
+            if (!_currentOrders.TryGetValue(orderId, out var orderContext))
             {
                 log.Warning($"Order context was not cached: {orderId}");
                 // didn't have cached info
                 orderContext = _acme.Order(new Uri(orderId));
             };
-        
+
             // check order status, if it's not 'ready' then try a few more times before giving up
             var order = await orderContext.Resource();
 
