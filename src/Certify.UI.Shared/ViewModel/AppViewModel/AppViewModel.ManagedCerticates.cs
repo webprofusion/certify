@@ -303,6 +303,8 @@ namespace Certify.UI.ViewModel
                     SelectedItem = newItem;
                 }
 
+                RaisePropertyChangedEvent(nameof(ManagedCertificates));
+
                 return newItem;
             }
             finally
