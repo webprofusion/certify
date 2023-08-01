@@ -97,7 +97,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Register.
+        ///   Looks up a localized string similar to Purchase License Key...
         /// </summary>
         public static string AboutControl_Register {
             get {
