@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Providers;
 
 namespace Certify.Management
@@ -87,7 +88,7 @@ namespace Certify.Management
                 var all = await _itemManager.Find(filter);
                 result.TotalResults = all.Count;
             }
-            
+
             result.Results = list;
 
             return result;
@@ -359,7 +360,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var logPath = ManagedCertificateLog.GetLogPath(id);
 
@@ -372,19 +373,18 @@ namespace Certify.Management
                     var log = System.IO.File.ReadAllLines(logPath)
                         .Reverse()
                         .Take(limit)
-                        .Reverse()
                         .ToArray();
-
-                    return log;
+                    var parsed = LogParser.Parse(log);
+                    return parsed;
                 }
                 catch (Exception exp)
                 {
-                    return new string[] { $"Failed to read log: {exp}" };
+                    return new LogItem[] { new LogItem { LogLevel = "ERR", EventDate = DateTime.Now, Message = $"Failed to read log: {exp}" } };
                 }
             }
             else
             {
-                return await Task.FromResult(new string[] { "" });
+                return await Task.FromResult(Array.Empty<LogItem>());
             }
         }
 
@@ -456,7 +456,7 @@ namespace Certify.Management
         /// Check if our temporary http challenge response service is running locally
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> IsHttpChallengeProcessStarted(bool allowRetry=false)
+        private async Task<bool> IsHttpChallengeProcessStarted(bool allowRetry = false)
         {
             if (_httpChallengeServerClient != null)
             {
@@ -465,7 +465,7 @@ namespace Certify.Management
                 try
                 {
                     var attempts = 3;
-                    while (attempts>0)
+                    while (attempts > 0)
                     {
                         var response = await _httpChallengeServerClient.GetAsync(testUrl);
                         if (response.IsSuccessStatusCode)

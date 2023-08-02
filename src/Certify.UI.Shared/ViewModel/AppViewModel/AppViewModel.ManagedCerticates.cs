@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.UI.Shared;
 using PropertyChanged;
 
@@ -468,7 +469,7 @@ namespace Certify.UI.ViewModel
         /// <param name="id"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var result = await _certifyClient.GetItemLog(id, limit);
             return result;

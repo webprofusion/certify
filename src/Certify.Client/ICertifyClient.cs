@@ -114,7 +114,7 @@ namespace Certify.Client
 
         Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info);
 
-        Task<string[]> GetItemLog(string id, int limit);
+        Task<Models.API.LogItem[]> GetItemLog(string id, int limit);
 
         #endregion Managed Certificates
 
