@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
 using Microsoft.AspNetCore.Mvc;
@@ -217,7 +218,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("log/{managedItemId}/{limit}")]
-        public async Task<string[]> GetLog(string managedItemId, int limit)
+        public async Task<LogItem[]> GetLog(string managedItemId, int limit)
         {
             DebugLog();
             return await _certifyManager.GetItemLog(managedItemId, limit);
