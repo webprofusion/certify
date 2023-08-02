@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -560,10 +561,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var response = await FetchAsync($"managedcertificates/log/{id}/{limit}");
-            return JsonConvert.DeserializeObject<string[]>(response);
+            return JsonConvert.DeserializeObject<LogItem[]>(response);
         }
 
         public async Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null)
