@@ -80,7 +80,7 @@ namespace Certify.Server.API.Controllers
         [HttpGet]
         [Route("{managedCertId}/log")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
         public async Task<IActionResult> DownloadLog(string managedCertId, int maxLines = 1000)
         {
             var managedCert = await _client.GetManagedCertificate(managedCertId);
@@ -96,50 +96,9 @@ namespace Certify.Server.API.Controllers
             }
 
             var log = await _client.GetItemLog(managedCertId, maxLines);
-            var logByteArrays = log.Select(l => System.Text.Encoding.UTF8.GetBytes(l + "\n")).ToArray();
 
-            // combine log lines to one byte array
-
-            var bytes = new byte[logByteArrays.Sum(a => a.Length)];
-            var offset = 0;
-            foreach (var array in logByteArrays)
-            {
-                System.Buffer.BlockCopy(array, 0, bytes, offset, array.Length);
-                offset += array.Length;
-            }
-
-            return new FileContentResult(bytes, "text/plain") { FileDownloadName = "log.txt" };
-
-        }
-
-        /// <summary>
-        /// Download text log for the given managed certificate
-        /// </summary>
-        /// <param name="managedCertId"></param>
-        /// <param name="maxLines"></param>
-        /// <returns>Log file in text format</returns>
-        [HttpGet]
-        [Route("{managedCertId}/log/text")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(string))]
-        public async Task<IActionResult> DownloadLogAsText(string managedCertId, int maxLines = 1000)
-        {
-            var managedCert = await _client.GetManagedCertificate(managedCertId);
-
-            if (managedCert == null)
-            {
-                return new NotFoundResult();
-            }
-
-            if (maxLines > 1000)
-            {
-                maxLines = 1000;
-            }
-
-            var log = await _client.GetItemLog(managedCertId, maxLines);
-
-            return new OkObjectResult(string.Join("\n", log));
-
+          
+            return new OkObjectResult(new LogResult { Items = log });
         }
 
         /// <summary>
@@ -174,10 +133,11 @@ namespace Certify.Server.API.Controllers
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
             }).OrderBy(a => a.Title);
 
-            var result = new ManagedCertificateSummaryResult { 
-                Results = list, 
-                TotalResults = managedCertResult.TotalResults, 
-                PageIndex = page ?? 0, 
+            var result = new ManagedCertificateSummaryResult
+            {
+                Results = list,
+                TotalResults = managedCertResult.TotalResults,
+                PageIndex = page ?? 0,
                 PageSize = pageSize ?? list.Count()
             };
 

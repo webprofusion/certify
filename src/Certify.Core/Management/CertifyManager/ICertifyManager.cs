@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -94,7 +95,7 @@ namespace Certify.Management
 
         Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config);
 
-        Task<string[]> GetItemLog(string id, int limit = 1000);
+        Task<LogItem[]> GetItemLog(string id, int limit = 1000);
 
         Task<string[]> GetServiceLog(string logType, int limit = 10000);
 
