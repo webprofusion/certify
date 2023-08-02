@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
 
@@ -87,7 +88,7 @@ namespace Certify.Management
                 var all = await _itemManager.Find(filter);
                 result.TotalResults = all.Count;
             }
-            
+
             result.Results = list;
 
             return result;
@@ -472,7 +473,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var logPath = ManagedCertificateLog.GetLogPath(id);
 
@@ -485,19 +486,18 @@ namespace Certify.Management
                     var log = System.IO.File.ReadAllLines(logPath)
                         .Reverse()
                         .Take(limit)
-                        .Reverse()
                         .ToArray();
-
-                    return log;
+                    var parsed = LogParser.Parse(log);
+                    return parsed;
                 }
                 catch (Exception exp)
                 {
-                    return new string[] { $"Failed to read log: {exp}" };
+                    return new LogItem[] { new LogItem { LogLevel = "ERR", EventDate = DateTime.Now, Message = $"Failed to read log: {exp}" } };
                 }
             }
             else
             {
-                return await Task.FromResult(new string[] { "" });
+                return await Task.FromResult(Array.Empty<LogItem>());
             }
         }
 
