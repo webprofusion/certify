@@ -44,10 +44,14 @@ namespace Certify.Models
     {
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
-        public RequestProgressManagedItem(string? id, string? name)
+        public string FailureMessage { get; set; } = string.Empty;
+        public int FailureCount { get; set; }
+        public RequestProgressManagedItem(string? id, string? name, string? failureMessage, int failureCount)
         {
             Id = id ?? "";
             Name = name ?? "";
+            FailureMessage = failureMessage ?? "";
+            FailureCount = failureCount;
         }
     }
 
@@ -61,7 +65,7 @@ namespace Certify.Models
         {
             CurrentState = currentState;
             Message = msg;
-            ManagedCertificate = new RequestProgressManagedItem(item.Id, item.Name);
+            ManagedCertificate = new RequestProgressManagedItem(item.Id, item.Name, item.RenewalFailureMessage, item.RenewalFailureCount);
             IsPreviewMode = isPreviewMode;
             IsSkipped = isSkipped;
             MessageCreated = DateTime.UtcNow;
