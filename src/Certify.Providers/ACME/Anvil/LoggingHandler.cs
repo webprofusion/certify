@@ -22,10 +22,11 @@ namespace Certify.Providers.ACME.Anvil
         {
             if (_log != null)
             {
-                _log.Debug($"Http Request: {request}");
+                _log.Debug("Http Request: {request}", request);
+
                 if (request.Content != null)
                 {
-                    _log.Debug(await request.Content.ReadAsStringAsync());
+                    _log.Debug("Content: {content}", await request.Content.ReadAsStringAsync());
                 }
             }
 
@@ -33,11 +34,11 @@ namespace Certify.Providers.ACME.Anvil
 
             if (_log != null)
             {
-                _log.Debug($"Http Response: {response}");
+                _log.Debug("Http Response: {response}", response);
 
                 if (response.Content != null)
                 {
-                    _log.Debug(await response.Content.ReadAsStringAsync());
+                    _log.Debug("Content: {content}", await response.Content.ReadAsStringAsync());
                 }
             }
 
