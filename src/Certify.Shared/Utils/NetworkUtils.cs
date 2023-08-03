@@ -5,8 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Certify.Management;
 #if NET6_0_OR_GREATER
@@ -15,18 +13,27 @@ using ARSoft.Tools.Net.Dns;
 #endif
 using Certify.Models.Config;
 using Certify.Models.Providers;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Certify.Shared.Core.Utils
 {
-    public class NetworkUtils
+    public class NetworkUtils : IDisposable
     {
         private bool _enableValidationProxyAPI = true;
+        private HttpClient _httpClient = null;
+        private HttpClientHandler _httpClientHandler = null;
 
         public NetworkUtils(bool enableProxyValidationAPI)
         {
             _enableValidationProxyAPI = enableProxyValidationAPI;
+
+            _httpClientHandler = new HttpClientHandler();
+            _httpClientHandler.ServerCertificateCustomValidationCallback =
+                 (message, certificate, chain, sslPolicyErrors) => true;
+
+            _httpClient = new HttpClient(_httpClientHandler);
+            _httpClient.Timeout = new TimeSpan(0, 0, 5);
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", Certify.Management.Util.GetUserAgent());
+
         }
 
         public Action<string> Log = (message) => { };
@@ -80,19 +87,14 @@ namespace Certify.Shared.Core.Utils
                     }
                 }
 
-                Thread.Sleep(250); // wait a bit for hosts file to take effect
+                await Task.Delay(250); // wait a bit for hosts file to take effect
 
                 try
                 {
-                    using (var client = new HttpClient())
-                    {
-                        client.DefaultRequestHeaders.Add("User-Agent", Certify.Management.Util.GetUserAgent());
+                    var resp = await _httpClient.SendAsync(req);
+                    // if the GET request succeeded, the Cert validation succeeded
+                    Log($"Local TLS SNI binding check OK: {host}, {sni}");
 
-                        var resp = await client.SendAsync(req);
-                        // if the GET request succeeded, the Cert validation succeeded
-                        Log($"Local TLS SNI binding check OK: {host}, {sni}");
-                        ;
-                    }
                 }
                 finally
                 {
@@ -138,52 +140,34 @@ namespace Certify.Shared.Core.Utils
             // remote API rather than directly on the servers
             var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
 
-            RemoteCertificateValidationCallback ignoreTlsValidation = delegate (object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-            {
-                return true;
-            };
-
-            var tlsCallBackApplied = false;
             //check http request to test path works
             try
             {
-                var request = WebRequest.Create(!useProxy ? url :
-                    Models.API.Config.APIBaseURI + "configcheck/testurl?url=" + url);
 
-                request.Timeout = 5000;
+                log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {_httpClient.Timeout.TotalMilliseconds}ms]");
 
-                if (ServicePointManager.ServerCertificateValidationCallback == null)
-                {
-                    tlsCallBackApplied = true;
-                    ServicePointManager.ServerCertificateValidationCallback += ignoreTlsValidation;
-                }
+                var requestUrl = useProxy ? Models.API.Config.APIBaseURI + "configcheck/testurl?url=" + url : url;
 
-                log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {request.Timeout}ms]");
-
-                var response = (HttpWebResponse)await request.GetResponseAsync();
+                var response = await _httpClient.GetAsync(requestUrl);
 
                 //if checking via proxy, examine result
                 if (useProxy)
                 {
-                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+                    if (response.IsSuccessStatusCode)
                     {
-                        var encoding = ASCIIEncoding.UTF8;
-                        using (var reader = new System.IO.StreamReader(response.GetResponseStream(), encoding))
+                        var jsonText = await response.Content.ReadAsStringAsync();
+
+                        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
+
+                        if (result.IsAccessible == true)
                         {
-                            var jsonText = reader.ReadToEnd();
+                            log.Information("URL is accessible. Check passed.");
 
-                            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
-
-                            if (result.IsAccessible == true)
-                            {
-                                log.Information("URL is accessible. Check passed.");
-
-                                return true;
-                            }
-                            else
-                            {
-                                log.Information($"(proxy api) URL is not accessible. Result: [{result.StatusCode}] {result.Message}");
-                            }
+                            return true;
+                        }
+                        else
+                        {
+                            log.Information($"(proxy api) URL is not accessible. Result: [{result.StatusCode}] {result.Message}");
                         }
                     }
 
@@ -192,7 +176,7 @@ namespace Certify.Shared.Core.Utils
                 }
                 else
                 {
-                    if ((int)response.StatusCode >= 200 && (int)response.StatusCode < 300)
+                    if (response.IsSuccessStatusCode)
                     {
                         log.Information($"(local check) URL is accessible. Check passed. HTTP {response.StatusCode}");
 
@@ -221,13 +205,6 @@ namespace Certify.Shared.Core.Utils
                     log.Error(exp, $"Failed to confirm URL is accessible : {url} ");
 
                     return false;
-                }
-            }
-            finally
-            {
-                if (tlsCallBackApplied)
-                {
-                    ServicePointManager.ServerCertificateValidationCallback -= ignoreTlsValidation;
                 }
             }
         }
@@ -435,6 +412,12 @@ namespace Certify.Shared.Core.Utils
             }
 #endif
             return results;
+        }
+
+        public void Dispose()
+        {
+            _httpClientHandler?.Dispose();
+            _httpClient?.Dispose();
         }
     }
 }
