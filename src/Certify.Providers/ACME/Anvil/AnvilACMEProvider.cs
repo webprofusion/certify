@@ -82,15 +82,6 @@ namespace Certify.Providers.ACME.Anvil
             _serviceUri = new Uri(acmeBaseUri);
 
             _allowInvalidTls = allowInvalidTls;
-
-            if (_allowInvalidTls)
-            {
-                ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
-                {
-                    // ignore all cert errors when validating URL response
-                    return true;
-                };
-            }
         }
 
         public string GetProviderName() => "Anvil";
@@ -107,12 +98,10 @@ namespace Certify.Providers.ACME.Anvil
 
             var httpHandler = new HttpClientHandler();
 
-#if NETSTANDARD2_1_OR_GREATER
             if (_allowInvalidTls)
             {
-                httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
             }
-#endif
 
             _loggingHandler = new LoggingHandler(httpHandler, _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
