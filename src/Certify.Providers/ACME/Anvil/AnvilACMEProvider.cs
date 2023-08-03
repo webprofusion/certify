@@ -1360,7 +1360,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
+            IKey csrKey = null;
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1375,6 +1375,11 @@ namespace Certify.Providers.ACME.Anvil
                 {
                     csrKey = savedKey;
                 }
+            }
+
+            if (csrKey == null)
+            {
+                csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
             }
 
             var certFriendlyName = $"{config.PrimaryDomain} [Certify] ";
