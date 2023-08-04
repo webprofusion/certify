@@ -82,11 +82,9 @@ namespace Certify.Management
             var list = await _itemManager.Find(filter);
             if (filter.PageSize > 0)
             {
-                // TODO: implement count on provider directly
                 filter.PageSize = null;
                 filter.PageIndex = null;
-                var all = await _itemManager.Find(filter);
-                result.TotalResults = all.Count;
+                result.TotalResults = await _itemManager.CountAll(filter);
             }
 
             result.Results = list;
