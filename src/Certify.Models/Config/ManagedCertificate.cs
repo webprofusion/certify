@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -119,7 +119,7 @@ namespace Certify.Models
         /// <summary>
         /// Total results available
         /// </summary>
-        public int TotalResults { get; set; }
+        public long TotalResults { get; set; }
     }
 
     public class ManagedCertificate : BindableBase
