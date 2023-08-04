@@ -101,9 +101,13 @@ namespace Certify.Core.Tests
             try
             {
                 var managedCertificate = await itemManager.Update(testCert);
+                var filter = new ManagedCertificateFilter { MaxResults = 10 };
+                var managedCertificates = await itemManager.Find(filter);
 
-                var managedCertificates = await itemManager.Find(new ManagedCertificateFilter { MaxResults = 10 });
                 Assert.IsTrue(managedCertificates.Count > 0);
+
+                var total = await itemManager.CountAll(filter);
+                Assert.IsTrue(total > 0);
             }
             finally
             {
