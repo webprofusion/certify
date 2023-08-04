@@ -82,7 +82,7 @@ namespace Certify.UI.Controls
 
             //sort by name ascending
             CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
-
+            
             if (_sortOrder == "NameAsc")
             {
                 CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
