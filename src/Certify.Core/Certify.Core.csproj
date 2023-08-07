@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net462;netstandard2.0;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462;net8.0</TargetFrameworks>
     <Configurations>Debug;Release;</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
@@ -69,6 +69,18 @@
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp />
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
+    <NoWarn>1701;1702;CA1068</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0|AnyCPU'">
+    <NoWarn>1701;1702;CA1068</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
+    <NoWarn>1701;1702;CA1068</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
+    <NoWarn>1701;1702;CA1068</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="7.2.4" />
