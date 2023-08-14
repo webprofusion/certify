@@ -72,24 +72,24 @@ namespace Certify.Models
             DateStart = dateStart;
             DateEnd = dateEnd;
         }
-        public DateTime DateStart { get; }
-        public DateTime DateEnd { get; }
+        public DateTimeOffset DateStart { get; }
+        public DateTimeOffset DateEnd { get; }
 
-        public int? GetPercentageElapsed(DateTime testDateTime)
+        public int? GetPercentageElapsed(DateTimeOffset testDateTime)
         {
             if (DateStart == null || DateEnd == null)
             {
                 return null;
             }
 
-            var lifetime = (DateTime)DateEnd - (DateTime)DateStart;
+            var lifetime = DateEnd - DateStart;
 
             if (lifetime.TotalMinutes <= 0)
             {
                 return 100;
             }
 
-            var certElapsed = testDateTime - (DateTime)DateStart;
+            var certElapsed = testDateTime - DateStart;
             var elapsedMinutes = lifetime.TotalMinutes - (lifetime.TotalMinutes - certElapsed.TotalMinutes);
 
             if (elapsedMinutes > 0)
