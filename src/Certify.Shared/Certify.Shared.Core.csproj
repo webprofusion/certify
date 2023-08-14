@@ -28,4 +28,13 @@
         <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Assets\public_suffix_list.dat">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="Assets\rdap_dns.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
