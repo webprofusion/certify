@@ -11,7 +11,6 @@ namespace Certify.Core.Tests.Unit
 
         }
 
-
         [TestMethod, Description("Test null/blank coalesce of string")]
         public void TestNullOrBlankCoalesce()
         {

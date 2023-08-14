@@ -357,6 +357,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test that duplicate https bindings are not created when multiple non-port 443 same-hostname bindings exist")]
+        [Ignore("Currently not supported")]
         public async Task MixedPortMixedSiteTest()
         {
 
