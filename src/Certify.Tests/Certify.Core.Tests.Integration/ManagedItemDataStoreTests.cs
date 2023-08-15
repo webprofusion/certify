@@ -342,11 +342,11 @@ namespace Certify.Core.Tests
                     newTestItem.Name = "FilterMultiTest_" + i;
                     newTestItem.Id = Guid.NewGuid().ToString();
                     newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
-                    newTestItem.DateExpiry = DateTime.Now.AddDays(new Random().Next(5, 90));
-                    newTestItem.DateStart = DateTime.Now.AddDays(-new Random().Next(1, 30));
-                    newTestItem.DateLastOcspCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 60));
-                    newTestItem.DateLastRenewalInfoCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateRenewed = DateTime.Now.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(new Random().Next(5, 90));
+                    newTestItem.DateStart = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 60));
+                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
+                    newTestItem.DateRenewed = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
 
                     if (rnd.Next(0, 10) >= 8)
                     {
@@ -365,11 +365,11 @@ namespace Certify.Core.Tests
                     newTestItem.Name = "ExtraMultiTest_" + i;
                     newTestItem.Id = Guid.NewGuid().ToString();
                     newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
-                    newTestItem.DateExpiry = DateTime.Now.AddDays(new Random().Next(5, 90));
-                    newTestItem.DateStart = DateTime.Now.AddDays(-new Random().Next(1, 30));
-                    newTestItem.DateLastOcspCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateLastRenewalInfoCheck = DateTime.Now.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateRenewed = DateTime.Now.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(new Random().Next(5, 90));
+                    newTestItem.DateStart = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
+                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
+                    newTestItem.DateRenewed = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
 
                     inMemoryList.Add(newTestItem);
                 }
@@ -438,8 +438,8 @@ namespace Certify.Core.Tests
                            (filter.Id == null || i.Id.Equals(filter.Id, StringComparison.InvariantCultureIgnoreCase))
                            && (filter.Keyword == null || i.Name.IndexOf(filter.Keyword, StringComparison.InvariantCultureIgnoreCase) >= 0)
                            && (filter.Name == null || i.Name.Equals(filter.Name, StringComparison.InvariantCultureIgnoreCase))
-                           && (filter.LastOCSPCheckMins == null || i.DateLastOcspCheck < DateTime.Now.AddMinutes(-(int)filter.LastOCSPCheckMins))
-                           && (filter.LastRenewalInfoCheckMins == null || i.DateLastRenewalInfoCheck < DateTime.Now.AddMinutes(-(int)filter.LastRenewalInfoCheckMins))
+                           && (filter.LastOCSPCheckMins == null || i.DateLastOcspCheck < DateTimeOffset.UtcNow.AddMinutes(-(int)filter.LastOCSPCheckMins))
+                           && (filter.LastRenewalInfoCheckMins == null || i.DateLastRenewalInfoCheck < DateTimeOffset.UtcNow.AddMinutes(-(int)filter.LastRenewalInfoCheckMins))
                            && (filter.ChallengeType == null || i.RequestConfig.Challenges.Any(c => c.ChallengeType == filter.ChallengeType))
                            && (filter.ChallengeProvider == null || i.RequestConfig.Challenges.Any(c => c.ChallengeProvider == filter.ChallengeProvider))
                            && (filter.StoredCredentialKey == null || i.RequestConfig.Challenges.Any(c => c.ChallengeCredentialKey == filter.StoredCredentialKey))

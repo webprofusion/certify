@@ -22,7 +22,7 @@ namespace Certify.Models
 
         public string Dns { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
-        public DateTime? AuthorizationExpiry { get; set; }
+        public DateTimeOffset? AuthorizationExpiry { get; set; }
         public bool IsAuthorizationPending { get; set; }
         public string ValidationError { get; set; } = string.Empty;
         public string ValidationErrorType { get; set; } = string.Empty;

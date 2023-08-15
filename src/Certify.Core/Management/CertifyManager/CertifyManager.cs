@@ -503,7 +503,7 @@ namespace Certify.Management
         /// <param name="logType"></param>
         private void LogMessage(string managedItemId, string msg, LogItemType logType = LogItemType.GeneralInfo) => ManagedCertificateLog.AppendLog(managedItemId, new ManagedCertificateLogItem
         {
-            EventDate = DateTime.UtcNow,
+            EventDate = DateTimeOffset.UtcNow,
             LogItemType = logType,
             Message = msg
         }, _loggingLevelSwitch);

@@ -409,14 +409,14 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null && SelectedItem.DateExpiry.HasValue)
                 {
-                    return (int)(SelectedItem.DateExpiry - DateTime.Now).Value.TotalDays;
+                    return (int)(SelectedItem.DateExpiry - DateTimeOffset.UtcNow).Value.TotalDays;
                 }
 
                 return null;
             }
         }
 
-        public DateTime? DateNextRenewalDue
+        public DateTimeOffset? DateNextRenewalDue
         {
             get
             {
@@ -436,7 +436,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                return SelectedItem?.GetPercentageLifetimeElapsed(DateTime.Now);
+                return SelectedItem?.GetPercentageLifetimeElapsed(DateTimeOffset.UtcNow);
             }
         }
         /// <summary>

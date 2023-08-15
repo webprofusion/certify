@@ -17,9 +17,9 @@ namespace Certify.Core.Tests.Unit
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
-                DateRenewed = DateTime.Now.AddDays(-15),
-                DateExpiry = DateTime.Now.AddDays(60),
-                DateLastRenewalAttempt = DateTime.Now.AddHours(-12),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-12),
                 LastRenewalStatus = RequestState.Error,
                 RenewalFailureCount = 2
             };
@@ -34,8 +34,8 @@ namespace Certify.Core.Tests.Unit
             managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
-                DateRenewed = DateTime.Now.AddDays(-15),
-                DateExpiry = DateTime.Now.AddDays(60),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
                 DateLastRenewalAttempt = null,
                 LastRenewalStatus = null,
                 RenewalFailureCount = 0
@@ -55,7 +55,7 @@ namespace Certify.Core.Tests.Unit
             var renewalPeriodDays = 14;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTimeOffset.UtcNow.AddDays(-15), DateExpiry = DateTimeOffset.UtcNow.AddDays(60) };
 
             // perform check
             var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
@@ -72,7 +72,7 @@ namespace Certify.Core.Tests.Unit
             var renewalPeriodDays = 30;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTimeOffset.UtcNow.AddDays(-15), DateExpiry = DateTimeOffset.UtcNow.AddDays(60) };
 
             // perform check
             var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
@@ -92,10 +92,10 @@ namespace Certify.Core.Tests.Unit
             var renewalPeriodDays = 30;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTime.Now.AddDays(-15), DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateRenewed = DateTimeOffset.UtcNow.AddDays(-15), DateExpiry = DateTimeOffset.UtcNow.AddDays(60) };
 
             // set scheduled renewal so it should become due
-            managedCertificate.DateNextScheduledRenewalAttempt = DateTime.Now.AddDays(-0.1);
+            managedCertificate.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddDays(-0.1);
 
             // perform check
             var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
@@ -104,7 +104,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(isRenewalRequired.IsRenewalDue, "Renewal should be required due to scheduled date");
 
             // set scheduled renewal so it should not become due
-            managedCertificate.DateNextScheduledRenewalAttempt = DateTime.Now.AddDays(45);
+            managedCertificate.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddDays(45);
 
             // perform check
             isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
@@ -121,7 +121,7 @@ namespace Certify.Core.Tests.Unit
             var renewalPeriodDays = 14;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateExpiry = DateTime.Now.AddDays(60) };
+            var managedCertificate = new ManagedCertificate { IncludeInAutoRenew = true, DateExpiry = DateTimeOffset.UtcNow.AddDays(60) };
 
             // perform check
             var isRenewalRequired = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
@@ -138,7 +138,7 @@ namespace Certify.Core.Tests.Unit
             var renewalPeriodDays = 14;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var startDate = DateTime.Now.AddDays(-0.5);
+            var startDate = DateTimeOffset.UtcNow.AddDays(-0.5);
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
@@ -175,7 +175,7 @@ namespace Certify.Core.Tests.Unit
             // setup 
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
 
-            var startDate = DateTime.Now.AddDays(-daysElapsed);
+            var startDate = DateTimeOffset.UtcNow.AddDays(-daysElapsed);
 
             var managedCertificate = new ManagedCertificate
             {
@@ -184,7 +184,7 @@ namespace Certify.Core.Tests.Unit
                 DateExpiry = startDate.AddDays(lifetimeDays),
                 CustomRenewalTarget = customRenewalPercentage,
                 CustomRenewalIntervalMode = customIntervalMode,
-                DateRenewed = previouslyRenewed ? (DateTime?)startDate : (DateTime?)null
+                DateRenewed = previouslyRenewed ? (DateTimeOffset?)startDate : (DateTimeOffset?)null
             };
 
             // perform check
@@ -210,14 +210,14 @@ namespace Certify.Core.Tests.Unit
         {
             // setup 
 
-            var startDate = DateTime.Now.AddDays(-daysElapsed);
+            var startDate = DateTimeOffset.UtcNow.AddDays(-daysElapsed);
 
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
                 DateStart = startDate,
                 DateExpiry = startDate.AddDays(lifetimeDays),
-                DateRenewed = previouslyRenewed ? (DateTime?)startDate : (DateTime?)null
+                DateRenewed = previouslyRenewed ? (DateTimeOffset?)startDate : (DateTimeOffset?)null
             };
 
             // perform check
@@ -246,14 +246,14 @@ namespace Certify.Core.Tests.Unit
         {
             // setup 
 
-            var startDate = DateTime.Now.AddDays(-daysElapsed);
+            var startDate = DateTimeOffset.UtcNow.AddDays(-daysElapsed);
 
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
                 DateStart = startDate,
                 DateExpiry = startDate.AddDays(lifetimeDays),
-                DateRenewed = previouslyRenewed ? (DateTime?)startDate : (DateTime?)null
+                DateRenewed = previouslyRenewed ? (DateTimeOffset?)startDate : (DateTimeOffset?)null
             };
 
             // perform check
@@ -299,7 +299,7 @@ namespace Certify.Core.Tests.Unit
 
             if (previousAttempts > 0)
             {
-                managedCertificate.DateLastRenewalAttempt = DateTime.Now.AddHours(-0.01);
+                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-0.01);
                 managedCertificate.RenewalFailureCount = previousAttempts;
 
             }
@@ -329,14 +329,14 @@ namespace Certify.Core.Tests.Unit
         {
             // setup 
 
-            var dateLastRenewed = DateTime.Now.AddDays(-daysSinceRenewed);
+            var dateLastRenewed = DateTimeOffset.UtcNow.AddDays(-daysSinceRenewed);
 
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
                 DateRenewed = dateLastRenewed,
                 DateLastRenewalAttempt = dateLastRenewed,
-                DateExpiry = DateTime.Now.AddDays(daysUntilExpiry)
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(daysUntilExpiry)
             };
 
             // perform check
@@ -370,15 +370,18 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Check Percentage Lifetime Elapsed calc, allowing for nulls etc")]
         [DataTestMethod]
         [DataRow(null, null, null)]
+
         [DataRow(14f, 90f, 15)]
         [DataRow(0.5f, 1f, 50)]
         [DataRow(0f, 1f, 0)]
+        [DataRow(0.1f, 0.5f, 20)]
+        [DataRow(-0.1f, 0.5f, 0)] // cert start date is in the future, no elapsed lifetime
         [DataRow(365f, 90f, 100)]
         public void TestCheckPercentageLifetimeElapsed(float? daysSinceRenewed, float? lifetimeDays, int? expectedPercentage)
         {
             var managedCertificate = new ManagedCertificate();
 
-            var testDate = DateTime.Now;
+            var testDate = DateTimeOffset.UtcNow;
 
             if (daysSinceRenewed.HasValue && lifetimeDays.HasValue)
             {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -96,7 +96,7 @@ namespace Certify.Management
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
             string msg = null)
         {
-            managedCertificate.DateLastRenewalAttempt = DateTime.Now;
+            managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
 
             if (status == RequestState.Success)
             {

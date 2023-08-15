@@ -19,7 +19,7 @@ namespace Certify.Models
 
     public class ManagedCertificateLogItem
     {
-        public DateTime EventDate { get; set; }
+        public DateTimeOffset EventDate { get; set; }
         public string Message { get; set; }
         public LogItemType LogItemType { get; set; }
     }

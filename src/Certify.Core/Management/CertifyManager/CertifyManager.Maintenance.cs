@@ -80,7 +80,7 @@ namespace Certify.Management
             return steps;
         }
 
-        private DateTime? _lastStatusCheckInProgress = null;
+        private DateTimeOffset? _lastStatusCheckInProgress = null;
 
         /// <summary>
         /// When called, perform OCSP checks and ACME Renewal Info (ARI) checks on all managed certs or a subsample, or a single item
@@ -99,7 +99,7 @@ namespace Certify.Management
                 _lastStatusCheckInProgress = null;
             });
 
-            _lastStatusCheckInProgress = DateTime.Now;
+            _lastStatusCheckInProgress = DateTimeOffset.UtcNow;
 
             try
             {
@@ -118,7 +118,7 @@ namespace Certify.Management
 
                 var itemsOcspRevoked = new List<string>();
                 var itemsOcspExpired = new List<string>();
-                var itemsViaARI = new Dictionary<string, DateTime>();
+                var itemsViaARI = new Dictionary<string, DateTimeOffset>();
 
                 if (ocspItemsToCheck?.Any() == true)
                 {
@@ -222,7 +222,8 @@ namespace Certify.Management
 
                                             if (info != null && item.DateExpiry != null)
                                             {
-                                                var nextRenewal = new DateTimeOffset((DateTime)item.DateExpiry);
+                                                var nextRenewal = item.DateExpiry.Value;
+
                                                 if (info.SuggestedWindow?.Start < nextRenewal)
                                                 {
                                                     var dateSpan = info.SuggestedWindow.End - info.SuggestedWindow.Start;
@@ -278,12 +279,12 @@ namespace Certify.Management
                         // remember that we have checked these items recently
                         if (completedOcspUpdateChecks.Contains(i))
                         {
-                            item.DateLastOcspCheck = DateTime.Now;
+                            item.DateLastOcspCheck = DateTimeOffset.UtcNow;
                         }
 
                         if (completedRenewalInfoChecks.Contains(i))
                         {
-                            item.DateLastRenewalInfoCheck = DateTime.Now;
+                            item.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow;
                         }
 
                         if (itemsViaARI.ContainsKey(item.Id))
@@ -294,25 +295,25 @@ namespace Certify.Management
                         // if item requires renewal, schedule next renewal attempt.
                         if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
                         {
-                            if (item.DateExpiry > DateTime.Now.AddHours(1))
+                            if (item.DateExpiry > DateTimeOffset.UtcNow.AddHours(1))
                             {
                                 var reason = "Expiry";
 
                                 if (itemsViaARI.ContainsKey(item.Id))
                                 {
                                     reason = "ARI Suggested Window";
-                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                    item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
                                 }
                                 else if (itemsOcspRevoked.Contains(item.Id))
                                 {
                                     reason = "OCSP status (Revoked)";
                                     item.CertificateRevoked = true;
-                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                    item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
                                 }
                                 else if (itemsOcspExpired.Contains(item.Id))
                                 {
                                     reason = "OCSP status (Expired)";
-                                    item.DateNextScheduledRenewalAttempt = DateTime.Now;
+                                    item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
                                 }
 
                                 _serviceLog.Information($"Expediting renewal for {item.Name} due to: {reason}");
@@ -557,7 +558,7 @@ namespace Certify.Management
                     // this will only perform expiry cleanup, as no specific thumbprint provided
                     var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
                             (CertificateCleanupMode)mode,
-                            DateTime.Now,
+                            DateTimeOffset.UtcNow,
                             matchingName: null,
                             excludedThumbprints: excludedCertThumprints,
                             log: _serviceLog,
@@ -589,7 +590,7 @@ namespace Certify.Management
                 try
                 {
                     var createdAt = System.IO.File.GetCreationTime(f);
-                    if (createdAt < DateTime.Now.AddMonths(-12))
+                    if (createdAt < DateTimeOffset.UtcNow.AddMonths(-12))
                     {
                         //remove old file
                         System.IO.File.Delete(f);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,19 +63,19 @@ namespace Certify.Management
                 // if mode is just RenewalDue then we also include items that are not marked auto renew (the user may be controlling when to perform renewal).
 
                 managedCertificates = managedCertificates.Where(s => s.IncludeInAutoRenew == true || settings.Mode == RenewalMode.RenewalsDue)
-                             .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTime.MinValue);
+                             .OrderBy(s => s.DateRenewed ?? s.DateLastRenewalAttempt ?? DateTimeOffset.MinValue);
             }
             else if (settings.Mode == RenewalMode.NewItems)
             {
                 // new items not yet completed in order of oldest renewal attempt first
                 managedCertificates = managedCertificates.Where(s => s.DateRenewed == null)
-                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTime.Now.AddHours(-48));
+                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-48));
             }
             else if (settings.Mode == RenewalMode.RenewalsWithErrors)
             {
                 // items with current errors in order of oldest renewal attempt first
                 managedCertificates = managedCertificates.Where(s => s.LastRenewalStatus == RequestState.Error)
-                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTime.Now.AddHours(-1));
+                              .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-1));
             }
 
             // check site list and examine current certificates. If certificate is less than n days

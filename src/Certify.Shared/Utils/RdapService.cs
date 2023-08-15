@@ -45,7 +45,7 @@ namespace Certify.Shared.Core.Utils
     public class RdapDnsRoot
     {
         public string Description { get; set; }
-        public DateTime Publication { get; set; }
+        public DateTimeOffset Publication { get; set; }
         public List<List<List<string>>> Services { get; set; }
         public string Version { get; set; }
     }

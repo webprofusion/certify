@@ -24,7 +24,7 @@ namespace Certify.UI.Utils
                 return SR.ExpiryDateConverter_NoCurrentCertificate;
             }
 
-            var ageSpan = lifetime.DateEnd.ToUniversalTime() - DateTime.UtcNow;
+            var ageSpan = lifetime.DateEnd - DateTimeOffset.UtcNow;
             var days = (int)ageSpan.TotalDays;
 
             if (ageSpan.TotalHours < 0)

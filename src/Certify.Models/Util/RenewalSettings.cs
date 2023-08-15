@@ -30,8 +30,8 @@ namespace Certify.Models
 
     public class RenewalSettings
     {
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
+        public DateTimeOffset? StartDate { get; set; }
+        public DateTimeOffset? EndDate { get; set; }
         public RenewalMode Mode { get; set; }
 
         public bool IsPreviewMode { get; set; }

@@ -36,7 +36,7 @@ namespace Certify.Providers.ACME.Anvil
         private AnvilSettings _settings = null;
         private ConcurrentDictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
-        private DateTime _lastInitDateTime = new DateTime();
+        private DateTimeOffset _lastInitDateTime = new DateTimeOffset();
         private readonly bool _newContactUseCurrentAccountKey = false;
 
         private AcmeHttpClient _httpClient;
@@ -94,7 +94,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="acmeDirectoryUrl"></param>
         private void PreInitAcmeContext()
         {
-            _lastInitDateTime = DateTime.Now;
+            _lastInitDateTime = DateTimeOffset.UtcNow;
 
             var httpHandler = new HttpClientHandler();
 
@@ -634,9 +634,10 @@ namespace Certify.Providers.ACME.Anvil
         /// <returns>  </returns>
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
-            if (DateTime.Now.Subtract(_lastInitDateTime).TotalMinutes > 30)
+            if (DateTimeOffset.UtcNow.Subtract(_lastInitDateTime).TotalMinutes > 30)
             {
                 // our acme context is stale, start a new one
+                // Note: this was originally added to avoid re-using stale replay nonce values and should no longer be required
                 await InitProvider(_log);
             }
 

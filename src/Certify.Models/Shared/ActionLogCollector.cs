@@ -25,7 +25,7 @@ namespace Certify.Models.Shared
                     Command = command,
                     Result = result,
                     ManagedCertificateId = managedItemId ?? string.Empty,
-                    DateTime = DateTime.Now
+                    EventDate = DateTimeOffset.UtcNow
                 });
             }
         }
