@@ -530,11 +530,11 @@ namespace Certify.Management
         /// When called, look for periodic maintenance tasks we can perform such as renewal
         /// </summary>
         /// <returns>  </returns>
-        public async Task<bool> PerformHourlyTasks()
+        public async Task<bool> PerformRenewalTasks()
         {
             try
             {
-                Debug.WriteLine("Checking for periodic tasks..");
+                Debug.WriteLine("Checking for renewal tasks..");
 
                 SettingsManager.LoadAppSettings();
 

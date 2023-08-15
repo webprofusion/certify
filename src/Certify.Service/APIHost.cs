@@ -144,7 +144,7 @@ namespace Certify.Service
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
             if (currentCertifyManager != null)
             {
-                await currentCertifyManager.PerformHourlyTasks();
+                await currentCertifyManager.PerformCertificateMaintenance();
             }
         }
 
@@ -153,7 +153,7 @@ namespace Certify.Service
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
             if (currentCertifyManager != null)
             {
-                await currentCertifyManager.PerformCertificateMaintenance();
+                await currentCertifyManager.PerformRenewalTasks();
             }
         }
     }
