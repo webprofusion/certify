@@ -89,7 +89,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            if (parsedJwt.ValidTo < DateTime.Now)
+            if (parsedJwt.ValidTo < DateTime.UtcNow)
             {
                 MessageBox.Show("The Authority Token has expired.");
                 return;

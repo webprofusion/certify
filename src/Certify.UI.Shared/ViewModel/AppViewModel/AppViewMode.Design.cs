@@ -36,10 +36,10 @@ namespace Certify.UI
                     Id = Guid.NewGuid().ToString(),
                     Name = $"test{i}.example.org",
                     ItemType = ManagedCertificateType.SSL_ACME,
-                    DateExpiry = DateTime.Now.AddDays(60 - 5 * i),
-                    DateRenewed = DateTime.Now.AddDays(-15),
-                    DateLastRenewalAttempt = DateTime.Now,
-                    DateStart = DateTime.Now.AddMonths(-3),
+                    DateExpiry = DateTimeOffset.UtcNow.AddDays(60 - 5 * i),
+                    DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                    DateLastRenewalAttempt = DateTimeOffset.UtcNow,
+                    DateStart = DateTimeOffset.UtcNow.AddMonths(-3),
 
                     RequestConfig = new CertRequestConfig()
                     {

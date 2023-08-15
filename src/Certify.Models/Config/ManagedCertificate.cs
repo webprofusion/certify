@@ -33,7 +33,7 @@ namespace Certify.Models
 
     public class RenewalDueInfo
     {
-        public DateTime? DateNextRenewalAttempt { get; set; }
+        public DateTimeOffset? DateNextRenewalAttempt { get; set; }
         public TimeSpan? CertLifetime { get; set; }
         public bool IsRenewalDue { get; set; }
         public bool IsRenewalOnHold { get; set; }
@@ -44,7 +44,7 @@ namespace Certify.Models
         /// </summary>
         public float HoldHrs { get; set; }
 
-        public RenewalDueInfo(string reason, bool isRenewalDue, DateTime? renewalAttemptDate, TimeSpan? certLifetime, bool isRenewalOnHold = false, float holdHrs = 0)
+        public RenewalDueInfo(string reason, bool isRenewalDue, DateTimeOffset? renewalAttemptDate, TimeSpan? certLifetime, bool isRenewalOnHold = false, float holdHrs = 0)
         {
             Reason = reason;
             IsRenewalDue = isRenewalDue;
@@ -67,29 +67,29 @@ namespace Certify.Models
 
     public class Lifetime
     {
-        public Lifetime(DateTime dateStart, DateTime dateEnd)
+        public Lifetime(DateTimeOffset dateStart, DateTimeOffset dateEnd)
         {
             DateStart = dateStart;
             DateEnd = dateEnd;
         }
-        public DateTime DateStart { get; }
-        public DateTime DateEnd { get; }
+        public DateTimeOffset DateStart { get; }
+        public DateTimeOffset DateEnd { get; }
 
-        public int? GetPercentageElapsed(DateTime testDateTime)
+        public int? GetPercentageElapsed(DateTimeOffset testDateTime)
         {
             if (DateStart == null || DateEnd == null)
             {
                 return null;
             }
 
-            var lifetime = (DateTime)DateEnd - (DateTime)DateStart;
+            var lifetime = DateEnd - DateStart;
 
             if (lifetime.TotalMinutes <= 0)
             {
                 return 100;
             }
 
-            var certElapsed = testDateTime - (DateTime)DateStart;
+            var certElapsed = testDateTime - DateStart;
             var elapsedMinutes = lifetime.TotalMinutes - (lifetime.TotalMinutes - certElapsed.TotalMinutes);
 
             if (elapsedMinutes > 0)
@@ -208,29 +208,29 @@ namespace Certify.Models
         /// </summary>
         public ManagedCertificateType ItemType { get; set; }
 
-        public DateTime? DateStart { get; set; }
-        public DateTime? DateExpiry { get; set; }
-        public DateTime? DateRenewed { get; set; }
+        public DateTimeOffset? DateStart { get; set; }
+        public DateTimeOffset? DateExpiry { get; set; }
+        public DateTimeOffset? DateRenewed { get; set; }
 
         /// <summary>
         /// Date we last check the OCSP status for this cert
         /// </summary>
-        public DateTime? DateLastOcspCheck { get; set; }
+        public DateTimeOffset? DateLastOcspCheck { get; set; }
 
         /// <summary>
         /// Date we last checked the CA renewal info (ARI), if available
         /// </summary>
-        public DateTime? DateLastRenewalInfoCheck { get; set; }
+        public DateTimeOffset? DateLastRenewalInfoCheck { get; set; }
 
         /// <summary>
         /// If set, date we should next attempt renewal. This is normally not set but may be for items affected by ARI renewal windows etc
         /// </summary>
-        public DateTime? DateNextScheduledRenewalAttempt { get; set; }
+        public DateTimeOffset? DateNextScheduledRenewalAttempt { get; set; }
 
         /// <summary>
         /// Date we last attempted renewal
         /// </summary>
-        public DateTime? DateLastRenewalAttempt { get; set; }
+        public DateTimeOffset? DateLastRenewalAttempt { get; set; }
 
         /// <summary>
         /// Status of most recent renewal attempt
@@ -310,7 +310,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="testDateTime"></param>
         /// <returns></returns>
-        public int? GetPercentageLifetimeElapsed(DateTime testDateTime)
+        public int? GetPercentageLifetimeElapsed(DateTimeOffset testDateTime)
         {
             return CertificateLifetime?.GetPercentageElapsed(testDateTime);
         }
@@ -320,7 +320,7 @@ namespace Certify.Models
         {
             get
             {
-                var percentageElapsed = GetPercentageLifetimeElapsed(DateTime.Now);
+                var percentageElapsed = GetPercentageLifetimeElapsed(DateTimeOffset.UtcNow);
 
                 if (LastRenewalStatus == RequestState.Error)
                 {
@@ -715,7 +715,7 @@ namespace Certify.Models
             }
         }
 
-        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, bool checkFailureStatus = false, DateTime? testDateTime = null)
+        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, bool checkFailureStatus = false, DateTimeOffset? testDateTime = null)
         {
 
             if (s == null)
@@ -723,9 +723,9 @@ namespace Certify.Models
                 return null;
             }
 
-            var nextRenewalAttemptDate = s.DateExpiry ?? DateTime.Now;
+            var nextRenewalAttemptDate = s.DateExpiry ?? DateTimeOffset.UtcNow;
 
-            var checkDate = DateTime.Now;
+            var checkDate = DateTimeOffset.UtcNow;
 
             if (testDateTime != null)
             {
@@ -887,7 +887,7 @@ namespace Certify.Models
                         var calcWaitHrs = (float)Math.Min(minWaitHrs * (factor * s.RenewalFailureCount), maxWaitHrs);
                         var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(calcWaitHrs);
 
-                        if (DateTime.Now < nextAttemptByDate)
+                        if (DateTimeOffset.UtcNow < nextAttemptByDate)
                         {
                             return new RenewalDueInfo(
                                     reason: $"Renewal attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs because item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",

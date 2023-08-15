@@ -139,7 +139,7 @@ namespace Certify.UI.Windows
                     Title = item.Title,
                     ProviderType = item.ProviderType,
                     StorageKey = Guid.NewGuid().ToString(),
-                    DateCreated = DateTime.Now,
+                    DateCreated = DateTime.UtcNow,
                     Secret = Newtonsoft.Json.JsonConvert.SerializeObject(credentialsToStore)
                 };
             }

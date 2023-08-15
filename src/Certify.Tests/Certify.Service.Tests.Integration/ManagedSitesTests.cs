@@ -67,8 +67,8 @@ namespace Certify.Service.Tests.Integration
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = title,
-                DateExpiry = DateTime.Now.AddDays(numDays),
-                DateLastRenewalAttempt = DateTime.Now.AddDays(-1),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(numDays),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddDays(-1),
                 LastRenewalStatus = RequestState.Success
 
             };

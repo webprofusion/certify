@@ -1,4 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -31,6 +34,19 @@ namespace Certify.Core.Tests.Unit
             ca = null;
             result = ca?.Description.WithDefault("default");
             Assert.AreEqual(result, null);
+        }
+
+        [TestMethod, Description("Test ntp check")]
+        public async Task TestNtp()
+        {
+            var check = await Certify.Management.Util.CheckTimeServer();
+
+            var timeDiff = check - DateTimeOffset.UtcNow;
+
+            if (Math.Abs(timeDiff.Value.TotalSeconds) > 50)
+            {
+                Assert.Fail("NTP Time Difference Failed");
+            }
         }
     }
 }

@@ -271,7 +271,7 @@ namespace Certify.Core.Tests
                 CertificateManager.RemoveCertificate(cert3, targetStore);
             }
         }
-        public X509Certificate2 CreateAndStoreTestCertificate(string domain, DateTime dateFrom, DateTime dateTo, string storeName = CertificateManager.DEFAULT_STORE_NAME)
+        public X509Certificate2 CreateAndStoreTestCertificate(string domain, DateTimeOffset dateFrom, DateTimeOffset dateTo, string storeName = CertificateManager.DEFAULT_STORE_NAME)
         {
             var cert = CertificateManager.GenerateSelfSignedCertificate(domain, dateFrom, dateTo);
             cert = CertificateManager.StoreCertificate(cert, storeName);

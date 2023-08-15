@@ -86,7 +86,7 @@ namespace Certify.Management
                 var timeResult = await CheckTimeServer(ntpServer);
                 if (timeResult != null)
                 {
-                    var diff = timeResult - DateTime.Now;
+                    var diff = timeResult - DateTimeOffset.UtcNow;
                     if (Math.Abs(diff.Value.TotalSeconds) > 50)
                     {
                         results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
@@ -556,7 +556,7 @@ namespace Certify.Management
             return ToUrlSafeBase64String(bytes);
         }
 
-        public static async Task<DateTime?> CheckTimeServer(string ntpServer = "pool.ntp.org")
+        public static async Task<DateTimeOffset?> CheckTimeServer(string ntpServer = "pool.ntp.org")
         {
             // https://stackoverflow.com/questions/1193955/how-to-query-an-ntp-server-using-c
 
@@ -600,9 +600,9 @@ namespace Certify.Management
                 var fractPart = (long)ntpData[44] << 24 | (long)ntpData[45] << 16 | (long)ntpData[46] << 8 | ntpData[47];
                 var netTicks = intPart * TicksPerSecond + (fractPart * TicksPerSecond >> 32);
 
-                var networkDateTime = new DateTime(TicksTo1900 + netTicks + pingTicks / 2);
+                var networkDateTime = new DateTime(TicksTo1900 + netTicks + pingTicks / 2, DateTimeKind.Utc);
 
-                return networkDateTime.ToLocalTime(); // without ToLocalTime() = faster
+                return new DateTimeOffset(networkDateTime);
             }
             catch
             {

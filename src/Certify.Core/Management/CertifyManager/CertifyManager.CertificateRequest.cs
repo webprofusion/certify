@@ -835,11 +835,11 @@ namespace Certify.Management
                             certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         }
 
-                        managedCertificate.DateStart = certInfo.NotBefore;
-                        managedCertificate.DateExpiry = certInfo.NotAfter;
-                        managedCertificate.DateRenewed = DateTime.Now;
-                        managedCertificate.DateLastOcspCheck = DateTime.Now;
-                        managedCertificate.DateLastRenewalInfoCheck = DateTime.Now;
+                        managedCertificate.DateStart = new DateTimeOffset(certInfo.NotBefore);
+                        managedCertificate.DateExpiry = new DateTimeOffset(certInfo.NotAfter);
+                        managedCertificate.DateRenewed = DateTimeOffset.UtcNow;
+                        managedCertificate.DateLastOcspCheck = DateTimeOffset.UtcNow;
+                        managedCertificate.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow;
                         managedCertificate.DateNextScheduledRenewalAttempt = null;
 
                         managedCertificate.CertificatePath = primaryCertFilePath;
@@ -937,7 +937,7 @@ namespace Certify.Management
                                 // cleanup certs based on the given cleanup mode
                                 var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
                                    (CertificateCleanupMode)mode,
-                                    DateTime.Now,
+                                    DateTimeOffset.UtcNow,
                                     matchingName: certCleanupName,
                                     excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
                                     log: _serviceLog,
