@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1016,6 +1016,9 @@ namespace Certify.Management
             }
 
             log?.Debug($"End of CompleteCertificateRequest.");
+
+            // cleanup progress tracking
+            _progressResults.TryRemove(managedCertificate.Id, out _);
 
             return result;
         }

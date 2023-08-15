@@ -79,7 +79,7 @@ namespace Certify.Management
         /// <summary>
         /// Set of current in-progress renewals
         /// </summary>
-        private ObservableCollection<RequestProgressState> _progressResults { get; set; }
+        private ConcurrentDictionary<string, RequestProgressState> _progressResults { get; set; }
 
         /// <summary>
         /// Service for reporting status/progress results back to client(s)
@@ -172,7 +172,7 @@ namespace Certify.Management
                 throw (new Exception(msg));
             }
 
-            _progressResults = new ObservableCollection<RequestProgressState>();
+            _progressResults = new ConcurrentDictionary<string, RequestProgressState>();
 
             LoadCertificateAuthorities();
 
@@ -446,16 +446,9 @@ namespace Certify.Management
         {
             try
             {
-                lock (_progressResults)
+                if (state?.Id != null)
                 {
-                    var existing = _progressResults?.FirstOrDefault(p => p.ManagedCertificate.Id == state.ManagedCertificate.Id);
-
-                    if (existing != null)
-                    {
-                        _progressResults.Remove(existing);
-                    }
-
-                    _progressResults.Add(state);
+                    _progressResults.AddOrUpdate(state.Id, state, (id, s) => state);
                 }
             }
             catch (Exception)
@@ -515,14 +508,13 @@ namespace Certify.Management
         /// <returns></returns>
         public RequestProgressState GetRequestProgressState(string managedItemId)
         {
-            var progress = _progressResults.FirstOrDefault(p => p.ManagedCertificate.Id == managedItemId);
-            if (progress == null)
+            if (_progressResults.TryGetValue(managedItemId, out var progress))
             {
-                return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
+                return progress;
             }
             else
             {
-                return progress;
+                return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
             }
         }
 
@@ -539,7 +531,7 @@ namespace Certify.Management
                 SettingsManager.LoadAppSettings();
 
                 // perform pending renewals
-                await PerformRenewAll(new RenewalSettings { }, null);
+                await PerformRenewAll(new RenewalSettings { });
             }
             catch (Exception exp)
             {
