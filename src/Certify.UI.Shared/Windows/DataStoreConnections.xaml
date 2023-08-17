@@ -27,8 +27,14 @@
         <TextBlock
             DockPanel.Dock="Top"
             Style="{StaticResource Instructions}"
-            Text="The system can be connected to one data store at a time and you can select the primary store here. You can also manage connections for data stores and migrate data between them. " />
-
+            Text="The system can be connected to one data store at a time and you can select the default store here. You can also manage connections for data stores and migrate data between them. " />
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <TextBlock
+                Margin="0,0,4,4"
+                FontWeight="SemiBold"
+                Text="Current Data Store:" />
+            <TextBlock FontWeight="SemiBold" Text="{Binding Path=DefaultStore.Title}" />
+        </StackPanel>
         <TabControl
             x:Name="GeneralSettingsTab"
             Height="auto"
@@ -46,10 +52,11 @@
                 Header="Managed Data Stores"
                 IsSelected="true">
                 <DockPanel Margin="8" LastChildFill="False">
-                    <DockPanel DockPanel.Dock="Top">
+                    <StackPanel DockPanel.Dock="Top">
                         <Button Click="AddConnection_Click">Add Data Store</Button>
-                    </DockPanel>
-                    <ScrollViewer DockPanel.Dock="Top">
+                    </StackPanel>
+
+                    <ScrollViewer HorizontalAlignment="Stretch" DockPanel.Dock="Top">
                         <ItemsControl x:Name="ConnectionList" Margin="0,16,0,0">
 
                             <ItemsControl.ItemTemplate>
