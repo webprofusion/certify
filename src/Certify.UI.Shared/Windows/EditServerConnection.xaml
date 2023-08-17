@@ -88,7 +88,7 @@
                 Width="120"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top"
-                Content="Use https" />
+                Content="Use Https" />
             <CheckBox IsChecked="{Binding Item.UseHTTPS}" />
         </StackPanel>
         <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
