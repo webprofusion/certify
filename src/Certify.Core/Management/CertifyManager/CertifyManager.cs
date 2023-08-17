@@ -101,6 +101,10 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
+        private System.Timers.Timer _frequentTimer;
+        private System.Timers.Timer _hourlyTimer;
+        private System.Timers.Timer _dailyTimer;
+
         public CertifyManager() : this(true)
         {
 
@@ -189,24 +193,47 @@ namespace Certify.Management
 
             _tc?.TrackEvent("ServiceStarted");
 
+            SetupJobs();
+
             _serviceLog?.Information("Certify Manager Started");
 
-            var systemVersion = Util.GetAppVersion().ToString();
-            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
+            await UpgradeSettings();
+        }
 
-            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
-            {
-                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
-                    { "previousVersion", previousVersion },
-                    { "currentVersion", systemVersion }
-                });
+        /// <summary>
+        /// Setup the continuous job tasks for renewals and maintenance
+        /// </summary>
+        private void SetupJobs()
+        {
+            // 5 minute job timer (maintenance etc)
+            _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
+            _frequentTimer.Elapsed += _frequentTimer_Elapsed;
+            _frequentTimer.Start();
 
-                // service has been updated, run any required migrations
-                await PerformServiceUpgrades();
+            // hourly jobs timer (renewal etc)
+            _hourlyTimer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
+            _hourlyTimer.Elapsed += _hourlyTimer_Elapsed;
+            _hourlyTimer.Start();
 
-                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
-                SettingsManager.SaveAppSettings();
-            }
+            // daily jobs timer (cleanup etc)
+            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000); // every 24 hrs
+            _dailyTimer.Elapsed += _dailyTimer_Elapsed;
+            _dailyTimer.Start();
+        }
+
+        private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformDailyMaintenanceTasks();
+        }
+
+        private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformCertificateMaintenanceTasks();
+        }
+
+        private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformRenewalTasks();
         }
 
         private async Task PerformServiceUpgrades()
