@@ -40,15 +40,6 @@ namespace Certify.Service.Controllers
             return await new Management.Util().CheckForUpdates();
         }
 
-        [HttpGet, Route("maintenance")]
-        public async Task<string> PerformMaintenanceTasks()
-        {
-            DebugLog();
-
-            await _certifyManager.PerformCertificateCleanup();
-            return "OK";
-        }
-
         [HttpGet, Route("diagnostics")]
         public async Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics()
         {
