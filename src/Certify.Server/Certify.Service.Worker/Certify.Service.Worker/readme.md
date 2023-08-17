@@ -30,13 +30,13 @@ WSL debug
 Linux Install
 ------------
 
-apt-get certifytheweb
+`apt-get certifytheweb`
 
-sudo mkdir /opt/certifytheweb
+`sudo mkdir /opt/certifytheweb`
 
 Systemd
 -----------
-
+```
 [Unit]
 Description=Certify The Web
 
@@ -50,3 +50,26 @@ PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
+```
+
+Windows Service
+-----------------
+
+` sc create "Certify Certificate Manager [dotnet]" binpath="C:\Work\GIT\certify_dev\certify\src\Certify.Server\Certify.Service.Worker\Certify.Service.Worker\bin\Debug\net8.0\Certify.Service.Worker.exe"`
+
+
+Publishing:
+
+-
+
+Windows:
+
+dotnet publish -c Release -r win-x64 --self-contained true
+
+Linux:
+
+dotnet publish -c Release -r linux-x64 --self-contained true
+
+Single File:
+
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
