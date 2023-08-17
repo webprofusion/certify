@@ -308,7 +308,7 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return await _certifyManager.PerformCertificateMaintenance(id);
+            return await _certifyManager.PerformCertificateMaintenanceTasks(id);
         }
 
         internal class ProgressLogSink : Serilog.Core.ILogEventSink

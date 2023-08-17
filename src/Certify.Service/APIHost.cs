@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -35,10 +35,6 @@ namespace Certify.Service
 
     public partial class APIHost
     {
-        private System.Timers.Timer _frequentTimer;
-        private System.Timers.Timer _hourlyTimer;
-        private System.Timers.Timer _dailyTimer;
-
         private ServiceContainer _container;
 
         public void Configuration(IAppBuilder appBuilder)
@@ -90,21 +86,6 @@ namespace Certify.Service
 
             // attached handlers for SignalR hub updates
             currentCertifyManager.SetStatusReporting(new StatusHubReporting());
-
-            // 5 minute job timer (maintenance etc)
-            _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
-            _frequentTimer.Elapsed += _frequentTimer_Elapsed;
-            _frequentTimer.Start();
-
-            // hourly jobs timer (renewal etc)
-            _hourlyTimer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
-            _hourlyTimer.Elapsed += _hourlyTimer_Elapsed;
-            _hourlyTimer.Start();
-
-            // daily jobs timer (cleanup etc)
-            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000); // every 24 hrs
-            _dailyTimer.Elapsed += _dailyTimer_Elapsed;
-            _dailyTimer.Start();
         }
 
         private AuthenticationSchemes IdentifyAuthentication(HttpListenerRequest request)
@@ -130,40 +111,6 @@ namespace Certify.Service
 
             // for windows auth require windows credentials
             return AuthenticationSchemes.IntegratedWindowsAuthentication;
-        }
-        private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
-            if (currentCertifyManager != null)
-            {
-                await currentCertifyManager.PerformDailyTasks();
-            }
-        }
-
-        private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
-            if (currentCertifyManager != null)
-            {
-                await currentCertifyManager.PerformCertificateMaintenance();
-            }
-        }
-
-        private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
-            if (currentCertifyManager != null)
-            {
-                await currentCertifyManager.PerformRenewalTasks();
-
-                try
-                {
-                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
-                }
-                catch {
-                    // failed to perform garbage collection, ignore.
-                }
-            }
         }
     }
 }
