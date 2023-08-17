@@ -214,7 +214,7 @@ namespace Certify.UI.ViewModel
             try
             {
                 await clientConnection.ConnectStatusStreamAsync();
-               
+
             }
             catch (Exception exp)
             {
@@ -302,7 +302,22 @@ namespace Certify.UI.ViewModel
                 serverConnections.Remove(serverConnections.Find(c => c.Id == item.Id));
             }
 
+            // if item is the default, all other items are no longer the default
+            if (item.IsDefault)
+            {
+                serverConnections
+                    .Where(s => s.Id != item.Id)
+                    .ToList()
+                    .ForEach(s => s.IsDefault = false);
+            }
+
             serverConnections.Add(item);
+
+            // if no default exists, make the first item default
+            if (!serverConnections.Exists(e => e.IsDefault))
+            {
+                serverConnections.First().IsDefault = true;
+            }
 
             ServerConnectionManager.Save(Log, serverConnections);
 
