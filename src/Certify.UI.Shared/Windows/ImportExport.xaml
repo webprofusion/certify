@@ -26,72 +26,103 @@
                 Controls:TextBoxHelper.Watermark="Password" />
 
         </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Export</TextBlock>
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Export a settings bundle including managed certificate settings, certificate files and encrypted credentials.</TextBlock>
-            <Button
-                x:Name="Export"
-                Width="120"
-                HorizontalAlignment="Left"
-                Click="Export_Click"
-                DockPanel.Dock="Top">
-                Export..
-            </Button>
-        </StackPanel>
 
-        <DockPanel Margin="0,16,0,0" DockPanel.Dock="Top">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Import</TextBlock>
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
-            <CheckBox
-                x:Name="OverwriteExisting"
-                Margin="0,4,4,4"
-                Content="Overwrite Existing"
-                DockPanel.Dock="Top" />
-            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-                <Button
-                    x:Name="Import"
-                    Width="120"
-                    HorizontalAlignment="Left"
-                    Click="Import_Click"
-                    DockPanel.Dock="Top">
-                    Preview Import..
-                </Button>
-
-
-                <Button
-                    x:Name="CompleteImport"
-                    Width="120"
-                    Margin="16,0,0,0"
-                    HorizontalAlignment="Left"
-                    Click="CompleteImport_Click"
-                    DockPanel.Dock="Bottom"
-                    Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                    Complete Import
-                </Button>
-            </StackPanel>
-
-            <Controls:MetroProgressBar
-                Width="250"
+        <TabControl
+            x:Name="GeneralSettingsTab"
+            Height="auto"
+            Margin="0,8,0,0"
+            HorizontalContentAlignment="Left"
+            VerticalContentAlignment="Stretch"
+            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+            Controls:TabControlHelper.Underlined="TabPanel"
+            DockPanel.Dock="Top"
+            TabStripPlacement="Top">
+            <TabItem
                 Height="32"
-                Margin="4"
-                HorizontalAlignment="Left"
-                DockPanel.Dock="Top"
-                IsIndeterminate="True"
-                Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                MinWidth="140"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="Export Settings"
+                IsSelected="true">
+                <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Export a settings bundle including managed certificate settings, certificate files and encrypted credentials.</TextBlock>
+                    <Button
+                        x:Name="Export"
+                        Width="120"
+                        HorizontalAlignment="Left"
+                        Click="Export_Click"
+                        DockPanel.Dock="Top">
+                        Export..
+                    </Button>
+                </StackPanel>
+            </TabItem>
+            <TabItem
+                Height="32"
+                MinWidth="140"
+                Controls:HeaderedControlHelper.HeaderFontSize="12"
+                Header="Import Settings">
+                <StackPanel Margin="0,16,0,0" Orientation="Vertical">
+                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
+                    <CheckBox
+                        x:Name="OverwriteExisting"
+                        Margin="0,4,4,4"
+                        Content="Overwrite Existing"
+                        DockPanel.Dock="Top" />
+                    <CheckBox
+                        x:Name="IncludeDeployment"
+                        Margin="0,4,4,4"
+                        Content="Include Standard Certificate Storage and Auto Deployment"
+                        DockPanel.Dock="Top"
+                        IsChecked="True"
+                        Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <Button
+                            x:Name="Import"
+                            Width="120"
+                            HorizontalAlignment="Left"
+                            Click="Import_Click"
+                            DockPanel.Dock="Top">
+                            Preview Import..
+                        </Button>
 
-            <DockPanel
-                DockPanel.Dock="Top"
-                LastChildFill="False"
-                Visibility="{Binding IsPreviewReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                        <Button
+                            x:Name="CompleteImport"
+                            Width="120"
+                            Margin="16,0,0,0"
+                            HorizontalAlignment="Left"
+                            Click="CompleteImport_Click"
+                            DockPanel.Dock="Bottom"
+                            Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                            Complete Import
+                        </Button>
+                    </StackPanel>
+
+                    <Controls:MetroProgressBar
+                        Width="250"
+                        Height="32"
+                        Margin="4"
+                        HorizontalAlignment="Left"
+                        DockPanel.Dock="Top"
+                        IsIndeterminate="True"
+                        Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+
+                    <DockPanel
+                        DockPanel.Dock="Top"
+                        LastChildFill="False"
+                        Visibility="{Binding IsPreviewReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
 
-                <WebBrowser
-                    x:Name="MarkdownView"
-                    Margin="0,16,0,0"
-                    DockPanel.Dock="Top" />
+                        <WebBrowser
+                            x:Name="MarkdownView"
+                            Margin="0,16,0,0"
+                            DockPanel.Dock="Top" />
 
-            </DockPanel>
+                    </DockPanel>
 
-        </DockPanel>
+                </StackPanel>
+            </TabItem>
+        </TabControl>
+
+
     </DockPanel>
 </Controls:MetroWindow>
