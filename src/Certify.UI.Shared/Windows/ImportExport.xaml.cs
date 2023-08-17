@@ -68,6 +68,7 @@ namespace Certify.UI.Windows
                 }
 
                 Model.ImportSettings.OverwriteExisting = (OverwriteExisting.IsChecked == true);
+                Model.ImportSettings.IncludeDeployment = (IncludeDeployment.IsChecked == true);
                 Model.ImportSettings.EncryptionSecret = txtSecret.Password;
                 Model.InProgress = true;
 
@@ -104,6 +105,10 @@ namespace Certify.UI.Windows
             if (MessageBox.Show("Are you sure you wish to perform the import as shown in the preview? The import cannot be reverted once complete.", "Perform Import?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
             {
                 Model.InProgress = true;
+
+                Model.ImportSettings.OverwriteExisting = (OverwriteExisting.IsChecked == true);
+                Model.ImportSettings.IncludeDeployment = (IncludeDeployment.IsChecked == true);
+
                 var results = await MainViewModel.PerformSettingsImport(Model.Package, Model.ImportSettings, false);
 
                 PrepareImportSummary(false, results);
