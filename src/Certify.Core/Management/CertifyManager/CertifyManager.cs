@@ -587,21 +587,24 @@ namespace Certify.Management
             var hasError = false;
             if (!importResult.Any(i => i.HasError))
             {
-
-                var deploySteps = new List<ActionStep>();
-                foreach (var m in importRequest.Package.Content.ManagedCertificates)
+                if (importRequest.Settings.IncludeDeployment)
                 {
-                    var managedCert = await GetManagedCertificate(m.Id);
 
-                    if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
+                    var deploySteps = new List<ActionStep>();
+                    foreach (var m in importRequest.Package.Content.ManagedCertificates)
                     {
-                        var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
+                        var managedCert = await GetManagedCertificate(m.Id);
 
-                        deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
+                        if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
+                        {
+                            var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
+
+                            deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
+                        }
                     }
-                }
 
-                importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
+                    importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
+                }
             }
             else
             {
