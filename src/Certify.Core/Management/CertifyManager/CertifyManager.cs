@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -97,7 +97,6 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
-        private System.Timers.Timer _heartbeatTimer;
         private System.Timers.Timer _frequentTimer;
         private System.Timers.Timer _hourlyTimer;
         private System.Timers.Timer _dailyTimer;
@@ -192,9 +191,10 @@ namespace Certify.Management
 
             SetupJobs();
 
-            await UpgradeSettings();
-
             _serviceLog?.Information("Certify Manager Started");
+        }
+
+            await UpgradeSettings();
         }
 
         /// <summary>
@@ -235,20 +235,6 @@ namespace Certify.Management
         private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             await PerformCertificateMaintenanceTasks();
-
-            try
-            {
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
-            }
-            catch
-            {
-                // failed to perform garbage collection, ignore.
-            }
-        }
-
-        private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-
         }
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
