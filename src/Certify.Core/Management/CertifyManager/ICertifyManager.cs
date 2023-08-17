@@ -78,11 +78,11 @@ namespace Certify.Management
 
         Task<bool> PerformRenewalTasks();
 
-        Task<bool> PerformDailyTasks();
+        Task<bool> PerformDailyMaintenanceTasks();
 
         Task PerformCertificateCleanup();
 
-        Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null);
+        Task<List<ActionResult>> PerformCertificateMaintenanceTasks(string managedItemId = null);
 
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
 
