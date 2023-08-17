@@ -73,7 +73,7 @@
                         Content="Include Standard Certificate Storage and Auto Deployment"
                         DockPanel.Dock="Top"
                         IsChecked="True"
-                        Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                        />
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button
                             x:Name="Import"
