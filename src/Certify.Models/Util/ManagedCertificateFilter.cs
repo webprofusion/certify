@@ -1,4 +1,4 @@
-﻿namespace Certify.Models
+namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
