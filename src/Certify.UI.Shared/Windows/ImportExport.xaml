@@ -72,8 +72,7 @@
                         Margin="0,4,4,4"
                         Content="Include Standard Certificate Storage and Auto Deployment"
                         DockPanel.Dock="Top"
-                        IsChecked="True"
-                        />
+                        IsChecked="True" />
                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
                         <Button
                             x:Name="Import"
