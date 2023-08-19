@@ -79,15 +79,14 @@ namespace Certify.Management
         {
             var result = new ManagedCertificateSearchResult();
 
-            var list = await _itemManager.Find(filter);
+            result.Results = await _itemManager.Find(filter);
+
             if (filter.PageSize > 0)
             {
                 filter.PageSize = null;
                 filter.PageIndex = null;
                 result.TotalResults = await _itemManager.CountAll(filter);
             }
-
-            result.Results = list;
 
             return result;
         }
