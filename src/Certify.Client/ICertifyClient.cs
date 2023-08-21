@@ -96,8 +96,6 @@ namespace Certify.Client
 
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive);
 
-        Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
-
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
         Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site);
 

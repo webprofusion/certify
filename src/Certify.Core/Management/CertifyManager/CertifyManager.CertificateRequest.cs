@@ -86,9 +86,11 @@ namespace Certify.Management
                 _itemManager,
                 settings,
                 prefs,
-                BeginTrackingProgress,
+           
                 ReportProgress, IsManagedCertificateRunning,
-                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) => { return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason); },
+                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) => { 
+                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
+                },
                 progressTrackers);
 
             _isRenewAllInProgress = false;
@@ -1069,9 +1071,6 @@ namespace Certify.Management
             }
 
             log?.Debug($"End of CompleteCertificateRequest.");
-
-            // cleanup progress tracking
-            _progressResults.TryRemove(managedCertificate.Id, out _);
 
             return result;
         }
