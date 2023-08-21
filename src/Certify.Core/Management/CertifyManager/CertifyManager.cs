@@ -76,11 +76,6 @@ namespace Certify.Management
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
 
         /// <summary>
-        /// Set of current in-progress renewals
-        /// </summary>
-        private ConcurrentDictionary<string, RequestProgressState> _progressResults { get; set; }
-
-        /// <summary>
         /// Service for reporting status/progress results back to client(s)
         /// </summary>
         private IStatusReporting _statusReporting { get; set; }
@@ -174,8 +169,6 @@ namespace Certify.Management
                 _serviceLog.Error(exp, msg);
                 throw (new Exception(msg));
             }
-
-            _progressResults = new ConcurrentDictionary<string, RequestProgressState>();
 
             LoadCertificateAuthorities();
 
@@ -381,22 +374,82 @@ namespace Certify.Management
             _statusReporting = statusReporting;
         }
         /// <summary>
-        /// Begin/restart progress tracking for renewal requests of a given managed certificate
+        /// used to set a specific account for testing, instead of loading from config
         /// </summary>
-        /// <param name="state"></param>
-        public void BeginTrackingProgress(RequestProgressState state)
+        public AccountDetails OverrideAccountDetails { get; set; }
+        /// <summary>
+        /// Get the ACME client applicable for the given managed certificate
+        /// </summary>
+        /// <param name="managedItem"></param>
+        /// <returns></returns>
+        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
         {
-            try
+            // determine account to use for the given managed cert
+
+            if (caAccount != null)
             {
-                if (state?.Id != null)
+                _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var ca);
+
+                if (ca != null)
                 {
-                    _progressResults.AddOrUpdate(state.Id, state, (id, s) => state);
+                    var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
+
+                    return await GetACMEProvider(caAccount.StorageKey, acmeBaseUrl, caAccount, ca.AllowUntrustedTls);
+                }
+                else
+                {
+                    // Unknown acme CA. May have been removed from CA list.
+                    return null;
                 }
             }
-            catch (Exception)
+            else
             {
-                // failed to add progress tracking, likely concurrency issue
-                _serviceLog?.Warning($"Failed to add tracking progress for {state.ManagedCertificate.Id}. Likely concurrency issue.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the ACME client for the given storage key or create and add a new one
+        /// </summary>
+        /// <param name="storageKey"></param>
+        /// <param name="acmeApiEndpoint"></param>
+        /// <param name="account"></param>
+        /// <param name="allowUntrustedTls"></param>
+        /// <returns></returns>
+        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTls = false)
+        {
+            // get or init acme provider required for the given account
+            if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
+            {
+                return provider;
+            }
+            else
+            {
+                var userAgent = Util.GetUserAgent();
+                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
+                var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
+
+                var newProvider = new AnvilACMEProvider(new AnvilACMEProviderSettings
+                {
+                    AcmeBaseUri = acmeApiEndpoint,
+                    ServiceSettingsBasePath = settingBaseFolder,
+                    LegacySettingsPath = providerPath,
+                    UserAgentName = userAgent,
+                    AllowUntrustedTls = allowUntrustedTls,
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval,
+                    EnableIssuerCache = CoreAppSettings.Current.EnableIssuerCache
+                });
+
+                if (!_useWindowsNativeFeatures)
+                {
+                    newProvider.DefaultCertificateFormat = "pem";
+                }
+
+                await newProvider.InitProvider(_serviceLog, account);
+
+                _acmeClientProviders.TryAdd(storageKey, newProvider);
+
+                return newProvider;
             }
         }
 
@@ -444,20 +497,30 @@ namespace Certify.Management
         }, _loggingLevelSwitch);
 
         /// <summary>
-        /// Get current progress result for the given managed certificate id
+        /// When called, look for periodic maintenance tasks we can perform such as renewal
         /// </summary>
-        /// <param name="managedItemId"></param>
-        /// <returns></returns>
-        public RequestProgressState GetRequestProgressState(string managedItemId)
+        /// <returns>  </returns>
+        public async Task<bool> PerformRenewalTasks()
         {
-            if (_progressResults.TryGetValue(managedItemId, out var progress))
+            try
             {
-                return progress;
+                Debug.WriteLine("Checking for renewal tasks..");
+
+                SettingsManager.LoadAppSettings();
+
+                // perform pending renewals
+                await PerformRenewAll(new RenewalSettings { });
+
+                // flush status report queue
+                await SendQueuedStatusReports();
             }
-            else
+            catch (Exception exp)
             {
-                return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
+                _tc?.TrackException(exp);
+                return await Task.FromResult(false);
             }
+
+            return await Task.FromResult(true);
         }
 
         public void Dispose() => ManagedCertificateLog.DisposeLoggers();
