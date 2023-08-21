@@ -77,11 +77,6 @@ namespace Certify.Management
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
 
         /// <summary>
-        /// Set of current in-progress renewals
-        /// </summary>
-        private ConcurrentDictionary<string, RequestProgressState> _progressResults { get; set; }
-
-        /// <summary>
         /// Service for reporting status/progress results back to client(s)
         /// </summary>
         private IStatusReporting _statusReporting { get; set; }
@@ -175,8 +170,6 @@ namespace Certify.Management
                 _serviceLog.Error(msg);
                 throw (new Exception(msg));
             }
-
-            _progressResults = new ConcurrentDictionary<string, RequestProgressState>();
 
             LoadCertificateAuthorities();
 
@@ -466,26 +459,6 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Begin/restart progress tracking for renewal requests of a given managed certificate
-        /// </summary>
-        /// <param name="state"></param>
-        public void BeginTrackingProgress(RequestProgressState state)
-        {
-            try
-            {
-                if (state?.Id != null)
-                {
-                    _progressResults.AddOrUpdate(state.Id, state, (id, s) => state);
-                }
-            }
-            catch (Exception)
-            {
-                // failed to add progress tracking, likely concurrency issue
-                _serviceLog?.Warning($"Failed to add tracking progress for {state.ManagedCertificate.Id}. Likely concurrency issue.");
-            }
-        }
-
-        /// <summary>
         /// Update progress tracking and send status report to client(s). optionally logging to service log
         /// </summary>
         /// <param name="progress"></param>
@@ -527,23 +500,6 @@ namespace Certify.Management
             LogItemType = logType,
             Message = msg
         }, _loggingLevelSwitch);
-
-        /// <summary>
-        /// Get current progress result for the given managed certificate id
-        /// </summary>
-        /// <param name="managedItemId"></param>
-        /// <returns></returns>
-        public RequestProgressState GetRequestProgressState(string managedItemId)
-        {
-            if (_progressResults.TryGetValue(managedItemId, out var progress))
-            {
-                return progress;
-            }
-            else
-            {
-                return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
-            }
-        }
 
         /// <summary>
         /// When called, look for periodic maintenance tasks we can perform such as renewal

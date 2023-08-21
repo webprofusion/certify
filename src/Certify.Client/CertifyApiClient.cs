@@ -459,12 +459,6 @@ namespace Certify.Client
             }
         }
 
-        public async Task<RequestProgressState> CheckCertificateRequest(string managedItemId)
-        {
-            var json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
-            return JsonConvert.DeserializeObject<RequestProgressState>(json);
-        }
-
         public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site)
         {
             var response = await PostAsync($"managedcertificates/testconfig", site);
