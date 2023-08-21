@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Unicode;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -58,7 +60,11 @@ namespace Certify.Shared.Core.Utils
 
         public async Task Init()
         {
-            var list = System.IO.File.ReadAllLines("Assets\\public_suffix_list.dat");
+            var dat = System.IO.File.ReadAllText("Assets\\public_suffix_list.dat");
+
+            var stringData = Encoding.UTF8.GetString(Convert.FromBase64String(dat));
+            var list = stringData.Split('\n');
+
             foreach (var line in list)
             {
                 if (line.StartsWith("// ===END ICANN DOMAINS==="))
@@ -73,9 +79,10 @@ namespace Certify.Shared.Core.Utils
                 }
             }
 
-            var rdapDnsConfig = System.IO.File.ReadAllText("Assets\\rdap_dns.json");
-
+            var rdapDnsConfigDat = System.IO.File.ReadAllText("Assets\\rdap_dns.json.dat");
+            var rdapDnsConfig = Encoding.UTF8.GetString(Convert.FromBase64String(rdapDnsConfigDat));
             var dnsRootConfig = JsonConvert.DeserializeObject<RdapDnsRoot>(rdapDnsConfig);
+
             foreach (var svc in dnsRootConfig.Services)
             {
 
@@ -111,7 +118,7 @@ namespace Certify.Shared.Core.Utils
             if (queryUrl != null)
             {
                 // query for rdap response
-                
+
                 var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
