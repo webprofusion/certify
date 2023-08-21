@@ -93,6 +93,9 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        int _filterPageIndex = 0;
+        int _filterPageSize = 10;
+
         /// <summary>
         /// Refresh the cached list of managed certs via the connected service
         /// </summary>
@@ -103,20 +106,12 @@ namespace Certify.UI.ViewModel
 
             // include external managed certs if enabled
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
+            filter.PageSize = _filterPageSize;
+            filter.PageIndex= _filterPageIndex;
 
-            var list = await _certifyClient.GetManagedCertificates(filter);
+            var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
-            foreach (var i in list)
-            {
-                i.IsChanged = false;
-
-                if (!HasDeprecatedChallengeTypes && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
-                {
-                    HasDeprecatedChallengeTypes = true;
-                }
-            }
-
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(list);
+            ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
         }
 
         /// <summary>
