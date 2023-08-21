@@ -78,9 +78,6 @@ namespace Certify.Service.Controllers
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
-            //begin monitoring progress
-            _certifyManager.BeginTrackingProgress(progressState);
-
             // perform challenge response test, log to string list and return in result
             var logList = new List<string>();
             using (var log = new LoggerConfiguration()
@@ -170,9 +167,6 @@ namespace Certify.Service.Controllers
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
-            //begin monitoring progress
-            _certifyManager.BeginTrackingProgress(progressState);
-
             //begin request
             var result = await _certifyManager.PerformCertificateRequest(
                                                                            null,
@@ -182,15 +176,6 @@ namespace Certify.Service.Controllers
                                                                             isInteractive: isInteractive
                                                                             );
             return result;
-        }
-
-        [HttpGet, Route("requeststatus/{managedItemId}")]
-        public RequestProgressState CheckCertificateRequest(string managedItemId)
-        {
-            DebugLog();
-
-            //TODO: check current status of request in progress
-            return _certifyManager.GetRequestProgressState(managedItemId);
         }
 
         [HttpGet, Route("log/{managedItemId}/{limit}")]
