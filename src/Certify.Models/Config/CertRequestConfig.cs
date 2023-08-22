@@ -370,7 +370,7 @@ namespace Certify.Models
                     var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
                     if (atc != null)
                     {
-                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
+                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                         if (parsedAtc != null)
                         {
                             identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
