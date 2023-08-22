@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -369,7 +369,10 @@ namespace Certify.Models
                     if (atc != null)
                     {
                         var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        if (parsedAtc != null)
+                        {
+                            identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        }
                     }
                 }
             }
