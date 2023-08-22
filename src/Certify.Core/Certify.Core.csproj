@@ -99,10 +99,4 @@
     <Reference Include="System.Security" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Management\CertifyManager\ICertifyManager.cs">
-      <DependentUpon>CertifyManager.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
 </Project>
