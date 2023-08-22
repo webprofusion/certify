@@ -134,7 +134,7 @@ namespace Certify.Models
             {
                 if (!value)
                 {
-                    UnsetChanged(this);
+                    BindableBase.UnsetChanged(this);
                 }
                 else
                 {
@@ -160,7 +160,7 @@ namespace Certify.Models
         /// BindableBase, and any BindableBase objects nested in ICollection properties
         /// </summary>
         /// <param name="obj"></param>
-        private void UnsetChanged(object obj)
+        private static void UnsetChanged(object obj)
         {
             if (obj is BindableBase bb)
             {
@@ -175,13 +175,13 @@ namespace Certify.Models
                     {
                         foreach (var subObj in propertyCollection)
                         {
-                            UnsetChanged(subObj);
+                            BindableBase.UnsetChanged(subObj);
                         }
                     }
 
                     if (val is BindableBase bbSub)
                     {
-                        UnsetChanged(bbSub);
+                        BindableBase.UnsetChanged(bbSub);
                     }
                 }
             }
@@ -190,7 +190,7 @@ namespace Certify.Models
             {
                 foreach (var subObj in collection)
                 {
-                    UnsetChanged(subObj);
+                    BindableBase.UnsetChanged(subObj);
                 }
             }
         }
