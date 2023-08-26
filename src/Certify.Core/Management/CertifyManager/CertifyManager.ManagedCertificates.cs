@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Providers;
-using Certify.Models.Shared;
+using Certify.Reporting;
 
 namespace Certify.Management
 {
@@ -89,6 +89,26 @@ namespace Certify.Management
             }
 
             return result;
+        }
+
+        public async Task<Certify.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        {
+            var ms = await _itemManager.Find(filter);
+
+            var summary = new Summary();
+            summary.Total = ms.Count();
+            summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
+            summary.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
+            summary.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
+            summary.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
+            summary.NoCertificate = ms.Count(c => c.CertificatePath == null);
+
+            // count items with invalid config (e.g. multiple primary domains)
+            summary.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
+
+            summary.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
+
+            return summary;
         }
         /// <summary>
         /// Update the stored details for the given managed certificate and report update to client(s)
