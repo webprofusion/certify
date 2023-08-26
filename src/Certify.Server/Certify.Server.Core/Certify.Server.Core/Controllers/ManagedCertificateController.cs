@@ -9,7 +9,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
-using Microsoft.AspNetCore.Mvc;
+using Certify.Reporting;
 using Serilog;
 
 namespace Certify.Service.Controllers
@@ -41,6 +41,13 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
             return await _certifyManager.GetManagedCertificateResults(filter);
+        }
+
+        [HttpPost, Route("summary")]
+        public async Task<Summary> GetSummary(ManagedCertificateFilter filter)
+        {
+            DebugLog();
+            return await _certifyManager.GetManagedCertificateSummary(filter);
         }
 
         [HttpGet, Route("{id}")]

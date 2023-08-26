@@ -5,6 +5,7 @@ using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Certify.Reporting;
 using Certify.Shared;
 
 namespace Certify.Client
@@ -77,6 +78,7 @@ namespace Certify.Client
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter);
         Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter);
+        Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter);
 
         Task<ManagedCertificate> GetManagedCertificate(string managedItemId);
 
