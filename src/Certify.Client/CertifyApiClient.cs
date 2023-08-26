@@ -11,6 +11,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
+using Certify.Reporting;
 using Certify.Shared;
 using Newtonsoft.Json;
 using Polly;
@@ -394,6 +395,19 @@ namespace Certify.Client
             using (var reader = new JsonTextReader(sr))
             {
                 var result = serializer.Deserialize<ManagedCertificateSearchResult>(reader);
+                return result;
+            }
+        }
+
+        public async Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        {
+            var response = await PostAsync("managedcertificates/summary/", filter);
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
+            {
+                var result = serializer.Deserialize<Summary>(reader);
                 return result;
             }
         }
