@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,6 +9,7 @@ using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.API;
+using Certify.Reporting;
 using Certify.UI.Shared;
 using PropertyChanged;
 
@@ -81,6 +82,11 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public long TotalManagedCertificates
+        {
+            get; set;
+        }
+
         /// <summary>
         /// Cached count of the number of managed certificate (not counting external certificate managers)
         /// </summary>
@@ -112,6 +118,14 @@ namespace Certify.UI.ViewModel
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
+            TotalManagedCertificates = result.TotalResults;
+        }
+
+        public async Task<Summary> GetManagedCertificateSummary()
+        {
+            var filter = new ManagedCertificateFilter();
+
+            return await _certifyClient.GetManagedCertificateSummary(filter);
         }
 
         /// <summary>
