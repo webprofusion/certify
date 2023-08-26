@@ -11,7 +11,7 @@ using Certify.Models.Shared;
 
 namespace Certify.Management
 {
-    public partial class CertifyManager : ICertifyManager, IDisposable
+    public partial class CertifyManager
     {
         /// <summary>
         /// Upgrade/migrate settings from previous version if applicable
