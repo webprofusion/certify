@@ -10,6 +10,7 @@ using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Reporting;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 
 namespace Certify.Service.Controllers
