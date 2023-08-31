@@ -88,7 +88,15 @@
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
                     TextChanged="TxtFilter_TextChanged" />
             </DockPanel>
-
+            <StackPanel
+                Margin="0,8,0,0"
+                HorizontalAlignment="Center"
+                DockPanel.Dock="Bottom"
+                Orientation="Horizontal">
+                <Button x:Name="Prev" Click="Prev_Click">&lt;</Button>
+                <TextBlock Margin="8,8,8,0" Text="{Binding ResultPageDescription}" />
+                <Button x:Name="Next" Click="Next_Click">&gt;</Button>
+            </StackPanel>
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
