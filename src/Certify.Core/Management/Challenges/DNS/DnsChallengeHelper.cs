@@ -167,54 +167,52 @@ namespace Certify.Core.Management.Challenges
 #pragma warning restore CS0618 // Type or member is obsolete
             }
 
-            if (dnsAPIProvider != null)
+            //most DNS providers require domains to by ASCII
+            txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower().Trim();
+
+            if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
             {
-                //most DNS providers require domains to by ASCII
-                txtRecordName = _idnMapping.GetAscii(txtRecordName).ToLower().Trim();
+                var delegatedTxtRecordName = ApplyChallengeDelegationRule(domain.Value, txtRecordName, challengeConfig.ChallengeDelegationRule);
+                log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTxtRecordName} in place of {txtRecordName}.");
 
-                if (!string.IsNullOrEmpty(challengeConfig.ChallengeDelegationRule))
+                txtRecordName = delegatedTxtRecordName;
+            }
+
+            log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', [{domain.Value}] {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
+            try
+            {
+                var result = await dnsAPIProvider.CreateRecord(new DnsRecord
                 {
-                    var delegatedTXTRecordName = ApplyChallengeDelegationRule(domain.Value, txtRecordName, challengeConfig.ChallengeDelegationRule);
-                    log.Information($"DNS: Challenge Delegation Domain enabled, using {delegatedTXTRecordName} in place of {txtRecordName}.");
+                    RecordType = "TXT",
+                    TargetDomainName = domain.Value.Trim(),
+                    RecordName = txtRecordName,
+                    RecordValue = txtRecordValue,
+                    ZoneId = zoneId
+                });
 
-                    txtRecordName = delegatedTXTRecordName;
+                result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
+
+                var isAwaitingUser = false;
+
+                if (challengeConfig.ChallengeProvider.Contains(".Manual") || result.Message.Contains("[Action Required]"))
+                {
+                    isAwaitingUser = true;
                 }
 
-                log.Information($"DNS: Creating TXT Record '{txtRecordName}' with value '{txtRecordValue}', [{domain.Value}] {(zoneId != null ? $"in ZoneId '{zoneId}'" : "")} using API provider '{dnsAPIProvider.ProviderTitle}'");
-                try
+                return new DnsChallengeHelperResult
                 {
-                    var result = await dnsAPIProvider.CreateRecord(new DnsRecord
-                    {
-                        RecordType = "TXT",
-                        TargetDomainName = domain.Value.Trim(),
-                        RecordName = txtRecordName,
-                        RecordValue = txtRecordValue,
-                        ZoneId = zoneId
-                    });
+                    Result = result,
+                    PropagationSeconds = dnsAPIProvider.PropagationDelaySeconds,
+                    IsAwaitingUser = isAwaitingUser
+                };
+            }
+            catch (Exception exp)
+            {
+                return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}");
+            }
 
-                    result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
-
-                    var isAwaitingUser = false;
-
-                    if (challengeConfig.ChallengeProvider.Contains(".Manual") || result.Message.Contains("[Action Required]"))
-                    {
-                        isAwaitingUser = true;
-                    }
-
-                    return new DnsChallengeHelperResult
-                    {
-                        Result = result,
-                        PropagationSeconds = dnsAPIProvider.PropagationDelaySeconds,
-                        IsAwaitingUser = isAwaitingUser
-                    };
-                }
-                catch (Exception exp)
-                {
-                    return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}");
-                }
-
-                //TODO: DNS query to check for new record
-                /*
+            //TODO: DNS query to check for new record
+            /*
                 if (result.IsSuccess)
                 {
                     // do our own txt record query before proceeding with challenge completion
@@ -245,11 +243,6 @@ namespace Certify.Core.Management.Challenges
                 return result;
             }
           */
-            }
-            else
-            {
-                return new DnsChallengeHelperResult(failureMsg: "Error: Could not determine DNS API Provider.");
-            }
         }
 
         /// <summary>

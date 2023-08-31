@@ -2,9 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -23,7 +21,7 @@ namespace Certify.Management
         private static Progress<RequestProgressState> SetupProgressTracker(
             ManagedCertificate item, string renewalReason,
             ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers,
-            Action<IProgress<RequestProgressState>, RequestProgressState, bool> ReportProgress
+            Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress
         )
         {
 
@@ -33,19 +31,19 @@ namespace Certify.Management
 
             progressTrackers.TryAdd(item.Id, progressTracker);
 
-            ReportProgress(progressTracker, new RequestProgressState(RequestState.Queued, $"Queued for renewal: {renewalReason}", item), false);
+            reportProgress(progressTracker, new RequestProgressState(RequestState.Queued, $"Queued for renewal: {renewalReason}", item), false);
 
             return progressTracker;
         }
 
         public static async Task<List<CertificateRequestResult>> PerformRenewAll(
-                ILog _serviceLog,
-                IManagedItemStore _itemManager,
+                ILog serviceLog,
+                IManagedItemStore itemManager,
                 RenewalSettings settings,
                 RenewalPrefs prefs,
-                Action<IProgress<RequestProgressState>, RequestProgressState, bool> ReportProgress,
-                Func<string, Task<bool>> IsManagedCertificateRunning,
-                Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> PerformCertificateRequest,
+                Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress,
+                Func<string, Task<bool>> isManagedCertificateRunning,
+                Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> performCertificateRequest,
                 ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null
                 )
         {
@@ -72,18 +70,18 @@ namespace Certify.Management
 
                 foreach (var id in settings.TargetManagedCertificates)
                 {
-                    targetCerts.Add(await _itemManager.GetById(id));
+                    targetCerts.Add(await itemManager.GetById(id));
                 }
 
                 managedCertificateBatch = targetCerts;
 
                 foreach (var item in managedCertificateBatch)
                 {
-                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, ReportProgress);
+                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
 
                     renewalTasks.Add(
                     new Task<CertificateRequestResult>(
-                            () => PerformCertificateRequest(item, progressTracker, settings.IsPreviewMode, "Renewal requested").Result,
+                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, "Renewal requested").Result,
                             TaskCreationOptions.LongRunning
                             )
                     );
@@ -122,7 +120,7 @@ namespace Certify.Management
                                       .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-1));
                     }*/
 
-                var totalRenewalCandidates = await _itemManager.CountAll(filter);
+                var totalRenewalCandidates = await itemManager.CountAll(filter);
 
                 var renewalIntervalDays = prefs.RenewalIntervalDays;
                 var renewalIntervalMode = prefs.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
@@ -134,14 +132,14 @@ namespace Certify.Management
                 var resultsRemaining = totalRenewalCandidates;
 
                 // identify items we will attempt and begin tracking progress
-                while (batch.Count() < maxRenewalTasks && resultsRemaining > 0)
+                while (batch.Count < maxRenewalTasks && resultsRemaining > 0)
                 {
-                    var results = await _itemManager.Find(filter);
-                    resultsRemaining = results.Count();
+                    var results = await itemManager.Find(filter);
+                    resultsRemaining = results.Count;
 
                     foreach (var item in results)
                     {
-                        if (batch.Count() < maxRenewalTasks)
+                        if (batch.Count < maxRenewalTasks)
                         {
                             // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks
                             if (item.LastRenewalStatus != RequestState.Paused)
@@ -163,7 +161,7 @@ namespace Certify.Management
                                 // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
                                 if (!prefs.IncludeStoppedSites && !string.IsNullOrEmpty(item.ServerSiteId) && item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
                                 {
-                                    var isSiteRunning = await IsManagedCertificateRunning(item.Id);
+                                    var isSiteRunning = await isManagedCertificateRunning(item.Id);
 
                                     if (!isSiteRunning)
                                     {
@@ -176,11 +174,11 @@ namespace Certify.Management
                                 {
                                     batch.Add(item);
 
-                                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, ReportProgress);
+                                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
 
                                     renewalTasks.Add(
                                         new Task<CertificateRequestResult>(
-                                                () => PerformCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
+                                                () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
                                                 TaskCreationOptions.LongRunning
                                                 )
                                         );
@@ -197,7 +195,7 @@ namespace Certify.Management
 
             if (managedCertificateBatch.Count(c => c.LastRenewalStatus == RequestState.Error) > MAX_CERTIFICATE_REQUEST_TASKS)
             {
-                _serviceLog?.Warning("Too many failed certificates outstanding. Fix failures or delete. Failures: " + managedCertificateBatch.Count(c => c.LastRenewalStatus == RequestState.Error));
+                serviceLog?.Warning("Too many failed certificates outstanding. Fix failures or delete. Failures: " + managedCertificateBatch.Count(c => c.LastRenewalStatus == RequestState.Error));
             }
 
             if (!renewalTasks.Any())
@@ -208,7 +206,7 @@ namespace Certify.Management
             }
             else
             {
-                _serviceLog.Information($"Attempting {renewalTasks.Count} renewal tasks. Max renewal tasks is set to {maxRenewalTasks}, max supported tasks is {MAX_CERTIFICATE_REQUEST_TASKS}");
+                serviceLog?.Information($"Attempting {renewalTasks.Count} renewal tasks. Max renewal tasks is set to {maxRenewalTasks}, max supported tasks is {MAX_CERTIFICATE_REQUEST_TASKS}");
             }
 
             if (prefs.PerformParallelRenewals)
@@ -241,42 +239,42 @@ namespace Certify.Management
         /// <returns></returns>
         private static List<AccountDetails> GetAccountsWithRequiredCAFeatures(ManagedCertificate item, string defaultCA, ICollection<CertificateAuthority> certificateAuthorities, List<AccountDetails> accounts)
         {
-            var requiredCAFeatures = new List<CertAuthoritySupportedRequests>();
+            var requiredCaFeatures = new List<CertAuthoritySupportedRequests>();
             var identifiers = item.GetCertificateIdentifiers();
 
             if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns && i.Value.StartsWith("*")))
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_WILDCARD);
             }
 
             if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) == 1)
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
             }
 
             if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) > 2)
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
             }
 
             if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Ip))
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.IP_SINGLE);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.IP_SINGLE);
             }
 
             if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Ip) > 1)
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.IP_MULTIPLE);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.IP_MULTIPLE);
             }
 
             if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.TnAuthList))
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.TNAUTHLIST);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.TNAUTHLIST);
             }
 
             if (item.RequestConfig.PreferredExpiryDays > 0)
             {
-                requiredCAFeatures.Add(CertAuthoritySupportedRequests.OPTIONAL_LIFETIME_DAYS);
+                requiredCaFeatures.Add(CertAuthoritySupportedRequests.OPTIONAL_LIFETIME_DAYS);
             }
 
             var fallbackCandidateAccounts = accounts.Where(a => a.CertificateAuthorityId != defaultCA && a.IsStagingAccount == item.UseStagingMode);
@@ -287,7 +285,7 @@ namespace Certify.Management
                 // select a candidate based on features required by the certificate. If a CA has no known features we assume it supports all the ones we might be interested in
                 foreach (var ca in certificateAuthorities)
                 {
-                    if (!ca.SupportedFeatures.Any() || requiredCAFeatures.All(r => ca.SupportedFeatures.Contains(r.ToString())))
+                    if (!ca.SupportedFeatures.Any() || requiredCaFeatures.All(r => ca.SupportedFeatures.Contains(r.ToString())))
                     {
                         fallbackAccounts.AddRange(fallbackCandidateAccounts.Where(f => f.CertificateAuthorityId == ca.Id));
                     }
