@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -396,9 +396,9 @@ namespace Certify.Management
             log?.Information($"{Util.GetUserAgent()}");
 
             var caAccount = await GetAccountDetails(managedCertificate, allowFailover: CoreAppSettings.Current.EnableAutomaticCAFailover);
-            var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
+            var acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
-            if (caAccount == null || _acmeClientProvider == null)
+            if (caAccount == null || acmeClientProvider == null)
             {
                 result.IsSuccess = false;
                 result.Abort = true;
@@ -412,7 +412,7 @@ namespace Certify.Management
                 managedCertificate.CurrentOrderUri = null;
             }
 
-            log?.Information("Beginning certificate request process: {Name} using ACME provider {Provider}", managedCertificate.Name, _acmeClientProvider.GetProviderName());
+            log?.Information("Beginning certificate request process: {Name} using ACME provider {Provider}", managedCertificate.Name, acmeClientProvider.GetProviderName());
 
             _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var certAuthority);
 
@@ -1410,15 +1410,15 @@ namespace Certify.Management
             log?.Warning($"Revoking certificate: {managedCertificate.Name}");
 
             var caAccount = await GetAccountDetails(managedCertificate, allowFailover: false, isResumedOrder: true);
-            var _acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
+            var acmeClientProvider = await GetACMEProvider(managedCertificate, caAccount);
 
-            if (_acmeClientProvider == null)
+            if (acmeClientProvider == null)
             {
                 log?.Error($"Could not revoke certificate as no matching valid ACME account could be found.");
                 return new StatusMessage { IsOK = false, Message = "Could not revoke certificate. No matching valid ACME account could be found" };
             }
 
-            var result = await _acmeClientProvider.RevokeCertificate(log, managedCertificate);
+            var result = await acmeClientProvider.RevokeCertificate(log, managedCertificate);
 
             if (result.IsOK)
             {
