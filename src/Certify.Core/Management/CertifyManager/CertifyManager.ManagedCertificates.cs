@@ -96,7 +96,7 @@ namespace Certify.Management
             var ms = await _itemManager.Find(filter);
 
             var summary = new Summary();
-            summary.Total = ms.Count();
+            summary.Total = ms.Count;
             summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
             summary.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
             summary.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
@@ -110,6 +110,7 @@ namespace Certify.Management
 
             return summary;
         }
+
         /// <summary>
         /// Update the stored details for the given managed certificate and report update to client(s)
         /// </summary>
@@ -188,7 +189,7 @@ namespace Certify.Management
                 await ReportManagedCertificateStatus(managedCertificate);
             }
 
-            _tc?.TrackEvent("UpdateManagedCertificatesStatus_" + status.ToString());
+            _tc?.TrackEvent("UpdateManagedCertificatesStatus_" + status);
         }
 
         private ConcurrentDictionary<string, RenewalStatusReport> _statusReportQueue { get; set; } = new ConcurrentDictionary<string, RenewalStatusReport>();
@@ -509,7 +510,13 @@ namespace Certify.Management
                 }
                 catch (Exception exp)
                 {
-                    return new LogItem[] { new LogItem { LogLevel = "ERR", EventDate = DateTime.Now, Message = $"Failed to read log: {exp}" } };
+                    return new LogItem[]
+                    {
+                        new LogItem
+                        {
+                            LogLevel = "ERR", EventDate = DateTime.Now, Message = $"Failed to read log: {exp}"
+                        }
+                    };
                 }
             }
             else
@@ -681,36 +688,32 @@ namespace Certify.Management
         /// Stop our temporary http challenge response service
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> StopHttpChallengeServer()
+        private async Task StopHttpChallengeServer()
         {
-            if (_httpChallengeServerClient != null)
+            if (_httpChallengeServerClient == null)
             {
-                try
-                {
-                    var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        try
-                        {
-                            if (_httpChallengeProcess != null && !_httpChallengeProcess.HasExited)
-                            {
-                                _httpChallengeProcess.CloseMainWindow();
-                            }
-                        }
-                        catch { }
-                    }
-                }
-                catch
-                {
-                    return true;
-                }
+                return;
             }
 
-            return true;
+            try
+            {
+                var response = await _httpChallengeServerClient.GetAsync($"http://127.0.0.1:{_httpChallengePort}/.well-known/acme-challenge/{_httpChallengeControlKey}");
+                if (response.IsSuccessStatusCode)
+                {
+                    return;
+                }
+                else
+                {
+                    if (_httpChallengeProcess?.HasExited == false)
+                    {
+                        _httpChallengeProcess.CloseMainWindow();
+                    }
+                }
+            }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }
