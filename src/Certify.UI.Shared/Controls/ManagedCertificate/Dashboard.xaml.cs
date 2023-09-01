@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Certify.Models;
-using Certify.Reporting;
+using Certify.Models.Reporting;
 using Certify.UI.ViewModel;
 
 namespace Certify.UI.Controls.ManagedCertificate

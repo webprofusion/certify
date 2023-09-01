@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Providers;
-using Certify.Reporting;
+using Certify.Models.Reporting;
 
 namespace Certify.Management
 {
@@ -91,7 +91,7 @@ namespace Certify.Management
             return result;
         }
 
-        public async Task<Certify.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        public async Task<Certify.Models.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
         {
             var ms = await _itemManager.Find(filter);
 
