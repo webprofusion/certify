@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models.API;
+using Certify.Models.Reporting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -142,6 +143,27 @@ namespace Certify.Server.API.Controllers
             };
 
             return new OkObjectResult(result);
+        }
+        
+        /// <summary>
+        /// Get summary counts of all managed certs
+        /// </summary>
+        /// <param name="keyword"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("summary")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Summary))]
+        public async Task<IActionResult> GetManagedCertificateSummary(string keyword)
+        {
+
+            var summary = await _client.GetManagedCertificateSummary(
+                new Models.ManagedCertificateFilter
+                {
+                    Keyword = keyword
+                });
+            
+            return new OkObjectResult(summary);
         }
 
         /// <summary>
