@@ -9,7 +9,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Utils;
-using Certify.Reporting;
+using Certify.Models.Reporting;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 

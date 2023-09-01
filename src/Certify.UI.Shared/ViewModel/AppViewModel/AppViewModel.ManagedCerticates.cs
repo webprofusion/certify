@@ -8,7 +8,7 @@ using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.API;
-using Certify.Reporting;
+using Certify.Models.Reporting;
 using Certify.UI.Shared;
 using PropertyChanged;
 

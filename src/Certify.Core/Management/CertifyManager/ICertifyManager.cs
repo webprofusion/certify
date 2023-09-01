@@ -29,7 +29,7 @@ namespace Certify.Management
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null);
         Task<ManagedCertificateSearchResult> GetManagedCertificateResults(ManagedCertificateFilter filter = null);
-        Task<Certify.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter = null);
+        Task<Certify.Models.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter = null);
 
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 

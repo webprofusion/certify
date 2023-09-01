@@ -5,7 +5,7 @@ using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Utils;
-using Certify.Reporting;
+using Certify.Models.Reporting;
 using Certify.Shared;
 
 namespace Certify.Client
