@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Certify.Models;
 
-namespace Certify.Reporting
+namespace Certify.Models.Reporting
 {
     public class Summary : BindableBase
     {
