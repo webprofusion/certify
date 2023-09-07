@@ -371,6 +371,16 @@ namespace Certify.UI.Controls
         {
             txtFilter.Text = filter;
         }
+
+        private void Prev_Click(object sender, RoutedEventArgs e)
+        {
+            _appViewModel.ManagedCertificatesPrevPage();
+        }
+
+        private void Next_Click(object sender, RoutedEventArgs e)
+        {
+            _appViewModel.ManagedCertificatesNextPage();
+        }
     }
 
     public static class StringExtensions
