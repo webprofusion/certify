@@ -88,15 +88,27 @@
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
                     TextChanged="TxtFilter_TextChanged" />
             </DockPanel>
-            <StackPanel
-                Margin="0,8,0,0"
-                HorizontalAlignment="Center"
-                DockPanel.Dock="Bottom"
-                Orientation="Horizontal">
-                <Button x:Name="Prev" Click="Prev_Click">&lt;</Button>
-                <TextBlock Margin="8,8,8,0" Text="{Binding ResultPageDescription}" />
-                <Button x:Name="Next" Click="Next_Click">&gt;</Button>
-            </StackPanel>
+            <DockPanel
+                Margin="4,8,4,4"
+                LastChildFill="False" Visibility="{Binding HasPagesOfResults, Converter={StaticResource BoolToVisConverter }}"
+                DockPanel.Dock="Bottom">
+                <Button x:Name="Prev" Click="Prev_Click" DockPanel.Dock="Left"> <fa:FontAwesome
+                        Margin="4,4,4,4"
+                        VerticalAlignment="top"
+                        FontSize="10"
+                        Icon="ChevronLeft" />
+                </Button>
+                <TextBlock Margin="16,4,16,4" DockPanel.Dock="Left" TextAlignment="Center"
+                           Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                           Text="{Binding ResultPageDescription}" />
+                <Button x:Name="Next" Click="Next_Click" DockPanel.Dock="Right">
+                    <fa:FontAwesome
+                        Margin="4,4,4,4"
+                        VerticalAlignment="top"
+                        FontSize="10"
+                        Icon="ChevronRight" />
+                </Button>
+            </DockPanel>
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"

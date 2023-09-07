@@ -16,7 +16,6 @@ namespace Certify.UI.ViewModel
 {
     public partial class AppViewModel : BindableBase
     {
-
         /// <summary>
         /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
@@ -81,10 +80,7 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public long TotalManagedCertificates
-        {
-            get; set;
-        }
+        public long TotalManagedCertificates { get; set; }
 
         /// <summary>
         /// Cached count of the number of managed certificate (not counting external certificate managers)
@@ -92,14 +88,11 @@ namespace Certify.UI.ViewModel
         [DependsOn(nameof(ManagedCertificates))]
         public int NumManagedCerts
         {
-            get
-            {
-                return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
-            }
+            get { return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0; }
         }
 
         int _filterPageIndex = 0;
-        int _filterPageSize = 10;
+        int _filterPageSize = 15;
 
         /// <summary>
         /// Refresh the cached list of managed certs via the connected service
@@ -112,7 +105,7 @@ namespace Certify.UI.ViewModel
             // include external managed certs if enabled
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
             filter.PageSize = _filterPageSize;
-            filter.PageIndex= _filterPageIndex;
+            filter.PageIndex = _filterPageIndex;
 
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
@@ -126,6 +119,39 @@ namespace Certify.UI.ViewModel
 
             return await _certifyClient.GetManagedCertificateSummary(filter);
         }
+
+        public async Task ManagedCertificatesNextPage()
+        {
+            if (ManagedCertificates.Count() >= _filterPageSize)
+            {
+                _filterPageIndex++;
+                await RefreshManagedCertificates();
+                RaisePropertyChangedEvent(nameof(ResultPageDescription));
+            }
+        }
+
+        public async Task ManagedCertificatesPrevPage()
+        {
+            if (_filterPageIndex > 0)
+            {
+                _filterPageIndex--;
+                await RefreshManagedCertificates();
+                RaisePropertyChangedEvent(nameof(ResultPageDescription));
+            }
+        }
+
+        /// <summary>
+        /// Formatted description of the current page index in the result set
+        /// </summary>
+        public string ResultPageDescription
+        {
+            get { return $"Page {_filterPageIndex + 1} of {Math.Ceiling((decimal)TotalManagedCertificates / _filterPageSize)}"; }
+        }
+
+        /// <summary>
+        /// True if there are more managed certificates than the current result set batch size
+        /// </summary>
+        public bool HasPagesOfResults => TotalManagedCertificates > _filterPageSize;
 
         /// <summary>
         /// Add/Update a managed certificate via service
