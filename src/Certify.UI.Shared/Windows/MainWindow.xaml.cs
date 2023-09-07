@@ -149,7 +149,7 @@ namespace Certify.UI.Windows
 
                 // renewals is a long running process so we need to run renewals process in the
                 // background and present UI to show progress.
-                // TODO: We should prevent starting the renewals process if it is currently in progress.
+
                 if (_appViewModel.RenewAllCommand.CanExecute(settings))
                 {
                     _appViewModel.RenewAllCommand.Execute(settings);
