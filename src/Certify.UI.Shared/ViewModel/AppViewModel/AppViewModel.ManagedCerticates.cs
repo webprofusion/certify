@@ -94,6 +94,8 @@ namespace Certify.UI.ViewModel
         int _filterPageIndex = 0;
         int _filterPageSize = 15;
 
+        public string FilterKeyword { get; set; }= string.Empty;
+
         /// <summary>
         /// Refresh the cached list of managed certs via the connected service
         /// </summary>
@@ -106,6 +108,8 @@ namespace Certify.UI.ViewModel
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
             filter.PageSize = _filterPageSize;
             filter.PageIndex = _filterPageIndex;
+            
+            filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
 
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
@@ -115,9 +119,14 @@ namespace Certify.UI.ViewModel
 
         public async Task<Summary> GetManagedCertificateSummary()
         {
+            if (!IsServiceAvailable)
+            {
+                return null;
+            }
+
             var filter = new ManagedCertificateFilter();
 
-            return await _certifyClient.GetManagedCertificateSummary(filter);
+            return await _certifyClient?.GetManagedCertificateSummary(filter);
         }
 
         public async Task ManagedCertificatesNextPage()
