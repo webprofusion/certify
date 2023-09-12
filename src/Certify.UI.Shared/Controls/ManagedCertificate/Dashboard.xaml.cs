@@ -46,12 +46,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         public async Task RefreshSummary()
         {
+            var summary = await AppViewModel.Current.GetManagedCertificateSummary();
 
-            if (AppViewModel.Current.ManagedCertificates?.Any() == true)
+            if (summary?.Total > 0)
             {
-                var summary = await AppViewModel.Current.GetManagedCertificateSummary();
-
-                var ms = AppViewModel.Current.ManagedCertificates;
 
                 ViewModel.Total = summary.Total;
                 ViewModel.Healthy = summary.Healthy;
