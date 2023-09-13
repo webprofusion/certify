@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -822,7 +822,7 @@ namespace Certify.Management
                         X509Certificate2 certInfo = null;
                         if (!string.IsNullOrWhiteSpace(primaryCertFilePath) && primaryCertFilePath.EndsWith(".pfx", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd);
+                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError:true);
                         }
                         else if (certRequestResult.SupportingData is X509Certificate2)
                         {
@@ -858,9 +858,9 @@ namespace Certify.Management
                             await _acmeClientProvider.UpdateRenewalInfo(previousCertId, true);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception exp)
                     {
-                        log?.Error("Failed to parse certificate dates.");
+                        log?.Error("Failed to parse certificate: {exp}", exp);
                     }
 
                     // Install certificate into certificate store and bind to matching sites on server
