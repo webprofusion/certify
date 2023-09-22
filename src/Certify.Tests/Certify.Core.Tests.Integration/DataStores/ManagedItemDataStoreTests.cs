@@ -11,7 +11,7 @@ using Certify.Models;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests
+namespace Certify.Core.Tests.DataStores
 {
     [TestClass]
     public class ManagedItemDataStoreTests
@@ -58,7 +58,7 @@ namespace Certify.Core.Tests
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupport store type " + storeType);
+                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
         }
 
