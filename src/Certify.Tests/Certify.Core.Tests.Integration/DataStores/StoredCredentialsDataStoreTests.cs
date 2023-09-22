@@ -8,7 +8,7 @@ using Certify.Management;
 using Certify.Models.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests
+namespace Certify.Core.Tests.DataStores
 {
     [TestClass]
     public class StoredCredentialsDataStoreTests
@@ -50,7 +50,7 @@ namespace Certify.Core.Tests
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupport store type " + storeType);
+                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
         }
 
