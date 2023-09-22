@@ -5,7 +5,7 @@ using Certify.Management;
 using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests
+namespace Certify.Core.Tests.DNS
 {
     [TestClass]
     public class DnsAPITestAWSRoute53 : IntegrationTestBase
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests
             Assert.IsTrue(createResult.IsSuccess);
 
             stopwatch.Stop();
-            System.Diagnostics.Debug.WriteLine($"Create DNS Record {createRequest.RecordName} took {stopwatch.Elapsed.TotalSeconds} seconds");
+            Debug.WriteLine($"Create DNS Record {createRequest.RecordName} took {stopwatch.Elapsed.TotalSeconds} seconds");
             return createRequest;
         }
 
@@ -62,7 +62,7 @@ namespace Certify.Core.Tests
             // also create a duplicate
             var record2 = await TestCreateRecord();
 
-            System.Diagnostics.Debug.WriteLine($"Cloudflare DNS should now have record {record1.RecordName} with values {record1.RecordValue} and {record2.RecordValue}");
+            Debug.WriteLine($"Cloudflare DNS should now have record {record1.RecordName} with values {record1.RecordValue} and {record2.RecordValue}");
         }
 
         [TestMethod, TestCategory("DNS")]
@@ -80,7 +80,7 @@ namespace Certify.Core.Tests
             var deleteResult = await _provider.DeleteRecord(deleteRequest);
             Assert.IsTrue(deleteResult.IsSuccess);
 
-            System.Diagnostics.Debug.WriteLine($"Delete DNS Record {deleteRequest.RecordName} took {stopwatch.Elapsed.TotalSeconds} seconds");
+            Debug.WriteLine($"Delete DNS Record {deleteRequest.RecordName} took {stopwatch.Elapsed.TotalSeconds} seconds");
         }
 
         [TestMethod, TestCategory("DNS")]
