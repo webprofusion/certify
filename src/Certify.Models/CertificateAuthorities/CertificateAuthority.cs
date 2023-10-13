@@ -103,6 +103,7 @@ namespace Certify.Models
             CertificateAuthorities.Definitions.SectigoDV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoOV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoEV.GetDefinition(),
+            CertificateAuthorities.Definitions.SectigoEnterprise.GetDefinition(),
             CertificateAuthorities.Definitions.Martini.GetDefinition()
         };
 
