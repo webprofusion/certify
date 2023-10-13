@@ -124,6 +124,8 @@
                 <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
                 <Controls:ToggleSwitch Content="Allow Untrusted TLS" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
 
+                <Controls:ToggleSwitch Content="Allow Internal Hostnames" IsOn="{Binding Model.Item.AllowInternalHostnames}" />
+
 
             </StackPanel>
         </StackPanel>
