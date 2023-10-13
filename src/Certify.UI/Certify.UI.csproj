@@ -180,7 +180,7 @@
       <Version>3.0.1</Version>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource">
-      <Version>7.0.2</Version>
+      <Version>8.0.0-rc.2.23479.6</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Http">
       <Version>4.3.4</Version>

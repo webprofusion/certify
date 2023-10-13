@@ -11,9 +11,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="7.2.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.1.23419.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0-rc.1.23419.4" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0-rc.1.23419.4" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-rc.2.23479.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0-rc.2.23479.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0-rc.2.23479.6" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />

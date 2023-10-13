@@ -23,10 +23,8 @@
 
     <ItemGroup>
         <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
-
-        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.3.7" Condition="'$(TargetFramework)' == 'net8.0'" />
+        <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.3.8" Condition="'$(TargetFramework)' == 'net8.0'" />
         <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies" Version="1.1.0" Condition="'$(TargetFramework)' != 'net8.0'" />
-       <!-- <PackageReference Include="System.Management.Automation" Version="7.3.6" Condition="'$(TargetFramework)' == 'net8.0'" />-->
     </ItemGroup>
 
 
