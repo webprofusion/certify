@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -141,7 +141,9 @@ namespace Certify.Server.API
 
             var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
             var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
-
+#if DEBUG
+            serverConnection = defaultConnectionConfig;
+#endif
             var internalServiceClient = new Client.CertifyServiceClient(configManager, serverConnection);
 
             internalServiceClient.ConnectStatusStreamAsync();
