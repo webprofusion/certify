@@ -59,7 +59,7 @@ namespace Certify.Management.Servers
                 {
                     using (var srv = GetDefaultServerManager())
                     {
-                        // _isIISAvaillable will be updated by query against server manager
+                        // _isIISAvailable is updated by completing the query against server manager
                         if (srv != null)
                         {
                             return Task.FromResult(_isIISAvailable);
