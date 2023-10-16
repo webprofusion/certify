@@ -15,6 +15,7 @@ using Certify.Models.Reporting;
 using Certify.Shared;
 using Newtonsoft.Json;
 using Polly;
+using Certify.Models.Config.AccessControl;
 
 namespace Certify.Client
 {
@@ -708,6 +709,11 @@ namespace Certify.Client
             return _refreshToken;
         }
 
+        public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples()
+        {
+            var result = await FetchAsync("access/securityprinciples");
+            return JsonConvert.DeserializeObject<List<SecurityPrinciple>>(result);
+        }
         #endregion
     }
 }

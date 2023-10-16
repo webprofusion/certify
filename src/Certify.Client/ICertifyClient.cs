@@ -7,6 +7,7 @@ using Certify.Models.Config;
 using Certify.Models.Utils;
 using Certify.Models.Reporting;
 using Certify.Shared;
+using Certify.Models.Config.AccessControl;
 
 namespace Certify.Client
 {
@@ -129,6 +130,10 @@ namespace Certify.Client
         Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null);
 
         #endregion Accounts
+        Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples();
+        #region Access Control
+
+        #endregion
     }
 
     /// <summary>
