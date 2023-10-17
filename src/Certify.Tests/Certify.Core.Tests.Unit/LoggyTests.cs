@@ -37,8 +37,8 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[ERR]"));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged error message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[ERR]"), "Logged error message should contain '[ERR]'");
         }
 
         [TestMethod, Description("Test Loggy.Error() Method (Exception)")]
@@ -65,9 +65,9 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[ERR]"));
-            Assert.IsTrue(logText.Contains(exceptionError));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged error message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[ERR]"), "Logged error message should contain '[ERR]'");
+            Assert.IsTrue(logText.Contains(exceptionError), $"Logged error message should contain exception error '{exceptionError}'");
         }
 
         [TestMethod, Description("Test Loggy.Information() Method")]
@@ -84,8 +84,8 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[INF]"));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged info message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[INF]"), "Logged info message should contain '[INF]'");
         }
 
         [TestMethod, Description("Test Loggy.Debug() Method")]
@@ -103,8 +103,8 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[DBG]"));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged debug message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[DBG]"), "Logged debug message should contain '[DBG]'");
         }
 
         [TestMethod, Description("Test Loggy.Verbose() Method")]
@@ -122,8 +122,8 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[VRB]"));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged verbose message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[VRB]"), "Logged verbose message should contain '[VRB]'");
         }
 
         [TestMethod, Description("Test Loggy.Warning() Method")]
@@ -140,8 +140,8 @@ namespace Certify.Core.Tests.Unit
 
             var logText = File.ReadAllText(this.logFilePath);
 
-            Assert.IsTrue(logText.Contains(logMessage));
-            Assert.IsTrue(logText.Contains("[WRN]"));
+            Assert.IsTrue(logText.Contains(logMessage), $"Logged warning message should contain '{logMessage}'");
+            Assert.IsTrue(logText.Contains("[WRN]"), "Logged warning message should contain '[WRN]'");
         }
     }
 }
