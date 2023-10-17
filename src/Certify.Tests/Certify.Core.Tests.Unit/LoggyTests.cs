@@ -11,14 +11,25 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class LoggyTests
     {
+        private string logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            File.Delete(this.logFilePath);
+        }
+
+        [TestCleanup]
+        public void TestCleanup() 
+        {
+            File.Delete(this.logFilePath);
+        }
+
         [TestMethod, Description("Test Loggy.Error() Method")]
         public void TestLoggyError()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
 
@@ -26,21 +37,17 @@ namespace Certify.Core.Tests.Unit
             log.Error(logMessage);
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[ERR]"));
-            File.Delete(logFilePath);
         }
 
         [TestMethod, Description("Test Loggy.Error() Method (Exception)")]
         public void TestLoggyErrorException()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
             var logMessage = "New Loggy Exception Error";
@@ -58,22 +65,18 @@ namespace Certify.Core.Tests.Unit
 
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[ERR]"));
             Assert.IsTrue(logText.Contains(exceptionError));
-            File.Delete(logFilePath);
         }
 
         [TestMethod, Description("Test Loggy.Information() Method")]
         public void TestLoggyInformation()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
 
@@ -81,22 +84,18 @@ namespace Certify.Core.Tests.Unit
             log.Information(logMessage);
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[INF]"));
-            File.Delete(logFilePath);
         }
 
         [TestMethod, Description("Test Loggy.Debug() Method")]
         public void TestLoggyDebug()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
                 .MinimumLevel.Debug()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
 
@@ -104,22 +103,18 @@ namespace Certify.Core.Tests.Unit
             log.Debug(logMessage);
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[DBG]"));
-            File.Delete(logFilePath);
         }
 
         [TestMethod, Description("Test Loggy.Verbose() Method")]
         public void TestLoggyVerbose()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
 
@@ -127,21 +122,17 @@ namespace Certify.Core.Tests.Unit
             log.Verbose(logMessage);
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[VRB]"));
-            File.Delete(logFilePath);
         }
 
         [TestMethod, Description("Test Loggy.Warning() Method")]
         public void TestLoggyWarning()
         {
-            var logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
-            File.Delete(logFilePath);
-
             var logImp = new LoggerConfiguration()
-                .WriteTo.File(logFilePath)
+                .WriteTo.File(this.logFilePath)
                 .CreateLogger();
             var log = new Loggy(logImp);
 
@@ -149,11 +140,10 @@ namespace Certify.Core.Tests.Unit
             log.Warning(logMessage);
             logImp.Dispose();
 
-            var logText = File.ReadAllText(logFilePath);
+            var logText = File.ReadAllText(this.logFilePath);
 
             Assert.IsTrue(logText.Contains(logMessage));
             Assert.IsTrue(logText.Contains("[WRN]"));
-            File.Delete(logFilePath);
         }
     }
 }
