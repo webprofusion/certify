@@ -60,9 +60,10 @@ namespace Certify.Management
                 _itemManager,
                 settings,
                 prefs,
-           
+
                 ReportProgress, IsManagedCertificateRunning,
-                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) => { 
+                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
+                {
                     return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
                 },
                 progressTrackers);
@@ -824,7 +825,7 @@ namespace Certify.Management
                         X509Certificate2 certInfo = null;
                         if (!string.IsNullOrWhiteSpace(primaryCertFilePath) && primaryCertFilePath.EndsWith(".pfx", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError:true);
+                            certInfo = CertificateManager.LoadCertificate(primaryCertFilePath, pfxPwd, throwOnError: true);
                         }
                         else if (certRequestResult.SupportingData is X509Certificate2)
                         {

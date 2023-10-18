@@ -1,7 +1,6 @@
-using Certify.Models.API;
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
