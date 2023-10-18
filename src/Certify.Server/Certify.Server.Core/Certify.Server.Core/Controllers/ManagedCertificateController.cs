@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
-using Certify.Models.Utils;
 using Certify.Models.Reporting;
+using Certify.Models.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 

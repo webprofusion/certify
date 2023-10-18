@@ -14,6 +14,7 @@ namespace Certify.Server.API
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
+
             CreateHostBuilder(args).Build().Run();
         }
 
