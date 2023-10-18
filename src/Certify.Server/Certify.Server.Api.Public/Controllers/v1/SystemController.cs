@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -36,9 +37,34 @@ namespace Certify.Server.API.Controllers
         [Route("version")]
         public async Task<IActionResult> GetSystemVersion()
         {
+
             var versionInfo = await _client.GetAppVersion();
 
             return new OkObjectResult(versionInfo);
+        }
+
+        /// <summary>
+        /// Check API is responding and can connect to background service
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("health")]
+        public async Task<IActionResult> GetHealth()
+        {
+            var serviceAvailable = false;
+            var versionInfo = "Not available. Cannot connect to service worker.";
+            try
+            {
+                versionInfo = await _client.GetAppVersion();
+                serviceAvailable = true;
+            }
+            catch { }
+
+            var env = Environment.GetEnvironmentVariables();
+
+            var health = new { API = "OK", Service = versionInfo, ServiceAvailable = serviceAvailable, env = env };
+
+            return new OkObjectResult(health);
         }
     }
 }

@@ -8,7 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
+using Certify.Models.Config.AccessControl;
+using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
@@ -53,7 +56,7 @@ namespace Certify.Client
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine
-    public class CertifyApiClient : ICertifyInternalApiClient
+    public partial class CertifyApiClient : ICertifyInternalApiClient
     {
         private HttpClient _client;
         private readonly string _baseUri = "/api/";
@@ -379,6 +382,37 @@ namespace Certify.Client
             }
         }
 
+        /// <summary>
+        /// Get search results, same as GetManagedCertificates but result has count of total results available as used when paging
+        /// </summary>
+        /// <param name="filter"></param>
+        /// <returns></returns>
+        public async Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter)
+        {
+            var response = await PostAsync("managedcertificates/results/", filter);
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
+            {
+                var result = serializer.Deserialize<ManagedCertificateSearchResult>(reader);
+                return result;
+            }
+        }
+
+        public async Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        {
+            var response = await PostAsync("managedcertificates/summary/", filter);
+            var serializer = new JsonSerializer();
+
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var reader = new JsonTextReader(sr))
+            {
+                var result = serializer.Deserialize<Summary>(reader);
+                return result;
+            }
+        }
+
         public async Task<ManagedCertificate> GetManagedCertificate(string managedItemId)
         {
             var result = await FetchAsync($"managedcertificates/{managedItemId}");
@@ -438,12 +472,6 @@ namespace Certify.Client
                     Result = exp
                 };
             }
-        }
-
-        public async Task<RequestProgressState> CheckCertificateRequest(string managedItemId)
-        {
-            var json = await FetchAsync($"managedcertificates/requeststatus/{managedItemId}");
-            return JsonConvert.DeserializeObject<RequestProgressState>(json);
         }
 
         public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site)
@@ -542,10 +570,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var response = await FetchAsync($"managedcertificates/log/{id}/{limit}");
-            return JsonConvert.DeserializeObject<string[]>(response);
+            return JsonConvert.DeserializeObject<LogItem[]>(response);
         }
 
         public async Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null)
@@ -681,6 +709,17 @@ namespace Certify.Client
             return _refreshToken;
         }
 
+        public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples()
+        {
+            var result = await FetchAsync("access/securityprinciples");
+            return JsonToObject<List<SecurityPrinciple>>(result);
+        }
+
         #endregion
+
+        private T JsonToObject<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
     }
 }

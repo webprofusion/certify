@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -152,12 +153,23 @@ namespace Certify.Management
             }
         }
 
-        private static string GetPowershellExePath()
+        /// <summary>
+        /// Get the path to the pwoershell exe, optionally using a preferred path first
+        /// </summary>
+        /// <param name="powershellPathPreference"></param>
+        /// <returns></returns>
+        private static string GetPowershellExePath(string powershellPathPreference)
         {
             var searchPaths = new List<string>() {
                 "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe"
+                "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
+                "/usr/bin/pwsh"
             };
+
+            if (!string.IsNullOrWhiteSpace(powershellPathPreference))
+            {
+                searchPaths.Insert(0, powershellPathPreference);
+            }
 
             // if powershell exe path supplied, use that (with expansion) and check exe exists
             // otherwise detect powershell exe location
@@ -173,15 +185,15 @@ namespace Certify.Management
             return null;
         }
 
-        private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
+        private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
         {
 
             var _log = new StringBuilder();
 
-            var commandExe = GetPowershellExePath();
+            var commandExe = GetPowershellExePath(powershellPathPreference);
             if (commandExe == null)
             {
-                return new ActionResult("Failed to locate powershell exe. Cannot launch as new process.", false);
+                return new ActionResult("Failed to locate powershell executable. Cannot launch as new process.", false);
             }
 
             if (!string.IsNullOrEmpty(scriptContent))
@@ -383,13 +395,17 @@ namespace Certify.Management
                 executionPolicy = parameters.FirstOrDefault(p => p.Key.ToLower() == "executionpolicy").Value?.ToString();
             }
 
-            if (!string.IsNullOrEmpty(executionPolicy))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                shell.AddCommand("Set-ExecutionPolicy")
-                        .AddParameter("ExecutionPolicy", executionPolicy)
-                        .AddParameter("Scope", "Process")
-                        .AddParameter("Force")
-                        .Invoke();
+                // on windows we may need to set execution policy depending on user preferences
+                if (!string.IsNullOrEmpty(executionPolicy))
+                {
+                    shell.AddCommand("Set-ExecutionPolicy")
+                            .AddParameter("ExecutionPolicy", executionPolicy)
+                            .AddParameter("Scope", "Process")
+                            .AddParameter("Force")
+                            .Invoke();
+                }
             }
 
             // add script command to invoke

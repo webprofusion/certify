@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -121,21 +123,78 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        class Debouncer : IDisposable
         {
+            private CancellationTokenSource lastCancellationTokenSource;
+            private int milliseconds;
+
+            public Debouncer(int milliseconds = 300)
+            {
+                this.milliseconds = milliseconds;
+            }
+
+            public async Task Debounce(Func<Task> action)
+            {
+                Cancel(lastCancellationTokenSource);
+
+                var tokenSrc = lastCancellationTokenSource = new CancellationTokenSource();
+
+                try
+                {
+                    await Task.Delay(new TimeSpan(milliseconds), tokenSrc.Token);
+                    if (!tokenSrc.IsCancellationRequested)
+                    {
+                        await Task.Run(action, tokenSrc.Token);
+                    }
+                }
+                catch (TaskCanceledException)
+                {
+                }
+            }
+
+            public void Cancel(CancellationTokenSource source)
+            {
+                if (source != null)
+                {
+                    source.Cancel();
+                    source.Dispose();
+                }
+            }
+
+            public void Dispose()
+            {
+                Cancel(lastCancellationTokenSource);
+            }
+
+            ~Debouncer()
+            {
+                Dispose();
+            }
+        }
+
+        private Debouncer _filterDebouncer = new Debouncer();
+
+        private async void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // refresh db results, then refresh UI view
+
+            _appViewModel.FilterKeyword = txtFilter.Text;
+
+            await _filterDebouncer.Debounce(_appViewModel.RefreshManagedCertificates);
+
             var defaultView = CollectionViewSource.GetDefaultView(lvManagedCertificates.ItemsSource);
 
             defaultView.Refresh();
 
-            if (lvManagedCertificates.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
-            {
-                // if the data model's selected item has come into view after filter box text
-                // changed, select the item in the list
-                if (defaultView.Filter(_appViewModel.SelectedItem))
-                {
-                    lvManagedCertificates.SelectedItem = _appViewModel.SelectedItem;
-                }
-            }
+            /* if (lvManagedCertificates.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
+             {
+                 // if the data model's selected item has come into view after filter box text
+                 // changed, select the item in the list
+                 if (defaultView.Filter(_appViewModel.SelectedItem))
+                 {
+                     lvManagedCertificates.SelectedItem = _appViewModel.SelectedItem;
+                 }
+             }*/
         }
 
         private async void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -169,6 +228,8 @@ namespace Certify.UI.Controls
 
         private void ResetFilter()
         {
+            _appViewModel.FilterKeyword = string.Empty;
+
             txtFilter.Text = "";
             txtFilter.Focus();
 
@@ -370,6 +431,16 @@ namespace Certify.UI.Controls
         private void GettingStarted_FilterApplied(string filter)
         {
             txtFilter.Text = filter;
+        }
+
+        private async void Prev_Click(object sender, RoutedEventArgs e)
+        {
+            await _appViewModel.ManagedCertificatesPrevPage();
+        }
+
+        private async void Next_Click(object sender, RoutedEventArgs e)
+        {
+            await _appViewModel.ManagedCertificatesNextPage();
         }
     }
 

@@ -3,6 +3,18 @@ namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
+        public enum SortMode
+        {
+            /// <summary>
+            /// Sort by Name, Ascending
+            /// </summary>
+            NAME_ASC,
+            /// <summary>
+            /// Sort by Date Last Renewed or Last Renewal Attempt if not yet renewed, Ascending
+            /// </summary>
+            RENEWAL_ASC
+        }
+
         public static readonly ManagedCertificateFilter ALL = new() { MaxResults = -1 };
 
         // optional filter on Id 
@@ -57,5 +69,7 @@ namespace Certify.Models
         /// Optonal description for the current set of filters (e.g. specific tests)
         /// </summary>
         public string FilterDescription { get; set; }
+
+        public SortMode OrderBy { get; set; } = ManagedCertificateFilter.SortMode.NAME_ASC;
     }
 }

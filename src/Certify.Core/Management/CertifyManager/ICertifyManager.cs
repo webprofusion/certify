@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Certify.Config;
 using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -27,6 +28,8 @@ namespace Certify.Management
         Task<ManagedCertificate> GetManagedCertificate(string id);
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter = null);
+        Task<ManagedCertificateSearchResult> GetManagedCertificateResults(ManagedCertificateFilter filter = null);
+        Task<Certify.Models.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter = null);
 
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 
@@ -58,8 +61,6 @@ namespace Certify.Management
         Task<ActionResult> RemoveCertificateAuthority(string id);
         Task<List<SiteInfo>> GetPrimaryWebSites(StandardServerTypes serverType, bool ignoreStoppedSites, string itemId = null);
 
-        void BeginTrackingProgress(RequestProgressState state);
-
         Task<List<CertificateRequestResult>> RedeployManagedCertificates(ManagedCertificateFilter filter, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false);
 
         Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false);
@@ -72,15 +73,13 @@ namespace Certify.Management
 
         Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
-        RequestProgressState GetRequestProgressState(string managedItemId);
-
         Task<bool> PerformRenewalTasks();
 
-        Task<bool> PerformDailyTasks();
+        Task<bool> PerformDailyMaintenanceTasks();
 
         Task PerformCertificateCleanup();
 
-        Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null);
+        Task<List<ActionResult>> PerformCertificateMaintenanceTasks(string managedItemId = null);
 
         Task<List<ActionStep>> GeneratePreview(ManagedCertificate item);
 
@@ -94,7 +93,7 @@ namespace Certify.Management
 
         Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config);
 
-        Task<string[]> GetItemLog(string id, int limit = 1000);
+        Task<LogItem[]> GetItemLog(string id, int limit = 1000);
 
         Task<string[]> GetServiceLog(string logType, int limit = 10000);
 
@@ -111,5 +110,6 @@ namespace Certify.Management
         Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
         Task<ActionResult> TestCredentials(string storageKey);
+        Task<Core.Management.Access.IAccessControl> GetCurrentAccessControl();
     }
 }

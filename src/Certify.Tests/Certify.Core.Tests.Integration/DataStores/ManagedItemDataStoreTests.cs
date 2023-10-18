@@ -11,7 +11,7 @@ using Certify.Models;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests
+namespace Certify.Core.Tests.DataStores
 {
     [TestClass]
     public class ManagedItemDataStoreTests
@@ -58,7 +58,7 @@ namespace Certify.Core.Tests
             }
             else
             {
-                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupport store type " + storeType);
+                throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
         }
 
@@ -101,9 +101,13 @@ namespace Certify.Core.Tests
             try
             {
                 var managedCertificate = await itemManager.Update(testCert);
+                var filter = new ManagedCertificateFilter { MaxResults = 10 };
+                var managedCertificates = await itemManager.Find(filter);
 
-                var managedCertificates = await itemManager.Find(new ManagedCertificateFilter { MaxResults = 10 });
                 Assert.IsTrue(managedCertificates.Count > 0);
+
+                var total = await itemManager.CountAll(filter);
+                Assert.IsTrue(total > 0);
             }
             finally
             {
@@ -342,11 +346,12 @@ namespace Certify.Core.Tests
                     newTestItem.Name = "FilterMultiTest_" + i;
                     newTestItem.Id = Guid.NewGuid().ToString();
                     newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
-                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(new Random().Next(5, 90));
-                    newTestItem.DateStart = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
-                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 60));
-                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateRenewed = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(rnd.Next(5, 90));
+                    newTestItem.DateStart = newTestItem.DateExpiry.Value.AddDays(-rnd.Next(1, 30));
+                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 60));
+                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 30));
+                    newTestItem.DateRenewed = newTestItem.DateStart;
+                    newTestItem.DateLastRenewalAttempt = newTestItem.DateRenewed;
 
                     if (rnd.Next(0, 10) >= 8)
                     {
@@ -365,11 +370,12 @@ namespace Certify.Core.Tests
                     newTestItem.Name = "ExtraMultiTest_" + i;
                     newTestItem.Id = Guid.NewGuid().ToString();
                     newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
-                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(new Random().Next(5, 90));
-                    newTestItem.DateStart = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
-                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-new Random().Next(1, 30));
-                    newTestItem.DateRenewed = DateTimeOffset.UtcNow.AddDays(-new Random().Next(1, 30));
+                    newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(rnd.Next(5, 90));
+                    newTestItem.DateStart = DateTimeOffset.UtcNow.AddDays(-rnd.Next(1, 30));
+                    newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 30));
+                    newTestItem.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 30));
+                    newTestItem.DateRenewed = DateTimeOffset.UtcNow.AddDays(-rnd.Next(1, 30));
+                    newTestItem.DateLastRenewalAttempt = newTestItem.DateRenewed;
 
                     inMemoryList.Add(newTestItem);
                 }
@@ -423,6 +429,7 @@ namespace Certify.Core.Tests
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=0, PageSize =5, FilterDescription="Paging test 0" },
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=1, PageSize =5, FilterDescription="Paging test 1" },
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=2, PageSize =5, FilterDescription="Paging test 3" },
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=2, PageSize =5, FilterDescription="Paging test 4 with sorting by renewal date", OrderBy= ManagedCertificateFilter.SortMode.RENEWAL_ASC },
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeType ="http-01", FilterDescription="Challenge type filter"},
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeProvider ="A.Test.Provider", FilterDescription="Challenge provider filter"},
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", StoredCredentialKey ="ABCD123", FilterDescription="Stored Credential filter"}
@@ -443,9 +450,21 @@ namespace Certify.Core.Tests
                            && (filter.ChallengeType == null || i.RequestConfig.Challenges.Any(c => c.ChallengeType == filter.ChallengeType))
                            && (filter.ChallengeProvider == null || i.RequestConfig.Challenges.Any(c => c.ChallengeProvider == filter.ChallengeProvider))
                            && (filter.StoredCredentialKey == null || i.RequestConfig.Challenges.Any(c => c.ChallengeCredentialKey == filter.StoredCredentialKey))
-                        )
-                        .OrderBy(t => t.Name)
-                        .AsQueryable();
+                        ).AsQueryable();
+
+                    if (filter.OrderBy == ManagedCertificateFilter.SortMode.NAME_ASC)
+                    {
+                        expectedResult = expectedResult
+                            .OrderBy(t => t.Name)
+                            .AsQueryable();
+                    }
+
+                    if (filter.OrderBy == ManagedCertificateFilter.SortMode.RENEWAL_ASC)
+                    {
+                        expectedResult = expectedResult
+                            .OrderBy(t => t.DateLastRenewalAttempt)
+                            .AsQueryable();
+                    }
 
                     if (filter.PageIndex != null && filter.PageSize != null)
                     {
@@ -467,8 +486,17 @@ namespace Certify.Core.Tests
 
                     Assert.AreEqual(expectedResult.Count(), testResult.Count, filter.FilterDescription);
 
-                    Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
-                    Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
+                    if (filter.OrderBy == ManagedCertificateFilter.SortMode.NAME_ASC)
+                    {
+                        Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
+                        Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
+                    }
+
+                    if (filter.OrderBy == ManagedCertificateFilter.SortMode.RENEWAL_ASC)
+                    {
+                        Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
+                        Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
+                    }
                 }
             }
             finally

@@ -110,6 +110,18 @@ namespace Certify.Models
         }
     }
 
+    public class ManagedCertificateSearchResult
+    {
+        /// <summary>
+        /// Results in this search (may be a paged subset)
+        /// </summary>
+        public IEnumerable<ManagedCertificate> Results { get; set; } = Enumerable.Empty<ManagedCertificate>();
+        /// <summary>
+        /// Total results available
+        /// </summary>
+        public long TotalResults { get; set; }
+    }
+
     public class ManagedCertificate : BindableBase
     {
         public ManagedCertificate()
@@ -768,7 +780,7 @@ namespace Certify.Models
                     }
 
                     var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
-                    var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
+                    var targetRenewalDate = s.DateStart != null ? s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart) : s.DateRenewed.Value;
                     nextRenewalAttemptDate = targetRenewalDate;
 
                     if (targetRenewalDate <= checkDate)

@@ -78,6 +78,7 @@ namespace Certify.Models
         /// <summary>
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
+        [Obsolete("Populate the zone id parameter in the Parameters collection instead")]
         public string? ZoneId { get; set; }
 
         /// <summary>
@@ -350,7 +351,7 @@ namespace Certify.Models
                 identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
             }
 
-            if (SubjectIPAddresses?.Any() == true)
+            if (SubjectIPAddresses?.Length > 0)
             {
                 foreach (var ip in SubjectIPAddresses)
                 {
@@ -368,7 +369,10 @@ namespace Certify.Models
                     if (atc != null)
                     {
                         var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        if (parsedAtc != null)
+                        {
+                            identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        }
                     }
                 }
             }

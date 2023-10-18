@@ -7,7 +7,9 @@ using System.Web.Http.Cors;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Config;
+using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Serilog;
 
@@ -31,6 +33,21 @@ namespace Certify.Service.Controllers
             DebugLog();
 
             return await _certifyManager.GetManagedCertificates(filter);
+        }
+
+        // Get List of Top N Managed Certificates, filtered by title, as a Search Result with total count
+        [HttpPost, Route("results")]
+        public async Task<ManagedCertificateSearchResult> GetResults(ManagedCertificateFilter filter)
+        {
+            DebugLog();
+            return await _certifyManager.GetManagedCertificateResults(filter);
+        }
+
+        [HttpPost, Route("summary")]
+        public async Task<Summary> GetSummary(ManagedCertificateFilter filter)
+        {
+            DebugLog();
+            return await _certifyManager.GetManagedCertificateSummary(filter);
         }
 
         [HttpGet, Route("{id}")]
@@ -68,9 +85,6 @@ namespace Certify.Service.Controllers
             var progressState = new RequestProgressState(RequestState.Running, "Starting Tests..", managedCertificate);
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-
-            //begin monitoring progress
-            _certifyManager.BeginTrackingProgress(progressState);
 
             // perform challenge response test, log to string list and return in result
             var logList = new List<string>();
@@ -161,9 +175,6 @@ namespace Certify.Service.Controllers
 
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
 
-            //begin monitoring progress
-            _certifyManager.BeginTrackingProgress(progressState);
-
             //begin request
             var result = await _certifyManager.PerformCertificateRequest(
                                                                            null,
@@ -175,17 +186,8 @@ namespace Certify.Service.Controllers
             return result;
         }
 
-        [HttpGet, Route("requeststatus/{managedItemId}")]
-        public RequestProgressState CheckCertificateRequest(string managedItemId)
-        {
-            DebugLog();
-
-            //TODO: check current status of request in progress
-            return _certifyManager.GetRequestProgressState(managedItemId);
-        }
-
         [HttpGet, Route("log/{managedItemId}/{limit}")]
-        public async Task<string[]> GetLog(string managedItemId, int limit)
+        public async Task<LogItem[]> GetLog(string managedItemId, int limit)
         {
             DebugLog();
             return await _certifyManager.GetItemLog(managedItemId, limit);
@@ -295,7 +297,7 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return await _certifyManager.PerformCertificateMaintenance(id);
+            return await _certifyManager.PerformCertificateMaintenanceTasks(id);
         }
 
         internal class ProgressLogSink : Serilog.Core.ILogEventSink

@@ -82,7 +82,8 @@ namespace Certify.Config.Migration
     public class ImportSettings
     {
         public string? EncryptionSecret { get; set; } = string.Empty;
-        public bool OverwriteExisting { get; set; } = false;
+        public bool OverwriteExisting { get; set; }
+        public bool IncludeDeployment { get; set; }
     }
 
     public class ExportRequest

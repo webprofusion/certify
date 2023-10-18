@@ -158,7 +158,7 @@
       <Version>4.7.0.9</Version>
     </PackageReference>
     <PackageReference Include="MahApps.Metro">
-      <Version>2.4.10</Version>
+      <Version>3.0.0-alpha0457</Version>
     </PackageReference>
     <PackageReference Include="Markdig.Wpf">
       <Version>0.5.0.1</Version>
@@ -177,10 +177,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Serilog">
-      <Version>2.12.0</Version>
+      <Version>3.0.1</Version>
     </PackageReference>
     <PackageReference Include="System.Diagnostics.DiagnosticSource">
-      <Version>7.0.2</Version>
+      <Version>8.0.0-rc.2.23479.6</Version>
     </PackageReference>
     <PackageReference Include="System.Net.Http">
       <Version>4.3.4</Version>

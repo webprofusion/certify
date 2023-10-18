@@ -304,7 +304,7 @@ namespace Certify.Core.Management
 
             var currentAppVersion = Certify.Management.Util.GetAppVersion();
 
-            if (currentAppVersion != package?.SystemVersion.ToVersion())
+            if (currentAppVersion != package?.SystemVersion?.ToVersion())
             {
                 if (package.SystemVersion == null || AppVersion.IsOtherVersionNewer(AppVersion.FromVersion(package.SystemVersion.ToVersion()), AppVersion.FromVersion(currentAppVersion)))
                 {

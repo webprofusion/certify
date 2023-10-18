@@ -170,7 +170,7 @@ namespace Certify.Management
         /// If true, renewal tasks in batch will run simultaneously
         /// </summary>
         public bool EnableParallelRenewals { get; set; }
-    
+
         /// <summary>
         /// If true, challenge cleanup will only happen after all auth challenges in an order have been processed
         /// </summary>

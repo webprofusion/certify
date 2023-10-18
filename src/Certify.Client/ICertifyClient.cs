@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
 
@@ -13,7 +14,7 @@ namespace Certify.Client
     /// <summary>
     /// Base API
     /// </summary>
-    public interface ICertifyInternalApiClient
+    public partial interface ICertifyInternalApiClient
     {
 
         #region System
@@ -76,6 +77,8 @@ namespace Certify.Client
         #region Managed Certificates
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter);
+        Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter);
+        Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter);
 
         Task<ManagedCertificate> GetManagedCertificate(string managedItemId);
 
@@ -95,8 +98,6 @@ namespace Certify.Client
 
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive);
 
-        Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
-
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
 
         Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
@@ -113,7 +114,7 @@ namespace Certify.Client
 
         Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info);
 
-        Task<string[]> GetItemLog(string id, int limit);
+        Task<Models.API.LogItem[]> GetItemLog(string id, int limit);
 
         #endregion Managed Certificates
 
@@ -128,6 +129,7 @@ namespace Certify.Client
         Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null);
 
         #endregion Accounts
+
     }
 
     /// <summary>

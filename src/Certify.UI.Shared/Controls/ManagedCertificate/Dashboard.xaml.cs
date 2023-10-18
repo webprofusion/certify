@@ -1,9 +1,8 @@
-﻿
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
+﻿using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Certify.UI.ViewModel;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -20,22 +19,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         }
 
-        public class SummaryModel : BindableBase
-        {
-            public int Total { get; set; }
-            public int Healthy { get; set; }
-            public int Error { get; set; }
-            public int Warning { get; set; }
-            public int AwaitingUser { get; set; }
-            public int InvalidConfig { get; set; }
-
-            public int NoCertificate { get; set; }
-
-            public int TotalDomains { get; set; }
-
-            public ObservableCollection<DailySummary> DailyRenewals { get; set; }
-        }
-        public SummaryModel ViewModel { get; set; } = new SummaryModel();
+        public Summary ViewModel { get; set; } = new Summary();
 
         protected ViewModel.AppViewModel _appViewModel => AppViewModel.Current;
 
@@ -57,25 +41,24 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
         }
 
-        public void RefreshSummary()
+        public async Task RefreshSummary()
         {
+            var summary = await AppViewModel.Current.GetManagedCertificateSummary();
 
-            if (AppViewModel.Current.ManagedCertificates?.Any() == true)
+            if (summary?.Total > 0)
             {
 
-                var ms = AppViewModel.Current.ManagedCertificates;
-
-                ViewModel.Total = ms.Count();
-                ViewModel.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
-                ViewModel.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
-                ViewModel.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
-                ViewModel.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
-                ViewModel.NoCertificate = ms.Count(c => c.CertificatePath == null);
+                ViewModel.Total = summary.Total;
+                ViewModel.Healthy = summary.Healthy;
+                ViewModel.Error = summary.Error;
+                ViewModel.Warning = summary.Warning;
+                ViewModel.AwaitingUser = summary.AwaitingUser;
+                ViewModel.NoCertificate = summary.NoCertificate;
 
                 // count items with invalid config (e.g. multiple primary domains)
-                ViewModel.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
+                ViewModel.InvalidConfig = summary.InvalidConfig;
 
-                ViewModel.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
+                ViewModel.TotalDomains = summary.TotalDomains;
 
                 PanelTotal.Visibility = ViewModel.Total == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;
                 PanelHealthy.Visibility = ViewModel.Healthy == 0 ? System.Windows.Visibility.Collapsed : System.Windows.Visibility.Visible;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Core.Management;
+using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
@@ -77,11 +77,6 @@ namespace Certify.Management
         private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
 
         /// <summary>
-        /// Set of current in-progress renewals
-        /// </summary>
-        private ConcurrentDictionary<string, RequestProgressState> _progressResults { get; set; }
-
-        /// <summary>
         /// Service for reporting status/progress results back to client(s)
         /// </summary>
         private IStatusReporting _statusReporting { get; set; }
@@ -100,6 +95,10 @@ namespace Certify.Management
         ///  Config info/preferences such as log level, challenge service config, powershell execution policy etc
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
+
+        private System.Timers.Timer _frequentTimer;
+        private System.Timers.Timer _hourlyTimer;
+        private System.Timers.Timer _dailyTimer;
 
         public CertifyManager() : this(true)
         {
@@ -172,8 +171,6 @@ namespace Certify.Management
                 throw (new Exception(msg));
             }
 
-            _progressResults = new ConcurrentDictionary<string, RequestProgressState>();
-
             LoadCertificateAuthorities();
 
             // init remaining utilities and optionally enable telematics
@@ -189,24 +186,47 @@ namespace Certify.Management
 
             _tc?.TrackEvent("ServiceStarted");
 
+            SetupJobs();
+
             _serviceLog?.Information("Certify Manager Started");
 
-            var systemVersion = Util.GetAppVersion().ToString();
-            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
+            await UpgradeSettings();
+        }
 
-            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
-            {
-                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
-                    { "previousVersion", previousVersion },
-                    { "currentVersion", systemVersion }
-                });
+        /// <summary>
+        /// Setup the continuous job tasks for renewals and maintenance
+        /// </summary>
+        private void SetupJobs()
+        {
+            // 5 minute job timer (maintenance etc)
+            _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
+            _frequentTimer.Elapsed += _frequentTimer_Elapsed;
+            _frequentTimer.Start();
 
-                // service has been updated, run any required migrations
-                await PerformServiceUpgrades();
+            // hourly jobs timer (renewal etc)
+            _hourlyTimer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
+            _hourlyTimer.Elapsed += _hourlyTimer_Elapsed;
+            _hourlyTimer.Start();
 
-                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
-                SettingsManager.SaveAppSettings();
-            }
+            // daily jobs timer (cleanup etc)
+            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000); // every 24 hrs
+            _dailyTimer.Elapsed += _dailyTimer_Elapsed;
+            _dailyTimer.Start();
+        }
+
+        private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformDailyMaintenanceTasks();
+        }
+
+        private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformCertificateMaintenanceTasks();
+        }
+
+        private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformRenewalTasks();
         }
 
         private async Task PerformServiceUpgrades()
@@ -439,26 +459,6 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Begin/restart progress tracking for renewal requests of a given managed certificate
-        /// </summary>
-        /// <param name="state"></param>
-        public void BeginTrackingProgress(RequestProgressState state)
-        {
-            try
-            {
-                if (state?.Id != null)
-                {
-                    _progressResults.AddOrUpdate(state.Id, state, (id, s) => state);
-                }
-            }
-            catch (Exception)
-            {
-                // failed to add progress tracking, likely concurrency issue
-                _serviceLog?.Warning($"Failed to add tracking progress for {state.ManagedCertificate.Id}. Likely concurrency issue.");
-            }
-        }
-
-        /// <summary>
         /// Update progress tracking and send status report to client(s). optionally logging to service log
         /// </summary>
         /// <param name="progress"></param>
@@ -502,23 +502,6 @@ namespace Certify.Management
         }, _loggingLevelSwitch);
 
         /// <summary>
-        /// Get current progress result for the given managed certificate id
-        /// </summary>
-        /// <param name="managedItemId"></param>
-        /// <returns></returns>
-        public RequestProgressState GetRequestProgressState(string managedItemId)
-        {
-            if (_progressResults.TryGetValue(managedItemId, out var progress))
-            {
-                return progress;
-            }
-            else
-            {
-                return new RequestProgressState(RequestState.NotRunning, "No request in progress", null);
-            }
-        }
-
-        /// <summary>
         /// When called, look for periodic maintenance tasks we can perform such as renewal
         /// </summary>
         /// <returns>  </returns>
@@ -560,21 +543,24 @@ namespace Certify.Management
             var hasError = false;
             if (!importResult.Any(i => i.HasError))
             {
-
-                var deploySteps = new List<ActionStep>();
-                foreach (var m in importRequest.Package.Content.ManagedCertificates)
+                if (importRequest.Settings.IncludeDeployment)
                 {
-                    var managedCert = await GetManagedCertificate(m.Id);
 
-                    if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
+                    var deploySteps = new List<ActionStep>();
+                    foreach (var m in importRequest.Package.Content.ManagedCertificates)
                     {
-                        var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
+                        var managedCert = await GetManagedCertificate(m.Id);
 
-                        deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
+                        if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
+                        {
+                            var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
+
+                            deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
+                        }
                     }
-                }
 
-                importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
+                    importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
+                }
             }
             else
             {
@@ -656,6 +642,18 @@ namespace Certify.Management
             }
 
             return Task.FromResult(true);
+        }
+
+        private IAccessControl _accessControl;
+        public Task<IAccessControl> GetCurrentAccessControl()
+        {
+            if (_accessControl == null)
+            {
+                var store = new SQLiteAccessControlStore();
+                _accessControl = new AccessControl(_serviceLog, store);
+            }
+
+            return Task.FromResult(_accessControl);
         }
     }
 }

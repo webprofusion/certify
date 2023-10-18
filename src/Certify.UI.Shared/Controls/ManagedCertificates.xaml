@@ -13,7 +13,7 @@
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     Width="970"
     Height="487"
-    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     Loaded="UserControl_OnLoaded"
@@ -88,7 +88,27 @@
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
                     TextChanged="TxtFilter_TextChanged" />
             </DockPanel>
-
+            <DockPanel
+                Margin="4,8,4,4"
+                LastChildFill="False" Visibility="{Binding HasPagesOfResults, Converter={StaticResource BoolToVisConverter }}"
+                DockPanel.Dock="Bottom">
+                <Button x:Name="Prev" Click="Prev_Click" DockPanel.Dock="Left"> <fa:FontAwesome
+                        Margin="4,4,4,4"
+                        VerticalAlignment="top"
+                        FontSize="10"
+                        Icon="ChevronLeft" />
+                </Button>
+                <TextBlock Margin="16,4,16,4" DockPanel.Dock="Left" TextAlignment="Center"
+                           Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                           Text="{Binding ResultPageDescription}" />
+                <Button x:Name="Next" Click="Next_Click" DockPanel.Dock="Right">
+                    <fa:FontAwesome
+                        Margin="4,4,4,4"
+                        VerticalAlignment="top"
+                        FontSize="10"
+                        Icon="ChevronRight" />
+                </Button>
+            </DockPanel>
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
@@ -103,7 +123,8 @@
                 SelectionMode="Single"
                 VirtualizingPanel.IsVirtualizing="True">
                 <ListView.ContextMenu>
-                    <ContextMenu x:Name="ListContextMenu" PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
+                    <ContextMenu x:Name="ListContextMenu"
+                                 PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
                         <MenuItem
                             Click="SetListSortOrder_Click"
                             Header="Sort By Name"
@@ -165,7 +186,8 @@
                                         Foreground="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateColourConverter}}"
                                         Text="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateConverter}}" />
 
-                                    <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
                                         <TextBlock
                                             Margin="0,0,0,0"
                                             FontSize="10"
@@ -186,6 +208,7 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
         </DockPanel>
         <GridSplitter
             Grid.Column="1"

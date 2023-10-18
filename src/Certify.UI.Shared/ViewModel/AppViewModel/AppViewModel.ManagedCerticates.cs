@@ -8,6 +8,8 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Models.API;
+using Certify.Models.Reporting;
 using Certify.UI.Shared;
 using PropertyChanged;
 
@@ -15,7 +17,6 @@ namespace Certify.UI.ViewModel
 {
     public partial class AppViewModel : BindableBase
     {
-
         /// <summary>
         /// If set, there are one or more vault items available to be imported as managed sites 
         /// </summary>
@@ -80,17 +81,21 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        public long TotalManagedCertificates { get; set; }
+
         /// <summary>
         /// Cached count of the number of managed certificate (not counting external certificate managers)
         /// </summary>
         [DependsOn(nameof(ManagedCertificates))]
         public int NumManagedCerts
         {
-            get
-            {
-                return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0;
-            }
+            get { return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0; }
         }
+
+        int _filterPageIndex = 0;
+        int _filterPageSize = 15;
+
+        public string FilterKeyword { get; set; } = string.Empty;
 
         /// <summary>
         /// Refresh the cached list of managed certs via the connected service
@@ -102,21 +107,61 @@ namespace Certify.UI.ViewModel
 
             // include external managed certs if enabled
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
+            filter.PageSize = _filterPageSize;
+            filter.PageIndex = _filterPageIndex;
 
-            var list = await _certifyClient.GetManagedCertificates(filter);
+            filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
 
-            foreach (var i in list)
+            var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+
+            ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
+            TotalManagedCertificates = result.TotalResults;
+        }
+
+        public async Task<Summary> GetManagedCertificateSummary()
+        {
+            if (!IsServiceAvailable)
             {
-                i.IsChanged = false;
-
-                if (!HasDeprecatedChallengeTypes && i.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
-                {
-                    HasDeprecatedChallengeTypes = true;
-                }
+                return null;
             }
 
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(list);
+            var filter = new ManagedCertificateFilter();
+
+            return await _certifyClient?.GetManagedCertificateSummary(filter);
         }
+
+        public async Task ManagedCertificatesNextPage()
+        {
+            if (ManagedCertificates.Count() >= _filterPageSize)
+            {
+                _filterPageIndex++;
+                await RefreshManagedCertificates();
+                RaisePropertyChangedEvent(nameof(ResultPageDescription));
+            }
+        }
+
+        public async Task ManagedCertificatesPrevPage()
+        {
+            if (_filterPageIndex > 0)
+            {
+                _filterPageIndex--;
+                await RefreshManagedCertificates();
+                RaisePropertyChangedEvent(nameof(ResultPageDescription));
+            }
+        }
+
+        /// <summary>
+        /// Formatted description of the current page index in the result set
+        /// </summary>
+        public string ResultPageDescription
+        {
+            get { return $"Page {_filterPageIndex + 1} of {Math.Ceiling((decimal)TotalManagedCertificates / _filterPageSize)}"; }
+        }
+
+        /// <summary>
+        /// True if there are more managed certificates than the current result set batch size
+        /// </summary>
+        public bool HasPagesOfResults => TotalManagedCertificates > _filterPageSize;
 
         /// <summary>
         /// Add/Update a managed certificate via service
@@ -125,7 +170,6 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
-
             // get existing
 
             var existing = await _certifyClient.GetManagedCertificate(item.Id);
@@ -260,7 +304,6 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
         {
-
             await _managedCertCacheSemaphore.WaitAsync();
 
             try
@@ -381,6 +424,7 @@ namespace Certify.UI.ViewModel
         /// <param name="item"></param>
         /// <returns></returns>
         public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await _certifyClient.PreviewActions(item);
+
         /// <summary>
         /// Perform re-download last certificate for a given managed certificate
         /// </summary>
@@ -404,7 +448,13 @@ namespace Certify.UI.ViewModel
             }
             catch (TaskCanceledException)
             {
-                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again." } };
+                return new List<StatusMessage>
+                {
+                    new StatusMessage
+                    {
+                        IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again."
+                    }
+                };
             }
         }
 
@@ -433,7 +483,6 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Re-deploy all managed certificates to any applicable bindings (re-store etc as applicable), optionally including Tasks
         /// </summary>
-
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
         internal async Task<List<CertificateRequestResult>> RedeployManagedCertificatess(bool isPreviewOnly, bool includeDeploymentTasks)
@@ -468,7 +517,7 @@ namespace Certify.UI.ViewModel
         /// <param name="id"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        public async Task<string[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
             var result = await _certifyClient.GetItemLog(id, limit);
             return result;
