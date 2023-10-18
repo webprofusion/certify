@@ -278,10 +278,11 @@ namespace Certify.Core.Tests.Unit
 
             // Update stored security principle
             adminPrinciple.Email = "admin@test.com";
-            _ = await access.UpdateSecurityPrinciple(adminPrinciple, contextUserId);
+            var updated = await access.UpdateSecurityPrinciple(adminPrinciple, contextUserId);
             storedPrinciple = (await access.GetSecurityPrinciples()).Find(p => p.Id == adminPrinciple.Id);
 
             // Validate stored security principle email after update
+            Assert.IsTrue(updated, "Method UpdateSecurityPrinciple() should return true on a successful update");
             Assert.AreEqual(storedPrinciple.Email, adminPrinciple.Email, $"Stored security principle email address should be {adminPrinciple.Email}");
         }
 
@@ -308,10 +309,11 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNotNull(storedPrinciple, $"Stored security principle {adminPrinciple.Id} should exist");
 
             // Delete stored security principle
-            _ = await access.DeleteSecurityPrinciple(adminPrinciple.Id, contextUserId);
+            var deleted = await access.DeleteSecurityPrinciple(adminPrinciple.Id, contextUserId);
             storedPrinciple = (await access.GetSecurityPrinciples()).Find(p => p.Id == adminPrinciple.Id);
 
             // Validate stored security principle does not exist after delete
+            Assert.IsTrue(deleted, "Method DeleteSecurityPrinciple() should return true on a successful deletion");
             Assert.IsNull(storedPrinciple, $"Stored security principle {adminPrinciple.Id} should be deleted");
         }
     }
