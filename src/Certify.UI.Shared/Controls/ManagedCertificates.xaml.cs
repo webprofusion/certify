@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -138,7 +138,7 @@ namespace Certify.UI.Controls
                 Cancel(lastCancellationTokenSource);
 
                 var tokenSrc = lastCancellationTokenSource = new CancellationTokenSource();
-                
+
                 try
                 {
                     await Task.Delay(new TimeSpan(milliseconds), tokenSrc.Token);
