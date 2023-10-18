@@ -6,6 +6,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Config.Migration;
+using Certify.Core.Management;
+using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
@@ -647,6 +650,18 @@ namespace Certify.Management
             }
 
             return Task.FromResult(true);
+        }
+
+        private IAccessControl _accessControl;
+        public Task<IAccessControl> GetCurrentAccessControl()
+        {
+            if (_accessControl == null)
+            {
+                var store = new SQLiteAccessControlStore();
+                _accessControl = new AccessControl(_serviceLog, store);
+            }
+
+            return Task.FromResult(_accessControl);
         }
     }
 }
