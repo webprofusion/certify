@@ -207,7 +207,7 @@ namespace Certify.Core.Management.Access
         {
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                _log?.Warning("User {contextUserId} attempted to use updated password for [{username} - {id}] without being in required role.");
+                _log?.Warning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, id);
                 return false;
             }
 
@@ -278,8 +278,6 @@ namespace Certify.Core.Management.Access
             return hashed;
         }
 
-        public Task<List<ResourcePolicy>> GetSecurityPrincipleResourcePolicies(string contextUserId, string userId) => throw new NotImplementedException();
-
         public async Task AddRole(Role r)
         {
             await _store.Add(nameof(Role), r);
@@ -293,6 +291,20 @@ namespace Certify.Core.Management.Access
         public async Task AddAction(ResourceAction action)
         {
             await _store.Add(nameof(ResourceAction), action);
+        }
+
+        public async Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id)
+        {
+
+            if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                _log?.Warning("User {contextUserId} attempted to read assigned role for [{id}] without being in required role.", contextUserId, id);
+                return new List<AssignedRole>();
+            }
+
+            var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
+
+            return assignedRoles.Where(r => r.SecurityPrincipleId == id).ToList();
         }
     }
 }
