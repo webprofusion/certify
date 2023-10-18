@@ -160,7 +160,7 @@ namespace Certify.Core.Management.Access
         /// <returns></returns>
         public async Task<bool> DeleteSecurityPrinciple(string id, string contextUserId)
         {
-            if (!await IsPrincipleInRole(contextUserId, StandardRoles.Administrator.Id, contextUserId))
+            if (!await IsPrincipleInRole(id, StandardRoles.Administrator.Id, contextUserId))
             {
                 _log?.Warning($"User {contextUserId} attempted to use DeleteSecurityPrinciple [{id}] without being in required role.");
                 return false;
