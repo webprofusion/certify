@@ -160,6 +160,11 @@ namespace Certify.Core.Tests.Unit
 
             // assign security principles to roles
             var assignedRoles = new List<AssignedRole> {
+                 // test administrator
+                new AssignedRole{
+                    RoleId=StandardRoles.Administrator.Id,
+                    SecurityPrincipleId="[test]"
+                },
                 // administrator
                 new AssignedRole{
                     RoleId=StandardRoles.Administrator.Id,
@@ -183,6 +188,9 @@ namespace Certify.Core.Tests.Unit
             }
 
             // assert
+
+            var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, "admin_01");
+            Assert.AreEqual(1, adminAssignedRoles.Count);
 
             var hasAccess = await access.IsPrincipleInRole(contextUserId, "admin_01", StandardRoles.Administrator.Id);
             Assert.IsTrue(hasAccess, "User should be in role");

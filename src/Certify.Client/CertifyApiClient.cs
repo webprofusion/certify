@@ -10,12 +10,12 @@ using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
-using Certify.Models.Utils;
+using Certify.Models.Config.AccessControl;
 using Certify.Models.Reporting;
+using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
 using Polly;
-using Certify.Models.Config.AccessControl;
 
 namespace Certify.Client
 {
@@ -56,7 +56,7 @@ namespace Certify.Client
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine
-    public class CertifyApiClient : ICertifyInternalApiClient
+    public partial class CertifyApiClient : ICertifyInternalApiClient
     {
         private HttpClient _client;
         private readonly string _baseUri = "/api/";
@@ -712,8 +712,14 @@ namespace Certify.Client
         public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples()
         {
             var result = await FetchAsync("access/securityprinciples");
-            return JsonConvert.DeserializeObject<List<SecurityPrinciple>>(result);
+            return JsonToObject<List<SecurityPrinciple>>(result);
         }
+
         #endregion
+
+        private T JsonToObject<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json);
+        }
     }
 }
