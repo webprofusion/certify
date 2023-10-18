@@ -61,9 +61,10 @@ namespace Certify.Management
                 _itemManager,
                 settings,
                 prefs,
-           
+
                 ReportProgress, IsManagedCertificateRunning,
-                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) => { 
+                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
+                {
                     return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
                 },
                 progressTrackers);

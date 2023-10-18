@@ -55,6 +55,6 @@ namespace Certify.Models
         /// <summary>
         /// If true, perform batches of items in parallel
         /// </summary>
-        public bool PerformParallelRenewals{ get; set; }
+        public bool PerformParallelRenewals { get; set; }
     }
 }

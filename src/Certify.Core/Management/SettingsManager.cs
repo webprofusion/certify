@@ -170,7 +170,7 @@ namespace Certify.Management
         /// If true, renewal tasks in batch will run simultaneously
         /// </summary>
         public bool EnableParallelRenewals { get; set; }
-    
+
         /// <summary>
         /// If set, customizes the ACME retry interval for operations such as polling order status where Retry After not supported by CA
         /// </summary>

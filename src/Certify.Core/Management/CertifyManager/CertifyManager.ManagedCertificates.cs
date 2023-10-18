@@ -326,7 +326,9 @@ namespace Certify.Management
                 var serverCheck = await serverProvider.RunConfigurationDiagnostics(managedCertificate.ServerSiteId);
                 results.AddRange(serverCheck.ConvertAll(x => new StatusMessage
                 {
-                    IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description
+                    IsOK = !x.HasError,
+                    HasWarning = x.HasWarning,
+                    Message = x.Description
                 }));
             }
 
@@ -341,7 +343,8 @@ namespace Certify.Management
                     {
                         results.Add(new StatusMessage
                         {
-                            IsOK = true, Message = "Http Challenge Server process available."
+                            IsOK = true,
+                            Message = "Http Challenge Server process available."
                         });
 
                         httpChallengeServerActive = true;
@@ -350,7 +353,9 @@ namespace Certify.Management
                     {
                         results.Add(new StatusMessage
                         {
-                            IsOK = true, HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to the default web server process (if available)."
+                            IsOK = true,
+                            HasWarning = true,
+                            Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to the default web server process (if available)."
                         });
                     }
                 }

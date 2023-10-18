@@ -9,8 +9,8 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
-using Certify.Models.Utils;
 using Certify.Models.Reporting;
+using Certify.Models.Utils;
 using Serilog;
 
 namespace Certify.Service.Controllers
