@@ -253,5 +253,36 @@ namespace Certify.Core.Tests.Unit
             var isAuthorised = await access.IsAuthorised("randomuser", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "random.microsoft.com", contextUserId);
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
         }
+
+        [TestMethod]
+        public async Task TestAccessControlUpdateSecurityPrinciple()
+        {
+            var log = new LoggerConfiguration()
+                   .WriteTo.Debug()
+                   .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principle
+            var adminPrinciple = this.GetTestAdminSecurityPrinciple();
+            _ = await access.AddSecurityPrinciple(adminPrinciple, contextUserId, bypassIntegrityCheck: true);
+
+            // Assign resource role per principle
+            var systemResourceProfile = GetSystemResourceProfile();
+            _ = await access.AddResourceProfile(systemResourceProfile, contextUserId, bypassIntegrityCheck: true);
+
+            // Validate stored security principle email before update
+            var storedPrinciple = (await access.GetSecurityPrinciples()).Find(p => p.Id == adminPrinciple.Id);
+            Assert.AreEqual(storedPrinciple.Email, adminPrinciple.Email, $"Stored security principle email address should be {adminPrinciple.Email}");
+
+            // Update stored security principle
+            adminPrinciple.Email = "admin@test.com";
+            _ = await access.UpdateSecurityPrinciple(adminPrinciple, contextUserId);
+            storedPrinciple = (await access.GetSecurityPrinciples()).Find(p => p.Id == adminPrinciple.Id);
+
+            // Validate stored security principle email after update
+            Assert.AreEqual(storedPrinciple.Email, adminPrinciple.Email, $"Stored security principle email address should be {adminPrinciple.Email}");
+        }
     }
 }

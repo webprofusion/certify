@@ -131,7 +131,7 @@ namespace Certify.Core.Management.Access
         public async Task<bool> UpdateSecurityPrinciple(SecurityPrinciple principle, string contextUserId)
         {
 
-            if (!await IsPrincipleInRole(contextUserId, StandardRoles.Administrator.Id, contextUserId))
+            if (!await IsPrincipleInRole(principle.Id, StandardRoles.Administrator.Id, contextUserId))
             {
                 _log?.Warning($"User {contextUserId} attempted to use UpdateSecurityPrinciple [{principle?.Id}] without being in required role.");
                 return false;
