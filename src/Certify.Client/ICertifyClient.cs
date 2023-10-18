@@ -4,10 +4,9 @@ using System.Threading.Tasks;
 using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Models.Utils;
 using Certify.Models.Reporting;
+using Certify.Models.Utils;
 using Certify.Shared;
-using Certify.Models.Config.AccessControl;
 
 namespace Certify.Client
 {
@@ -15,7 +14,7 @@ namespace Certify.Client
     /// <summary>
     /// Base API
     /// </summary>
-    public interface ICertifyInternalApiClient
+    public partial interface ICertifyInternalApiClient
     {
 
         #region System
@@ -131,10 +130,7 @@ namespace Certify.Client
         Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null);
 
         #endregion Accounts
-        Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples();
-        #region Access Control
 
-        #endregion
     }
 
     /// <summary>
