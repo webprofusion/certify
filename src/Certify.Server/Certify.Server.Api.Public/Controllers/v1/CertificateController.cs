@@ -98,7 +98,7 @@ namespace Certify.Server.API.Controllers
 
             var log = await _client.GetItemLog(managedCertId, maxLines);
 
-          
+
             return new OkObjectResult(new LogResult { Items = log });
         }
 
@@ -106,6 +106,8 @@ namespace Certify.Server.API.Controllers
         /// Get all managed certificates matching criteria
         /// </summary>
         /// <param name="keyword"></param>
+        /// <param name="page"></param>
+        /// <param name="pageSize"></param>
         /// <returns></returns>
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -144,7 +146,7 @@ namespace Certify.Server.API.Controllers
 
             return new OkObjectResult(result);
         }
-        
+
         /// <summary>
         /// Get summary counts of all managed certs
         /// </summary>
@@ -162,7 +164,7 @@ namespace Certify.Server.API.Controllers
                 {
                     Keyword = keyword
                 });
-            
+
             return new OkObjectResult(summary);
         }
 

@@ -99,7 +99,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     var log = await AppViewModel.GetItemLog(ItemViewModel.SelectedItem.Id, 1000);
                     var tempPath = System.IO.Path.GetTempFileName() + ".txt";
 
-                    System.IO.File.WriteAllLines(tempPath, log.Select(i=>i.ToString()));
+                    System.IO.File.WriteAllLines(tempPath, log.Select(i => i.ToString()));
                     _tempLogFilePath = tempPath;
 
                     try
