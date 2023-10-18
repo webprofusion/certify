@@ -114,7 +114,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddSecurityPrinciple(SecurityPrinciple principle, string contextUserId, bool bypassIntegrityCheck = false)
         {
-            if (!await IsPrincipleInRole(contextUserId, StandardRoles.Administrator.Id, contextUserId) && !bypassIntegrityCheck)
+            if (!await IsPrincipleInRole(principle.Id, StandardRoles.Administrator.Id, contextUserId) && !bypassIntegrityCheck)
             {
                 _log?.Warning($"User {contextUserId} attempted to use AddSecurityPrinciple [{principle?.Id}] without being in required role.");
                 return false;
