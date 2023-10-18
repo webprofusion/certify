@@ -1,10 +1,7 @@
-using Certify.Models.API;
 using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using Certify.Management;
-using Certify.Models;
-using Certify.Shared.Core.Utils.PKI;
+using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit

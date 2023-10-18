@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Management;
-using Certify.UI.ViewModel;
 using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
