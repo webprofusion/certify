@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Certify.CertificateAuthorities.Definitions;
 
 namespace Certify.Models.API
 {
