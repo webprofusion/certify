@@ -66,7 +66,7 @@ namespace Certify.Management
                 {
                     taskList = managedCert.PreRequestTasks.Where(t => t.Id == taskId);
                 }
-                else
+                else if (managedCert.PostRequestTasks?.Any(t => t.Id == taskId) == true)
                 {
                     taskList = managedCert.PostRequestTasks.Where(t => t.Id == taskId);
                 }
