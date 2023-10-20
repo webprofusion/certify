@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +52,9 @@ namespace Certify.Core.Tests.Unit
         public Task Update<T>(string itemType, T item)
         {
             var o = item as AccessStoreItem;
-            return Task.FromResult(_store.TryUpdate(o.Id, o, o));
+            _store.TryGetValue(o.Id, out var value);
+            var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as AccessStoreItem;
+            return Task.FromResult(_store.TryUpdate(o.Id, o, c));
         }
     }
 
