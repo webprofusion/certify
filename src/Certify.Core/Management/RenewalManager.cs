@@ -257,7 +257,7 @@ namespace Certify.Management
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
             }
 
-            if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Ip))
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Ip) == 1)
             {
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.IP_SINGLE);
             }
@@ -320,7 +320,7 @@ namespace Certify.Management
                 if (fallbackAccounts.Any())
                 {
                     // use the next suitable fallback account
-                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA && f.CertificateAuthorityId != defaultMatchingAccount?.CertificateAuthorityId);
+                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA);
 
                     if (nextFallback != null)
                     {
