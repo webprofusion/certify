@@ -64,9 +64,11 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
-            var updated = _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
-
-            if (updated.IsCompleted != true)
+            try
+            {
+                var updated = _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
+            }
+            catch
             {
                 _log?.Warning($"User {contextUserId} attempted to use UpdateSecurityPrinciple [{principle?.Id}], but was not successful");
                 return false;
@@ -138,7 +140,8 @@ namespace Certify.Core.Management.Access
 
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(actionId)))
             {
-                // if any of the service principles assigned roles are restricted by the type of resource type, check for identifier matches (e.g. role assignment restricted on domains )
+                // if any of the service principles assigned roles are restricted by the type of resource type,
+                // check for identifier matches (e.g. role assignment restricted on domains )
                 if (spSpecificAssignedRoles.Any(a => a.IncludedResources.Any(r => r.ResourceType == resourceType)))
                 {
                     var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
