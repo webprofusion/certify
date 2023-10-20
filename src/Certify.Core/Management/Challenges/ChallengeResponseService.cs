@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -633,7 +633,9 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
+        private DnsChallengeHelper _dnsHelper = null;
+
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -651,9 +653,11 @@ namespace Certify.Core.Management.Challenges
             }
 
             // create DNS records (manually or via automation)
-            var dnsHelper = new DnsChallengeHelper(credentialsManager);
+            if (_dnsHelper == null) {
+                _dnsHelper = new DnsChallengeHelper(credentialsManager);
+            }
 
-            DnsChallengeHelperResult dnsResult;
+            var dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
 
             if (!isCleanupOnly)
             {
@@ -685,7 +689,7 @@ namespace Certify.Core.Management.Challenges
             // configure cleanup actions for use after challenge completes
             pendingAuth.Cleanup = async () =>
                {
-                   _ = await dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
+                   _ = await _dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
                };
 
             return dnsResult;
