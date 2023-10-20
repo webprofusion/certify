@@ -161,16 +161,22 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class AccessControlTests
     {
+        private Loggy loggy;
+        private AccessControl access;
+        private const string contextUserId = "[test]";
+
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            this.loggy = new Loggy(new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger());
+            this.access = new AccessControl(loggy, new MemoryObjectStore());
+        }
+
         [TestMethod]
         public async Task TestAccessControlAddGetSecurityPrinciples()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -190,13 +196,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlGetSecurityPrinciplesNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var securityPrincipleAdded = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.TestAdmin());
 
@@ -207,13 +206,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlAddGetSecurityPrinciple()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -232,13 +224,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlAddGetAssignedRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -272,13 +257,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlGetAssignedRolesNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -292,13 +270,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlAddResourcePolicyNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -318,13 +289,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrinciple()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -364,13 +328,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrincipleNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -389,13 +346,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrincipleBadUpdate()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -431,13 +381,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrinciplePassword()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             var firstPassword = adminSecurityPrinciples[0].Password;
@@ -479,13 +422,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrinciplePasswordNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             var firstPassword = adminSecurityPrinciples[0].Password;
@@ -505,13 +441,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlUpdateSecurityPrinciplePasswordBadPassword()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             var firstPassword = adminSecurityPrinciples[0].Password;
@@ -547,13 +476,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlDeleteSecurityPrinciple()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -591,13 +513,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlDeleteSecurityPrincipleNoRoles()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -619,13 +534,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlDeleteSecurityPrincipleSelfDeletion()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -663,13 +571,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlDeleteSecurityPrincipleBadId()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -707,13 +608,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlIsPrincipleInRole()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
@@ -750,13 +644,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlDomainAuth()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
 
@@ -786,13 +673,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlWildcardDomainAuth()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
 
@@ -826,13 +706,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task TestAccessControlRandomUserAuth()
         {
-            var log = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-            var loggy = new Loggy(log);
-            var access = new AccessControl(loggy, new MemoryObjectStore());
-            var contextUserId = "[test]";
-
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
 
