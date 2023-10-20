@@ -253,7 +253,7 @@ namespace Certify.Providers.DNS.Azure
             catch (Exception exp)
             {
                 // failed
-                _log.Warning($"Azure DNS create recrod failed: {exp.Message}");
+                _log.Warning($"Azure DNS create record failed: {exp.Message}");
                 return new ActionResult { IsSuccess = false, Message = $"DNS TXT Record create failed {exp.Message}" };
             }
         }
