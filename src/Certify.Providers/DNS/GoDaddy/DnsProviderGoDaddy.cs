@@ -43,6 +43,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private string _authKey;
         private string _authSecret;
         private const int _maxZonesPerPage = 250; // go daddy API documentation varies between a 500 and 1000 page limit so we use a smaller number for potential future proofing.
+        private const float _rateLimitMS = (1000*60f)/50f; // max rate limit is 60 calls per minute, so we limit ourselves to 50 per minute.
         private const string _baseUri = "https://api.godaddy.com/v1/";
         private const string _listZonesUri = _baseUri + "domains?limit={0}&marker={1}";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
@@ -121,6 +122,8 @@ namespace Certify.Providers.DNS.GoDaddy
             var records = new List<DnsRecord>();
             var request = CreateRequest(HttpMethod.Get, $"{string.Format(_listRecordsUri, tldName, "TXT")}");
 
+            await Task.Delay((int)_rateLimitMS);
+
             var result = await _client.SendAsync(request);
 
             if (result.IsSuccessStatusCode)
@@ -165,6 +168,8 @@ namespace Certify.Providers.DNS.GoDaddy
 
             request.Content.Headers.ContentType.MediaType = "application/json";
 
+            await Task.Delay((int)_rateLimitMS);
+
             var result = await _client.SendAsync(request);
 
             if (!result.IsSuccessStatusCode)
@@ -202,6 +207,7 @@ namespace Certify.Providers.DNS.GoDaddy
 
             request.Content.Headers.ContentType.MediaType = "application/json";
 
+            await Task.Delay((int)_rateLimitMS);
             var result = await _client.SendAsync(request);
 
             if (!result.IsSuccessStatusCode)
@@ -261,6 +267,9 @@ namespace Certify.Providers.DNS.GoDaddy
 
             // API now supports a delete method
             var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, domainInfo.RootDomain, "TXT", recordName));
+            
+            await Task.Delay((int)_rateLimitMS); 
+            
             var result = await _client.SendAsync(req);
 
             if (result.IsSuccessStatusCode)
@@ -277,39 +286,51 @@ namespace Certify.Providers.DNS.GoDaddy
             }
         }
 
+        private List<DnsZone> _zoneCache = new List<DnsZone>();
+        
         public override async Task<List<DnsZone>> GetZones()
         {
-            var zones = new List<DnsZone>();
-
-            var marker = "";
-            var isFullPage = true;
-
-            while (isFullPage)
+            if (_zoneCache.Any())
             {
-                var request = CreateRequest(HttpMethod.Get, string.Format(_listZonesUri, _maxZonesPerPage, marker));
+                return _zoneCache;
+            }
+            else
+            {
+                var zones = new List<DnsZone>();
 
-                var result = await _client.SendAsync(request);
+                var marker = "";
+                var isFullPage = true;
 
-                if (result.IsSuccessStatusCode)
+                while (isFullPage)
                 {
-                    var content = await result.Content.ReadAsStringAsync();
-                    var zonesResult = JsonConvert.DeserializeObject<IEnumerable<Zone>>(content).ToList();
-                    isFullPage = zonesResult.Count == _maxZonesPerPage;
-                    marker = zonesResult[zonesResult.Count - 1].Domain;
+                    var request = CreateRequest(HttpMethod.Get, string.Format(_listZonesUri, _maxZonesPerPage, marker));
+                    
+                    await Task.Delay((int)_rateLimitMS);
 
-                    foreach (var zone in zonesResult)
+                    var result = await _client.SendAsync(request);
+
+                    if (result.IsSuccessStatusCode)
                     {
-                        // DomainId is not used by the GoDaddy API, so we use the domain as the ID
-                        zones.Add(new DnsZone { ZoneId = zone.Domain, Name = zone.Domain });
+                        var content = await result.Content.ReadAsStringAsync();
+                        var zonesResult = JsonConvert.DeserializeObject<IEnumerable<Zone>>(content).ToList();
+                        isFullPage = zonesResult.Count == _maxZonesPerPage;
+                        marker = zonesResult[zonesResult.Count - 1].Domain;
+
+                        foreach (var zone in zonesResult)
+                        {
+                            // DomainId is not used by the GoDaddy API, so we use the domain as the ID
+                            zones.Add(new DnsZone { ZoneId = zone.Domain, Name = zone.Domain });
+                        }
+                    }
+                    else
+                    {
+                        isFullPage = false;
                     }
                 }
-                else
-                {
-                    isFullPage = false;
-                }
-            }
 
-            return zones;
+                _zoneCache = zones;
+                return zones;
+            }
         }
 
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
