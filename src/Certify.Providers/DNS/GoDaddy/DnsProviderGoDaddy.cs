@@ -221,9 +221,15 @@ namespace Certify.Providers.DNS.GoDaddy
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             //TODO: check if record already exists and update instead
-            var root = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
-            var recordName = NormaliseRecordName(root, request.RecordName);
-            return await AddDnsRecord(root.RootDomain, recordName, request.RecordValue);
+            var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
+
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+            return await AddDnsRecord(domainInfo.RootDomain, recordName, request.RecordValue);
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -231,24 +237,30 @@ namespace Certify.Providers.DNS.GoDaddy
             // grab all the txt records for the zone as a json array, remove the txt record in
             // question, and send an update command.
 
-            var root = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
-            var recordName = NormaliseRecordName(root, request.RecordName);
+            var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
-            var domainrecords = await GetDnsRecords(root.RootDomain);
+            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+            }
+
+            var recordName = NormaliseRecordName(domainInfo, request.RecordName);
+
+            var domainrecords = await GetDnsRecords(domainInfo.RootDomain);
 
             if (!domainrecords.Any())
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record delete: nothing to do." };
             }
 
-            var recordsToRemove = domainrecords.Where(x => x.RecordName + "." + root.RootDomain == request.RecordName).ToList();
+            var recordsToRemove = domainrecords.Where(x => x.RecordName + "." + domainInfo.RootDomain == request.RecordName).ToList();
             if (!recordsToRemove.Any())
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
             }
 
             // API now supports a delete method
-            var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, root.RootDomain, "TXT", recordName));
+            var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, domainInfo.RootDomain, "TXT", recordName));
             var result = await _client.SendAsync(req);
 
             if (result.IsSuccessStatusCode)
