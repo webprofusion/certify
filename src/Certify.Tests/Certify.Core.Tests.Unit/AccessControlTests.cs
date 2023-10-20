@@ -293,6 +293,54 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public async Task TestAccessControlUpdateSecurityPrinciplePassword()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var firstPassword = adminSecurityPrinciples[0].Password;
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Setup security principle actions
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddAction(a));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            var firstPasswordHashed = access.HashPassword(firstPassword, storedSecurityPrinciple.Password.Split('.')[1]);
+            Assert.AreEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+
+            // Update security principle in AccessControl with a new password
+            var newPassword = "GFEDCBA";
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, adminSecurityPrinciples[0].Id, firstPassword, newPassword);
+            Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to succeed");
+
+            // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
+            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            var newPasswordHashed = access.HashPassword(newPassword, storedSecurityPrinciple.Password.Split('.')[1]);
+            Assert.AreNotEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to not match previous Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+            Assert.AreEqual(storedSecurityPrinciple.Password, newPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match updated Password '{newPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+        }
+
+        [TestMethod]
         public async Task TestAccessControlDeleteSecurityPrinciple()
         {
             var log = new LoggerConfiguration()
