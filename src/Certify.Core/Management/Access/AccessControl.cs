@@ -64,7 +64,15 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
-            await _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
+            try
+            {
+                var updated = _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
+            }
+            catch
+            {
+                _log?.Warning($"User {contextUserId} attempted to use UpdateSecurityPrinciple [{principle?.Id}], but was not successful");
+                return false;
+            }
 
             _log?.Information($"User {contextUserId} updated security principle [{principle?.Id}] {principle?.Username}");
             return true;
@@ -92,8 +100,13 @@ namespace Certify.Core.Management.Access
 
             var existing = await GetSecurityPrinciple(contextUserId, id);
 
-            await _store.Delete<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+            var deleted = await _store.Delete<SecurityPrinciple>(nameof(SecurityPrinciple), id);
 
+            if (deleted != true)
+            {
+                _log?.Warning($"User {contextUserId} attempted to delete security principle [{id}] {existing?.Username}, but was not successful");
+                return false;
+            }
             // TODO: remove assigned roles
 
             _log?.Information($"User {contextUserId} deleted security principle [{id}] {existing?.Username}");
@@ -127,7 +140,8 @@ namespace Certify.Core.Management.Access
 
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(actionId)))
             {
-                // if and of the service principles assigned roles are restricted by the type of resource type, check for identifier matches (e.g. role assignment restricted on domains )
+                // if any of the service principles assigned roles are restricted by the type of resource type,
+                // check for identifier matches (e.g. role assignment restricted on domains )
                 if (spSpecificAssignedRoles.Any(a => a.IncludedResources.Any(r => r.ResourceType == resourceType)))
                 {
                     var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
