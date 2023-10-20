@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,170 +56,431 @@ namespace Certify.Core.Tests.Unit
         }
     }
 
+    public class TestAssignedRoles
+    {
+        public static AssignedRole TestAdmin { get; } = new AssignedRole
+        { // test administrator
+            RoleId = StandardRoles.Administrator.Id,
+            SecurityPrincipleId = "[test]"
+        };
+        public static AssignedRole Admin { get; } = new AssignedRole
+        { // administrator
+            RoleId = StandardRoles.Administrator.Id,
+            SecurityPrincipleId = "admin_01"
+        };
+        public static AssignedRole DevopsUserDomainConsumer { get; } = new AssignedRole
+        { // devops user in consumer role for a specific domain
+            RoleId = StandardRoles.CertificateConsumer.Id,
+            SecurityPrincipleId = "devops_user_01",
+            IncludedResources = new List<Resource>{
+                new Resource{ ResourceType=ResourceTypes.Domain, Identifier="www.example.com" },
+            }
+        };
+        public static AssignedRole DevopsUserWildcardDomainConsumer { get; } = new AssignedRole
+        { // devops user in consumer role for a wildcard domain
+            RoleId = StandardRoles.CertificateConsumer.Id,
+            SecurityPrincipleId = "devops_user_01",
+            IncludedResources = new List<Resource>{
+                new Resource{ ResourceType=ResourceTypes.Domain, Identifier="*.microsoft.com" },
+            }
+        };
+    }
+
+    public class TestSecurityPrinciples
+    {
+        public static SecurityPrinciple TestAdmin() 
+        { 
+            return new SecurityPrinciple
+            {
+                Id = "[test]",
+                Username = "test administrator",
+                Description = "Example test administrator used as context user during test",
+                Email = "test_admin@test.com",
+                Password = "ABCDEFG",
+                PrincipleType = SecurityPrincipleType.User
+            }; 
+        }
+        public static SecurityPrinciple Admin()
+        {
+            return new SecurityPrinciple
+            {
+                Id = "admin_01",
+                Username = "admin",
+                Description = "Administrator account",
+                Email = "info@test.com",
+                Password = "ABCDEFG",
+                PrincipleType = SecurityPrincipleType.User,
+            };
+        }
+        public static SecurityPrinciple DomainOwner()
+        {
+            return new SecurityPrinciple
+            {
+                Id = "domain_owner_01",
+                Username = "demo_owner",
+                Description = "Example domain owner",
+                Email = "domains@test.com",
+                Password = "ABCDEFG",
+                PrincipleType = SecurityPrincipleType.User,
+            };
+        }
+        public static SecurityPrinciple DevopsUser()
+        {
+            return new SecurityPrinciple
+            {
+                Id = "devops_user_01",
+                Username = "devops_01",
+                Description = "Example devops user",
+                Email = "devops01@test.com",
+                Password = "ABCDEFG",
+                PrincipleType = SecurityPrincipleType.User,
+            };
+        }
+        public static SecurityPrinciple DevopsAppDomainConsumer()
+        {
+            return new SecurityPrinciple
+            {
+                Id = "devops_app_01",
+                Username = "devapp_01",
+                Description = "Example devops app domain consumer",
+                Email = "dev_app01@test.com",
+                Password = "ABCDEFG",
+                PrincipleType = SecurityPrincipleType.User,
+            };
+        }
+    }
+
     [TestClass]
     public class AccessControlTests
     {
-        private List<SecurityPrinciple> GetTestSecurityPrinciples()
-        {
-            return new List<SecurityPrinciple>
-            {
-                new SecurityPrinciple
-                {
-                    Id = "admin_01",
-                    Username = "admin",
-                    Description = "Administrator account",
-                    Email = "info@test.com",
-                    Password = "ABCDEFG",
-                    PrincipleType = SecurityPrincipleType.User
-                },
-                new SecurityPrinciple
-                {
-                    Id = "domain_owner_01",
-                    Username = "demo_owner",
-                    Description = "Example domain owner",
-                    Email = "domains@test.com",
-                    Password = "ABCDEFG",
-                    PrincipleType = SecurityPrincipleType.User
-                },
-                new SecurityPrinciple
-                {
-                    Id = "devops_user_01",
-                    Username = "devops_01",
-                    Description = "Example devops user",
-                    Email = "devops01@test.com",
-                    Password = "ABCDEFG",
-                    PrincipleType = SecurityPrincipleType.User
-                },
-                new SecurityPrinciple
-                {
-                    Id = "devops_app_01",
-                    Username = "devapp_01",
-                    Description = "Example devops app domain consumer",
-                    Email = "dev_app01@test.com",
-                    Password = "ABCDEFG",
-                    PrincipleType = SecurityPrincipleType.User
-                },
-                    new SecurityPrinciple
-                {
-                    Id = "[test]",
-                    Username = "test administrator",
-                    Description = "Example test administrator used as context user during test",
-                    Email = "test_admin@test.com",
-                    Password = "ABCDEFG",
-                    PrincipleType = SecurityPrincipleType.User
-                }
-            };
-        }
-
         [TestMethod]
-        public async Task TestAccessControlChecks()
+        public async Task TestAccessControlAddGetSecurityPrinciples()
         {
             var log = new LoggerConfiguration()
                 .WriteTo.Debug()
                 .CreateLogger();
-
             var loggy = new Loggy(log);
-
             var access = new AccessControl(loggy, new MemoryObjectStore());
-
             var contextUserId = "[test]";
 
-            // add test security principles
-            var allPrinciples = GetTestSecurityPrinciples();
-            foreach (var p in allPrinciples)
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Get stored security principles
+            var storedSecurityPrinciples = await access.GetSecurityPrinciples(contextUserId);
+
+            // Validate SecurityPrinciple list returned by AccessControl.GetSecurityPrinciples()
+            Assert.IsNotNull(storedSecurityPrinciples, "Expected list returned by AccessControl.GetSecurityPrinciples() to not be null");
+            Assert.AreEqual(2, storedSecurityPrinciples.Count, "Expected list returned by AccessControl.GetSecurityPrinciples() to have 2 SecurityPrinciple objects");
+            foreach (var passedPrinciple in adminSecurityPrinciples)
             {
-                _ = await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true);
+                Assert.IsNotNull(storedSecurityPrinciples.Find(x => x.Id == passedPrinciple.Id), $"Expected a SecurityPrinciple returned by GetSecurityPrinciples() to match Id '{passedPrinciple.Id}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+            }
+        }
+
+        [TestMethod]
+        public async Task TestAccessControlAddGetSecurityPrinciple()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            foreach (var securityPrinciple in adminSecurityPrinciples)
+            {
+                // Get stored security principle
+                var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, securityPrinciple.Id);
+
+                // Validate SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple()
+                Assert.IsNotNull(storedSecurityPrinciple, "Expected object returned by AccessControl.GetSecurityPrinciple() to not be null");
+                Assert.AreEqual(storedSecurityPrinciple.Id, securityPrinciple.Id, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Id '{securityPrinciple.Id}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+            }
+        }
+
+        [TestMethod]
+        public async Task TestAccessControlAddGetAssignedRoles()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Setup security principle actions
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddAction(a));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
+            foreach (var assignedRole in assignedRoles)
+            {
+                var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, assignedRole.SecurityPrincipleId);
+                Assert.IsNotNull(adminAssignedRoles, "Expected list returned by AccessControl.GetAssignedRoles() to not be null");
+                Assert.AreEqual(1, adminAssignedRoles.Count, "Expected list returned by AccessControl.GetAssignedRoles() to have 1 AssignedRole object");
+                Assert.AreEqual(assignedRole.SecurityPrincipleId, adminAssignedRoles[0].SecurityPrincipleId, "Expected AssignedRole returned by GetAssignedRoles() to match SecurityPrincipleId of AssignedRole passed into AddAssignedRole()");
+            }
+        }
+
+        [TestMethod]
+        public async Task TestAccessControlUpdateSecurityPrinciple()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Setup security principle actions
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddAction(a));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+
+            // Update security principle in AccessControl with a new principle object of the same Id, but different email
+            var newSecurityPrinciple = TestSecurityPrinciples.Admin();
+            newSecurityPrinciple.Email = "new_test_email@test.com";
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
+            Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to succeed");
+
+            // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
+            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, newSecurityPrinciple.Id);
+            Assert.AreNotEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to not match previous Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+            Assert.AreEqual(storedSecurityPrinciple.Email, newSecurityPrinciple.Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match updated Email '{newSecurityPrinciple.Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+        }
+
+        [TestMethod]
+        public async Task TestAccessControlDeleteSecurityPrinciple()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Setup security principle actions
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddAction(a));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Validate SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before delete is not null
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            Assert.IsNotNull(storedSecurityPrinciple, "Expected object returned by AccessControl.GetSecurityPrinciple() to not be null");
+            Assert.AreEqual(storedSecurityPrinciple.Id, adminSecurityPrinciples[0].Id, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Id '{adminSecurityPrinciples[0].Id}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+
+            // Delete first security principle in adminSecurityPrinciples list from AccessControl store
+            var securityPrincipleDeleted = await access.DeleteSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+
+            // Validate SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after delete is null
+            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            Assert.IsNull(storedSecurityPrinciple, $"Expected SecurityPrinciple for '{adminSecurityPrinciples[0].Id}' to be null from GetSecurityPrinciple()");
+        }
+
+        [TestMethod]
+        public async Task TestAccessControlIsPrincipleInRole()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test security principles
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // Setup security principle actions
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddAction(a));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Validate specified admin user is a principle role
+            bool hasAccess;
+            foreach (var assignedRole in assignedRoles)
+            {
+                hasAccess = await access.IsPrincipleInRole(contextUserId, assignedRole.SecurityPrincipleId, StandardRoles.Administrator.Id);
+                Assert.IsTrue(hasAccess, $"User '{assignedRole.SecurityPrincipleId}' should be in role");
             }
 
-            // setup known actions
-            var actions = Policies.GetStandardResourceActions();
-
-            foreach (var action in actions)
-            {
-                await access.AddAction(action);
-            }
-
-            // setup policies with actions
-
-            var policies = Policies.GetStandardPolicies();
-
-            // add policies to store
-            foreach (var r in policies)
-            {
-                _ = await access.AddResourcePolicy(contextUserId, r, bypassIntegrityCheck: true);
-            }
-
-            // setup roles with policies
-            var roles = await access.GetSystemRoles();
-
-            foreach (var r in roles)
-            {
-                // add roles and policy assignments to store
-                await access.AddRole(r);
-            }
-
-            // assign security principles to roles
-            var assignedRoles = new List<AssignedRole> {
-                 // test administrator
-                new AssignedRole{
-                    RoleId=StandardRoles.Administrator.Id,
-                    SecurityPrincipleId="[test]"
-                },
-                // administrator
-                new AssignedRole{
-                    RoleId=StandardRoles.Administrator.Id,
-                    SecurityPrincipleId="admin_01"
-                },
-                // devops user in consumer role for a couple of specific domains
-                new AssignedRole{
-                    RoleId=StandardRoles.CertificateConsumer.Id,
-                    SecurityPrincipleId="devops_user_01",
-                    IncludedResources=new List<Resource>{
-                        new Resource{ ResourceType=ResourceTypes.Domain, Identifier="www.example.com" },
-                        new Resource{ ResourceType=ResourceTypes.Domain, Identifier="*.microsoft.com" }
-                    }
-                }
-            };
-
-            foreach (var r in assignedRoles)
-            {
-                // add roles and policy assignments to store
-                await access.AddAssignedRole(r);
-            }
-
-            // assert
-
-            var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, "admin_01");
-            Assert.AreEqual(1, adminAssignedRoles.Count);
-
-            var hasAccess = await access.IsPrincipleInRole(contextUserId, "admin_01", StandardRoles.Administrator.Id);
-            Assert.IsTrue(hasAccess, "User should be in role");
-
+            // Validate fake admin user is not a principle role
             hasAccess = await access.IsPrincipleInRole(contextUserId, "admin_02", StandardRoles.Administrator.Id);
             Assert.IsFalse(hasAccess, "User should not be in role");
+        }
 
-            // check user can consume a cert for a given domain 
+        [TestMethod]
+        public async Task TestAccessControlDomainAuth()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+
+            // Setup security principle actions
+            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            await access.AddAssignedRole(TestAssignedRoles.DevopsUserDomainConsumer); // devops user in consumer role for a specific domain
+
+            // Validate user can consume a cert for a given domain 
             var isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "www.example.com");
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this domain");
 
-            // check user can't consume a cert for a subdomain they haven't been granted
+            // Validate user can't consume a cert for a subdomain they haven't been granted
             isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "secure.example.com");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for this domain");
+        }
 
-            // check user can consume any subdomain via a granted wildcard
-            isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
+        [TestMethod]
+        public async Task TestAccessControlWildcardDomainAuth()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+
+            // Setup security principle actions
+            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
+
+            // Validate user can consume any subdomain via a granted wildcard
+            var isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this subdomain via wildcard");
 
-            // check user can't consume a random wildcard
+            // Validate user can't consume a random wildcard
             isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "*  lkjhasdf98862364");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
 
-            // check user can't consume a random wildcard
+            // Validate user can't consume a random wildcard
             isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "lkjhasdf98862364.*.microsoft.com");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
+        }
 
-            // random user should not be authorised
-            isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
+        [TestMethod]
+        public async Task TestAccessControlRandomUserAuth()
+        {
+            var log = new LoggerConfiguration()
+                .WriteTo.Debug()
+                .CreateLogger();
+            var loggy = new Loggy(log);
+            var access = new AccessControl(loggy, new MemoryObjectStore());
+            var contextUserId = "[test]";
+
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+
+            // Setup security principle actions
+            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
+
+            // Validate that random user should not be authorised
+            var isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
         }
     }
