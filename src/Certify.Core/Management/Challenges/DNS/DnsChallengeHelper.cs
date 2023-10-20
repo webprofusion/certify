@@ -6,6 +6,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -94,6 +95,46 @@ namespace Certify.Core.Management.Challenges
             };
         }
 
+        private Dictionary<string, IDnsProvider> _dnsProviderCache = new Dictionary<string, IDnsProvider>();
+        private bool _useDnsProviderCaching = false;
+
+        /// <summary>
+        /// Gets optionally cached DNS provider instance, caching may be based credentials/parameters to allow for zone query caching. TODO: log context will be first caller instead of current
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="challengeProvider"></param>
+        /// <param name="credentials"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        private async Task<IDnsProvider> GetDnsProvider(ILog log, string challengeProvider, Dictionary<string, string> credentials, Dictionary<string, string> parameters)
+        {
+
+            IDnsProvider dnsAPIProvider = null;
+
+            if (_useDnsProviderCaching)
+            {
+                // construct basic cache key for dns provider and credentials combo
+                var providerCacheKey = challengeProvider + (challengeProvider + JsonConvert.SerializeObject(credentials ?? new Dictionary<string, string>()) + JsonConvert.SerializeObject(parameters ?? new Dictionary<string, string>())).GetHashCode().ToString();
+                if (_dnsProviderCache.ContainsKey(providerCacheKey))
+                {
+                    log.Warning("Developer Note: DNS provider log context will be first caller instead of current");
+
+                    dnsAPIProvider = _dnsProviderCache[providerCacheKey];
+                }
+                else
+                {
+                    dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeProvider, credentials, parameters, log);
+                    _dnsProviderCache.Add(providerCacheKey, dnsAPIProvider);
+                }
+            }
+            else
+            {
+                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeProvider, credentials, parameters, log);
+            }
+
+            return dnsAPIProvider;
+        }
+
         public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue, bool isTestMode)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -129,7 +170,7 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters, log);
+                dnsAPIProvider = await GetDnsProvider(log, challengeConfig.ChallengeProvider, credentials, parameters);
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {
@@ -358,15 +399,15 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-                dnsAPIProvider = await ChallengeProviders.GetDnsProvider(challengeConfig.ChallengeProvider, credentials, parameters);
+                dnsAPIProvider = await GetDnsProvider(log, challengeConfig.ChallengeProvider, credentials, parameters);
             }
             catch (ChallengeProviders.CredentialsRequiredException)
             {
-                return new DnsChallengeHelperResult(failureMsg: "This DNS Challenge API requires one or more credentials to be specified.");
+                return new DnsChallengeHelperResult("This DNS Challenge API requires one or more credentials to be specified.");
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult(failureMsg: $"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
+                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
             }
 
             if (dnsAPIProvider == null)
