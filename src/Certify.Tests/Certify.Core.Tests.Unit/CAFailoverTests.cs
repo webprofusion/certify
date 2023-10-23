@@ -1,9 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -11,6 +13,14 @@ namespace Certify.Core.Tests.Unit
     public class CAFailoverTests
     {
         private const string DEFAULTCA = "letscertify";
+
+        // TODO: This requires a valid test CA auth token to run
+        //private Dictionary<string, string> ConfigSettings = new Dictionary<string, string>();
+
+        //public CAFailoverTests()
+        //{
+        //    ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
+        //}
 
         private List<CertificateAuthority> GetTestCAs()
         {
@@ -323,4 +333,33 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
         }
     }
+
+    // TODO: This test requires a valid test CA auth token to run
+    //[TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with TnAuthList CA")]
+    //public void TestBasicFailoverOccursTnAuthList()
+    //{
+    //    // setup
+    //    var accounts = GetTestAccounts();
+    //    var caList = GetTestCAs();
+
+    //    var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+    //        new CertRequestConfig {
+    //            //SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com" }.ToArray(),
+    //            AuthorityTokens = new ObservableCollection<TkAuthToken> {
+    //                new TkAuthToken{
+    //                    Token = ConfigSettings["TestAuthToken"],
+    //                    Crl =ConfigSettings["TestAuthTokenCRL"]
+    //                }
+    //            }
+    //        });
+
+    //    // perform check
+    //    var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+    //    var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+    //    // assert result
+    //    Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Fallback CA should be selected");
+    //    Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+    //}
 }
