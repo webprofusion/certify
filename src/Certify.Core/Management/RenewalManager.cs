@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -320,7 +320,7 @@ namespace Certify.Management
                 if (fallbackAccounts.Any())
                 {
                     // use the next suitable fallback account
-                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA && f.CertificateAuthorityId != defaultMatchingAccount?.CertificateAuthorityId);
+                    var nextFallback = fallbackAccounts.FirstOrDefault(f => f.CertificateAuthorityId != item.LastAttemptedCA);
 
                     if (nextFallback != null)
                     {
