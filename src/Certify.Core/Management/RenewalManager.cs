@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -257,7 +257,7 @@ namespace Certify.Management
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
             }
 
-            if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Ip))
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Ip) == 1)
             {
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.IP_SINGLE);
             }
