@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -11,6 +13,14 @@ namespace Certify.Core.Tests.Unit
     public class CAFailoverTests
     {
         private const string DEFAULTCA = "letscertify";
+
+        // TODO: This requires a valid test CA auth token to run
+        //private Dictionary<string, string> ConfigSettings = new Dictionary<string, string>();
+
+        //public CAFailoverTests()
+        //{
+        //    ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
+        //}
 
         private List<CertificateAuthority> GetTestCAs()
         {
@@ -84,7 +94,7 @@ namespace Certify.Core.Tests.Unit
             return accounts;
         }
 
-        private ManagedCertificate GetBasicManagedCertificate(RequestState? lastRenewalState = null, int numberFailedRenewals = 0, string lastCA = null)
+        private ManagedCertificate GetBasicManagedCertificate(RequestState? lastRenewalState = null, int numberFailedRenewals = 0, string lastCA = null, CertRequestConfig customCertRequestConfig = null)
         {
             var managedCertificate = new ManagedCertificate
             {
@@ -95,10 +105,10 @@ namespace Certify.Core.Tests.Unit
                 LastRenewalStatus = lastRenewalState,
                 RenewalFailureCount = numberFailedRenewals,
                 LastAttemptedCA = lastCA,
-                RequestConfig = new CertRequestConfig
+                RequestConfig = customCertRequestConfig == null ? new CertRequestConfig
                 {
                     SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com" }.ToArray()
-                }
+                } : customCertRequestConfig
             };
 
             return managedCertificate;
@@ -160,5 +170,196 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
             Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
         }
+
+        [TestMethod, Description("No failover expected on one account")]
+        public void TestNoFailoverOneAccount()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(null, 0, null);
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts.GetRange(3, 1), managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
+            Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
+        }
+
+        [TestMethod, Description("No fallback accounts available")]
+        public void TestBasicNoFallbacks()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA);
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts.FindAll(a => a.IsStagingAccount == false), managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
+            Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Next fallback is null")]
+        public void TestBasicNextFallbackNull()
+        {
+            // setup
+            var accounts = GetTestAccounts().FindAll(a  => a.ID != "letsreluctantlyfallback_ABC234_staging");
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: "letsfallback");
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            accounts.Add(new AccountDetails { ID = "letsfallback_ABC234_staging_isfailover", IsStagingAccount = true, IsFailoverSelection = true, 
+                CertificateAuthorityId = "letsfallback", Title = "A fallback account with is failover" });
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
+            Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with wildcard domain")]
+        public void TestBasicFailoverOccursWildcardDomainCA()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA, 
+                new CertRequestConfig { SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com", "*.wildtest.com" }.ToArray() });
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsfallback", "Fallback CA should be selected");
+            Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with single domain CA")]
+        public void TestBasicFailoverOccursSingleDnsCA()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+                new CertRequestConfig { SubjectAlternativeNames = new List<string> { "test.com" }.ToArray() });
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Reluctant Fallback CA should be selected");
+            Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with single IP CA")]
+        public void TestBasicFailoverOccursSingleIP()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+                new CertRequestConfig { SubjectIPAddresses = new List<string> { "192.168.48.64" }.ToArray() });
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Fallback CA should be selected");
+            Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with Multiple IP CA")]
+        public void TestBasicFailoverOccursMultipleIP()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+                new CertRequestConfig { SubjectIPAddresses = new List<string> { "192.168.48.64", "192.168.48.66" }.ToArray() });
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Fallback CA should be selected");
+            Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+        }
+
+        [TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with Optional Lifetime Days CA")]
+        public void TestBasicFailoverOccursOptionalLifetimeDays()
+        {
+            // setup
+            var accounts = GetTestAccounts();
+            var caList = GetTestCAs();
+
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+                new CertRequestConfig { SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com", "*.wildtest.com" }.ToArray(),
+                    PreferredExpiryDays = 7,
+                });
+
+            // perform check
+            var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+            var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+            // assert result
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Fallback CA should be selected");
+            Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+        }
     }
+
+    // TODO: This test requires a valid test CA auth token to run
+    //[TestMethod, Description("Failover to an alternate CA when an item has repeatedly failed, with TnAuthList CA")]
+    //public void TestBasicFailoverOccursTnAuthList()
+    //{
+    //    // setup
+    //    var accounts = GetTestAccounts();
+    //    var caList = GetTestCAs();
+
+    //    var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
+    //        new CertRequestConfig {
+    //            //SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com" }.ToArray(),
+    //            AuthorityTokens = new ObservableCollection<TkAuthToken> {
+    //                new TkAuthToken{
+    //                    Token = ConfigSettings["TestAuthToken"],
+    //                    Crl =ConfigSettings["TestAuthTokenCRL"]
+    //                }
+    //            }
+    //        });
+
+    //    // perform check
+    //    var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
+
+    //    var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
+
+    //    // assert result
+    //    Assert.IsTrue(selectedAccount.CertificateAuthorityId == "letsreluctantlyfallback", "Fallback CA should be selected");
+    //    Assert.IsTrue(selectedAccount.IsFailoverSelection, "Account should be marked as a failover choice");
+    //}
 }
