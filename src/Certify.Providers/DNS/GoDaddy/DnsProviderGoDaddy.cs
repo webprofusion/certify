@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -196,9 +196,13 @@ namespace Certify.Providers.DNS.GoDaddy
             var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName, record.RecordType, record.RecordName));
 
             request.Content = new StringContent(
-                JsonConvert.SerializeObject(new object[] { new
-                        {
-                            data = value,
+                JsonConvert.SerializeObject(new object[] {
+                     new {
+                            data = record.RecordValue, //preserve last record value
+                            ttl = 600
+                        },
+                    new {
+                            data = value, // append our new value
                             ttl = 600
                         }
                     })
@@ -240,7 +244,7 @@ namespace Certify.Providers.DNS.GoDaddy
             var recordsToUpdate = existingRecords.Where(x => (x.RecordName + "." + domainInfo.RootDomain == request.RecordName) || (x.RecordName == request.RecordName)).ToList();
             if (recordsToUpdate.Any())
             {
-                return await UpdateDnsRecord(domainInfo.RootDomain, recordsToUpdate.First(), request.RecordValue);
+                return await UpdateDnsRecord(domainInfo.RootDomain, recordsToUpdate.Last(), request.RecordValue);
             }
             else
             {
