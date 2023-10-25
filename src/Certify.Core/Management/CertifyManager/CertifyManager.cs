@@ -222,6 +222,15 @@ namespace Certify.Management
         private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             await PerformCertificateMaintenanceTasks();
+
+            try
+            {
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
+            }
+            catch
+            {
+                // failed to perform garbage collection, ignore.
+            }
         }
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
