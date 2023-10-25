@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -43,7 +43,7 @@ namespace Certify.Providers.DNS.GoDaddy
         private string _authKey;
         private string _authSecret;
         private const int _maxZonesPerPage = 250; // go daddy API documentation varies between a 500 and 1000 page limit so we use a smaller number for potential future proofing.
-        private const float _rateLimitMS = (1000*60f)/50f; // max rate limit is 60 calls per minute, so we limit ourselves to 50 per minute.
+        private const float _rateLimitMS = (1000 * 60f) / 50f; // max rate limit is 60 calls per minute, so we limit ourselves to 50 per minute.
         private const string _baseUri = "https://api.godaddy.com/v1/";
         private const string _listZonesUri = _baseUri + "domains?limit={0}&marker={1}";
         private const string _createRecordUri = _baseUri + "domains/{0}/records";
@@ -192,7 +192,6 @@ namespace Certify.Providers.DNS.GoDaddy
 
         private async Task<ActionResult> UpdateDnsRecord(string zoneName, DnsRecord record, string value)
         {
-            await Test();
 
             var request = CreateRequest(HttpMethod.Put, string.Format(_updateRecordUri, zoneName, record.RecordType, record.RecordName));
 
@@ -229,13 +228,24 @@ namespace Certify.Providers.DNS.GoDaddy
             //TODO: check if record already exists and update instead
             var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
-            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            if (string.IsNullOrWhiteSpace(domainInfo?.RootDomain))
             {
                 return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
             }
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
-            return await AddDnsRecord(domainInfo.RootDomain, recordName, request.RecordValue);
+
+            var existingRecords = await GetDnsRecords(domainInfo.RootDomain);
+
+            var recordsToUpdate = existingRecords.Where(x => (x.RecordName + "." + domainInfo.RootDomain == request.RecordName) || (x.RecordName == request.RecordName)).ToList();
+            if (recordsToUpdate.Any())
+            {
+                return await UpdateDnsRecord(domainInfo.RootDomain, recordsToUpdate.First(), request.RecordValue);
+            }
+            else
+            {
+                return await AddDnsRecord(domainInfo.RootDomain, recordName, request.RecordValue);
+            }
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -245,7 +255,7 @@ namespace Certify.Providers.DNS.GoDaddy
 
             var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);
 
-            if (string.IsNullOrEmpty(domainInfo.RootDomain))
+            if (string.IsNullOrWhiteSpace(domainInfo?.RootDomain))
             {
                 return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
             }
@@ -259,7 +269,7 @@ namespace Certify.Providers.DNS.GoDaddy
                 return new ActionResult { IsSuccess = true, Message = "DNS record delete: nothing to do." };
             }
 
-            var recordsToRemove = domainrecords.Where(x => x.RecordName + "." + domainInfo.RootDomain == request.RecordName).ToList();
+            var recordsToRemove = domainrecords.Where(x => (x.RecordName + "." + domainInfo.RootDomain == request.RecordName) || (x.RecordName == request.RecordName)).ToList();
             if (!recordsToRemove.Any())
             {
                 return new ActionResult { IsSuccess = true, Message = "DNS record does not exist, nothing to delete." };
@@ -267,9 +277,9 @@ namespace Certify.Providers.DNS.GoDaddy
 
             // API now supports a delete method
             var req = CreateRequest(HttpMethod.Delete, string.Format(_deleteRecordUri, domainInfo.RootDomain, "TXT", recordName));
-            
-            await Task.Delay((int)_rateLimitMS); 
-            
+
+            await Task.Delay((int)_rateLimitMS);
+
             var result = await _client.SendAsync(req);
 
             if (result.IsSuccessStatusCode)
@@ -287,7 +297,7 @@ namespace Certify.Providers.DNS.GoDaddy
         }
 
         private List<DnsZone> _zoneCache = new List<DnsZone>();
-        
+
         public override async Task<List<DnsZone>> GetZones()
         {
             if (_zoneCache.Any())
@@ -304,7 +314,7 @@ namespace Certify.Providers.DNS.GoDaddy
                 while (isFullPage)
                 {
                     var request = CreateRequest(HttpMethod.Get, string.Format(_listZonesUri, _maxZonesPerPage, marker));
-                    
+
                     await Task.Delay((int)_rateLimitMS);
 
                     var result = await _client.SendAsync(request);
