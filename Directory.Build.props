@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
-    <Version>6.0.9</Version>
-    <AssemblyVersion>6.0.9</AssemblyVersion>
+    <Version>6.0.12</Version>
+    <AssemblyVersion>6.0.12</AssemblyVersion>
     <Authors>Webprofusion Pty Ltd</Authors>
     <Company>Webprofusion Pty Ltd</Company>
     <Product>Certify Community Edition [via github]</Product>
