@@ -213,7 +213,7 @@ namespace Certify.Management
             }
         }
 
-        public static X509Certificate2 LoadCertificate(string filename, string pwd = "")
+        public static X509Certificate2 LoadCertificate(string filename, string pwd = "", bool throwOnError = false)
         {
             try
             {
@@ -222,8 +222,15 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-                System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
-                return null;
+                if (throwOnError)
+                {
+                    throw;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
+                    return null;
+                }
             }
         }
 

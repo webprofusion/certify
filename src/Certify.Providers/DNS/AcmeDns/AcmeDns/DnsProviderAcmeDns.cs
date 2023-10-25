@@ -317,7 +317,7 @@ namespace Certify.Providers.DNS.AcmeDns
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Update failed: Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
+                    return new ActionResult { IsSuccess = false, Message = $"Update failed with status {result.StatusCode} acme-dns API credentials may be invalid. Ensure the {request.RecordName} CNAME points to {registration.fulldomain}" };
                 }
             }
             catch (Exception exp)

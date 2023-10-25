@@ -54,7 +54,6 @@ namespace Certify.UI.Windows
 
         private async Task NewCertificate(ManagedCertificate original = null)
         {
-
             // save or discard site changes before creating a new site/certificate
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())
             {
@@ -95,7 +94,6 @@ namespace Certify.UI.Windows
             // check user has registered a contact with ACME CA first
             if (EnsureContactRegistered())
             {
-
                 //present new managed item (certificate request) UI
                 //select tab Managed Items
                 _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
@@ -109,7 +107,6 @@ namespace Certify.UI.Windows
                     duplicate.Id = null;
 
                     _appViewModel.SelectedItem = duplicate;
-
                 }
                 else
                 {
@@ -125,12 +122,13 @@ namespace Certify.UI.Windows
         private async void Button_NewCertificate(object sender, RoutedEventArgs e)
         {
             await NewCertificate();
-
         }
 
         private async void Button_RenewAll(object sender, RoutedEventArgs e)
         {
-            var settings = new Models.RenewalSettings { };
+            var settings = new Models.RenewalSettings
+            {
+            };
 
             // if ctrl is pressed, force renewal
             if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))
@@ -171,14 +169,14 @@ namespace Certify.UI.Windows
                     var virtScreenWidth = System.Windows.SystemParameters.VirtualScreenWidth;
                     var virtScreenHeight = System.Windows.SystemParameters.VirtualScreenHeight;
 
-                    if (uiSettings.Width < virtScreenWidth)
+                    if (uiSettings.Width > 128 && uiSettings.Width < virtScreenWidth)
                     {
-                        Width = uiSettings.Width ?? Width;
+                        Width = uiSettings.Width.Value;
                     }
 
-                    if (uiSettings.Height < virtScreenHeight)
+                    if (uiSettings.Height > 128 && uiSettings.Height < virtScreenHeight)
                     {
-                        Height = uiSettings.Height ?? Height;
+                        Height = uiSettings.Height.Value;
                     }
 
                     if (uiSettings.Top >= 0 && uiSettings.Top < (virtScreenHeight - Height))
@@ -223,7 +221,6 @@ namespace Certify.UI.Windows
             }
 
             await PerformAppStartupChecks();
-
         }
 
         private async Task PerformAppStartupChecks()
@@ -235,7 +232,10 @@ namespace Certify.UI.Windows
 
             _appViewModel.PluginManager = new Management.PluginManager();
 
-            _appViewModel.PluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_LICENSING, PluginManager.PLUGINS_DASHBOARD });
+            _appViewModel.PluginManager.LoadPlugins(new List<string>
+            {
+                PluginManager.PLUGINS_LICENSING, PluginManager.PLUGINS_DASHBOARD
+            });
 
             var licensingManager = _appViewModel.PluginManager.LicensingManager;
             if (licensingManager != null)
@@ -389,7 +389,10 @@ namespace Certify.UI.Windows
             {
                 //start by registering
                 MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditAccountDialog { Owner = Window.GetWindow(this) };
+                var d = new Windows.EditAccountDialog
+                {
+                    Owner = Window.GetWindow(this)
+                };
 
                 d.ShowDialog();
             }
@@ -425,10 +428,12 @@ namespace Certify.UI.Windows
 
         private async void PerformUpdateConfirmation(Models.UpdateCheck updateCheck)
         {
-
             // offer to start download and notify when ready to apply
 
-            var d = new Windows.UpdateAvailable(updateCheck) { Owner = Window.GetWindow(this) };
+            var d = new Windows.UpdateAvailable(updateCheck)
+            {
+                Owner = Window.GetWindow(this)
+            };
 
             if (d.ShowDialog() == true)
             {
@@ -495,10 +500,7 @@ namespace Certify.UI.Windows
 
         private async void ManagedCertificates_OnDuplicate(ManagedCertificate original)
         {
-            await Application.Current.Dispatcher.InvokeAsync(async delegate
-            {
-                await NewCertificate(original);
-            });
+            await Application.Current.Dispatcher.InvokeAsync(async delegate { await NewCertificate(original); });
         }
     }
 }

@@ -113,7 +113,7 @@ namespace Certify.Management
 
             if (dataStore == null)
             {
-                _serviceLog.Error($"Could not match data store connection information to the specified store id: {dataStore.Id}");
+                _serviceLog.Error($"Could not match data store connection information to the specified store id: {dataStoreId}");
                 return false;
             }
 

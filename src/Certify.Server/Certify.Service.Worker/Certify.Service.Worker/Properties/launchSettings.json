@@ -12,7 +12,6 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "api/system/appversion",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -20,7 +19,6 @@
     "Certify.Service.Worker": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "api/system/appversion",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

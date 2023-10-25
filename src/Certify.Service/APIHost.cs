@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Threading;
@@ -154,6 +155,14 @@ namespace Certify.Service
             if (currentCertifyManager != null)
             {
                 await currentCertifyManager.PerformRenewalTasks();
+
+                try
+                {
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
+                }
+                catch {
+                    // failed to perform garbage collection, ignore.
+                }
             }
         }
     }
