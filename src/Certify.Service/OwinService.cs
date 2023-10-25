@@ -149,7 +149,7 @@ namespace Certify.Service
             var certUpdated = false;
 
             // if cert expired will need a new one
-            if (currentCert != null && currentCert.NotAfter <= DateTime.Now)
+            if (currentCert != null && currentCert.NotAfter <= DateTime.UtcNow)
             {
                 CertificateManager.RemoveCertificate(currentCert, certStore);
                 currentCert = null;
@@ -158,7 +158,7 @@ namespace Certify.Service
             if (currentCert == null)
             {
                 // create and install new cert
-                var newCert = CertificateManager.GenerateSelfSignedCertificate(certSubject, DateTime.Now, DateTime.Now.AddYears(3), "[Certify Background API]");
+                var newCert = CertificateManager.GenerateSelfSignedCertificate(certSubject, DateTime.UtcNow, DateTime.UtcNow.AddYears(3), "[Certify Background API]");
                 currentCert = CertificateManager.StoreCertificate(newCert, storeName: certStore);
 
                 certUpdated = true;

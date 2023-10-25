@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -96,7 +96,7 @@ namespace Certify.Management
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
             string msg = null)
         {
-            managedCertificate.DateLastRenewalAttempt = DateTime.Now;
+            managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
 
             if (status == RequestState.Success)
             {
@@ -249,7 +249,7 @@ namespace Certify.Management
                     }
                     else
                     {
-                        results.Add(new StatusMessage { IsOK = true, HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to IIS." });
+                        results.Add(new StatusMessage { IsOK = true, HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to the default web server process (if available)." });
                     }
                 }
             }

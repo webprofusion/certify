@@ -29,6 +29,8 @@ namespace Certify.UI.Controls.ManagedCertificate
             public int AwaitingUser { get; set; }
             public int InvalidConfig { get; set; }
 
+            public int NoCertificate { get; set; }
+
             public int TotalDomains { get; set; }
 
             public ObservableCollection<DailySummary> DailyRenewals { get; set; }
@@ -68,6 +70,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ViewModel.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
                 ViewModel.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
                 ViewModel.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
+                ViewModel.NoCertificate = ms.Count(c => c.CertificatePath == null);
 
                 // count items with invalid config (e.g. multiple primary domains)
                 ViewModel.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
@@ -90,6 +93,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 ViewModel.Warning = 0;
                 ViewModel.AwaitingUser = 0;
                 ViewModel.InvalidConfig = 0;
+                ViewModel.NoCertificate = 0;
 
                 ViewModel.TotalDomains = 0;
 

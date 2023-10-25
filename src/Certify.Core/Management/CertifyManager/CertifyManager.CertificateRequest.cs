@@ -116,7 +116,7 @@ namespace Certify.Management
                 string reason = null
             )
         {
-            _serviceLog?.Information($"Performing Certificate Request: {managedCertificate.Name} [{managedCertificate.Id}]");
+            _serviceLog?.Information("Performing Certificate Request: {Name} [{Id}]", managedCertificate.Name, managedCertificate.Id);
 
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
@@ -125,11 +125,11 @@ namespace Certify.Management
                 log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
             }
 
-            log.Information($"---- Beginning Request [{managedCertificate.Name}] ----");
+            log.Information("---- Beginning Request [{Name}] ----", managedCertificate.Name);
 
             if (reason != null)
             {
-                log.Information($"{reason}");
+                log.Information("Renewal Reason: {reason}", reason);
             }
 
             // start with a failure result, set to success when succeeding
@@ -218,7 +218,7 @@ namespace Certify.Management
                                 // request is waiting on user input but has been automatically initiated,
                                 // therefore skip for now
                                 requestResult.Abort = true;
-                                log.Information($"Certificate Request Skipped, Awaiting User Input: {managedCertificate.Name}");
+                                log.Information("Certificate Request Skipped, Awaiting User Input: {Name}", managedCertificate.Name);
                             }
                         }
                     }
@@ -377,26 +377,26 @@ namespace Certify.Management
                 return result;
             }
 
-            log?.Information($"Beginning certificate request process: {managedCertificate.Name} using ACME provider {_acmeClientProvider.GetProviderName()}");
+            log?.Information("Beginning certificate request process: {Name} using ACME provider {Provider}", managedCertificate.Name, _acmeClientProvider.GetProviderName());
 
             _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var certAuthority);
 
             if (caAccount.IsFailoverSelection)
             {
-                log?.Warning($"Due to previous renewal failures an alternative CA account has been selected for failover: {certAuthority?.Title}");
+                log?.Warning("Due to previous renewal failures an alternative CA account has been selected for failover: {Title}", certAuthority?.Title);
             }
             else
             {
-                log?.Information($"The selected Certificate Authority is: {certAuthority?.Title}");
+                log?.Information("The selected Certificate Authority is: {Title}", certAuthority?.Title);
             }
 
             if (managedCertificate.RequestConfig.PreferredExpiryDays > 0)
             {
-                log?.Information($"Requested certificate lifetime is {managedCertificate.RequestConfig.PreferredExpiryDays} days.");
+                log?.Information("Requested certificate lifetime is {Days} days.", managedCertificate.RequestConfig.PreferredExpiryDays);
 
             }
 
-            log?.Information($"Requested identifiers to include on certificate: {string.Join(";", managedCertificate.GetCertificateIdentifiers())}");
+            log?.Information("Requested identifiers to include on certificate: {Identifiers}", string.Join(";", managedCertificate.GetCertificateIdentifiers()));
 
             ReportProgress(progress,
                 new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RegisterDomainIdentity, managedCertificate, false), logThisEvent: false
@@ -835,11 +835,11 @@ namespace Certify.Management
                             certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
                         }
 
-                        managedCertificate.DateStart = certInfo.NotBefore;
-                        managedCertificate.DateExpiry = certInfo.NotAfter;
-                        managedCertificate.DateRenewed = DateTime.Now;
-                        managedCertificate.DateLastOcspCheck = DateTime.Now;
-                        managedCertificate.DateLastRenewalInfoCheck = DateTime.Now;
+                        managedCertificate.DateStart = new DateTimeOffset(certInfo.NotBefore);
+                        managedCertificate.DateExpiry = new DateTimeOffset(certInfo.NotAfter);
+                        managedCertificate.DateRenewed = DateTimeOffset.UtcNow;
+                        managedCertificate.DateLastOcspCheck = DateTimeOffset.UtcNow;
+                        managedCertificate.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow;
                         managedCertificate.DateNextScheduledRenewalAttempt = null;
 
                         managedCertificate.CertificatePath = primaryCertFilePath;
@@ -937,7 +937,7 @@ namespace Certify.Management
                                 // cleanup certs based on the given cleanup mode
                                 var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
                                    (CertificateCleanupMode)mode,
-                                    DateTime.Now,
+                                    DateTimeOffset.UtcNow,
                                     matchingName: certCleanupName,
                                     excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
                                     log: _serviceLog,
@@ -1016,6 +1016,9 @@ namespace Certify.Management
             }
 
             log?.Debug($"End of CompleteCertificateRequest.");
+
+            // cleanup progress tracking
+            _progressResults.TryRemove(managedCertificate.Id, out _);
 
             return result;
         }

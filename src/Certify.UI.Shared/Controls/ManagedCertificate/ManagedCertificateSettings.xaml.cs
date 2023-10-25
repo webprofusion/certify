@@ -181,7 +181,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 // if recently renewed, confirm user really wants to renew
                 var renewalCheckWindow = ItemViewModel.SelectedItem.DateRenewed?.AddDays(2);
-                if (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && renewalCheckWindow > DateTime.Now)
+                if (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && renewalCheckWindow > DateTimeOffset.UtcNow)
                 {
                     // cert was recently renewed. confirm user intent
                     var msg = "This managed certificate was recently renewed. Are you sure you wish to request it again now? \r\n\r\nThe Certificate Authority may impose rate limits on the number of duplicate certificates which can be issued, so requesting duplicate certificates should be avoided. ";

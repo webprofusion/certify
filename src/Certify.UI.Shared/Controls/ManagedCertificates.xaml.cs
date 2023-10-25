@@ -65,6 +65,7 @@ namespace Certify.UI.Controls
                         (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
                         (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
                         (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
+                        (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
                         // match on selected or primary domain options with domain containing keyword
                         (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
                         // match on requestconfig primary or san containing keyword

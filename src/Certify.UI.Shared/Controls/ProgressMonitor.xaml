@@ -104,7 +104,7 @@
                                 FontWeight="SemiBold"
                                 IsReadOnly="True"
                                 IsTabStop="False"
-                                Text="{Binding ManagedCertificate.RenewalFailureMessage, Mode=OneWay}"
+                                Text="{Binding ManagedCertificate.FailureMessage, Mode=OneWay}"
                                 TextWrapping="WrapWithOverflow" />
 
                         </StackPanel>

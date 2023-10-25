@@ -30,7 +30,7 @@ namespace Certify.Core.Management.Challenges
 
         private bool _debugMode = false;
 #endif
-        private DateTime _lastRequestTime { get; set; }
+        private DateTimeOffset _lastRequestTime { get; set; }
 
         private void Log(string msg, bool clearLog = false)
         {
@@ -66,7 +66,7 @@ namespace Certify.Core.Management.Challenges
 #if DEBUG
             _debugMode = true;
 #endif
-            _lastRequestTime = DateTime.Now;
+            _lastRequestTime = DateTimeOffset.UtcNow;
             try
             {
                 if (controlKey != null)
@@ -102,7 +102,7 @@ namespace Certify.Core.Management.Challenges
                 var stateTimer = new Timer((object stateInfo) =>
                 {
                     Log("Checking for auto close.");
-                    var time = _lastRequestTime - DateTime.Now;
+                    var time = _lastRequestTime - DateTimeOffset.UtcNow;
                     if (Math.Abs(time.TotalSeconds) > 60)
                     {
                         Log("No requests recently, stopping server.");
@@ -131,7 +131,7 @@ namespace Certify.Core.Management.Challenges
 
             while (_httpListener != null && _httpListener.IsListening)
             {
-                _lastRequestTime = DateTime.Now;
+                _lastRequestTime = DateTimeOffset.UtcNow;
 
                 var server = await _httpListener.GetContextAsync();
 

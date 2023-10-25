@@ -65,3 +65,7 @@ SSH.NET
 	MIT License
 	Copyright (c) Renci, Oleg Kapeljushnik, Gert Driesen and contributors
 	https://github.com/sshnet/SSH.NET
+Public Suffix List
+    Mozilla Public License, v. 2.0. 
+    https://mozilla.org/MPL/2.0
+    https://publicsuffix.org/list/public_suffix_list.dat

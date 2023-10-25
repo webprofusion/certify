@@ -19,7 +19,7 @@ namespace Certify.Models
 
     public class ManagedCertificateLogItem
     {
-        public DateTime EventDate { get; set; }
+        public DateTimeOffset EventDate { get; set; }
         public string Message { get; set; }
         public LogItemType LogItemType { get; set; }
     }
@@ -70,11 +70,15 @@ namespace Certify.Models
                 }
                 catch { }
 
+                Serilog.Debugging.SelfLog.Enable(Console.Error);
+
                 log = new LoggerConfiguration()
                     .MinimumLevel.ControlledBy(logLevelSwitch)
+#if DEBUG
                     .WriteTo.Debug()
+#endif
                     .WriteTo.File(
-                        logPath, shared: true,
+                        logPath, shared: true, 
                         flushToDiskInterval: new TimeSpan(0, 0, 10)
                     )
                     .CreateLogger();

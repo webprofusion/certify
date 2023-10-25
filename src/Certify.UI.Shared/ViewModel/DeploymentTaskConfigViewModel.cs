@@ -237,6 +237,14 @@ namespace Certify.UI.ViewModel
             await _appViewModel.RefreshStoredCredentialsList();
             _filteredCredentials.Refresh();
 
+            if (_appViewModel.StoredCredentials?.Any(c => c.ProviderType == SelectedItem?.ChallengeProvider) != true
+                 && !string.IsNullOrWhiteSpace(this.SelectedItem?.ChallengeCredentialKey)
+            )
+            {
+                // there is no credential in set (filtered on provider type) matching the current selection, clear it
+                this.SelectedItem.ChallengeCredentialKey = null;
+            }
+
             RaisePropertyChangedEvent(nameof(FilteredCredentials));
 
         }

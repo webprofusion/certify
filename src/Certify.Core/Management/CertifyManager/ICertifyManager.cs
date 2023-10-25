@@ -74,7 +74,7 @@ namespace Certify.Management
 
         RequestProgressState GetRequestProgressState(string managedItemId);
 
-        Task<bool> PerformHourlyTasks();
+        Task<bool> PerformRenewalTasks();
 
         Task<bool> PerformDailyTasks();
 

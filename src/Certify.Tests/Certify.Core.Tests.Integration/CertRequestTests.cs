@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -137,10 +137,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
@@ -214,10 +214,10 @@ namespace Certify.Core.Tests
                 var certInfo = CertificateManager.LoadCertificate(dummyManagedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
-                var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
                 Assert.IsTrue(isRecentlyCreated);
 
-                var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+                var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
                 Assert.IsTrue(expiresInFuture);
             }
             finally
@@ -417,10 +417,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site
@@ -486,10 +486,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // test a renewal for this managed cert
@@ -585,10 +585,10 @@ namespace Certify.Core.Tests
                 certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
                 Assert.IsNotNull(certInfo);
 
-                var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
                 Assert.IsTrue(isRecentlyCreated);
 
-                var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+                var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
                 Assert.IsTrue(expiresInFuture);
             }
             finally
@@ -700,10 +700,10 @@ namespace Certify.Core.Tests
             var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
             Assert.IsNotNull(certInfo);
 
-            var isRecentlyCreated = Math.Abs((DateTime.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+            var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
             Assert.IsTrue(isRecentlyCreated);
 
-            var expiresInFuture = (certInfo.NotAfter - DateTime.UtcNow).TotalDays >= 89;
+            var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
             Assert.IsTrue(expiresInFuture);
 
             // remove managed site

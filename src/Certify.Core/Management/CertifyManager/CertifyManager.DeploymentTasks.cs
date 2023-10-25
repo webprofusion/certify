@@ -234,7 +234,7 @@ namespace Certify.Management
                 if (shouldRunCurrentTask)
                 {
                     log?.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
-                    task.TaskConfig.DateLastExecuted = DateTime.Now;
+                    task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
                     taskResults = await task.Execute(log, _credentialsManager, result, CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
 

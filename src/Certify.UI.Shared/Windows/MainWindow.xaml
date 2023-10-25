@@ -44,6 +44,7 @@
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
                 Click="Button_NewCertificate"
+                IsEnabled="{Binding IsServiceAvailable}"
                 DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
@@ -59,6 +60,7 @@
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.Renew_All}"
                 Click="Button_RenewAll"
+                IsEnabled="{Binding IsServiceAvailable}"
                 DockPanel.Dock="Left">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
@@ -169,6 +171,8 @@
 
             <TabItem
                 MinWidth="100"
+                HorizontalContentAlignment="Stretch"
+                VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Controls:HeaderedControlHelper.HeaderForeground="Blue"
                 Header="{x:Static res:SR.Managed_Certificates}"
@@ -184,7 +188,8 @@
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
-                Header="{x:Static res:SR.In_Progress}">
+                Header="{x:Static res:SR.In_Progress}"
+                IsEnabled="{Binding IsServiceAvailable}">
                 <CustomControls:ProgressMonitor />
             </TabItem>
             <TabItem
@@ -193,7 +198,8 @@
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
-                Header="{x:Static res:SR.Settings}">
+                Header="{x:Static res:SR.Settings}"
+                IsEnabled="{Binding IsServiceAvailable}">
                 <SettingsControls:General Height="Auto" />
             </TabItem>
             <TabItem

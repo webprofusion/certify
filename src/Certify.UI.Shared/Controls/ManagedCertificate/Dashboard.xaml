@@ -153,8 +153,32 @@
                             Style="{StaticResource SummaryBadge}">
                             <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=InvalidConfig}" />
                         </Border>
-                    </DockPanel>
 
+                    </DockPanel>
+                    <DockPanel x:Name="PanelNoCertificate">
+                        <DockPanel.Style>
+                            <Style BasedOn="{StaticResource SummaryPanel}" TargetType="DockPanel">
+                                <Setter Property="UIElement.Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding NoCertificate}" Value="0">
+                                        <Setter Property="UIElement.Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </DockPanel.Style>
+                        <TextBlock DockPanel.Dock="Left">
+                            <Hyperlink Click="Hyperlink_Click" Tag="[Status=NoCertificate]">
+                                No Certificate
+                            </Hyperlink>
+                        </TextBlock>
+                        <Border
+                            Background="BlueViolet"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource SummaryBadge}">
+                            <TextBlock Style="{StaticResource SummaryBadgeText}" Text="{Binding Path=NoCertificate}" />
+                        </Border>
+
+                    </DockPanel>
 
                 </StackPanel>
             </StackPanel>

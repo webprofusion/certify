@@ -96,8 +96,8 @@ namespace Certify.UI.ViewModel
                 while (true)
                 {
                     await Task.Delay(waitMS);
-                    var now = DateTime.UtcNow;
-                    var items = ProgressResults.Where(p => p.MessageCreated < DateTime.UtcNow.AddMilliseconds(-waitMS));
+                    var now = DateTimeOffset.UtcNow;
+                    var items = ProgressResults.Where(p => p.MessageCreated < DateTimeOffset.UtcNow.AddMilliseconds(-waitMS));
 
                     if (items.Any())
                     {

@@ -36,7 +36,7 @@ namespace Certify.Providers.ACME.Anvil
         private AnvilSettings _settings = null;
         private ConcurrentDictionary<string, IOrderContext> _currentOrders;
         private IdnMapping _idnMapping = new IdnMapping();
-        private DateTime _lastInitDateTime = new DateTime();
+        private DateTimeOffset _lastInitDateTime = new DateTimeOffset();
         private readonly bool _newContactUseCurrentAccountKey = false;
 
         private AcmeHttpClient _httpClient;
@@ -82,15 +82,6 @@ namespace Certify.Providers.ACME.Anvil
             _serviceUri = new Uri(acmeBaseUri);
 
             _allowInvalidTls = allowInvalidTls;
-
-            if (_allowInvalidTls)
-            {
-                ServicePointManager.ServerCertificateValidationCallback += (obj, cert, chain, errors) =>
-                {
-                    // ignore all cert errors when validating URL response
-                    return true;
-                };
-            }
         }
 
         public string GetProviderName() => "Anvil";
@@ -103,16 +94,14 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="acmeDirectoryUrl"></param>
         private void PreInitAcmeContext()
         {
-            _lastInitDateTime = DateTime.Now;
+            _lastInitDateTime = DateTimeOffset.UtcNow;
 
             var httpHandler = new HttpClientHandler();
 
-#if NETSTANDARD2_1_OR_GREATER
             if (_allowInvalidTls)
             {
-                httpHandler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+                httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
             }
-#endif
 
             _loggingHandler = new LoggingHandler(httpHandler, _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
@@ -645,9 +634,10 @@ namespace Certify.Providers.ACME.Anvil
         /// <returns>  </returns>
         public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
         {
-            if (DateTime.Now.Subtract(_lastInitDateTime).TotalMinutes > 30)
+            if (DateTimeOffset.UtcNow.Subtract(_lastInitDateTime).TotalMinutes > 30)
             {
                 // our acme context is stale, start a new one
+                // Note: this was originally added to avoid re-using stale replay nonce values and should no longer be required
                 await InitProvider(_log);
             }
 
@@ -1371,7 +1361,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
             }
 
-            var csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
+            IKey csrKey = null;
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1386,6 +1376,11 @@ namespace Certify.Providers.ACME.Anvil
                 {
                     csrKey = savedKey;
                 }
+            }
+
+            if (csrKey == null)
+            {
+                csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
             }
 
             var certFriendlyName = $"{config.PrimaryDomain} [Certify] ";

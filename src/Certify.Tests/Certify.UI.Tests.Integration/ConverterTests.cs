@@ -14,13 +14,13 @@ namespace Certify.UI.Tests.Integration
         public void ExpiryDateConvertDescription()
         {
             // expires in 8 days
-            var description = ExpiryDateConverter.GetDescription(new Models.Lifetime(DateTime.Now, DateTime.Now.AddDays(8.1)));
+            var description = ExpiryDateConverter.GetDescription(new Models.Lifetime(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(8.1)));
 
             Assert.AreEqual(string.Format(SR.ExpiryDateConverter_CertificateExpiresIn, 8), description);
 
             // expired 1 days ago
 
-            description = ExpiryDateConverter.GetDescription(new Models.Lifetime(DateTime.Now, DateTime.Now.AddDays(-1)));
+            description = ExpiryDateConverter.GetDescription(new Models.Lifetime(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(-1)));
 
             Assert.AreEqual(string.Format(SR.ExpiryDateConverter_CertificateExpiredNDaysAgo, 1), description);
 
@@ -42,27 +42,27 @@ namespace Certify.UI.Tests.Integration
             var inactiveColour = System.Windows.Media.Brushes.SlateGray;
 
             // 13 days to go, should be warning
-            var color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTime.Now.AddDays(-77), DateTime.Now.AddDays(13)));
+            var color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTimeOffset.UtcNow.AddDays(-77), DateTimeOffset.UtcNow.AddDays(13)));
 
             Assert.AreEqual(warningColour, color);
 
             // 6 days to go, should be warning
-            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTime.Now.AddDays(-(90 - 6.1)), DateTime.Now.AddDays(6.1)));
+            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTimeOffset.UtcNow.AddDays(-(90 - 6.1)), DateTimeOffset.UtcNow.AddDays(6.1)));
 
             Assert.AreEqual(warningColour, color);
 
             // 0 days to go (less than 1), should be error
-            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTime.Now.AddDays(-89), DateTime.Now.AddDays(1.1)));
+            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTimeOffset.UtcNow.AddDays(-89), DateTimeOffset.UtcNow.AddDays(1.1)));
 
             Assert.AreEqual(dangerColour, color);
 
             // expired, more than 0 days past expiry, should be dark red
-            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTime.Now.AddDays(-90), DateTime.Now.AddDays(-1)));
+            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTimeOffset.UtcNow.AddDays(-90), DateTimeOffset.UtcNow.AddDays(-1)));
 
             Assert.AreEqual(errorColour, color);
 
             // still plenty of time remaining, should be green
-            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTime.Now.AddDays(-60), DateTime.Now.AddDays(30.1)));
+            color = ExpiryDateColourConverter.GetColour(new Models.Lifetime(DateTimeOffset.UtcNow.AddDays(-60), DateTimeOffset.UtcNow.AddDays(30.1)));
 
             Assert.AreEqual(successColour, color);
 

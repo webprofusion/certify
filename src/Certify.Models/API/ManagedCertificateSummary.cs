@@ -31,12 +31,12 @@ namespace Certify.Models.API
         /// <summary>
         /// Date request/renewal was last attempted (if any)
         /// </summary>
-        public DateTime? DateRenewed { get; set; }
+        public DateTimeOffset? DateRenewed { get; set; }
 
         /// <summary>
         /// Date this item will expire (if applicable)
         /// </summary>
-        public DateTime? DateExpiry { get; set; }
+        public DateTimeOffset? DateExpiry { get; set; }
 
         /// <summary>
         /// Most recent request/renewal status for this item

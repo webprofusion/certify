@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Management;
@@ -89,9 +89,9 @@ namespace Certify.Core.Tests.Unit
             var managedCertificate = new ManagedCertificate
             {
                 IncludeInAutoRenew = true,
-                DateRenewed = DateTime.Now.AddDays(-15),
-                DateExpiry = DateTime.Now.AddDays(60),
-                DateLastRenewalAttempt = DateTime.Now.AddHours(-12),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-12),
                 LastRenewalStatus = lastRenewalState,
                 RenewalFailureCount = numberFailedRenewals,
                 LastAttemptedCA = lastCA,

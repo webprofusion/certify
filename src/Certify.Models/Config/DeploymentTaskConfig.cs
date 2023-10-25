@@ -101,7 +101,7 @@ namespace Certify.Config
         /// </summary>
         public List<ProviderParameterSetting>? Parameters { get; set; } = new();
 
-        public DateTime? DateLastExecuted { get; set; }
+        public DateTimeOffset? DateLastExecuted { get; set; }
         public string? LastResult { get; set; }
         public RequestState? LastRunStatus { get; set; }
 

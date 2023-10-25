@@ -30,7 +30,7 @@ namespace Certify.Management
         public const string WEBHOSTING_STORE_NAME = "WebHosting";
         public const string DISALLOWED_STORE_NAME = "Disallowed";
 
-        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTime? dateFrom = null, DateTime? dateTo = null, string suffix = "[Certify]", string subject = null)
+        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTimeOffset? dateFrom = null, DateTimeOffset? dateTo = null, string suffix = "[Certify]", string subject = null)
         {
             // configure generators
             var random = new SecureRandom(new CryptoApiRandomGenerator());
@@ -44,8 +44,8 @@ namespace Certify.Management
             certificateGenerator.SetSubjectDN(new X509Name($"CN={(subject ?? domain)}"));
             certificateGenerator.SetIssuerDN(new X509Name($"CN={(subject ?? domain)}"));
             certificateGenerator.SetSerialNumber(serialNumber);
-            certificateGenerator.SetNotBefore(dateFrom ?? DateTime.UtcNow);
-            certificateGenerator.SetNotAfter(dateTo ?? DateTime.UtcNow.AddMinutes(5));
+            certificateGenerator.SetNotBefore((dateFrom ?? DateTime.UtcNow).DateTime);
+            certificateGenerator.SetNotAfter((dateTo ?? DateTime.UtcNow.AddMinutes(5)).DateTime);
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, new DerSequence(new Asn1Encodable[] { new GeneralName(GeneralName.DnsName, domain) }));
             certificateGenerator.AddExtension(X509Extensions.ExtendedKeyUsage, false, new ExtendedKeyUsage(new KeyPurposeID[] { KeyPurposeID.id_kp_serverAuth, KeyPurposeID.id_kp_clientAuth }));
             certificateGenerator.AddExtension(X509Extensions.KeyUsage, true, new KeyUsage(KeyUsage.KeyEncipherment | KeyUsage.DigitalSignature));
@@ -529,7 +529,7 @@ namespace Certify.Management
         /// <param name="expiryBefore">  </param>
         public static List<string> PerformCertificateStoreCleanup(
             Models.CertificateCleanupMode cleanupMode,
-            DateTime expiryBefore,
+            DateTimeOffset expiryBefore,
             string matchingName,
             List<string> excludedThumbprints,
             ILog log = null,

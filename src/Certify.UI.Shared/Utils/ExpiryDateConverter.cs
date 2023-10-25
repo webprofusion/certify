@@ -24,7 +24,7 @@ namespace Certify.UI.Utils
                 return SR.ExpiryDateConverter_NoCurrentCertificate;
             }
 
-            var ageSpan = lifetime.DateEnd - DateTime.Now;
+            var ageSpan = lifetime.DateEnd - DateTimeOffset.UtcNow;
             var days = (int)ageSpan.TotalDays;
 
             if (ageSpan.TotalHours < 0)
@@ -75,7 +75,7 @@ namespace Certify.UI.Utils
                 return System.Windows.Media.Brushes.SlateGray;
             }
 
-            var percentageElapsed = lifetime?.GetPercentageElapsed(DateTime.Now);
+            var percentageElapsed = lifetime?.GetPercentageElapsed(DateTimeOffset.UtcNow);
 
             if (percentageElapsed > LifetimeHealthThresholds.PercentageDanger)
             {

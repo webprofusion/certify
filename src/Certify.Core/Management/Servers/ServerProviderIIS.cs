@@ -113,10 +113,23 @@ namespace Certify.Management.Servers
         {
             var configChecks = new List<ActionStep>();
 
+            var defaultConfigError = new ActionStep
+            {
+                HasWarning = true,
+                Title = "IIS Administration API not available",
+                Description = "Querying the state of IIS failed. This is usually because IIS is not installed or is not fully configured."
+            };
+
             try
             {
                 using (var serverManager = await GetDefaultServerManager())
                 {
+                    if (serverManager == null)
+                    {
+                        configChecks.Add(defaultConfigError);
+                        return configChecks;
+                    }
+
                     var config = serverManager.GetApplicationHostConfiguration();
 
                     if ((bool?)serverManager.ApplicationPoolDefaults["enableConfigurationOverride"] == false)
@@ -141,12 +154,7 @@ namespace Certify.Management.Servers
             }
             catch (Exception)
             {
-                configChecks.Add(new ActionStep
-                {
-                    HasWarning = true,
-                    Title = "IIS Administration API not available",
-                    Description = "Querying the state of IIS failed. This is usually because IIS is not installed or is not fully configured."
-                });
+                configChecks.Add(defaultConfigError);
             }
 
             return configChecks;

@@ -196,7 +196,7 @@ namespace Certify.Management
             // note that the impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it and the target script
             // if the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
 
-            var arguments = $"{wrapperScriptPath}";
+            var arguments = $"\"{wrapperScriptPath}\"";
 
             if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
             {
