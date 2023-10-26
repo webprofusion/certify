@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Certify.Management;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -354,6 +355,817 @@ namespace Certify.Core.Tests.Unit
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"));
+            Assert.AreEqual(results[0].Title, "Certificate Storage");
+
+            Assert.IsTrue(results[1].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsTrue(results[2].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
+            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[2].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when not in preview")]
+        public async Task MixedIPBindingChecksNoPreview()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled with blank certStoreName")]
+        public async Task MixedIPBindingChecksBlankCertStoreName()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "");
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file path")]
+        public async Task MixedIPBindingChecksBadPfxPath()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Asset\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async() => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file")]
+        public async Task MixedIPBindingChecksBadPfxFile()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\badcert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx password")]
+        public async Task MixedIPBindingChecksBadPfxPassword()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "badpass", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad cert store name")]
+        public async Task MixedIPBindingChecksBadCertStoreName()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
+
+            Assert.AreEqual(results.Count, 1);
+            Assert.IsTrue(results[0].HasError);            
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."));
+            Assert.AreEqual(results[0].Title, "Certificate Storage Failed");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when DeploymentBindingOption = DeploymentBindingOption.UpdateOnly")]
+        public async Task MixedIPBindingChecksRequestConfigUpdateOnly()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.AllSites,
+                    DeploymentBindingOption = DeploymentBindingOption.UpdateOnly,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.AreEqual(results.Count, 1);
+            Assert.IsFalse(results[0].HasError);
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+        }
+
+        [TestMethod, Description("Test if https IP bindings are handled")]
+        public async Task HttpsIPBindingChecks()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="https" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="https" },
+            };
+            var deployment = new BindingDeploymentManager();
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(2, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"));
+            Assert.AreEqual(results[0].Title, "Certificate Storage");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:80:test.com Non-SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+        }
+
+#if NET462
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when CertificateThumbprintHash is defined")]
+        public async Task MixedIPBindingChecksCertificateThumbprintHash()
+        {
+            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01));
+            cert = CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http", CertificateHash = cert.Thumbprint},
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificateThumbprintHash = cert.Thumbprint,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+
+        [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when CertificatePreviousThumbprintHash is defined")]
+        public async Task MixedIPBindingChecksCertificatePreviousThumbprintHash()
+        {
+
+            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01));
+            cert = CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="http", CertificateHash = cert.Thumbprint},
+                new BindingInfo{ Host="test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="http" },
+                new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "MixedIPBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePreviousThumbprintHash = cert.Thumbprint,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+        }
+#endif
+
+        [TestMethod, Description("Test if ftp bindings are handled when not in preview")]
+        public async Task FtpBindingChecksNoPreview()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="ftp.test.com", IP="*", Port = 20, Protocol="ftp", IsFtpSite=true },
+                new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "FtpBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ftp.test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | ***:21:ftp.test.com **"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | ***:21:ftp.test.com **"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+        }
+
+        [TestMethod, Description("Test if ftp bindings are handled when not in preview with Certificate Request that defines a BindingIPAddress")]
+        public async Task FtpBindingChecksCertReqBindingIPAddr()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="ftp.test.com", IP="*", Port = 20, Protocol="ftp", IsFtpSite=true },
+                new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "FtpBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ftp.test.com",
+                    BindingIPAddress = "127.0.0.1",
+                    PerformAutomatedCertBinding = false,
+                    DeploymentSiteOption = DeploymentOption.AllSites,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | **127.0.0.1:21:ftp.test.com **"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | **127.0.0.1:21:ftp.test.com **"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+        }
+
+        [TestMethod, Description("Test if ftp bindings are handled when not in preview with Certificate Request that defines a BindingPort")]
+        public async Task FtpBindingChecksCertReqBindingPort()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="ftp.test.com", IP="*", Port = 20, Protocol="ftp", IsFtpSite=true },
+                new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "FtpBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ftp.test.com",
+                    BindingPort = "22",
+                    PerformAutomatedCertBinding = false,
+                    DeploymentSiteOption = DeploymentOption.AllSites,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | ***:22:ftp.test.com **"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
+            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | ***:22:ftp.test.com **"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+        }
+
+        [TestMethod, Description("Test update bindings are skipped when using a protocol other than http, https, or ftp")]
+        public async Task UpdateBindingSkippedUnsupportedProtocol()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="smtp.test.com", IP="127.0.0.1", Port = 587, Protocol="smtp" },
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "SmtpBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "smtp.test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(1, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+        }
+
+        [TestMethod, Description("Test if ftp bindings are handled when not in preview")]
+        public async Task FtpBindingChecksUpdateExisting()
+        {
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{ Host="ftp.test.com", IP="*", Port = 21, Protocol="ftp", IsFtpSite=true },
+                new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 21, Protocol="ftp", IsFtpSite=true },
+            };
+            var deployment = new BindingDeploymentManager();
+            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "FtpBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ftp.test.com",
+                    PerformAutomatedCertBinding = true,
+                    //DeploymentSiteOption = DeploymentOption.SingleSite,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME,
+                CertificatePath = dummyCertPath
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(1, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            testManagedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
+            results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.IsTrue(results.Any());
+            Assert.AreEqual(3, results.Count());
+            Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
+            Assert.AreEqual(results[0].Category, "CertificateStorage");
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
+            Assert.AreEqual(results[0].Title, "Certificate Stored");
+
+            Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[1].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"));
+            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+
+            Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
+            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
+            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"));
+            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
         }
 
         [TestMethod, Description("Test that duplicate https bindings are not created when multiple non-port 443 same-hostname bindings exist")]
