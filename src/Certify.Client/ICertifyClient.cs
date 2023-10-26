@@ -99,6 +99,7 @@ namespace Certify.Client
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive);
 
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
+        Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site);
 
         Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
 

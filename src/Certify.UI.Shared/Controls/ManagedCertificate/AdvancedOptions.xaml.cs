@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Management;
+using Certify.UI.ViewModel;
 using Microsoft.Win32;
 
 namespace Certify.UI.Controls.ManagedCertificate
@@ -279,6 +280,13 @@ namespace Certify.UI.Controls.ManagedCertificate
             ItemViewModel.SelectedItem.LastRenewalStatus = Models.RequestState.Success;
             ItemViewModel.SelectedItem.DateLastRenewalAttempt = null;
 
+        }
+
+        private async void ChallengeCleanup_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await AppViewModel.Current.PerformChallengeCleanup(ItemViewModel.SelectedItem);
+
+            AppViewModel.Current.ShowNotification(result.FirstOrDefault().Message);
         }
     }
 }

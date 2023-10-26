@@ -50,6 +50,7 @@ namespace Certify.Management
         Task<ActionResult<AccountDetails>> ChangeAccountKey(string storageKey, string newKeyPEM = null);
 
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
+        Task<List<StatusMessage>> PerformChallengeCleanup(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
         Task<List<ActionResult>> PerformServiceDiagnostics();
         Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);

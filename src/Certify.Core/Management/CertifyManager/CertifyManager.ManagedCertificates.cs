@@ -317,6 +317,7 @@ namespace Certify.Management
                     managedCertificate,
                     isPreviewMode,
                     CoreAppSettings.Current.EnableDNSValidationChecks,
+                    performCleanupOnly: false,
                     _credentialsManager,
                     progress
                 )
@@ -341,6 +342,47 @@ namespace Certify.Management
             if (httpChallengeServerActive)
             {
                 await StopHttpChallengeServer();
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// Perform a forced cleanup of challenges where possible. This is particularly useful for cleanup of stray DNS challenge TXT records.
+        /// </summary>
+        /// <param name="log">Log to use</param>
+        /// <param name="managedCertificate"> managed site to perform cleanup for </param>
+        /// <param name="progress">Progress tracker</param>
+        /// <returns>  </returns>
+        public async Task<List<StatusMessage>> PerformChallengeCleanup(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null)
+        {
+            var results = new List<StatusMessage>();
+
+            var serverProvider = GetTargetServerProvider(managedCertificate);
+
+            results.AddRange(
+               await _challengeResponseService.TestChallengeResponse(
+                   log,
+                   serverProvider,
+                   managedCertificate,
+                   isPreviewMode: false,
+                   enableDnsChecks: false,
+                   performCleanupOnly: true,
+                   credentialsManager: _credentialsManager,
+                   progress
+               )
+           );
+
+            if (progress != null)
+            {
+                if (results.Any(r => r.IsOK == false))
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, "One or more challenge cleanup operations failed", managedCertificate, isPreviewMode: false));
+                }
+                else
+                {
+                    ReportProgress(progress, new RequestProgressState(RequestState.Success, "Challenge cleanup operations completed", managedCertificate, isPreviewMode: false));
+                }
             }
 
             return results;
