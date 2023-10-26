@@ -70,6 +70,13 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
+        public async Task TestIISIsAvailable()
+        {
+            var isAvailable = await iisManager.IsAvailable();
+            Assert.IsTrue(isAvailable);
+        }
+
+        [TestMethod]
         public async Task TestIISSiteRunning()
         {
             //this site should be running

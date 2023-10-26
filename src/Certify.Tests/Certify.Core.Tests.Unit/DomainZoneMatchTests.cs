@@ -18,8 +18,8 @@ namespace Certify.Core.Tests.Unit
                     new DnsZone{ Name="test.com", ZoneId="123-test.com"},
                     new DnsZone{ Name="subdomain.test.com", ZoneId="345-subdomain-test.com"},
                     new DnsZone{ Name="long-subdomain.test.com", ZoneId="345-subdomain-test.com"},
-                        new DnsZone{ Name="bar.co.uk", ZoneId="lengthtest-1"},
-                           new DnsZone{ Name="foobar.co.uk", ZoneId="lengthtest-2"}
+                    new DnsZone{ Name="bar.co.uk", ZoneId="lengthtest-1"},
+                    new DnsZone{ Name="foobar.co.uk", ZoneId="lengthtest-2"}
                 }
             );
 
@@ -30,6 +30,9 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(domainRoot.ZoneId == "345-subdomain-test.com");
 
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("www.test.com", "123-test.com");
+            Assert.IsTrue(domainRoot.ZoneId == "123-test.com");
+
+            domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("test.com", "bad.domain.com");
             Assert.IsTrue(domainRoot.ZoneId == "123-test.com");
 
             domainRoot = await mockDnsProvider.Object.DetermineZoneDomainRoot("www.test.com", null);
