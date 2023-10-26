@@ -102,7 +102,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure correct challenge config selected based on domain")]
-        public void ChallengeDelgationRuleTests()
+        public void ChallengeDelegationRuleTests()
         {
             // wildcard rule tests [any subdomain source, any subdomain target]
             var testRule = "*.test.com:*.auth.test.co.uk";
@@ -139,6 +139,15 @@ namespace Certify.Core.Tests.Unit
 
             result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("www.subdomain.example.com", "_acme-challenge.www.subdomain.example.com", testRule);
             Assert.AreEqual("_acme-challenge.www.subdomain.auth.example.co.uk", result);
+        }
+
+        [TestMethod, Description("Ensure correct challenge config selected when rule is blank")]
+        public void ChallengeDelegationRuleBlankRule()
+        {
+            // wildcard rule tests [any subdomain source, any subdomain target]
+            var testRule = "*.test.com:*.auth.test.co.uk";
+            var result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("test.com", "_acme-challenge.test.com", null);
+            Assert.AreEqual("_acme-challenge.test.com", result);
         }
     }
 }
