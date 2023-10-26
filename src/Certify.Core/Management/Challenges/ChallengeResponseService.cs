@@ -31,11 +31,12 @@ namespace Certify.Core.Management.Challenges
         /// </summary>
         /// <param name="serverManager">  </param>
         /// <param name="managedCertificate">  </param>
+        /// <param name="performCleanupOnly"> If true, perform cleanup of challenges only, this mode otherwise the same as a non-test challenge response.</param>
         /// <returns> APIResult </returns>
         /// <remarks> 
         /// The purpose of this method is to test the options (permissions, configuration) before
         /// submitting a request to the ACME server, to avoid creating failed requests and hitting
-        /// usage limits.
+        /// usage limits. Also used as a method for batch cleanup of challenge responses (DNS etc)
         /// </remarks>
         public async Task<List<StatusMessage>> TestChallengeResponse(
             ILog log,
@@ -43,6 +44,7 @@ namespace Certify.Core.Management.Challenges
             ManagedCertificate managedCertificate,
             bool isPreviewMode,
             bool enableDnsChecks,
+            bool performCleanupOnly,
             ICredentialsManager credentialsManager,
             IProgress<RequestProgressState> progress = null
             )
@@ -190,6 +192,11 @@ namespace Certify.Core.Management.Challenges
                     {
                         var recordName = $"_acme-challenge-test.{domain.Value}".Replace("*.", "");
 
+                        if (performCleanupOnly)
+                        {
+                            recordName = $"_acme-challenge.{domain.Value}".Replace("*.", "");
+
+                        }
                         // ISSUE: dependency on changing behavior for a specific plugin
                         if (challengeConfig.ChallengeProvider == "DNS01.API.AcmeDns" || challengeConfig.ChallengeProvider == "DNS01.API.CertifyDns")
                         {
@@ -216,7 +223,8 @@ namespace Certify.Core.Management.Challenges
                                 domain,
                                 managedCertificate,
                                 simulatedAuthorization,
-                                isTestMode: true,
+                                isTestMode: performCleanupOnly ? false : true, //for cleanup only mode we use the real challenge record name, test mode uses a test record name
+                                isCleanupOnly: performCleanupOnly,
                                 credentialsManager
                             );
 
@@ -336,7 +344,7 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response
-                        var check = await PerformChallengeResponse_Dns01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
+                        var check = await PerformChallengeResponse_Dns01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -625,7 +633,7 @@ namespace Certify.Core.Management.Challenges
             return () => checkQueue.All(check => check());
         }
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -645,22 +653,31 @@ namespace Certify.Core.Management.Challenges
             // create DNS records (manually or via automation)
             var dnsHelper = new DnsChallengeHelper(credentialsManager);
 
-            var dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
+            DnsChallengeHelperResult dnsResult;
 
-            if (!dnsResult.Result.IsSuccess)
+            if (!isCleanupOnly)
             {
-                if (dnsResult.IsAwaitingUser)
+                dnsResult = await dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
+
+                if (!dnsResult.Result.IsSuccess)
                 {
-                    log?.Error($"Action Required: {dnsResult.Result.Message}");
+                    if (dnsResult.IsAwaitingUser)
+                    {
+                        log?.Error($"Action Required: {dnsResult.Result.Message}");
+                    }
+                    else
+                    {
+                        log?.Error($"DNS update failed: {dnsResult.Result.Message}");
+                    }
                 }
                 else
                 {
-                    log?.Error($"DNS update failed: {dnsResult.Result.Message}");
+                    log.Information($"DNS: {dnsResult.Result.Message}");
                 }
             }
             else
             {
-                log.Information($"DNS: {dnsResult.Result.Message}");
+                dnsResult = new DnsChallengeHelperResult { Result = new ActionResult("Challenge Cleanup OK.", true) };
             }
 
             var cleanupQueue = new List<Action> { };

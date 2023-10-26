@@ -408,6 +408,24 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        internal async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate managedCertificate)
+        {
+            try
+            {
+                return await _certifyClient.PerformChallengeCleanup(managedCertificate);
+            }
+            catch (TaskCanceledException)
+            {
+                return new List<StatusMessage>
+                {
+                    new StatusMessage
+                    {
+                        IsOK = false, Message = "The operation took too long to complete and has timed out. Please check and try again."
+                    }
+                };
+            }
+        }
+
         /// <summary>
         /// Perform revoke for given managed certificate
         /// </summary>

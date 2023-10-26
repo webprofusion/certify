@@ -281,5 +281,12 @@ namespace Certify.UI.Controls.ManagedCertificate
             ItemViewModel.SelectedItem.DateLastRenewalAttempt = null;
 
         }
+
+        private async void ChallengeCleanup_Click(object sender, RoutedEventArgs e)
+        {
+            var result = await AppViewModel.Current.PerformChallengeCleanup(ItemViewModel.SelectedItem);
+
+            AppViewModel.Current.ShowNotification(result.FirstOrDefault().Message);
+        }
     }
 }

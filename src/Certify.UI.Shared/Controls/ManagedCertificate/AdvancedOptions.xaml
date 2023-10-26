@@ -404,8 +404,16 @@
                                 x:Name="ResetFailureInfo"
                                 Width="220"
                                 Margin="0,4,0,0"
-                                HorizontalAlignment="Left" Click="ResetFailureInfo_Click">
+                                HorizontalAlignment="Left"
+                                Click="ResetFailureInfo_Click">
                                 Reset Failure Status
+                            </Button>
+                            <Button
+                                x:Name="ChallengeCleanup"
+                                Width="220"
+                                Margin="0,4,0,0"
+                                HorizontalAlignment="Left" Click="ChallengeCleanup_Click">
+                                Perform Challenge Cleanup
                             </Button>
                         </StackPanel>
 

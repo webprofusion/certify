@@ -98,6 +98,7 @@ namespace Certify.Client
         Task<RequestProgressState> CheckCertificateRequest(string managedItemId);
 
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
+        Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site);
 
         Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
 

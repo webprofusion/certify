@@ -451,7 +451,11 @@ namespace Certify.Client
             var response = await PostAsync($"managedcertificates/testconfig", site);
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
-
+        public async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site)
+        {
+            var response = await PostAsync($"managedcertificates/challengecleanup", site);
+            return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
+        }
         public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
             var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
