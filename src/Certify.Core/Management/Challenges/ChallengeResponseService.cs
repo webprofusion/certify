@@ -621,7 +621,7 @@ namespace Certify.Core.Management.Challenges
 
         private DnsChallengeHelper _dnsHelper = null;
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, ICredentialsManager credentialsManager)
+        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 
@@ -639,12 +639,12 @@ namespace Certify.Core.Management.Challenges
             }
 
             // create DNS records (manually or via automation)
-            if (_dnsHelper == null) {
+            if (_dnsHelper == null)
+            {
                 _dnsHelper = new DnsChallengeHelper(credentialsManager);
             }
 
-            var dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
-
+            DnsChallengeHelperResult dnsResult;
             if (!isCleanupOnly)
             {
                 dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value, isTestMode);
