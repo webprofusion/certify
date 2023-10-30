@@ -69,6 +69,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Anvi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.ACME.Anvil", "..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj", "{443202E1-B6E5-4625-BC3E-B3CB54CF4055}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Service.Worker", "Certify.Server\Certify.Service.Worker\Certify.Service.Worker\Certify.Service.Worker.csproj", "{D786EFD1-7402-43F0-B74F-504DB7C25FF6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -277,6 +279,14 @@ Global
 		{443202E1-B6E5-4625-BC3E-B3CB54CF4055}.Release|Any CPU.Build.0 = Release|Any CPU
 		{443202E1-B6E5-4625-BC3E-B3CB54CF4055}.Release|x64.ActiveCfg = Release|Any CPU
 		{443202E1-B6E5-4625-BC3E-B3CB54CF4055}.Release|x64.Build.0 = Release|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Debug|x64.Build.0 = Debug|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Release|x64.ActiveCfg = Release|Any CPU
+		{D786EFD1-7402-43F0-B74F-504DB7C25FF6}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
