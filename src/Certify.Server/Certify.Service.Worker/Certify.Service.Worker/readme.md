@@ -73,3 +73,9 @@ dotnet publish -c Release -r linux-x64 --self-contained true
 Single File:
 
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+
+
+Docker
+---------
+Requires a dockerfile to define how to build the images. certify-manager/docker for more dockerfile examples
+Requries Microsoft.VisualStudio.Azure.Containers.Tools.Targets NuGet package installed in the project to hook up docker integration.
