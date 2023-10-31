@@ -993,7 +993,7 @@ namespace Certify.Management
 
                     // certificate request failed
                     result.IsSuccess = false;
-                    result.Message = string.Format(CoreSR.CertifyManager_LetsEncryptServiceTimeout, certRequestResult.ErrorMessage ?? "");
+                    result.Message = $"The certificate order failed to complete. {certRequestResult.ErrorMessage ?? ""}";
 
                     log?.Error(result.Message);
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1450,17 +1450,17 @@ namespace Certify.Providers.ACME.Anvil
                         }
                     }
 
-                    //TODO: we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state.
+                    //Theoretically we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state, however we still do for some custom CAs
                     if (order.Status == OrderStatus.Processing)
                     {
                         // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
                         // https://tools.ietf.org/html/rfc8555#section-7.1.6
 
-                        attempts = 5;
+                        attempts = 10;
 
                         while (attempts > 0 && order.Status == OrderStatus.Processing)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 2)));
+                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 3)));
                             order = await orderContext.Resource();
                             attempts--;
                         }
@@ -1468,7 +1468,7 @@ namespace Certify.Providers.ACME.Anvil
 
                     if (order.Status != OrderStatus.Valid)
                     {
-                        throw new AcmeException("Failed to finalise certificate order. Final order status was " + order.Status.ToString());
+                        return new ProcessStepResult { ErrorMessage = $"The CA did not to finalise the certificate order in the allowed time. The final order status was \"{order.Status}\". Your CA can allow more time for order processing by setting the RetryAfter header in their service implementation.", IsSuccess = false };
                     }
 
                     certificateChain = await orderContext.Download(preferredChain);
