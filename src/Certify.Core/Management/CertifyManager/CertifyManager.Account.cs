@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -670,33 +670,7 @@ namespace Certify.Management
             }
         }
 
-        /// <summary>
-        /// Load cached set of ACME Certificate authorities
-        /// </summary>
-        private void LoadCertificateAuthorities()
-        {
-            _certificateAuthorities.Clear();
-
-            // load core CAs and custom CAs
-            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
-            {
-                _certificateAuthorities.TryAdd(ca.Id, ca);
-            }
-
-            try
-            {
-                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
-
-                foreach (var ca in customCAs)
-                {
-                    _certificateAuthorities.TryAdd(ca.Id, ca);
-                }
-            }
-            catch (Exception exp)
-            {
-                // failed to load custom CAs
-                _serviceLog?.Error(exp.Message);
-            }
+            return await Task.FromResult(new ActionResult("An error occurred removing the indicated Custom CA from the Certificate Authorities list.", false));
         }
     }
 }
