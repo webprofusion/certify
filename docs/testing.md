@@ -3,6 +3,11 @@ Testing Configuration
 
 - In Visual Studio (or other Test UI such as AxoCover), set execution environment to 64-bit to ensure tests load.
 - Units tests are for discreet function testing or limited component dependency tests.
+    - `CertifyManagerAccountTests` require an existing Prod and Staging ACME account for letsencrypt.org to exist. It also requires a `.env.test_accounts` file in the directory `C:\ProgramData\certify\Tests` with values for `RESTORE_KEY_PEM`, `RESTORE_ACCOUNT_URI`, and `RESTORE_ACCOUNT_EMAIL` for an existing letsencrypt.org ACME account
+      ```.env
+      RESTORE_KEY_PEM="-----BEGIN EC PRIVATE KEY-----\r\nMHcCAQEEINL5koIn4o+an+EwyDQEd4Ggnxra5j7Oro13M5klKmhaoAoGCCqGSM49\r\nAwEHoUQDQgAEPF7u1CLMe9FIBQo0MVmv7vlvqGOdSERG5nRLkNKTDUgBRxkXGqY+\r\nGbnnzXUb7j4g7VN7CuEy0SpCdFItD+63hQ==\r\n-----END EC PRIVATE KEY-----\r\n"
+      RESTORE_ACCOUNT_URI=https://acme-staging-v02.api.letsencrypt.org/acme/acct/123456789
+      RESTORE_ACCOUNT_EMAIL=admin.8c635b@test.com
 - Integration tests exercise multiple components and may interact with ACME services etc. Required elements include:
 	- IIS Installed on local machine
     - The debug version of the app must be configured with a contact against staging Let's Encrypt servers
@@ -26,8 +31,7 @@ Testing Configuration
         "Cloudflare_ZoneId": "5265262gdd562s4x6xd64zxczxcv",
         "Cloudflare_TestDomain": "anothertest.com"
     }
-```
-In addition, the test domain for some tests can be set using the CERTIFYSSLDOMAIN environment variable.
+- In addition, the test domain for some tests can be set using the CERTIFYSSLDOMAIN environment variable.
 		
 
 
