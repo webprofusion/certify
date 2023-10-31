@@ -524,7 +524,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Refresh cached list of known certificate authorities ands return the current list
+        /// Refresh cached list of known certificate authorities and return the current list
         /// </summary>
         /// <returns></returns>
         public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
@@ -607,7 +607,7 @@ namespace Certify.Management
                 }
             }
 
-            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
+            return await Task.FromResult(new ActionResult("An error occurred removing the indicated Custom CA from the Certificate Authorities list.", false));
         }
     }
 }
