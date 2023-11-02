@@ -9,7 +9,6 @@ using Certify.Core.Management;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Certify.Management;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -527,7 +526,7 @@ namespace Certify.Core.Tests.Unit
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async() => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file")]
@@ -667,7 +666,7 @@ namespace Certify.Core.Tests.Unit
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
 
             Assert.AreEqual(results.Count, 1);
-            Assert.IsTrue(results[0].HasError);            
+            Assert.IsTrue(results[0].HasError);
             Assert.AreEqual(results[0].Category, "CertificateStorage");
             Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."));
             Assert.AreEqual(results[0].Title, "Certificate Storage Failed");
