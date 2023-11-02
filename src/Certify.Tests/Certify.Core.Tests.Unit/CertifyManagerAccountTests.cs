@@ -57,7 +57,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
             Assert.AreEqual("letsencrypt.org", caAccount.CertificateAuthorityId, $"Unexpected certificate authority id '{caAccount.CertificateAuthorityId}'");
         }
-        
+
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when OverrideAccountDetails is defined in CertifyManager")]
         public async Task TestCertifyManagerGetAccountDetailsDefinedOverrideAccountDetails()
         {
@@ -116,7 +116,7 @@ namespace Certify.Core.Tests.Unit
             try
             {
                 // Setup account registration info
-                var contactRegEmail = "admin."+ Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
+                var contactRegEmail = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
                 var contactRegistration = new ContactRegistration
                 {
                     AgreedToTermsAndConditions = true,
@@ -126,7 +126,7 @@ namespace Certify.Core.Tests.Unit
                     ImportedAccountURI = "",
                     IsStaging = true
                 };
-                
+
                 // Add account
                 var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
                 Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
@@ -142,12 +142,12 @@ namespace Certify.Core.Tests.Unit
                 }
             }
         }
-        
+
         [TestMethod, Description("Happy path test for using CertifyManager.RemoveAccount()")]
         public async Task TestCertifyManagerRemoveAccount()
         {
             // Setup account registration info
-            var contactRegEmail = "admin."+ Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
+            var contactRegEmail = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
@@ -157,7 +157,7 @@ namespace Certify.Core.Tests.Unit
                 ImportedAccountURI = "",
                 IsStaging = true
             };
-            
+
             // Add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
             Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
@@ -696,7 +696,7 @@ namespace Certify.Core.Tests.Unit
                         CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     }
                 };
-                
+
                 // Add new CA
                 var addCaRes = await _certifyManager.UpdateCertificateAuthority(newCustomCa);
                 Assert.IsTrue(addCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {newCustomCa.Id} to be successful");
@@ -718,7 +718,7 @@ namespace Certify.Core.Tests.Unit
                         CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                     }
                 };
-                
+
                 // Update existing CA
                 var updateCaRes = await _certifyManager.UpdateCertificateAuthority(updatedCustomCa);
                 Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA update for CA with ID {updatedCustomCa.Id} to be successful");
@@ -783,9 +783,9 @@ namespace Certify.Core.Tests.Unit
             var certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
             var newCaDetails = certificateAuthorities.Find(c => c.Id == newCustomCa.Id);
             Assert.IsNotNull(newCaDetails, $"Expected one of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {newCustomCa.Id}");
-            
+
             // Delete custom CA
-            var deleteCaRes = await _certifyManager.RemoveCertificateAuthority(newCustomCa.Id); 
+            var deleteCaRes = await _certifyManager.RemoveCertificateAuthority(newCustomCa.Id);
             Assert.IsTrue(deleteCaRes.IsSuccess, $"Expected Custom CA deletion for CA with ID {newCustomCa.Id} to be successful");
             Assert.AreEqual(deleteCaRes.Message, "OK", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() success");
             certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
