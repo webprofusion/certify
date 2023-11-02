@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -213,7 +211,7 @@ namespace Certify.Core.Tests.Unit
         public void TestBasicNextFallbackNull()
         {
             // setup
-            var accounts = GetTestAccounts().FindAll(a  => a.ID != "letsreluctantlyfallback_ABC234_staging");
+            var accounts = GetTestAccounts().FindAll(a => a.ID != "letsreluctantlyfallback_ABC234_staging");
             var caList = GetTestCAs();
 
             var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: "letsfallback");
@@ -221,8 +219,14 @@ namespace Certify.Core.Tests.Unit
             // perform check
             var defaultCAAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == DEFAULTCA && a.IsStagingAccount == managedCertificate.UseStagingMode);
 
-            accounts.Add(new AccountDetails { ID = "letsfallback_ABC234_staging_isfailover", IsStagingAccount = true, IsFailoverSelection = true, 
-                CertificateAuthorityId = "letsfallback", Title = "A fallback account with is failover" });
+            accounts.Add(new AccountDetails
+            {
+                ID = "letsfallback_ABC234_staging_isfailover",
+                IsStagingAccount = true,
+                IsFailoverSelection = true,
+                CertificateAuthorityId = "letsfallback",
+                Title = "A fallback account with is failover"
+            });
 
             var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
 
@@ -238,7 +242,7 @@ namespace Certify.Core.Tests.Unit
             var accounts = GetTestAccounts();
             var caList = GetTestCAs();
 
-            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA, 
+            var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
                 new CertRequestConfig { SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com", "*.wildtest.com" }.ToArray() });
 
             // perform check
@@ -319,7 +323,9 @@ namespace Certify.Core.Tests.Unit
             var caList = GetTestCAs();
 
             var managedCertificate = GetBasicManagedCertificate(RequestState.Error, 3, lastCA: DEFAULTCA,
-                new CertRequestConfig { SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com", "*.wildtest.com" }.ToArray(),
+                new CertRequestConfig
+                {
+                    SubjectAlternativeNames = new List<string> { "test.com", "anothertest.com", "www.test.com", "*.wildtest.com" }.ToArray(),
                     PreferredExpiryDays = 7,
                 });
 

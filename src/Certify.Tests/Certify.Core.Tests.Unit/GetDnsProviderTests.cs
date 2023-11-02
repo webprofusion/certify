@@ -14,7 +14,7 @@ namespace Certify.Core.Tests.Unit
         private SQLiteCredentialStore credentialsManager;
         private DnsChallengeHelper dnsHelper;
 
-        public GetDnsProviderTests() 
+        public GetDnsProviderTests()
         {
             var pluginManager = new PluginManager();
             pluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_DNS_PROVIDERS });
