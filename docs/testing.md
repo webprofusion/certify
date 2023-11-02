@@ -10,6 +10,8 @@ Testing Configuration
       RESTORE_ACCOUNT_EMAIL=admin.8c635b@test.com
 - Integration tests exercise multiple components and may interact with ACME services etc. Required elements include:
 	- IIS Installed on local machine
+        * A non-enabled site in IIS is needed for TestCertifyManagerGetPrimaryWebSitesIncludeStoppedSites() in CertifyManagerServerTypeTests.cs
+    - Must set IncludeExternalPlugins to true in C:\ProgramData\certify\appsettings.json and run copy-plugins.bat from certify-internal
     - The debug version of the app must be configured with a contact against staging Let's Encrypt servers
 	- Completing HTTP challenges requires that the machine can respond to port 80 requests from the internet (such as the Let's Encrypt staging server checks)
 	- DNS API Credentials test and DNS Challenges require the respective DNS credentials by configured as saved credentials in the UI (see config below)
