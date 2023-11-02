@@ -55,7 +55,7 @@ namespace Certify.Core.Tests.Unit
             _store.TryGetValue(o.Id, out var value);
             var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as AccessStoreItem;
             var r = Task.FromResult(_store.TryUpdate(o.Id, o, c));
-            if(r.Result == false)
+            if (r.Result == false)
             {
                 throw new Exception("Could not store item type");
             }
@@ -96,8 +96,8 @@ namespace Certify.Core.Tests.Unit
 
     public class TestSecurityPrinciples
     {
-        public static SecurityPrinciple TestAdmin() 
-        { 
+        public static SecurityPrinciple TestAdmin()
+        {
             return new SecurityPrinciple
             {
                 Id = "[test]",
@@ -106,7 +106,7 @@ namespace Certify.Core.Tests.Unit
                 Email = "test_admin@test.com",
                 Password = "ABCDEFG",
                 PrincipleType = SecurityPrincipleType.User
-            }; 
+            };
         }
         public static SecurityPrinciple Admin()
         {
