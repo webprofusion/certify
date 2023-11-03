@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -697,5 +697,11 @@
   </data>
   <data name="ExpiryDateConverter_CertificateExpiredNHoursAgo" xml:space="preserve">
     <value>Expired {0} hours ago</value>
+  </data>
+  <data name="Settings_CA_Intro" xml:space="preserve">
+    <value> Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted).</value>
+  </data>
+  <data name="Settings_CA_Fallback" xml:space="preserve">
+    <value>If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.</value>
   </data>
 </root>
