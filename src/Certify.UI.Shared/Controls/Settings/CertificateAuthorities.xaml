@@ -15,13 +15,12 @@
     <!--  Certificate Authority Preference  -->
     <StackPanel Orientation="Vertical">
 
-        <TextBlock Style="{StaticResource Instructions}">
-            Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted).
-        </TextBlock>
+        <TextBlock Style="{StaticResource Instructions}" Text="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
 
-        <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER', Path=Prefs}">
-            If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.
-        </TextBlock>
+        <TextBlock
+            Style="{StaticResource Instructions}"
+            Text="{x:Static res:SR.Settings_CA_Fallback}"
+            Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='CA_FAILOVER', Path=Prefs}" />
 
         <StackPanel Orientation="Horizontal">
             <Label Content="{x:Static res:SR.PreferredCertificateAuthority}" />
