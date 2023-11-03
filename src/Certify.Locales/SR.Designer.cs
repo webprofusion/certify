@@ -1620,6 +1620,24 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can&apos;t issue a new certificate an alternative compatible provider can be used automatically..
+        /// </summary>
+        public static string Settings_CA_Fallback {
+            get {
+                return ResourceManager.GetString("Settings_CA_Fallback", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  Certificate Authorities are the organisations who can issue trusted certificates. You need to register an account for each (ACME) Certificate Authority you wish to use. Accounts can either be Production (live, trusted certificates) or Staging (test, non-trusted)..
+        /// </summary>
+        public static string Settings_CA_Intro {
+            get {
+                return ResourceManager.GetString("Settings_CA_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Check for updates automatically.
         /// </summary>
         public static string Settings_CheckUpdates {
