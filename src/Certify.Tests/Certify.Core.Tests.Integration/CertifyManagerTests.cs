@@ -6,10 +6,10 @@ using Certify.Models;
 using Certify.Service;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Certify.Core.Tests.Unit
+namespace Certify.Core.Tests
 {
     [TestClass]
-    public class CertifyManagerTests
+    public class CertifyManagerTests : IntegrationTestBase
     {
         private readonly CertifyManager _certifyManager;
 
@@ -22,18 +22,49 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Happy path test for using CertifyManager.GetACMEProvider()")]
         public async Task TestCertifyManagerGetACMEProvider()
         {
-            // Setup test data
+            // Setup account registration info
+            var testCaId = StandardCertAuthorities.LETS_ENCRYPT;
+            var contactRegEmail = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
+            var contactRegistration = new ContactRegistration
+            {
+                AgreedToTermsAndConditions = true,
+                CertificateAuthorityId = testCaId,
+                EmailAddress = contactRegEmail,
+                ImportedAccountKey = "",
+                ImportedAccountURI = "",
+                IsStaging = true
+            };
+
+            // Add new ACME account
+            var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+            Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
+            var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
+
+            // Setup dummy ManagedCertificate
             var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
-            var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
+            var dummyManagedCert = new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true };
 
-            // Get results from CertifyManager.GetACMEProvider()
-            var acmeClientProvider = await _certifyManager.GetACMEProvider(dummyManagedCert, caAccount);
+            // Get expected certificate authority staging URI
+            var expectedAcmeBaseUri = CertificateAuthority.CoreCertificateAuthorities.Find((c) => c.Id == testCaId).StagingAPIEndpoint;
 
-            // Validate return from CertifyManager.GetACMEProvider()
-            Assert.IsNotNull(acmeClientProvider, "Expected response from CertifyManager.GetACMEProvider() to not be null");
-            Assert.AreEqual("https://acme-staging-v02.api.letsencrypt.org/directory", acmeClientProvider.GetAcmeBaseURI());
-            Assert.AreEqual("Anvil", acmeClientProvider.GetProviderName());
+            try
+            {
+                // Get results from CertifyManager.GetACMEProvider()
+                var acmeClientProvider = await _certifyManager.GetACMEProvider(dummyManagedCert, accountDetails);
+
+                // Validate return from CertifyManager.GetACMEProvider()
+                Assert.IsNotNull(acmeClientProvider, "Expected response from CertifyManager.GetACMEProvider() to not be null");
+                Assert.AreEqual(expectedAcmeBaseUri, acmeClientProvider.GetAcmeBaseURI(), "Unexpected CA Base URI in returned value from acmeClientProvider.GetAcmeBaseURI()");
+                Assert.AreEqual("Anvil", acmeClientProvider.GetProviderName(), "Unexpected Provider name in returned value from acmeClientProvider.GetProviderName()");
+                await Assert.ThrowsExceptionAsync<NotImplementedException>(async () => await acmeClientProvider.GetAcmeAccountStatus(), "Expected acmeClientProvider.GetAcmeAccountStatus() to throw NotImplementedException");
+                Assert.IsNotNull(await acmeClientProvider.GetAcmeDirectory(), "Expected acmeClientProvider.GetAcmeDirectory() to return a non-null value");
+            }
+            finally
+            {
+                // Remove created ACME account
+                var removeAccountRes = await _certifyManager.RemoveAccount(accountDetails.StorageKey, true);
+                Assert.IsTrue(removeAccountRes.IsSuccess, $"Expected account removal to be successful for {contactRegEmail}");
+            }
         }
 
         [TestMethod, Description("Test for using CertifyManager.GetACMEProvider() with a null ca account")]
@@ -41,7 +72,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Setup test data
             var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true };
 
             // Get results from CertifyManager.GetACMEProvider()
             var acmeClientProvider = await _certifyManager.GetACMEProvider(dummyManagedCert, null);
@@ -55,7 +86,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Setup test data
             var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true };
             var account = new AccountDetails
             {
                 AccountKey = "",
@@ -79,7 +110,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Setup test data
             var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true };
 
             var progressState = new RequestProgressState(RequestState.Running, "Starting..", dummyManagedCert);
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
