@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -159,16 +159,13 @@
   <data name="Email_Address" xml:space="preserve">
     <value>Correo electrónico</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>Sí, estoy de acuerdo</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>Registrar Contacto</value>
   </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
-    <value>Para solicitar certificados, debe registrarse en cada una de las Autoridades de certificación que desee utilizar. </value>
-  </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>La dirección de correo electrónico provista se puede ser utilizada para notificarle acerca de la próxima renovación de certificados si es necesario. Las direcciones de correo electrónico inválidas serán rechazadas por la Autoridad de Certificación.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
@@ -198,26 +195,59 @@
   <data name="ImportDlg_Merge" xml:space="preserve">
     <value>Combinar múltiples dominios/certificados por sitio en un Sitio Administrado</value>
   </data>
-  <data name="ImportDlg_Skip" xml:space="preserve">
-    <value>Omitir Importar</value>
-  </data>
   <data name="Import" xml:space="preserve">
     <value>Importar</value>
   </data>
+  <data name="ImportDlg_Skip" xml:space="preserve">
+    <value>Omitir Importar</value>
+  </data>
   <data name="Send_Feedback_Exception" xml:space="preserve">
     <value>¡Huy! Algo salió mal. Por favor cuéntanos más detalles al respecto.</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Información</value>
+  </data>
+  <data name="Comments" xml:space="preserve">
+    <value>Comentarios:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
+    <value>Url:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
+    <value>Método:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
+    <value>Cuerpo:</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
+    <value>ContentType:</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
+    <value>Revocar Certificado</value>
+  </data>
+  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
+    <value>[Edición de la comunidad] </value>
+  </data>
+  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
+    <value>Certificado Revocado.</value>
+  </data>
+  <data name="Alert" xml:space="preserve">
+    <value>Alerta</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Contraseña</value>
   </data>
   <data name="Send_Feedback_Success" xml:space="preserve">
     <value>Gracias, tus comentarios han sido enviados.</value>
   </data>
   <data name="Send_Feedback_Error" xml:space="preserve">
     <value>Lo sentimos, hubo un problema al enviar sus comentarios.</value>
-  </data>
-  <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>Hubo un problema al registrarse con la Autoridad de Certificación utilizando este correo electrónico. Verifique que el correo electrónico sea válido y que esta computadora tenga una conexión abierta a Internet (se requiere https saliente para las llamadas API). </value>
-  </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
-    <value>Para continuar, confirme que acepta los términos y condiciones actuales de esta Autoridad de Certificación. </value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
     <value>Ingrese el correo electrónico que utilizó al registrar su clave.</value>
@@ -251,12 +281,6 @@
   </data>
   <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
     <value>Para realizar la renovación automática de certificados, Certify creará una tarea en el Programador de Tareas de Windows. Esta tarea debe ejecutarse como un usuario de nivel de Administrador para realizar tareas de administración de certificados y administración de IIS.</value>
-  </data>
-  <data name="OK" xml:space="preserve">
-    <value>OK</value>
-  </data>
-  <data name="Password" xml:space="preserve">
-    <value>Contraseña</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
     <value>Esta versión es gratuita para evaluación y gestionará un número limitado de certificados. Para eliminar esta limitación, compre una clave de registro en https://certifytheweb.com/register. Los usuarios registrados pueden obtener asistencia enviando un correo electrónico a support@certifytheweb.com </value>
@@ -300,17 +324,92 @@
   <data name="Settings_AutoRenewalInterval" xml:space="preserve">
     <value>Intervalo de renovación automática (días)</value>
   </data>
+  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
+    <value>Caduca en {0} días</value>
+  </data>
+  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
+    <value>Sin certificado actual.</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
+    <value>Ruta del certificado: [establecer]</value>
+  </data>
+  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
+    <value>Trigger de Webhook:</value>
+  </data>
+  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
+    <value>Usar enlaces de IP/Puerto específicos</value>
+  </data>
+  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
+    <value>Creación/ ctualización automática de enlaces de IIS (utiliza SNI)</value>
+  </data>
+  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
+    <value>Post-solicitud PS Script:</value>
+  </data>
+  <data name="About_LanguageTranslator" xml:space="preserve">
+    <value>Traductor de idiomas actual:</value>
+  </data>
+  <data name="LanguageAuthor" xml:space="preserve">
+    <value>Colaboradores de Certify Certificate Manager https://certifytheweb.com</value>
+  </data>
+  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
+    <value>¿Desea visitar la página de descarga ahora?</value>
+  </data>
+  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
+    <value>Error al Revocar Certificado: {0}</value>
+  </data>
+  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
+    <value>¿Está seguro de que desea revocar este certificado?</value>
+  </data>
+  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
+    <value>Estás usando la versión de prueba de esta aplicación. Por favor, compre una clave de registro para actualizar. Vea la opción Registrar en la pestaña Acerca de.</value>
+  </data>
+  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
+    <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
+  </data>
+  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
+    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a support@certifytheweb.com proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
+  </data>
+  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+    <value>Comience registrando un nuevo contacto, luego puede comenzar a solicitar certificados.</value>
+  </data>
   <data name="Settings_AutoRenewalRequestLimit" xml:space="preserve">
     <value>Número máximo de solicitudes de renovación automática por sesión (0 = Ilimitado)</value>
   </data>
   <data name="Settings_CheckUpdates" xml:space="preserve">
     <value>Buscar actualizaciones automáticamente</value>
   </data>
+  <data name="Browser" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Eliminar</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Guardar</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Guardar Cambios</value>
+  </data>
   <data name="Settings_EnableTelemetry" xml:space="preserve">
     <value>Habilitar la aplicación de telemetría (informes de uso de características)</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>Habilitar proxy API para las comprobaciones de configuración de dominio</value>
+  </data>
+  <data name="succeed" xml:space="preserve">
+    <value>exitoso</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>fallido</value>
+  </data>
+  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
+    <value>Prueba de Webhook</value>
+  </data>
+  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
+    <value>Ver Certificado</value>
+  </data>
+  <data name="SaveError" xml:space="preserve">
+    <value>Error al Guardar</value>
   </data>
   <data name="Settings_EnableEFS" xml:space="preserve">
     <value>Habilite el Sistema de Cifrados de Archivos (EFS) para archivos confidenciales. Esta opción no funciona en todas las versiones de Windows.</value>
@@ -321,17 +420,8 @@
   <data name="Settings_EnableDnsValidation" xml:space="preserve">
     <value>Habilitar comprobaciones de validación de DNS (Resolution, CAA, DNSSEC)</value>
   </data>
-  <data name="SaveChanges" xml:space="preserve">
-    <value>Guardar Cambios</value>
-  </data>
-  <data name="Save" xml:space="preserve">
-    <value>Guardar</value>
-  </data>
   <data name="DiscardChanges" xml:space="preserve">
     <value>Descartar Cambios</value>
-  </data>
-  <data name="Delete" xml:space="preserve">
-    <value>Eliminar</value>
   </data>
   <data name="ManagedCertificateSettings_RequestCertificate" xml:space="preserve">
     <value>Solicitar Certificado</value>
@@ -341,9 +431,6 @@
   </data>
   <data name="ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure" xml:space="preserve">
     <value>Notificar al contacto principal sobre la falla de renovación</value>
-  </data>
-  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>Se requiere al menos un nombre de host completo (por ejemplo, 'github.com') o comodín (por ejemplo, '*.github.com) para crear un certificado. </value>
   </data>
   <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>Opciones</value>
@@ -408,23 +495,14 @@
   <data name="Test" xml:space="preserve">
     <value>Prueba</value>
   </data>
-  <data name="Browser" xml:space="preserve">
-    <value>...</value>
-  </data>
   <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>Nota: Para exportar este certificado, use la opción Administrar Certificados en Windows.</value>
   </data>
   <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>brir archivo de registro</value>
   </data>
-  <data name="ManagedCertificateSettings_ViewCertificate" xml:space="preserve">
-    <value>Ver Certificado</value>
-  </data>
   <data name="ManagedCertificateSettings_CertificateRevokeWarning" xml:space="preserve">
     <value>ADVERTENCIA: este certificado ha sido revocado.</value>
-  </data>
-  <data name="SaveError" xml:space="preserve">
-    <value>Error al Guardar</value>
   </data>
   <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
     <value>Seleccione el sitio web para crear un certificado</value>
@@ -481,187 +559,109 @@
   <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
     <value>Prueba de Webhook Fallida</value>
   </data>
-  <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
-    <value>Prueba de Webhook</value>
-  </data>
-  <data name="succeed" xml:space="preserve">
-    <value>exitoso</value>
-  </data>
-  <data name="failed" xml:space="preserve">
-    <value>fallido</value>
-  </data>
   <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Solicitud de Webhook {0}: HTTP {1}</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Error de solicitud de Webhook: {0}</value>
   </data>
-  <data name="Alert" xml:space="preserve">
-    <value>Alerta</value>
-  </data>
-  <data name="Error" xml:space="preserve">
-    <value>Error</value>
-  </data>
-  <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
-    <value>Certificado Revocado.</value>
-  </data>
-  <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
-    <value>Error al Revocar Certificado: {0}</value>
-  </data>
-  <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
-    <value>¿Está seguro de que desea revocar este certificado?</value>
-  </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>Estás usando la versión de prueba de esta aplicación. Por favor, compre una clave de registro para actualizar. Vea la opción Registrar en la pestaña Acerca de.</value>
-  </data>
-  <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
-    <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
-  </data>
-  <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>No se detectó IIS en este servidor, una serie de características importantes no estarán disponible. Si IIS está instalado y ejecutándose en este servidor, informe este error a support@certifytheweb.com proporcionando detalles de la versión del sistema operativo del servidor y las versiones de IIS.</value>
-  </data>
-  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
-    <value>Comience registrando un nuevo contacto, luego puede comenzar a solicitar certificados.</value>
-  </data>
-  <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
-    <value>¿Desea visitar la página de descarga ahora?</value>
-  </data>
-  <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value>[Edición de la comunidad] </value>
-  </data>
-  <data name="LanguageAuthor" xml:space="preserve">
-    <value>Colaboradores de Certify Certificate Manager https://certifytheweb.com</value>
-  </data>
-  <data name="About_LanguageTranslator" xml:space="preserve">
-    <value>Traductor de idiomas actual:</value>
-  </data>
-  <data name="Info" xml:space="preserve">
-    <value>Información</value>
-  </data>
-  <data name="Comments" xml:space="preserve">
-    <value>Comentarios:</value>
-  </data>
-  <data name="ManagedCertificateSettings_RevokeCertificate" xml:space="preserve">
-    <value>Revocar Certificado</value>
-  </data>
-  <data name="ManagedCertificateSettings_HookUrl" xml:space="preserve">
-    <value>Url:</value>
-  </data>
-  <data name="ManagedCertificateSettings_HookMethod" xml:space="preserve">
-    <value>Método:</value>
-  </data>
-  <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
-    <value>Cuerpo:</value>
-  </data>
-  <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
-    <value>ContentType:</value>
-  </data>
-  <data name="ManagedCertificateSettings_PostRequestScript" xml:space="preserve">
-    <value>Post-solicitud PS Script:</value>
-  </data>
-  <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
-    <value>Creación/ ctualización automática de enlaces de IIS (utiliza SNI)</value>
-  </data>
-  <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
-    <value>Usar enlaces de IP/Puerto específicos</value>
-  </data>
-  <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
-    <value>Trigger de Webhook:</value>
-  </data>
-  <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
-    <value>Ruta del certificado: [establecer]</value>
-  </data>
-  <data name="ExpiryDateConverter_NoCurrentCertificate" xml:space="preserve">
-    <value>Sin certificado actual.</value>
-  </data>
-  <data name="ExpiryDateConverter_CertificateExpiresIn" xml:space="preserve">
-    <value>Caduca en {0} días</value>
-  </data>
+  <data name="Account_Edit_Intro" xml:space="preserve">
+		<value>Para solicitar certificados, debe registrarse en cada una de las Autoridades de certificación que desee utilizar. </value>
+	</data>
+  <data name="New_Contact_EmailError" xml:space="preserve">
+		<value>Hubo un problema al registrarse con la Autoridad de Certificación utilizando este correo electrónico. Verifique que el correo electrónico sea válido y que esta computadora tenga una conexión abierta a Internet (se requiere https saliente para las llamadas API). </value>
+	</data>
+  <data name="Account_Edit_AgreeConditions" xml:space="preserve">
+		<value>Para continuar, confirme que acepta los términos y condiciones actuales de esta Autoridad de Certificación. </value>
+	</data>
+  <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
+		<value>Se requiere al menos un nombre de host completo (por ejemplo, 'github.com') o comodín (por ejemplo, '*.github.com) para crear un certificado. </value>
+	</data>
   <data name="General_Loading" xml:space="preserve">
-    <value>Cargando...</value>
-  </data>
+		<value>Cargando...</value>
+	</data>
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
-    <value>La versión actual de la aplicación requiere una actualización esencial para garantizar el funcionamiento continuo. Por favor actualice inmediatamente. ¿Cerrar la aplicación ahora?</value>
-  </data>
+		<value>La versión actual de la aplicación ya no es compatible. Por favor actualize para continuar.</value>
+	</data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>Nota: esta configuración solo se aplica a los nuevos enlaces https, los enlaces existentes solo se actualizan con el nuevo certificado. El uso de una IP fija para varios certificados provocará un conflicto de vinculación en Windows, utilícelo con precaución. </value>
-  </data>
+		<value>Nota: esta configuración solo se aplica a los nuevos enlaces https, los enlaces existentes solo se actualizan con el nuevo certificado. El uso de una IP fija para varios certificados provocará un conflicto de vinculación en Windows, utilícelo con precaución. </value>
+	</data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
-    <value>Vuelva a aplicar el certificado a los enlaces</value>
-  </data>
+		<value>Vuelva a aplicar el certificado a los enlaces</value>
+	</data>
   <data name="Dashboard_Register" xml:space="preserve">
-    <value>Agregar</value>
-  </data>
+		<value>Agregar</value>
+	</data>
   <data name="Dashboard_Password" xml:space="preserve">
-    <value>Contraseña</value>
-  </data>
+		<value>Contraseña</value>
+	</data>
   <data name="GettingStarted_AddToDashboard" xml:space="preserve">
-    <value>Agregar al panel de informes </value>
-  </data>
+		<value>Agregar al panel de informes </value>
+	</data>
   <data name="GettingStarted_Dashboard" xml:space="preserve">
-    <value>Panel de informes</value>
-  </data>
+		<value>Panel de informes</value>
+	</data>
   <data name="GettingStarted_DashboardIntro" xml:space="preserve">
-    <value>Puede utilizar el panel de informes para ver fácilmente el estado de renovación del certificado en uno o más servidores. </value>
-  </data>
+		<value>Puede utilizar el panel de informes para ver fácilmente el estado de renovación del certificado en uno o más servidores. </value>
+	</data>
   <data name="GettingStarted_ViewDashboard" xml:space="preserve">
-    <value>Ver panel de informes</value>
-  </data>
+		<value>Ver panel de informes</value>
+	</data>
   <data name="Dashboard_NewAccount" xml:space="preserve">
-    <value>Crear una nueva cuenta</value>
-  </data>
+		<value>Crear una nueva cuenta</value>
+	</data>
   <data name="Dashboard_AddIntro" xml:space="preserve">
-    <value>Para agregar este servidor a su panel, proporcione sus https://certifytheweb.com/profile detalles de inicio de sesión o registre una nueva cuenta: </value>
-  </data>
+		<value>Para agregar este servidor a su panel, proporcione sus https://certifytheweb.com/profile detalles de inicio de sesión o registre una nueva cuenta: </value>
+	</data>
   <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
-    <value>Usar servicio en segundo plano (se ejecuta como sistema local) </value>
-  </data>
+		<value>Usar servicio en segundo plano (se ejecuta como sistema local) </value>
+	</data>
   <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
-    <value>Usar una tarea programada (se ejecuta como usuario especificado) </value>
-  </data>
+		<value>Usar una tarea programada (se ejecuta como usuario especificado) </value>
+	</data>
   <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
-    <value>Actualizar</value>
-  </data>
+		<value>Actualizar</value>
+	</data>
   <data name="Update_DownloadNow" xml:space="preserve">
-    <value>¿Le gustaría descargar automáticamente la actualización? Se le notificará cuando esté listo para aplicar.</value>
-  </data>
+		<value>¿Le gustaría descargar automáticamente la actualización? Se le notificará cuando esté listo para aplicar.</value>
+	</data>
   <data name="Update_ReadyToApply" xml:space="preserve">
-    <value>Una nueva actualización está lista para aplicarse. ¿Le gustaría instalarlo ahora? </value>
-  </data>
+		<value>Una nueva actualización está lista para aplicarse. ¿Le gustaría instalarlo ahora? </value>
+	</data>
   <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
-    <value>Está intentando crear un enlace SNI que también tiene una dirección IP enlazada específica. En su lugar, se recomienda que los enlaces SNI utilicen Todos sin asignar. ¿Desea continuar? </value>
-  </data>
+		<value>Está intentando crear un enlace SNI que también tiene una dirección IP enlazada específica. En su lugar, se recomienda que los enlaces SNI utilicen Todos sin asignar. ¿Desea continuar? </value>
+	</data>
   <data name="Credentials_EditCredential" xml:space="preserve">
-    <value>Agregar / actualizar credencial almacenada </value>
-  </data>
+		<value>Agregar / actualizar credencial almacenada </value>
+	</data>
   <data name="Update_DownloadFailed" xml:space="preserve">
-    <value>Lo sentimos, no se pudo descargar la actualización. Por favor, inténtelo de nuevo más tarde. </value>
-  </data>
+		<value>Lo sentimos, no se pudo descargar la actualización. Por favor, inténtelo de nuevo más tarde. </value>
+	</data>
   <data name="Managed_Certificates" xml:space="preserve">
-    <value>Administrar Certificados</value>
-  </data>
+		<value>Administrar Certificados</value>
+	</data>
   <data name="ManagedCertificateSettings_DefaultTitle" xml:space="preserve">
-    <value>Nuevo certificado administrado</value>
-  </data>
+		<value>Nuevo certificado administrado</value>
+	</data>
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
-    <value>Agregue dominios al certificado:</value>
-  </data>
+		<value>Agregue dominios al certificado:</value>
+	</data>
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
-    <value>p.ej. test.com, www.test.com o * .test.com </value>
-  </data>
+		<value>p.ej. test.com, www.test.com o * .test.com </value>
+	</data>
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
-    <value>Habilitar el servidor de desafío Http</value>
-  </data>
+		<value>Habilitar el servidor de desafío Http</value>
+	</data>
   <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
-    <value>Habilitar la limpieza de certificados </value>
-  </data>
+		<value>Habilitar la limpieza de certificados </value>
+	</data>
   <data name="Settings_EnableStatusReporting" xml:space="preserve">
-    <value>Habilitar informes de estado en el panel </value>
-  </data>
+		<value>Habilitar informes de estado en el panel </value>
+	</data>
   <data name="PreferredCertificateAuthority" xml:space="preserve">
-    <value>Autoridad de Certificación preferida</value>
-  </data>
+		<value>Autoridad de Certificación preferida</value>
+	</data>
   <data name="MainWindow_KeyExpired" xml:space="preserve">
-    <value>Su clave de licencia ha caducado o ya no está activa. </value>
-  </data>
+		<value>Su clave de licencia ha caducado o ya no está activa. </value>
+	</data>
 </root>
