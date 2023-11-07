@@ -40,7 +40,7 @@
                     Height="32"
                     MinWidth="140"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
-                    Header="Certificate Authority"
+                    Header="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Title}"
                     IsSelected="true">
                     <!--  Certificate Authority Preference  -->
                     <DockPanel Margin="16,0,8,8" DockPanel.Dock="Top">
@@ -70,7 +70,7 @@
 
                             <CheckBox
                                 Margin="4,4,0,4"
-                                Content="Use Staging Mode (Test Certificates)"
+                                Content="{x:Static Resources:SR.ManagedCertificate_CertificateAuthority_UseTestCertificates}"
                                 IsChecked="{Binding SelectedItem.UseStagingMode}"
                                 Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
                         </StackPanel>
