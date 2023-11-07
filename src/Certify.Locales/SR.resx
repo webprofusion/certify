@@ -159,16 +159,16 @@
   <data name="Email_Address" xml:space="preserve">
     <value>Email Address</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>Yes, I Agree</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>Register Contact</value>
   </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
+  <data name="Account_Edit_Intro" xml:space="preserve">
     <value>To request certificates you need to register with each of the Certificate Authorities that you want to use.</value>
   </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
@@ -216,7 +216,7 @@
   <data name="New_Contact_EmailError" xml:space="preserve">
     <value>There was a problem registering with the Certificate Authority using this email address. Check the email address is valid and that this computer has an open connection to the internet (outgoing https is required for API calls).</value>
   </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConditions" xml:space="preserve">
     <value>To proceed, confirm that you agree to the current terms and conditions for this Certificate Authority.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">
@@ -516,7 +516,7 @@
     <value>You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
-    <value>This will renew certificates for all auto-renewed items. Proceed?</value>
+    <value>This will renew certificates for all auto-renewed items, if applicable. Proceed?</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
     <value>IIS Was not detected on this server, important functionality will be unavailable. If you know IIS is installed and working on this server, please report this error to support@certifytheweb.com providing details of your server Operating System version and IIS versions</value>
@@ -703,5 +703,17 @@
   </data>
   <data name="Settings_CA_Fallback" xml:space="preserve">
     <value>If you register with multiple authorities this may enable you to use automatic Certificate Authority Failover, so if your preferred Certificate Authority can't issue a new certificate an alternative compatible provider can be used automatically.</value>
+  </data>
+  <data name="Account_Edit_SectionTitle" xml:space="preserve">
+    <value>Edit ACME Account</value>
+  </data>
+  <data name="ManagedCertificate_CertificateAuthority_UseTestCertificates" xml:space="preserve">
+    <value>Use Staging Mode (Test Certificates)</value>
+  </data>
+  <data name="EditCertificateAuthority_TitleHelp" xml:space="preserve">
+    <value>(Display Name for the Certificate Authority)</value>
+  </data>
+  <data name="EditCertificateAuthority_ProductionDirectoryHelp" xml:space="preserve">
+    <value>(Url for the production directory endpoint)</value>
   </data>
 </root>
