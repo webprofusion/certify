@@ -156,13 +156,13 @@
   <data name="Email_Address" xml:space="preserve">
     <value>E-postadresse</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>Ja, jeg aksepterer</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>Registrer kontakt</value>
   </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>E-postadressen som er oppgitt, kan brukes til å varsle deg om kommende sertifikatfornyelser hvis nødvendig. Ugyldige e-postadresser blir avvist av Let's Encrypt.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">

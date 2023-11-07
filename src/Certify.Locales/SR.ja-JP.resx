@@ -123,7 +123,7 @@
   <data name="Send_Feedback_Email" xml:space="preserve">
     <value>あなたのメール アドレス (回答が必要な場合):</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>はい、同意します</value>
   </data>
   <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
@@ -612,7 +612,7 @@
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>すべての自動更新アイテムの証明書が更新されます。 続行しますか？</value>
   </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
   <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
