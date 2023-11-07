@@ -7,7 +7,7 @@
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    Title="Edit ACME Account"
+    Title="{x:Static res:SR.Account_Edit_SectionTitle}"
     Width="514"
     Height="416"
     ResizeMode="CanResizeWithGrip"
@@ -43,7 +43,7 @@
                         VerticalAlignment="Top"
                         DockPanel.Dock="Top"
                         Style="{StaticResource Instructions}"
-                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip1}" /><LineBreak /><Run /></TextBlock>
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.Account_Edit_Intro}" /><LineBreak /><Run /></TextBlock>
                     <!--  Certificate Authority Preference  -->
                     <StackPanel
                         Margin="0,0,0,8"
@@ -83,7 +83,7 @@
                         Margin="0,0,8,0"
                         DockPanel.Dock="Top"
                         Style="{StaticResource Instructions}"
-                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.New_Contact_Tip2}" /></TextBlock>
+                        TextWrapping="Wrap"><Run Text="{x:Static res:SR.Account_Edit_Intro2}" /></TextBlock>
 
                     <StackPanel
                         Margin="0,8"
@@ -95,14 +95,14 @@
                             Margin="0,0,0,0"
                             FontWeight="Bold"
                             Style="{StaticResource Instructions}"
-                            Text="{x:Static res:SR.New_Contact_NeedAgree}"
+                            Text="{x:Static res:SR.Account_Edit_AgreeConditions}"
                             TextWrapping="Wrap" />
 
                         <CheckBox
                             Margin="12,12,12,12"
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
-                            Content="{x:Static res:SR.Yes_I_Agree}"
+                            Content="{x:Static res:SR.Account_Edit_AgreeConfirm}"
                             DockPanel.Dock="Top"
                             IsChecked="{Binding Item.AgreedToTermsAndConditions}" />
 

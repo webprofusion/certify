@@ -141,7 +141,7 @@ namespace Certify.UI.Windows
             }
             else
             {
-                MessageBox.Show(Certify.Locales.SR.New_Contact_NeedAgree);
+                MessageBox.Show(Certify.Locales.SR.Account_Edit_AgreeConditions);
             }
         }
 
