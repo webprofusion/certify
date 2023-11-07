@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -123,8 +123,8 @@
   <data name="RegistrationEmailAddress" xml:space="preserve">
     <value>﻿登録したメールアドレス</value>
   </data>
-  <data name="LicenseKey" xml:space="preserve">
-    <value>ライセンス キー</value>
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
+    <value>はい、同意します</value>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>キャンセル</value>
@@ -606,8 +606,8 @@
   <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
     <value>バック グラウンド サービスを利用 (ローカル システムとして実行) </value>
   </data>
-  <data name="ScheduledTaskConfig_UseScheduledTask" xml:space="preserve">
-    <value>スケジュールされたタスクを利用 (指定されたユーザーとして実行)</value>
+  <data name="Account_Edit_Intro2" xml:space="preserve">
+    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
   <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
     <value>更新</value>

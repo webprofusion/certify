@@ -142,6 +142,51 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to To proceed, confirm that you agree to the current terms and conditions for this Certificate Authority..
+        /// </summary>
+        public static string Account_Edit_AgreeConditions {
+            get {
+                return ResourceManager.GetString("Account_Edit_AgreeConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Yes, I Agree.
+        /// </summary>
+        public static string Account_Edit_AgreeConfirm {
+            get {
+                return ResourceManager.GetString("Account_Edit_AgreeConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To request certificates you need to register with each of the Certificate Authorities that you want to use..
+        /// </summary>
+        public static string Account_Edit_Intro {
+            get {
+                return ResourceManager.GetString("Account_Edit_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority..
+        /// </summary>
+        public static string Account_Edit_Intro2 {
+            get {
+                return ResourceManager.GetString("Account_Edit_Intro2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit ACME Account.
+        /// </summary>
+        public static string Account_Edit_SectionTitle {
+            get {
+                return ResourceManager.GetString("Account_Edit_SectionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Advanced.
         /// </summary>
         public static string Advanced {
@@ -291,6 +336,24 @@ namespace Certify.Locales {
         public static string DiscardChanges {
             get {
                 return ResourceManager.GetString("DiscardChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Url for the production directory endpoint).
+        /// </summary>
+        public static string EditCertificateAuthority_ProductionDirectoryHelp {
+            get {
+                return ResourceManager.GetString("EditCertificateAuthority_ProductionDirectoryHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Display Name for the Certificate Authority).
+        /// </summary>
+        public static string EditCertificateAuthority_TitleHelp {
+            get {
+                return ResourceManager.GetString("EditCertificateAuthority_TitleHelp", resourceCulture);
             }
         }
         
@@ -529,7 +592,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This will renew certificates for all auto-renewed items. Proceed?.
+        ///   Looks up a localized string similar to This will renew certificates for all auto-renewed items, if applicable. Proceed?.
         /// </summary>
         public static string MainWindow_RenewAllConfirm {
             get {
@@ -579,6 +642,15 @@ namespace Certify.Locales {
         public static string Managed_Sites {
             get {
                 return ResourceManager.GetString("Managed_Sites", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use Staging Mode (Test Certificates).
+        /// </summary>
+        public static string ManagedCertificate_CertificateAuthority_UseTestCertificates {
+            get {
+                return ResourceManager.GetString("ManagedCertificate_CertificateAuthority_UseTestCertificates", resourceCulture);
             }
         }
         
@@ -1269,33 +1341,6 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to To proceed, confirm that you agree to the current terms and conditions for this Certificate Authority..
-        /// </summary>
-        public static string New_Contact_NeedAgree {
-            get {
-                return ResourceManager.GetString("New_Contact_NeedAgree", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to To request certificates you need to register with each of the Certificate Authorities that you want to use..
-        /// </summary>
-        public static string New_Contact_Tip1 {
-            get {
-                return ResourceManager.GetString("New_Contact_Tip1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority..
-        /// </summary>
-        public static string New_Contact_Tip2 {
-            get {
-                return ResourceManager.GetString("New_Contact_Tip2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to OK.
         /// </summary>
         public static string OK {
@@ -1805,15 +1850,6 @@ namespace Certify.Locales {
         public static string ValidateKey {
             get {
                 return ResourceManager.GetString("ValidateKey", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Yes, I Agree.
-        /// </summary>
-        public static string Yes_I_Agree {
-            get {
-                return ResourceManager.GetString("Yes_I_Agree", resourceCulture);
             }
         }
     }
