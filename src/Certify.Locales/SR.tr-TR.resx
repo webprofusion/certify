@@ -159,16 +159,16 @@
   <data name="Email_Address" xml:space="preserve">
     <value>E-posta Adresi</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>Evet katılıyorum</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>Yetkiliyi Kaydet</value>
   </data>
-  <data name="New_Contact_Tip1" xml:space="preserve">
+  <data name="Account_Edit_Intro" xml:space="preserve">
     <value>Sertifika talep etmek için kullanmak istediğiniz Sertifika Yetkililerinin her birine kaydolmanız gerekir.</value>
   </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>Sağlanan e-posta adresi, gerekirse yaklaşan sertifika yenilemelerini size bildirmek için kullanılabilir. Geçersiz e-posta adresleri Sertifika Yetkilisi tarafından reddedilecektir.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
@@ -216,7 +216,7 @@
   <data name="New_Contact_EmailError" xml:space="preserve">
     <value>Bu e-posta adresini kullanarak Sertifika Yetkilisine kaydolurken bir sorun oluştu. E-posta adresinin geçerli olduğunu ve bu bilgisayarın internete açık bir bağlantısı olduğunu kontrol edin (API çağrıları için giden https gereklidir).</value>
   </data>
-  <data name="New_Contact_NeedAgree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConditions" xml:space="preserve">
     <value>Devam etmek için bu Sertifika Yetkilisi için geçerli hüküm ve koşulları kabul ettiğinizi onaylayın.</value>
   </data>
   <data name="Registration_NeedEmail" xml:space="preserve">

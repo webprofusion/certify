@@ -51,7 +51,7 @@
                 Height="23"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Controls:TextBoxHelper.Watermark="(Display Name for the Certificate Authority)"
+                Controls:TextBoxHelper.Watermark="{x:Static res:SR.EditCertificateAuthority_TitleHelp}"
                 Text="{Binding Model.Item.Title}"
                 TextWrapping="Wrap" />
         </StackPanel>
@@ -88,7 +88,7 @@
                 Height="23"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Controls:TextBoxHelper.Watermark="(Url for the production directory endpoint)"
+                Controls:TextBoxHelper.Watermark="{x:Static res:SR.EditCertificateAuthority_ProductionDirectoryHelp}"
                 Text="{Binding Model.Item.ProductionAPIEndpoint}"
                 TextWrapping="Wrap" />
         </StackPanel>
