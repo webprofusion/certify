@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -522,7 +522,8 @@ namespace Certify.Management.Servers
                 }
                 catch (Exception exp)
                 {
-                    System.Diagnostics.Debug.WriteLine(exp.ToString());
+                    _log?.Error(exp, "Exception during AddOrUpdateSiteBinding {exp}", exp);
+
                     // failed to commit binding, possible exception due to config still being written
                     // from another operation
                     isCompleted = false;
