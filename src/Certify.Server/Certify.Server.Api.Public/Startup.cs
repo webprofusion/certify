@@ -72,6 +72,8 @@ namespace Certify.Server.API
             services.AddSwaggerGen(c =>
             {
 
+                // docs UI will be available at /docs
+
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Certify Server API",
