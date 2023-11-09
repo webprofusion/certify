@@ -83,7 +83,7 @@
     <NoWarn>1701;1702;CA1068</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Polly" Version="8.0.0" />
+    <PackageReference Include="Polly" Version="8.1.0" />
   </ItemGroup>
   
   <ItemGroup>
