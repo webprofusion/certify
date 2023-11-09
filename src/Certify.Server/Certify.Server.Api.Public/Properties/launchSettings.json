@@ -26,6 +26,17 @@
         "CERTIFY_SERVER_PORT": "9695"
       },
       "distributionName": ""
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/docs",
+      "environmentVariables": {
+        "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
+        "CERTIFY_SERVER_HOST": "localhost",
+        "CERTIFY_SERVER_PORT": "9695"
+      },
+      "publishAllPorts": true,
+      "useSSL": true
     }
   },
   "iisSettings": {
