@@ -566,15 +566,19 @@ namespace Certify.Management
                 {
                     return new ActionResult("OK", true);
                 }
+                else
+                {
+                    return new ActionResult($"The certificate authority could not be updated.", false);
+                }
             }
             catch (Exception exp)
             {
                 // failed to load custom CAs
                 _serviceLog?.Error(exp.Message);
+
+                return await Task.FromResult(new ActionResult($"An error occurred saving the updated Certificate Authorities list: {exp.Message}", false));
+
             }
-
-            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
-
         }
 
         /// <summary>
@@ -594,11 +598,17 @@ namespace Certify.Management
 
                 if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
                 {
-                    return new ActionResult("OK", true);
+                    return await Task.FromResult(new ActionResult("OK", true));
+                }
+                else
+                {
+                    return new ActionResult($"An error occurred removing the indicated Custom CA {id} from the Certificate Authorities list.", false);
                 }
             }
-
-            return await Task.FromResult(new ActionResult("An error occurred removing the indicated Custom CA from the Certificate Authorities list.", false));
+            else
+            {
+                return new ActionResult($"The certificate authority {id} was not found in the list of custom CAs and could not be removed.", false);
+            }
         }
     }
 }
