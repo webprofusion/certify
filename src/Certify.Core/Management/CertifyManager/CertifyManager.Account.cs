@@ -669,8 +669,5 @@ namespace Certify.Management
                 return new ActionResult($"The certificate authority {id} was not found in the list of custom CAs and could not be removed.", false);
             }
         }
-
-            return await Task.FromResult(new ActionResult("An error occurred removing the indicated Custom CA from the Certificate Authorities list.", false));
-        }
     }
 }
