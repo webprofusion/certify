@@ -30,11 +30,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "sslPort": 44360,
-      "applicationUrl": "http://localhost:32768;https://localhost:44360",
-      "httpPort": 32768,
-      "publishAllPorts": true,
-      "useSSL": true
+      "publishAllPorts": true      
     },
     "WSL": {
       "commandName": "WSL2",
