@@ -1,5 +1,4 @@
 ﻿using Certify.Client;
-using Certify.Server.API.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

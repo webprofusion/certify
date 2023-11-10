@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
