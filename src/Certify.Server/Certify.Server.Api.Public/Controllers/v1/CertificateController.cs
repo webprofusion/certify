@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Certify.Server.API.Controllers
+namespace Certify.Server.Api.Public.Controllers
 {
     /// <summary>
     /// Provides managed certificate related operations
@@ -97,7 +97,6 @@ namespace Certify.Server.API.Controllers
             }
 
             var log = await _client.GetItemLog(managedCertId, maxLines);
-
 
             return new OkObjectResult(new LogResult { Items = log });
         }

@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Certify.Server.API.Controllers
+namespace Certify.Server.Api.Public.Controllers
 {
     /// <summary>
     /// Internal API for extended certificate management. Not intended for general use.
     /// </summary>
     [ApiController]
     [Route("internal/v1/[controller]")]
-    public class StoredCredentialController : ControllerBase
+    public partial class StoredCredentialController : ControllerBase
     {
 
         private readonly ILogger<StoredCredentialController> _logger;

@@ -4,14 +4,14 @@ using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Certify.Server.API.Controllers
+namespace Certify.Server.Api.Public.Controllers
 {
     /// <summary>
     /// Provides general system level information (version etc)
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class SystemController : ControllerBase
+    public partial class SystemController : ControllerBase
     {
 
         private readonly ILogger<SystemController> _logger;
