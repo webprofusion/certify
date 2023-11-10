@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Reporting;
@@ -26,8 +25,8 @@ namespace Certify.Client
         Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics();
         Task<List<Models.Config.ActionResult>> PerformManagedCertMaintenance(string id = null);
 
-        Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
-        Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
+       // Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
+      //  Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
 
         Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId);
         Task<List<ProviderDefinition>> GetDataStoreProviders();

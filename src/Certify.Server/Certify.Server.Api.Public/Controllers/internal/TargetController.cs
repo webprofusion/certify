@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace Certify.Server.API.Controllers
+namespace Certify.Server.Api.Public.Controllers
 {
     /// <summary>
     /// Internal API for extended certificate management. Not intended for general use.
