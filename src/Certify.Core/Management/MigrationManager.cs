@@ -8,10 +8,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Config;
-using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
 

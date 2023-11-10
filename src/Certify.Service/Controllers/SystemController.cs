@@ -2,10 +2,10 @@
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Cors;
-using Certify.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Shared;
 
 namespace Certify.Service.Controllers

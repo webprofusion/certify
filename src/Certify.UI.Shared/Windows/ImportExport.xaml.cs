@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows;
-
-using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.Config.Migration;
 using Certify.UI.Shared;
 using Microsoft.Win32;
 using Newtonsoft.Json;

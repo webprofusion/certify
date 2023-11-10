@@ -6,11 +6,11 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Config.AccessControl;
+using Certify.Models.Config.Migration;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -256,7 +256,7 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 
-        public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
+        /*public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
         {
             var result = await PostAsync("system/migration/export", exportRequest);
             return JsonConvert.DeserializeObject<ImportExportPackage>(await result.Content.ReadAsStringAsync());
@@ -266,7 +266,7 @@ namespace Certify.Client
         {
             var result = await PostAsync("system/migration/import", importRequest);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
-        }
+        }*/
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
         {
             var result = await PostAsync($"system/datastores/setdefault/{dataStoreId}", null);

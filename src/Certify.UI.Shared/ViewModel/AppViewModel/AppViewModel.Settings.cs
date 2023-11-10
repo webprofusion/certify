@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.Config.Migration;
 using Certify.UI.Settings;
 
 namespace Certify.UI.ViewModel
