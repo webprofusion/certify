@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Certify.Server.API.Controllers
+namespace Certify.Server.Api.Public.Controllers
 {
     /// <summary>
     /// Provides auth related operations

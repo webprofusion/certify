@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
 using Certify.Models;
+using Certify.Models.Config.Migration;
 using Certify.UI.Settings;
 
 namespace Certify.UI.ViewModel
@@ -185,7 +185,7 @@ namespace Certify.UI.ViewModel
         public async Task<List<ActionStep>> PerformSettingsImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
         {
             var results = await _certifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
-            return results;
+            return results.ToList();
         }
     }
 }

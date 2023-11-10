@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
+using Certify.Models.Config.Migration;
 using Certify.Core.Management;
 using Certify.Datastore.SQLite;
 using Certify.Management;
