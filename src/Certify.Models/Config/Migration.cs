@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Certify.Models;
 using Certify.Models.Config;
 
-namespace Certify.Config.Migration
+namespace Certify.Models.Config.Migration
 {
     public class ImportExportContent
     {
