@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Certify.Config.Migration;
+using Certify.Models.Config.Migration;
 using Certify.Management;
 using Certify.Models;
 using Certify.Service;
