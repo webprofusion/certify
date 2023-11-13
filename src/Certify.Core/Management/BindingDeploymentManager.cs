@@ -264,7 +264,9 @@ namespace Certify.Core.Management
                                 sslPort = int.Parse(requestConfig.BindingPort);
                             }
 
-                            if (b.Protocol == "https")
+                            // if binding already exists (https or ftp), re-use existing port and IP choices.
+
+                            if (b.Protocol == "https" || b.Protocol == "ftp")
                             {
                                 if (b.Port > 0)
                                 {
