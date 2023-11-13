@@ -15,7 +15,8 @@ namespace Certify.Models.Shared.Validation
         REQUIRED_NAME,
         INVALID_HOSTNAME,
         REQUIRED_CHALLENGE_CONFIG_PARAM,
-        SAN_LIMIT
+        SAN_LIMIT,
+        CN_LIMIT
     }
 
     public class CertificateEditorService
@@ -282,11 +283,24 @@ namespace Certify.Models.Shared.Validation
                     if (GetPrimarySubjectDomain(item) == null)
                     {
                         // if we still can't decide on the primary domain ask user to define it
+                        // note that CAs are moving away from CN/Primary Subject support and we may remove this in the future
                         return new ValidationResult(
                             false,
                             SR.ManagedCertificateSettings_NeedPrimaryDomain,
                             ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString()
                         );
+                    }
+                    else
+                    {
+                        // CN/Primary Subject has a limit of 64 characters
+                        if (GetPrimarySubjectDomain(item)?.Domain?.Length > 64 == true)
+                        {
+                            return new ValidationResult(
+                                         false,
+                                         $"Certificate CN (primary subject/domain) cannot exceed 64 characters.",
+                                         ValidationErrorCodes.CN_LIMIT.ToString()
+                                      );
+                        }
                     }
 
                     if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
