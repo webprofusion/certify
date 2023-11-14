@@ -1755,6 +1755,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You can create an export file to bundle all of the related settings and file for this instance together. Note: sensitive content is encrypted but you should not share this file with untrusted sources or use unsecured storage..
+        /// </summary>
+        public static string Settings_Export_Intro {
+            get {
+                return ResourceManager.GetString("Settings_Export_Intro", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ignore stopped IIS sites for new certificates and renewals.
         /// </summary>
         public static string Settings_IgnoreStoppedSites {
