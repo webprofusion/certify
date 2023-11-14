@@ -716,4 +716,7 @@
   <data name="EditCertificateAuthority_ProductionDirectoryHelp" xml:space="preserve">
     <value>(Url for the production directory endpoint)</value>
   </data>
+  <data name="Settings_Export_Intro" xml:space="preserve">
+    <value>You can create an export file to bundle all of the related settings and file for this instance together. Note: sensitive content is encrypted but you should not share this file with untrusted sources or use unsecured storage.</value>
+  </data>
 </root>
