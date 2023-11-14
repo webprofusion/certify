@@ -17,7 +17,7 @@
     <DockPanel Margin="16" LastChildFill="true">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Import/Export Settings</TextBlock>
-            <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">You can create an export file to bundle all of the related settings and file for this instance together. Note: sensitive content is encrypted but you should not share this file with untrusted sources or use unsecured storage.</TextBlock>
+            <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">"{x:Static properties:SR.Settings_Export_Intro}"</TextBlock>
             <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">To import or export, you should specify a password to use for encryption/decryption:</TextBlock>
             <PasswordBox
                 x:Name="txtSecret"
