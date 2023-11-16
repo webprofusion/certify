@@ -1,34 +1,30 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+﻿
+var builder = WebApplication.CreateBuilder(args);
 
-namespace Certify.Server.API
+builder.AddServiceDefaults();
+
+// Add services to the container.
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+
+app.MapDefaultEndpoints();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    /// <summary>
-    /// API Server hosting
-    /// </summary>
-    public class Program
-    {
-        /// <summary>
-        /// Entry point for API host
-        /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args)
-        {
-
-            CreateHostBuilder(args).Build().Run();
-        }
-
-        /// <summary>
-        /// Build hosting for API
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
+
+app.UseHttpsRedirection();
+
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();
