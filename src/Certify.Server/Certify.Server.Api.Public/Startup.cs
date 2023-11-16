@@ -44,7 +44,7 @@ namespace Certify.Server.API
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-
+            
             services
                 .AddTokenAuthentication(Configuration)
                 .AddAuthorization()
