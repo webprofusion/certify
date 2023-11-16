@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Shared.Core.Management;
 using Certify.SharedUtils;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.API
@@ -44,7 +35,7 @@ namespace Certify.Server.API
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            
+
             services
                 .AddTokenAuthentication(Configuration)
                 .AddAuthorization()
@@ -67,6 +58,9 @@ namespace Certify.Server.API
             });
 
 #if DEBUG
+
+            services.AddEndpointsApiExplorer();
+
             // Register the Swagger generator, defining 1 or more Swagger documents
             // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio
             services.AddSwaggerGen(c =>
@@ -156,31 +150,19 @@ namespace Certify.Server.API
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
         }
 
-        private StatusHubReporting _statusReporting;
-
-        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
-        {
-            System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
-
-            _statusReporting.ReportManagedCertificateUpdated(obj);
-        }
-        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj)
-        {
-            System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
-            _statusReporting.ReportRequestProgress(obj);
-        }
-        private void InternalServiceClient_OnMessageFromService(string arg1, string arg2)
-        {
-            System.Diagnostics.Debug.WriteLine($"Public API: got message to forward: {arg1} {arg2}"); ;
-        }
-
         /// <summary>
         /// Configure the http request pipeline
         /// </summary>
         /// <param name="app"></param>
         /// <param name="env"></param>
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHubContext<StatusHub> statusHubContext)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+
+            var statusHubContext = app.ApplicationServices.GetService(typeof(IHubContext<StatusHub>)) as IHubContext<StatusHub>;
+            if (statusHubContext == null)
+            {
+                throw new Exception("Status Hub not registered");
+            }
 
             // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
             _statusReporting = new StatusHubReporting(statusHubContext);
@@ -224,6 +206,24 @@ namespace Certify.Server.API
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Server API");
             });
 #endif
+        }
+
+        private StatusHubReporting _statusReporting;
+
+        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
+        {
+            System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
+
+            _statusReporting.ReportManagedCertificateUpdated(obj);
+        }
+        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj)
+        {
+            System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
+            _statusReporting.ReportRequestProgress(obj);
+        }
+        private void InternalServiceClient_OnMessageFromService(string arg1, string arg2)
+        {
+            System.Diagnostics.Debug.WriteLine($"Public API: got message to forward: {arg1} {arg2}"); ;
         }
     }
 }

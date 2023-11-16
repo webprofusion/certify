@@ -8,7 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Core.Tests
 {
     [TestClass]
-    public class CertifyManagerServerTypeTests : IntegrationTestBase, IDisposable 
+    public class CertifyManagerServerTypeTests : IntegrationTestBase, IDisposable
     {
         private readonly CertifyManager _certifyManager;
         private readonly ServerProviderIIS _iisManager;
@@ -160,7 +160,7 @@ namespace Certify.Core.Tests
             var noDomainSite = await _iisManager.CreateSite(noDomainSiteName, "", _primaryWebRoot, "DefaultAppPool", port: 81);
             Assert.IsTrue(await _iisManager.SiteExists(_testSiteName), "Expected no domain site to be created");
             var noDomainSiteId = noDomainSite.Id.ToString();
-            
+
             // Request website Domain Options using Item ID
             var siteDomainOptions = await _certifyManager.GetDomainOptionsFromSite(StandardServerTypes.IIS, noDomainSiteId);
 
@@ -206,13 +206,13 @@ namespace Certify.Core.Tests
 
             // Evaluate returns from CertifyManager.IsServerTypeAvailable()
             Assert.IsTrue(isIisAvailable, "Expected return from CertifyManager.IsServerTypeAvailable() to be true when at least one IIS site is active");
-            
+
             Assert.IsTrue(isNginxAvailable, "Expected return from CertifyManager.IsServerTypeAvailable() to be true when at least one Nginx site is active");
-            
+
             Assert.IsFalse(isApacheAvailable, "Expected return from CertifyManager.IsServerTypeAvailable() to be false when Apache plugin does not exist");
             // TODO: Support for Apache via plugin must be added to enable the next assert
             //Assert.IsTrue(isApacheAvailable, "Expected return from CertifyManager.IsServerTypeAvailable() to be true when at least one Apache site is active");
-            
+
             Assert.IsFalse(isOtherAvailable, "Expected return from CertifyManager.IsServerTypeAvailable() to be false for StandardServerTypes.Other");
         }
 
@@ -230,14 +230,14 @@ namespace Certify.Core.Tests
             // Evaluate returns from CertifyManager.GetServerTypeVersion()
             Assert.AreNotEqual(unknownVersion, iisServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be known when at least one IIS site is active");
             Assert.IsTrue(iisServerVersion.Major > 0);
-            
+
             Assert.AreNotEqual(unknownVersion, nginxServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be known when at least one Nginx site is active");
             Assert.IsTrue(nginxServerVersion.Major > 0);
-            
+
             Assert.AreEqual(unknownVersion, apacheServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be unknown when Apache plugin does not exist");
             // TODO: Support for Apache via plugin must be added to enable the next assert
             //Assert.AreNotEqual(unknownVersion, isApacheAvailable, "Expected return from CertifyManager.GetServerTypeVersion() to be known when at least one Apache site is active");
-            
+
             Assert.AreEqual(unknownVersion, otherServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be unknown for StandardServerTypes.Other");
         }
 

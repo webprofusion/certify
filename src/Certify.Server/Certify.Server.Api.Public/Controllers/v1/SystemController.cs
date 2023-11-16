@@ -1,8 +1,5 @@
-﻿using System;
-using System.Threading.Tasks;
-using Certify.Client;
+﻿using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Certify.Server.Api.Public.Controllers
 {

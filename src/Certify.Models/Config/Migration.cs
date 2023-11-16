@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Certify.Models;
-using Certify.Models.Config;
 
 namespace Certify.Models.Config.Migration
 {
