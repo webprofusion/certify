@@ -1,34 +1,22 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
+﻿
+using Certify.Server.API;
 
-namespace Certify.Server.API
-{
-    /// <summary>
-    /// API Server hosting
-    /// </summary>
-    public class Program
-    {
-        /// <summary>
-        /// Entry point for API host
-        /// </summary>
-        /// <param name="args"></param>
-        public static void Main(string[] args)
-        {
+var builder = WebApplication.CreateBuilder(args);
 
-            CreateHostBuilder(args).Build().Run();
-        }
+#if ASPIRE
+    builder.AddServiceDefaults();
+#endif
 
-        /// <summary>
-        /// Build hosting for API
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
+var startup = new Startup(builder.Configuration);
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
-}
+startup.ConfigureServices(builder.Services);
+
+var app = builder.Build();
+
+#if ASPIRE
+    app.MapDefaultEndpoints();
+#endif
+
+startup.Configure(app, builder.Environment);
+
+app.Run();
