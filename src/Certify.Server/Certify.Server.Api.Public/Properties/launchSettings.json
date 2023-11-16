@@ -14,7 +14,7 @@
         "CERTIFY_SERVER_HOST": "127.0.0.2",
         "CERTIFY_SERVER_PORT": "9695"
       },
-      "applicationUrl": "https://localhost:54361;http://localhost:54360"
+      "applicationUrl": "https://localhost:44361;http://localhost:44360"
     },
     "WSL": {
       "commandName": "WSL2",

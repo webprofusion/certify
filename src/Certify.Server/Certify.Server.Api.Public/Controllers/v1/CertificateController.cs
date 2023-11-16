@@ -110,7 +110,7 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetManagedCertificates(string keyword, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
         {
             var managedCertResult = await _client.GetManagedCertificateSearchResult(
                 new Models.ManagedCertificateFilter
@@ -153,7 +153,7 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("summary")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Summary))]
-        public async Task<IActionResult> GetManagedCertificateSummary(string keyword)
+        public async Task<IActionResult> GetManagedCertificateSummary(string? keyword)
         {
 
             var summary = await _client.GetManagedCertificateSummary(
