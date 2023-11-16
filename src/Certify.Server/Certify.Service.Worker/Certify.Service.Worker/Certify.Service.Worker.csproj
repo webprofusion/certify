@@ -19,5 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
+    <ProjectReference Include="C:\Users\chris\source\repos\Certify.AspireContainers\Certify.AspireContainers.ServiceDefaults\Certify.AspireContainers.ServiceDefaults.csproj" />
   </ItemGroup>
 </Project>
