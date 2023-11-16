@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Certify.Models.Config.Migration;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config.Migration;
 using Certify.Service;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -128,7 +128,7 @@ namespace Certify.Core.Tests
             // Execute CertifyManager.ReportProgress() with new Warning state
             _certifyManager.ReportProgress(progressIndicator, new RequestProgressState(RequestState.Warning, "Warning message", dummyManagedCert), logThisEvent: true);
             await Task.Delay(100);
-            
+
             // Validate events from CertifyManager.ReportProgress()
             Assert.IsTrue(progressChanged, "Expected progressChanged to be true after CertifyManager.ReportProgress() completed");
             Assert.AreEqual(RequestState.Warning, progressNewState, "Expected progressNewState to be changed to RequestState.Warning");
@@ -159,7 +159,7 @@ namespace Certify.Core.Tests
             // Setup export test data
             var exportReq = new ExportRequest
             {
-                Filter = new ManagedCertificateFilter { }, 
+                Filter = new ManagedCertificateFilter { },
                 Settings = new ExportSettings { ExportAllStoredCredentials = true, EncryptionSecret = "secret" },
                 IsPreviewMode = false,
             };
