@@ -1,12 +1,9 @@
 ﻿using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models.API;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace Certify.Server.Api.Public.Controllers
 {
