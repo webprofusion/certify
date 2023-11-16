@@ -19,7 +19,6 @@
     <ProjectReference Include="..\..\..\..\certify-manager\src\Certify.SourceGenerators\Certify.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\..\..\certify\src\Certify.Client\Certify.Client.csproj" />
     <ProjectReference Include="..\..\..\..\certify\src\Certify.Shared\Certify.Shared.Core.csproj" />
-    <ProjectReference Include="C:\Users\chris\source\repos\Certify.AspireContainers\Certify.AspireContainers.ServiceDefaults\Certify.AspireContainers.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>
