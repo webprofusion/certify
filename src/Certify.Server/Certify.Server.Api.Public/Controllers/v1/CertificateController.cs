@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Certify.Server.Api.Public.Controllers
 {
@@ -113,7 +112,6 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
         public async Task<IActionResult> GetManagedCertificates(string keyword, int? page = null, int? pageSize = null)
         {
-
             var managedCertResult = await _client.GetManagedCertificateSearchResult(
                 new Models.ManagedCertificateFilter
                 {
@@ -176,7 +174,6 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("settings/{managedCertId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        [SwaggerOperation(OperationId = nameof(GetManagedCertificateDetails))]
         public async Task<IActionResult> GetManagedCertificateDetails(string managedCertId)
         {
 
@@ -194,7 +191,6 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("settings/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        [SwaggerOperation(OperationId = nameof(UpdateManagedCertificateDetails))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(Models.ManagedCertificate managedCertificate)
         {
 
@@ -218,7 +214,6 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("order")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        [SwaggerOperation(OperationId = nameof(BeginOrder))]
         public async Task<IActionResult> BeginOrder(string id)
         {
 
@@ -242,7 +237,6 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("renew")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        [SwaggerOperation(OperationId = nameof(PerformRenewal))]
         public async Task<IActionResult> PerformRenewal(Models.RenewalSettings settings)
         {
 
@@ -266,7 +260,6 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("test")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.StatusMessage>))]
-        [SwaggerOperation(OperationId = nameof(PerformConfigurationTest))]
         public async Task<IActionResult> PerformConfigurationTest(Models.ManagedCertificate item)
         {
 
