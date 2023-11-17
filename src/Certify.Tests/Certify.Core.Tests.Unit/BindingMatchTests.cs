@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -382,7 +382,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -439,7 +439,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -496,7 +496,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Asset\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Asset/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -536,7 +536,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\badcert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/badcert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -576,7 +576,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -633,7 +633,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -680,7 +680,7 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -780,7 +780,7 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -843,7 +843,7 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -900,7 +900,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -955,7 +955,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1011,7 +1011,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1066,7 +1066,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="smtp.test.com", IP="127.0.0.1", Port = 587, Protocol="smtp" },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1111,7 +1111,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 21, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
+            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
