@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,6 +21,29 @@ namespace Certify.Core.Tests.Unit
             _certifyManager.Init().Wait();
             var testCredentialsPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "Tests", ".env.test_accounts");
             DotNetEnv.Env.Load(testCredentialsPath);
+            SetupAccount().Wait();
+        }
+
+        private async Task SetupAccount()
+        {
+            var currentAccounts = await _certifyManager.GetAccountRegistrations();
+            if (currentAccounts.Count == 0)
+            {
+                var contactRegEmail = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
+                var contactRegistration = new ContactRegistration
+                {
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = "letsencrypt.org",
+                    EmailAddress = contactRegEmail,
+                    ImportedAccountKey = "",
+                    ImportedAccountURI = "",
+                    IsStaging = true
+                };
+
+                // Add account
+                var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+                Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
+            }
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountDetails()")]
