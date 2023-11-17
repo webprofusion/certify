@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Models.Config.Migration;
 using Certify.Core.Management;
 using Certify.Datastore.SQLite;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config.Migration;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
