@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -250,7 +250,7 @@ namespace Certify.Core.Tests.Unit
                 AgreedToTermsAndConditions = true,
                 CertificateAuthorityId = "letsencrypt.org",
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM"),
+                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM")?.Replace("\\r", "\r")?.Replace("\\n", "\n")?.Replace("'", ""),
                 ImportedAccountURI = "",
                 IsStaging = true
             };
@@ -297,7 +297,7 @@ namespace Certify.Core.Tests.Unit
                 AgreedToTermsAndConditions = true,
                 CertificateAuthorityId = "letsencrypt.org",
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM"),
+                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM")?.Replace("\\r", "\r")?.Replace("\\n", "\n")?.Replace("'", ""),
                 ImportedAccountURI = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_URI"),
                 IsStaging = true
             };
@@ -801,7 +801,7 @@ namespace Certify.Core.Tests.Unit
             // Delete custom CA
             var deleteCaRes = await _certifyManager.RemoveCertificateAuthority(badId);
             Assert.IsFalse(deleteCaRes.IsSuccess, $"Expected Custom CA deletion for CA with ID {badId} to be unsuccessful");
-            Assert.AreEqual(deleteCaRes.Message, "An error occurred removing the indicated Custom CA from the Certificate Authorities list.", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() failure");
+            Assert.AreEqual(deleteCaRes.Message, $"The certificate authority {badId} was not found in the list of custom CAs and could not be removed.", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() failure");
         }
     }
 }
