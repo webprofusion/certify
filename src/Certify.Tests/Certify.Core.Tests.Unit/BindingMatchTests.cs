@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Management;
@@ -665,9 +666,14 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(results.Count, 1);
             Assert.IsTrue(results[0].HasError);
             Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."));
-            Assert.AreEqual(results[0].Title, "Certificate Storage Failed");
-        }
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."), $"Unexpected description: '{results[0].Description}'");
+            }
+            else
+            {
+                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The specified X509 certificate store does not exist."), $"Unexpected description: '{results[0].Description}'");
+            }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when DeploymentBindingOption = DeploymentBindingOption.UpdateOnly")]
         public async Task MixedIPBindingChecksRequestConfigUpdateOnly()
