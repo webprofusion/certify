@@ -1,18 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Shared.Core.Management;
 using Certify.SharedUtils;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.API
@@ -44,7 +35,7 @@ namespace Certify.Server.API
         /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
-            
+
             services
                 .AddTokenAuthentication(Configuration)
                 .AddAuthorization()
@@ -174,7 +165,7 @@ namespace Certify.Server.API
             }
 
             // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
-           _statusReporting = new StatusHubReporting(statusHubContext);
+            _statusReporting = new StatusHubReporting(statusHubContext);
 
             if (env.IsDevelopment())
             {
