@@ -6,6 +6,11 @@
     <AssemblyName>Plugin.DNS.NameCheap</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>

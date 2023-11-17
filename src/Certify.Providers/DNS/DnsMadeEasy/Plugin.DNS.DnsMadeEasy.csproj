@@ -6,6 +6,11 @@
     <AssemblyName>Plugin.DNS.DnsMadeEasy</AssemblyName>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
