@@ -6,11 +6,6 @@
     <AssemblyName>Plugin.DNS.MicrosoftDns</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
     <ItemGroup>
     <PackageReference Include="Microsoft.Management.Infrastructure" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>

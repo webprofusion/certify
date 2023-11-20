@@ -82,10 +82,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0|AnyCPU'">
     <NoWarn>1701;1702;CA1068</NoWarn>
   </PropertyGroup>
-  <PropertyGroup>
-   <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
-   <DebugType>portable</DebugType>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Polly" Version="8.2.0" />
   </ItemGroup>

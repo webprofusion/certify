@@ -6,11 +6,6 @@
     <AssemblyName>Plugin.DNS.Azure</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
-    <DebugType>portable</DebugType>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Azure.Core" Version="1.36.0" />
     <PackageReference Include="Azure.Identity" Version="1.10.4" />

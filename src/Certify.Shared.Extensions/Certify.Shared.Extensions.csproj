@@ -6,11 +6,6 @@
 
     </PropertyGroup>
 
-    <PropertyGroup>
-        <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
-        <DebugType>portable</DebugType>
-    </PropertyGroup>
-
     <ItemGroup>
         <None Remove="Scripts\DNS\PoshACME\Posh-ACME-Wrapper.ps1" />
         <None Remove="Scripts\Internal\Script-Wrapper.ps1" />
