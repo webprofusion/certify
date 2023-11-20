@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -15,6 +16,7 @@ namespace Certify.Core.Tests.Unit
     public class BindingMatchTests
     {
         public List<BindingInfo> _allSites { get; set; }
+        private readonly string _dummyCertPath = Path.Combine(Environment.CurrentDirectory, "Assets", "dummycert.pfx");
 
         [TestInitialize]
         public void Setup()
@@ -383,7 +385,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -404,13 +405,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -440,7 +441,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -461,13 +461,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "");
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "");
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -497,7 +497,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Asset/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -518,13 +517,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file")]
@@ -537,7 +536,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/badcert.pfx";
+            var badCertPath = Path.Combine(Environment.CurrentDirectory, "Assets", "badcert.pfx");
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -558,13 +557,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, badCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx password")]
@@ -577,7 +576,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -598,13 +596,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "badpass", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "badpass", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -634,7 +632,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -655,13 +652,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
 
             Assert.AreEqual(1, results.Count);
             Assert.IsTrue(results[0].HasError);
@@ -674,6 +671,7 @@ namespace Certify.Core.Tests.Unit
             {
                 Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The specified X509 certificate store does not exist."), $"Unexpected description: '{results[0].Description}'");
             }
+
             Assert.AreEqual("Certificate Storage Failed", results[0].Title);
         }
 
@@ -688,7 +686,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -710,13 +707,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.AreEqual(1, results.Count);
             Assert.IsFalse(results[0].HasError);
@@ -788,7 +785,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -810,13 +806,13 @@ namespace Certify.Core.Tests.Unit
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
                 CertificateThumbprintHash = cert.Thumbprint,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -851,7 +847,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -873,13 +868,13 @@ namespace Certify.Core.Tests.Unit
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
                 CertificatePreviousThumbprintHash = cert.Thumbprint,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -908,7 +903,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -929,13 +923,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -963,7 +957,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -985,13 +978,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -1019,7 +1012,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1041,13 +1033,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
@@ -1074,7 +1066,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="smtp.test.com", IP="127.0.0.1", Port = 587, Protocol="smtp" },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1095,13 +1086,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(1, results.Count());
@@ -1119,7 +1110,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 21, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "/Assets/dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1140,13 +1130,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(1, results.Count());
@@ -1156,7 +1146,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             testManagedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
-            results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());

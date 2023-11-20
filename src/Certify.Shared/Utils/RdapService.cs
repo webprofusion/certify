@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -59,7 +60,7 @@ namespace Certify.Shared.Core.Utils
 
         public async Task Init()
         {
-            var dat = System.IO.File.ReadAllText("Assets/public_suffix_list.dat");
+            var dat = System.IO.File.ReadAllText(Path.Combine("Assets", "public_suffix_list.dat"));
 
             var stringData = Encoding.UTF8.GetString(Convert.FromBase64String(dat));
             var list = stringData.Split('\n');
@@ -78,7 +79,7 @@ namespace Certify.Shared.Core.Utils
                 }
             }
 
-            var rdapDnsConfigDat = System.IO.File.ReadAllText("Assets/rdap_dns.json.dat");
+            var rdapDnsConfigDat = System.IO.File.ReadAllText(Path.Combine("Assets", "rdap_dns.json.dat"));
             var rdapDnsConfig = Encoding.UTF8.GetString(Convert.FromBase64String(rdapDnsConfigDat));
             var dnsRootConfig = JsonConvert.DeserializeObject<RdapDnsRoot>(rdapDnsConfig);
 
