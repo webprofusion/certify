@@ -24,6 +24,14 @@ namespace Certify.Core.Tests.Unit
             SetupAccount().Wait();
         }
 
+        private string GetEnvValue(string key)
+        {
+            return DotNetEnv.Env.GetString(key)
+                ?.Replace("\\r", "\r")
+                ?.Replace("\\n", "\n")
+                ?.Replace("'", "");
+        }
+
         private async Task SetupAccount()
         {
             var currentAccounts = await _certifyManager.GetAccountRegistrations();
@@ -273,7 +281,7 @@ namespace Certify.Core.Tests.Unit
                 AgreedToTermsAndConditions = true,
                 CertificateAuthorityId = "letsencrypt.org",
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM")?.Replace("\\r", "\r")?.Replace("\\n", "\n")?.Replace("'", ""),
+                ImportedAccountKey = GetEnvValue("RESTORE_KEY_PEM"),
                 ImportedAccountURI = "",
                 IsStaging = true
             };
@@ -297,7 +305,7 @@ namespace Certify.Core.Tests.Unit
                 CertificateAuthorityId = "letsencrypt.org",
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "tHiSiSnOtApEm",
-                ImportedAccountURI = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_URI"),
+                ImportedAccountURI = GetEnvValue("RESTORE_ACCOUNT_URI"),
                 IsStaging = true
             };
 
@@ -313,15 +321,14 @@ namespace Certify.Core.Tests.Unit
         public async Task TestCertifyManagerAddAccountImport()
         {
             // Setup account registration info
-            //var contactRegEmail = "admin.98b9a6@test.com";
-            var contactRegEmail = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_EMAIL");
+            var contactRegEmail = GetEnvValue("RESTORE_ACCOUNT_EMAIL");
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
                 CertificateAuthorityId = "letsencrypt.org",
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM")?.Replace("\\r", "\r")?.Replace("\\n", "\n")?.Replace("'", ""),
-                ImportedAccountURI = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_URI"),
+                ImportedAccountKey = GetEnvValue("RESTORE_KEY_PEM"),
+                ImportedAccountURI = GetEnvValue("RESTORE_ACCOUNT_URI"),
                 IsStaging = true
             };
 
