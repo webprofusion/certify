@@ -1,11 +1,12 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS base
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 EXPOSE 9696
+RUN wget https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.23.0/step-cli_0.23.0_amd64.deb && dpkg -i step-cli_0.23.0_amd64.deb
 
 # define build and copy required source files
-FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ./certify/src ./certify/src
 COPY ./certify-plugins/src ./certify-plugins/src
