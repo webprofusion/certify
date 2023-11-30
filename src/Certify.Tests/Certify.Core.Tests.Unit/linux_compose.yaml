@@ -1,0 +1,37 @@
+﻿name: certify-core-tests-unit-linux
+services:
+
+  certify-core-tests-unit-8_0:
+    image: certify-core-tests-unit-8_0-linux:latest
+    build: 
+      context: ../../../../
+      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-8_0-linux.dockerfile   
+    ports:
+      - 80:80
+      - 443:443
+      - 9696:9696
+    # environment:
+    #   VSTEST_HOST_DEBUG: 1
+    volumes:
+      - step:/mnt/step_share
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetails'"
+    depends_on:
+      step-ca:
+        condition: service_healthy
+
+  step-ca:
+    image: smallstep/step-ca:latest
+    hostname: step-ca
+    ports:
+      - 9000:9000
+    environment:
+      DOCKER_STEPCA_INIT_NAME: Smallstep
+      DOCKER_STEPCA_INIT_DNS_NAMES: localhost,step-ca
+      DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT: true
+      DOCKER_STEPCA_INIT_ACME: true
+    volumes:
+      - step:/home/step
+
+volumes:
+  step: {}

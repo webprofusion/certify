@@ -32,6 +32,9 @@ namespace Certify.Management
         public const string DEFAULT_STORE_NAME = "My";
         public const string WEBHOSTING_STORE_NAME = "WebHosting";
         public const string DISALLOWED_STORE_NAME = "Disallowed";
+        private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static readonly bool IsLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
+        private static readonly bool IsMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
 
         public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTimeOffset? dateFrom = null, DateTimeOffset? dateTo = null, string suffix = "[Certify]", string subject = null, string keyType = StandardKeyTypes.RSA256)
         {
@@ -269,6 +272,72 @@ namespace Certify.Management
             return cert;
         }
 
+        private static X509Store GetStore(string storeName, bool useMachineStore = true)
+        {
+            if (IsWindows)
+            {
+                if (useMachineStore)
+                {
+                    return GetMachineStore(storeName);
+                }
+
+                return GetUserStore(storeName);
+            }
+            else if (IsLinux)
+            {
+                // See https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/X509Certificates/StorePal.OpenSsl.cs#L142
+                return GetUserStore(storeName);
+            }
+            else if (IsMac)
+            {
+                // See https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/X509Certificates/StorePal.macOS.cs#L108
+                if (!useMachineStore || (storeName == CA_STORE_NAME || storeName == WEBHOSTING_STORE_NAME))
+                {
+                    return GetUserStore(storeName);
+                }
+                else if (storeName == DEFAULT_STORE_NAME || storeName == ROOT_STORE_NAME || storeName == DISALLOWED_STORE_NAME)
+                {
+                    return GetMachineStore(storeName);
+                }
+
+                throw new CryptographicException($"Could not open X509Store {storeName} in LocalMachine on OSX");
+            }
+
+            throw new PlatformNotSupportedException($"Could not open X509Store for unsupported OS {RuntimeInformation.OSDescription}");
+        }
+
+        private static void OpenStoreForReadWrite(X509Store store, string storeName)
+        {
+            if (IsWindows)
+            {
+                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+            }
+            else if (IsLinux)
+            {
+                // See https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/X509Certificates/StorePal.OpenSsl.cs#L142
+                if (storeName == DEFAULT_STORE_NAME || storeName == WEBHOSTING_STORE_NAME)
+                {
+                    store.Open(OpenFlags.ReadWrite);
+                }
+                else
+                {
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                }
+            }
+            else if (IsMac)
+            {
+                // See https://github.com/dotnet/runtime/blob/main/src/libraries/System.Security.Cryptography/src/System/Security/Cryptography/X509Certificates/StorePal.macOS.cs#L108
+                if (storeName == CA_STORE_NAME || storeName == WEBHOSTING_STORE_NAME)
+                {
+                    store.Open(OpenFlags.ReadWrite);
+                }
+                else
+                {
+                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                }
+            }
+        }
+
         public static bool StoreCertificateFromPem(string pem, string storeName, bool useMachineStore = true)
         {
             try
@@ -277,9 +346,9 @@ namespace Certify.Management
                 var cert = x509CertificateParser.ReadCertificate(System.Text.UTF8Encoding.UTF8.GetBytes(pem));
 
                 var certToStore = new X509Certificate2(DotNetUtilities.ToX509Certificate(cert));
-                using (var store = useMachineStore ? GetMachineStore(storeName) : GetUserStore(storeName))
+                using (var store = GetStore(storeName, useMachineStore))
                 {
-                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    OpenStoreForReadWrite(store, storeName);
                     store.Add(certToStore);
                     store.Close();
                     return true;
@@ -367,11 +436,11 @@ namespace Certify.Management
             }
         }
 
-        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, string storeName = DEFAULT_STORE_NAME)
+        public static List<X509Certificate2> GetCertificatesFromStore(string issuerName = null, string storeName = DEFAULT_STORE_NAME, bool useMachineStore = true)
         {
             var list = new List<X509Certificate2>();
 
-            using (var store = GetMachineStore(storeName))
+            using (var store = GetStore(storeName, useMachineStore))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -394,7 +463,7 @@ namespace Certify.Management
         {
             X509Certificate2 cert = null;
 
-            using (var store = GetMachineStore(storeName))
+            using (var store = GetStore(storeName))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -420,7 +489,7 @@ namespace Certify.Management
 
             X509Certificate2 cert = null;
 
-            using (var store = useMachineStore ? GetMachineStore(storeName) : GetUserStore(storeName))
+            using (var store = GetStore(storeName, useMachineStore))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -439,9 +508,9 @@ namespace Certify.Management
 
         public static X509Certificate2 StoreCertificate(X509Certificate2 certificate, string storeName = DEFAULT_STORE_NAME)
         {
-            using (var store = GetMachineStore(storeName))
+            using (var store = GetStore(storeName))
             {
-                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                OpenStoreForReadWrite(store, storeName);
 
                 store.Add(certificate);
 
@@ -453,9 +522,9 @@ namespace Certify.Management
 
         public static void RemoveCertificate(X509Certificate2 certificate, string storeName = DEFAULT_STORE_NAME)
         {
-            using (var store = GetMachineStore(storeName))
+            using (var store = GetStore(storeName))
             {
-                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                OpenStoreForReadWrite(store, storeName);
                 store.Remove(certificate);
                 store.Close();
             }
@@ -727,7 +796,7 @@ namespace Certify.Management
         {
             var certExists = false;
 
-            using (var store = GetMachineStore(storeName))
+            using (var store = GetStore(storeName))
             {
                 store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadOnly);
 
@@ -772,9 +841,9 @@ namespace Certify.Management
                 }
 
                 // get all certificates
-                using (var store = GetMachineStore(storeName))
+                using (var store = GetStore(storeName))
                 {
-                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    OpenStoreForReadWrite(store, storeName);
 
                     var certsToRemove = new List<X509Certificate2>();
                     foreach (var c in store.Certificates)
@@ -866,9 +935,9 @@ namespace Certify.Management
         {
             var disabled = false;
 
-            using (var store = useMachineStore ? GetMachineStore(sourceStore) : GetUserStore(sourceStore))
+            using (var store = GetStore(sourceStore, useMachineStore))
             {
-                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                OpenStoreForReadWrite(store, sourceStore);
 
                 foreach (var c in store.Certificates)
                 {
@@ -887,9 +956,9 @@ namespace Certify.Management
         public static bool MoveCertificate(string thumbprint, string sourceStore, string destStore, bool useMachineStore = true)
         {
             var certsToMove = new List<X509Certificate2>();
-            using (var store = useMachineStore ? GetMachineStore(sourceStore) : GetUserStore(sourceStore))
+            using (var store = GetStore(sourceStore, useMachineStore))
             {
-                store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                OpenStoreForReadWrite(store, sourceStore);
                 foreach (var c in store.Certificates)
                 {
                     if (c.Thumbprint == thumbprint)
@@ -908,9 +977,9 @@ namespace Certify.Management
 
             if (certsToMove.Any())
             {
-                using (var store = useMachineStore ? GetMachineStore(destStore) : GetUserStore(destStore))
+                using (var store = GetStore(destStore, useMachineStore))
                 {
-                    store.Open(OpenFlags.OpenExistingOnly | OpenFlags.ReadWrite);
+                    OpenStoreForReadWrite(store, destStore);
                     foreach (var c in certsToMove)
                     {
                         var foundCerts = store.Certificates.Find(X509FindType.FindByThumbprint, thumbprint, false);
