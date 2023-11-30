@@ -111,6 +111,7 @@ Visual Studio will then bring up a new window showing the running Processes on t
 ![Screenshot of the Visual Studio Attach to Process Window](../../../docs/images/VS_Container_Debug_Attach_To_Process_Window.png)
 
 For Linux containers, you may additionally have to select the proper code type for debugging in the following window (Always choose `Managed (.NET Core for Unix)`):
+
 ![Screenshot of the Visual Studio Select Code Type Window](../../../docs/images/VS_Container_Debug_Select_Code_Type_Window.png)
 
 The Visual Studio's debugger will then take a moment to attach. Once ready, you will need to click the `Continue` button to start test code execution.
