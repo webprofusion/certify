@@ -13,7 +13,6 @@ services:
     # environment:
     #   VSTEST_HOST_DEBUG: 1
     volumes:
-      # - certifydata:/usr/share/certify
       - step:/mnt/step_share
     # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
     # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetails'"
@@ -36,6 +35,3 @@ services:
 
 volumes:
   step: {}
-
-  # certifydata:
-  #   external: true
