@@ -11,9 +11,8 @@ services:
       - 443:443
       - 9696:9696
     # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests
-    entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
     volumes:
-      # - certifydata:C:\ProgramData\certify
       - step:C:\step_share
     depends_on:
       step-ca:
@@ -30,6 +29,3 @@ services:
 
 volumes:
   step: {}
-
-  # certifydata:
-  #   external: true
