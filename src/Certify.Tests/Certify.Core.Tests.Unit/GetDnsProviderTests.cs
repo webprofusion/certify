@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
 using Certify.Management;
@@ -19,7 +20,7 @@ namespace Certify.Core.Tests.Unit
             var pluginManager = new PluginManager();
             pluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_DNS_PROVIDERS });
             var TEST_PATH = "Tests\\credentials";
-            credentialsManager = new SQLiteCredentialStore(storageSubfolder: TEST_PATH);
+            credentialsManager = new SQLiteCredentialStore(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), TEST_PATH);
             dnsHelper = new DnsChallengeHelper(credentialsManager);
         }
 
@@ -58,6 +59,9 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("DNS Challenge API Provider not set or could not load.", result.Result.Message);
             Assert.IsFalse(result.Result.IsSuccess);
             Assert.IsFalse(result.Result.IsWarning);
+
+            // Cleanup credentials
+            await credentialsManager.Delete(null, testCredential.StorageKey);
         }
 
         [TestMethod, Description("Test Getting DNS Provider with a bad CredentialId")]
@@ -82,6 +86,9 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("DNS Challenge API Credentials could not be decrypted or no longer exists. The original user must be used for decryption.", result.Result.Message);
             Assert.IsFalse(result.Result.IsSuccess);
             Assert.IsFalse(result.Result.IsWarning);
+
+            // Cleanup credentials
+            await credentialsManager.Delete(null, testCredential.StorageKey);
         }
 
         [TestMethod, Description("Test Getting DNS Provider")]
@@ -107,6 +114,9 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(result.Result.IsSuccess);
             Assert.IsFalse(result.Result.IsWarning);
             Assert.AreEqual(testCredential.ProviderType, result.Provider.ProviderId);
+
+            // Cleanup credentials
+            await credentialsManager.Delete(null, testCredential.StorageKey);
         }
 
         [TestMethod, Description("Test Getting Challenge API Providers")]

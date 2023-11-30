@@ -11,4 +11,8 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
   </PropertyGroup>
+  <PropertyGroup>
+	<Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
+	<DebugType>portable</DebugType>
+  </PropertyGroup>
 </Project>

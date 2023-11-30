@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Management;
@@ -14,6 +16,7 @@ namespace Certify.Core.Tests.Unit
     public class BindingMatchTests
     {
         public List<BindingInfo> _allSites { get; set; }
+        private readonly string _dummyCertPath = Path.Combine(Environment.CurrentDirectory, "Assets", "dummycert.pfx");
 
         [TestInitialize]
         public void Setup()
@@ -357,19 +360,19 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"));
-            Assert.AreEqual(results[0].Title, "Certificate Storage");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Storage", results[0].Title);
 
             Assert.IsTrue(results[1].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsTrue(results[2].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
-            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[2].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when not in preview")]
@@ -382,7 +385,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -403,30 +405,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled with blank certStoreName")]
@@ -439,7 +441,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -460,30 +461,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "");
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "");
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file path")]
@@ -496,7 +497,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Asset\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -517,13 +517,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath.Replace("Assets", "Asset"), pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file")]
@@ -536,7 +536,7 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\badcert.pfx";
+            var badCertPath = Path.Combine(Environment.CurrentDirectory, "Assets", "badcert.pfx");
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -557,13 +557,13 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, badCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx password")]
@@ -576,7 +576,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -597,30 +596,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "badpass", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "badpass", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad cert store name")]
@@ -633,7 +632,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="www.test.com", IP="[fe80::3c4e:11b7:fe4f:c601%31]", Port=80, Protocol="http" }
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -654,19 +652,27 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
 
-            Assert.AreEqual(results.Count, 1);
+            Assert.AreEqual(1, results.Count);
             Assert.IsTrue(results[0].HasError);
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."));
-            Assert.AreEqual(results[0].Title, "Certificate Storage Failed");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."), $"Unexpected description: '{results[0].Description}'");
+            }
+            else
+            {
+                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The specified X509 certificate store does not exist."), $"Unexpected description: '{results[0].Description}'");
+            }
+
+            Assert.AreEqual("Certificate Storage Failed", results[0].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when DeploymentBindingOption = DeploymentBindingOption.UpdateOnly")]
@@ -680,7 +686,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -702,19 +707,19 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
-            Assert.AreEqual(results.Count, 1);
+            Assert.AreEqual(1, results.Count);
             Assert.IsFalse(results[0].HasError);
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
         }
 
         [TestMethod, Description("Test if https IP bindings are handled")]
@@ -755,14 +760,14 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(results.Any());
             Assert.AreEqual(2, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"));
-            Assert.AreEqual(results[0].Title, "Certificate Storage");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Storage", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:80:test.com Non-SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:80:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
         }
 
 #if NET462
@@ -780,7 +785,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -802,30 +806,30 @@ namespace Certify.Core.Tests.Unit
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
                 CertificateThumbprintHash = cert.Thumbprint,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when CertificatePreviousThumbprintHash is defined")]
@@ -843,7 +847,6 @@ namespace Certify.Core.Tests.Unit
             };
 
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -865,30 +868,30 @@ namespace Certify.Core.Tests.Unit
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
                 CertificatePreviousThumbprintHash = cert.Thumbprint,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.AddBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 #endif
 
@@ -900,7 +903,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -921,30 +923,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | ***:21:ftp.test.com **"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | ***:21:ftp.test.com **"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if ftp bindings are handled when not in preview with Certificate Request that defines a BindingIPAddress")]
@@ -955,7 +957,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -977,30 +978,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: {results[0].Description}");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | **127.0.0.1:21:ftp.test.com **"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: {results[1].Description}");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | **127.0.0.1:21:ftp.test.com **"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: {results[2].Description}");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test if ftp bindings are handled when not in preview with Certificate Request that defines a BindingPort")]
@@ -1011,7 +1012,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 20, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1033,30 +1033,30 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[1].Description.Contains("Add ftp binding |  | ***:22:ftp.test.com **"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.AddBinding");
-            Assert.IsTrue(results[2].Description.Contains("Add ftp binding |  | ***:22:ftp.test.com **"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For FTP Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test update bindings are skipped when using a protocol other than http, https, or ftp")]
@@ -1066,7 +1066,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="smtp.test.com", IP="127.0.0.1", Port = 587, Protocol="smtp" },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1087,20 +1086,20 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(1, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
         }
 
         [TestMethod, Description("Test if ftp bindings are handled when not in preview")]
@@ -1111,7 +1110,6 @@ namespace Certify.Core.Tests.Unit
                 new BindingInfo{ Host="ftp.test.com", IP="127.0.0.1", Port = 21, Protocol="ftp", IsFtpSite=true },
             };
             var deployment = new BindingDeploymentManager();
-            var dummyCertPath = Environment.CurrentDirectory + "\\Assets\\dummycert.pfx";
             var testManagedCert = new ManagedCertificate
             {
                 Id = Guid.NewGuid().ToString(),
@@ -1132,40 +1130,40 @@ namespace Certify.Core.Tests.Unit
                         }
                 },
                 ItemType = ManagedCertificateType.SSL_ACME,
-                CertificatePath = dummyCertPath
+                CertificatePath = _dummyCertPath
             };
 
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(1, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             testManagedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
-            results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+            results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             Assert.IsTrue(results.Any());
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
-            Assert.AreEqual(results[0].Category, "CertificateStorage");
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"));
-            Assert.AreEqual(results[0].Title, "Certificate Stored");
+            Assert.AreEqual("CertificateStorage", results[0].Category);
+            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[1].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"));
-            Assert.AreEqual(results[1].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
+            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
-            Assert.AreEqual(results[2].Category, "Deployment.UpdateBinding");
-            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"));
-            Assert.AreEqual(results[2].Title, "Install Certificate For Binding");
+            Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
+            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:21:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
         [TestMethod, Description("Test that duplicate https bindings are not created when multiple non-port 443 same-hostname bindings exist")]
