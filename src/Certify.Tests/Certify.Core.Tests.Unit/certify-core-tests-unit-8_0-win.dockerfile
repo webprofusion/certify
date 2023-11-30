@@ -3,6 +3,10 @@ WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 EXPOSE 9696
+RUN mkdir C:\temp && pwsh -Command "Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\temp\step_windows_0.24.4_amd64.zip'" && tar -oxzf C:\temp\step_windows_0.24.4_amd64.zip -C "C:\Program Files" && rmdir /s /q C:\temp
+USER ContainerAdministrator
+RUN setx /M PATH "%PATH%;C:\Program Files\step_0.24.4\bin"
+USER ContainerUser
 
 # define build and copy required source files
 FROM mcr.microsoft.com/dotnet/sdk:8.0-windowsservercore-ltsc2022 AS build
