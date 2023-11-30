@@ -1,27 +1,53 @@
-﻿name: certify-core-tests-unit-8_0-win
+﻿name: certify-core-tests-unit-win
 services:
 
   certify-core-tests-unit-8_0:
     image: certify-core-tests-unit-8_0-win:latest
-    build: ..\..\..\..\
+    build: 
+      context: ../../../../
+      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-8_0-win.dockerfile
     # environment:
     #   VSTEST_HOST_DEBUG: 1
     ports:
       - 80:80
       - 443:443
       - 9696:9696
-    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
     # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
     volumes:
       - step:C:\step_share
+    profiles: ["8_0"]
+    depends_on:
+      step-ca:
+        condition: service_healthy
+
+  certify-core-tests-unit-4_6_2:
+    image: certify-core-tests-unit-4_6_2-win:latest
+    build: 
+      context: ../../../../
+      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-4_6_2-win.dockerfile
+    # environment:
+    #   VSTEST_HOST_DEBUG: 1
+    ports:
+      - 80:80
+      - 443:443
+      - 9696:9696
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net462 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net462 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
+    volumes:
+      - step:C:\step_share
+    profiles: ["4_6_2"]
     depends_on:
       step-ca:
         condition: service_healthy
   
   step-ca:
     image: step-ca-win:latest
-    build: .
+    build: 
+      context: .
+      dockerfile: ./step-ca-win.dockerfile   
     hostname: step-ca
+    profiles: ["4_6_2", "8_0"]
     ports:
       - 9000:9000
     volumes:
