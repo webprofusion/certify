@@ -1,26 +1,312 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.Management;
 using Certify.Models;
+using Certify.Providers.ACME.Anvil;
+using DotNet.Testcontainers.Builders;
+using DotNet.Testcontainers.Containers;
+using DotNet.Testcontainers.Volumes;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Serilog;
 
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class CertifyManagerAccountTests
+    public class CertifyManagerAccountTests : IDisposable
     {
         private readonly CertifyManager _certifyManager;
+        private readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+        private readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private readonly string _caDomain;
+        private readonly int _caPort;
+        private IContainer _caContainer;
+        private IVolume _stepVolume;
+        private CertificateAuthority _customCa;
+        private AccountDetails _customCaAccount;
+        private readonly Loggy _log;
 
         public CertifyManagerAccountTests()
         {
             _certifyManager = new CertifyManager();
             _certifyManager.Init().Wait();
-            var testCredentialsPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "Tests", ".env.test_accounts");
-            DotNetEnv.Env.Load(testCredentialsPath);
+            _log = new Loggy(new LoggerConfiguration().WriteTo.Debug().CreateLogger());
+
+            _caDomain = _isContainer ? "step-ca" : "localhost";
+            _caPort = 9000;
+
+            BootstrapStepCa().Wait();
+            CheckCustomCaIsRunning().Wait();
+            AddCustomCa().Wait();
+            AddNewAccount().Wait();
+        }
+
+        private async Task BootstrapStepCa()
+        {
+            string stepCaFingerprint;
+
+            // If running in a container
+            if (_isContainer)
+            {
+                // Step container volume path containing step-ca config based on OS
+                var configPath = _isWindows ? "C:\\step_share\\config\\defaults.json" : "/mnt/step_share/config/defaults.json";
+
+                // Wait till step-ca config file is written
+                while (!File.Exists(configPath)) { }
+
+                // Read step-ca fingerprint from config file
+                var stepCaConfigJson = JsonReader.ReadFile<StepCaConfig>(configPath);
+                stepCaFingerprint = stepCaConfigJson.fingerprint;
+            }
+            else
+            {
+                // Start new step-ca container
+                await StartStepCaContainer();
+
+                // Read step-ca fingerprint from config file
+                var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
+                var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
+                stepCaFingerprint = stepCaConfigJson.fingerprint;
+            }
+
+            // Run bootstrap command
+            //var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint} --install";
+            var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
+            RunCommand("step", command, "Bootstrap Step CA Script", 1000 * 30);
+        }
+
+        private async Task StartStepCaContainer()
+        {
+            try
+            {
+                // Create new volume for step-ca container
+                _stepVolume = new VolumeBuilder().WithName("step").Build();
+                await _stepVolume.CreateAsync();
+
+                // Create new step-ca container
+                _caContainer = new ContainerBuilder()
+                    .WithName("step-ca")
+                    // Set the image for the container to "smallstep/step-ca:latest".
+                    .WithImage("smallstep/step-ca:latest")
+                    .WithVolumeMount(_stepVolume, "/home/step")
+                    // Bind port 9000 of the container to port 9000 on the host.
+                    .WithPortBinding(_caPort)
+                    .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
+                    .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
+                    .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
+                    .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
+                    // Wait until the HTTPS endpoint of the container is available.
+                    .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
+                    // Build the container configuration.
+                    .Build();
+
+                // Start step-ca container
+                await _caContainer.StartAsync();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        private static class JsonReader
+        {
+            public static T ReadFile<T>(string filePath)
+            {
+                using (var streamReader = new StreamReader(File.Open(filePath, FileMode.Open)))
+                {
+                    using (var jsonTextReader = new JsonTextReader(streamReader))
+                    {
+                        var serializer = new JsonSerializer();
+                        return serializer.Deserialize<T>(jsonTextReader);
+                    }
+                }
+            }
+
+            public static T ReadBytes<T>(byte[] bytes)
+            {
+                using (var stringReader = new StringReader(Encoding.UTF8.GetString(bytes)))
+                {
+                    using (var jsonTextReader = new JsonTextReader(stringReader))
+                    {
+                        var serializer = new JsonSerializer();
+                        return serializer.Deserialize<T>(jsonTextReader);
+                    }
+                }
+            }
+        }
+
+        private class StepCaConfig
+        {
+            [JsonProperty(PropertyName = "ca-url")]
+            public string ca_url;
+            [JsonProperty(PropertyName = "ca-config")]
+            public string ca_config;
+            public string fingerprint;
+            public string root;
+        }
+
+        private void RunCommand(string program, string args, string description = null, int timeoutMS = 1000 * 5)
+        {
+            if (description == null) { description = string.Concat(program, " ", args); }
+            
+            var output = "";
+            var errorOutput = "";
+
+            var startInfo = new ProcessStartInfo()
+            {
+                FileName = program,
+                Arguments = args,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            var process = new Process() { StartInfo = startInfo };
+
+            process.OutputDataReceived += (obj, a) =>
+            {
+                if (!string.IsNullOrWhiteSpace(a.Data))
+                {
+                    _log.Information(a.Data);
+                    output += a.Data;
+                }
+            };
+
+            process.ErrorDataReceived += (obj, a) =>
+            {
+                if (!string.IsNullOrWhiteSpace(a.Data))
+                {
+                    _log.Error($"Error: {a.Data}");
+                    errorOutput += a.Data;
+                }
+            };
+
+            try
+            {
+                process.Start();
+
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                process.WaitForExit(timeoutMS);
+            }
+            catch (Exception exp)
+            {
+                _log.Error($"Error Running ${description}: " + exp.ToString());
+                throw;
+            }
+
+            _log.Information($"{description} Successful");
+        }
+
+        private async Task CheckCustomCaIsRunning()
+        {
+            var httpHandler = new HttpClientHandler();
+
+            httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
+
+            var loggingHandler = new LoggingHandler(httpHandler, _log);
+            var stepCaHttp = new HttpClient(loggingHandler);
+            var healthRes = await stepCaHttp.GetAsync($"https://{_caDomain}:{_caPort}/health");
+            var healthResStr = await healthRes.Content.ReadAsStringAsync();
+            Assert.AreEqual("{\"status\":\"ok\"}\n", (healthResStr));
+        }
+
+        private async Task AddCustomCa()
+        {
+            _customCa = new CertificateAuthority
+            {
+                Id = "step-ca",
+                Title = "Custom Step CA",
+                IsCustom = true,
+                IsEnabled = true,
+                APIType = CertAuthorityAPIType.ACME_V2.ToString(),
+                ProductionAPIEndpoint = $"https://{_caDomain}:{_caPort}/acme/acme/directory",
+                StagingAPIEndpoint = $"https://{_caDomain}:{_caPort}/acme/acme/directory",
+                RequiresEmailAddress = true,
+                AllowUntrustedTls = true,
+                SANLimit = 100,
+                StandardExpiryDays = 90,
+                SupportedFeatures = new List<string>
+                {
+                    CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
+                    CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
+                },
+                SupportedKeyTypes = new List<string>{
+                    StandardKeyTypes.ECDSA256,
+                }
+            };
+            var updateCaRes = await _certifyManager.UpdateCertificateAuthority(_customCa);
+            Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {_customCa.Id} to be successful");
+        }
+
+        private async Task AddNewAccount()
+        {
+            if (_customCa?.Id != null)
+            {
+                var contactRegistration = new ContactRegistration
+                {
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = _customCa.Id,
+                    EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
+                    ImportedAccountKey = "",
+                    ImportedAccountURI = "",
+                    IsStaging = true
+                };
+
+                // Add account
+                var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+                Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
+                _customCaAccount = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegistration.EmailAddress);
+            }
+        }
+
+        public void Dispose() => Cleanup().Wait();
+
+        private async Task Cleanup()
+        {
+            if (_customCaAccount != null)
+            {
+                await _certifyManager.RemoveAccount(_customCaAccount.StorageKey, true);
+            }
+
+            if (_customCa != null)
+            {
+                await _certifyManager.RemoveCertificateAuthority(_customCa.Id);
+            }
+
+            if (!_isContainer)
+            {
+                await _caContainer.DisposeAsync();
+                await _stepVolume.DeleteAsync();
+                await _stepVolume.DisposeAsync();
+            }
+            
+            var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
+            if (Directory.Exists(stepConfigPath))
+            {
+                Directory.Delete(stepConfigPath, true);
+            }
+
+            var stepCertsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "certs");
+            if (Directory.Exists(stepCertsPath))
+            {
+                Directory.Delete(stepCertsPath, true);
+            }
+
+            _certifyManager?.Dispose();
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountDetails()")]
@@ -52,10 +338,10 @@ namespace Certify.Core.Tests.Unit
         public async Task TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId()
         {
             var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true, CertificateAuthorityId = "letsencrypt.org" });
+            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true, CertificateAuthorityId = _customCa.Id });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
-            Assert.AreEqual("letsencrypt.org", caAccount.CertificateAuthorityId, $"Unexpected certificate authority id '{caAccount.CertificateAuthorityId}'");
+            Assert.AreEqual(_customCa.Id, caAccount.CertificateAuthorityId, $"Unexpected certificate authority id '{caAccount.CertificateAuthorityId}'");
         }
 
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when OverrideAccountDetails is defined in CertifyManager")]
@@ -68,7 +354,7 @@ namespace Certify.Core.Tests.Unit
                 AccountURI = "",
                 Title = "Dev",
                 Email = "test@certifytheweb.com",
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 StorageKey = "dev",
                 IsStagingAccount = true,
             };
@@ -91,7 +377,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to be null");
         }
 
-        [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when there is no matching account")]
+        [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when it is a resume order")]
         public async Task TestCertifyManagerGetAccountDetailsIsResumeOrder()
         {
             var testUrl = "test.com";
@@ -120,7 +406,7 @@ namespace Certify.Core.Tests.Unit
                 var contactRegistration = new ContactRegistration
                 {
                     AgreedToTermsAndConditions = true,
-                    CertificateAuthorityId = "letsencrypt.org",
+                    CertificateAuthorityId = _customCa.Id,
                     EmailAddress = contactRegEmail,
                     ImportedAccountKey = "",
                     ImportedAccountURI = "",
@@ -151,7 +437,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -179,7 +465,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = false,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -225,10 +511,10 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
-                ImportedAccountURI = "https://acme-staging-v02.api.letsencrypt.org/acme/acct/123403114",
+                ImportedAccountURI = _customCaAccount.AccountURI,
                 IsStaging = true
             };
 
@@ -248,9 +534,9 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM"),
+                ImportedAccountKey = _customCaAccount.AccountKey,
                 ImportedAccountURI = "",
                 IsStaging = true
             };
@@ -271,10 +557,10 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "tHiSiSnOtApEm",
-                ImportedAccountURI = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_URI"),
+                ImportedAccountURI = _customCaAccount.AccountURI,
                 IsStaging = true
             };
 
@@ -289,30 +575,28 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for CertifyManager.AddAccount() when ImportedAccountKey and ImportedAccountURI are valid")]
         public async Task TestCertifyManagerAddAccountImport()
         {
+            // Remove account
+            var removeAccountRes = await _certifyManager.RemoveAccount(_customCaAccount.StorageKey);
+            Assert.IsTrue(removeAccountRes.IsSuccess, $"Expected account removal to be successful for {_customCaAccount.Email}");
+            var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == _customCaAccount.Email);
+            Assert.IsNull(accountDetails, $"Did not expect an account for {_customCaAccount.Email} to be returned by CertifyManager.GetAccountRegistrations()");
+
             // Setup account registration info
-            //var contactRegEmail = "admin.98b9a6@test.com";
-            var contactRegEmail = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_EMAIL");
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
-                EmailAddress = contactRegEmail,
-                ImportedAccountKey = DotNetEnv.Env.GetString("RESTORE_KEY_PEM"),
-                ImportedAccountURI = DotNetEnv.Env.GetString("RESTORE_ACCOUNT_URI"),
+                CertificateAuthorityId = _customCa.Id,
+                EmailAddress = _customCaAccount.Email,
+                ImportedAccountKey = _customCaAccount.AccountKey,
+                ImportedAccountURI = _customCaAccount.AccountURI,
                 IsStaging = true
             };
 
             // Add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
-            Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
-            var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
-            Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {contactRegEmail}");
-
-            // Remove account
-            var removeAccountRes = await _certifyManager.RemoveAccount(accountDetails.StorageKey);
-            Assert.IsTrue(removeAccountRes.IsSuccess, $"Expected account removal to be successful for {contactRegEmail}");
-            accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
-            Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
+            Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {_customCaAccount.Email}");
+            accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == _customCaAccount.Email);
+            Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {_customCaAccount.Email}");
         }
 
         [TestMethod, Description("Test for using CertifyManager.RemoveAccount() with a bad storage key")]
@@ -336,7 +620,7 @@ namespace Certify.Core.Tests.Unit
                 var contactRegistration = new ContactRegistration
                 {
                     AgreedToTermsAndConditions = true,
-                    CertificateAuthorityId = "letsencrypt.org",
+                    CertificateAuthorityId = _customCa.Id,
                     EmailAddress = contactRegEmail,
                     ImportedAccountKey = "",
                     ImportedAccountURI = "",
@@ -383,7 +667,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -401,7 +685,7 @@ namespace Certify.Core.Tests.Unit
             var newContactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = newContactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -424,7 +708,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -442,7 +726,7 @@ namespace Certify.Core.Tests.Unit
             var newContactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = false,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = newContactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -468,7 +752,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -486,7 +770,7 @@ namespace Certify.Core.Tests.Unit
             var newContactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = newContactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -582,7 +866,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -618,7 +902,7 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = _customCa.Id,
                 EmailAddress = contactRegEmail,
                 ImportedAccountKey = "",
                 ImportedAccountURI = "",
@@ -801,7 +1085,7 @@ namespace Certify.Core.Tests.Unit
             // Delete custom CA
             var deleteCaRes = await _certifyManager.RemoveCertificateAuthority(badId);
             Assert.IsFalse(deleteCaRes.IsSuccess, $"Expected Custom CA deletion for CA with ID {badId} to be unsuccessful");
-            Assert.AreEqual(deleteCaRes.Message, "An error occurred removing the indicated Custom CA from the Certificate Authorities list.", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() failure");
+            Assert.AreEqual(deleteCaRes.Message, $"The certificate authority {badId} was not found in the list of custom CAs and could not be removed.", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() failure");
         }
     }
 }
