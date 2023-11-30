@@ -9,12 +9,25 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class LoggyTests
     {
-        private string logFilePath = "C:\\ProgramData\\certify\\Tests\\test.log";
+        private string testsDataPath;
+        private string logFilePath;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            File.Delete(this.logFilePath);
+            testsDataPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "Tests");
+            logFilePath = Path.Combine(testsDataPath, "test.log");
+
+            if (!Directory.Exists(testsDataPath))
+            {
+                Directory.CreateDirectory(testsDataPath);
+
+            }
+
+            if (File.Exists(logFilePath))
+            {
+                File.Delete(this.logFilePath);
+            }
         }
 
         [TestCleanup]
@@ -56,10 +69,11 @@ namespace Certify.Core.Tests.Unit
 
             // Trigger an exception error and log it using Loggy.Error()
             var logMessage = "New Loggy Exception Error";
-            var exceptionError = "System.IO.FileNotFoundException: Could not find file 'C:\\ProgramData\\certify\\Tests\\test1.log'.";
+            var badFilePath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "Tests", "test1.log");
+
+            var exceptionError = $"System.IO.FileNotFoundException: Could not find file '{badFilePath}'.";
             try
             {
-                var badFilePath = "C:\\ProgramData\\certify\\Tests\\test1.log";
                 var nullObject = File.ReadAllBytes(badFilePath);
             }
             catch (Exception e)
