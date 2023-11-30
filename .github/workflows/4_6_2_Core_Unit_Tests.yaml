@@ -1,0 +1,48 @@
+name: build and test .NET 4.6.2
+
+on:
+  push:
+  pull_request:
+    branches: [ main ]
+    paths:
+    - '**.cs'
+    - '**.csproj'
+
+env:
+  DOTNET_VERSION: '8.0.0' # The .NET SDK version to use
+
+jobs:
+  build-and-test:
+
+    name: build-and-test-${{matrix.os}}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit
+      
+    - name: Build
+      run: dotnet build -c Release --no-restore -f net462
+      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit
+    
+    - name: Test
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 --logger trx --results-directory "TestResults-4_6_2-${{ matrix.os }}"
+      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net462
+
+    - name: Upload dotnet test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: dotnet-results-4_6_2-${{ matrix.os }}
+        path: TestResults-4_6_2-${{ matrix.os }}
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
