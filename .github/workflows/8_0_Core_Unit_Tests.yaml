@@ -9,7 +9,7 @@ on:
     - '**.csproj'
 
 env:
-  DOTNET_VERSION: '8.0.0' # The .NET SDK version to use
+  DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
 
 jobs:
   build-and-test:
