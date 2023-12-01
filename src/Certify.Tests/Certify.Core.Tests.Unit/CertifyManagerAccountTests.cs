@@ -34,6 +34,7 @@ namespace Certify.Core.Tests.Unit
         private CertificateAuthority _customCa;
         private AccountDetails _customCaAccount;
         private readonly Loggy _log;
+        private readonly string _winRunnerTempDir = "C:\\Temp\\.step";
 
         public CertifyManagerAccountTests()
         {
@@ -47,7 +48,8 @@ namespace Certify.Core.Tests.Unit
             BootstrapStepCa().Wait();
             CheckCustomCaIsRunning().Wait();
             AddCustomCa().Wait();
-            AddNewAccount().Wait();
+            CheckForExistingLeAccount().Wait();
+            AddNewCustomCaAccount().Wait();
         }
 
         private async Task BootstrapStepCa()
@@ -73,15 +75,17 @@ namespace Certify.Core.Tests.Unit
                 await StartStepCaContainer();
 
                 // Read step-ca fingerprint from config file
-                if(_isWindowsGitlabRunner)
+                if (_isWindowsGitlabRunner)
                 {
-                    var result = await _caContainer.ExecAsync(new List<string> { "dir", "C:\\Users\\ContainerUser\\.step\\config\\" });
-                    _log.Information(result.Stdout);
+                    // Read step-ca fingerprint from config file
+                    var stepCaConfigJson = JsonReader.ReadFile<StepCaConfig>($"{_winRunnerTempDir}\\config\\defaults.json");
+                    stepCaFingerprint = stepCaConfigJson.fingerprint;
+                } else
+                {
+                    var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
+                    var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
+                    stepCaFingerprint = stepCaConfigJson.fingerprint;
                 }
-
-                var stepCaConfigBytes = await _caContainer.ReadFileAsync(_isWindowsGitlabRunner ? "C:\\Users\\ContainerUser\\.step\\config\\defaults.json" : "/home/step/config/defaults.json");
-                var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
-                stepCaFingerprint = stepCaConfigJson.fingerprint;
             }
 
             // Run bootstrap command
@@ -94,26 +98,51 @@ namespace Certify.Core.Tests.Unit
         {
             try
             {
-                // Create new volume for step-ca container
-                _stepVolume = new VolumeBuilder().WithName("step").Build();
-                await _stepVolume.CreateAsync();
+                if (_isWindowsGitlabRunner)
+                {
+                    if (!Directory.Exists(_winRunnerTempDir)) {
+                        Directory.CreateDirectory(_winRunnerTempDir);
+                    }
 
-                // Create new step-ca container
-                _caContainer = new ContainerBuilder()
-                    .WithName("step-ca")
-                    // Set the image for the container to "smallstep/step-ca:latest".
-                    .WithImage(_isWindowsGitlabRunner ? "jrnelson90/step-ca-win:latest" : "smallstep/step-ca:latest")
-                    .WithVolumeMount(_stepVolume, _isWindowsGitlabRunner ? "C:\\Users\\ContainerUser\\.step" : "/home/step")
-                    // Bind port 9000 of the container to port 9000 on the host.
-                    .WithPortBinding(_caPort)
-                    .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
-                    .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
-                    .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
-                    .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
-                    // Wait until the HTTPS endpoint of the container is available.
-                    .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
-                    // Build the container configuration.
-                    .Build();
+                    // Create new step-ca container
+                    _caContainer = new ContainerBuilder()
+                        .WithName("step-ca")
+                        // Set the image for the container to "smallstep/step-ca:latest".
+                        .WithImage("jrnelson90/step-ca-win:latest")
+                        .WithBindMount(_winRunnerTempDir, "C:\\Users\\ContainerUser\\.step")
+                        // Bind port 9000 of the container to port 9000 on the host.
+                        .WithPortBinding(_caPort)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
+                        // Wait until the HTTPS endpoint of the container is available.
+                        .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
+                        // Build the container configuration.
+                        .Build();
+                } else
+                {
+                    // Create new volume for step-ca container
+                    _stepVolume = new VolumeBuilder().WithName("step").Build();
+                    await _stepVolume.CreateAsync();
+
+                    // Create new step-ca container
+                    _caContainer = new ContainerBuilder()
+                        .WithName("step-ca")
+                        // Set the image for the container to "smallstep/step-ca:latest".
+                        .WithImage("smallstep/step-ca:latest")
+                        .WithVolumeMount(_stepVolume, "/home/step")
+                        // Bind port 9000 of the container to port 9000 on the host.
+                        .WithPortBinding(_caPort)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
+                        // Wait until the HTTPS endpoint of the container is available.
+                        .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
+                        // Build the container configuration.
+                        .Build();
+                }
 
                 // Start step-ca container
                 await _caContainer.StartAsync();
@@ -259,7 +288,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {_customCa.Id} to be successful");
         }
 
-        private async Task AddNewAccount()
+        private async Task AddNewCustomCaAccount()
         {
             if (_customCa?.Id != null)
             {
@@ -267,6 +296,27 @@ namespace Certify.Core.Tests.Unit
                 {
                     AgreedToTermsAndConditions = true,
                     CertificateAuthorityId = _customCa.Id,
+                    EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
+                    ImportedAccountKey = "",
+                    ImportedAccountURI = "",
+                    IsStaging = true
+                };
+
+                // Add account
+                var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+                Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
+                _customCaAccount = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegistration.EmailAddress);
+            }
+        }
+
+        private async Task CheckForExistingLeAccount()
+        {
+            if ((await _certifyManager.GetAccountRegistrations()).Find(a => a.CertificateAuthorityId == "letsencrypt.org") == null)
+            {
+                var contactRegistration = new ContactRegistration
+                {
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = "letsencrypt.org",
                     EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
                     ImportedAccountKey = "",
                     ImportedAccountURI = "",
@@ -297,8 +347,15 @@ namespace Certify.Core.Tests.Unit
             if (!_isContainer)
             {
                 await _caContainer.DisposeAsync();
-                await _stepVolume.DeleteAsync();
-                await _stepVolume.DisposeAsync();
+                if (_stepVolume != null)
+                {
+                    await _stepVolume.DeleteAsync();
+                    await _stepVolume.DisposeAsync();
+                } 
+                else
+                {
+                    Directory.Delete("C:\\Temp\\.step", true);
+                }
             }
             
             var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
