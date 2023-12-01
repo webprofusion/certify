@@ -62,6 +62,12 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Setup Step CLI
+      run: wget https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.23.0/step-cli_0.23.0_amd64.deb && dpkg -i step-cli_0.23.0_amd64.deb
+
+    - name: Pull step-ca Docker Image
+      run: docker pull smallstep/step-ca
+
     - name: Install Dependencies
       run: dotnet restore
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
