@@ -1,9 +1,9 @@
-name: build and test .NET 4.6.2
+name: build and test .NET 4.6.2 Windows
 
 on:
   push:
   pull_request:
-    branches: [ main ]
+    branches: [ release, development ]
     paths:
     - '**.cs'
     - '**.csproj'
@@ -22,6 +22,22 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - uses: actions/checkout@master
+      with:
+        repository: webprofusion/anvil
+        ref: refs/heads/main
+        path: ./libs/anvil
+    - uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: refs/heads/${{ github.ref_name }}    
+        path: ./certify-plugins
+    - uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-internal
+        ref: refs/heads/main
+        path: ./certify-plugins
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
       with:
