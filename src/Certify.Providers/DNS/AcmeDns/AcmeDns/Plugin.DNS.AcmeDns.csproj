@@ -5,7 +5,6 @@
     <Platforms>AnyCPU</Platforms>
     <AssemblyName>Plugin.DNS.AcmeDns</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>
