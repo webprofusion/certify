@@ -50,6 +50,14 @@ jobs:
         ref: refs/heads/release    
         path: ./certify-plugins
 
+    - name: Clone webprofusion/certify-plugins (development default)
+      if: ${{ ! contains(github.ref_name, '_rel') && ! contains(github.ref_name, '_dev') }}
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: refs/heads/release    
+        path: ./certify-plugins
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@master
       with:
