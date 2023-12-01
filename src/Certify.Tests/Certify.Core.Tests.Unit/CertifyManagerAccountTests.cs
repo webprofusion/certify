@@ -73,6 +73,12 @@ namespace Certify.Core.Tests.Unit
                 await StartStepCaContainer();
 
                 // Read step-ca fingerprint from config file
+                if(_isWindowsGitlabRunner)
+                {
+                    var result = await _caContainer.ExecAsync(new List<string> { "dir", "C:\\Users\\ContainerUser\\.step\\config\\" });
+                    _log.Information(result.Stdout);
+                }
+
                 var stepCaConfigBytes = await _caContainer.ReadFileAsync(_isWindowsGitlabRunner ? "C:\\Users\\ContainerUser\\.step\\config\\defaults.json" : "/home/step/config/defaults.json");
                 var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
                 stepCaFingerprint = stepCaConfigJson.fingerprint;
