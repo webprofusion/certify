@@ -47,12 +47,12 @@ jobs:
         ref: refs/heads/release    
         path: ./certify-plugins
 
-    - name: Clone webprofusion/certify-internal
-      uses: actions/checkout@master
-      with:
-        repository: webprofusion/certify-internal
-        ref: refs/heads/main
-        path: ./certify-internal
+    # - name: Clone webprofusion/certify-internal
+    #   uses: actions/checkout@master
+    #   with:
+    #     repository: webprofusion/certify-internal
+    #     ref: refs/heads/main
+    #     path: ./certify-internal
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
