@@ -13,7 +13,8 @@ env:
 
 jobs:
   build-and-test:
-
+    # TODO: Re-enable once we determine the cause of the .NET Framework 4.6.2 tests stalling (test runner doesn't quit when done')
+    if: ${{ ! always() }}
     name: build-and-test-${{matrix.os}}
     runs-on: ${{ matrix.os }}
     strategy:
