@@ -20,6 +20,7 @@ namespace Certify.Core.Tests.Unit
         public CAFailoverTests()
         {
             _certifyManager = new CertifyManager();
+            _certifyManager.Init().Wait();
             CheckForExistingLeAccount().Wait();
             // ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
         }
