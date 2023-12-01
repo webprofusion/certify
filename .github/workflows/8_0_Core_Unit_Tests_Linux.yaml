@@ -73,17 +73,17 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       
     - name: Build Certify.Core.Tests.Unit
-      run: dotnet build -c Release --no-restore -f net8.0
+      run: dotnet build -c Debug --no-restore -f net8.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --results-directory "TestResults-8_0-${{ matrix.os }}"
-      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net8.0
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Upload Certify.Core.Tests.Unit Test Results
       uses: actions/upload-artifact@master
       with:
         name: dotnet-results-8_0-${{ matrix.os }}
-        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net8.0/TestResults-8_0-${{ matrix.os }}
+        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}

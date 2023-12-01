@@ -66,7 +66,7 @@ jobs:
       run: "Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\\temp\\step_windows_0.24.4_amd64.zip'; tar -oxzf C:\\temp\\step_windows_0.24.4_amd64.zip -C 'C:\\Program Files';"
       
     - name: Add Step CLI to PATH
-      run: $NewPath = $Env.Path += ";C:\\Program Files\\step_0.24.4\\bin" && [Environment]::SetEnvironmentVariable("Path", $NewPath)
+      run: $NewPath = [Environment]::GetEnvironmentVariable("Path") += ";C:\\Program Files\\step_0.24.4\\bin" && [Environment]::SetEnvironmentVariable("GITHUB_PATH", $NewPath)
 
     - name: Validate Step CLI Install
       run: dir "C:\\Program Files\\step_0.24.4" && [Environment]::GetEnvironmentVariable("Path") -split ";"
@@ -79,17 +79,17 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       
     - name: Build Certify.Core.Tests.Unit
-      run: dotnet build -c Release --no-restore -f net8.0
+      run: dotnet build -c Debug --no-restore -f net8.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --results-directory "TestResults-8_0-${{ matrix.os }}"
-      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net8.0
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Upload Certify.Core.Tests.Unit Test Results
       uses: actions/upload-artifact@master
       with:
         name: dotnet-results-8_0-${{ matrix.os }}
-        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net8.0/TestResults-8_0-${{ matrix.os }}
+        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
