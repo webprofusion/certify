@@ -52,7 +52,7 @@ jobs:
       with:
         repository: webprofusion/certify-internal
         ref: refs/heads/main
-        path: ./certify-plugins
+        path: ./certify-internal
 
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
