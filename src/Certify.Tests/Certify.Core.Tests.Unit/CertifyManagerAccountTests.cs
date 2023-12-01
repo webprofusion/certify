@@ -326,7 +326,6 @@ namespace Certify.Core.Tests.Unit
                 // Add account
                 var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
                 Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
-                _customCaAccount = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegistration.EmailAddress);
             }
         }
 
