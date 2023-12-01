@@ -22,14 +22,16 @@ jobs:
 
     steps:
     - name: Clone webprofusion/certify
-      uses: actions/checkout@v3
+      uses: actions/checkout@master
+      with:
+        path: ./certify
 
     - name: Clone webprofusion/anvil
       uses: actions/checkout@master
       with:
         repository: webprofusion/anvil
         ref: refs/heads/main
-        path: ../libs/anvil
+        path: ./libs/anvil
 
     - name: Clone webprofusion/certify-plugins (development)
       if: ${{ contains(github.ref_name, '_dev') }}
@@ -37,7 +39,7 @@ jobs:
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/development    
-        path: ../certify-plugins
+        path: ./certify-plugins
 
     - name: Clone webprofusion/certify-plugins (release)
       if: ${{ contains(github.ref_name, '_rel') }}
@@ -45,14 +47,14 @@ jobs:
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/release    
-        path: ../certify-plugins
+        path: ./certify-plugins
 
     # - name: Clone webprofusion/certify-internal
     #   uses: actions/checkout@master
     #   with:
     #     repository: webprofusion/certify-internal
     #     ref: refs/heads/main
-    #     path: ../certify-internal
+    #     path: ./certify-internal
     
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v3
