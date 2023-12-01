@@ -21,18 +21,34 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/checkout@master
+    - name: Clone webprofusion/certify
+      uses: actions/checkout@v3
+
+    - name: Clone webprofusion/anvil
+      uses: actions/checkout@master
       with:
         repository: webprofusion/anvil
         ref: refs/heads/main
         path: ./libs/anvil
-    - uses: actions/checkout@master
+
+    - name: Clone webprofusion/certify-plugins (development)
+      if: ${{ contains(github.ref_name, '_dev') }}
+      uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
-        ref: refs/heads/${{ github.base_ref }}    
+        ref: refs/heads/development    
         path: ./certify-plugins
-    - uses: actions/checkout@master
+
+    - name: Clone webprofusion/certify-plugins (release)
+      if: ${{ contains(github.ref_name, '_rel') }}
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: refs/heads/release    
+        path: ./certify-plugins
+
+    - name: Clone webprofusion/certify-internal
+      uses: actions/checkout@master
       with:
         repository: webprofusion/certify-internal
         ref: refs/heads/main
