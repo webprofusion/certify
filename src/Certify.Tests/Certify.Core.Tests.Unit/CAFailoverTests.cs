@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,14 +12,37 @@ namespace Certify.Core.Tests.Unit
     public class CAFailoverTests
     {
         private const string DEFAULTCA = "letscertify";
+        private readonly CertifyManager _certifyManager;
 
         // TODO: This requires a valid test CA auth token to run
         //private Dictionary<string, string> ConfigSettings = new Dictionary<string, string>();
 
-        //public CAFailoverTests()
-        //{
-        //    ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
-        //}
+        public CAFailoverTests()
+        {
+            _certifyManager = new CertifyManager();
+            CheckForExistingLeAccount().Wait();
+            // ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
+        }
+
+        private async Task CheckForExistingLeAccount()
+        {
+            if ((await _certifyManager.GetAccountRegistrations()).Find(a => a.CertificateAuthorityId == "letsencrypt.org") == null)
+            {
+                var contactRegistration = new ContactRegistration
+                {
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = "letsencrypt.org",
+                    EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
+                    ImportedAccountKey = "",
+                    ImportedAccountURI = "",
+                    IsStaging = true
+                };
+
+                // Add account
+                var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+                Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
+            }
+        }
 
         private List<CertificateAuthority> GetTestCAs()
         {
