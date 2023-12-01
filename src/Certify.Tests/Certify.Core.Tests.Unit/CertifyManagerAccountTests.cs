@@ -90,12 +90,15 @@ namespace Certify.Core.Tests.Unit
                 // Create new volume for step-ca container
                 _stepVolume = new VolumeBuilder().WithName("step").Build();
                 await _stepVolume.CreateAsync();
+
+                var isWindowsGitlabRunner = _isWindows && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
+
                 // Create new step-ca container
                 _caContainer = new ContainerBuilder()
                     .WithName("step-ca")
                     // Set the image for the container to "smallstep/step-ca:latest".
-                    .WithImage(_isWindows && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null ? "jrnelson90/step-ca-win:latest" : "smallstep/step-ca:latest")
-                    .WithVolumeMount(_stepVolume, "/home/step")
+                    .WithImage(isWindowsGitlabRunner ? "jrnelson90/step-ca-win:latest" : "smallstep/step-ca:latest")
+                    .WithVolumeMount(_stepVolume, isWindowsGitlabRunner ? Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".step") : "/home/step")
                     // Bind port 9000 of the container to port 9000 on the host.
                     .WithPortBinding(_caPort)
                     .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
