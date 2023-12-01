@@ -49,34 +49,27 @@ jobs:
         ref: refs/heads/release    
         path: ./certify-plugins
 
-    # - name: Clone webprofusion/certify-internal
-    #   uses: actions/checkout@master
-    #   with:
-    #     repository: webprofusion/certify-internal
-    #     ref: refs/heads/main
-    #     path: ./certify-internal
-
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@master
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    - name: Install dependencies
+    - name: Install Dependencies
       run: dotnet restore
-      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
-    - name: Build
+    - name: Build Certify.Core.Tests.Unit
       run: dotnet build -c Release --no-restore -f net462
-      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
-    - name: Test
+    - name: Run Certify.Core.Tests.Unit Tests
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 --logger trx --results-directory "TestResults-4_6_2-${{ matrix.os }}"
-      working-directory: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net462
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net462
 
-    - name: Upload dotnet test results
-      uses: actions/upload-artifact@v3
+    - name: Upload Certify.Core.Tests.Unit Test Results
+      uses: actions/upload-artifact@master
       with:
         name: dotnet-results-4_6_2-${{ matrix.os }}
-        path: TestResults-4_6_2-${{ matrix.os }}
+        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Release/net462/TestResults-4_6_2-${{ matrix.os }}
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
