@@ -26,6 +26,7 @@ namespace Certify.Core.Tests.Unit
         private readonly CertifyManager _certifyManager;
         private readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
         private readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private readonly bool _isWindowsGitlabRunner = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
         private readonly string _caDomain;
         private readonly int _caPort;
         private IContainer _caContainer;
@@ -72,7 +73,7 @@ namespace Certify.Core.Tests.Unit
                 await StartStepCaContainer();
 
                 // Read step-ca fingerprint from config file
-                var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
+                var stepCaConfigBytes = await _caContainer.ReadFileAsync(_isWindowsGitlabRunner ? "C:\\Users\\ContainerUser\\.step\\config\\defaults.json" : "/home/step/config/defaults.json");
                 var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
                 stepCaFingerprint = stepCaConfigJson.fingerprint;
             }
@@ -91,14 +92,12 @@ namespace Certify.Core.Tests.Unit
                 _stepVolume = new VolumeBuilder().WithName("step").Build();
                 await _stepVolume.CreateAsync();
 
-                var isWindowsGitlabRunner = _isWindows && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
-
                 // Create new step-ca container
                 _caContainer = new ContainerBuilder()
                     .WithName("step-ca")
                     // Set the image for the container to "smallstep/step-ca:latest".
-                    .WithImage(isWindowsGitlabRunner ? "jrnelson90/step-ca-win:latest" : "smallstep/step-ca:latest")
-                    .WithVolumeMount(_stepVolume, isWindowsGitlabRunner ? Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".step") : "/home/step")
+                    .WithImage(_isWindowsGitlabRunner ? "jrnelson90/step-ca-win:latest" : "smallstep/step-ca:latest")
+                    .WithVolumeMount(_stepVolume, _isWindowsGitlabRunner ? "C:\\Users\\ContainerUser\\.step" : "/home/step")
                     // Bind port 9000 of the container to port 9000 on the host.
                     .WithPortBinding(_caPort)
                     .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
