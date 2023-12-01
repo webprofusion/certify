@@ -63,7 +63,10 @@ jobs:
         dotnet-version: ${{ env.DOTNET_VERSION }}
     
     - name: Setup Step CLI
-      run: "Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\\temp\\step_windows_0.24.4_amd64.zip'; tar -oxzf C:\\temp\\step_windows_0.24.4_amd64.zip -C 'C:\\Program Files'; setx /M PATH '%PATH%;C:\\Program Files\\step_0.24.4\\bin'"
+      run: "Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\\temp\\step_windows_0.24.4_amd64.zip'; tar -oxzf C:\\temp\\step_windows_0.24.4_amd64.zip -C 'C:\\Program Files';"
+      
+    - name: Add Step CLI to PATH
+      run: setx /M PATH "%PATH%;C:\\Program Files\\step_0.24.4\\bin"
 
     - name: Validate Step CLI Install
       run: dir "C:\\Program Files\\step_0.24.4" && [Environment]::GetEnvironmentVariable("Path") -split ";"
