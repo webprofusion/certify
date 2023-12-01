@@ -30,7 +30,7 @@ jobs:
     - uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
-        ref: refs/heads/${{ github.ref_name }}    
+        ref: refs/heads/${{ github.base_ref }}    
         path: ./certify-plugins
     - uses: actions/checkout@master
       with:
