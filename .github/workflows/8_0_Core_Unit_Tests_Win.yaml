@@ -80,7 +80,10 @@ jobs:
     - name: Install Dependencies
       run: dotnet restore
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
-      
+   
+    - name: Install Coverlet Collector Package
+      run: dotnet add package coverlet.collector
+
     - name: Build Certify.Core.Tests.Unit
       run: dotnet build -c Debug --no-restore -f net8.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
