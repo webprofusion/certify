@@ -15,7 +15,7 @@ jobs:
   build-and-test:
     # TODO: Re-enable once we determine the cause of the .NET Framework 4.6.2 tests stalling (test runner doesn't quit when done')
     if: ${{ ! always() }}
-    name: build-and-test-${{ runner.os }}
+    name: build-and-test-windows
     runs-on: windows-latest
     steps:
     - name: Clone webprofusion/certify
@@ -31,7 +31,7 @@ jobs:
         path: ./libs/anvil
 
     - name: Clone webprofusion/certify-plugins (development branch push)
-      if: ${{ github.event_name == "push" && contains(github.ref_name, '_dev') }}
+      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_dev') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
@@ -39,7 +39,7 @@ jobs:
         path: ./certify-plugins
 
     - name: Clone webprofusion/certify-plugins (release branch push)
-      if: ${{ github.event_name == "push" && contains(github.ref_name, '_rel') }}
+      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_rel') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
@@ -47,7 +47,7 @@ jobs:
         path: ./certify-plugins
 
     - name: Clone webprofusion/certify-plugins (pull request)
-      if: ${{ github.event_name == "pull_request" }}
+      if: ${{ github.event_name == 'pull_request' }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
