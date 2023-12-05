@@ -80,11 +80,11 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
-      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ matrix.os }}"
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ matrix.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Debug Test Results Output
-      run: ls ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }} && ls ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/**/
+      run: ls ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }} && ls ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/**
 
     - name: Generated HTML Coverage Report
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
