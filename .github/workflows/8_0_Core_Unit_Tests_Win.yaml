@@ -89,6 +89,9 @@ jobs:
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ matrix.os }}"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
+    - name: Debug Test Results Output
+      run: dir ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
+
     - name: Generated HTML Coverage Report
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
     
