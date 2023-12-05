@@ -77,7 +77,7 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
-      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --results-directory "TestResults-8_0-${{ matrix.os }}"
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ matrix.os }}"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Upload Certify.Core.Tests.Unit Test Results
@@ -87,3 +87,23 @@ jobs:
         path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
+
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}coverage.cobertura.xml
+        badge: true
+        fail_below_min: false
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: false
+        indicators: true
+        output: both
+        thresholds: '50 70'
+
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+        recreate: true
+        path: code-coverage-results.md
