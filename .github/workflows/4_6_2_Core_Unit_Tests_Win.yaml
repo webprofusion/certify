@@ -4,9 +4,9 @@ on:
   push:
   pull_request:
     branches: [ release, development ]
-    paths:
-    - '**.cs'
-    - '**.csproj'
+    # paths:
+    # - '**.cs'
+    # - '**.csproj'
 
 env:
   DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
@@ -15,12 +15,8 @@ jobs:
   build-and-test:
     # TODO: Re-enable once we determine the cause of the .NET Framework 4.6.2 tests stalling (test runner doesn't quit when done')
     if: ${{ ! always() }}
-    name: build-and-test-${{matrix.os}}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-
+    name: build-and-test-${{ runner.os }}
+    runs-on: windows-latest
     steps:
     - name: Clone webprofusion/certify
       uses: actions/checkout@master
@@ -34,28 +30,28 @@ jobs:
         ref: refs/heads/main
         path: ./libs/anvil
 
-    - name: Clone webprofusion/certify-plugins (development)
-      if: ${{ contains(github.ref_name, '_dev') }}
+    - name: Clone webprofusion/certify-plugins (development branch push)
+      if: ${{ github.event_name == "push" && contains(github.ref_name, '_dev') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/development    
         path: ./certify-plugins
 
-    - name: Clone webprofusion/certify-plugins (release)
-      if: ${{ contains(github.ref_name, '_rel') }}
+    - name: Clone webprofusion/certify-plugins (release branch push)
+      if: ${{ github.event_name == "push" && contains(github.ref_name, '_rel') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/release    
         path: ./certify-plugins
 
-    - name: Clone webprofusion/certify-plugins (development default)
-      if: ${{ ! contains(github.ref_name, '_rel') && ! contains(github.ref_name, '_dev') }}
+    - name: Clone webprofusion/certify-plugins (pull request)
+      if: ${{ github.event_name == "pull_request" }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
-        ref: refs/heads/release    
+        ref: ${{ github.base_ref }}    
         path: ./certify-plugins
 
     - name: Setup .NET Core
@@ -69,9 +65,6 @@ jobs:
     - name: Add Step CLI to PATH
       run: echo "C:\Program Files\step_0.24.4\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-    - name: Validate Step CLI Install
-      run: dir "C:\Program Files\step_0.24.4" && [Environment]::GetEnvironmentVariable("Path") -split ";" && [Environment]::GetEnvironmentVariable("GITHUB_PATH") -split ";"
-
     - name: Pull step-ca Docker Image
       run: docker pull jrnelson90/step-ca-win
 
@@ -79,18 +72,43 @@ jobs:
       run: dotnet restore
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
+    - name: Install ReportGenerator Coverage Tool
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0  
+
     - name: Build Certify.Core.Tests.Unit
       run: dotnet build -c Debug --no-restore -f net462
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Run Certify.Core.Tests.Unit Tests
-      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 --logger trx --results-directory "TestResults-4_6_2-${{ matrix.os }}"
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-4_6_2-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
 
+    - name: Generated HTML Coverage Report
+      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}
+    
     - name: Upload Certify.Core.Tests.Unit Test Results
       uses: actions/upload-artifact@master
       with:
-        name: dotnet-results-4_6_2-${{ matrix.os }}
-        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ matrix.os }}
+        name: dotnet-results-4_6_2-${{ runner.os }}
+        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}
       # Use always() to always run this step to publish test results when there are test failures
       if: ${{ always() }}
+
+    # - name: Publish Test Results
+    #   uses: EnricoMi/publish-unit-test-result-action/composite@v2
+    #   if: always()
+    #   with:
+    #     files: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/*.trx
+
+    # - name: Code Coverage Report
+    #   uses: irongut/CodeCoverageSummary@v1.3.0
+    #   with:
+    #     filename: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/coverage.cobertura.xml
+    #     badge: true
+    #     fail_below_min: false
+    #     format: markdown
+    #     hide_branch_rate: false
+    #     hide_complexity: false
+    #     indicators: true
+    #     output: both
+    #     thresholds: '50 70'
