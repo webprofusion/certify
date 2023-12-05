@@ -4,9 +4,9 @@ on:
   push:
   pull_request:
     branches: [ release, development ]
-    paths:
-    - '**.cs'
-    - '**.csproj'
+    # paths:
+    # - '**.cs'
+    # - '**.csproj'
 
 env:
   DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
@@ -85,9 +85,6 @@ jobs:
     - name: Run Certify.Core.Tests.Unit Tests
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ matrix.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
-
-    - name: Debug Test Results Output
-      run: dir ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }} && dir ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/**/
 
     - name: Generated HTML Coverage Report
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ matrix.os }}
