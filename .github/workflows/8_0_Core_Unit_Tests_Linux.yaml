@@ -68,24 +68,25 @@ jobs:
       run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0 && dotnet tool install --global LiquidTestReports.Cli --version 1.4.3-beta
 
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
-      run: dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
+      run: dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly && dotnet add package GitHubActionsTestLogger
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
-      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger html --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0 -s test.runsettings -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
-    - name: Generated Test Results Report
-      # if: success() || failure()    # run this step even if previous step failed
+    # - name: Generated Test Results Report
+    #   if: success() || failure()    # run this step even if previous step failed
       # run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
-      uses: dorny/test-reporter@v1
-      if: success() || failure()    # run this step even if previous step failed
-      with:
-        name: Test Results            # Name of the check run which will be created
-        path: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx    # Path to test results
-        reporter: dotnet-trx        # Format of test results
-        working-directory: ./certify
-        max-annotations: '50'
+
+      # uses: dorny/test-reporter@v1
+      # if: success() || failure()    # run this step even if previous step failed
+      # with:
+      #   name: Test Results            # Name of the check run which will be created
+      #   path: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx    # Path to test results
+      #   reporter: dotnet-trx        # Format of test results
+      #   working-directory: ./certify
+      #   max-annotations: '50'
 
     - name: Generated Test Coverage Report
       if: success() || failure()    # run this step even if previous step failed
