@@ -78,20 +78,21 @@ jobs:
     - name: Generated Test Results Report
       # if: success() || failure()    # run this step even if previous step failed
       # run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
-      uses: dorny/test-reporter@master
+      uses: dorny/test-reporter@v1
       if: success() || failure()    # run this step even if previous step failed
       with:
         name: Test Results            # Name of the check run which will be created
         path: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx    # Path to test results
         reporter: dotnet-trx        # Format of test results
         working-directory: ./certify
+        max-annotations: '50'
 
     - name: Generated Test Coverage Report
       if: success() || failure()    # run this step even if previous step failed
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
 
     # - name: Publish Test Results
-    #   uses: EnricoMi/publish-unit-test-result-action@master
+    #   uses: EnricoMi/publish-unit-test-result-action@v2
     #   if: always()
     #   with:
     #     files: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx
