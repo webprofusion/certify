@@ -70,9 +70,9 @@ jobs:
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
       run: dotnet add package GitHubActionsTestLogger && dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
-    
+
     - name: Run Certify.Core.Tests.Unit Tests
-      run: echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE" && dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
+      run: echo "/home/runner/work/certify/certify/certify" > $GITHUB_WORKSPACE && echo GITHUB_WORKSPACE = $GITHUB_WORKSPACE  && dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     # - name: Generated Test Results Report
@@ -90,7 +90,7 @@ jobs:
 
     - name: Generated Test Coverage Report
       if: success() || failure()    # run this step even if previous step failed
-      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
+      run: echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE" && reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
 
     # - name: Publish Test Results
     #   uses: EnricoMi/publish-unit-test-result-action@v2
