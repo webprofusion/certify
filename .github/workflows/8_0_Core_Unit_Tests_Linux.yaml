@@ -68,7 +68,7 @@ jobs:
       run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0 && dotnet tool install --global LiquidTestReports.Cli --version 1.4.3-beta
 
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
-      run: dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly && dotnet add package GitHubActionsTestLogger
+      run: dotnet add package GitHubActionsTestLogger && dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
