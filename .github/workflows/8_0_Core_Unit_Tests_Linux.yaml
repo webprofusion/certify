@@ -76,7 +76,7 @@ jobs:
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
         export GITHUB_WORKSPACE="$GITHUB_WORKSPACE/certify"
-        echo "# Test Results\n\n" > $GITHUB_STEP_SUMMARY
+        echo "# Test Results" > $GITHUB_STEP_SUMMARY
         dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
