@@ -78,14 +78,14 @@ jobs:
       run: |
         # echo "D:\a\certify\certify\certify" | Out-File -FilePath $env:GITHUB_WORKSPACE -Encoding utf8
         $env:GITHUB_WORKSPACE="D:\a\certify\certify\certify"
-        $env:GITHUB_STEP_SUMMARY="./test-summary.md"
+        $env:GITHUB_STEP_SUMMARY="./TestResults-8_0-${{ runner.os }}/test-summary.md"
         # echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
-        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
-        Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
+        Get-Content -Path ./TestResults-8_0-${{ runner.os }}/test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Generated Test Coverage Report
       run: |
         reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
-        Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+        Get-Content -Path ./TestResults-8_0-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
