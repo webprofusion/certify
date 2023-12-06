@@ -56,9 +56,7 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@master
       with:
-        dotnet-version: |
-          3.1.x
-          ${{ env.DOTNET_VERSION }}
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
     - name: Setup Step CLI
       run: wget https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.23.0/step-cli_0.23.0_amd64.deb && sudo dpkg -i step-cli_0.23.0_amd64.deb
@@ -67,11 +65,7 @@ jobs:
       run: docker pull smallstep/step-ca
 
     - name: Install ReportGenerator Coverage Tool
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0  
-
-    - name: Install TrxToHtml Tool
-      run: dotnet tool install -g Samhammer.TrxToHtml
-      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
 
     - name: Install Dependencies
       run: dotnet restore
@@ -82,11 +76,11 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
     
     - name: Run Certify.Core.Tests.Unit Tests
-      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0
+      run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger html --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
-    - name: Generated HTML Reports
-      run: trx-to-html && reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
+    - name: Generated HTML Coverage Report
+      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
     
     - name: Upload Certify.Core.Tests.Unit Test Results and Coverage
       uses: actions/upload-artifact@master
