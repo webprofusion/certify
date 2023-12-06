@@ -4,9 +4,9 @@ on:
   push:
   pull_request:
     branches: [ release, development ]
-    # paths:
-    # - '**.cs'
-    # - '**.csproj'
+    paths:
+    - '**.cs'
+    - '**.csproj'
 
 env:
   DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
@@ -76,41 +76,22 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Generated Test Results Report
-      run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
-    
+      # if: success() || failure()    # run this step even if previous step failed
+      # run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
+      uses: dorny/test-reporter@master
+      if: success() || failure()    # run this step even if previous step failed
+      with:
+        name: Test Results            # Name of the check run which will be created
+        path: ./src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx    # Path to test results
+        reporter: dotnet-trx        # Format of test results
+        working-directory: ./certify
+
     - name: Generated Test Coverage Report
+      if: success() || failure()    # run this step even if previous step failed
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
 
-    # - name: Upload Certify.Core.Tests.Unit Test Results and Coverage
-    #   uses: actions/upload-artifact@master
-    #   with:
-    #     name: dotnet-results-8_0-${{ runner.os }}
-    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
-    #   # Use always() to always run this step to publish test results when there are test failures
-    #   if: ${{ always() }}
-
     # - name: Publish Test Results
-    #   uses: EnricoMi/publish-unit-test-result-action@v2
+    #   uses: EnricoMi/publish-unit-test-result-action@master
     #   if: always()
     #   with:
     #     files: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx
-
-    # - name: Code Coverage Report
-    #   uses: irongut/CodeCoverageSummary@v1.3.0
-    #   with:
-    #     filename: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/coverage.cobertura.xml
-    #     badge: true
-    #     fail_below_min: false
-    #     format: markdown
-    #     hide_branch_rate: false
-    #     hide_complexity: false
-    #     indicators: true
-    #     output: both
-    #     thresholds: '50 70'
-
-    # - name: Add Coverage PR Comment
-    #   uses: marocchino/sticky-pull-request-comment@v2.8.0
-    #   if: github.event_name == 'pull_request'
-    #   with:
-    #     recreate: true
-    #     path: code-coverage-results.md
