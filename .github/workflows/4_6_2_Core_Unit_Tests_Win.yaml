@@ -84,7 +84,7 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
 
     - name: Generated Test Results Report
-      run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/*.trx;Format=Trx"" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/test_results.md --title "Test Results" && Get-Content -Path ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/test_results.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+      run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/*.trx;Folder=./certify/src/Certify.Tests/Certify.Core.Tests.Unit;Format=Trx"" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/test_results.md --title "Test Results" && Get-Content -Path ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/test_results.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
 
     - name: Generated Test Coverage Report
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && Get-Content -Path ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY

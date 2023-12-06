@@ -80,7 +80,7 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Generated Test Results Report
-      run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
+      run: liquid --inputs "File=./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx;Folder=./certify/src/Certify.Tests/Certify.Core.Tests.Unit;Format=Trx" --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md --title "Test Results" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
     
     - name: Generated Test Coverage Report
       run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage" && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
