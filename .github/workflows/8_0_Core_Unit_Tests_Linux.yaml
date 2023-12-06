@@ -64,8 +64,8 @@ jobs:
     - name: Pull step-ca Docker Image
       run: docker pull smallstep/step-ca
 
-    - name: Install ReportGenerator Coverage Tool
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
+    - name: Install Test Report Tools
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0 && dotnet tool install --global LiquidTestReports.Cli --version 1.4.3-beta
 
     - name: Install Dependencies
       run: dotnet restore
@@ -79,16 +79,19 @@ jobs:
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 --logger trx --logger html --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
-    - name: Generated HTML Coverage Report
-      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
+    - name: Generated Test Coverage Report
+      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
     
-    - name: Upload Certify.Core.Tests.Unit Test Results and Coverage
-      uses: actions/upload-artifact@master
-      with:
-        name: dotnet-results-8_0-${{ runner.os }}
-        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
-      # Use always() to always run this step to publish test results when there are test failures
-      if: ${{ always() }}
+    - name: Generated Test Results Report
+      run: liquid --inputs ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/*.trx --output-file ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md && cat ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}/test_results.md > $GITHUB_STEP_SUMMARY
+    
+    # - name: Upload Certify.Core.Tests.Unit Test Results and Coverage
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #     name: dotnet-results-8_0-${{ runner.os }}
+    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
+    #   # Use always() to always run this step to publish test results when there are test failures
+    #   if: ${{ always() }}
 
     # - name: Publish Test Results
     #   uses: EnricoMi/publish-unit-test-result-action@v2
