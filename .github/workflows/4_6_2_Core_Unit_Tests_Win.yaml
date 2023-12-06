@@ -68,12 +68,16 @@ jobs:
     - name: Pull step-ca Docker Image
       run: docker pull jrnelson90/step-ca-win
 
+    - name: Install ReportGenerator Coverage Tool
+      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0  
+
+    - name: Install TrxToHtml Tool
+      run: dotnet tool install -g Samhammer.TrxToHtml
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+
     - name: Install Dependencies
       run: dotnet restore
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
-
-    - name: Install ReportGenerator Coverage Tool
-      run: dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0  
 
     - name: Build Certify.Core.Tests.Unit
       run: dotnet build -c Debug --no-restore -f net462
@@ -83,8 +87,8 @@ jobs:
       run: dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 --logger trx --collect:"XPlat Code Coverage" --results-directory "TestResults-4_6_2-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
 
-    - name: Generated HTML Coverage Report
-      run: reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}
+    - name: Generated HTML Reports
+      run: trx-to-html && reportgenerator -reports:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462/TestResults-4_6_2-${{ runner.os }}
     
     - name: Upload Certify.Core.Tests.Unit Test Results
       uses: actions/upload-artifact@master
