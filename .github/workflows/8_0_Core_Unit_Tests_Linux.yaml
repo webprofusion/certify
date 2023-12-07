@@ -77,7 +77,7 @@ jobs:
       run: |
         export GITHUB_WORKSPACE="$GITHUB_WORKSPACE/certify"
         export GITHUB_STEP_SUMMARY="./TestResults-8_0-${{ runner.os }}/test-summary.md"
-        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
+        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Generate Test Results Report
