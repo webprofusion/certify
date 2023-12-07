@@ -76,19 +76,29 @@ jobs:
     
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
-        $env:GITHUB_WORKSPACE="D:\a\certify\certify\certify"
+        $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
         $env:GITHUB_STEP_SUMMARY=".\TestResults-8_0-${{ runner.os }}\test-summary.md"
         dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
     
     - name: Generate Test Results Report
       run: |
-        echo "# Test Results\n" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+        echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
         Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
+      if: ${{ always() }}
 
     - name: Generated Test Coverage Report
       run: |
         reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
         Get-Content -Path ./TestResults-8_0-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
+      if: ${{ always() }}
+
+    - name: Upload dotnet test Artifacts
+      uses: actions/upload-artifact@master
+      with:
+        name: dotnet-results-${{ runner.os }}-${{ env.DOTNET_VERSION }}
+        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
+      # Use always() to always run this step to publish test results when there are test failures
+      if: ${{ always() }}
