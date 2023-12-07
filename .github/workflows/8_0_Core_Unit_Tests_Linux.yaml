@@ -66,6 +66,15 @@ jobs:
     - name: Pull step-ca Docker Image
       run: docker pull smallstep/step-ca
 
+    - name: Cache NuGet Dependencies    
+      uses: actions/cache@v3
+      with:
+        path: $HOME/.nuget/packages
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget
+
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
