@@ -70,7 +70,8 @@ jobs:
     - name: Pull step-ca Docker Image
       run: |
         docker info
-        dir "C:\Program Files\Docker"
+        docker version
+        dir "C:\Program Files(x86)\Docker"
         dir "C:\ProgramData\Docker"
         cd "C:\ProgramData\Docker\Docker" 
         .\DockerCli.exe -SwitchLinuxEngine
