@@ -79,10 +79,8 @@ jobs:
         $env:GITHUB_WORKSPACE="D:\a\certify\certify\certify"
         $env:GITHUB_STEP_SUMMARY=".\TestResults-8_0-${{ runner.os }}\test-summary.md"
         dotnet test Certify.Core.Tests.Unit.dll -v normal -f net8.0 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --collect:"XPlat Code Coverage" --results-directory "TestResults-8_0-${{ runner.os }}" /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.collector\6.0.0\build\netstandard1.0 -- RunConfiguration.CollectSourceInformation=true
-        dir .\TestResults-8_0-${{ runner.os }}
-        dir .
-        echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Encoding utf8 -Append
-        Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+        echo "# Test Results\n" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+        Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
 
     - name: Generated Test Coverage Report
