@@ -124,8 +124,8 @@ namespace Certify.Core.Tests.Unit
             }
             else
             {
-                var dockerInfo = RunCommand("docker", "info", "Get Docker Info");
-                var runningWindowsDockerEngine = dockerInfo.output.Contains("OSType: windows");
+                var dockerInfo = RunCommand("docker", "info --format \"{{ .OSType }}\"", "Get Docker Info");
+                var runningWindowsDockerEngine = dockerInfo.output.Contains("windows");
 
                 // Start new step-ca container
                 await StartStepCaContainer(runningWindowsDockerEngine);
