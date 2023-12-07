@@ -79,7 +79,7 @@ jobs:
         dir "C:\tools"
         dir "D:\"
         dir "D:\a"
-        dir "D:\a\temp"
+        dir "D:\a\_temp"
         dir "C:\ProgramData\Docker"
         echo GITHUB_PATH
         $env:GITHUB_PATH -split ";"
