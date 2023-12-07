@@ -84,7 +84,7 @@ jobs:
     - name: Generate Test Results Report
       run: |
         echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
-        Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+        (Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md).Replace('<details>', '<details open>') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
       if: ${{ always() }}
 
