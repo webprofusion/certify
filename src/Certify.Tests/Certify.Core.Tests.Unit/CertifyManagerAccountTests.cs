@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.Management;
@@ -25,7 +26,6 @@ namespace Certify.Core.Tests.Unit
     {
         private static readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
         private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        private static readonly bool _isWindowsGitlabRunner = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
         private static readonly string _winRunnerTempDir = "C:\\Temp\\.step";
         private static string _caDomain;
         private static int _caPort;
@@ -88,7 +88,7 @@ namespace Certify.Core.Tests.Unit
                 }
                 else
                 {
-                    Directory.Delete("C:\\Temp\\.step", true);
+                    Directory.Delete(_winRunnerTempDir, true);
                 }
             }
 
@@ -124,11 +124,14 @@ namespace Certify.Core.Tests.Unit
             }
             else
             {
+                var dockerInfo = RunCommand("docker", "info", "Get Docker Info");
+                var runningWindowsDockerEngine = dockerInfo.output.Contains("OSType: windows");
+
                 // Start new step-ca container
-                await StartStepCaContainer();
+                await StartStepCaContainer(runningWindowsDockerEngine);
 
                 // Read step-ca fingerprint from config file
-                if (_isWindowsGitlabRunner)
+                if (_isWindows && runningWindowsDockerEngine)
                 {
                     // Read step-ca fingerprint from config file
                     var stepCaConfigJson = JsonReader.ReadFile<StepCaConfig>($"{_winRunnerTempDir}\\config\\defaults.json");
@@ -146,11 +149,11 @@ namespace Certify.Core.Tests.Unit
             RunCommand("step", args, "Bootstrap Step CA Script", 1000 * 30);
         }
 
-        private static async Task StartStepCaContainer()
+        private static async Task StartStepCaContainer(bool runningWindowsDockerEngine)
         {
             try
             {
-                if (_isWindowsGitlabRunner)
+                if (_isWindows && runningWindowsDockerEngine)
                 {
                     if (!Directory.Exists(_winRunnerTempDir)) {
                         Directory.CreateDirectory(_winRunnerTempDir);
@@ -159,7 +162,7 @@ namespace Certify.Core.Tests.Unit
                     // Create new step-ca container
                     _caContainer = new ContainerBuilder()
                         .WithName("step-ca")
-                        // Set the image for the container to "smallstep/step-ca:latest".
+                        // Set the image for the container to "jrnelson90/step-ca-win:latest".
                         .WithImage("jrnelson90/step-ca-win:latest")
                         .WithBindMount(_winRunnerTempDir, "C:\\Users\\ContainerUser\\.step")
                         // Bind port 9000 of the container to port 9000 on the host.
@@ -243,7 +246,7 @@ namespace Certify.Core.Tests.Unit
             public string root;
         }
 
-        private static void RunCommand(string program, string args, string description = null, int timeoutMS = 1000 * 5)
+        private static CommandOutput RunCommand(string program, string args, string description = null, int timeoutMS = Timeout.Infinite)
         {
             if (description == null) { description = string.Concat(program, " ", args); }
             
@@ -254,7 +257,6 @@ namespace Certify.Core.Tests.Unit
             {
                 FileName = program,
                 Arguments = args,
-                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -288,7 +290,7 @@ namespace Certify.Core.Tests.Unit
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                process.WaitForExit(timeoutMS);
+                process.WaitForExit(timeoutMS); 
             }
             catch (Exception exp)
             {
@@ -296,7 +298,16 @@ namespace Certify.Core.Tests.Unit
                 throw;
             }
 
-            _log.Information($"{description} Successful");
+            _log.Information($"{description} is Finished");
+
+            return new CommandOutput { errorOutput = errorOutput, output = output, exitCode = process.ExitCode };
+        }
+
+        private struct CommandOutput
+        {
+            public string errorOutput { get; set; }
+            public string output { get; set; }
+            public int exitCode { get; set; }
         }
 
         private static async Task CheckCustomCaIsRunning()
