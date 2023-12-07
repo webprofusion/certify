@@ -76,6 +76,8 @@ jobs:
         dir "D:\"
         dir "D:\a"
         dir "C:\ProgramData\Docker"
+        $env:GITHUB_PATH -split ";"
+        $env:path -split ";"
         cd "C:\ProgramData\Docker\Docker" 
         .\DockerCli.exe -SwitchLinuxEngine
         docker pull smallstep/step-ca
