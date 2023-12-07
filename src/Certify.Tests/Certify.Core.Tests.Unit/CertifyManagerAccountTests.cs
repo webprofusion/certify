@@ -21,38 +21,91 @@ using Serilog;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class CertifyManagerAccountTests : IDisposable
+    public class CertifyManagerAccountTests
     {
-        private readonly CertifyManager _certifyManager;
-        private readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-        private readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        private readonly bool _isWindowsGitlabRunner = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
-        private readonly string _caDomain;
-        private readonly int _caPort;
-        private IContainer _caContainer;
-        private IVolume _stepVolume;
+        private static readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+        private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static readonly bool _isWindowsGitlabRunner = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Environment.GetEnvironmentVariable("GITHUB_WORKSPACE") != null;
+        private static readonly string _winRunnerTempDir = "C:\\Temp\\.step";
+        private static string _caDomain;
+        private static int _caPort;
+        private static IContainer _caContainer;
+        private static IVolume _stepVolume;
+        private static Loggy _log;
+        private CertifyManager _certifyManager;
         private CertificateAuthority _customCa;
         private AccountDetails _customCaAccount;
-        private readonly Loggy _log;
-        private readonly string _winRunnerTempDir = "C:\\Temp\\.step";
 
-        public CertifyManagerAccountTests()
+        [ClassInitialize]
+        public static async Task ClassInit(TestContext context)
         {
-            _certifyManager = new CertifyManager();
-            _certifyManager.Init().Wait();
             _log = new Loggy(new LoggerConfiguration().WriteTo.Debug().CreateLogger());
 
             _caDomain = _isContainer ? "step-ca" : "localhost";
             _caPort = 9000;
 
-            BootstrapStepCa().Wait();
-            CheckCustomCaIsRunning().Wait();
-            AddCustomCa().Wait();
-            CheckForExistingLeAccount().Wait();
-            AddNewCustomCaAccount().Wait();
+            await BootstrapStepCa();
+            await CheckCustomCaIsRunning();
         }
 
-        private async Task BootstrapStepCa()
+        [TestInitialize]
+        public async Task TestInit()
+        {
+            _certifyManager = new CertifyManager();
+            _certifyManager.Init().Wait();
+
+            await AddCustomCa();
+            await AddNewCustomCaAccount();
+            await CheckForExistingLeAccount();
+        }
+
+        [TestCleanup]
+        public async Task Cleanup()
+        {
+            if (_customCaAccount != null)
+            {
+                await _certifyManager.RemoveAccount(_customCaAccount.StorageKey, true);
+            }
+
+            if (_customCa != null)
+            {
+                await _certifyManager.RemoveCertificateAuthority(_customCa.Id);
+            }
+
+            _certifyManager?.Dispose();
+        }
+
+        [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+        public static async Task ClassCleanup()
+        {
+            if (!_isContainer)
+            {
+                await _caContainer.DisposeAsync();
+                if (_stepVolume != null)
+                {
+                    await _stepVolume.DeleteAsync();
+                    await _stepVolume.DisposeAsync();
+                }
+                else
+                {
+                    Directory.Delete("C:\\Temp\\.step", true);
+                }
+            }
+
+            var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
+            if (Directory.Exists(stepConfigPath))
+            {
+                Directory.Delete(stepConfigPath, true);
+            }
+
+            var stepCertsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "certs");
+            if (Directory.Exists(stepCertsPath))
+            {
+                Directory.Delete(stepCertsPath, true);
+            }
+        }
+
+        private static async Task BootstrapStepCa()
         {
             string stepCaFingerprint;
 
@@ -89,12 +142,11 @@ namespace Certify.Core.Tests.Unit
             }
 
             // Run bootstrap command
-            //var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint} --install";
-            var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
-            RunCommand("step", command, "Bootstrap Step CA Script", 1000 * 30);
+            var args = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
+            RunCommand("step", args, "Bootstrap Step CA Script", 1000 * 30);
         }
 
-        private async Task StartStepCaContainer()
+        private static async Task StartStepCaContainer()
         {
             try
             {
@@ -120,7 +172,8 @@ namespace Certify.Core.Tests.Unit
                         .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
                         // Build the container configuration.
                         .Build();
-                } else
+                } 
+                else
                 {
                     // Create new volume for step-ca container
                     _stepVolume = new VolumeBuilder().WithName("step").Build();
@@ -190,7 +243,7 @@ namespace Certify.Core.Tests.Unit
             public string root;
         }
 
-        private void RunCommand(string program, string args, string description = null, int timeoutMS = 1000 * 5)
+        private static void RunCommand(string program, string args, string description = null, int timeoutMS = 1000 * 5)
         {
             if (description == null) { description = string.Concat(program, " ", args); }
             
@@ -246,7 +299,7 @@ namespace Certify.Core.Tests.Unit
             _log.Information($"{description} Successful");
         }
 
-        private async Task CheckCustomCaIsRunning()
+        private static async Task CheckCustomCaIsRunning()
         {
             var httpHandler = new HttpClientHandler();
 
@@ -280,7 +333,8 @@ namespace Certify.Core.Tests.Unit
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
                 },
-                SupportedKeyTypes = new List<string>{
+                SupportedKeyTypes = new List<string>
+                {
                     StandardKeyTypes.ECDSA256,
                 }
             };
@@ -327,49 +381,6 @@ namespace Certify.Core.Tests.Unit
                 var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
                 Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
             }
-        }
-
-        public void Dispose() => Cleanup().Wait();
-
-        private async Task Cleanup()
-        {
-            if (_customCaAccount != null)
-            {
-                await _certifyManager.RemoveAccount(_customCaAccount.StorageKey, true);
-            }
-
-            if (_customCa != null)
-            {
-                await _certifyManager.RemoveCertificateAuthority(_customCa.Id);
-            }
-
-            if (!_isContainer)
-            {
-                await _caContainer.DisposeAsync();
-                if (_stepVolume != null)
-                {
-                    await _stepVolume.DeleteAsync();
-                    await _stepVolume.DisposeAsync();
-                } 
-                else
-                {
-                    Directory.Delete("C:\\Temp\\.step", true);
-                }
-            }
-            
-            var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
-            if (Directory.Exists(stepConfigPath))
-            {
-                Directory.Delete(stepConfigPath, true);
-            }
-
-            var stepCertsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "certs");
-            if (Directory.Exists(stepCertsPath))
-            {
-                Directory.Delete(stepCertsPath, true);
-            }
-
-            _certifyManager?.Dispose();
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountDetails()")]
