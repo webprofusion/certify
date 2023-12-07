@@ -71,6 +71,7 @@ jobs:
       run: |
         docker info
         docker version
+        docker context ls
         dir "C:\Program Files(x86)\Docker"
         dir "C:\ProgramData\Docker"
         cd "C:\ProgramData\Docker\Docker" 
