@@ -87,7 +87,7 @@ jobs:
       run: |
         $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
         $env:GITHUB_STEP_SUMMARY=".\TestResults-4_6_2-${{ runner.os }}\test-summary.md"
-        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --results-directory "TestResults-4_6_2-${{ runner.os }}" -- RunConfiguration.CollectSourceInformation=true
+        dotnet test Certify.Core.Tests.Unit.dll -v normal -f net462 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --results-directory "TestResults-4_6_2-${{ runner.os }}" --collect:"Code Coverage" --test-adapter-path C:\%HOMEPATH%\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0 -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
 
     - name: Generated Test Results Report
@@ -97,12 +97,13 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
       if: ${{ always() }}
 
-    # - name: Generated Test Coverage Report
-    #   run: |
-    #     reportgenerator -reports:./TestResults-4_6_2-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
-    #     Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
-    #   working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
-    #   if: ${{ always() }}
+    - name: Generated Test Coverage Report
+      run: |
+        C:\%HOMEPATH%\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0\CodeCoverage\CodeCoverage.exe analyze /output:./TestResults-4_6_2-${{ runner.os }}/DynamicCodeCoverage.coverage.xml ./TestResults-4_6_2-${{ runner.os }}/**/*.coverage
+        reportgenerator -reports:./TestResults-4_6_2-${{ runner.os }}/DynamicCodeCoverage.coverage.xml -targetdir:./TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
+      if: ${{ always() }}
 
     - name: Upload dotnet test Artifacts
       uses: actions/upload-artifact@master
