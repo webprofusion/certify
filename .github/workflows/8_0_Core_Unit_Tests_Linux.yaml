@@ -69,7 +69,7 @@ jobs:
     - name: Cache NuGet Dependencies    
       uses: actions/cache@v3
       with:
-        path: $HOME/.nuget/packages
+        path: ~/.nuget/packages
         # Look to see if there is a cache hit for the corresponding requirements file
         key: ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
         restore-keys: |
