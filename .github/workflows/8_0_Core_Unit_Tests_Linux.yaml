@@ -71,9 +71,9 @@ jobs:
       with:
         path: $HOME/.nuget/packages
         # Look to see if there is a cache hit for the corresponding requirements file
-        key: ${{ runner.os }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
+        key: ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
         restore-keys: |
-          ${{ runner.os }}-nuget
+          ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget
 
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
       run: |
