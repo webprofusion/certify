@@ -99,8 +99,10 @@ jobs:
 
     - name: Generated Test Coverage Report
       run: |
-        & C:\$env:HOMEPATH\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0\CodeCoverage\CodeCoverage.exe analyze /output:./TestResults-4_6_2-${{ runner.os }}/DynamicCodeCoverage.coveragexml ./TestResults-4_6_2-${{ runner.os }}/**/*.coverage
-        reportgenerator -reports:./TestResults-4_6_2-${{ runner.os }}/DynamicCodeCoverage.coveragexml -targetdir:./TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        Move-Item -Path .\TestResults-4_6_2-${{ runner.os }}\**\*.coverage -Destination .\TestResults-4_6_2-${{ runner.os }}
+        Get-Item -Path ".\TestResults-4_6_2-${{ runner.os }}\*.coverage" | Rename-Item -NewName "results.coverage"
+        & C:\$env:HOMEPATH\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0\CodeCoverage\CodeCoverage.exe analyze /output:./TestResults-4_6_2-${{ runner.os }}/results.xml ./TestResults-4_6_2-${{ runner.os }}/results.coverage
+        reportgenerator -reports:./TestResults-4_6_2-${{ runner.os }}/results.xml -targetdir:./TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
         Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net462
       if: ${{ always() }}
