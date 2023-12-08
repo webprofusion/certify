@@ -7,12 +7,6 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class RdapTests
     {
-
-        public RdapTests()
-        {
-
-        }
-
         [TestMethod, Description("Test domain TLD check")]
         [DataTestMethod]
         [DataRow("example.com", "com")]
