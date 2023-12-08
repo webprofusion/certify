@@ -104,10 +104,10 @@ jobs:
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0
       if: ${{ always() }}
 
-    - name: Upload dotnet test Artifacts
-      uses: actions/upload-artifact@master
-      with:
-        name: dotnet-results-${{ runner.os }}-${{ env.DOTNET_VERSION }}
-        path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
-      # Use always() to always run this step to publish test results when there are test failures
-      if: ${{ always() }}
+    # - name: Upload dotnet test Artifacts
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #     name: dotnet-results-${{ runner.os }}-${{ env.DOTNET_VERSION }}
+    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/bin/Debug/net8.0/TestResults-8_0-${{ runner.os }}
+    #   # Use always() to always run this step to publish test results when there are test failures
+    #   if: ${{ always() }}
