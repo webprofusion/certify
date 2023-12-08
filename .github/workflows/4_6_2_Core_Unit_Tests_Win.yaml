@@ -72,14 +72,15 @@ jobs:
       with:
         path: ~/.nuget/packages
         # Look to see if there is a cache hit for the corresponding requirements file
-        key: ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
+        key: ${{ runner.os }}-4.6.2-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
         restore-keys: |
-          ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget
+          ${{ runner.os }}-4.6.2-nuget
 
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
         dotnet add package GitHubActionsTestLogger
+        dotnet add package coverlet.collector
         dotnet build -c Debug -f net462 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 

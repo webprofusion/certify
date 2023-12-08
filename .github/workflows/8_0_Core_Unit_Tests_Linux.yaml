@@ -79,6 +79,7 @@ jobs:
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
         dotnet add package GitHubActionsTestLogger
+        dotnet add package coverlet.collector
         dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
