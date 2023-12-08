@@ -87,7 +87,7 @@ jobs:
       run: |
         $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
         $env:GITHUB_STEP_SUMMARY=".\bin\Debug\net462\TestResults-4_6_2-${{ runner.os }}\test-summary.md"
-        dotnet test Certify.Core.Tests.Unit.csproj --no-build -v normal -f net462 --l trx --l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --results-directory ".\bin\Debug\net462\TestResults-4_6_2-${{ runner.os }}" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.msbuild\6.0.0\build -- RunConfiguration.CollectSourceInformation=true
+        dotnet test Certify.Core.Tests.Unit.csproj --no-build -v normal -f net462 -l trx -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace" --results-directory ".\bin\Debug\net462\TestResults-4_6_2-${{ runner.os }}" /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /testadapterpath:C:\%HOMEPATH%\.nuget\packages\coverlet.msbuild\6.0.0\build -- RunConfiguration.CollectSourceInformation=true
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Generated Test Results Report
