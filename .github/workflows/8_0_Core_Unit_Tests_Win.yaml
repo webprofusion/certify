@@ -100,7 +100,7 @@ jobs:
 
     - name: Generated Test Coverage Report
       run: |
-        reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/**/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/*/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
         Get-Content -Path ./TestResults-8_0-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
