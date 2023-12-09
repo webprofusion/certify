@@ -19,7 +19,7 @@
             <ModulePaths>
               <Include>
                 <ModulePath>.*Certify.*$</ModulePath>
-                <ModulePath>.*Plugin.*$</ModulePath>
+                <ModulePath>.*Plugin.Datastore.SQLite.dll$</ModulePath>
               </Include>
               <Exclude>
                 <ModulePath>.*Certify.Core.Tests.Unit.dll$</ModulePath>
