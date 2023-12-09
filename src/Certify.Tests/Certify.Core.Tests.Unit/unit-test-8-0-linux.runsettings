@@ -5,7 +5,7 @@
   <RunConfiguration>
     <TestAdaptersPaths>$HOME/.nuget/packages/coverlet.collector/6.0.0/build/netstandard1.0;$HOME/.nuget/packages/coverlet.msbuild/6.0.0/build</TestAdaptersPaths>
     <TargetFrameworkVersion>net8.0</TargetFrameworkVersion>
-    <ResultsDirectory>./TestResults-8_0-linux</ResultsDirectory>
+    <ResultsDirectory>./TestResults-8_0-Linux</ResultsDirectory>
     <CollectSourceInformation>true</CollectSourceInformation>
   </RunConfiguration>
   <!-- Configurations for data collectors -->
