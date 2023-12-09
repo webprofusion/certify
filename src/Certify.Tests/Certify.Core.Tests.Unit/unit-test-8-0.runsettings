@@ -15,7 +15,7 @@
         <Configuration>
           <Format>cobertura</Format>
           <!-- [Assembly-Filter]Type-Filter -->
-          <Include>[Certify.*]*,[Plugin.*]*</Include>
+          <Include>[Certify.*]*,[Plugin.Datastore.SQLite]*</Include>
           <!-- [Assembly-Filter]Type-Filter -->
           <IncludeTestAssembly>false</IncludeTestAssembly>
         </Configuration>
