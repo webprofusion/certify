@@ -101,6 +101,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
     <NoWarn>1701;1702;NU1701</NoWarn>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='WINDOWS_NT|net462'">
+    <RunSettingsFilePath>.\unit-test-462.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='WINDOWS_NT|net8.0'">
+    <RunSettingsFilePath>.\unit-test-8-0.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='UNIX|net8.0'">
+    <RunSettingsFilePath>.\unit-test-8-0-linux.runsettings</RunSettingsFilePath>
+  </PropertyGroup>
   <ItemGroup>
     <None Remove="Assets\Powershell\Simple.ps1" />
   </ItemGroup>

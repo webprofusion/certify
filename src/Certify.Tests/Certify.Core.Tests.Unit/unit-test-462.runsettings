@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- File name extension must be .runsettings -->
+<RunSettings>
+  <!-- Configurations that affect the Test Framework -->
+  <RunConfiguration>
+    <TestAdaptersPaths>%SystemDrive%\%HOMEPATH%\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0</TestAdaptersPaths>
+    <TargetFrameworkVersion>net462</TargetFrameworkVersion>
+    <ResultsDirectory>.\TestResults-4_6_2-windows</ResultsDirectory>
+    <CollectSourceInformation>true</CollectSourceInformation>
+  </RunConfiguration>
+  <!-- Configurations for data collectors -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage" uri="datacollector://Microsoft/CodeCoverage/2.0" assemblyQualifiedName="Microsoft.VisualStudio.Coverage.DynamicCoverageDataCollector, Microsoft.VisualStudio.TraceCollector, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+        <Configuration>
+          <Format>Cobertura</Format>
+          <CodeCoverage>
+            <!-- Match assembly file paths: -->
+            <ModulePaths>
+              <Include>
+                <ModulePath>.*Certify.*$</ModulePath>
+                <ModulePath>.*Plugin.*$</ModulePath>
+              </Include>
+              <Exclude>
+                <ModulePath>.*Certify.Core.Tests.Unit.dll$</ModulePath>
+                <ModulePath>.*Moq.dll$</ModulePath>
+              </Exclude>
+            </ModulePaths>
+            <!--<EnableStaticManagedInstrumentation>True</EnableStaticManagedInstrumentation>
+            <EnableStaticNativeInstrumentationRestore>True</EnableStaticNativeInstrumentationRestore>-->
+            <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  <!-- Configuration for loggers -->
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True">
+        <Configuration>
+          <Verbosity>normal</Verbosity>
+        </Configuration>
+      </Logger>
+      <Logger friendlyName="trx" enabled="True" />
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>
