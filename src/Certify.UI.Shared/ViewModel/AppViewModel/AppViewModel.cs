@@ -14,6 +14,7 @@ using Certify.Models.Providers;
 using Certify.Providers;
 using Certify.SharedUtils;
 using Certify.UI.Shared;
+using Certify.UI.Shared.Utils;
 using Serilog;
 
 namespace Certify.UI.ViewModel
@@ -79,7 +80,22 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>();
+            ManagedCertificates = new ManagedCertificateVirtualObservableCollection(0, _filterPageSize, async (int pageIndex, int pageSize) => {
+                var filter = new ManagedCertificateFilter();
+
+                // include external managed certs if enabled
+                filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
+                filter.PageSize = _filterPageSize;
+                filter.PageIndex = _filterPageIndex;
+
+                filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
+
+                var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+
+                
+                TotalManagedCertificates = result.TotalResults;
+                return result.Results;
+            });
 
             StartProgressCleanupTask();
 
