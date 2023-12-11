@@ -11,6 +11,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
 using Certify.UI.Shared;
+using Certify.UI.Shared.Utils;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
@@ -52,12 +53,12 @@ namespace Certify.UI.ViewModel
         }
 
         private object _managedCertificatesLock = new object();
-        private ObservableCollection<ManagedCertificate> _managedCertificates;
+        private ManagedCertificateVirtualObservableCollection _managedCertificates;
 
         /// <summary>
         /// Cached list of all the sites we currently manage 
         /// </summary>
-        public ObservableCollection<ManagedCertificate> ManagedCertificates
+        public ManagedCertificateVirtualObservableCollection ManagedCertificates
         {
             get
             {
@@ -87,9 +88,11 @@ namespace Certify.UI.ViewModel
         /// Cached count of the number of managed certificate (not counting external certificate managers)
         /// </summary>
         [DependsOn(nameof(ManagedCertificates))]
-        public int NumManagedCerts
+        public long NumManagedCerts
         {
-            get { return ManagedCertificates?.Where(c => string.IsNullOrEmpty(c.SourceId)).Count() ?? 0; }
+            get {
+                return TotalManagedCertificates;
+            }
         }
 
         int _filterPageIndex = 0;
@@ -114,7 +117,7 @@ namespace Certify.UI.ViewModel
 
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
+            ManagedCertificates.UpdatePage(result.TotalResults,result.Results, _filterPageIndex, _filterPageSize);
             TotalManagedCertificates = result.TotalResults;
         }
 
@@ -132,7 +135,7 @@ namespace Certify.UI.ViewModel
 
         public async Task ManagedCertificatesNextPage()
         {
-            if (ManagedCertificates.Count() >= _filterPageSize)
+            if (ManagedCertificates.Count >= _filterPageSize)
             {
                 _filterPageIndex++;
                 await RefreshManagedCertificates();
@@ -328,22 +331,9 @@ namespace Certify.UI.ViewModel
                     newItem.IsChanged = false;
 
                     // update our cached copy of the managed site details
-                    if (existing != null)
-                    {
-                        var index = ManagedCertificates.IndexOf(existing);
-                        if (index > -1)
-                        {
-                            ManagedCertificates[index] = newItem;
-                        }
-                        else
-                        {
-                            ManagedCertificates.Add(newItem);
-                        }
-                    }
-                    else
-                    {
-                        ManagedCertificates.Add(newItem);
-                    }
+                    ManagedCertificates.AddOrUpdate(newItem);
+
+                    
                 }
 
                 // refresh SelectedItem value if it matches our updated item

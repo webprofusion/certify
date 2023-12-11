@@ -22,13 +22,14 @@ namespace Certify.UI
             GenerateMockData();
 
             // auto-load data if in WPF designer
-            SelectedItem = ManagedCertificates.First();
+            SelectedItem = ManagedCertificates.FirstOrDefault();
         }
 
         private void GenerateMockData()
         {
             // generate 20 mock sites
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>();
+            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(0, 10, null);
+            
             for (var i = 1; i <= 20; i++)
             {
                 var site = new ManagedCertificate()
@@ -85,7 +86,7 @@ namespace Certify.UI
                 site.IsChanged = false;
             }
 
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(ManagedCertificates);
+            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(ManagedCertificates.Count, 10, null);
 
             ProgressResults = new ObservableCollection<RequestProgressState>
             {
@@ -112,7 +113,7 @@ namespace Certify.UI
                 site.IsChanged = false;
             }
 
-            ManagedCertificates = new ObservableCollection<ManagedCertificate>(mockSites);
+            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(mockSites.Count, 10, null);
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
         }
         public override bool IsIISAvailable => true;
