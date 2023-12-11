@@ -217,16 +217,13 @@ namespace Certify.CLI
             // wait for server to stop
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-            while (challengeServer.IsRunning() && stopwatch.ElapsedMilliseconds < MAX_CHALLENGE_SERVER_RUNTIME)
+            while (challengeServer.IsRunning && stopwatch.ElapsedMilliseconds < MAX_CHALLENGE_SERVER_RUNTIME)
             {
                 await Task.Delay(500);
             }
 
             // if we exceeded the allowed time for challenge server to run, ensure it is closed and quit
-            if (challengeServer.IsRunning())
-            {
-                challengeServer.Stop();
-            }
+            challengeServer.Stop();
 
             return 0;
         }
