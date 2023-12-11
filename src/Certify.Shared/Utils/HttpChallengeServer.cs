@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -34,6 +34,11 @@ namespace Certify.Core.Management.Challenges
         /// The check key is the key which will return a test response to prove the server is responding OK
         /// </summary>
         private string _checkKey = "TESTING123";
+
+        /// <summary>
+        /// If set, default response returned for any unknown challenge key, used for testing and debugging
+        /// </summary>
+        private string _defaultKeyResponse = null;
 
         /// <summary>
         /// The challenge prefix is the path prefix which the http listener will respond to, we specifically listen for acme challenges
@@ -91,7 +96,7 @@ namespace Certify.Core.Management.Challenges
         /// <param name="controlKey"> Control key to command process to quit </param>
         /// <param name="checkKey"> Check key to test server response </param>
         /// <returns>  </returns>
-        public bool Start(ServiceConfig serverConfig, string controlKey = null, string checkKey = null)
+        public bool Start(ServiceConfig serverConfig, string controlKey = null, string checkKey = null, string defaultKeyResponse = null)
         {
             lock (_challengeServerStartLock)
             {
@@ -111,6 +116,11 @@ namespace Certify.Core.Management.Challenges
                         _checkKey = checkKey;
                     }
 
+                    if (defaultKeyResponse != null)
+                    {
+                        _defaultKeyResponse = defaultKeyResponse;
+                    }
+
                     _isActive = true;
                     _httpListener = new HttpListener();
 
@@ -125,6 +135,11 @@ namespace Certify.Core.Management.Challenges
                     _httpListener.Prefixes.Add(uriPrefix);
 
                     _challengeResponses = new ConcurrentDictionary<string, string>();
+
+                    if (defaultKeyResponse != null)
+                    {
+                        _challengeResponses.TryAdd("default", _defaultKeyResponse);
+                    }
 
                     _httpListener.Start();
 
@@ -253,6 +268,12 @@ namespace Certify.Core.Management.Challenges
                             {
                                 Log($"Could not refresh current challenges from main service. Service may be unavailable or inaccessible. {exp} ");
                             }
+                        }
+
+                        if (_defaultKeyResponse != null)
+                        {
+                            // add default response if not already present, this is primarily for testing and debugging
+                            _challengeResponses.TryAdd(key, _defaultKeyResponse);
                         }
 
                         if (_challengeResponses.ContainsKey(key))
