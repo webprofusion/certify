@@ -532,6 +532,9 @@ namespace Certify.Management
 
                 // perform pending renewals
                 await PerformRenewAll(new RenewalSettings { });
+
+                // flush status report queue
+                await SendQueuedStatusReports();
             }
             catch (Exception exp)
             {
