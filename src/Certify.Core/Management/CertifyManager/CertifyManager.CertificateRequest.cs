@@ -35,13 +35,13 @@ namespace Certify.Management
         {
             if (_isRenewAllInProgress)
             {
-                Debug.WriteLine("Renew all is already is progress..");
+                _serviceLog?.Verbose("Renew all is already is progress..");
                 return await Task.FromResult(new List<CertificateRequestResult>());
             }
 
             _isRenewAllInProgress = true;
 
-            _serviceLog?.Information($"Performing Renew All for all applicable managed certificates.");
+            _serviceLog?.Verbose($"Performing Renew All for all applicable managed certificates.");
 
             _isRenewAllInProgress = true;
 
