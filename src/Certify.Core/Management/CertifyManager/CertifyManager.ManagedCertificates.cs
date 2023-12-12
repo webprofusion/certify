@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,6 +8,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
@@ -174,7 +176,7 @@ namespace Certify.Management
 
             // if reporting api enabled, send report
 
-            if (managedCertificate.RequestConfig?.EnableFailureNotifications == true)
+            if (managedCertificate.RequestConfig?.EnableFailureNotifications == true && CoreAppSettings.Current.EnableStatusReporting)
             {
                 await ReportManagedCertificateStatus(managedCertificate);
             }
@@ -182,6 +184,8 @@ namespace Certify.Management
             _tc?.TrackEvent("UpdateManagedCertificatesStatus_" + status);
         }
 
+        private ConcurrentDictionary<string, RenewalStatusReport> _statusReportQueue { get; set; } = new ConcurrentDictionary<string, RenewalStatusReport>();
+        private bool _useStatusReportQueue { get; set; } = true;
         /// <summary>
         /// Optionally send current managed certificate status to the reporting dashboard
         /// </summary>
@@ -189,41 +193,80 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task ReportManagedCertificateStatus(ManagedCertificate managedCertificate)
         {
-            if (CoreAppSettings.Current.EnableStatusReporting)
+
+            var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
+
+            // remove anything we don't want to report to the dashboard
+
+            reportedCert.RequestConfig.CustomCSR = null;
+            reportedCert.RequestConfig.CustomPrivateKey = null;
+
+            reportedCert.RequestConfig.Challenges
+                .Where(c => c.ChallengeProvider == "DNS01.API.CertifyDns")
+                .Select(s => s.Parameters
+                    .Where(p => p.Key == "credentials_json").Select(p => p.Value = null));
+
+            var report = new Models.Shared.RenewalStatusReport
             {
-                if (_pluginManager != null && _pluginManager.DashboardClient != null)
+                InstanceId = CoreAppSettings.Current.InstanceId,
+                MachineName = Environment.MachineName,
+                PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
+                ManagedSite = reportedCert,
+                AppVersion = Util.GetAppVersion().ToString()
+            };
+
+            if (!_useStatusReportQueue)
+            {
+                await SendStatusReport(report);
+            }
+            else
+            {
+                _statusReportQueue.AddOrUpdate(managedCertificate.Id, report, (k, v) => report);
+            }
+        }
+
+        private async Task SendStatusReport(RenewalStatusReport report)
+        {
+            if (CoreAppSettings.Current.EnableStatusReporting && _pluginManager?.DashboardClient != null)
+            {
+                try
                 {
-                    var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
+                    await _pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                }
+                catch (Exception)
+                {
+                    // failed to report status
+                    LogMessage(report?.ManagedSite?.Id, "Failed to send renewal status report.",
+                        LogItemType.GeneralWarning);
+                }
+            }
+        }
 
-                    // remove anything we don't want to report to the dashboard
-
-                    reportedCert.RequestConfig.CustomCSR = null;
-                    reportedCert.RequestConfig.CustomPrivateKey = null;
-
-                    reportedCert.RequestConfig.Challenges
-                        .Where(c => c.ChallengeProvider == "DNS01.API.CertifyDns")
-                        .Select(s => s.Parameters
-                            .Where(p => p.Key == "credentials_json").Select(p => p.Value = null));
-
-                    var report = new Models.Shared.RenewalStatusReport
+        private async Task SendQueuedStatusReports()
+        {
+            try
+            {
+                if (_statusReportQueue.Any())
+                {
+                    var itemsSent = 0;
+                    foreach (var k in _statusReportQueue.Keys)
                     {
-                        InstanceId = CoreAppSettings.Current.InstanceId,
-                        MachineName = Environment.MachineName,
-                        PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
-                        ManagedSite = reportedCert,
-                        AppVersion = Util.GetAppVersion().ToString()
-                    };
-                    try
-                    {
-                        await _pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                        if (_statusReportQueue.TryRemove(k, out var report))
+                        {
+                            await SendStatusReport(report);
+                            itemsSent++;
+                        }
                     }
-                    catch (Exception)
+
+                    if (itemsSent > 0)
                     {
-                        // failed to report status
-                        LogMessage(managedCertificate.Id, "Failed to send renewal status report.",
-                            LogItemType.GeneralWarning);
+                        _serviceLog.Information($"Sent {itemsSent} queued status reports.");
                     }
                 }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog.Error(exp, "Failed to send queued status reports.");
             }
         }
 
