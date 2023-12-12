@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
