@@ -108,11 +108,11 @@ namespace Certify.Core.Management.Challenges.DNS
 
         string IDnsProvider.ProviderId => Definition.Id;
 
-        string IDnsProvider.ProviderTitle => Definition.Title;
+        string IDnsProvider.ProviderTitle => DelegateProviderDefinition?.Title ?? Definition.Title;
 
-        string IDnsProvider.ProviderDescription => Definition.Description;
+        string IDnsProvider.ProviderDescription => DelegateProviderDefinition?.Description ?? Definition.Description;
 
-        string IDnsProvider.ProviderHelpUrl => Definition.HelpUrl;
+        string IDnsProvider.ProviderHelpUrl => DelegateProviderDefinition?.HelpUrl ?? Definition.HelpUrl;
 
         public bool IsTestModeSupported => Definition.IsTestModeSupported;
 
