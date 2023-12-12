@@ -246,36 +246,6 @@ namespace Certify.Management
 
         public bool VerifyUpdateFile(string tempFile, string expectedHash, bool throwOnDeviation = true)
         {
-            var performCertValidation = true;
-
-            var signatureVerified = false;
-
-            if (performCertValidation)
-            {
-                // check digital signature
-                var wintrustSignatureVerified = Security.WinTrust.WinTrust.VerifyEmbeddedSignature(tempFile);
-
-                //get verified signed file cert
-                var cert = CertificateManager.GetFileCertificate(tempFile);
-
-                //also test cert subject (not rigorous, just an additional check)
-                if (!(cert != null && wintrustSignatureVerified && cert.SubjectName.Name.Contains("Webprofusion")))
-                {
-                    if (throwOnDeviation)
-                    {
-                        throw new Exception("Downloaded file failed digital signature check.");
-                    }
-                    else
-                    {
-                        return false;
-                    }
-                }
-                else
-                {
-                    signatureVerified = true;
-                }
-            }
-
             //verify file SHA256
             string computedSHA256 = null;
             using (Stream stream = new FileStream(tempFile, FileMode.Open, FileAccess.Read, FileShare.Read, 8192, true))
@@ -297,11 +267,11 @@ namespace Certify.Management
                 }
                 else
                 {
-                    return false;
+                    hashVerified = false;
                 }
             }
 
-            return hashVerified && (!performCertValidation || (performCertValidation && signatureVerified));
+            return hashVerified;
         }
 
         public static string GetUserLocalAppDataFolder()
@@ -363,7 +333,7 @@ namespace Certify.Management
                 if (File.Exists(setupFile))
                 {
                     // file already downloaded, see if it's already valid
-                    if (VerifyUpdateFile(setupFile, result.Message.SHA256, throwOnDeviation: false))
+                    if (VerifyUpdateFile(setupFile, result.Message.SHA256, throwOnDeviation: true))
                     {
                         downloadVerified = true;
                     }
