@@ -33,6 +33,12 @@ namespace Certify.Core.Tests
             certifyManager.Init().Wait();
         }
 
+        [TestCleanup]   
+        public void Cleanup()
+        {
+            certifyManager?.Dispose();
+        }
+
         private DeploymentTaskConfig GetMockTaskConfig(
             string name,
             string msg = "Hello World",
