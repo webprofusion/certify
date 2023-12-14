@@ -1,0 +1,114 @@
+name: build and test .NET Core 8.0 Windows
+
+on:
+  push:
+  pull_request:
+    branches: [ release, development ]
+    paths:
+    - '**.cs'
+    - '**.csproj'
+
+env:
+  DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
+
+jobs:
+  build-and-test:
+
+    name: build-and-test-windows
+    runs-on: windows-latest
+    steps:
+    - name: Clone webprofusion/certify
+      uses: actions/checkout@master
+      with:
+        path: ./certify
+
+    - name: Clone webprofusion/anvil
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/anvil
+        ref: refs/heads/main
+        path: ./libs/anvil
+
+    - name: Clone webprofusion/certify-plugins (development branch push)
+      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_dev') }}
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: refs/heads/development    
+        path: ./certify-plugins
+
+    - name: Clone webprofusion/certify-plugins (release branch push)
+      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_rel') }}
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: refs/heads/release    
+        path: ./certify-plugins
+
+    - name: Clone webprofusion/certify-plugins (pull request)
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: actions/checkout@master
+      with:
+        repository: webprofusion/certify-plugins
+        ref: ${{ github.base_ref }}    
+        path: ./certify-plugins
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@master
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Setup Step CLI
+      run: |
+        Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\temp\step_windows_0.24.4_amd64.zip'
+        tar -oxzf C:\temp\step_windows_0.24.4_amd64.zip -C "C:\Program Files"
+        echo "C:\Program Files\step_0.24.4\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+    - name: Pull step-ca Docker Image
+      run: docker pull jrnelson90/step-ca-win
+
+    - name: Cache NuGet Dependencies    
+      uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget-${{ hashFiles('./certify/src/Certify.Tests/Certify.Core.Tests.Unit/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-${{ env.DOTNET_VERSION }}-nuget
+
+    - name: Install Dependencies & Build Certify.Core.Tests.Unit
+      run: |
+        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
+        dotnet add package GitHubActionsTestLogger
+        dotnet add package coverlet.collector
+        dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+
+    - name: Run Certify.Core.Tests.Unit Tests
+      run: |
+        $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
+        $env:GITHUB_STEP_SUMMARY=".\TestResults-8_0-${{ runner.os }}\test-summary.md"
+        dotnet test --no-build -f net8.0 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+    
+    - name: Generate Test Results Report
+      run: |
+        echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+        (Get-Content -Path .\TestResults-8_0-${{ runner.os }}\test-summary.md).Replace('<details>', '<details open>') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+      if: ${{ always() }}
+
+    - name: Generated Test Coverage Report
+      run: |
+        reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/*/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        Get-Content -Path ./TestResults-8_0-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+      working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
+      if: ${{ always() }}
+
+    # - name: Upload dotnet test Artifacts
+    #   uses: actions/upload-artifact@master
+    #   with:
+    #     name: dotnet-results-${{ runner.os }}-${{ env.DOTNET_VERSION }}
+    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/TestResults-8_0-${{ runner.os }}
+    #   # Use always() to always run this step to publish test results when there are test failures
+    #   if: ${{ always() }}
