@@ -46,6 +46,7 @@ namespace Certify.Core.Tests
         {
             await _iisManager.DeleteSite(_testSiteName);
             Assert.IsFalse(await _iisManager.SiteExists(_testSiteName));
+            _certifyManager.Dispose();
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetPrimaryWebSites() for IIS")]
