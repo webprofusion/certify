@@ -36,6 +36,12 @@ namespace Certify.Core.Tests
             PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];
         }
 
+        [TestCleanup]   
+        public void Cleanup()
+        {
+            certifyManager?.Dispose();
+        }
+
         private DeploymentTaskConfig GetMockTaskConfig(
             string name,
             string msg = "Hello World",
