@@ -86,18 +86,19 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(cmdResult.StandardOutput.Contains("The Certify.Service$Debug service has stopped."));
         }
 
-        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route /api/system/appversion")]
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/system/appversion")]
         public async Task TestCertifyServiceAppVersionRoute()
         {
             var certifyService = await StartCertifyService();
 
             try
             {
-                var versionRes = await _httpClient.GetAsync("system/appversion");
-                var versionResStr = await versionRes.Content.ReadAsStringAsync();
-                
-                Assert.AreEqual(HttpStatusCode.OK, versionRes.StatusCode, $"Unexpected status code from GET {versionRes.RequestMessage.RequestUri.AbsoluteUri}");
-                StringAssert.Matches(versionResStr, new Regex(@"^""(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)""$"), $"Unexpected response from GET {versionRes.RequestMessage.RequestUri.AbsoluteUri} : {versionResStr}");                
+                var versionRawRes = await _httpClient.GetAsync("system/appversion");
+                var versionResStr = await versionRawRes.Content.ReadAsStringAsync();
+                var versionRes = JsonConvert.DeserializeObject<string>(versionResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, versionRawRes.StatusCode, $"Unexpected status code from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                StringAssert.Matches(versionRes, new Regex(@"^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$"), $"Unexpected response from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri} : {versionResStr}");                
             }
             finally
             {
@@ -105,7 +106,7 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        [TestMethod, Description("Validate that Certify.Service.exe returns a valid respose on route /api/system/updatecheck")]
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid respose on route GET /api/system/updatecheck")]
         public async Task TestCertifyServiceUpdateCheckRoute()
         {
             var certifyService = await StartCertifyService();
@@ -128,7 +129,7 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route /api/system/diagnostics")]
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/system/diagnostics")]
         public async Task TestCertifyServiceDiagnosticsRoute()
         {
             var certifyService = await StartCertifyService();
@@ -168,7 +169,7 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route /api/system/datastores/providers")]
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/system/datastores/providers")]
         public async Task TestCertifyServiceDatastoreProvidersRoute()
         {
             var certifyService = await StartCertifyService();
@@ -187,7 +188,7 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route /api/system/datastores/")]
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/system/datastores/")]
         public async Task TestCertifyServiceDatastoresRoute()
         {
             var certifyService = await StartCertifyService();
@@ -200,6 +201,224 @@ namespace Certify.Core.Tests.Unit
 
                 Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
                 Assert.IsTrue(datastoreRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route POST /api/system/datastores/test")]
+        public async Task TestCertifyServiceDatastoresTestRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                var datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                var datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 1);
+
+                var datastoreTestRawRes = await _httpClient.PostAsJsonAsync("system/datastores/test", datastoreRes[0]);
+                var datastoreTestRawResStr = await datastoreTestRawRes.Content.ReadAsStringAsync();
+                var datastoreTestRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreTestRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreTestRawRes.StatusCode, $"Unexpected status code from POST {datastoreTestRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreTestRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route POST /api/system/datastores/update")]
+        public async Task TestCertifyServiceDatastoresUpdateRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                var datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                var datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 1);
+
+                var datastoreUpdateRawRes = await _httpClient.PostAsJsonAsync("system/datastores/update", datastoreRes[0]);
+                var datastoreUpdateRawResStr = await datastoreUpdateRawRes.Content.ReadAsStringAsync();
+                var datastoreUpdateRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreUpdateRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreUpdateRawRes.StatusCode, $"Unexpected status code from POST {datastoreUpdateRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreUpdateRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route POST /api/system/datastores/setdefault/{dataStoreId}")]
+        public async Task TestCertifyServiceDatastoresSetDefaultRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                var datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                var datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 1);
+
+                var datastoreSetDefaultRawRes = await _httpClient.PostAsync($"system/datastores/setdefault/{datastoreRes[0].Id}", new StringContent(""));
+                var datastoreSetDefaultRawResStr = await datastoreSetDefaultRawRes.Content.ReadAsStringAsync();
+                var datastoreSetDefaultRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreSetDefaultRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreSetDefaultRawRes.StatusCode, $"Unexpected status code from POST {datastoreSetDefaultRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreSetDefaultRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route POST /api/system/datastores/delete")]
+        [Ignore]
+        public async Task TestCertifyServiceDatastoresDeleteRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                var datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                var datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 1);
+
+                var datastoreDeleteRawRes = await _httpClient.PostAsync("system/datastores/delete", new StringContent(datastoreRes[0].Id));
+                var datastoreDeleteRawResStr = await datastoreDeleteRawRes.Content.ReadAsStringAsync();
+                var datastoreDeleteRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreDeleteRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreDeleteRawRes.StatusCode, $"Unexpected status code from POST {datastoreDeleteRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreDeleteRes.Count >= 1);
+
+                var datastoreUpdateRawRes = await _httpClient.PostAsJsonAsync("system/datastores/update", datastoreRes[0]);
+                var datastoreUpdateRawResStr = await datastoreUpdateRawRes.Content.ReadAsStringAsync();
+                var datastoreUpdateRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreUpdateRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreUpdateRawRes.StatusCode, $"Unexpected status code from POST {datastoreUpdateRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreUpdateRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route POST /api/system/datastores/copy/{sourceId}/{destId}")]
+        [Ignore]
+        public async Task TestCertifyServiceDatastoresCopyRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                var datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                var datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 1);
+
+                var newDataStoreId = "default-copy";
+                var datastoreCopyRawRes = await _httpClient.PostAsync($"system/datastores/copy/{datastoreRes[0].Id}/{newDataStoreId}", new StringContent(""));
+                var datastoreCopyRawResStr = await datastoreCopyRawRes.Content.ReadAsStringAsync();
+                var datastoreCopyRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreCopyRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreCopyRawRes.StatusCode, $"Unexpected status code from POST {datastoreCopyRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreCopyRes.Count >= 1);
+
+                datastoreRawRes = await _httpClient.GetAsync("system/datastores/");
+                datastoreRawResStr = await datastoreRawRes.Content.ReadAsStringAsync();
+                datastoreRes = JsonConvert.DeserializeObject<List<DataStoreConnection>>(datastoreRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreRawRes.StatusCode, $"Unexpected status code from GET {datastoreRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreRes.Count >= 2);
+
+                var datastoreDeleteRawRes = await _httpClient.PostAsJsonAsync<string>("system/datastores/delete", newDataStoreId);
+                var datastoreDeleteRawResStr = await datastoreDeleteRawRes.Content.ReadAsStringAsync();
+                var datastoreDeleteRes = JsonConvert.DeserializeObject<List<ActionStep>>(datastoreDeleteRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, datastoreDeleteRawRes.StatusCode, $"Unexpected status code from POST {datastoreDeleteRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(datastoreDeleteRes.Count >= 1);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/server/isavailable/{serverType}")]
+        public async Task TestCertifyServiceServerIsavailableRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var isAvailableRawRes = await _httpClient.GetAsync($"server/isavailable/{StandardServerTypes.IIS}");
+                var isAvailableRawResStr = await isAvailableRawRes.Content.ReadAsStringAsync();
+                var isAvailableRes = JsonConvert.DeserializeObject<bool>(isAvailableRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, isAvailableRawRes.StatusCode, $"Unexpected status code from GET {isAvailableRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                Assert.IsTrue(isAvailableRes);
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/server/sitelist/{serverType}")]
+        public async Task TestCertifyServiceServerSitelistRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var sitelistRawRes = await _httpClient.GetAsync($"server/sitelist/{StandardServerTypes.IIS}");
+                var sitelistRawResStr = await sitelistRawRes.Content.ReadAsStringAsync();
+                var sitelistRes = JsonConvert.DeserializeObject<List<SiteInfo>>(sitelistRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, sitelistRawRes.StatusCode, $"Unexpected status code from GET {sitelistRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+            }
+            finally
+            {
+                await StopCertifyService(certifyService);
+            }
+        }
+
+        [TestMethod, Description("Validate that Certify.Service.exe returns a valid response on route GET /api/server/version/{serverType}")]
+        public async Task TestCertifyServiceServerVersionRoute()
+        {
+            var certifyService = await StartCertifyService();
+
+            try
+            {
+                var versionRawRes = await _httpClient.GetAsync($"server/version/{StandardServerTypes.IIS}");
+                var versionRawResStr = await versionRawRes.Content.ReadAsStringAsync();
+                var versionRes = JsonConvert.DeserializeObject<string>(versionRawResStr);
+
+                Assert.AreEqual(HttpStatusCode.OK, versionRawRes.StatusCode, $"Unexpected status code from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri}");
+                StringAssert.Matches(versionRes, new Regex(@"^(\d+\.)?(\*|\d+)$"), $"Unexpected response from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri} : {versionRawResStr}");
             }
             finally
             {
