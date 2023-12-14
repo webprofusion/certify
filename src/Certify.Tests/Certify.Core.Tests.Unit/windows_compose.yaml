@@ -50,6 +50,11 @@ services:
     profiles: ["4_6_2", "8_0"]
     ports:
       - 9000:9000
+    environment:
+      DOCKER_STEPCA_INIT_NAME: Smallstep
+      DOCKER_STEPCA_INIT_DNS_NAMES: localhost
+      DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT: true
+      DOCKER_STEPCA_INIT_ACME: true
     volumes:
       - step:C:\Users\ContainerUser\.step
 
