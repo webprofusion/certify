@@ -80,28 +80,27 @@ jobs:
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
         dotnet add package GitHubActionsTestLogger
-        dotnet add package coverlet.collector
         dotnet build -c Debug -f net462 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
         $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
-        $env:GITHUB_STEP_SUMMARY=".\TestResults-4_6_2-${{ runner.os }}\test-summary.md"
+        $env:GITHUB_STEP_SUMMARY=".\TestResults-${{ runner.os }}\test-summary.md"
         dotnet test --no-build -f net462 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Generated Test Results Report
       run: |
         echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
-        (Get-Content -Path .\TestResults-4_6_2-${{ runner.os }}\test-summary.md).Replace('<details>', '<details open>') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+        (Get-Content -Path .\TestResults-${{ runner.os }}\test-summary.md).Replace('<details>', '<details open>') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
     - name: Generated Test Coverage Report
       run: |
-        reportgenerator -reports:./TestResults-4_6_2-${{ runner.os }}/*/*.cobertura.xml -targetdir:./TestResults-4_6_2-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
-        Get-Content -Path ./TestResults-4_6_2-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
+        reportgenerator -reports:./TestResults-${{ runner.os }}/*/*.cobertura.xml -targetdir:./TestResults-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        Get-Content -Path ./TestResults-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
