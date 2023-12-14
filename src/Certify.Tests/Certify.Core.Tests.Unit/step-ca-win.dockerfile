@@ -16,6 +16,6 @@ FROM base AS final
 COPY ./step-ca-win-init.bat .
 COPY --from=netapi /Windows/System32/netapi32.dll /Windows/System32/netapi32.dll
 
-HEALTHCHECK CMD curl -Method GET -f http://localhost:9000/health || exit 1
+HEALTHCHECK CMD curl -Method GET -f %HEALTH_URL% || exit 1
 
 CMD step-ca-win-init.bat && cmd

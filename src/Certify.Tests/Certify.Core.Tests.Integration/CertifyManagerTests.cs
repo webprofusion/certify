@@ -19,6 +19,11 @@ namespace Certify.Core.Tests
             _certifyManager.Init().Wait();
         }
 
+        [TestCleanup] public void Cleanup()
+        {
+            _certifyManager.Dispose();
+        }
+
         [TestMethod, Description("Happy path test for using CertifyManager.GetACMEProvider()")]
         public async Task TestCertifyManagerGetACMEProvider()
         {
