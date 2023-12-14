@@ -30,7 +30,7 @@ jobs:
         path: ./libs/anvil
 
     - name: Clone webprofusion/certify-plugins (development branch push)
-      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_dev') }}
+      if: ${{ github.event_name == 'push' && (contains(github.ref_name, '_dev') || github.ref_name == 'development') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
@@ -38,7 +38,7 @@ jobs:
         path: ./certify-plugins
 
     - name: Clone webprofusion/certify-plugins (release branch push)
-      if: ${{ github.event_name == 'push' && contains(github.ref_name, '_rel') }}
+      if: ${{ github.event_name == 'push' && (contains(github.ref_name, '_rel') || github.ref_name == 'release') }}
       uses: actions/checkout@master
       with:
         repository: webprofusion/certify-plugins
