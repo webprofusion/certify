@@ -144,8 +144,6 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Ensure correct challenge config selected when rule is blank")]
         public void ChallengeDelegationRuleBlankRule()
         {
-            // wildcard rule tests [any subdomain source, any subdomain target]
-            var testRule = "*.test.com:*.auth.test.co.uk";
             var result = Management.Challenges.DnsChallengeHelper.ApplyChallengeDelegationRule("test.com", "_acme-challenge.test.com", null);
             Assert.AreEqual("_acme-challenge.test.com", result);
         }

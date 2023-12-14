@@ -203,7 +203,7 @@ namespace Certify.Core.Tests.Unit
             var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts.FindAll(a => a.IsStagingAccount == false), managedCertificate, defaultCAAccount);
 
             // assert result
-            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, $"Default CA should be selected: returned CA {selectedAccount.CertificateAuthorityId}");
             Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
         }
 
@@ -231,7 +231,7 @@ namespace Certify.Core.Tests.Unit
             var selectedAccount = RenewalManager.SelectCAWithFailover(caList, accounts, managedCertificate, defaultCAAccount);
 
             // assert result
-            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, "Default CA should be selected");
+            Assert.IsTrue(selectedAccount.CertificateAuthorityId == DEFAULTCA, $"Default CA should be selected: returned CA {selectedAccount.CertificateAuthorityId}");
             Assert.IsFalse(selectedAccount.IsFailoverSelection, "Account should not be marked as a failover choice");
         }
 

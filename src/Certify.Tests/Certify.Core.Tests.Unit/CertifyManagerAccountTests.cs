@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.Management;
@@ -21,35 +22,90 @@ using Serilog;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class CertifyManagerAccountTests : IDisposable
+    public class CertifyManagerAccountTests
     {
-        private readonly CertifyManager _certifyManager;
-        private readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-        private readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        private readonly string _caDomain;
-        private readonly int _caPort;
-        private IContainer _caContainer;
-        private IVolume _stepVolume;
+        private static readonly bool _isContainer = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
+        private static readonly bool _isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+        private static readonly string _winRunnerTempDir = "C:\\Temp\\.step";
+        private static string _caDomain;
+        private static int _caPort;
+        private static IContainer _caContainer;
+        private static IVolume _stepVolume;
+        private static Loggy _log;
+        private CertifyManager _certifyManager;
         private CertificateAuthority _customCa;
         private AccountDetails _customCaAccount;
-        private readonly Loggy _log;
 
-        public CertifyManagerAccountTests()
+        [ClassInitialize]
+        public static async Task ClassInit(TestContext context)
         {
-            _certifyManager = new CertifyManager();
-            _certifyManager.Init().Wait();
             _log = new Loggy(new LoggerConfiguration().WriteTo.Debug().CreateLogger());
 
             _caDomain = _isContainer ? "step-ca" : "localhost";
             _caPort = 9000;
 
-            BootstrapStepCa().Wait();
-            CheckCustomCaIsRunning().Wait();
-            AddCustomCa().Wait();
-            AddNewAccount().Wait();
+            await BootstrapStepCa();
+            await CheckCustomCaIsRunning();
         }
 
-        private async Task BootstrapStepCa()
+        [TestInitialize]
+        public async Task TestInit()
+        {
+            _certifyManager = new CertifyManager();
+            _certifyManager.Init().Wait();
+
+            await AddCustomCa();
+            await AddNewCustomCaAccount();
+            await CheckForExistingLeAccount();
+        }
+
+        [TestCleanup]
+        public async Task Cleanup()
+        {
+            if (_customCaAccount != null)
+            {
+                await _certifyManager.RemoveAccount(_customCaAccount.StorageKey, true);
+            }
+
+            if (_customCa != null)
+            {
+                await _certifyManager.RemoveCertificateAuthority(_customCa.Id);
+            }
+
+            _certifyManager?.Dispose();
+        }
+
+        [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+        public static async Task ClassCleanup()
+        {
+            if (!_isContainer)
+            {
+                await _caContainer.DisposeAsync();
+                if (_stepVolume != null)
+                {
+                    await _stepVolume.DeleteAsync();
+                    await _stepVolume.DisposeAsync();
+                }
+                else
+                {
+                    Directory.Delete(_winRunnerTempDir, true);
+                }
+            }
+
+            var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
+            if (Directory.Exists(stepConfigPath))
+            {
+                Directory.Delete(stepConfigPath, true);
+            }
+
+            var stepCertsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "certs");
+            if (Directory.Exists(stepCertsPath))
+            {
+                Directory.Delete(stepCertsPath, true);
+            }
+        }
+
+        private static async Task BootstrapStepCa()
         {
             string stepCaFingerprint;
 
@@ -68,45 +124,81 @@ namespace Certify.Core.Tests.Unit
             }
             else
             {
+                var dockerInfo = RunCommand("docker", "info --format \"{{ .OSType }}\"", "Get Docker Info");
+                var runningWindowsDockerEngine = dockerInfo.output.Contains("windows");
+
                 // Start new step-ca container
-                await StartStepCaContainer();
+                await StartStepCaContainer(runningWindowsDockerEngine);
 
                 // Read step-ca fingerprint from config file
-                var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
-                var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
-                stepCaFingerprint = stepCaConfigJson.fingerprint;
+                if (_isWindows && runningWindowsDockerEngine)
+                {
+                    // Read step-ca fingerprint from config file
+                    var stepCaConfigJson = JsonReader.ReadFile<StepCaConfig>($"{_winRunnerTempDir}\\config\\defaults.json");
+                    stepCaFingerprint = stepCaConfigJson.fingerprint;
+                } else
+                {
+                    var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
+                    var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
+                    stepCaFingerprint = stepCaConfigJson.fingerprint;
+                }
             }
 
             // Run bootstrap command
-            //var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint} --install";
-            var command = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
-            RunCommand("step", command, "Bootstrap Step CA Script", 1000 * 30);
+            var args = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
+            RunCommand("step", args, "Bootstrap Step CA Script", 1000 * 30);
         }
 
-        private async Task StartStepCaContainer()
+        private static async Task StartStepCaContainer(bool runningWindowsDockerEngine)
         {
             try
             {
-                // Create new volume for step-ca container
-                _stepVolume = new VolumeBuilder().WithName("step").Build();
-                await _stepVolume.CreateAsync();
+                if (_isWindows && runningWindowsDockerEngine)
+                {
+                    if (!Directory.Exists(_winRunnerTempDir)) {
+                        Directory.CreateDirectory(_winRunnerTempDir);
+                    }
 
-                // Create new step-ca container
-                _caContainer = new ContainerBuilder()
-                    .WithName("step-ca")
-                    // Set the image for the container to "smallstep/step-ca:latest".
-                    .WithImage("smallstep/step-ca:latest")
-                    .WithVolumeMount(_stepVolume, "/home/step")
-                    // Bind port 9000 of the container to port 9000 on the host.
-                    .WithPortBinding(_caPort)
-                    .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
-                    .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
-                    .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
-                    .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
-                    // Wait until the HTTPS endpoint of the container is available.
-                    .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
-                    // Build the container configuration.
-                    .Build();
+                    // Create new step-ca container
+                    _caContainer = new ContainerBuilder()
+                        .WithName("step-ca")
+                        // Set the image for the container to "jrnelson90/step-ca-win:latest".
+                        .WithImage("jrnelson90/step-ca-win:latest")
+                        .WithBindMount(_winRunnerTempDir, "C:\\Users\\ContainerUser\\.step")
+                        // Bind port 9000 of the container to port 9000 on the host.
+                        .WithPortBinding(_caPort)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
+                        // Wait until the HTTPS endpoint of the container is available.
+                        .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
+                        // Build the container configuration.
+                        .Build();
+                } 
+                else
+                {
+                    // Create new volume for step-ca container
+                    _stepVolume = new VolumeBuilder().WithName("step").Build();
+                    await _stepVolume.CreateAsync();
+
+                    // Create new step-ca container
+                    _caContainer = new ContainerBuilder()
+                        .WithName("step-ca")
+                        // Set the image for the container to "smallstep/step-ca:latest".
+                        .WithImage("smallstep/step-ca:latest")
+                        .WithVolumeMount(_stepVolume, "/home/step")
+                        // Bind port 9000 of the container to port 9000 on the host.
+                        .WithPortBinding(_caPort)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_NAME", "Smallstep")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_DNS_NAMES", _caDomain)
+                        .WithEnvironment("DOCKER_STEPCA_INIT_REMOTE_MANAGEMENT", "true")
+                        .WithEnvironment("DOCKER_STEPCA_INIT_ACME", "true")
+                        // Wait until the HTTPS endpoint of the container is available.
+                        .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
+                        // Build the container configuration.
+                        .Build();
+                }
 
                 // Start step-ca container
                 await _caContainer.StartAsync();
@@ -154,7 +246,7 @@ namespace Certify.Core.Tests.Unit
             public string root;
         }
 
-        private void RunCommand(string program, string args, string description = null, int timeoutMS = 1000 * 5)
+        private static CommandOutput RunCommand(string program, string args, string description = null, int timeoutMS = Timeout.Infinite)
         {
             if (description == null) { description = string.Concat(program, " ", args); }
             
@@ -165,7 +257,6 @@ namespace Certify.Core.Tests.Unit
             {
                 FileName = program,
                 Arguments = args,
-                RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -199,7 +290,7 @@ namespace Certify.Core.Tests.Unit
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                process.WaitForExit(timeoutMS);
+                process.WaitForExit(timeoutMS); 
             }
             catch (Exception exp)
             {
@@ -207,10 +298,19 @@ namespace Certify.Core.Tests.Unit
                 throw;
             }
 
-            _log.Information($"{description} Successful");
+            _log.Information($"{description} is Finished");
+
+            return new CommandOutput { errorOutput = errorOutput, output = output, exitCode = process.ExitCode };
         }
 
-        private async Task CheckCustomCaIsRunning()
+        private struct CommandOutput
+        {
+            public string errorOutput { get; set; }
+            public string output { get; set; }
+            public int exitCode { get; set; }
+        }
+
+        private static async Task CheckCustomCaIsRunning()
         {
             var httpHandler = new HttpClientHandler();
 
@@ -244,7 +344,8 @@ namespace Certify.Core.Tests.Unit
                     CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString(),
                     CertAuthoritySupportedRequests.DOMAIN_WILDCARD.ToString()
                 },
-                SupportedKeyTypes = new List<string>{
+                SupportedKeyTypes = new List<string>
+                {
                     StandardKeyTypes.ECDSA256,
                 }
             };
@@ -252,7 +353,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {_customCa.Id} to be successful");
         }
 
-        private async Task AddNewAccount()
+        private async Task AddNewCustomCaAccount()
         {
             if (_customCa?.Id != null)
             {
@@ -273,40 +374,24 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        public void Dispose() => Cleanup().Wait();
-
-        private async Task Cleanup()
+        private async Task CheckForExistingLeAccount()
         {
-            if (_customCaAccount != null)
+            if ((await _certifyManager.GetAccountRegistrations()).Find(a => a.CertificateAuthorityId == "letsencrypt.org") == null)
             {
-                await _certifyManager.RemoveAccount(_customCaAccount.StorageKey, true);
-            }
+                var contactRegistration = new ContactRegistration
+                {
+                    AgreedToTermsAndConditions = true,
+                    CertificateAuthorityId = "letsencrypt.org",
+                    EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
+                    ImportedAccountKey = "",
+                    ImportedAccountURI = "",
+                    IsStaging = true
+                };
 
-            if (_customCa != null)
-            {
-                await _certifyManager.RemoveCertificateAuthority(_customCa.Id);
+                // Add account
+                var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
+                Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegistration.EmailAddress}");
             }
-
-            if (!_isContainer)
-            {
-                await _caContainer.DisposeAsync();
-                await _stepVolume.DeleteAsync();
-                await _stepVolume.DisposeAsync();
-            }
-            
-            var stepConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "config");
-            if (Directory.Exists(stepConfigPath))
-            {
-                Directory.Delete(stepConfigPath, true);
-            }
-
-            var stepCertsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".step", "certs");
-            if (Directory.Exists(stepCertsPath))
-            {
-                Directory.Delete(stepCertsPath, true);
-            }
-
-            _certifyManager?.Dispose();
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountDetails()")]

@@ -9,12 +9,6 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class MiscTests
     {
-
-        public MiscTests()
-        {
-
-        }
-
         [TestMethod, Description("Test null/blank coalesce of string")]
         public void TestNullOrBlankCoalesce()
         {

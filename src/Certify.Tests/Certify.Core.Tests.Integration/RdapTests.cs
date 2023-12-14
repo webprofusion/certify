@@ -8,12 +8,6 @@ namespace Certify.Core.Tests
     [TestClass]
     public class RdapTests
     {
-
-        public RdapTests()
-        {
-
-        }
-
         [TestMethod, Description("Test Rdap Query")]
         [DataTestMethod]
         [DataRow("example.com", "OK", null)]
