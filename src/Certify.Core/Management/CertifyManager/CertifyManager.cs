@@ -533,7 +533,16 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
-        public void Dispose() => ManagedCertificateLog.DisposeLoggers();
+        public void Dispose() => Cleanup();
+
+        private void Cleanup()
+        {
+            ManagedCertificateLog.DisposeLoggers();
+            if(_tc != null)
+            {
+                _tc.Dispose();
+            }
+        }
 
         /// <summary>
         /// Perform (or preview) an import of settings from another instance
