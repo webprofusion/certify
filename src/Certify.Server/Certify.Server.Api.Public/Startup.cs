@@ -119,8 +119,9 @@ namespace Certify.Server.API
             var configManager = new ServiceConfigManager();
             var serviceConfig = configManager.GetServiceConfig();
 
-            var serviceHostEnv = Environment.GetEnvironmentVariable("CERTIFY_SERVER_HOST");
-            var servicePortEnv = Environment.GetEnvironmentVariable("CERTIFY_SERVER_PORT");
+            // Optionally load service host/port from environment variables. ENV_CERTIFY_SERVICE_ is kubernetes and CERTIFY_SERVICE_HOST is docker-compose
+            var serviceHostEnv = Environment.GetEnvironmentVariable("ENV_CERTIFY_SERVICE_HOST") ?? Environment.GetEnvironmentVariable("CERTIFY_SERVICE_HOST");
+            var servicePortEnv = Environment.GetEnvironmentVariable("ENV_CERTIFY_SERVICE_PORT") ?? Environment.GetEnvironmentVariable("CERTIFY_SERVICE_PORT");
 
             if (!string.IsNullOrEmpty(serviceHostEnv))
             {
