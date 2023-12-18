@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Locales;
@@ -358,7 +358,7 @@ namespace Certify.Models.Shared.Validation
 
                     if (identifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
                     {
-                        foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                        foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.",StringComparison.OrdinalIgnoreCase)))
                         {
                             var rootDomain = wildcard.Value.Replace("*.", "");
                             // add list of identifiers where label count exceeds root domain label count
