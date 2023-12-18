@@ -4,14 +4,18 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:54688",
-      "sslPort": 44346
+      "applicationUrl": "http://localhost:9695"
     }
   },
+ 
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
+      "launchUrl": "http://localhost:9695/docs",
+      "iisExpress": {
+        "applicationUrl": "http://localhost:9695"
+      },
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -21,26 +25,25 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:5001;http://localhost:5000"
+      }
     },
     "Docker": {
       "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/api/system/appversion",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/docs",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://0.0.0.0:9695"
       },
-      "publishAllPorts": true      
+      "publishAllPorts": true,
+      "httpPort": 9695
     },
     "WSL": {
       "commandName": "WSL2",
       "launchBrowser": true,
-      "launchUrl": "https://localhost:5001/api/system/appversion",
+      "launchUrl": "http://localhost:9695/docs",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:5001;http://localhost:5000"
-      },
-      "distributionName": ""
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }
