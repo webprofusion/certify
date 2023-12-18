@@ -2,41 +2,42 @@
   "profiles": {
     "IIS Express": {
       "commandName": "IISExpress",
-      "launchUrl": "docs",
+      "launchUrl": "https://localhost:44361/docs",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
+        "CERTIFY_SERVICE_HOST": "localhost",
+        "CERTIFY_SERVICE_PORT": "9695"
       }
     },
     "Certify.Server.Api.Public": {
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "CERTIFY_SERVER_HOST": "127.0.0.2",
-        "CERTIFY_SERVER_PORT": "9695"
+        "CERTIFY_SERVICE_HOST": "127.0.0.2",
+        "CERTIFY_SERVICE_PORT": "9695"
       },
       "applicationUrl": "https://localhost:44361;http://localhost:44360"
     },
     "WSL": {
       "commandName": "WSL2",
-      "launchUrl": "https://localhost:5001",
+      "launchUrl": "https://localhost:44361/docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
-        "CERTIFY_SERVER_HOST": "localhost",
-        "CERTIFY_SERVER_PORT": "9695"
-      },
-      "distributionName": ""
+        "CERTIFY_SERVICE_HOST": "localhost",
+        "CERTIFY_SERVICE_PORT": "9695"
+      }
     },
     "Docker": {
       "commandName": "Docker",
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/docs",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
-        "CERTIFY_SERVER_HOST": "localhost",
-        "CERTIFY_SERVER_PORT": "9695"
+        "ASPNETCORE_URLS": "https://0.0.0.0:44361;http://0.0.0.0:44360",
+        "CERTIFY_SERVICE_HOST": "localhost",
+        "CERTIFY_SERVICE_PORT": "9695"
       },
-      "publishAllPorts": true,
-      "useSSL": true
+      "httpPort": 44360,
+      "sslPort": 44361
     }
   },
   "iisSettings": {
