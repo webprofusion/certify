@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
+using Certify.Models.Shared.Validation;
 using Certify.Shared.Core.Utils;
 
 namespace Certify.Core.Management.Challenges
@@ -53,34 +54,18 @@ namespace Certify.Core.Management.Challenges
 
             var requestConfig = managedCertificate.RequestConfig;
 
-            if (string.IsNullOrEmpty(requestConfig.PrimaryDomain))
+            if (!performCleanupOnly)
             {
-                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "There is no primary domain set for this certificate." } };
+                var validationResult = CertificateEditorService.Validate(managedCertificate, null, null, false);
+
+                if (!validationResult.IsValid)
+                {
+                    results.Add(new StatusMessage { IsOK = false, Message = validationResult.Message });
+                    return results;
+                }
             }
 
             var identifiers = managedCertificate.GetCertificateIdentifiers();
-
-            // TODO: some of these checks can be moved/shared with general item validation 
-
-            // if wildcard domain included, check first level labels not also specified, i.e.
-            // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
-            // test.wwww.example.com can
-            var invalidLabels = new List<CertIdentifierItem>();
-            if (identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
-            {
-                foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.")))
-                {
-                    var rootDomain = wildcard.Value.Replace("*.", "");
-                    // add list of identifiers where label count exceeds root domain label count
-                    invalidLabels.AddRange(identifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith(rootDomain) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
-
-                    if (invalidLabels.Any())
-                    {
-                        results.Add(new StatusMessage { IsOK = false, Message = $"Wildcard domain certificate requests (e.g. {wildcard}) cannot be mixed with requests including immediate subdomains (e.g. {invalidLabels[0]})." });
-                        return results;
-                    }
-                }
-            }
 
             var generatedAuthorizations = new List<PendingAuthorization>();
 
