@@ -175,32 +175,34 @@ namespace Certify.Management
             //get app version
             try
             {
-                var client = new HttpClient();
-                client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
-
-                var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
-                if (response.IsSuccessStatusCode)
+                using (var client = new HttpClient())
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    /*json = @"{
-                         'version': {
-                             'major': 2,
-                             'minor': 0,
-                             'patch': 3
-                                                 },
-                           'message': {
-                                                     'body': 'There is an awesome update available.',
-                             'downloadPageURL': 'https://certify.webprofusion.com',
-                             'releaseNotesURL': 'https://certify.webprofusion.com/home/changelog',
-                             'isMandatory': true
-                           }
-                     }";*/
+                    client.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent());
 
-                    var checkResult = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateCheck>(json);
-                    return CompareVersions(appVersion, checkResult);
+                    var response = await client.GetAsync(Models.API.Config.APIBaseURI + "update?version=" + appVersion);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        /*json = @"{
+                             'version': {
+                                 'major': 2,
+                                 'minor': 0,
+                                 'patch': 3
+                                                     },
+                               'message': {
+                                                         'body': 'There is an awesome update available.',
+                                 'downloadPageURL': 'https://certify.webprofusion.com',
+                                 'releaseNotesURL': 'https://certify.webprofusion.com/home/changelog',
+                                 'isMandatory': true
+                               }
+                         }";*/
+
+                        var checkResult = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateCheck>(json);
+                        return CompareVersions(appVersion, checkResult);
+                    }
+
+                    return new UpdateCheck { IsNewerVersion = false, InstalledVersion = AppVersion.FromString(appVersion) };
                 }
-
-                return new UpdateCheck { IsNewerVersion = false, InstalledVersion = AppVersion.FromString(appVersion) };
             }
             catch (Exception)
             {
@@ -611,6 +613,7 @@ namespace Certify.Management
         {
             _config = TelemetryConfiguration.CreateDefault();
             _config.ConnectionString = $"InstrumentationKey={key}";
+
             _tc = new TelemetryClient(_config);
 
             // Set session data:

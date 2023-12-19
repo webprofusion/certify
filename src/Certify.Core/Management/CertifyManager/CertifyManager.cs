@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -659,6 +659,7 @@ namespace Certify.Management
             }
             else if (!CoreAppSettings.Current.EnableAppTelematics && _tc != null)
             {
+                _tc?.Dispose();
                 _tc = null;
             }
 
