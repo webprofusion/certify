@@ -10,7 +10,6 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Config.AccessControl;
-using Certify.Models.Config.Migration;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
