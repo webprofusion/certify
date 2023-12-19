@@ -409,6 +409,7 @@ namespace Certify.UI.Windows
             }
             else
             {
+                tc?.Dispose();
                 tc = null;
             }
         }

@@ -668,6 +668,7 @@ namespace Certify.Management
             }
             else if (!CoreAppSettings.Current.EnableAppTelematics && _tc != null)
             {
+                _tc?.Dispose();
                 _tc = null;
             }
 
