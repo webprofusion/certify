@@ -167,9 +167,7 @@ namespace Certify.Service.Controllers
 
             var output = $"API [{sourceFilePath}/{callerName}] {msg}";
 
-            Console.ForegroundColor = ConsoleColor.Yellow;
             Debug.WriteLine(output);
-            Console.ForegroundColor = ConsoleColor.White;
 #endif
         }
 
