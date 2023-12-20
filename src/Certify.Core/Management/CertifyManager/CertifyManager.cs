@@ -345,8 +345,7 @@ namespace Certify.Management
             _serviceLog = new Loggy(
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
-               .WriteTo.Debug()
-               .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
+               .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger()
                );
 
