@@ -133,17 +133,38 @@ namespace Certify.Server.API
                 serviceConfig.Port = tryServicePort;
             }
 
-            var defaultConnectionConfig = new Shared.ServerConnection(serviceConfig);
+            var backendServiceConnectionConfig = new Shared.ServerConnection(serviceConfig);
+
+            backendServiceConnectionConfig.Authentication = "jwt";
+            backendServiceConnectionConfig.ServerMode = "v2";
+
             System.Diagnostics.Debug.WriteLine($"Public API: connecting to background service {serviceConfig:Host}:{serviceConfig.Port}");
 
-            var connections = ServerConnectionManager.GetServerConnections(null, defaultConnectionConfig);
-            var serverConnection = connections.FirstOrDefault(c => c.IsDefault == true);
-#if DEBUG
-            serverConnection = defaultConnectionConfig;
-#endif
-            var internalServiceClient = new Client.CertifyServiceClient(configManager, serverConnection);
+            var internalServiceClient = new Client.CertifyServiceClient(configManager, backendServiceConnectionConfig);
 
-            internalServiceClient.ConnectStatusStreamAsync();
+            var attempts = 3;
+            while (attempts > 0)
+            {
+                try
+                {
+                    internalServiceClient.ConnectStatusStreamAsync().Wait();
+                    break;
+                }
+                catch
+                {
+                    attempts--;
+
+                    if (attempts == 0)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        Task.Delay(2000).Wait(); // wait for service to start
+                    }
+                }
+            }
+
             internalServiceClient.OnMessageFromService += InternalServiceClient_OnMessageFromService;
             internalServiceClient.OnRequestProgressStateUpdated += InternalServiceClient_OnRequestProgressStateUpdated;
             internalServiceClient.OnManagedCertificateUpdated += InternalServiceClient_OnManagedCertificateUpdated;
