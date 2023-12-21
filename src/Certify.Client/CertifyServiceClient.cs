@@ -97,12 +97,6 @@ namespace Certify.Client
                 .AddMessagePackProtocol()
                 .Build();
 
-                connection.Closed += async (error) =>
-                {
-                    await Task.Delay(new Random().Next(0, 5) * 1000);
-                    await connection.StartAsync();
-                };
-
                 connection.On<RequestProgressState>(Providers.StatusHubMessages.SendProgressStateMsg, (s) =>
                 {
                     OnRequestProgressStateUpdated?.Invoke(s);
@@ -119,6 +113,12 @@ namespace Certify.Client
                 });
 
                 await connection.StartAsync();
+
+                connection.Closed += async (error) =>
+                {
+                    await Task.Delay(new Random().Next(0, 5) * 1000);
+                    await connection.StartAsync();
+                };
             }
         }
 
