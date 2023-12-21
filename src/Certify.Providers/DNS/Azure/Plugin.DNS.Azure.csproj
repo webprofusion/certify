@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Core" Version="1.36.0" />
     <PackageReference Include="Azure.Identity" Version="1.10.4" />
-    <PackageReference Include="Azure.ResourceManager.Dns" Version="1.0.1" />
+    <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.0" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
