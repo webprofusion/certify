@@ -10,7 +10,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class ValidationController : ControllerBase
+    public partial class ValidationController : ControllerBase
     {
 
         private readonly ILogger<ValidationController> _logger;
@@ -29,7 +29,7 @@ namespace Certify.Server.Api.Public.Controllers
         }
 
         /// <summary>
-        /// get current challenge info fo a given type/key
+        /// get current challenge info for a given type/key
         /// </summary>
         /// <param name="type"></param>
         /// <param name="key"></param>
