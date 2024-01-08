@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models;
 using Microsoft.AspNetCore.Mvc;
 
