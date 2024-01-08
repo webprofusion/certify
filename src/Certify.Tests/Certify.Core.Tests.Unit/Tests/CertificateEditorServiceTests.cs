@@ -1,10 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Certify.Models;
-using Certify.Models.Providers;
+﻿using Certify.Models;
 using Certify.Models.Shared.Validation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace Certify.Core.Tests.Unit
 {
