@@ -1,4 +1,4 @@
-﻿using Certify.Client;
+using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Api.Public.Controllers
@@ -46,7 +46,6 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("health")]
-        [Route("/health")]
         public async Task<IActionResult> GetHealth()
         {
             var serviceAvailable = false;
