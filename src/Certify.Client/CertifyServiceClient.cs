@@ -156,5 +156,10 @@ namespace Certify.Client
         {
             return _connectionConfig;
         }
+
+        public string GetStatusHubUri()
+        {
+            return _statusHubUri;
+        }
     }
 }
