@@ -19,7 +19,8 @@ namespace Certify.Core.Tests
             _certifyManager.Init().Wait();
         }
 
-        [TestCleanup] public void Cleanup()
+        [TestCleanup]
+        public void Cleanup()
         {
             _certifyManager.Dispose();
         }

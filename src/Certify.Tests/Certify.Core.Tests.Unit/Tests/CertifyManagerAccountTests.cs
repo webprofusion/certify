@@ -136,7 +136,8 @@ namespace Certify.Core.Tests.Unit
                     // Read step-ca fingerprint from config file
                     var stepCaConfigJson = JsonReader.ReadFile<StepCaConfig>($"{_winRunnerTempDir}\\config\\defaults.json");
                     stepCaFingerprint = stepCaConfigJson.fingerprint;
-                } else
+                }
+                else
                 {
                     var stepCaConfigBytes = await _caContainer.ReadFileAsync("/home/step/config/defaults.json");
                     var stepCaConfigJson = JsonReader.ReadBytes<StepCaConfig>(stepCaConfigBytes);
@@ -155,7 +156,8 @@ namespace Certify.Core.Tests.Unit
             {
                 if (_isWindows && runningWindowsDockerEngine)
                 {
-                    if (!Directory.Exists(_winRunnerTempDir)) {
+                    if (!Directory.Exists(_winRunnerTempDir))
+                    {
                         Directory.CreateDirectory(_winRunnerTempDir);
                     }
 
@@ -175,7 +177,7 @@ namespace Certify.Core.Tests.Unit
                         .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged($"Serving HTTPS on :{_caPort} ..."))
                         // Build the container configuration.
                         .Build();
-                } 
+                }
                 else
                 {
                     // Create new volume for step-ca container
@@ -239,17 +241,17 @@ namespace Certify.Core.Tests.Unit
         private class StepCaConfig
         {
             [JsonProperty(PropertyName = "ca-url")]
-            public string ca_url;
+            public string ca_url = string.Empty;
             [JsonProperty(PropertyName = "ca-config")]
-            public string ca_config;
-            public string fingerprint;
-            public string root;
+            public string ca_config = string.Empty;
+            public string fingerprint = string.Empty;
+            public string root = string.Empty;
         }
 
         private static CommandOutput RunCommand(string program, string args, string description = null, int timeoutMS = Timeout.Infinite)
         {
             if (description == null) { description = string.Concat(program, " ", args); }
-            
+
             var output = "";
             var errorOutput = "";
 
@@ -290,7 +292,7 @@ namespace Certify.Core.Tests.Unit
                 process.BeginOutputReadLine();
                 process.BeginErrorReadLine();
 
-                process.WaitForExit(timeoutMS); 
+                process.WaitForExit(timeoutMS);
             }
             catch (Exception exp)
             {

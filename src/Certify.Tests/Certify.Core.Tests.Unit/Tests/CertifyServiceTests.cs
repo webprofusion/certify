@@ -1,15 +1,15 @@
-﻿using Certify.Models;
-using Certify.Models.Config;
-using Certify.Shared;
-using Medallion.Shell;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Config;
+using Certify.Shared;
+using Medallion.Shell;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -20,16 +20,17 @@ namespace Certify.Core.Tests.Unit
         private HttpClient _httpClient;
         private string serviceUri;
 
-        public CertifyServiceTests() {
+        public CertifyServiceTests()
+        {
             var serviceConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
             serviceUri = $"{(serviceConfig.UseHTTPS ? "https" : "http")}://{serviceConfig.Host}:{serviceConfig.Port}";
             var httpHandler = new HttpClientHandler { UseDefaultCredentials = true };
             _httpClient = new HttpClient(httpHandler);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
-            _httpClient.BaseAddress = new Uri(serviceUri+"/api/");
+            _httpClient.BaseAddress = new Uri(serviceUri + "/api/");
         }
 
-        private async Task <Command> StartCertifyService(string args = "")
+        private async Task<Command> StartCertifyService(string args = "")
         {
             Command certifyService;
             if (args == "")
@@ -98,7 +99,7 @@ namespace Certify.Core.Tests.Unit
                 var versionRes = JsonConvert.DeserializeObject<string>(versionResStr);
 
                 Assert.AreEqual(HttpStatusCode.OK, versionRawRes.StatusCode, $"Unexpected status code from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri}");
-                StringAssert.Matches(versionRes, new Regex(@"^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$"), $"Unexpected response from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri} : {versionResStr}");                
+                StringAssert.Matches(versionRes, new Regex(@"^(\d+\.)?(\d+\.)?(\d+\.)?(\*|\d+)$"), $"Unexpected response from GET {versionRawRes.RequestMessage.RequestUri.AbsoluteUri} : {versionResStr}");
             }
             finally
             {
@@ -116,7 +117,7 @@ namespace Certify.Core.Tests.Unit
                 var updatesRawRes = await _httpClient.GetAsync("system/updatecheck");
                 var updateRawResStr = await updatesRawRes.Content.ReadAsStringAsync();
                 var updateRes = JsonConvert.DeserializeObject<UpdateCheck>(updateRawResStr);
-                
+
                 Assert.AreEqual(HttpStatusCode.OK, updatesRawRes.StatusCode, $"Unexpected status code from GET {updatesRawRes.RequestMessage.RequestUri.AbsoluteUri}");
                 Assert.IsFalse(updateRes.MustUpdate);
                 Assert.IsFalse(updateRes.IsNewerVersion);

@@ -33,7 +33,7 @@ namespace Certify.Core.Tests
             certifyManager.Init().Wait();
         }
 
-        [TestCleanup]   
+        [TestCleanup]
         public void Cleanup()
         {
             certifyManager?.Dispose();
