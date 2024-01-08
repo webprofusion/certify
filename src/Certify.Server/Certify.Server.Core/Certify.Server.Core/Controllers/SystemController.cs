@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Shared;
-using Newtonsoft.Json.Linq;
 
 namespace Certify.Core.Management.Challenges
 {
