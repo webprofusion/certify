@@ -550,7 +550,7 @@ namespace Certify.Management
         private void Cleanup()
         {
             ManagedCertificateLog.DisposeLoggers();
-            if(_tc != null)
+            if (_tc != null)
             {
                 _tc.Dispose();
             }
