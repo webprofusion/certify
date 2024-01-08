@@ -1,9 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.API;
 using Certify.Server.Api.Public.Controllers;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
@@ -31,7 +33,7 @@ namespace Certify.Service.Api.Tests
         public static void Init(TestContext context)
         {
 
-            // setup public API service and backend service worker API
+            // setup public API service and backend service
 
             var config = new ConfigurationBuilder()
                 .SetBasePath(AppContext.BaseDirectory)
@@ -60,7 +62,33 @@ namespace Certify.Service.Api.Tests
             _clientWithAnonymousAccess = _server.CreateClient();
             _clientWithAuthorizedAccess = _server.CreateClient();
 
-            Worker.Program.CreateHostBuilder(new string[] { }).Build().StartAsync();
+           // CreateCoreServer();
+        }
+
+        private static void CreateCoreServer()
+        {
+            // configure and start a custom instance of the core server for the public API to talk to
+            var builder = WebApplication.CreateBuilder();
+
+            var coreServerStartup = new Certify.Server.Core.Startup(builder.Configuration);
+            
+            if (File.Exists(Path.Join(AppContext.BaseDirectory, "appsettings.worker.test.json")))
+            {
+                builder.Configuration.AddJsonFile("appsettings.worker.test.json");
+                builder.Configuration.AddUserSecrets(typeof(APITestBase).Assembly); // for worker pfx details
+            }
+
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+
+            coreServerStartup.ConfigureServices(builder.Services);
+
+            var coreServerApp = builder.Build();
+            
+            coreServerStartup.Configure(coreServerApp, builder.Environment);
+
+            coreServerApp.StartAsync();
+
         }
 
         public async Task PerformAuth()

@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Certify.Server.Api.Public\Certify.Server.Api.Public.csproj" />
-    <ProjectReference Include="..\Certify.Service.Worker\Certify.Service.Worker\Certify.Service.Worker.csproj" />
+    <ProjectReference Include="..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
   </ItemGroup>
 
 </Project>

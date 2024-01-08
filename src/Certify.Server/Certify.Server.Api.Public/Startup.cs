@@ -1,10 +1,12 @@
-﻿using System.Reflection;
+using System.Reflection;
+using Certify.Client;
+using Certify.Models.Config;
 using Certify.Server.Api.Public.Middleware;
-using Certify.Shared.Core.Management;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
+using Polly;
 
 namespace Certify.Server.API
 {
@@ -29,12 +31,18 @@ namespace Certify.Server.API
         /// </summary>
         public IConfiguration Configuration { get; }
 
+        public void ConfigureServices(IServiceCollection services)
+        {
+            _ = ConfigureServicesWithResults(services);
+        }
+
         /// <summary>
         /// Configure services for use by the API
         /// </summary>
         /// <param name="services"></param>
-        public void ConfigureServices(IServiceCollection services)
+        public List<ActionResult> ConfigureServicesWithResults(IServiceCollection services)
         {
+            var results = new List<ActionResult>();
 
             services
                 .AddTokenAuthentication(Configuration)
@@ -142,45 +150,23 @@ namespace Certify.Server.API
 
             var internalServiceClient = new Client.CertifyServiceClient(configManager, backendServiceConnectionConfig);
 
-            var attempts = 3;
-            while (attempts > 0)
-            {
-                try
-                {
-                    internalServiceClient.ConnectStatusStreamAsync().Wait();
-                    break;
-                }
-                catch
-                {
-                    attempts--;
-
-                    if (attempts == 0)
-                    {
-                        throw;
-                    }
-                    else
-                    {
-                        Task.Delay(2000).Wait(); // wait for service to start
-                    }
-                }
-            }
-
             internalServiceClient.OnMessageFromService += InternalServiceClient_OnMessageFromService;
             internalServiceClient.OnRequestProgressStateUpdated += InternalServiceClient_OnRequestProgressStateUpdated;
             internalServiceClient.OnManagedCertificateUpdated += InternalServiceClient_OnManagedCertificateUpdated;
 
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
+
+            return results;
         }
 
         /// <summary>
         /// Configure the http request pipeline
         /// </summary>
-        /// <param name="app"></param>
-        /// <param name="env"></param>
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 
-            var statusHubContext = app.ApplicationServices.GetService(typeof(IHubContext<StatusHub>)) as IHubContext<StatusHub>;
+            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<StatusHub>>();
+
             if (statusHubContext == null)
             {
                 throw new Exception("Status Hub not registered");
@@ -202,8 +188,6 @@ namespace Certify.Server.API
                 p.AllowAnyOrigin()
                 .AllowAnyMethod()
                 .AllowAnyHeader();
-                //.AllowCredentials();
-
             });
 
             app.UseAuthentication();
@@ -228,6 +212,44 @@ namespace Certify.Server.API
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Server API");
             });
 #endif
+        }
+
+        public async Task SetupStatusHubConnection(WebApplication app)
+        {
+            var internalServiceClient = app.Services.GetRequiredService<ICertifyInternalApiClient>() as CertifyServiceClient;
+
+            if (internalServiceClient == null)
+            {
+                app.Logger.LogError($"Unable to resolve internal service client. Cannot connect status stream.");
+                return;
+            }
+            else
+            {
+
+                var attempts = 3;
+                var connected = false;
+                while (attempts > 0 && !connected)
+                {
+                    try
+                    {
+                        await internalServiceClient.ConnectStatusStreamAsync();
+                        connected = true;
+                    }
+                    catch
+                    {
+                        attempts--;
+
+                        if (attempts == 0)
+                        {
+                            app.Logger.LogError($"Unable to connect to service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.");
+                        }
+                        else
+                        {
+                            Task.Delay(2000).Wait(); // wait for service to start
+                        }
+                    }
+                }
+            }
         }
 
         private StatusHubReporting _statusReporting;

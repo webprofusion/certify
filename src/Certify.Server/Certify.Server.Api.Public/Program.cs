@@ -1,22 +1,36 @@
-﻿
-using Certify.Server.API;
+﻿using Certify.Server.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #if ASPIRE
-    builder.AddServiceDefaults();
+builder.AddServiceDefaults();
 #endif
 
 var startup = new Startup(builder.Configuration);
 
-startup.ConfigureServices(builder.Services);
+var results = startup.ConfigureServicesWithResults(builder.Services);
 
 var app = builder.Build();
 
+// log any relevant startup messages encountered during configure services
+foreach (var result in results)
+{
+    if (result.IsSuccess)
+    {
+        app.Logger.LogInformation($"Startup: {result.Message}");
+    }
+    else
+    {
+        app.Logger.LogError($"Startup: {result.Message}");
+    }
+}
+
 #if ASPIRE
-    app.MapDefaultEndpoints();
+app.MapDefaultEndpoints();
 #endif
 
 startup.Configure(app, builder.Environment);
+
+app.Lifetime.ApplicationStarted.Register(async () => await startup.SetupStatusHubConnection(app));
 
 app.Run();
