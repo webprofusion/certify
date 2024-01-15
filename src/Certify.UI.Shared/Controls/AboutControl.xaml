@@ -81,24 +81,16 @@
                 Click="UpdateCheck_Click"
                 Content="{x:Static res:SR.AboutControl_CheckForUpdateButton}"
                 DockPanel.Dock="Top" />
-            <Button
-                x:Name="Register"
-                Width="150"
-                Margin="0,0,0,8"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Click="Button_Click"
-                Content="{x:Static res:SR.AboutControl_Register}"
-                DockPanel.Dock="Top" />
+
 
             <Button
                 x:Name="ValidateKey"
                 Width="150"
-                Margin="0,0,0,8"
+                Margin="0,24,0,8"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Click="Button_ApplyRegistrationKey"
-                Content="{x:Static res:SR.AboutControl_EnterKey}"
+                Content="Add License Key.."
                 DockPanel.Dock="Top" />
 
             <Button
@@ -108,7 +100,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Click="DeactivateInstall_Click"
-                Content="Deactivate Install"
+                Content="Remove License Key.."
                 DockPanel.Dock="Top" />
 
             <Button
@@ -120,7 +112,15 @@
                 Click="Help_Click"
                 Content="{x:Static res:SR.AboutControl_Support}"
                 DockPanel.Dock="Top" />
-
+            <Button
+                x:Name="Register"
+                Width="150"
+                Margin="0,0,0,8"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Button_Click"
+                Content="{x:Static res:SR.AboutControl_Register}"
+                DockPanel.Dock="Top" />
 
         </DockPanel>
 
