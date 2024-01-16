@@ -1,10 +1,12 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Certify.Client;
 using Certify.Models.Config;
 using Certify.Server.Api.Public.Middleware;
 using Certify.SharedUtils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Polly;
 
@@ -40,9 +42,9 @@ namespace Certify.Server.API
         /// Configure services for use by the API
         /// </summary>
         /// <param name="services"></param>
-        public List<ActionResult> ConfigureServicesWithResults(IServiceCollection services)
+        public List<Models.Config.ActionResult> ConfigureServicesWithResults(IServiceCollection services)
         {
-            var results = new List<ActionResult>();
+            var results = new List<Models.Config.ActionResult>();
 
             services
                 .AddTokenAuthentication(Configuration)
@@ -121,6 +123,15 @@ namespace Certify.Server.API
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
 
+                c.MapType<FileContentResult>(() =>
+                {
+                    return new Microsoft.OpenApi.Models.OpenApiSchema
+                    {
+                        Type = "string",
+                        Format = "binary",
+                    };
+                });
+
             });
 #endif
             // connect to certify service 
@@ -146,7 +157,7 @@ namespace Certify.Server.API
             backendServiceConnectionConfig.Authentication = "jwt";
             backendServiceConnectionConfig.ServerMode = "v2";
 
-            System.Diagnostics.Debug.WriteLine($"Public API: connecting to background service {serviceConfig:Host}:{serviceConfig.Port}");
+            System.Diagnostics.Debug.WriteLine($"Public API: connecting to background service {serviceConfig.Host}:{serviceConfig.Port}");
 
             var internalServiceClient = new Client.CertifyServiceClient(configManager, backendServiceConnectionConfig);
 
