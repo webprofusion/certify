@@ -1,4 +1,5 @@
-﻿using Certify.Management;
+﻿using System.Text;
+using Certify.Management;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
@@ -154,8 +155,24 @@ namespace Certify.Server.Core
             {
                 endpoints.MapHub<Service.StatusHub>("/api/status");
                 endpoints.MapControllers();
-            });
 
+#if DEBUG
+                endpoints.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
+                {
+                    var sb = new StringBuilder();
+                    var endpoints = endpointSources.SelectMany(es => es.Endpoints);
+                    foreach (var endpoint in endpoints)
+                    {
+                        if (endpoint is RouteEndpoint routeEndpoint)
+                        {
+                            sb.AppendLine($"{routeEndpoint.DisplayName} {routeEndpoint.RoutePattern.RawText}");
+                        }
+                    }
+
+                    return sb.ToString();
+                });
+#endif
+            });
         }
     }
 }
