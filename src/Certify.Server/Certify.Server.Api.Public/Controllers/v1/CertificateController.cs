@@ -40,7 +40,9 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpGet]
         [Route("{managedCertId}/download/{format?}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> Download(string managedCertId, string format, string mode)
+        
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        public async Task<IActionResult> Download(string managedCertId, string format, string? mode = null)
         {
             if (format == null)
             {
