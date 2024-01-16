@@ -1,4 +1,4 @@
-using Certify.Client;
+﻿using Certify.Client;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Api.Public.Controllers
@@ -32,12 +32,12 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("version")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Version))]
         public async Task<IActionResult> GetSystemVersion()
         {
-
             var versionInfo = await _client.GetAppVersion();
 
-            return new OkObjectResult(versionInfo);
+            return new OkObjectResult(Version.Parse(versionInfo));
         }
 
         /// <summary>
@@ -46,6 +46,7 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("health")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         public async Task<IActionResult> GetHealth()
         {
             var serviceAvailable = false;
