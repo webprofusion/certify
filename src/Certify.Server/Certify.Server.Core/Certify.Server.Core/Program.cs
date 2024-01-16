@@ -12,3 +12,8 @@ var app = builder.Build();
 startup.Configure(app, builder.Environment);
 
 app.Run();
+
+/// <summary>
+/// Declare program as partial for reference in tests: https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-8.0
+/// </summary>
+public partial class Program { }
