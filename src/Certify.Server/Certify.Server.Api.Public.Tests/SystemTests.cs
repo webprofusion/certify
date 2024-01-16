@@ -10,15 +10,13 @@ namespace Certify.Service.Api.Tests
         [TestMethod]
         public async Task GetSystemVersionTest()
         {
+            await PerformAuth();
 
-            // Act
-            var response = await _clientWithAnonymousAccess.GetAsync("/api/v1/system/version");
-            response.EnsureSuccessStatusCode();
-            var responseString = await response.Content.ReadAsStringAsync();
-
+            var responseVersion = await _clientWithAuthorizedAccess.GetSystemVersionAsync();
+           
             // Assert
-            var expectedVersion = typeof(Certify.Models.AppVersion).GetTypeInfo().Assembly.GetName().Version.ToString();
-            Assert.AreEqual(expectedVersion, responseString);
+            var expectedVersion = typeof(Certify.Models.AppVersion).GetTypeInfo().Assembly.GetName().Version;
+            Assert.AreEqual(expectedVersion, responseVersion);
 
         }
     }
