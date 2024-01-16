@@ -29,4 +29,7 @@
     <ItemGroup>
         <Folder Include="Properties\" />
     </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="Certify.Server.Api.Public.Tests" />
+    </ItemGroup>
 </Project>
