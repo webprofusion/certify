@@ -172,7 +172,12 @@ namespace Certify.Core.Tests.DataStores
 
                 Assert.IsTrue(access.IsPasswordValid("oldpassword", consumerSp.Password));
 
-                var updated = await access.UpdateSecurityPrinciplePassword(adminSp.Id, consumerSp.Id, "oldpassword", "newpassword");
+                var updated = await access.UpdateSecurityPrinciplePassword(adminSp.Id, new Models.API.SecurityPrinciplePasswordUpdate
+                {
+                    SecurityPrincipleId = consumerSp.Id,
+                    Password = "oldpassword",
+                    NewPassword = "newpassword"
+                });
 
                 Assert.IsTrue(updated, "SP password should have been updated OK");
 
