@@ -1,6 +1,8 @@
 ﻿using Certify.Core.Management.Access;
 using Certify.Management;
+using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Service.Controllers
@@ -10,6 +12,13 @@ namespace Certify.Service.Controllers
     public class AccessController : ControllerBase
     {
         private ICertifyManager _certifyManager;
+        private IDataProtectionProvider _dataProtectionProvider;
+
+        public AccessController(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider)
+        {
+            _certifyManager = certifyManager;
+            _dataProtectionProvider = dataProtectionProvider;
+        }
 
         private string GetContextUserId()
         {
@@ -26,71 +35,31 @@ namespace Certify.Service.Controllers
             return contextUserId;
         }
 
-        public AccessController(ICertifyManager certifyManager)
+        [HttpPost, Route("securityprinciple")]
+        public async Task<Models.Config.ActionResult> AddSecurityPrinciple([FromBody] SecurityPrinciple principle)
         {
-            _certifyManager = certifyManager;
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var addResultOk = await accessControl.AddSecurityPrinciple(GetContextUserId(), principle);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = addResultOk,
+                Message = addResultOk ? "Added" : "Failed to add"
+            };
         }
 
-#if DEBUG
-        private async Task BootstrapTestAdminUserAndRoles(IAccessControl access)
+        [HttpDelete, Route("securityprinciple/{id}")]
+        public async Task<Models.Config.ActionResult> DeleteSecurityPrinciple(string id)
         {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var resultOk = await accessControl.DeleteSecurityPrinciple(GetContextUserId(), id);
 
-            var adminSp = new SecurityPrinciple
+            return new Models.Config.ActionResult
             {
-                Id = "admin_01",
-                Email = "admin@test.com",
-                Description = "Primary test admin",
-                PrincipleType = SecurityPrincipleType.User,
-                Username = "admin",
-                Provider = StandardProviders.INTERNAL
+                IsSuccess = resultOk,
+                Message = resultOk ? "Deleted" : "Failed to delete security principle"
             };
-
-            await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
-
-            var actions = Policies.GetStandardResourceActions();
-
-            foreach (var action in actions)
-            {
-                await access.AddAction(action);
-            }
-
-            // setup policies with actions
-
-            var policies = Policies.GetStandardPolicies();
-
-            // add policies to store
-            foreach (var r in policies)
-            {
-                _ = await access.AddResourcePolicy(adminSp.Id, r, bypassIntegrityCheck: true);
-            }
-
-            // setup roles with policies
-            var roles = await access.GetSystemRoles();
-
-            foreach (var r in roles)
-            {
-                // add roles and policy assignments to store
-                await access.AddRole(r);
-            }
-
-            // assign security principles to roles
-            var assignedRoles = new List<AssignedRole> {
-                 // administrator
-                 new AssignedRole{
-                     Id= Guid.NewGuid().ToString(),
-                     RoleId=StandardRoles.Administrator.Id,
-                     SecurityPrincipleId=adminSp.Id
-                 }
-            };
-
-            foreach (var r in assignedRoles)
-            {
-                // add roles and policy assignments to store
-                await access.AddAssignedRole(r);
-            }
         }
-
-#endif
 
         [HttpGet, Route("securityprinciples")]
         public async Task<List<SecurityPrinciple>> GetSecurityPrinciples()
@@ -99,14 +68,6 @@ namespace Certify.Service.Controllers
 
             var results = await accessControl.GetSecurityPrinciples(GetContextUserId());
 
-#if DEBUG
-            // bootstrap the default user
-            if (!results.Any())
-            {
-                await BootstrapTestAdminUserAndRoles(accessControl);
-                results = await accessControl.GetSecurityPrinciples(GetContextUserId());
-            }
-#endif
             foreach (var r in results)
             {
                 r.AuthKey = "<sanitized>";
@@ -135,10 +96,35 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("updatepassword")]
-        public async Task<bool> UpdatePassword(string id, string oldpassword, string newpassword)
+        public async Task<Models.Config.ActionResult> UpdatePassword([FromBody] SecurityPrinciplePasswordUpdate passwordUpdate)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            return await accessControl.UpdateSecurityPrinciplePassword(GetContextUserId(), id: id, oldpassword: oldpassword, newpassword: newpassword);
+            var result = await accessControl.UpdateSecurityPrinciplePassword(GetContextUserId(), passwordUpdate);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = result,
+                Message = result ? "Updated" : "Failed to update"
+            };
+        }
+
+        [HttpPost, Route("validate")]
+        public async Task<SecurityPrincipleCheckResponse> Validate([FromBody] SecurityPrinciplePasswordCheck passwordCheck)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var result =  await accessControl.CheckSecurityPrinciplePassword(GetContextUserId(), passwordCheck);
+
+            return result;
+        }
+
+        [HttpPost, Route("serviceauth")]
+        public async Task<Models.Config.ActionResult> ValidateServiceAuth()
+        {
+            var protector = _dataProtectionProvider.CreateProtector("serviceauth");
+
+            protector.Unprotect(Request.Headers["X-Service-Auth"]);
+
+            return new Models.Config.ActionResult();
         }
     }
 }

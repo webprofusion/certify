@@ -40,7 +40,6 @@ namespace Certify.Service.Api.Tests
         {
             // setup public API service and backend service
 
-
             // tell backend service to uses specific host/ports if not already set
             if (Environment.GetEnvironmentVariable("CERTIFY_SERVICE_HOST") == null)
             {
@@ -88,13 +87,9 @@ namespace Certify.Service.Api.Tests
             {
                 var serverProcessInfo = new ProcessStartInfo()
                 {
-                    RedirectStandardInput = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    FileName = "Certify.Server.Core.exe",
-                    Verb = "RunAs",
+                    FileName = "Certify.Server.Core.exe"
                 };
 
                 _serverProcess = Process.Start(serverProcessInfo);
