@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using Certify.Client;
 using Certify.Models.API;
+using Certify.Models.Config.AccessControl;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -50,21 +51,34 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns>Response contains access token and refresh token for API operations.</returns>
         [HttpPost]
         [Route("login")]
-        public AuthResponse Login(AuthRequest login)
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        public async Task<IActionResult> Login(AuthRequest login)
         {
-            // TODO: check users login, if valid issue new JWT access token and refresh token based on their identity
-            // Refresh token should be stored or hashed for later use
+            // check users login, if valid issue new JWT access token and refresh token based on their identity
+            var validation = await _client.ValidateSecurityPrinciplePassword(new SecurityPrinciplePasswordCheck() { Username = login.Username, Password = login.Password });
 
-            var jwt = new Api.Public.Services.JwtService(_config);
-
-            var authResponse = new AuthResponse
+            if (validation.IsSuccess)
             {
-                Detail = "OK",
-                AccessToken = jwt.GenerateSecurityToken(login.Username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"])),
-                RefreshToken = jwt.GenerateRefreshToken()
-            };
+                // TODO: get user details from API and return as part of response instead of returning as json
 
-            return authResponse;
+                var jwt = new Api.Public.Services.JwtService(_config);
+
+                var authResponse = new AuthResponse
+                {
+                    Detail = "OK",
+                    AccessToken = jwt.GenerateSecurityToken(login.Username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"])),
+                    RefreshToken = jwt.GenerateRefreshToken(),
+                    SecurityPrinciple = validation.SecurityPrinciple
+                };
+
+                // TODO: Refresh token should be stored or hashed for later use
+
+                return Ok(authResponse);
+            }
+            else
+            {
+                return Unauthorized();
+            }
         }
 
         /// <summary>
@@ -75,34 +89,39 @@ namespace Certify.Server.Api.Public.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
         [Route("refresh")]
-        public AuthResponse Refresh(string refreshToken)
+        [ProducesResponseType(typeof(AuthResponse), 200)]
+        public IActionResult Refresh(string refreshToken)
         {
             // validate token and issue new one
             var jwt = new Api.Public.Services.JwtService(_config);
 
             var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]).Parameter;
-            var claimsIdentity = jwt.ClaimsIdentityFromToken(authToken, false);
-            var username = claimsIdentity.Name;
 
-            // var savedRefreshToken = GetRefreshToken(username); //retrieve the refresh token from a data store
-            // if (savedRefreshToken != refreshToken)
-            // throw new SecurityTokenException("Invalid refresh token");
-
-            var newJwtToken = jwt.GenerateSecurityToken(username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"]));
-            var newRefreshToken = jwt.GenerateRefreshToken();
-
-            // invalidate old refresh token and store new one
-            // DeleteRefreshToken(username, refreshToken);
-            // SaveRefreshToken(username, newRefreshToken);
-
-            var authResponse = new AuthResponse
+            try
             {
-                Detail = "OK",
-                AccessToken = newJwtToken,
-                RefreshToken = newRefreshToken
-            };
+                var claimsIdentity = jwt.ClaimsIdentityFromToken(authToken, false);
+                var username = claimsIdentity.Name;
 
-            return authResponse;
+                var newJwtToken = jwt.GenerateSecurityToken(username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"]));
+                var newRefreshToken = jwt.GenerateRefreshToken();
+
+                // invalidate old refresh token and store new one
+                // DeleteRefreshToken(username, refreshToken);
+                // SaveRefreshToken(username, newRefreshToken);
+
+                var authResponse = new AuthResponse
+                {
+                    Detail = "OK",
+                    AccessToken = newJwtToken,
+                    RefreshToken = newRefreshToken
+                };
+
+                return Ok(authResponse);
+            }
+            catch
+            {
+                return Unauthorized();
+            }
         }
     }
 }

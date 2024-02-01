@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
 
 namespace Certify.Core.Management.Access
@@ -21,12 +22,12 @@ namespace Certify.Core.Management.Access
         Task<bool> IsPrincipleInRole(string contextUserId, string id, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
         Task<bool> UpdateSecurityPrinciple(string contextUserId, SecurityPrinciple principle);
-        Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, string id, string oldpassword, string newpassword);
+        Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate);
+        Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck);
 
         Task AddRole(Role role);
         Task AddAssignedRole(AssignedRole assignedRole);
         Task AddAction(ResourceAction action);
-
-
+        Task<bool> IsInitialized();
     }
 }

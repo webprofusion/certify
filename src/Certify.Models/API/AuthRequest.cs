@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.API
+﻿using Certify.Models.Config.AccessControl;
+
+namespace Certify.Models.API
 {
     /// <summary>
     /// Required info to begin auth
@@ -37,5 +39,43 @@
         /// Refresh token string
         /// </summary>
         public string RefreshToken { get; set; } = string.Empty;
+
+        public Models.Config.AccessControl.SecurityPrinciple? SecurityPrinciple { get; set; }
+    }
+
+    public class SecurityPrinciplePasswordCheck
+    {
+        public string SecurityPrincipleId { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+
+        public SecurityPrinciplePasswordCheck() { }
+        public SecurityPrinciplePasswordCheck(string securityPrincipleId, string password)
+        {
+            SecurityPrincipleId = securityPrincipleId;
+            Password = password;
+        }
+    }
+
+    public class SecurityPrincipleCheckResponse
+    {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public SecurityPrinciple SecurityPrinciple { get; set; }
+    }
+
+    public class SecurityPrinciplePasswordUpdate
+    {
+        public string SecurityPrincipleId { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string NewPassword { get; set; } = string.Empty;
+
+        public SecurityPrinciplePasswordUpdate() { }
+        public SecurityPrinciplePasswordUpdate(string securityPrincipleId, string password, string newPassword)
+        {
+            SecurityPrincipleId = securityPrincipleId;
+            Password = password;
+            NewPassword = newPassword;
+        }
     }
 }
