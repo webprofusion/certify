@@ -509,7 +509,8 @@ namespace Certify.Core.Management.Challenges
                     // Or include preset key in our config, or make behaviour configurable
                     LogAction($"Pre-config check failed: Auto-config will overwrite existing config: {destPath}\\web.config");
 
-                    var configOptions = Directory.EnumerateFiles(Path.Combine(Environment.CurrentDirectory, "Scripts", "Web.config"), "*.config");
+                    var configPath = Path.Combine(AppContext.BaseDirectory, "Scripts", "Web.config");
+                    var configOptions = Directory.EnumerateFiles(configPath, "*.config");
 
                     foreach (var configFile in configOptions)
                     {
