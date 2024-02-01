@@ -38,6 +38,8 @@ namespace Certify.Models.Config.AccessControl
         public SecurityPrincipleType? PrincipleType { get; set; }
 
         public string? AuthKey { get; set; }
+
+        public string AvatarUrl { get; set; } = string.Empty;
     }
 
     public class Role : AccessStoreItem

@@ -96,66 +96,51 @@ namespace Certify.Core.Tests.Unit
 
     public class TestSecurityPrinciples
     {
-        public static SecurityPrinciple TestAdmin()
+        public static SecurityPrinciple TestAdmin => new SecurityPrinciple
         {
-            return new SecurityPrinciple
-            {
-                Id = "[test]",
-                Username = "test administrator",
-                Description = "Example test administrator used as context user during test",
-                Email = "test_admin@test.com",
-                Password = "ABCDEFG",
-                PrincipleType = SecurityPrincipleType.User
-            };
-        }
-        public static SecurityPrinciple Admin()
+            Id = "[test]",
+            Username = "test administrator",
+            Description = "Example test administrator used as context user during test",
+            Email = "test_admin@test.com",
+            Password = "ABCDEFG",
+            PrincipleType = SecurityPrincipleType.User
+        };
+        public static SecurityPrinciple Admin => new SecurityPrinciple
         {
-            return new SecurityPrinciple
-            {
-                Id = "admin_01",
-                Username = "admin",
-                Description = "Administrator account",
-                Email = "info@test.com",
-                Password = "ABCDEFG",
-                PrincipleType = SecurityPrincipleType.User,
-            };
-        }
-        public static SecurityPrinciple DomainOwner()
+            Id = "admin_01",
+            Username = "admin",
+            Description = "Administrator account",
+            Email = "info@test.com",
+            Password = "ABCDEFG",
+            PrincipleType = SecurityPrincipleType.User,
+        };
+        public static SecurityPrinciple DomainOwner => new SecurityPrinciple
         {
-            return new SecurityPrinciple
-            {
-                Id = "domain_owner_01",
-                Username = "demo_owner",
-                Description = "Example domain owner",
-                Email = "domains@test.com",
-                Password = "ABCDEFG",
-                PrincipleType = SecurityPrincipleType.User,
-            };
-        }
-        public static SecurityPrinciple DevopsUser()
+            Id = "domain_owner_01",
+            Username = "demo_owner",
+            Description = "Example domain owner",
+            Email = "domains@test.com",
+            Password = "ABCDEFG",
+            PrincipleType = SecurityPrincipleType.User,
+        };
+        public static SecurityPrinciple DevopsUser => new SecurityPrinciple
         {
-            return new SecurityPrinciple
-            {
-                Id = "devops_user_01",
-                Username = "devops_01",
-                Description = "Example devops user",
-                Email = "devops01@test.com",
-                Password = "ABCDEFG",
-                PrincipleType = SecurityPrincipleType.User,
-            };
-        }
-        public static SecurityPrinciple DevopsAppDomainConsumer()
+            Id = "devops_user_01",
+            Username = "devops_01",
+            Description = "Example devops user",
+            Email = "devops01@test.com",
+            Password = "ABCDEFG",
+            PrincipleType = SecurityPrincipleType.User,
+        };
+        public static SecurityPrinciple DevopsAppDomainConsumer => new SecurityPrinciple
         {
-            return new SecurityPrinciple
-            {
-                Id = "devops_app_01",
-                Username = "devapp_01",
-                Description = "Example devops app domain consumer",
-                Email = "dev_app01@test.com",
-                Password = "ABCDEFG",
-                PrincipleType = SecurityPrincipleType.User,
-            };
-        }
+            Id = "devops_app_01",
+            Username = "devapp_01",
+            Description = "Example devops app domain consumer",
+            Email = "dev_app01@test.com",
+            Password = "ABCDEFG",
+            PrincipleType = SecurityPrincipleType.User,
+        };
     }
 
     [TestClass]
@@ -175,10 +160,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlAddGetSecurityPrinciples()
+        public async Task TestAddGetSecurityPrinciples()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Get stored security principles
@@ -194,20 +179,20 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlGetSecurityPrinciplesNoRoles()
+        public async Task TestGetSecurityPrinciplesNoRoles()
         {
             // Add test security principles
-            var securityPrincipleAdded = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.TestAdmin());
+            var securityPrincipleAdded = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.TestAdmin);
 
             // Get stored security principles
             Assert.IsFalse(securityPrincipleAdded, $"Expected AddSecurityPrinciple() to be unsuccessful without roles defined for {contextUserId}");
         }
 
         [TestMethod]
-        public async Task TestAccessControlAddGetSecurityPrinciple()
+        public async Task TestAddGetSecurityPrinciple()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             foreach (var securityPrinciple in adminSecurityPrinciples)
@@ -222,10 +207,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlAddGetAssignedRoles()
+        public async Task TestAddGetAssignedRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -255,10 +240,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlGetAssignedRolesNoRoles()
+        public async Task TestGetAssignedRolesNoRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
@@ -268,10 +253,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlAddResourcePolicyNoRoles()
+        public async Task TestAddResourcePolicyNoRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -287,10 +272,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrinciple()
+        public async Task TestUpdateSecurityPrinciple()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -314,7 +299,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
 
             // Update security principle in AccessControl with a new principle object of the same Id, but different email
-            var newSecurityPrinciple = TestSecurityPrinciples.Admin();
+            var newSecurityPrinciple = TestSecurityPrinciples.Admin;
             newSecurityPrinciple.Email = "new_test_email@test.com";
             var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
             Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to succeed");
@@ -326,10 +311,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrincipleNoRoles()
+        public async Task TestUpdateSecurityPrincipleNoRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
@@ -337,17 +322,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
 
             // Update security principle in AccessControl with a new principle object of the same Id, but different email, with roles undefined
-            var newSecurityPrinciple = TestSecurityPrinciples.Admin();
+            var newSecurityPrinciple = TestSecurityPrinciples.Admin;
             newSecurityPrinciple.Email = "new_test_email@test.com";
             var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to be unsuccessful without roles defined");
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrincipleBadUpdate()
+        public async Task TestUpdateSecurityPrincipleBadUpdate()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -371,7 +356,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
 
             // Update security principle in AccessControl with a new principle object with a bad Id name and different email
-            var newSecurityPrinciple = TestSecurityPrinciples.Admin();
+            var newSecurityPrinciple = TestSecurityPrinciples.Admin;
             newSecurityPrinciple.Email = "new_test_email@test.com";
             newSecurityPrinciple.Id = "missing_username";
             var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
@@ -379,10 +364,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrinciplePassword()
+        public async Task TestUpdateSecurityPrinciplePassword()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             var firstPassword = adminSecurityPrinciples[0].Password;
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
@@ -409,7 +394,7 @@ namespace Certify.Core.Tests.Unit
 
             // Update security principle in AccessControl with a new password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, adminSecurityPrinciples[0].Id, firstPassword, newPassword);
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
             Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to succeed");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
@@ -420,16 +405,16 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrinciplePasswordNoRoles()
+        public async Task TestUpdateSecurityPrinciplePasswordNoRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             var firstPassword = adminSecurityPrinciples[0].Password;
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Update security principle in AccessControl with a new password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, adminSecurityPrinciples[0].Id, firstPassword, newPassword);
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail without roles");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
@@ -439,10 +424,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlUpdateSecurityPrinciplePasswordBadPassword()
+        public async Task TestUpdateSecurityPrinciplePasswordBadPassword()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             var firstPassword = adminSecurityPrinciples[0].Password;
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
@@ -464,7 +449,7 @@ namespace Certify.Core.Tests.Unit
 
             // Update security principle in AccessControl with a new password, but wrong original password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, adminSecurityPrinciples[0].Id, firstPassword.ToLower(), newPassword);
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword.ToLower(), newPassword));
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail with wrong password");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
@@ -474,10 +459,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlDeleteSecurityPrinciple()
+        public async Task TestDeleteSecurityPrinciple()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -511,10 +496,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlDeleteSecurityPrincipleNoRoles()
+        public async Task TestDeleteSecurityPrincipleNoRoles()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Validate SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before delete is not null
@@ -532,10 +517,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlDeleteSecurityPrincipleSelfDeletion()
+        public async Task TestDeleteSecurityPrincipleSelfDeletion()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -569,10 +554,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlDeleteSecurityPrincipleBadId()
+        public async Task TestDeleteSecurityPrincipleBadId()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -606,10 +591,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlIsPrincipleInRole()
+        public async Task TestIsPrincipleInRole()
         {
             // Add test security principles
-            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin(), TestSecurityPrinciples.TestAdmin() };
+            var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -642,10 +627,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlDomainAuth()
+        public async Task TestDomainAuth()
         {
             // Add test devops user security principle
-            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
             await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
@@ -671,10 +656,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlWildcardDomainAuth()
+        public async Task TestWildcardDomainAuth()
         {
             // Add test devops user security principle
-            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
             await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
@@ -704,10 +689,10 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task TestAccessControlRandomUserAuth()
+        public async Task TestRandomUserAuth()
         {
             // Add test devops user security principle
-            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser(), bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
             await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
@@ -726,6 +711,26 @@ namespace Certify.Core.Tests.Unit
             // Validate that random user should not be authorised
             var isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
+        }
+
+        [TestMethod]
+        public async Task TestSecurityPrinciplePwdValid()
+        {
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
+            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, TestSecurityPrinciples.DevopsUser.Password));
+
+            Assert.IsTrue(check.IsSuccess, "Password should be valid");
+        }
+
+        [TestMethod]
+        public async Task TestSecurityPrinciplePwdInvalid()
+        {
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
+            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, "INVALID_PWD"));
+
+            Assert.IsFalse(check.IsSuccess, "Password should not be valid");
         }
     }
 }
