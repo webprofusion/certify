@@ -21,7 +21,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.2.0" />
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.3.0" />
 		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.8.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
