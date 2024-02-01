@@ -11,6 +11,7 @@ using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
+using Certify.Models.Config.AccessControl;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -192,6 +193,72 @@ namespace Certify.Management
         }
 
             await UpgradeSettings();
+
+            var accessControl = await GetCurrentAccessControl();
+
+            if (await accessControl.IsInitialized() == false)
+            {
+                BootstrapTestAdminUserAndRoles(accessControl).Wait();
+            }
+        }
+
+        private static async Task BootstrapTestAdminUserAndRoles(IAccessControl access)
+        {
+
+            var adminSp = new SecurityPrinciple
+            {
+                Id = "admin_01",
+                Email = "admin@test.com",
+                Description = "Primary test admin",
+                PrincipleType = SecurityPrincipleType.User,
+                Username = "admin",
+                Password = "admin",
+                Provider = StandardProviders.INTERNAL
+            };
+
+            await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+
+            var actions = Policies.GetStandardResourceActions();
+
+            foreach (var action in actions)
+            {
+                await access.AddAction(action);
+            }
+
+            // setup policies with actions
+
+            var policies = Policies.GetStandardPolicies();
+
+            // add policies to store
+            foreach (var r in policies)
+            {
+                _ = await access.AddResourcePolicy(adminSp.Id, r, bypassIntegrityCheck: true);
+            }
+
+            // setup roles with policies
+            var roles = await access.GetSystemRoles();
+
+            foreach (var r in roles)
+            {
+                // add roles and policy assignments to store
+                await access.AddRole(r);
+            }
+
+            // assign security principles to roles
+            var assignedRoles = new List<AssignedRole> {
+                 // administrator
+                 new AssignedRole{
+                     Id= Guid.NewGuid().ToString(),
+                     RoleId=StandardRoles.Administrator.Id,
+                     SecurityPrincipleId=adminSp.Id
+                 }
+            };
+
+            foreach (var r in assignedRoles)
+            {
+                // add roles and policy assignments to store
+                await access.AddAssignedRole(r);
+            }
         }
 
         /// <summary>

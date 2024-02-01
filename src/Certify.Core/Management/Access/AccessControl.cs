@@ -2,10 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Unicode;
 using System.Threading.Tasks;
+using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
 using Certify.Models.Providers;
 using Certify.Providers;
+using Org.BouncyCastle.Tls;
+using static System.Net.WebRequestMethods;
 
 namespace Certify.Core.Management.Access
 {
@@ -19,6 +24,23 @@ namespace Certify.Core.Management.Access
         {
             _store = store;
             _log = log;
+        }
+
+        /// <summary>
+        /// Check if the system has been initialized with a security principle
+        /// </summary>
+        /// <returns></returns>
+        public async Task<bool> IsInitialized()
+        {
+            var list = await GetSecurityPrinciples("system");
+            if (list.Count != 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         public async Task<List<Role>> GetSystemRoles()
@@ -116,7 +138,28 @@ namespace Certify.Core.Management.Access
 
         public async Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id)
         {
-            return await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+            try
+            {
+                return await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+            }
+            catch (Exception exp)
+            {
+                _log.Error(exp, $"User {contextUserId} attempted to retrieve security principle [{id}] but was not successful");
+
+                return default;
+            }
+        }
+
+        public async Task<SecurityPrinciple> GetSecurityPrincipleByUsername(string contextUserId, string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return default;
+            }
+
+            var list = await GetSecurityPrinciples(contextUserId);
+
+            return list?.SingleOrDefault(sp => sp.Username?.ToLowerInvariant() == username.ToLowerInvariant());
         }
 
         public async Task<bool> IsAuthorised(string contextUserId, string principleId, string roleId, string resourceType, string actionId, string identifier)
@@ -217,21 +260,21 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, string id, string oldpassword, string newpassword)
+        public async Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate)
         {
-            if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (passwordUpdate.SecurityPrincipleId != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                _log?.Warning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, id);
+                _log?.Warning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipleId);
                 return false;
             }
 
             var updated = false;
 
-            var principle = await GetSecurityPrinciple(contextUserId, id);
+            var principle = await GetSecurityPrinciple(contextUserId, passwordUpdate.SecurityPrincipleId);
 
-            if (IsPasswordValid(oldpassword, principle.Password))
+            if (IsPasswordValid(passwordUpdate.Password, principle.Password))
             {
-                principle.Password = HashPassword(newpassword);
+                principle.Password = HashPassword(passwordUpdate.NewPassword);
                 updated = await UpdateSecurityPrinciple(contextUserId, principle);
             }
             else
@@ -254,6 +297,11 @@ namespace Certify.Core.Management.Access
 
         public bool IsPasswordValid(string password, string currentHash)
         {
+            if (string.IsNullOrWhiteSpace(currentHash) && string.IsNullOrWhiteSpace(password))
+            {
+                return true;
+            }
+
             var components = currentHash.Split('.');
 
             // hash provided password with same salt to compare result
@@ -309,7 +357,6 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id)
         {
-
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 _log?.Warning("User {contextUserId} attempted to read assigned role for [{id}] without being in required role.", contextUserId, id);
@@ -319,6 +366,49 @@ namespace Certify.Core.Management.Access
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
             return assignedRoles.Where(r => r.SecurityPrincipleId == id).ToList();
+        }
+
+        public async Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck)
+        {
+            var principle = string.IsNullOrWhiteSpace(passwordCheck.SecurityPrincipleId) ?
+                                await GetSecurityPrincipleByUsername(contextUserId, passwordCheck.Username) :
+                                await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId);
+
+            if (principle != null && IsPasswordValid(passwordCheck.Password, principle.Password))
+            {
+                principle.AvatarUrl = string.IsNullOrWhiteSpace(principle.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principle.Email.Trim().ToLower())}";
+                return new SecurityPrincipleCheckResponse { IsSuccess = true, SecurityPrinciple = principle };
+            }
+            else
+            {
+                if (principle == null)
+                {
+                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid security principle" };
+                }
+                else
+                {
+                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid password" };
+                }
+            }
+        }
+
+        public string GetSHA256Hash(string val)
+        {
+            using (var sha256Hash = SHA256.Create())
+            {
+                byte[] data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(val));
+                var sBuilder = new StringBuilder();
+
+                // Loop through each byte of the hashed data
+                // and format each one as a hexadecimal string.
+                for (int i = 0; i < data.Length; i++)
+                {
+                    sBuilder.Append(data[i].ToString("x2"));
+                }
+
+                // Return the hexadecimal string.
+                return sBuilder.ToString();
+            }
         }
     }
 }
