@@ -48,6 +48,19 @@ namespace Certify.Service.Controllers
             };
         }
 
+        [HttpPost, Route("securityprinciple/update")]
+        public async Task<Models.Config.ActionResult> UpdateSecurityPrinciple([FromBody] SecurityPrinciple principle)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var addResultOk = await accessControl.UpdateSecurityPrinciple(GetContextUserId(), principle);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = addResultOk,
+                Message = addResultOk ? "Updated" : "Failed to update"
+            };
+        }
+
         [HttpDelete, Route("securityprinciple/{id}")]
         public async Task<Models.Config.ActionResult> DeleteSecurityPrinciple(string id)
         {
