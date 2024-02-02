@@ -66,15 +66,33 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
+            var existing = await GetSecurityPrinciple(contextUserId, principle.Id);
+            if (existing != null)
+            {
+                _log?.Warning($"User {contextUserId} attempted to use AddSecurityPrinciple [{principle?.Id}] which already exists.");
+                return false;
+            }
+
             if (!string.IsNullOrWhiteSpace(principle.Password))
             {
                 principle.Password = HashPassword(principle.Password);
             }
+            else
+            {
+                principle.Password = HashPassword(Guid.NewGuid().ToString());
+            }
+
+            principle.AvatarUrl = GetAvatarUrlForPrinciple(principle);
 
             await _store.Add<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
 
             _log?.Information($"User {contextUserId} added security principle [{principle?.Id}] {principle?.Username}");
             return true;
+        }
+
+        public string GetAvatarUrlForPrinciple(SecurityPrinciple principle)
+        {
+            return string.IsNullOrWhiteSpace(principle.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principle.Email.Trim().ToLower())}";
         }
 
         public async Task<bool> UpdateSecurityPrinciple(string contextUserId, SecurityPrinciple principle)
@@ -88,7 +106,14 @@ namespace Certify.Core.Management.Access
 
             try
             {
-                var updated = _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
+                var updateSp = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), principle.Id);
+                updateSp.Email = principle.Email;
+                updateSp.Description = principle.Description;
+                updateSp.Title = principle.Title;
+
+                updateSp.AvatarUrl = GetAvatarUrlForPrinciple(principle);
+
+                var updated = _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), updateSp);
             }
             catch
             {
@@ -375,8 +400,7 @@ namespace Certify.Core.Management.Access
                                 await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId);
 
             if (principle != null && IsPasswordValid(passwordCheck.Password, principle.Password))
-            {
-                principle.AvatarUrl = string.IsNullOrWhiteSpace(principle.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principle.Email.Trim().ToLower())}";
+            {               
                 return new SecurityPrincipleCheckResponse { IsSuccess = true, SecurityPrinciple = principle };
             }
             else
