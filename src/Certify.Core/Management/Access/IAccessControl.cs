@@ -22,6 +22,7 @@ namespace Certify.Core.Management.Access
         Task<bool> IsPrincipleInRole(string contextUserId, string id, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
         Task<bool> UpdateSecurityPrinciple(string contextUserId, SecurityPrinciple principle);
+        Task<bool> UpdateAssignedRoles(string contextUserId, SecurityPrincipleAssignedRoleUpdate update);
         Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate);
         Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck);
 
