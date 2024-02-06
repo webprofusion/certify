@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Unicode;
 using System.Threading.Tasks;
 using Certify.Models.API;
+using Certify.Models.Config;
 using Certify.Models.Config.AccessControl;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -391,6 +392,37 @@ namespace Certify.Core.Management.Access
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
             return assignedRoles.Where(r => r.SecurityPrincipleId == id).ToList();
+        }
+
+        public async Task<bool> UpdateAssignedRoles(string contextUserId, SecurityPrincipleAssignedRoleUpdate update)
+        {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                _log?.Warning("User {contextUserId} attempted to update assigned role for [{id}] without being in required role.", contextUserId, update.SecurityPrincipleId);
+                return false;
+            }
+
+            // remove items from assigned roles
+            var existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipleId);
+            foreach (var deleted in update.RemovedAssignedRoles)
+            {
+                var e = existing.FirstOrDefault(r => r.RoleId == deleted.RoleId);
+                if (e!=null){
+                    await _store.Delete<AssignedRole>(nameof(AssignedRole), e.Id);
+                }
+            }
+
+            // add items to assigned roles
+            existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipleId);
+            foreach (var added in update.AddedAssignedRoles)
+            {
+                if (!existing.Exists(r => r.RoleId == added.RoleId))
+                {
+                    await _store.Add<AssignedRole>(nameof(AssignedRole), added);
+                }
+            }
+
+            return true;
         }
 
         public async Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck)
