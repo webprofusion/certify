@@ -73,7 +73,7 @@ namespace Certify.Models.Config.AccessControl
         /// </summary>
         public string? SecurityPrincipleId { get; set; }
 
-        public List<Resource> IncludedResources { get; set; }
+        public List<Resource>? IncludedResources { get; set; }
     }
 
     /// <summary>
@@ -124,5 +124,11 @@ namespace Certify.Models.Config.AccessControl
         }
 
         public string? ResourceType { get; set; }
+    }
+    public class SecurityPrincipleAssignedRoleUpdate
+    {
+        public string SecurityPrincipleId { get; set; } = String.Empty;
+        public List<AssignedRole> AddedAssignedRoles { get; set; } = new List<AssignedRole>();
+        public List<AssignedRole> RemovedAssignedRoles { get; set; } = new List<AssignedRole>();
     }
 }

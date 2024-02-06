@@ -61,6 +61,19 @@ namespace Certify.Service.Controllers
             };
         }
 
+        [HttpPost, Route("securityprinciple/roles/update")]
+        public async Task<Models.Config.ActionResult> UpdateSecurityPrincipleAssignedRoles([FromBody] SecurityPrincipleAssignedRoleUpdate update)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var resultOk = await accessControl.UpdateAssignedRoles(GetContextUserId(), update);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = resultOk,
+                Message = resultOk ? "Updated" : "Failed to update"
+            };
+        }
+
         [HttpDelete, Route("securityprinciple/{id}")]
         public async Task<Models.Config.ActionResult> DeleteSecurityPrinciple(string id)
         {
