@@ -4,7 +4,7 @@ Please refer to each project website for full license details:
 
 Anvil: 
 	MIT License
-	Copyright (c) 2023 Certify.ACME.Anvil Project Contributors, portions from the original Certes project copyright (c) 2018 Certes Project Contributors
+	Copyright (c) 2024 Certify.ACME.Anvil Project Contributors, portions from the original Certes project copyright (c) 2018 Certes Project Contributors
 	https://github.com/webprofusion/anvil
 Posh-ACME:
 	MIT License
