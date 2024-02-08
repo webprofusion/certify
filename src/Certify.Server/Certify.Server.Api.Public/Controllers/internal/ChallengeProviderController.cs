@@ -11,7 +11,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// </summary>
     [ApiController]
     [Route("internal/v1/[controller]")]
-    public partial class ChallengeProviderController : ControllerBase
+    public partial class ChallengeProviderController : ApiControllerBase
     {
 
         private readonly ILogger<ChallengeProviderController> _logger;
