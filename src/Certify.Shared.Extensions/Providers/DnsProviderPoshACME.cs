@@ -39,6 +39,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Google Cloud](https://poshac.me/docs/v4/Plugins/GCloud),
             [Google Domains](https://poshac.me/docs/v4/Plugins/GoogleDomains),
             [Hetzner](https://poshac.me/docs/v4/Plugins/Hetzner),
+            [HostingDe](https://poshac.me/docs/v4/Plugins/HostingDe),
             [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
             [Infomaniak](https://poshac.me/docs/v4/Plugins/Infomaniak)
@@ -611,6 +612,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Hetzner",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.HostingDE",
+                Title = "Hosting.de DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/v4/Plugins/HostingDE/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "HDEToken", Name = "API Token", IsRequired = true, IsCredential = true},
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostingDe",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = true,
                 IsExperimental = true
