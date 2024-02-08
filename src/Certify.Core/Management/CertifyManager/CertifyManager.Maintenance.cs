@@ -292,7 +292,7 @@ namespace Certify.Management
                             item.DateNextScheduledRenewalAttempt = itemsViaARI[item.Id];
                         }
 
-                        // if item requires renewal, schedule next renewal attempt.
+                        // if item requires immediate renewal, schedule next renewal attempt now.
                         if (itemsWhichRequireRenewal.Contains(item.Id) && item.IncludeInAutoRenew)
                         {
                             if (item.DateExpiry > DateTimeOffset.UtcNow.AddHours(1))

@@ -48,6 +48,43 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Site with no previous status - Renewal should be required");
         }
 
+        [TestMethod, Description("Ensure renewal hold when site requires immediate renewal but failure has previously occurred")]
+        public void TestCheckAutoRenewalPeriodRequiredWithFailuresHold()
+        {
+            // setup
+            var renewalPeriodDays = 14;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-12),
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureCount = 2000, // high number of failures
+                DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-0.1) // scheduled renewal set to become due
+            };
+
+            // perform check
+            var renewalDueCheck
+                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+
+            // assert result
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
+            Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should be on hold");
+            Assert.AreEqual(renewalDueCheck.HoldHrs, 48, "Hold should be for 48 Hrs");
+
+            managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
+            // perform check
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+
+            // assert result
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
+            Assert.IsFalse(renewalDueCheck.IsRenewalOnHold, "Renewal should be required");
+        }
+
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal")]
         public void TestCheckAutoRenewalPeriodRequired()
         {

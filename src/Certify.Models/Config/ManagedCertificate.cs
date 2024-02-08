@@ -751,77 +751,81 @@ namespace Certify.Models
 
                 if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= checkDate)
                 {
-                    return new RenewalDueInfo("Certificate scheduled renewal is now due.", true, checkDate, certLifetime: certLifetime);
-                }
-
-                // strategy if cert lifetime is less than the standard renewal interval allows or the renewal mode is based on percentage lifetime
-                if (certLifetime.HasValue && (certLifetime.Value.TotalDays < renewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
-                {
-                    // cert has a shorter lifetime than the renewal interval. Switch to a percentage based renewal 
-                    float targetRenewalPercentage = 75;
-
-                    if (selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime && selectedRenewalInterval > 0)
-                    {
-                        targetRenewalPercentage = selectedRenewalInterval;
-
-                        if (targetRenewalPercentage > 100) { targetRenewalPercentage = 100; }
-                    }
-
-                    var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
-                    var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
-                    nextRenewalAttemptDate = targetRenewalDate;
-
-                    if (targetRenewalDate <= checkDate)
-                    {
-                        isRenewalRequired = true;
-                        renewalStatusReason = $"Certificate has exceeded {targetRenewalPercentage}% of its lifetime.";
-                    }
-                    else
-                    {
-                        isRenewalRequired = false;
-                        renewalStatusReason = $"Certificate has not yet exceeded {targetRenewalPercentage}% of its lifetime.";
-                    }
+                    isRenewalRequired = true;
+                    renewalStatusReason = "Certificate scheduled renewal is now due.";
                 }
                 else
                 {
-                    // calculate renewal for non-percentage based strategies
 
-                    if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                    // strategy if cert lifetime is less than the standard renewal interval allows or the renewal mode is based on percentage lifetime
+                    if (certLifetime.HasValue && (certLifetime.Value.TotalDays < renewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
                     {
-                        var renewalDiffDays = timeToExpiry.TotalDays - renewalInterval;
+                        // cert has a shorter lifetime than the renewal interval. Switch to a percentage based renewal 
+                        float targetRenewalPercentage = 75;
 
-                        // is item expiring within N days
-                        if (timeToExpiry.TotalDays <= renewalInterval)
+                        if (selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime && selectedRenewalInterval > 0)
                         {
+                            targetRenewalPercentage = selectedRenewalInterval;
 
+                            if (targetRenewalPercentage > 100) { targetRenewalPercentage = 100; }
+                        }
+
+                        var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
+                        var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
+                        nextRenewalAttemptDate = targetRenewalDate;
+
+                        if (targetRenewalDate <= checkDate)
+                        {
                             isRenewalRequired = true;
-                            nextRenewalAttemptDate = checkDate;
-                            renewalStatusReason = "Certificate is due to expire within the default renewal interval.";
+                            renewalStatusReason = $"Certificate has exceeded {targetRenewalPercentage}% of its lifetime.";
                         }
                         else
                         {
                             isRenewalRequired = false;
-                            nextRenewalAttemptDate = checkDate.AddDays(renewalDiffDays);
-                            renewalStatusReason = $"Certificate has {renewalDiffDays} remaining days before the default renewal interval occurs.";
+                            renewalStatusReason = $"Certificate has not yet exceeded {targetRenewalPercentage}% of its lifetime.";
                         }
                     }
                     else
                     {
-                        // was item renewed more than N days ago
-                        var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
-                        var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalInterval;
+                        // calculate renewal for non-percentage based strategies
 
-                        if (daysSinceLastRenewal >= renewalInterval)
+                        if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
                         {
-                            isRenewalRequired = true;
-                            nextRenewalAttemptDate = checkDate;
-                            renewalStatusReason = "Certificate is due for renewal, based on the default renewal settings.";
+                            var renewalDiffDays = timeToExpiry.TotalDays - renewalInterval;
+
+                            // is item expiring within N days
+                            if (timeToExpiry.TotalDays <= renewalInterval)
+                            {
+
+                                isRenewalRequired = true;
+                                nextRenewalAttemptDate = checkDate;
+                                renewalStatusReason = "Certificate is due to expire within the default renewal interval.";
+                            }
+                            else
+                            {
+                                isRenewalRequired = false;
+                                nextRenewalAttemptDate = checkDate.AddDays(renewalDiffDays);
+                                renewalStatusReason = $"Certificate has {renewalDiffDays} remaining days before the default renewal interval occurs.";
+                            }
                         }
                         else
                         {
-                            isRenewalRequired = false;
-                            nextRenewalAttemptDate = checkDate.AddDays(-renewalDiffDays);
-                            renewalStatusReason = "Certificate does not yet require renewal, based on the default renewal settings.";
+                            // was item renewed more than N days ago
+                            var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
+                            var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalInterval;
+
+                            if (daysSinceLastRenewal >= renewalInterval)
+                            {
+                                isRenewalRequired = true;
+                                nextRenewalAttemptDate = checkDate;
+                                renewalStatusReason = "Certificate is due for renewal, based on the default renewal settings.";
+                            }
+                            else
+                            {
+                                isRenewalRequired = false;
+                                nextRenewalAttemptDate = checkDate.AddDays(-renewalDiffDays);
+                                renewalStatusReason = "Certificate does not yet require renewal, based on the default renewal settings.";
+                            }
                         }
                     }
                 }
@@ -874,7 +878,6 @@ namespace Certify.Models
                         {
                             // cert lifetime is unknown, if not yet requested default to a short retry interval
                             maxWaitHrs = Math.Max(0.25f * s.RenewalFailureCount, 1f);
-
                         }
 
                         // set ceiling for max hold wait time
