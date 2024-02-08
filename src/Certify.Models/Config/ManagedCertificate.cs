@@ -785,12 +785,11 @@ namespace Certify.Models
                         {
                             targetRenewalPercentage = selectedRenewalInterval;
 
-                    var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
-                    var targetRenewalDate = s.DateStart != null ? s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart) : s.DateRenewed.Value;
-                    nextRenewalAttemptDate = targetRenewalDate;
-
+                            if (targetRenewalPercentage > 100) { targetRenewalPercentage = 100; }
+                        }
+                        
                         var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
-                        var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
+                        var targetRenewalDate = s.DateStart != null ? s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart) : s.DateRenewed.Value;
                         nextRenewalAttemptDate = targetRenewalDate;
 
                         if (targetRenewalDate <= checkDate)
