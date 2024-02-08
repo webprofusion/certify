@@ -1,4 +1,4 @@
-﻿using Certify.Core.Management.Access;
+using Certify.Core.Management.Access;
 using Certify.Management;
 using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
@@ -25,13 +25,6 @@ namespace Certify.Service.Controllers
             // TODO: sign passed value provided by public API using public APIs access token
             var contextUserId = Request.Headers["X-Context-User-Id"];
 
-#if DEBUG
-            if (string.IsNullOrEmpty(contextUserId))
-            {
-                // TODO: our context user has to at least come from a valid JWT claim
-                contextUserId = "admin_01";
-            }
-#endif
             return contextUserId;
         }
 
