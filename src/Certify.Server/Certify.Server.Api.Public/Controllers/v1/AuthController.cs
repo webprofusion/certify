@@ -13,7 +13,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public partial class AuthController : ControllerBase
+    public partial class AuthController : ApiControllerBase
     {
         private readonly ILogger<AuthController> _logger;
         private readonly ICertifyInternalApiClient _client;
@@ -54,8 +54,9 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(typeof(AuthResponse), 200)]
         public async Task<IActionResult> Login(AuthRequest login)
         {
+
             // check users login, if valid issue new JWT access token and refresh token based on their identity
-            var validation = await _client.ValidateSecurityPrinciplePassword(new SecurityPrinciplePasswordCheck() { Username = login.Username, Password = login.Password });
+            var validation = await _client.ValidateSecurityPrinciplePassword(new SecurityPrinciplePasswordCheck() { Username = login.Username, Password = login.Password }, CurrentAuthContext);
 
             if (validation.IsSuccess)
             {
@@ -68,9 +69,11 @@ namespace Certify.Server.Api.Public.Controllers
                     Detail = "OK",
                     AccessToken = jwt.GenerateSecurityToken(login.Username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"])),
                     RefreshToken = jwt.GenerateRefreshToken(),
-                    SecurityPrinciple = validation.SecurityPrinciple
+                    SecurityPrinciple = validation.SecurityPrinciple,
+                    RoleStatus = await _client.GetSecurityPrincipleRoleStatus(validation.SecurityPrinciple.Id, CurrentAuthContext)
                 };
 
+                
                 // TODO: Refresh token should be stored or hashed for later use
 
                 return Ok(authResponse);
