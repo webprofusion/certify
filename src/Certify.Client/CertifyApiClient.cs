@@ -54,6 +54,12 @@ namespace Certify.Client
                 );
     }
 
+    public class AuthContext
+    {
+        public string Username { get; set; }
+        public string Token { get; set; }
+    }
+
     // This version of the client communicates with the Certify.Service instance on the local machine
     public partial class CertifyApiClient : ICertifyInternalApiClient
     {
@@ -134,19 +140,33 @@ namespace Certify.Client
             CreateHttpClient();
         }
 
-        private async Task<string> FetchAsync(string endpoint)
+        private void SetAuthContextForRequest(HttpRequestMessage request, AuthContext authContext)
+        {
+            if (authContext != null)
+            {
+                request.Headers.Add("X-Context-User-Id", authContext.Username);
+            }
+        }
+
+        private async Task<string> FetchAsync(string endpoint, AuthContext authContext)
         {
             try
             {
-                var response = await _client.GetAsync(_baseUri + endpoint);
-                if (response.IsSuccessStatusCode)
+                using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_baseUri + endpoint)))
                 {
-                    return await response.Content.ReadAsStringAsync();
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+                    SetAuthContextForRequest(request, authContext);
+
+                    var response = await _client.SendAsync(request);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return await response.Content.ReadAsStringAsync();
+                    }
+                    else
+                    {
+                        var error = await response.Content.ReadAsStringAsync();
+                        throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+                    }
                 }
             }
             catch (HttpRequestException exp)
@@ -160,7 +180,7 @@ namespace Certify.Client
             public string Message;
         }
 
-        private async Task<HttpResponseMessage> PostAsync(string endpoint, object data)
+        private async Task<HttpResponseMessage> PostAsync(string endpoint, object data, AuthContext authContext)
         {
             if (data != null)
             {
@@ -169,30 +189,37 @@ namespace Certify.Client
                 try
                 {
 
-                    var response = await _client.PostAsync(_baseUri + endpoint, content);
-                    if (response.IsSuccessStatusCode)
+                    using (var request = new HttpRequestMessage(HttpMethod.Post, new Uri(_baseUri + endpoint)))
                     {
-                        return response;
-                    }
-                    else
-                    {
-                        var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                        SetAuthContextForRequest(request, authContext);
 
-                        if (response.StatusCode == HttpStatusCode.Unauthorized)
+                        request.Content = content;
+
+                        var response = await _client.SendAsync(request);
+                        if (response.IsSuccessStatusCode)
                         {
-                            throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
+                            return response;
                         }
                         else
                         {
+                            var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-                            if (response.StatusCode == HttpStatusCode.InternalServerError && error.Contains("\"message\""))
+                            if (response.StatusCode == HttpStatusCode.Unauthorized)
                             {
-                                var err = JsonConvert.DeserializeObject<ServerErrorMsg>(error);
-                                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {err.Message}");
+                                throw new ServiceCommsException($"API Access Denied: {endpoint}: {error}");
                             }
                             else
                             {
-                                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+
+                                if (response.StatusCode == HttpStatusCode.InternalServerError && error.Contains("\"message\""))
+                                {
+                                    var err = JsonConvert.DeserializeObject<ServerErrorMsg>(error);
+                                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {err.Message}");
+                                }
+                                else
+                                {
+                                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                                }
                             }
                         }
                     }
@@ -217,29 +244,35 @@ namespace Certify.Client
             }
         }
 
-        private async Task<HttpResponseMessage> DeleteAsync(string endpoint)
+        private async Task<HttpResponseMessage> DeleteAsync(string endpoint, AuthContext authContext)
         {
-            var response = await _client.DeleteAsync(_baseUri + endpoint);
-            if (response.IsSuccessStatusCode)
+            using (var request = new HttpRequestMessage(HttpMethod.Delete, new Uri(_baseUri + endpoint)))
             {
-                return response;
-            }
-            else
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                SetAuthContextForRequest(request, authContext);
+
+                var response = await _client.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return response;
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                }
             }
         }
 
         #region System
 
-        public async Task<string> GetAppVersion() => await FetchAsync("system/appversion");
+        public async Task<string> GetAppVersion(AuthContext authContext = null) => await FetchAsync("system/appversion", authContext);
 
-        public async Task<UpdateCheck> CheckForUpdates()
+        public async Task<UpdateCheck> CheckForUpdates(AuthContext authContext = null)
         {
             try
             {
-                var result = await FetchAsync("system/updatecheck");
+                var result = await FetchAsync("system/updatecheck", authContext);
                 return JsonConvert.DeserializeObject<UpdateCheck>(result);
             }
             catch (Exception)
@@ -249,97 +282,89 @@ namespace Certify.Client
             }
         }
 
-        public async Task<List<ActionResult>> PerformServiceDiagnostics()
+        public async Task<List<ActionResult>> PerformServiceDiagnostics(AuthContext authContext = null)
         {
-            var result = await FetchAsync("system/diagnostics");
+            var result = await FetchAsync("system/diagnostics", authContext);
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 
-        /*public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
+        public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId, AuthContext authContext = null)
         {
-            var result = await PostAsync("system/migration/export", exportRequest);
-            return JsonConvert.DeserializeObject<ImportExportPackage>(await result.Content.ReadAsStringAsync());
+            var result = await PostAsync($"system/datastores/setdefault/{dataStoreId}", null, authContext);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
+        public async Task<List<ProviderDefinition>> GetDataStoreProviders(AuthContext authContext = null)
         {
-            var result = await PostAsync("system/migration/import", importRequest);
-            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
-        }*/
-        public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
-        {
-            var result = await PostAsync($"system/datastores/setdefault/{dataStoreId}", null);
-            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
-        }
-        public async Task<List<ProviderDefinition>> GetDataStoreProviders()
-        {
-            var result = await FetchAsync("system/datastores/providers");
+            var result = await FetchAsync("system/datastores/providers", authContext);
             return JsonConvert.DeserializeObject<List<ProviderDefinition>>(result);
         }
-        public async Task<List<DataStoreConnection>> GetDataStoreConnections()
+        
+        public async Task<List<DataStoreConnection>> GetDataStoreConnections(AuthContext authContext = null)
         {
-            var result = await FetchAsync("system/datastores/");
+            var result = await FetchAsync("system/datastores/", authContext);
             return JsonConvert.DeserializeObject<List<DataStoreConnection>>(result);
         }
-        public async Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId)
+        
+        public async Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null)
         {
-            var result = await PostAsync($"system/datastores/copy/{sourceId}/{targetId}", null);
+            var result = await PostAsync($"system/datastores/copy/{sourceId}/{targetId}", null, authContext: authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection)
+        public async Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null)
         {
-            var result = await PostAsync($"system/datastores/update", dataStoreConnection);
+            var result = await PostAsync($"system/datastores/update", dataStoreConnection, authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection)
+        public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null)
         {
-            var result = await PostAsync($"system/datastores/test", dataStoreConnection);
+            var result = await PostAsync($"system/datastores/test", dataStoreConnection, authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
         #endregion System
 
         #region Server
 
-        public async Task<bool> IsServerAvailable(StandardServerTypes serverType)
+        public async Task<bool> IsServerAvailable(StandardServerTypes serverType, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"server/isavailable/{serverType}");
+            var result = await FetchAsync($"server/isavailable/{serverType}", authContext);
             return bool.Parse(result);
         }
 
-        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null)
+        public async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null, AuthContext authContext = null)
         {
             if (string.IsNullOrEmpty(itemId))
             {
-                var result = await FetchAsync($"server/sitelist/{serverType}");
+                var result = await FetchAsync($"server/sitelist/{serverType}", authContext);
                 return JsonConvert.DeserializeObject<List<SiteInfo>>(result);
             }
             else
             {
-                var result = await FetchAsync($"server/sitelist/{serverType}/{itemId}");
+                var result = await FetchAsync($"server/sitelist/{serverType}/{itemId}", authContext);
                 return JsonConvert.DeserializeObject<List<SiteInfo>>(result);
             }
         }
 
-        public async Task<System.Version> GetServerVersion(StandardServerTypes serverType)
+        public async Task<System.Version> GetServerVersion(StandardServerTypes serverType, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"server/version/{serverType}");
+            var result = await FetchAsync($"server/version/{serverType}", authContext);
 
             var versionString = JsonConvert.DeserializeObject<string>(result, new Newtonsoft.Json.Converters.VersionConverter());
             var version = Version.Parse(versionString);
             return version;
         }
 
-        public async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId)
+        public async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"server/sitedomains/{serverType}/{serverSiteId}");
+            var result = await FetchAsync($"server/sitedomains/{serverType}/{serverSiteId}", authContext);
             return JsonConvert.DeserializeObject<List<DomainOption>>(result);
         }
 
-        public async Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId)
+        public async Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null)
         {
-            var results = await FetchAsync($"server/diagnostics/{serverType}/{serverSiteId}");
+            var results = await FetchAsync($"server/diagnostics/{serverType}/{serverSiteId}", authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(results);
         }
 
@@ -347,15 +372,15 @@ namespace Certify.Client
 
         #region Preferences
 
-        public async Task<Preferences> GetPreferences()
+        public async Task<Preferences> GetPreferences(AuthContext authContext = null)
         {
-            var result = await FetchAsync("preferences/");
+            var result = await FetchAsync("preferences/", authContext);
             return JsonConvert.DeserializeObject<Preferences>(result);
         }
 
-        public async Task<bool> SetPreferences(Preferences preferences)
+        public async Task<bool> SetPreferences(Preferences preferences, AuthContext authContext = null)
         {
-            _ = await PostAsync("preferences/", preferences);
+            _ = await PostAsync("preferences/", preferences, authContext);
             return true;
         }
 
@@ -363,9 +388,9 @@ namespace Certify.Client
 
         #region Managed Certificates
 
-        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
+        public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter, AuthContext authContext = null)
         {
-            var response = await PostAsync("managedcertificates/search/", filter);
+            var response = await PostAsync("managedcertificates/search/", filter, authContext);
             var serializer = new JsonSerializer();
 
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
@@ -386,9 +411,9 @@ namespace Certify.Client
         /// </summary>
         /// <param name="filter"></param>
         /// <returns></returns>
-        public async Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter)
+        public async Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter, AuthContext authContext = null)
         {
-            var response = await PostAsync("managedcertificates/results/", filter);
+            var response = await PostAsync("managedcertificates/results/", filter, authContext);
             var serializer = new JsonSerializer();
 
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
@@ -399,9 +424,9 @@ namespace Certify.Client
             }
         }
 
-        public async Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        public async Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null)
         {
-            var response = await PostAsync("managedcertificates/summary/", filter);
+            var response = await PostAsync("managedcertificates/summary/", filter, authContext);
             var serializer = new JsonSerializer();
 
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
@@ -412,9 +437,9 @@ namespace Certify.Client
             }
         }
 
-        public async Task<ManagedCertificate> GetManagedCertificate(string managedItemId)
+        public async Task<ManagedCertificate> GetManagedCertificate(string managedItemId, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"managedcertificates/{managedItemId}");
+            var result = await FetchAsync($"managedcertificates/{managedItemId}", authContext);
             var site = JsonConvert.DeserializeObject<ManagedCertificate>(result);
             if (site != null)
             {
@@ -424,28 +449,28 @@ namespace Certify.Client
             return site;
         }
 
-        public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site)
+        public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site, AuthContext authContext = null)
         {
-            var response = await PostAsync("managedcertificates/update", site);
+            var response = await PostAsync("managedcertificates/update", site, authContext);
             var json = await response.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<ManagedCertificate>(json);
         }
 
-        public async Task<bool> DeleteManagedCertificate(string managedItemId)
+        public async Task<bool> DeleteManagedCertificate(string managedItemId, AuthContext authContext = null)
         {
-            var response = await DeleteAsync($"managedcertificates/delete/{managedItemId}");
+            var response = await DeleteAsync($"managedcertificates/delete/{managedItemId}", authContext);
             return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId)
+        public async Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId, AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/revoke/{managedItemId}");
+            var response = await FetchAsync($"managedcertificates/revoke/{managedItemId}", authContext);
             return JsonConvert.DeserializeObject<StatusMessage>(response);
         }
 
-        public async Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings)
+        public async Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext authContext)
         {
-            var response = await PostAsync("managedcertificates/autorenew", settings);
+            var response = await PostAsync("managedcertificates/autorenew", settings, authContext);
             var serializer = new JsonSerializer();
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (var reader = new JsonTextReader(sr))
@@ -455,11 +480,11 @@ namespace Certify.Client
             }
         }
 
-        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive)
+        public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive, AuthContext authContext = null)
         {
             try
             {
-                var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}/{isInteractive}");
+                var response = await FetchAsync($"managedcertificates/renewcert/{managedItemId}/{resumePaused}/{isInteractive}", authContext);
                 return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
             }
             catch (Exception exp)
@@ -473,82 +498,82 @@ namespace Certify.Client
             }
         }
 
-        public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site)
+        public async Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site, AuthContext authContext = null)
         {
-            var response = await PostAsync($"managedcertificates/testconfig", site);
+            var response = await PostAsync($"managedcertificates/testconfig", site, authContext);
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
-        public async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site)
+        public async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site, AuthContext authContext = null)
         {
-            var response = await PostAsync($"managedcertificates/challengecleanup", site);
+            var response = await PostAsync($"managedcertificates/challengecleanup", site, authContext);
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId, AuthContext authContext = null)
         {
-            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}");
+            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}", authContext);
             return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
         }
 
-        public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
+        public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null)
         {
-            var response = await PostAsync($"managedcertificates/preview", site);
+            var response = await PostAsync($"managedcertificates/preview", site, authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks)
+        public async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/redeploy/{isPreviewOnly}/{includeDeploymentTasks}");
+            var response = await FetchAsync($"managedcertificates/redeploy/{isPreviewOnly}/{includeDeploymentTasks}", authContext);
             return JsonConvert.DeserializeObject<List<CertificateRequestResult>>(response);
         }
 
-        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks)
+        public async Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}/{includeDeploymentTasks}");
+            var response = await FetchAsync($"managedcertificates/reapply/{managedItemId}/{isPreviewOnly}/{includeDeploymentTasks}", authContext);
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId)
+        public async Task<CertificateRequestResult> RefetchCertificate(string managedItemId, AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/fetch/{managedItemId}/{false}");
+            var response = await FetchAsync($"managedcertificates/fetch/{managedItemId}/{false}", authContext);
             return JsonConvert.DeserializeObject<CertificateRequestResult>(response);
         }
 
-        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList()
+        public async Task<List<ChallengeProviderDefinition>> GetChallengeAPIList(AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/challengeapis/");
+            var response = await FetchAsync($"managedcertificates/challengeapis/", authContext);
             return JsonConvert.DeserializeObject<List<ChallengeProviderDefinition>>(response);
         }
 
-        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key)
+        public async Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"managedcertificates/currentchallenges/{type}/{key}");
+            var result = await FetchAsync($"managedcertificates/currentchallenges/{type}/{key}", authContext);
             return JsonConvert.DeserializeObject<List<SimpleAuthorizationChallengeItem>>(result);
         }
 
-        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList()
+        public async Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList(AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/deploymentproviders/");
+            var response = await FetchAsync($"managedcertificates/deploymentproviders/", authContext);
             return JsonConvert.DeserializeObject<List<DeploymentProviderDefinition>>(response);
         }
 
-        public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config)
+        public async Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config, AuthContext authContext)
         {
-            var response = await PostAsync($"managedcertificates/deploymentprovider/{id}", config);
+            var response = await PostAsync($"managedcertificates/deploymentprovider/{id}", config, authContext);
             return JsonConvert.DeserializeObject<DeploymentProviderDefinition>(await response.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute)
+        public async Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute, AuthContext authContext)
         {
             if (!forceTaskExecute)
             {
                 if (string.IsNullOrEmpty(taskId))
                 {
-                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}");
+                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}", authContext);
                     return JsonConvert.DeserializeObject<List<ActionStep>>(response);
                 }
                 else
                 {
-                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+                    var response = await FetchAsync($"managedcertificates/performdeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}", authContext);
                     return JsonConvert.DeserializeObject<List<ActionStep>>(response);
                 }
             }
@@ -556,32 +581,32 @@ namespace Certify.Client
             {
                 if (string.IsNullOrEmpty(taskId))
                 {
-                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}");
+                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}", authContext);
                     return JsonConvert.DeserializeObject<List<ActionStep>>(response);
                 }
                 else
                 {
-                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}");
+                    var response = await FetchAsync($"managedcertificates/performforceddeployment/{isPreviewOnly}/{managedCertificateId}/{taskId}", authContext);
                     return JsonConvert.DeserializeObject<List<ActionStep>>(response);
                 }
             }
         }
 
-        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info)
+        public async Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext authContext = null)
         {
-            var result = await PostAsync($"managedcertificates/validatedeploymenttask", info);
+            var result = await PostAsync($"managedcertificates/validatedeploymenttask", info, authContext);
             return JsonConvert.DeserializeObject<List<ActionResult>>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<LogItem[]> GetItemLog(string id, int limit)
+        public async Task<LogItem[]> GetItemLog(string id, int limit, AuthContext authContext = null)
         {
-            var response = await FetchAsync($"managedcertificates/log/{id}/{limit}");
+            var response = await FetchAsync($"managedcertificates/log/{id}/{limit}", authContext);
             return JsonConvert.DeserializeObject<LogItem[]>(response);
         }
 
-        public async Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null)
+        public async Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null, AuthContext authContext = null)
         {
-            var result = await FetchAsync($"managedcertificates/maintenance/{id}");
+            var result = await FetchAsync($"managedcertificates/maintenance/{id}", authContext);
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 
@@ -589,50 +614,50 @@ namespace Certify.Client
 
         #region Accounts
 
-        public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
+        public async Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext authContext = null)
         {
-            var result = await FetchAsync("accounts/authorities");
+            var result = await FetchAsync("accounts/authorities", authContext);
             return JsonConvert.DeserializeObject<List<CertificateAuthority>>(result);
         }
-        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext =null)
         {
-            var result = await PostAsync("accounts/authorities", ca);
+            var result = await PostAsync("accounts/authorities", ca, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> DeleteCertificateAuthority(string id)
+        public async Task<ActionResult> DeleteCertificateAuthority(string id, AuthContext authContext = null)
         {
-            var result = await DeleteAsync("accounts/authorities/" + id);
+            var result = await DeleteAsync("accounts/authorities/" + id, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<List<AccountDetails>> GetAccounts()
+        public async Task<List<AccountDetails>> GetAccounts(AuthContext authContext = null)
         {
-            var result = await FetchAsync("accounts");
+            var result = await FetchAsync("accounts", authContext);
             return JsonConvert.DeserializeObject<List<AccountDetails>>(result);
         }
 
-        public async Task<ActionResult> AddAccount(ContactRegistration contact)
+        public async Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext authContext = null)
         {
-            var result = await PostAsync("accounts", contact);
+            var result = await PostAsync("accounts", contact, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> UpdateAccountContact(ContactRegistration contact)
+        public async Task<ActionResult> UpdateAccountContact(ContactRegistration contact, AuthContext authContext = null)
         {
-            var result = await PostAsync($"accounts/update/{contact.StorageKey}", contact);
+            var result = await PostAsync($"accounts/update/{contact.StorageKey}", contact, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> RemoveAccount(string storageKey, bool deactivate)
+        public async Task<ActionResult> RemoveAccount(string storageKey, bool deactivate, AuthContext authContext = null)
         {
-            var result = await DeleteAsync($"accounts/remove/{storageKey}/{deactivate}");
+            var result = await DeleteAsync($"accounts/remove/{storageKey}/{deactivate}", authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM)
+        public async Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM, AuthContext authContext = null)
         {
-            var result = await PostAsync($"accounts/changekey/{storageKey}", new { newKeyPem = newKeyPEM });
+            var result = await PostAsync($"accounts/changekey/{storageKey}", new { newKeyPem = newKeyPEM }, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
@@ -640,42 +665,42 @@ namespace Certify.Client
 
         #region Credentials
 
-        public async Task<List<StoredCredential>> GetCredentials()
+        public async Task<List<StoredCredential>> GetCredentials(AuthContext authContext = null)
         {
-            var result = await FetchAsync("credentials");
+            var result = await FetchAsync("credentials", authContext);
             return JsonConvert.DeserializeObject<List<StoredCredential>>(result);
         }
 
-        public async Task<StoredCredential> UpdateCredentials(StoredCredential credential)
+        public async Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext authContext = null)
         {
-            var result = await PostAsync("credentials", credential);
+            var result = await PostAsync("credentials", credential, authContext);
             return JsonConvert.DeserializeObject<StoredCredential>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<bool> DeleteCredential(string credentialKey)
+        public async Task<bool> DeleteCredential(string credentialKey, AuthContext authContext = null)
         {
-            var result = await DeleteAsync($"credentials/{credentialKey}");
+            var result = await DeleteAsync($"credentials/{credentialKey}", authContext);
             return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<ActionResult> TestCredentials(string credentialKey)
+        public async Task<ActionResult> TestCredentials(string credentialKey, AuthContext authContext = null)
         {
-            var result = await PostAsync($"credentials/{credentialKey}/test", new { });
+            var result = await PostAsync($"credentials/{credentialKey}/test", new { }, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
         #endregion
 
         #region Auth
-        public async Task<string> GetAuthKeyWindows()
+        public async Task<string> GetAuthKeyWindows(AuthContext authContext)
         {
-            var result = await FetchAsync("auth/windows");
+            var result = await FetchAsync("auth/windows", authContext);
             return JsonConvert.DeserializeObject<string>(result);
         }
 
-        public async Task<string> GetAccessToken(string key)
+        public async Task<string> GetAccessToken(string key, AuthContext authContext)
         {
-            var result = await PostAsync("auth/token", new { Key = key });
+            var result = await PostAsync("auth/token", new { Key = key }, authContext);
             _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
 
             if (!string.IsNullOrEmpty(_accessToken))
@@ -686,9 +711,9 @@ namespace Certify.Client
             return _accessToken;
         }
 
-        public async Task<string> GetAccessToken(string username, string password)
+        public async Task<string> GetAccessToken(string username, string password, AuthContext authContext = null)
         {
-            var result = await PostAsync("auth/token", new { Username = username, Password = password });
+            var result = await PostAsync("auth/token", new { Username = username, Password = password }, authContext);
             _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
 
             if (!string.IsNullOrEmpty(_accessToken))
@@ -699,9 +724,9 @@ namespace Certify.Client
             return _accessToken;
         }
 
-        public async Task<string> RefreshAccessToken()
+        public async Task<string> RefreshAccessToken(AuthContext authContext)
         {
-            var result = await PostAsync("auth/refresh", new { Token = _accessToken });
+            var result = await PostAsync("auth/refresh", new { Token = _accessToken }, authContext);
             _accessToken = JsonConvert.DeserializeObject<string>(await result.Content.ReadAsStringAsync());
 
             if (!string.IsNullOrEmpty(_accessToken))
@@ -712,9 +737,9 @@ namespace Certify.Client
             return _refreshToken;
         }
 
-        public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples()
+        public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples(AuthContext authContext)
         {
-            var result = await FetchAsync("access/securityprinciples");
+            var result = await FetchAsync("access/securityprinciples", authContext);
             return JsonToObject<List<SecurityPrinciple>>(result);
         }
 

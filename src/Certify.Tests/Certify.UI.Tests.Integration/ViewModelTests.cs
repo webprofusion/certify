@@ -19,11 +19,12 @@ namespace Certify.UI.Tests.Integration
         {
             var mockClient = new Mock<ICertifyClient>();
 
-            mockClient.Setup(c => c.GetPreferences()).Returns(
+            AuthContext authContext = null;
+            mockClient.Setup(c => c.GetPreferences(authContext)).Returns(
                 Task.FromResult(new Models.Preferences { })
                 );
 
-            mockClient.Setup(c => c.GetManagedCertificates(It.IsAny<Models.ManagedCertificateFilter>()))
+            mockClient.Setup(c => c.GetManagedCertificates(It.IsAny<Models.ManagedCertificateFilter>(), authContext))
                 .Returns(
                 Task.FromResult(new List<ManagedCertificate> {
                     new ManagedCertificate{
@@ -33,7 +34,7 @@ namespace Certify.UI.Tests.Integration
                 })
                 );
 
-            mockClient.Setup(c => c.GetAccounts())
+            mockClient.Setup(c => c.GetAccounts(authContext))
                 .Returns(
                 Task.FromResult(
                     new List<AccountDetails> {
@@ -45,7 +46,7 @@ namespace Certify.UI.Tests.Integration
                     })
                 );
 
-            mockClient.Setup(c => c.GetCredentials())
+            mockClient.Setup(c => c.GetCredentials(authContext))
               .Returns(
               Task.FromResult(new List<StoredCredential> { })
               );

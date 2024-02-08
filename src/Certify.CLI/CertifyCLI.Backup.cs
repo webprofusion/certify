@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Client;
 using Certify.Models.Config.Migration;
 using Newtonsoft.Json;
 
@@ -26,7 +27,7 @@ namespace Certify.CLI
 
             var exportRequest = new ExportRequest { IsPreviewMode = false, Settings = new ExportSettings { EncryptionSecret = secret, ExportAllStoredCredentials = true } };
 
-            var export = await _certifyClient.PerformExport(exportRequest);
+            var export = await _certifyClient.PerformExport(exportRequest, null);
 
             System.IO.File.WriteAllText(filename, JsonConvert.SerializeObject(export));
 
@@ -64,7 +65,7 @@ namespace Certify.CLI
                 return;
             }
 
-            var importSteps = await _certifyClient.PerformImport(importRequest);
+            var importSteps = await _certifyClient.PerformImport(importRequest, null);
 
             foreach (var s in importSteps)
             {
