@@ -63,13 +63,20 @@ namespace Certify.Models.Config.AccessControl
         public static string CertificateAuthority { get; } = "ca";
     }
 
+    public static class StandardResourceActions
+    {
+        public const string CertificateDownload = "certificate_download";
+        public const string ManagedItemAdd = "manageditem_add";
+        public const string ManagedItemList = "manageditem_list";
+    }
+
     public static class Policies
     {
         public static List<ResourceAction> GetStandardResourceActions()
         {
             return new List<ResourceAction> {
 
-                new ResourceAction("certificate_download", "Certificate Download", ResourceTypes.Certificate),
+                new ResourceAction(StandardResourceActions.CertificateDownload, "Certificate Download", ResourceTypes.Certificate),
 
                 new ResourceAction("storedcredential_add", "Add New Stored Credential", ResourceTypes.StoredCredential),
                 new ResourceAction("storedcredential_update", "Update Stored Credential", ResourceTypes.StoredCredential),
@@ -83,6 +90,7 @@ namespace Certify.Models.Config.AccessControl
 
                 new ResourceAction("manageditem_requester", "Request New Managed Items", ResourceTypes.ManagedItem),
                 new ResourceAction("manageditem_add", "Add Managed Items", ResourceTypes.ManagedItem),
+                new ResourceAction("manageditem_list", "List Managed Items", ResourceTypes.ManagedItem),
                 new ResourceAction("manageditem_update", "Update Managed Items", ResourceTypes.ManagedItem),
                 new ResourceAction("manageditem_delete", "Delete Managed Items", ResourceTypes.ManagedItem),
                 new ResourceAction("manageditem_test", "Test Managed Item Renewal Checks", ResourceTypes.ManagedItem),
@@ -98,7 +106,8 @@ namespace Certify.Models.Config.AccessControl
             return new List<ResourcePolicy> {
                 new ResourcePolicy{ Id="managed_item_admin", Title="Managed Item Administration", SecurityPermissionType= SecurityPermissionType.ALLOW,
                     ResourceActions= new List<string>{
-                        "manageditem_add",
+                        StandardResourceActions.ManagedItemList,
+                        StandardResourceActions.ManagedItemAdd,
                         "manageditem_update",
                         "manageditem_delete",
                         "manageditem_test",
@@ -118,7 +127,7 @@ namespace Certify.Models.Config.AccessControl
                 },
                 new ResourcePolicy{ Id="certificate_consumer", Title="Consume Certificates", SecurityPermissionType= SecurityPermissionType.ALLOW,
                     ResourceActions= new List<string>{
-                        "certificate_download",
+                        StandardResourceActions.CertificateDownload,
                         "certificate_key_download"
                     }
                 },
