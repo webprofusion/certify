@@ -22,6 +22,8 @@ namespace Certify.Core.Tests.Unit
 
             result = updateChecker.CheckForUpdates("6.1.1").Result;
 
+            Assert.IsNotNull(result, "Update check result should not be null");
+
             // current version is newer than update version
             Assert.IsFalse(result.IsNewerVersion);
             Assert.IsFalse(result.MustUpdate, "No mandatory update required");
