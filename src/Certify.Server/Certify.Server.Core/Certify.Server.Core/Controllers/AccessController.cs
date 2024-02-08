@@ -1,4 +1,4 @@
-using Certify.Core.Management.Access;
+﻿using Certify.Core.Management.Access;
 using Certify.Management;
 using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
@@ -112,6 +112,16 @@ namespace Certify.Service.Controllers
             var results = await accessControl.GetAssignedRoles(GetContextUserId(), id);
 
             return results;
+        }
+
+        [HttpGet, Route("securityprinciple/{id}/rolestatus")]
+        public async Task<RoleStatus> GetSecurityPrincipleRoleStatus(string id)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            var result = await accessControl.GetSecurityPrincipleRoleStatus(GetContextUserId(), id);
+
+            return result;
         }
 
         [HttpPost, Route("updatepassword")]

@@ -1,4 +1,5 @@
-﻿using Certify.Models.Config.AccessControl;
+﻿using System.Collections.Generic;
+using Certify.Models.Config.AccessControl;
 
 namespace Certify.Models.API
 {
@@ -41,6 +42,8 @@ namespace Certify.Models.API
         public string RefreshToken { get; set; } = string.Empty;
 
         public Models.Config.AccessControl.SecurityPrinciple? SecurityPrinciple { get; set; }
+
+        public RoleStatus? RoleStatus { get; set; }
     }
 
     public class SecurityPrinciplePasswordCheck
