@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -625,7 +625,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "HDEToken", Name = "API Token", IsRequired = true, IsCredential = true},
+                    new ProviderParameter { Key = "HDEToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
