@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
@@ -46,7 +47,15 @@ namespace Certify.Providers.DeploymentTasks
                     }
                     else
                     {
-                        return new List<ActionResult> { new ActionResult { IsSuccess = true, Message = "Task is review mode only. Not action performed." } };
+                        var validation = await TaskProvider.Validate(execParams);
+                        if (validation == null || !validation.Any(r => r.IsSuccess == false))
+                        {
+                            return new List<ActionResult> { new ActionResult { IsSuccess = true, Message = "Task is valid and ready to execute." } };
+                        }
+                        else
+                        {
+                            return validation;
+                        }
                     }
                 }
                 catch (Exception exp)
