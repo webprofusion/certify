@@ -8,7 +8,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// </summary>
     [ApiController]
     [Route("api/v1/[controller]")]
-    public partial class SystemController : ControllerBase
+    public partial class SystemController : ApiControllerBase
     {
 
         private readonly ILogger<SystemController> _logger;
