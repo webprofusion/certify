@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.Config.AccessControl;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace Certify.Core.Tests.Unit
@@ -276,6 +277,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
+
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
 
             // Setup security principle actions
@@ -294,20 +296,29 @@ namespace Certify.Core.Tests.Unit
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
             assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
 
+            // clone the test security principles to avoid reference issues as we are using an in-memory store
+            adminSecurityPrinciples = JsonConvert.DeserializeObject<List<SecurityPrinciple>>(JsonConvert.SerializeObject(adminSecurityPrinciples));
+
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
             Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
 
             // Update security principle in AccessControl with a new principle object of the same Id, but different email
-            var newSecurityPrinciple = TestSecurityPrinciples.Admin;
-            newSecurityPrinciple.Email = "new_test_email@test.com";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
-            Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to succeed");
+            var updateSecurityPrinciple = new SecurityPrinciple
+            {
+                Id = TestSecurityPrinciples.Admin.Id,
+                Username = TestSecurityPrinciples.Admin.Username,
+                Description = TestSecurityPrinciples.Admin.Description,
+                Email = "new_test_email@test.com"
+            };
+
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, updateSecurityPrinciple);
+            Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle update for {updateSecurityPrinciple.Id} to succeed");
 
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
-            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, newSecurityPrinciple.Id);
+            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, updateSecurityPrinciple.Id);
             Assert.AreNotEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to not match previous Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
-            Assert.AreEqual(storedSecurityPrinciple.Email, newSecurityPrinciple.Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match updated Email '{newSecurityPrinciple.Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
+            Assert.AreEqual(storedSecurityPrinciple.Email, updateSecurityPrinciple.Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match updated Email '{updateSecurityPrinciple.Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
         }
 
         [TestMethod]
