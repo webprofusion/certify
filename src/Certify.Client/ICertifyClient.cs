@@ -18,115 +18,111 @@ namespace Certify.Client
 
         #region System
 
-        Task<string> GetAppVersion();
+        Task<string> GetAppVersion(AuthContext authContext = null);
 
-        Task<UpdateCheck> CheckForUpdates();
+        Task<UpdateCheck> CheckForUpdates(AuthContext authContext = null);
 
-        Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics();
-        Task<List<Models.Config.ActionResult>> PerformManagedCertMaintenance(string id = null);
+        Task<List<Models.Config.ActionResult>> PerformServiceDiagnostics(AuthContext authContext = null);
+        Task<List<Models.Config.ActionResult>> PerformManagedCertMaintenance(string id = null, AuthContext authContext = null);
 
-        // Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
-        //  Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
-
-        Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId);
-        Task<List<ProviderDefinition>> GetDataStoreProviders();
-        Task<List<DataStoreConnection>> GetDataStoreConnections();
-        Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId);
-        Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection);
-        Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection);
+        Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId, AuthContext authContext = null);
+        Task<List<ProviderDefinition>> GetDataStoreProviders(AuthContext authContext = null);
+        Task<List<DataStoreConnection>> GetDataStoreConnections(AuthContext authContext = null);
+        Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null);
+        Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
+        Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
 
         #endregion System
 
         #region Server
+        Task<bool> IsServerAvailable(StandardServerTypes serverType, AuthContext authContext = null);
 
-        Task<bool> IsServerAvailable(StandardServerTypes serverType);
+        Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null, AuthContext authContext = null);
 
-        Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null);
+        Task<Version> GetServerVersion(StandardServerTypes serverType, AuthContext authContext = null);
 
-        Task<Version> GetServerVersion(StandardServerTypes serverType);
+        Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null);
 
-        Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId);
+        Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null);
 
-        Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId);
-
-        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key);
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext authContext = null);
 
         #endregion Server
 
         #region Preferences
 
-        Task<Preferences> GetPreferences();
+        Task<Preferences> GetPreferences(AuthContext authContext = null);
 
-        Task<bool> SetPreferences(Preferences preferences);
+        Task<bool> SetPreferences(Preferences preferences, AuthContext authContext = null);
 
         #endregion Preferences
 
         #region Credentials
 
-        Task<List<StoredCredential>> GetCredentials();
+        Task<List<StoredCredential>> GetCredentials(AuthContext authContext = null);
 
-        Task<StoredCredential> UpdateCredentials(StoredCredential credential);
+        Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext authContext = null);
 
-        Task<bool> DeleteCredential(string credentialKey);
+        Task<bool> DeleteCredential(string credentialKey, AuthContext authContext = null);
 
-        Task<ActionResult> TestCredentials(string credentialKey);
+        Task<ActionResult> TestCredentials(string credentialKey, AuthContext authContext = null);
 
         #endregion Credentials
 
         #region Managed Certificates
 
-        Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter);
-        Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter);
-        Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter);
+        Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter, AuthContext authContext = null);
+        Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter, AuthContext authContext = null);
+        Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null);
 
-        Task<ManagedCertificate> GetManagedCertificate(string managedItemId);
+        Task<ManagedCertificate> GetManagedCertificate(string managedItemId, AuthContext authContext = null);
 
-        Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
+        Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site, AuthContext authContext = null);
 
-        Task<bool> DeleteManagedCertificate(string managedItemId);
+        Task<bool> DeleteManagedCertificate(string managedItemId, AuthContext authContext = null);
 
-        Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId);
+        Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId, AuthContext authContext = null);
 
-        Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings);
+        Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext authContext = null);
 
-        Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks);
+        Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null);
 
-        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks);
+        Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null);
 
-        Task<CertificateRequestResult> RefetchCertificate(string managedItemId);
+        Task<CertificateRequestResult> RefetchCertificate(string managedItemId, AuthContext authContext = null);
 
-        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive);
+        Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive, AuthContext authContext = null);
 
-        Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site);
-        Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site);
+        Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site, AuthContext authContext = null);
+        Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site, AuthContext authContext = null);
 
-        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
+        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId, AuthContext authContext = null);
 
-        Task<List<ActionStep>> PreviewActions(ManagedCertificate site);
+        Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null);
 
-        Task<List<ChallengeProviderDefinition>> GetChallengeAPIList();
+        Task<List<ChallengeProviderDefinition>> GetChallengeAPIList(AuthContext authContext = null);
 
-        Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList();
+        Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList(AuthContext authContext = null);
 
-        Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config);
+        Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, Config.DeploymentTaskConfig config, AuthContext authContext = null);
 
-        Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute);
+        Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute, AuthContext authContext = null);
 
-        Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info);
+        Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext authContext = null);
 
-        Task<Models.API.LogItem[]> GetItemLog(string id, int limit);
+        Task<Models.API.LogItem[]> GetItemLog(string id, int limit, AuthContext authContext = null);
 
         #endregion Managed Certificates
 
         #region Accounts
-        Task<List<CertificateAuthority>> GetCertificateAuthorities();
-        Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca);
-        Task<ActionResult> DeleteCertificateAuthority(string id);
-        Task<List<AccountDetails>> GetAccounts();
-        Task<ActionResult> AddAccount(ContactRegistration contact);
-        Task<ActionResult> UpdateAccountContact(ContactRegistration contact);
-        Task<ActionResult> RemoveAccount(string storageKey, bool deactivate);
-        Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null);
+        Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext authContext = null);
+        Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext = null);
+        Task<ActionResult> DeleteCertificateAuthority(string id, AuthContext authContext = null);
+        Task<List<AccountDetails>> GetAccounts(AuthContext authContext = null);
+        Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext authContext = null);
+        Task<ActionResult> UpdateAccountContact(ContactRegistration contact, AuthContext authContext = null);
+        Task<ActionResult> RemoveAccount(string storageKey, bool deactivate, AuthContext authContext = null);
+        Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null, AuthContext authContext = null);
 
         #endregion Accounts
 
@@ -137,7 +133,6 @@ namespace Certify.Client
     /// </summary>
     public interface ICertifyClient : ICertifyInternalApiClient
     {
-
         event Action<string, string> OnMessageFromService;
 
         event Action<RequestProgressState> OnRequestProgressStateUpdated;

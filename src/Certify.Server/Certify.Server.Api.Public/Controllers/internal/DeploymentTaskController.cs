@@ -10,7 +10,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// </summary>
     [ApiController]
     [Route("internal/v1/[controller]")]
-    public partial class DeploymentTaskController : ControllerBase
+    public partial class DeploymentTaskController : ApiControllerBase
     {
 
         private readonly ILogger<DeploymentTaskController> _logger;
