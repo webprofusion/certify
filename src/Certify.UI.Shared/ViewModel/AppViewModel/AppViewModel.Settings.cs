@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config.Migration;
 using Certify.UI.Settings;
@@ -162,6 +163,13 @@ namespace Certify.UI.ViewModel
 
         }
 
+        public AuthContext DefaultAuthContext
+        {
+            get
+            {
+                return null;
+            }
+        }
         /// <summary>
         /// Perform full export of app configuration
         /// </summary>
@@ -171,7 +179,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<ImportExportPackage> GetSettingsExport(ManagedCertificateFilter filter, ExportSettings settings, bool isPreview)
         {
-            var pkg = await _certifyClient.PerformExport(new ExportRequest { Filter = filter, Settings = settings, IsPreviewMode = isPreview });
+            var pkg = await _certifyClient.PerformExport(new ExportRequest { Filter = filter, Settings = settings, IsPreviewMode = isPreview }, DefaultAuthContext);
             return pkg;
         }
 
@@ -184,7 +192,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<List<ActionStep>> PerformSettingsImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
         {
-            var results = await _certifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
+            var results = await _certifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode }, DefaultAuthContext);
             return results.ToList();
         }
     }

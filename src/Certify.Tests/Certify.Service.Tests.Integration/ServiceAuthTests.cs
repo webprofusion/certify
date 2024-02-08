@@ -10,8 +10,10 @@ namespace Certify.Service.Tests.Integration
         [TestMethod]
         public async Task TestAuthFlow()
         {
+            AuthContext authContext = null;
+
             // use windows auth to acquire initial auth key
-            var authKey = await _client.GetAuthKeyWindows();
+            var authKey = await _client.GetAuthKeyWindows(authContext);
             Assert.IsNotNull(authKey);
 
             // attempt request without jwt auth being set yet
@@ -20,21 +22,21 @@ namespace Certify.Service.Tests.Integration
             // check should throw exception
             await Assert.ThrowsExceptionAsync<ServiceCommsException>(async () =>
             {
-                var noAuthResult = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { });
+                var noAuthResult = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { }, authContext);
                 Assert.IsNull(noAuthResult);
             });
 
             // use auth key to get JWT
 
-            var jwt = await _client.GetAccessToken(authKey);
+            var jwt = await _client.GetAccessToken(authKey, authContext);
             Assert.IsNotNull(jwt);
 
             // attempt request with JWT set
-            var authedResult = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { });
+            var authedResult = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { }, authContext);
             Assert.IsNotNull(authedResult);
 
             // refresh JWT
-            var refreshedToken = await _client.RefreshAccessToken();
+            var refreshedToken = await _client.RefreshAccessToken(authContext);
             Assert.IsNotNull(jwt);
         }
 
