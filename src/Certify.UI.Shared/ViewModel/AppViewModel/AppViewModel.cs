@@ -92,28 +92,30 @@ namespace Certify.UI.ViewModel
         {
             var progressCleanup = new Task(async () =>
             {
-                var waitMS = 5 * 60 * 1000; // cleanup all old progress messages every 5 mins
-                while (true)
+                try
                 {
-                    await Task.Delay(waitMS);
-                    var now = DateTimeOffset.UtcNow;
-                    var items = ProgressResults.Where(p => p.MessageCreated < DateTimeOffset.UtcNow.AddMilliseconds(-waitMS));
-
-                    if (items.Any())
+                    var waitMS = 5 * 60 * 1000; // cleanup all old progress messages every 5 mins
+                    while (true)
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
+                        await Task.Delay(waitMS);
+                        var now = DateTimeOffset.UtcNow;
+                        var items = ProgressResults.Where(p => p.MessageCreated < DateTimeOffset.UtcNow.AddMilliseconds(-waitMS));
+
+                        if (items.Any())
                         {
-                            foreach (var item in items.ToList())
+                            Application.Current.Dispatcher.Invoke(() =>
                             {
-                                ProgressResults.Remove(item);
-                            };
-                        });
+                                foreach (var item in items.ToList())
+                                {
+                                    ProgressResults.Remove(item);
+                                };
+                            });
+                        }
                     }
-
-                    if (_certifyClient != null)
-                    {
-                        await _certifyClient.EnsureServiceHubConnected();
-                    }
+                }
+                catch (Exception exp)
+                {
+                    Log?.Error("ProgressCleanupTask: " + exp.ToString());
                 }
             }, TaskCreationOptions.LongRunning);
 
