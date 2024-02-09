@@ -38,7 +38,10 @@ namespace Certify.UI.ViewModel
 
             if (connections.Any() && connections.Count() == 1)
             {
-                ServerConnectionManager.Save(Log, connections);
+                if (!ServerConnectionManager.ConfigExists())
+                {
+                    ServerConnectionManager.Save(Log, connections);
+                }
             }
 
             return connections.FirstOrDefault(c => c.IsDefault == true);

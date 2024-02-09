@@ -96,5 +96,11 @@ namespace Certify.Shared.Core.Management
                 log?.Error($"Failed to save server connection configuration [{connectionConfigFile}] :: {exp}");
             }
         }
+
+        public static bool ConfigExists()
+        {
+            var connectionConfigFile = GetConfigPath();
+            return File.Exists(connectionConfigFile);
+        }
     }
 }
