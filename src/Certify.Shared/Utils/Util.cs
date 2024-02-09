@@ -87,7 +87,9 @@ namespace Certify.Management
                 if (timeResult != null)
                 {
                     var diff = timeResult - DateTimeOffset.UtcNow;
-                    if (Math.Abs(diff.Value.TotalSeconds) > 50)
+
+                    // if time is more than 50 seconds out, warn user, if beyond 100 days assume time server response is probably wrong (e.g. 01/01/1900)
+                    if (Math.Abs(diff.Value.TotalSeconds) > 50 && Math.Abs(diff.Value.TotalDays) < 100)
                     {
                         results.Add(new ActionResult { IsSuccess = false, Message = $"Note: Your system time does not appear to be in sync with an internet time service, this can result in certificate request errors." });
                     }
