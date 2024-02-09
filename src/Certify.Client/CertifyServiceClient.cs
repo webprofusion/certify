@@ -1,10 +1,12 @@
-﻿using System;
+using System;
+using System.IO;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Shared;
 using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Certify.Client
 {
@@ -56,6 +58,13 @@ namespace Certify.Client
                 _legacyConnection.Reconnected += OnConnectionReconnected;
                 _legacyConnection.Closed += OnConnectionClosed;
 
+#if DEBUG
+                var logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "hubconnection.log");
+                var writer = new StreamWriter(logPath);
+                writer.AutoFlush = true;
+                _legacyConnection.TraceLevel = TraceLevels.All;
+                _legacyConnection.TraceWriter = writer;
+#endif
                 await _legacyConnection.Start();
 
             }
