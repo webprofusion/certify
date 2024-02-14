@@ -94,7 +94,7 @@ namespace Certify.Management
         /// <param name="managedCert"></param>
         /// <returns></returns>
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
-            string msg = null)
+            string msg = null, int? failureCount = null)
         {
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
 
@@ -112,8 +112,17 @@ namespace Certify.Management
             }
             else
             {
+                if (failureCount > managedCertificate.RenewalFailureCount)
+                {
+                    managedCertificate.RenewalFailureCount = ((int)failureCount) + 1;
+                }
+                else
+                {
+                    managedCertificate.RenewalFailureCount++;
+                }
+
                 managedCertificate.RenewalFailureMessage = msg;
-                managedCertificate.RenewalFailureCount++;
+
                 managedCertificate.LastRenewalStatus = RequestState.Error;
             }
 
@@ -516,7 +525,7 @@ namespace Certify.Management
         /// Check if our temporary http challenge response service is running locally
         /// </summary>
         /// <returns></returns>
-        private async Task<bool> IsHttpChallengeProcessStarted(bool allowRetry=false)
+        private async Task<bool> IsHttpChallengeProcessStarted(bool allowRetry = false)
         {
             if (_httpChallengeServerClient != null)
             {
@@ -525,7 +534,7 @@ namespace Certify.Management
                 try
                 {
                     var attempts = 3;
-                    while (attempts>0)
+                    while (attempts > 0)
                     {
                         var response = await _httpChallengeServerClient.GetAsync(testUrl);
                         if (response.IsSuccessStatusCode)
