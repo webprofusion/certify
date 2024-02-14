@@ -137,7 +137,7 @@ namespace Certify.Management
         /// <param name="managedCert"></param>
         /// <returns></returns>
         private async Task UpdateManagedCertificateStatus(ManagedCertificate managedCertificate, RequestState status,
-            string msg = null)
+            string msg = null, int? failureCount = null)
         {
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
 
@@ -155,8 +155,17 @@ namespace Certify.Management
             }
             else
             {
+                if (failureCount > managedCertificate.RenewalFailureCount)
+                {
+                    managedCertificate.RenewalFailureCount = ((int)failureCount) + 1;
+                }
+                else
+                {
+                    managedCertificate.RenewalFailureCount++;
+                }
+
                 managedCertificate.RenewalFailureMessage = msg;
-                managedCertificate.RenewalFailureCount++;
+
                 managedCertificate.LastRenewalStatus = RequestState.Error;
             }
 

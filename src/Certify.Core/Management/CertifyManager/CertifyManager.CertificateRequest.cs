@@ -140,6 +140,7 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
 
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
+            var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
 
             try
             {
@@ -262,7 +263,7 @@ namespace Certify.Management
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, requestResult.Message, managedCertificate), logThisEvent: false);
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, requestResult.Message);
+                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, requestResult.Message, currentFailureCount);
                 }
                 catch { }
             }
@@ -331,7 +332,12 @@ namespace Certify.Management
                     requestResult.Message = managedCertificate.RenewalFailureMessage;
                 }
 
-                await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message);
+                await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
+            }
+
+            if (isInteractive)
+            {
+                await SendQueuedStatusReports();
             }
 
             return requestResult;
