@@ -67,13 +67,13 @@ namespace Certify.Server.Api.Public.Controllers
                 var authResponse = new AuthResponse
                 {
                     Detail = "OK",
-                    AccessToken = jwt.GenerateSecurityToken(login.Username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"])),
+                    AccessToken = jwt.GenerateSecurityToken(login.Username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20")),
                     RefreshToken = jwt.GenerateRefreshToken(),
                     SecurityPrinciple = validation.SecurityPrinciple,
                     RoleStatus = await _client.GetSecurityPrincipleRoleStatus(validation.SecurityPrinciple.Id, CurrentAuthContext)
                 };
 
-                
+
                 // TODO: Refresh token should be stored or hashed for later use
 
                 return Ok(authResponse);
@@ -105,7 +105,12 @@ namespace Certify.Server.Api.Public.Controllers
                 var claimsIdentity = jwt.ClaimsIdentityFromToken(authToken, false);
                 var username = claimsIdentity.Name;
 
-                var newJwtToken = jwt.GenerateSecurityToken(username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"]));
+                if (username == null)
+                {
+                    return Unauthorized();
+                }
+
+                var newJwtToken = jwt.GenerateSecurityToken(username, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20"));
                 var newRefreshToken = jwt.GenerateRefreshToken();
 
                 // invalidate old refresh token and store new one
