@@ -12,7 +12,6 @@ namespace Certify.Server.Api.Public.Controllers
         /// <summary>
         /// Get the corresponding auth context to pass to the backend service
         /// </summary>
-        /// <param name="httpContext"></param>
         /// <returns></returns>
         internal AuthContext CurrentAuthContext
         {
