@@ -10,13 +10,10 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary
-                    Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
-                <ResourceDictionary
-                    Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Green.xaml" />
 
-                <ResourceDictionary
-                    Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <!--  Heading  -->
             <Style x:Key="Subheading" TargetType="TextBlock">
@@ -54,8 +51,7 @@
 
             <!--  brush color overrides (tab items and disabled buttons)  -->
             <SolidColorBrush x:Key="MahApps.Brushes.Gray" Color="{DynamicResource MahApps.Colors.SystemChromeHigh}" />
-            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled"
-                             Color="{DynamicResource MahApps.Colors.SystemAltLow}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled" Color="{DynamicResource MahApps.Colors.SystemAltLow}" />
 
             <Style TargetType="controls:NumericUpDown">
                 <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />
