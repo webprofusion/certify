@@ -5,7 +5,7 @@
 		<Platforms>AnyCPU</Platforms>
 		<LangVersion>10.0</LangVersion>
 		<Nullable>enable</Nullable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Description>Certify Certificate Manager API Models</Description>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
@@ -32,6 +32,7 @@
 		</PackageReference>
 		<PackageReference Include="System.Text.Json" Version="8.0.1" />
 	</ItemGroup>
+
 	<ItemGroup>
 	  <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
 	</ItemGroup>
