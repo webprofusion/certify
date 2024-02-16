@@ -45,7 +45,7 @@ namespace Certify.Models.Config.AccessControl
     public class Role : AccessStoreItem
     {
         public List<string> Policies { get; set; } = new List<string>();
-        public Role(string id, string title, string description, List<string> policies = null)
+        public Role(string id, string title, string description, List<string>? policies = null)
         {
             Id = id;
             Title = title;
