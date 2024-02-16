@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 
@@ -119,20 +120,28 @@ namespace Certify.Management
             // check powershell version
             var subkey = @"SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine";
             var isPSAvailable = true;
-            try
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(subkey))
+                try
                 {
-                    var vals = (ndpKey.GetValue("PSCompatibleVersion") as string).Split(',');
-                    if (!vals.Any(v => v.Trim() == "5.0"))
+                    using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).OpenSubKey(subkey))
                     {
-                        isPSAvailable = false;
+                        var vals = (ndpKey.GetValue("PSCompatibleVersion") as string).Split(',');
+                        if (!vals.Any(v => v.Trim() == "5.0"))
+                        {
+                            isPSAvailable = false;
+                        }
                     }
                 }
+                catch
+                {
+                    isPSAvailable = false;
+                }
             }
-            catch
+            else
             {
-                isPSAvailable = false;
+                isPSAvailable = false; // assume PowerShell not present on non-windows
             }
 
             if (!isPSAvailable)
@@ -438,19 +447,7 @@ namespace Certify.Management
         /// <returns>  </returns>
         public static string GetDotNetVersion()
         {
-            const string subkey = @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full\";
-
-            using (var ndpKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32).OpenSubKey(subkey))
-            {
-                if (ndpKey != null && ndpKey.GetValue("Release") != null)
-                {
-                    return GetDotNetVersion((int)ndpKey.GetValue("Release"));
-                }
-                else
-                {
-                    return ".NET Version not detected.";
-                }
-            }
+            return RuntimeInformation.FrameworkDescription;
         }
 
         private static string GetDotNetVersion(int releaseKey)

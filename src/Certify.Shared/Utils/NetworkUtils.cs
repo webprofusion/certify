@@ -209,9 +209,10 @@ namespace Certify.Shared.Core.Utils
             }
         }
 
+#if NET6_0_OR_GREATER
         public async Task<string> GetDNSRecordTXT(ILog log, string fullyQualifiedRecordName)
         {
-#if NET6_0_OR_GREATER
+
             try
             {
                 // check TXT
@@ -232,10 +233,10 @@ namespace Certify.Shared.Core.Utils
             {
                 log.Error(exp, $"'{fullyQualifiedRecordName}' DNS error resolving TXT record ");
             }
-#endif
 
             return null;
         }
+#endif
 
         public async Task<ActionResult> CheckServiceConnection(string hostname, int port)
         {
@@ -411,7 +412,7 @@ namespace Certify.Shared.Core.Utils
                 });
             }
 #endif
-            return results;
+            return await Task.FromResult(results);
         }
 
         public void Dispose()
