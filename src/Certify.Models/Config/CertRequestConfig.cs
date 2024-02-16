@@ -345,6 +345,8 @@ namespace Certify.Models
 
             return allDomains.Distinct().ToList();
         }
+       
+        private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
         private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
@@ -375,7 +377,7 @@ namespace Certify.Models
                     var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
                     if (atc != null)
                     {
-                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
                         if (parsedAtc != null)
                         {
                             identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });

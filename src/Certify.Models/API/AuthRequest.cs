@@ -64,7 +64,7 @@ namespace Certify.Models.API
     {
         public bool IsSuccess { get; set; }
         public string Message { get; set; } = string.Empty;
-        public SecurityPrinciple SecurityPrinciple { get; set; }
+        public SecurityPrinciple? SecurityPrinciple { get; set; }
     }
 
     public class SecurityPrinciplePasswordUpdate
