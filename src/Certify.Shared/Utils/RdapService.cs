@@ -91,6 +91,8 @@ namespace Certify.Shared.Core.Utils
                     _dnsRootConfig.Add(tld, svc[1][0]);
                 }
             }
+
+            await Task.CompletedTask;
         }
 
         public string GetRdapQueryURL(string tld)
