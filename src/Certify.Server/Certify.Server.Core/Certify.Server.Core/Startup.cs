@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Certify.Management;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
@@ -24,6 +24,10 @@ namespace Certify.Server.Core
                 .AddSignalR()
                 .AddMessagePackProtocol();
 
+            services.AddDataProtection(a =>
+            {
+                a.ApplicationDiscriminator = "certify";
+            });
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream", "application/json" });
