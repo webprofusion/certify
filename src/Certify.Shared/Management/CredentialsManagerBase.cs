@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -61,7 +63,7 @@ namespace Certify.Management
         public string Protect(
                 string clearText,
                 string optionalEntropy = null,
-                DataProtectionScope scope = DataProtectionScope.CurrentUser)
+                DataProtectionScope? scope = null)
         {
             // https://www.thomaslevesque.com/2013/05/21/an-easy-and-secure-way-to-store-a-password-using-data-protection-api/
 
@@ -70,18 +72,27 @@ namespace Certify.Management
                 return null;
             }
 
-            if (_useWindowsNativeFeatures)
+            if (_useWindowsNativeFeatures && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                if (scope == null)
+                {
+                    scope = DataProtectionScope.CurrentUser;
+                }
 
                 var clearBytes = Encoding.UTF8.GetBytes(clearText);
                 var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
                     ? null
                     : Encoding.UTF8.GetBytes(optionalEntropy);
-                var encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, scope);
+                var encryptedBytes = ProtectedData.Protect(clearBytes, entropyBytes, (DataProtectionScope)scope);
                 return Convert.ToBase64String(encryptedBytes);
             }
             else
             {
+#if RELEASE
+                Trace.Assert(true, "Using dummy encryption, not suitable for production use.");
+#endif
+                Trace.WriteLine("Using dummy encryption, not suitable for production use.");
+
                 // TODO: dummy implementation, require alternative implementation for non-windows
                 return Convert.ToBase64String(Encoding.UTF8.GetBytes(clearText).Reverse().ToArray());
             }
@@ -97,7 +108,7 @@ namespace Certify.Management
         public string Unprotect(
             string encryptedText,
             string optionalEntropy = null,
-            DataProtectionScope scope = DataProtectionScope.CurrentUser)
+            DataProtectionScope? scope = null)
         {
             // https://www.thomaslevesque.com/2013/05/21/an-easy-and-secure-way-to-store-a-password-using-data-protection-api/
 
@@ -106,18 +117,23 @@ namespace Certify.Management
                 throw new ArgumentNullException("encryptedText");
             }
 
-            if (_useWindowsNativeFeatures)
+            if (_useWindowsNativeFeatures && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                if (scope == null)
+                {
+                    scope = DataProtectionScope.CurrentUser;
+                }
+
                 var encryptedBytes = Convert.FromBase64String(encryptedText);
                 var entropyBytes = string.IsNullOrEmpty(optionalEntropy)
                     ? null
                     : Encoding.UTF8.GetBytes(optionalEntropy);
-                var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, scope);
+                var clearBytes = ProtectedData.Unprotect(encryptedBytes, entropyBytes, (DataProtectionScope)scope);
                 return Encoding.UTF8.GetString(clearBytes);
             }
             else
             {
-
+                Debug.WriteLine("Using dummy encryption, not suitable for production use.");
                 // TODO: dummy implementation, implement alternative implementation for non-windows
                 var bytes = Convert.FromBase64String(encryptedText);
                 return Encoding.UTF8.GetString(bytes.Reverse().ToArray());
