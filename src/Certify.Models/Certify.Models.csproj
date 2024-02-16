@@ -5,11 +5,13 @@
 		<Platforms>AnyCPU</Platforms>
 		<LangVersion>10.0</LangVersion>
 		<Nullable>enable</Nullable>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 		<Description>Certify Certificate Manager API Models</Description>
 		<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
 		<EnableNETAnalyzers>True</EnableNETAnalyzers>
 		<AnalysisLevel>latest-recommended</AnalysisLevel>
+		<Product>Certify The Web - Certify Certificate Manager</Product>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<PlatformTarget>AnyCPU</PlatformTarget>
@@ -30,7 +32,16 @@
 		</PackageReference>
 		<PackageReference Include="System.Text.Json" Version="8.0.1" />
 	</ItemGroup>
+
 	<ItemGroup>
 	  <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="readme.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+
 </Project>
