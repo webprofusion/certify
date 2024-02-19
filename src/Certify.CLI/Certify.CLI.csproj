@@ -79,4 +79,8 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
+  </ItemGroup>
 </Project>
