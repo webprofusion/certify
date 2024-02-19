@@ -1,10 +1,12 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Org.BouncyCastle.Asn1.Oiw;
 using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 
 namespace Certify.Shared.Core.Utils.PKI
@@ -126,8 +128,9 @@ namespace Certify.Shared.Core.Utils.PKI
             var certPfx = new X509Certificate2(pfxData, pwd);
 
             var cert = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(certPfx.GetRawCertData());
-
-            var certId = new CertificateID(Org.BouncyCastle.Asn1.Nist.NistObjectIdentifiers.IdSha256.Id, cert, cert.SerialNumber);
+            
+           
+            var certId = new CertificateID(CertificateID.DigestSha1, cert, cert.SerialNumber);
 
             return Certify.Management.Util.ToUrlSafeBase64String(certId.ToAsn1Object().GetDerEncoded());
         }
