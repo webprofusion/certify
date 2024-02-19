@@ -20,7 +20,10 @@ namespace Certify.Core.Tests.Unit
         public Task Add<T>(string itemType, AccessStoreItem item)
         {
             item.ItemType = itemType;
-            return Task.FromResult(_store.TryAdd(item.Id, item));
+            
+            // clone the item to avoid reference issue mutating the same object, as we are using an in-memory store
+            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
+            return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
         }
 
         public Task<bool> Delete<T>(string itemType, string id)
@@ -47,12 +50,15 @@ namespace Certify.Core.Tests.Unit
         {
             var o = item as AccessStoreItem;
             o.ItemType = itemType;
-            return Task.FromResult(_store.TryAdd(o.Id, o));
+
+            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(o)) as AccessStoreItem;
+            return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
         }
 
         public Task Update<T>(string itemType, T item)
         {
-            var o = item as AccessStoreItem;
+            var o =  JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
+
             _store.TryGetValue(o.Id, out var value);
             var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as AccessStoreItem;
             var r = Task.FromResult(_store.TryUpdate(o.Id, o, c));
@@ -296,9 +302,6 @@ namespace Certify.Core.Tests.Unit
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
             assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
 
-            // clone the test security principles to avoid reference issues as we are using an in-memory store
-            adminSecurityPrinciples = JsonConvert.DeserializeObject<List<SecurityPrinciple>>(JsonConvert.SerializeObject(adminSecurityPrinciples));
-
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
             Assert.AreEqual(storedSecurityPrinciple.Email, adminSecurityPrinciples[0].Email, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Email '{adminSecurityPrinciples[0].Email}' of SecurityPrinciple passed into AddSecurityPrinciple()");
@@ -335,6 +338,7 @@ namespace Certify.Core.Tests.Unit
             // Update security principle in AccessControl with a new principle object of the same Id, but different email, with roles undefined
             var newSecurityPrinciple = TestSecurityPrinciples.Admin;
             newSecurityPrinciple.Email = "new_test_email@test.com";
+
             var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to be unsuccessful without roles defined");
         }
@@ -371,6 +375,7 @@ namespace Certify.Core.Tests.Unit
             newSecurityPrinciple.Email = "new_test_email@test.com";
             newSecurityPrinciple.Id = "missing_username";
             var securityPrincipleUpdated = await access.UpdateSecurityPrinciple(contextUserId, newSecurityPrinciple);
+
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle update for {newSecurityPrinciple.Id} to be unsuccessful with bad update data (Id does not already exist in store)");
         }
 
@@ -411,6 +416,7 @@ namespace Certify.Core.Tests.Unit
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
             storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
             var newPasswordHashed = access.HashPassword(newPassword, storedSecurityPrinciple.Password.Split('.')[1]);
+
             Assert.AreNotEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to not match previous Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
             Assert.AreEqual(storedSecurityPrinciple.Password, newPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match updated Password '{newPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
         }
@@ -431,6 +437,7 @@ namespace Certify.Core.Tests.Unit
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
             var firstPasswordHashed = access.HashPassword(firstPassword, storedSecurityPrinciple.Password.Split('.')[1]);
+
             Assert.AreEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
         }
 
