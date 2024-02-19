@@ -126,8 +126,7 @@ namespace Certify.CLI
                             {
                                 // cert in store, check permissions
                                 Console.WriteLine($"Stored cert :: " + storedCert.FriendlyName);
-                                var test = fileCert.PrivateKey.KeyExchangeAlgorithm;
-                                Console.WriteLine(test.ToString());
+                                Console.WriteLine($"Signature Algorithm :: " + storedCert.SignatureAlgorithm.FriendlyName);
 
                                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                                 {
