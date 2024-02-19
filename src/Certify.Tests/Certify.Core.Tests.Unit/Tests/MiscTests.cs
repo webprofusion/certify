@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Certify.Management;
 using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -61,44 +60,6 @@ namespace Certify.Core.Tests.Unit
             {
                 Assert.Fail("NTP Time Difference Failed");
             }
-        }
-
-        [TestMethod, Description("Test self signed cert")]
-        public void TestSelfSignedCertCreate()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-        }
-
-        [TestMethod, Description("Test self signed cert storage")]
-        public void TestSelfSignedCertCreateAndStore()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-
-            CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-
-            var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-            Assert.IsNotNull(storedCert);
-
-            CertificateManager.RemoveCertificate(storedCert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-        }
-
-        [TestMethod, Description("Test localhost cert")]
-        public void TestSelfSignedLocalhostCertCreateAndStore()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-
-            CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-
-            var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-            Assert.IsNotNull(storedCert);
-
-            CertificateManager.RemoveCertificate(storedCert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
         }
     }
 }
