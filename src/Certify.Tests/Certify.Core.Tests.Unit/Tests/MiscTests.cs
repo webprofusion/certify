@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Certify.Management;
 using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
