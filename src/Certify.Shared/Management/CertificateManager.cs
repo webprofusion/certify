@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,6 +36,7 @@ namespace Certify.Management
 
         public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTimeOffset? dateFrom = null, DateTimeOffset? dateTo = null, string suffix = "[Certify]", string subject = null)
         {
+
             // configure generators
             var random = new SecureRandom(new CryptoApiRandomGenerator());
             var keyGenerationParameters = new KeyGenerationParameters(random, 2048);
@@ -58,24 +59,15 @@ namespace Certify.Management
             certificateGenerator.SetPublicKey(keyPair.Public);
             var bouncy_cert = certificateGenerator.Generate(new Asn1SignatureFactory("SHA256WithRSA", keyPair.Private, random));
 
-            // get private key into machine key store
-            var csp = new RSACryptoServiceProvider(
-                new CspParameters
-                {
-                    KeyContainerName = Guid.NewGuid().ToString(),
-                    KeyNumber = 1,
-                    Flags = CspProviderFlags.UseMachineKeyStore
-                });
-
-            var rp = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
-            csp.ImportParameters(rp);
-
             // convert from bouncy cert to X509Certificate2
-            return new X509Certificate2(bouncy_cert.GetEncoded(), (string)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet)
+            var selfSignedX509Cert = new X509Certificate2(bouncy_cert.GetEncoded(), (string)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                FriendlyName = domain + " " + suffix + " Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter,
-                PrivateKey = csp
-            };
+                selfSignedX509Cert.FriendlyName = domain + " " + suffix + " Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter;
+            }
+
+            return selfSignedX509Cert;
         }
 
         public static bool VerifyCertificateSAN(System.Security.Cryptography.X509Certificates.X509Certificate certificate, string sni)
@@ -359,7 +351,7 @@ namespace Certify.Management
                 pwd = "";
             }
 
-            try
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (!string.IsNullOrEmpty(customFriendlyName))
                 {
@@ -372,10 +364,6 @@ namespace Certify.Management
                     certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
 
                 }
-            }
-            catch (System.PlatformNotSupportedException)
-            {
-                // friendly name not supported on unix
             }
 
             var cert = StoreCertificate(certificate, storeName);
