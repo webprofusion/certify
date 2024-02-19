@@ -316,8 +316,18 @@ namespace Certify.Core.Management.Access
 
             if (IsPasswordValid(passwordUpdate.Password, principle.Password))
             {
-                principle.Password = HashPassword(passwordUpdate.NewPassword);
-                await UpdateSecurityPrinciple(contextUserId, principle);
+                try
+                {
+                    var updateSp = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), principle.Id);
+                    updateSp.Password = HashPassword(passwordUpdate.NewPassword);
+                    await _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), updateSp);
+                    updated = true;
+                }
+                catch
+                {
+                    await AuditWarning($"User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principle?.Id}], but was not successful");
+                    return false;
+                }
             }
             else
             {
