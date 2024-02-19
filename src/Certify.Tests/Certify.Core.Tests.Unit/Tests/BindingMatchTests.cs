@@ -770,7 +770,6 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
         }
 
-#if NET462
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when CertificateThumbprintHash is defined")]
         public async Task MixedIPBindingChecksCertificateThumbprintHash()
         {
@@ -830,6 +829,8 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
             Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
+
+            CertificateManager.RemoveCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when CertificatePreviousThumbprintHash is defined")]
@@ -892,8 +893,9 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
             Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
+
+            CertificateManager.RemoveCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
         }
-#endif
 
         [TestMethod, Description("Test if ftp bindings are handled when not in preview")]
         public async Task FtpBindingChecksNoPreview()
