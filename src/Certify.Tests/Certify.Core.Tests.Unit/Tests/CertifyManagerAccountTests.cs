@@ -399,8 +399,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountDetails()")]
         public async Task TestCertifyManagerGetAccountDetails()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
         }
@@ -415,8 +414,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when allowCache is false")]
         public async Task TestCertifyManagerGetAccountDetailsAllowCacheFalse()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert, false);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
         }
@@ -424,8 +422,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when CertificateAuthorityId is defined in passed ManagedCertificate")]
         public async Task TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true, CertificateAuthorityId = _customCa.Id });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true, CertificateAuthorityId = _customCa.Id });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
             Assert.AreEqual(_customCa.Id, caAccount.CertificateAuthorityId, $"Unexpected certificate authority id '{caAccount.CertificateAuthorityId}'");
@@ -434,7 +431,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when OverrideAccountDetails is defined in CertifyManager")]
         public async Task TestCertifyManagerGetAccountDetailsDefinedOverrideAccountDetails()
         {
-            var testUrl = "test.com";
+
             var account = new AccountDetails
             {
                 AccountKey = "",
@@ -447,7 +444,7 @@ namespace Certify.Core.Tests.Unit
             };
             _certifyManager.OverrideAccountDetails = account;
 
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
             Assert.AreEqual("test@certifytheweb.com", caAccount.Email);
@@ -458,8 +455,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when there is no matching account")]
         public async Task TestCertifyManagerGetAccountDetailsNoMatches()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true, CertificateAuthorityId = "sectigo-ev" });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true, CertificateAuthorityId = "sectigo-ev" });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert);
             Assert.IsNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to be null");
         }
@@ -467,8 +463,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when it is a resume order")]
         public async Task TestCertifyManagerGetAccountDetailsIsResumeOrder()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true, CertificateAuthorityId = "letsencrypt.org", LastAttemptedCA = "zerossl.com" });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true, CertificateAuthorityId = "letsencrypt.org", LastAttemptedCA = "zerossl.com" });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert, true, false, true);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
         }
@@ -476,8 +471,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when allowFailover is true")]
         public async Task TestCertifyManagerGetAccountDetailsAllowFailover()
         {
-            var testUrl = "test.com";
-            var dummyManagedCert = (new ManagedCertificate { CurrentOrderUri = testUrl, UseStagingMode = true });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert, true, true);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
         }
