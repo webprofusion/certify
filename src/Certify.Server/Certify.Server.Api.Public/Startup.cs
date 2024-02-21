@@ -47,6 +47,7 @@ namespace Certify.Server.API
             var results = new List<Models.Config.ActionResult>();
 
             services
+                .AddMemoryCache()
                 .AddTokenAuthentication(Configuration)
                 .AddAuthorization()
                 .AddControllers()

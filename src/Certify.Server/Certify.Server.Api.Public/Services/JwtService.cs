@@ -58,8 +58,7 @@ namespace Certify.Server.Api.Public.Services
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.Name, identifier),
-                    new Claim(ClaimTypes.NameIdentifier, identifier)
+                    new Claim(ClaimTypes.Sid, identifier)
                 }),
                 Issuer = _issuer,
                 Expires = expiryMinutes != null ? DateTime.UtcNow.AddHours((double)expiryMinutes) : DateTime.UtcNow.AddDays(double.Parse(_expDate)), //token expiry could be role specific - e.g. 1 yr vs 1 month
@@ -75,7 +74,7 @@ namespace Certify.Server.Api.Public.Services
         /// <param name="validateTokenLifetime"></param>
         /// <returns></returns>
         /// <exception cref="SecurityTokenException"></exception>
-        public ClaimsIdentity ClaimsIdentityFromToken(string token, bool validateTokenLifetime)
+        public async Task<ClaimsIdentity> ClaimsIdentityFromTokenAsync(string token, bool validateTokenLifetime)
         {
             var key = Encoding.UTF8.GetBytes(_secret);
 
@@ -91,7 +90,7 @@ namespace Certify.Server.Api.Public.Services
 
             var tokenHandler = new JsonWebTokenHandler();
 
-            var result = tokenHandler.ValidateToken(token, tokenValidationParameters);
+            var result = await tokenHandler.ValidateTokenAsync(token, tokenValidationParameters);
             if (result.IsValid)
             {
                 return result.ClaimsIdentity;
