@@ -74,17 +74,20 @@ namespace Certify.Core.Tests.Unit
     public class TestAssignedRoles
     {
         public static AssignedRole TestAdmin { get; } = new AssignedRole
-        { // test administrator
+        { 
+            // test administrator
             RoleId = StandardRoles.Administrator.Id,
             SecurityPrincipleId = "[test]"
         };
         public static AssignedRole Admin { get; } = new AssignedRole
-        { // administrator
+        { 
+            // administrator
             RoleId = StandardRoles.Administrator.Id,
             SecurityPrincipleId = "admin_01"
         };
         public static AssignedRole DevopsUserDomainConsumer { get; } = new AssignedRole
-        { // devops user in consumer role for a specific domain
+        { 
+            // devops user in consumer role for a specific domain
             RoleId = StandardRoles.CertificateConsumer.Id,
             SecurityPrincipleId = "devops_user_01",
             IncludedResources = new List<Resource>{
@@ -92,7 +95,8 @@ namespace Certify.Core.Tests.Unit
             }
         };
         public static AssignedRole DevopsUserWildcardDomainConsumer { get; } = new AssignedRole
-        { // devops user in consumer role for a wildcard domain
+        { 
+            // devops user in consumer role for a wildcard domain
             RoleId = StandardRoles.CertificateConsumer.Id,
             SecurityPrincipleId = "devops_user_01",
             IncludedResources = new List<Resource>{
@@ -225,11 +229,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -271,7 +275,7 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             var addedResourcePolicy = await access.AddResourcePolicy(contextUserId, policy);
 
             // Validate that AddResourcePolicy() failed when no roles are defined
@@ -291,11 +295,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -355,11 +359,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -392,11 +396,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -454,11 +458,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -488,11 +492,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -546,11 +550,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -583,11 +587,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -620,11 +624,11 @@ namespace Certify.Core.Tests.Unit
             actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.Administrator.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -654,11 +658,11 @@ namespace Certify.Core.Tests.Unit
             await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -680,14 +684,14 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
@@ -713,14 +717,14 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload));
 
             // Setup policy with actions and add policy to store
-            var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
 
             // Setup and add roles and policy assignments to store
-            var role = (await access.GetSystemRoles()).Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
             await access.AddRole(role);
 
             // Assign security principles to roles and add roles and policy assignments to store
