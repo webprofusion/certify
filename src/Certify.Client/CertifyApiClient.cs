@@ -56,7 +56,7 @@ namespace Certify.Client
 
     public class AuthContext
     {
-        public string Username { get; set; }
+        public string UserId { get; set; }
         public string Token { get; set; }
     }
 
@@ -144,7 +144,7 @@ namespace Certify.Client
         {
             if (authContext != null)
             {
-                request.Headers.Add("X-Context-User-Id", authContext.Username);
+                request.Headers.Add("X-Context-User-Id", authContext.UserId);
             }
         }
 
