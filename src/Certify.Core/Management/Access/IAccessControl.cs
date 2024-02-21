@@ -17,7 +17,7 @@ namespace Certify.Core.Management.Access
         /// Get the list of standard roles built-in to the system
         /// </summary>
         /// <returns></returns>
-        Task<List<Role>> GetSystemRoles();
+        Task<List<Role>> GetRoles();
         Task<bool> IsAuthorised(string contextUserId, string principleId, string roleId, string resourceType, string actionId, string identifier);
         Task<bool> IsPrincipleInRole(string contextUserId, string id, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
@@ -29,7 +29,7 @@ namespace Certify.Core.Management.Access
 
         Task AddRole(Role role);
         Task AddAssignedRole(AssignedRole assignedRole);
-        Task AddAction(ResourceAction action);
+        Task AddResourceAction(ResourceAction action);
         Task<bool> IsInitialized();
     }
 }
