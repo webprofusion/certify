@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -49,6 +51,11 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test get cert RSA private key file path")]
         public void TestGetRSAPrivateKeyPath()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
 
             var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)", keyType: StandardKeyTypes.RSA256);
 
@@ -71,6 +78,11 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test get cert ECDSA private key file path")]
         public void TestGetECDSAPrivateKeyPath()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
 
             var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)", keyType: StandardKeyTypes.ECDSA256);
 
