@@ -58,14 +58,9 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<List<Role>> GetSystemRoles()
+        public async Task<List<Role>> GetRoles()
         {
-            return await Task.FromResult(new List<Role>
-            {
-                StandardRoles.Administrator,
-                StandardRoles.IdentifierController,
-                StandardRoles.CertificateConsumer
-            });
+            return await _store.GetItems<Role>(nameof(Role));
         }
 
         public async Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId)
@@ -402,7 +397,7 @@ namespace Certify.Core.Management.Access
             await _store.Add(nameof(AssignedRole), r);
         }
 
-        public async Task AddAction(ResourceAction action)
+        public async Task AddResourceAction(ResourceAction action)
         {
             await _store.Add(nameof(ResourceAction), action);
         }
