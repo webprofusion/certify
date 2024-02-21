@@ -207,6 +207,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     var keyContent = File.ReadAllText(openFileDialog.FileName);
 
+                    // if parsing an openssl produced key file with extra ecparams, remove the params so we can parse the key
+                    if (keyContent.Contains("EC PARAMETERS"))
+                    {
+                        keyContent = keyContent.Substring(keyContent.LastIndexOf("-----BEGIN"));
+                    }
+
                     if (keyContent.Contains("PRIVATE KEY") && Certify.Shared.Core.Utils.PKI.CSRUtils.CanParsePrivateKey(keyContent))
                     {
                         ItemViewModel.SelectedItem.RequestConfig.CustomPrivateKey = keyContent;
