@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using Certify.Client;
 using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
@@ -73,7 +73,6 @@ namespace Certify.Server.Api.Public.Controllers
                     RoleStatus = await _client.GetSecurityPrincipleRoleStatus(validation.SecurityPrinciple.Id, CurrentAuthContext)
                 };
 
-
                 // TODO: Refresh token should be stored or hashed for later use
 
                 return Ok(authResponse);
@@ -93,7 +92,7 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpPost]
         [Route("refresh")]
         [ProducesResponseType(typeof(AuthResponse), 200)]
-        public IActionResult Refresh(string refreshToken)
+        public async Task<IActionResult> Refresh(string refreshToken)
         {
             // validate token and issue new one
             var jwt = new Api.Public.Services.JwtService(_config);
