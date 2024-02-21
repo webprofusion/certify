@@ -181,56 +181,77 @@ namespace Certify.CLI
                 performRequestNow = true;
             }
 
-            var managedCert = await _certifyClient.GetManagedCertificate(managedCertId);
             if (domains != null && domains.Any())
             {
-                foreach (var d in domains.Where(i => !string.IsNullOrEmpty(i)).Select(i => i.Trim().ToLower()))
+                var managedCerts = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()
                 {
-                    var domainOption = managedCert.DomainOptions.FirstOrDefault(o => o.Domain == d);
+                    Id = managedCertId == "any" ? null : managedCertId
+                });
 
-                    if (domainOption != null)
+                var filteredManagedCerts = managedCerts.Where(c => c.DomainOptions.Any(d => domains.Contains(d.Domain.ToLower()) && d.IsSelected && d.Type == CertIdentifierType.Dns)).ToList();
+                
+                foreach (var managedCert in filteredManagedCerts)
+                {
+                    var hasChanges = false;
+
+                    foreach (var d in domains.Where(i => !string.IsNullOrEmpty(i)).Select(i => i.Trim().ToLower()))
                     {
-                        managedCert.DomainOptions.Remove(domainOption);
+                        var domainOption = managedCert.DomainOptions.FirstOrDefault(o => o.Domain == d);
+
+                        if (domainOption != null)
+                        {
+                            managedCert.DomainOptions.Remove(domainOption);
+                            hasChanges = true;
+                        }
+
+                        if (managedCert.RequestConfig.SubjectAlternativeNames.Contains(d))
+                        {
+                            // remove domain from list of subject alternative names
+                            managedCert.RequestConfig.SubjectAlternativeNames = managedCert.RequestConfig.SubjectAlternativeNames.Where(i => i != d).ToArray();
+                            hasChanges = true;
+                        }
                     }
 
-                    if (managedCert.RequestConfig.SubjectAlternativeNames.Contains(d))
+                    // check we still have a primary domain, if not selected a default one
+                    if (!managedCert.DomainOptions.Any(o => o.IsPrimaryDomain))
                     {
-                        // remove domain from list of subject alternative names
-                        managedCert.RequestConfig.SubjectAlternativeNames = managedCert.RequestConfig.SubjectAlternativeNames.Where(i => i != d).ToArray();
+                        var defaultIdentifier = managedCert.DomainOptions.FirstOrDefault(o => o.IsSelected);
+                        if (defaultIdentifier != null)
+                        {
+                            defaultIdentifier.IsPrimaryDomain = true;
+                            managedCert.RequestConfig.PrimaryDomain = defaultIdentifier.Domain;
+                        }
+
+                        hasChanges = true;
                     }
-                }
 
-                // check we still have a primary domain, if not selected a default one
-                if (!managedCert.DomainOptions.Any(o => o.IsPrimaryDomain))
-                {
-                    var defaultIdentifier = managedCert.DomainOptions.FirstOrDefault(o => o.IsSelected);
-                    if (defaultIdentifier != null)
+                    if (!managedCert.DomainOptions.Any(d => d.IsSelected))
                     {
-                        defaultIdentifier.IsPrimaryDomain = true;
-                        managedCert.RequestConfig.PrimaryDomain = defaultIdentifier.Domain;
+                        // there are no domains selected on this certificate anymore
+                        managedCert.RequestConfig.PrimaryDomain = null;
+                        hasChanges = true;
                     }
-                }
 
-                if (!managedCert.DomainOptions.Any(d => d.IsSelected))
-                {
-                    // there are no domains selected on this certificate anymore
-                    managedCert.RequestConfig.PrimaryDomain = null;
-                }
-
-                if (managedCert.GetCertificateDomains().Count() == 0)
-                {
-                    // this managed certificate has no domains anymore. Delete it.
-                    await _certifyClient.DeleteManagedCertificate(managedCert.Id);
-                    Console.WriteLine("Managed certificate has no more domains, deleted.");
-                }
-                else
-                {
-                    // update managed cert and optionally begin the request
-                    var updatedManagedCert = await _certifyClient.UpdateManagedCertificate(managedCert);
-
-                    if (updatedManagedCert != null && performRequestNow)
+                    if (hasChanges && managedCert.GetCertificateDomains().Count() == 0)
                     {
-                        await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, true);
+                        // this managed certificate has no domains anymore. Delete it.
+                        await _certifyClient.DeleteManagedCertificate(managedCert.Id);
+                        Console.WriteLine("Managed certificate has no more domains, deleted.");
+                    }
+                    else
+                    {
+                        if (hasChanges)
+                        {
+                            // update managed cert and optionally begin the request
+                            var updatedManagedCert = await _certifyClient.UpdateManagedCertificate(managedCert);
+
+                            Console.WriteLine($"Domains removed from managed cert {managedCert.Name} [{managedCert.Id}].");
+                            if (updatedManagedCert != null && performRequestNow)
+                            {
+                                Console.WriteLine($"Requesting updated certificate {managedCert.Name} [{managedCert.Id}].");
+                                await _certifyClient.BeginCertificateRequest(updatedManagedCert.Id, true, true);
+                            }
+                        }
                     }
                 }
             }
