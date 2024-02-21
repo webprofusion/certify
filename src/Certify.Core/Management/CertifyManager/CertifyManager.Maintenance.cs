@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Core.Management.Access;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.AccessControl;
 using Certify.Models.Shared;
 
 namespace Certify.Management
@@ -35,6 +37,87 @@ namespace Certify.Management
 
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
                 SettingsManager.SaveAppSettings();
+            }
+
+            var accessControl = await GetCurrentAccessControl();
+
+            if (await accessControl.IsInitialized() == false)
+            {
+                await BootstrapTestAdminUserAndRoles(accessControl);
+            }
+            else
+            {
+                await UpdateStandardRoles(accessControl);
+            }
+        }
+
+        private static async Task BootstrapTestAdminUserAndRoles(IAccessControl access)
+        {
+            // setup roles with policies
+            await UpdateStandardRoles(access);
+
+            var adminSp = new SecurityPrinciple
+            {
+                Id = "admin_01",
+                Description = "Primary default admin",
+                PrincipleType = SecurityPrincipleType.User,
+                Username = "admin",
+                Password = "admin",
+                Provider = StandardIdentityProviders.INTERNAL
+            };
+            
+            await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+         
+            // assign security principles to roles
+            var assignedRoles = new List<AssignedRole> {
+                 // administrator
+                 new AssignedRole{
+                     Id= Guid.NewGuid().ToString(),
+                     RoleId=StandardRoles.Administrator.Id,
+                     SecurityPrincipleId=adminSp.Id
+                 }
+            };
+
+            foreach (var r in assignedRoles)
+            {
+                // add roles and policy assignments to store
+                await access.AddAssignedRole(r);
+            }
+        }
+
+        /// <summary>
+        /// Add/update standard system roles, policies and resource actions
+        /// </summary>
+        /// <param name="access"></param>
+        /// <returns></returns>
+        private static async Task UpdateStandardRoles(IAccessControl access)
+        {
+            // setup roles with policies
+
+            var actions = Policies.GetStandardResourceActions();
+
+            foreach (var action in actions)
+            {
+                await access.AddResourceAction(action);
+            }
+
+            // setup policies with actions
+
+            var policies = Policies.GetStandardPolicies();
+
+            // add policies to store
+            foreach (var r in policies)
+            {
+                _ = await access.AddResourcePolicy(null, r, bypassIntegrityCheck: true);
+            }
+
+            // setup roles with policies
+            var roles = Policies.GetStandardRoles();
+
+            foreach (var r in roles)
+            {
+                // add roles and policy assignments to store
+                await access.AddRole(r);
             }
         }
 

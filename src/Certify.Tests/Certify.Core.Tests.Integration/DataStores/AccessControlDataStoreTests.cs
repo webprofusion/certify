@@ -67,7 +67,7 @@ namespace Certify.Core.Tests.DataStores
                 Email = "test@test.com",
                 PrincipleType = SecurityPrincipleType.User,
                 Username = "test",
-                Provider = StandardProviders.INTERNAL
+                Provider = StandardIdentityProviders.INTERNAL
             };
 
             try
@@ -140,7 +140,7 @@ namespace Certify.Core.Tests.DataStores
                 Description = "Primary test admin",
                 PrincipleType = SecurityPrincipleType.User,
                 Username = "admin01",
-                Provider = StandardProviders.INTERNAL
+                Provider = StandardIdentityProviders.INTERNAL
             };
 
             var consumerSp = new SecurityPrinciple
@@ -151,7 +151,7 @@ namespace Certify.Core.Tests.DataStores
                 PrincipleType = SecurityPrincipleType.User,
                 Username = "dev01",
                 Password = "oldpassword",
-                Provider = StandardProviders.INTERNAL
+                Provider = StandardIdentityProviders.INTERNAL
             };
 
             try

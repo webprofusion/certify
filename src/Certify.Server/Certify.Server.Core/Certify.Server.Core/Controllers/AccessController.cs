@@ -100,7 +100,7 @@ namespace Certify.Service.Controllers
         public async Task<List<Role>> GetRoles()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var roles = await accessControl.GetSystemRoles();
+            var roles = await accessControl.GetRoles();
             return roles;
         }
 
