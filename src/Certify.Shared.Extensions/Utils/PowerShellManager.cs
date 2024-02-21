@@ -83,23 +83,29 @@ namespace Certify.Management
                         {
                             shell.Runspace = runspace;
 
-                            if (credentials != null && credentials.Any())
+                            // running PowerShell under credentials currently only supported for windows
+                            var credentialsProvidedButNotSupported = false;
+
+                            if (credentials?.Any() == true && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                            {
+                                // TODO: warn credentials not supported on this platform
+                                credentialsProvidedButNotSupported = true;
+                            }
+
+                            if (credentials?.Any() == true && credentialsProvidedButNotSupported == false)
                             {
                                 // run as windows user
                                 UserCredentials windowsCredentials = null;
 
-                                if (credentials != null && credentials.Count > 0)
+                                try
                                 {
-                                    try
-                                    {
-                                        windowsCredentials = GetWindowsCredentials(credentials);
-                                    }
-                                    catch
-                                    {
-                                        var err = "Command with Windows Credentials requires username and password.";
+                                    windowsCredentials = GetWindowsCredentials(credentials);
+                                }
+                                catch
+                                {
+                                    var err = "Command with Windows Credentials requires username and password.";
 
-                                        return new ActionResult(err, false);
-                                    }
+                                    return new ActionResult(err, false);
                                 }
 
                                 // logon type affects the range of abilities the impersonated user has
@@ -261,48 +267,56 @@ namespace Certify.Management
             // launch process with user credentials set
             if (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"))
             {
-                var username = credentials["username"];
-                var pwd = credentials["password"];
-
-                credentials.TryGetValue("domain", out var domain);
-
-                if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    domain = ".";
-                }
 
-                scriptProcessInfo.UserName = username;
-                scriptProcessInfo.Domain = domain;
+                    var username = credentials["username"];
+                    var pwd = credentials["password"];
 
-                var sPwd = new SecureString();
-                foreach (var c in pwd)
-                {
-                    sPwd.AppendChar(c);
-                }
+                    credentials.TryGetValue("domain", out var domain);
 
-                sPwd.MakeReadOnly();
-
-                scriptProcessInfo.Password = sPwd;
-
-                if (resultsJsonTempPath != null)
-                {
-                    //allow this user to read the results file
-                    var fileInfo = new FileInfo(resultsJsonTempPath);
-                    var accessControl = fileInfo.GetAccessControl();
-                    var fullUser = domain == "." ? username : $"{domain}\\{username}";
-                    accessControl.AddAccessRule(new FileSystemAccessRule(fullUser, FileSystemRights.Read, AccessControlType.Allow));
-
-                    try
+                    if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
                     {
-                        fileInfo.SetAccessControl(accessControl);
+                        domain = ".";
                     }
-                    catch
-                    {
-                        _log.AppendLine("Running Powershell As New Process: Could not apply access control to allow this user to read the temp results file");
-                    }
-                }
 
-                _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
+                    scriptProcessInfo.UserName = username;
+                    scriptProcessInfo.Domain = domain;
+
+                    var sPwd = new SecureString();
+                    foreach (var c in pwd)
+                    {
+                        sPwd.AppendChar(c);
+                    }
+
+                    sPwd.MakeReadOnly();
+
+                    scriptProcessInfo.Password = sPwd;
+
+                    if (resultsJsonTempPath != null)
+                    {
+                        //allow this user to read the results file
+                        var fileInfo = new FileInfo(resultsJsonTempPath);
+                        var accessControl = fileInfo.GetAccessControl();
+                        var fullUser = domain == "." ? username : $"{domain}\\{username}";
+                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUser, FileSystemRights.Read, AccessControlType.Allow));
+
+                        try
+                        {
+                            fileInfo.SetAccessControl(accessControl);
+                        }
+                        catch
+                        {
+                            _log.AppendLine("Running PowerShell As New Process: Could not apply access control to allow this user to read the temp results file");
+                        }
+                    }
+
+                    _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
+                }
+                else
+                {
+                    _log.AppendLine($"Running PowerShell As New Process: Running as specific user credentials are not supported on this platform.");
+                }
             }
 
             try
