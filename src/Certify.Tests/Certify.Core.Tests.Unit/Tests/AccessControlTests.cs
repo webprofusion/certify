@@ -222,7 +222,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -268,7 +268,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -288,7 +288,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -352,7 +352,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -389,7 +389,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -451,7 +451,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -485,7 +485,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -543,7 +543,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -580,7 +580,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -617,7 +617,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddAction(a));
+            actions.ForEach(async a => await access.AddResourceAction(a));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "access_admin");
@@ -651,7 +651,7 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
@@ -680,7 +680,7 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
@@ -713,7 +713,7 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == "certificate_consumer");
