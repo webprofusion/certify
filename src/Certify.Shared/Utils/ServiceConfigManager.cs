@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Certify.Models;
 using Certify.Providers;
 using Certify.Shared;
 using Newtonsoft.Json;
@@ -9,29 +10,6 @@ namespace Certify.SharedUtils
 {
     public class ServiceConfigManager : IServiceConfigProvider
     {
-        private static string GetAppDataFolder(string subFolder = null)
-        {
-            var parts = new List<string>()
-            {
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                Models.SharedConstants.APPDATASUBFOLDER
-            };
-
-            if (subFolder != null)
-            {
-                parts.Add(subFolder);
-            }
-
-            var path = Path.Combine(parts.ToArray());
-
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-
-            return path;
-        }
-
         /// <summary>
         /// Get default or saved service config settings
         /// </summary>
@@ -43,7 +21,7 @@ namespace Certify.SharedUtils
                 ConfigStatus = ConfigStatus.DefaultFailed
             };
 
-            var appDataPath = GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
             serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");
@@ -93,7 +71,7 @@ namespace Certify.SharedUtils
                 return;
             }
 
-            var appDataPath = GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.GetAppDataFolder();
             var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
             serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");

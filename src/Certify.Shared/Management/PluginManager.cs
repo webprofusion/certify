@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Serilog;
@@ -54,7 +55,7 @@ namespace Certify.Management
             _log = new Models.Loggy(
                     new LoggerConfiguration()
                         .MinimumLevel.Information()
-                        .WriteTo.File(Path.Combine(GetAppDataFolder("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                         .CreateLogger()
                 );
 
@@ -62,29 +63,6 @@ namespace Certify.Management
             {
                 CurrentInstance = this;
             }
-        }
-
-        public static string GetAppDataFolder(string subFolder = null)
-        {
-            var parts = new List<string>()
-            {
-                Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-                Models.SharedConstants.APPDATASUBFOLDER
-            };
-
-            if (subFolder != null)
-            {
-                parts.Add(subFolder);
-            }
-
-            var path = Path.Combine(parts.ToArray());
-
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-
-            return path;
         }
 
         private string GetPluginFolderPath(bool usePluginSubfolder = true, bool useAppData = false)
@@ -109,7 +87,7 @@ namespace Certify.Management
             }
             else
             {
-                return GetAppDataFolder("plugins");
+                return EnvironmentUtil.GetAppDataFolder("plugins");
             }
         }
 

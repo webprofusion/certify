@@ -24,26 +24,11 @@ namespace Certify.Models
         public LogItemType LogItemType { get; set; }
     }
 
-    public class Util
-    {
-
-        public static string GetAppDataFolder()
-        {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), Models.SharedConstants.APPDATASUBFOLDER);
-            if (!System.IO.Directory.Exists(path))
-            {
-                System.IO.Directory.CreateDirectory(path);
-            }
-
-            return path;
-        }
-    }
-
     public static class ManagedCertificateLog
     {
         private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
-        public static string GetLogPath(string managedItemId) => Path.Combine(Util.GetAppDataFolder(), "logs", "log_" + managedItemId.Replace(':', '_') + ".txt");
+        public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
 
         public static ILog GetLogger(string managedItemId, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
         {
