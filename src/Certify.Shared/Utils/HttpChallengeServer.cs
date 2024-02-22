@@ -325,7 +325,15 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception exp)
                 {
-                    Log($"Error in http challenge server: {exp}");
+                    if (exp.Message.Contains("thread exit"))
+                    {
+                        // this is a normal exception when stopping the server
+                    }
+                    else
+                    {
+                        Log($"Error in http challenge server: {exp}");
+                    }
+
                     Stop();
                     return;
                 }
