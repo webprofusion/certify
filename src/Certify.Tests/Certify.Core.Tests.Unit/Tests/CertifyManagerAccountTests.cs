@@ -164,8 +164,8 @@ namespace Certify.Core.Tests.Unit
                     // Create new step-ca container
                     _caContainer = new ContainerBuilder()
                         .WithName("step-ca")
-                        // Set the image for the container to "jrnelson90/step-ca-win:latest".
-                        .WithImage("jrnelson90/step-ca-win:latest")
+                        // Set the image for the container to "webprofusion/step-ca-win:latest".
+                        .WithImage("webprofusion/step-ca-win:latest")
                         .WithBindMount(_winRunnerTempDir, "C:\\Users\\ContainerUser\\.step")
                         // Bind port 9000 of the container to port 9000 on the host.
                         .WithPortBinding(_caPort)

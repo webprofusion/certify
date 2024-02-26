@@ -3,9 +3,8 @@
 <RunSettings>
   <!-- Configurations that affect the Test Framework -->
   <RunConfiguration>
-    <TestAdaptersPaths>%SystemDrive%\%HOMEPATH%\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0</TestAdaptersPaths>
-    <TargetFrameworkVersion>net462</TargetFrameworkVersion>
-    <ResultsDirectory>.\TestResults-4_6_2-windows</ResultsDirectory>
+    <TestAdaptersPaths>$HOME/.nuget/packages/microsoft.codecoveraged/17.8.0/build/netstandard2.0</TestAdaptersPaths>
+    <ResultsDirectory>./TestResults-Linux</ResultsDirectory>
     <CollectSourceInformation>true</CollectSourceInformation>
   </RunConfiguration>
   <!-- Configurations for data collectors -->
@@ -19,15 +18,14 @@
             <ModulePaths>
               <Include>
                 <ModulePath>.*Certify.*$</ModulePath>
-                <ModulePath>.*Plugin.Datastore.SQLite.dll$</ModulePath>
+                <ModulePath>.*Plugin.Datastore.*$</ModulePath>
               </Include>
               <Exclude>
                 <ModulePath>.*Certify.Core.Tests.Unit.dll$</ModulePath>
                 <ModulePath>.*Moq.dll$</ModulePath>
+                <ModulePath>.*Microsoft.*$</ModulePath>
               </Exclude>
             </ModulePaths>
-            <!--<EnableStaticManagedInstrumentation>True</EnableStaticManagedInstrumentation>
-            <EnableStaticNativeInstrumentationRestore>True</EnableStaticNativeInstrumentationRestore>-->
             <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
           </CodeCoverage>
         </Configuration>
