@@ -39,7 +39,7 @@ namespace Certify.Core.Management.Access
 
         public async Task AuditInformation(string template, params object[] propertyvalues)
         {
-            _log.Error(template, propertyvalues);
+            _log.Information(template, propertyvalues);
         }
         /// <summary>
         /// Check if the system has been initialized with a security principle
