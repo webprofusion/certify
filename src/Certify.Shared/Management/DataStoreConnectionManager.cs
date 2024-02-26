@@ -12,7 +12,7 @@ namespace Certify.Shared.Core.Management
     {
         private static string GetConfigPath()
         {
-            var appDataPath = EnvironmentUtil.GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.CreateAppDataPath();
             var configFile = Path.Combine(appDataPath, "datastores.json");
             return configFile;
         }

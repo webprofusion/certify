@@ -72,7 +72,7 @@ namespace Certify.UI.ViewModel
                 new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.Debug()
-                .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                 .CreateLogger()
                 );
 

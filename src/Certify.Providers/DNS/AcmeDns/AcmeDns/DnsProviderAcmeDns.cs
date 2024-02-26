@@ -90,7 +90,7 @@ namespace Certify.Providers.DNS.AcmeDns
         private Uri _apiBaseUri { get; set; }
         public DnsProviderAcmeDns()
         {
-            _settingsPath = EnvironmentUtil.GetAppDataFolder();
+            _settingsPath = EnvironmentUtil.CreateAppDataPath();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderAcmeDns");

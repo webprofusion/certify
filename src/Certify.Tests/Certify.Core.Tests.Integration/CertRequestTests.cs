@@ -634,7 +634,7 @@ namespace Certify.Core.Tests
         {
 
             var apiEndpoint = ConfigSettings["TestAuthTokenEndpoint"];
-            var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
+            var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
             var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
             var provider = new AnvilACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Certify.Management.Util.GetUserAgent());
             var account = new AccountDetails

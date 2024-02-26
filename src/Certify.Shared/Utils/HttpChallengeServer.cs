@@ -73,7 +73,7 @@ namespace Certify.Core.Management.Challenges
 
             try
             {
-                var logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), "logs", "httpChallengeServer.log");
+                var logPath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), "logs", "httpChallengeServer.log");
                 if (clearLog)
                 {
                     System.IO.File.WriteAllText(logPath, msg);

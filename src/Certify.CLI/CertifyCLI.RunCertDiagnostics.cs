@@ -222,7 +222,7 @@ namespace Certify.CLI
         public async Task FindPendingAuthorizations(bool autoFix)
         {
             // scan log files for authz URLs, check status of each
-            var logFolder = EnvironmentUtil.GetAppDataFolder("logs");
+            var logFolder = EnvironmentUtil.CreateAppDataPath("logs");
             var files = System.IO.Directory.GetFiles(logFolder, "log_*.txt");
             var orderUrls = new List<string>();
 
