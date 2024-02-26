@@ -59,7 +59,7 @@ namespace Certify.Client
                 _legacyConnection.Closed += OnConnectionClosed;
 
 #if DEBUG
-                var logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "hubconnection.log");
+                var logPath = Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "hubconnection.log");
                 var writer = new StreamWriter(logPath);
                 writer.AutoFlush = true;
                 _legacyConnection.TraceLevel = TraceLevels.All;

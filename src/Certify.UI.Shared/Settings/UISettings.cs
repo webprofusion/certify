@@ -21,7 +21,7 @@ namespace Certify.UI.Settings
 
         public static UISettings Load()
         {
-            var uiSettingsFilePath = Path.Combine(EnvironmentUtil.GetAppDataFolder(), SETTINGS_FILE);
+            var uiSettingsFilePath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), SETTINGS_FILE);
             if (File.Exists(uiSettingsFilePath))
             {
                 try
@@ -45,7 +45,7 @@ namespace Certify.UI.Settings
             try
             {
                 var json = Newtonsoft.Json.JsonConvert.SerializeObject(uiSettings, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText(Path.Combine(EnvironmentUtil.GetAppDataFolder(), SETTINGS_FILE), json);
+                File.WriteAllText(Path.Combine(EnvironmentUtil.CreateAppDataPath(), SETTINGS_FILE), json);
             }
             catch { }
         }

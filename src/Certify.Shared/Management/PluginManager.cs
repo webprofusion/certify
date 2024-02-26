@@ -55,7 +55,7 @@ namespace Certify.Management
             _log = new Models.Loggy(
                     new LoggerConfiguration()
                         .MinimumLevel.Information()
-                        .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                         .CreateLogger()
                 );
 
@@ -87,7 +87,7 @@ namespace Certify.Management
             }
             else
             {
-                return EnvironmentUtil.GetAppDataFolder("plugins");
+                return EnvironmentUtil.CreateAppDataPath("plugins");
             }
         }
 

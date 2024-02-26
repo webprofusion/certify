@@ -28,7 +28,7 @@ namespace Certify.Models
     {
         private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
 
-        public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
+        public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
 
         public static ILog GetLogger(string managedItemId, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
         {

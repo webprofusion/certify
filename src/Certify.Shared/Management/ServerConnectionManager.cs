@@ -12,7 +12,7 @@ namespace Certify.Shared.Core.Management
     {
         private static string GetConfigPath()
         {
-            var appDataPath = EnvironmentUtil.GetAppDataFolder();
+            var appDataPath = EnvironmentUtil.CreateAppDataPath();
             var connectionConfigFile = Path.Combine(appDataPath, "servers.json");
             return connectionConfigFile;
         }

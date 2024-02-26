@@ -57,7 +57,7 @@ namespace Certify.Service
             // log event/exception
             try
             {
-                var logPath = System.IO.Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "service.exceptions.log");
+                var logPath = System.IO.Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "service.exceptions.log");
                 if (msg != null)
                 {
                     System.IO.File.AppendAllText(logPath, "\r\n[" + DateTime.Now + "] :: " + msg);

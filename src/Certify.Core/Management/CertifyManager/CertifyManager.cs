@@ -329,7 +329,7 @@ namespace Certify.Management
             _serviceLog = new Loggy(
                 new LoggerConfiguration()
                .MinimumLevel.ControlledBy(_loggingLevelSwitch)
-               .WriteTo.File(Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
+               .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger()
                );
 
@@ -449,7 +449,7 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
-                var settingBaseFolder = EnvironmentUtil.GetAppDataFolder();
+                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
                 var newProvider = new AnvilACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
@@ -620,7 +620,7 @@ namespace Certify.Management
 
             if (type == "session")
             {
-                logPath = Path.Combine(EnvironmentUtil.GetAppDataFolder("logs"), "session.log");
+                logPath = Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log");
             }
 
             if (logPath != null && System.IO.File.Exists(logPath))
