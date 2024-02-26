@@ -101,16 +101,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
     <NoWarn>1701;1702;NU1701</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='WINDOWS_NT|net462'">
-    <RunSettingsFilePath>$(MSBuildProjectDirectory)/unit-test-462.runsettings</RunSettingsFilePath>
+  <PropertyGroup Condition="'$(OS)'=='WINDOWS_NT'">
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)\unit-test.runsettings</RunSettingsFilePath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='WINDOWS_NT|net8.0'">
-    <RunSettingsFilePath>$(MSBuildProjectDirectory)/unit-test-8-0.runsettings</RunSettingsFilePath>
+  <PropertyGroup Condition="'$(OS)'=='UNIX'">
+    <RunSettingsFilePath>$(MSBuildThisFileDirectory)\unit-test-linux.runsettings</RunSettingsFilePath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(OS)|$(TargetFramework)'=='UNIX|net8.0'">
-    <RunSettingsFilePath>$(MSBuildProjectDirectory)/unit-test-8-0-linux.runsettings</RunSettingsFilePath>
-  </PropertyGroup>
-
   <ItemGroup>
     <Content Include="Assets\Powershell\Simple.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -149,6 +145,7 @@
     <PackageReference Include="Polly" Version="8.3.0" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.0" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <PackageReference Include="System.Text.Json" Version="8.0.2" />
     <PackageReference Include="Testcontainers" Version="3.7.0" />
   </ItemGroup>
   <ItemGroup>

@@ -79,29 +79,28 @@ jobs:
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
         dotnet add package GitHubActionsTestLogger
-        dotnet add package coverlet.collector
         dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
         export GITHUB_WORKSPACE="$GITHUB_WORKSPACE/certify"
-        export GITHUB_STEP_SUMMARY="./TestResults-8_0-${{ runner.os }}/test-summary.md"
+        export GITHUB_STEP_SUMMARY="./TestResults-${{ runner.os }}/test-summary.md"
         dotnet test --no-build -f net8.0 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Generate Test Results Report
       run: |
         echo "# Test Results" > $GITHUB_STEP_SUMMARY
-        sed -i 's/<details>/<details open>/g' ./TestResults-8_0-${{ runner.os }}/test-summary.md
-        cat ./TestResults-8_0-${{ runner.os }}/test-summary.md >> $GITHUB_STEP_SUMMARY
+        sed -i 's/<details>/<details open>/g' ./TestResults-${{ runner.os }}/test-summary.md
+        cat ./TestResults-${{ runner.os }}/test-summary.md >> $GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
     - name: Generated Test Coverage Report
       run: |
-        reportgenerator -reports:./TestResults-8_0-${{ runner.os }}/*/coverage.cobertura.xml -targetdir:./TestResults-8_0-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
-        cat ./TestResults-8_0-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
+        reportgenerator -reports:./TestResults-${{ runner.os }}/*/*.cobertura.xml -targetdir:./TestResults-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
+        cat ./TestResults-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
