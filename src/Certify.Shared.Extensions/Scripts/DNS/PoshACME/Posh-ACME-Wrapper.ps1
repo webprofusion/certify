@@ -4,8 +4,15 @@
 $Public  = @( Get-ChildItem -Path $PoshACMERoot\Public\*.ps1 -ErrorAction Ignore )
 $Private = @( Get-ChildItem -Path $PoshACMERoot\Private\*.ps1 -ErrorAction Ignore )
 
-# default to TLS 1.2
-[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+# default to TLS 1.2 and TLS 1.3, but just use TLS 1.2 if this machine doesn't understand TLS 1.3
+
+try {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12 -bor [System.Net.SecurityProtocolType]::Tls13
+} catch {
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+}
+
+# iwr https://tls13.1d.pw # TLS 1.3 test
 
 # Load Assembly without using Add-Type to avoid locking assembly dll
 $bcPath = "$($PoshACMERoot)/../../../BouncyCastle.Cryptography.dll"
