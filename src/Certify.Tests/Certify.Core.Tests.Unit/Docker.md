@@ -134,7 +134,7 @@ To run all of the Certify Core Unit Tests in a Linux container, use the followin
 docker run --name core-tests-unit-8_0-linux --rm -it -v ${pwd}\bin\Debug\net8.0:/app -w /app mcr.microsoft.com/dotnet/sdk:8.0 dotnet test Certify.Core.Tests.Unit.dll -f net8.0
 ```
 
-To run a specifi class of Certify Core Unit Tests in a Linux container, use the following command, substituting the Class Name of the tests after `--filter "ClassName=`:
+To run a specific class of Certify Core Unit Tests in a Linux container, use the following command, substituting the Class Name of the tests after `--filter "ClassName=`:
 
 ```
 docker run --name core-tests-unit-8_0-linux --rm -it -v ${pwd}\bin\Debug\net8.0:/app -w /app mcr.microsoft.com/dotnet/sdk:8.0 dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter "ClassName=Certify.Core.Tests.Unit.DnsQueryTests"
