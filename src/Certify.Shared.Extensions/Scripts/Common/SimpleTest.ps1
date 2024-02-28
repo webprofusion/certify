@@ -1,4 +1,4 @@
-# This is an example script and it will be overwritten when the next update is installed. 
+# This is a legacy example script and it will be overwritten when the next update is installed. 
 # To use this script copy it to another location and modify as required
 
 # Logs results to the given path (modify as required)

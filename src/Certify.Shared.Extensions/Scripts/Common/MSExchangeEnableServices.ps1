@@ -1,4 +1,4 @@
-﻿# This is an example script and it will be overwritten when the next update is installed. 
+﻿# # This is a legacy example script and it will be overwritten when the next update is installed. 
 # To use this script copy it to another location and modify as required
 
 # This script enables the use of the newly retrieved and stored certificate with common Exchange services
