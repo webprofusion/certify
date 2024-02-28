@@ -1834,8 +1834,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
                 catch (Exception)
                 {
-                    //TODO: log
-                    System.Diagnostics.Debug.WriteLine("Failed to properly cache issuer certs.");
+                    _log?.Warning("AnvilAcmeProvider: Failed to properly cache issuer certs.");
                 }
             }
         }

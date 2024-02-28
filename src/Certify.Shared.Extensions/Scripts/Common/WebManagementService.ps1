@@ -1,4 +1,4 @@
-﻿# This is an example script and it will be overwritten when the next update is installed. 
+﻿# This is an legacy example script and it will be overwritten when the next update is installed. 
 # To use this script copy it to another location and modify as required
 
 # Set certificate for Web Management Service in port 8172 (Web Deploy etc)
