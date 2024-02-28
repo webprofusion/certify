@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Serilog;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -95,6 +96,58 @@ namespace Certify.Core.Tests.Unit
             {
                 var path = CertificateManager.GetCertificatePrivateKeyPath(storedCert);
                 Assert.IsNotNull(path);
+            }
+            finally
+            {
+                CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
+            }
+        }
+
+        [TestMethod, Description("Test private key set ACL")]
+        [DataTestMethod]
+        [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.RSA256, "read", true, "RSA Key Type, Read")]
+        [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.RSA256, "fullcontrol", true, "RSA Key Type, Full Control")]
+        [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.ECDSA256, "read", true, "ECDSA Key Type, Read")]
+        [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.ECDSA256, "fullcontrol", true, "ECDSA Key Type, Full Control")]
+        [DataRow("NT AUTHORITY\\MadeUpUser", StandardKeyTypes.ECDSA256, "fullcontrol", false, "ECDSA Key Type, Full Control, Invalid User")]
+        public void TestSetACLOnPrivateKey(string account, string keyType, string fileSystemRights, bool isUserValid, string testDescription)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
+
+            var logCfg = new LoggerConfiguration()
+              .MinimumLevel.Debug()
+              .WriteTo.Debug()
+              .CreateLogger();
+
+            var log = new Loggy(logCfg);
+
+            var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)", keyType: keyType);
+
+            CertificateManager.StoreCertificate(cert, CertificateManager.DEFAULT_STORE_NAME);
+
+            var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, CertificateManager.DEFAULT_STORE_NAME);
+            Assert.IsNotNull(storedCert);
+
+            try
+            {
+
+                var success = CertificateManager.GrantUserAccessToCertificatePrivateKey(storedCert, account, fileSystemRights: fileSystemRights, log);
+
+                if (isUserValid)
+                {
+                    Assert.IsTrue(success, "Updating the ACL for the private key should succeed");
+
+                    var hasAccess = CertificateManager.HasUserAccessToCertificatePrivateKey(storedCert, account, fileSystemRights: fileSystemRights, log);
+                    Assert.IsTrue(hasAccess, "User should have the required access on the private key");
+                }
+                else
+                {
+                    Assert.IsFalse(success, "Updating the ACL for the private key should fail due to invalid user specified");
+                }
             }
             finally
             {
