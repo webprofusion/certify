@@ -81,7 +81,17 @@ namespace Certify.Management
                 // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks
                 if (managedCertificate.LastRenewalStatus != RequestState.Paused)
                 {
-                    targetCerts.Add(await itemManager.GetById(id));
+                    var item = await itemManager.GetById(id);
+                    if (item != null)
+                    {
+                        targetCerts.Add(item);
+                    }
+                }
+
+                if (!targetCerts.Any())
+                {
+                    serviceLog?.Error("No matching target managed certificates found for renewal.");
+                    return new List<CertificateRequestResult>();
                 }
 
                 managedCertificateBatch = targetCerts;
