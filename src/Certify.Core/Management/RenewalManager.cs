@@ -70,7 +70,17 @@ namespace Certify.Management
 
                 foreach (var id in settings.TargetManagedCertificates)
                 {
-                    targetCerts.Add(await itemManager.GetById(id));
+                    var item = await itemManager.GetById(id);
+                    if (item != null)
+                    {
+                        targetCerts.Add(item);
+                    }
+                }
+
+                if (!targetCerts.Any())
+                {
+                    serviceLog?.Error("No matching target managed certificates found for renewal.");
+                    return new List<CertificateRequestResult>();
                 }
 
                 managedCertificateBatch = targetCerts;
