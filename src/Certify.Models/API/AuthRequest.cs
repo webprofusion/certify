@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Certify.Models.Config.AccessControl;
+﻿using Certify.Models.Config.AccessControl;
 
 namespace Certify.Models.API
 {

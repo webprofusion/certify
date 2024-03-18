@@ -1,5 +1,4 @@
-﻿using Certify.Core.Management.Access;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models.API;
 using Certify.Models.Config.AccessControl;
 using Microsoft.AspNetCore.DataProtection;
@@ -141,7 +140,7 @@ namespace Certify.Service.Controllers
         public async Task<SecurityPrincipleCheckResponse> Validate([FromBody] SecurityPrinciplePasswordCheck passwordCheck)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var result =  await accessControl.CheckSecurityPrinciplePassword(GetContextUserId(), passwordCheck);
+            var result = await accessControl.CheckSecurityPrinciplePassword(GetContextUserId(), passwordCheck);
 
             return result;
         }

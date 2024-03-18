@@ -1,13 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.API.Public;
 using Certify.Models;
-using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Org.BouncyCastle.Utilities;
 
 namespace Certify.Service.Api.Tests
 {
@@ -47,11 +44,11 @@ namespace Certify.Service.Api.Tests
 
             Assert.IsTrue(response.TotalResults > 0, "Certificate query should be successful");
 
-            var itemWithCert = response.Results.Last(c => c.HasCertificate && c.Identifiers.Any(d=>d.IdentifierType== CertIdentifierType.Dns));
+            var itemWithCert = response.Results.Last(c => c.HasCertificate && c.Identifiers.Any(d => d.IdentifierType == CertIdentifierType.Dns));
 
             // get cert /certificate/{managedCertId}/download/{format?}
 
-           var file =  await _clientWithAuthorizedAccess.DownloadAsync(itemWithCert.Id, "pfx","fullchain");
+            var file = await _clientWithAuthorizedAccess.DownloadAsync(itemWithCert.Id, "pfx", "fullchain");
 
             // Assert
             using (var memoryStream = new MemoryStream())
@@ -66,7 +63,8 @@ namespace Certify.Service.Api.Tests
                     Assert.IsTrue(cert.HasPrivateKey, "Downloaded PFX has private key");
 
                     Assert.AreEqual(cert.Subject, "CN=" + itemWithCert.PrimaryIdentifier.Value, "Primary domain of cert should match primary domain of managed item");
-                } catch (System.Security.Cryptography.CryptographicException)
+                }
+                catch (System.Security.Cryptography.CryptographicException)
                 {
                     // pfx has a password set
                 }

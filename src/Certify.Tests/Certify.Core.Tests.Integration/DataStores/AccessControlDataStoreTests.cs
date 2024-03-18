@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
-using Certify.Datastore.Postgres;
-using Certify.Datastore.SQLServer;
 using Certify.Management;
 using Certify.Models.Config.AccessControl;
 using Certify.Providers;

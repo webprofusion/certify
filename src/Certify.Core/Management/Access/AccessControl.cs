@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Unicode;
 using System.Threading.Tasks;
 using Certify.Models.API;
-using Certify.Models.Config;
 using Certify.Models.Config.AccessControl;
 using Certify.Models.Providers;
 using Certify.Providers;
-using Org.BouncyCastle.Tls;
-using static System.Net.WebRequestMethods;
 
 namespace Certify.Core.Management.Access
 {
@@ -420,7 +416,7 @@ namespace Certify.Core.Management.Access
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read role status role for [{id}] without being in required role.", contextUserId, id);
-                
+
             }
 
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
@@ -457,7 +453,8 @@ namespace Certify.Core.Management.Access
             foreach (var deleted in update.RemovedAssignedRoles)
             {
                 var e = existing.FirstOrDefault(r => r.RoleId == deleted.RoleId);
-                if (e!=null){
+                if (e != null)
+                {
                     await _store.Delete<AssignedRole>(nameof(AssignedRole), e.Id);
                 }
             }
@@ -482,7 +479,7 @@ namespace Certify.Core.Management.Access
                                 await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId);
 
             if (principle != null && IsPasswordValid(passwordCheck.Password, principle.Password))
-            {               
+            {
                 return new SecurityPrincipleCheckResponse { IsSuccess = true, SecurityPrinciple = principle };
             }
             else

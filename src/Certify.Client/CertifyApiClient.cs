@@ -299,13 +299,13 @@ namespace Certify.Client
             var result = await FetchAsync("system/datastores/providers", authContext);
             return JsonConvert.DeserializeObject<List<ProviderDefinition>>(result);
         }
-        
+
         public async Task<List<DataStoreConnection>> GetDataStoreConnections(AuthContext authContext = null)
         {
             var result = await FetchAsync("system/datastores/", authContext);
             return JsonConvert.DeserializeObject<List<DataStoreConnection>>(result);
         }
-        
+
         public async Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null)
         {
             var result = await PostAsync($"system/datastores/copy/{sourceId}/{targetId}", null, authContext: authContext);
@@ -619,7 +619,7 @@ namespace Certify.Client
             var result = await FetchAsync("accounts/authorities", authContext);
             return JsonConvert.DeserializeObject<List<CertificateAuthority>>(result);
         }
-        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext =null)
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext = null)
         {
             var result = await PostAsync("accounts/authorities", ca, authContext);
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());

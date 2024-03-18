@@ -11,7 +11,6 @@ using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
-using Certify.Models.Config.AccessControl;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
