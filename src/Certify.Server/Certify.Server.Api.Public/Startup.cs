@@ -1,14 +1,11 @@
 ﻿using System.Reflection;
 using Certify.Client;
-using Certify.Models.Config;
 using Certify.Server.Api.Public.Middleware;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
-using Polly;
 
 namespace Certify.Server.API
 {

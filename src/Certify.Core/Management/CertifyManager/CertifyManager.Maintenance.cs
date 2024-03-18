@@ -88,9 +88,9 @@ namespace Certify.Management
                 Password = "admin",
                 Provider = StandardIdentityProviders.INTERNAL
             };
-            
+
             await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
-         
+
             // assign security principles to roles
             var assignedRoles = new List<AssignedRole> {
                  // administrator
