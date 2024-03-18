@@ -20,7 +20,7 @@ namespace Certify.Core.Tests.Unit
         public Task Add<T>(string itemType, AccessStoreItem item)
         {
             item.ItemType = itemType;
-            
+
             // clone the item to avoid reference issue mutating the same object, as we are using an in-memory store
             var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
             return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
@@ -57,7 +57,7 @@ namespace Certify.Core.Tests.Unit
 
         public Task Update<T>(string itemType, T item)
         {
-            var o =  JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
+            var o = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
 
             _store.TryGetValue(o.Id, out var value);
             var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as AccessStoreItem;
@@ -74,19 +74,19 @@ namespace Certify.Core.Tests.Unit
     public class TestAssignedRoles
     {
         public static AssignedRole TestAdmin { get; } = new AssignedRole
-        { 
+        {
             // test administrator
             RoleId = StandardRoles.Administrator.Id,
             SecurityPrincipleId = "[test]"
         };
         public static AssignedRole Admin { get; } = new AssignedRole
-        { 
+        {
             // administrator
             RoleId = StandardRoles.Administrator.Id,
             SecurityPrincipleId = "admin_01"
         };
         public static AssignedRole DevopsUserDomainConsumer { get; } = new AssignedRole
-        { 
+        {
             // devops user in consumer role for a specific domain
             RoleId = StandardRoles.CertificateConsumer.Id,
             SecurityPrincipleId = "devops_user_01",
@@ -95,7 +95,7 @@ namespace Certify.Core.Tests.Unit
             }
         };
         public static AssignedRole DevopsUserWildcardDomainConsumer { get; } = new AssignedRole
-        { 
+        {
             // devops user in consumer role for a wildcard domain
             RoleId = StandardRoles.CertificateConsumer.Id,
             SecurityPrincipleId = "devops_user_01",

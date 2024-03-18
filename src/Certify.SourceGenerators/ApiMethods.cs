@@ -1,5 +1,5 @@
-﻿using SourceGenerator;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SourceGenerator;
 
 namespace Certify.SourceGenerators
 {
@@ -13,7 +13,7 @@ namespace Certify.SourceGenerators
             // - to then generate the public API clients, run nswag when the public API is running.
 
             return new List<GeneratedAPI> {
-  
+
                     new GeneratedAPI {
 
                         OperationName = "GetSecurityPrincipleAssignedRoles",
@@ -97,8 +97,8 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "securityprinciple/update",
                         ServiceAPIRoute = "access/securityprinciple/update",
                         ReturnType = "Models.Config.ActionResult",
-                        Params = new Dictionary<string, string>{ 
-                            { "principle", "Certify.Models.Config.AccessControl.SecurityPrinciple" } 
+                        Params = new Dictionary<string, string>{
+                            { "principle", "Certify.Models.Config.AccessControl.SecurityPrinciple" }
                         }
                     },
                       new GeneratedAPI {
