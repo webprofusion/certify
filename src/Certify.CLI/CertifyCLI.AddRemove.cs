@@ -189,7 +189,7 @@ namespace Certify.CLI
                 });
 
                 var filteredManagedCerts = managedCerts.Where(c => c.DomainOptions.Any(d => domains.Contains(d.Domain.ToLower()) && d.IsSelected && d.Type == CertIdentifierType.Dns)).ToList();
-                
+
                 foreach (var managedCert in filteredManagedCerts)
                 {
                     var hasChanges = false;

@@ -45,7 +45,7 @@ namespace Certify.Server.Api.Public.Middleware
                 };
             });
 
-            
+
             return services;
         }
     }
