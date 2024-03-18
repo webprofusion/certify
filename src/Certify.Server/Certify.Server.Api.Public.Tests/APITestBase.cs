@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.API;
-using Certify.Server.Api.Public.Controllers;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.VisualStudio.TestPlatform.CoreUtilities.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Service.Api.Tests
@@ -58,11 +51,11 @@ namespace Certify.Service.Api.Tests
                  .ConfigureAppConfiguration((context, builder) =>
                  {
                      builder.AddJsonFile("appsettings.api.public.test.json");
-                     
+
                  })
                 .UseStartup<Server.API.Startup>()
                 );
-            
+
             _httpClientWithAnonymousAccess = _apiServer.CreateClient();
             _clientWithAnonymousAccess = new API.Public.Client(_apiServer.BaseAddress.ToString(), _httpClientWithAnonymousAccess);
 
