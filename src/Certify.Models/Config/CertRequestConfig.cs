@@ -340,7 +340,7 @@ namespace Certify.Models
 
             return allDomains.Distinct().ToList();
         }
-       
+
         private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
         public List<CertIdentifierItem> GetCertificateIdentifiers()
