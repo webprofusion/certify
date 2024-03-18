@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Service.Controllers
@@ -31,7 +30,7 @@ namespace Certify.Service.Controllers
             var identity = new ClaimsIdentity(claims: claims, authenticationType: BearerTokenDefaults.AuthenticationScheme);
             var servicePrinciple = new ClaimsPrincipal(identity: identity);
 
-            
+
 
             // consume a service token request and return a long lived JWT token
             var response = new AccessTokenResponse
@@ -39,8 +38,8 @@ namespace Certify.Service.Controllers
                 AccessToken = "",
                 ExpiresIn = 3600,
                 RefreshToken = "",
-            };  
-           return Ok(response);
+            };
+            return Ok(response);
         }
 
         [HttpPost, Route("refresh")]

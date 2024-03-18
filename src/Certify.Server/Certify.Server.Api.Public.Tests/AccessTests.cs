@@ -1,6 +1,4 @@
-﻿using System.Net.Http;
-using System.Threading.Tasks;
-using Certify.API.Public;
+﻿using System.Threading.Tasks;
 using Certify.Models.API;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

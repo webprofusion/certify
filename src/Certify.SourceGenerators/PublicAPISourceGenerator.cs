@@ -1,10 +1,10 @@
-﻿using Certify.SourceGenerators;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Certify.SourceGenerators;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
 
 namespace SourceGenerator
 {
@@ -38,7 +38,7 @@ namespace SourceGenerator
                 var apiParamDecl = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Value} {p.Key}")) : "";
                 var apiParamDeclWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Value} {p.Key}")) : "";
 
-                var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")): "";
+                var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
                 var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
                 if (context.Compilation.AssemblyName.EndsWith("Api.Public"))
@@ -72,7 +72,7 @@ using Certify.Models.Config.AccessControl;
                     [Route(""""""{config.PublicAPIRoute}"""""")]
                     public async Task<IActionResult> {config.OperationName}({apiParamDeclWithoutAuthContext})
                     {{
-                        var result = await _client.{config.OperationName}({apiParamCall.Replace("authContext","CurrentAuthContext")});
+                        var result = await _client.{config.OperationName}({apiParamCall.Replace("authContext", "CurrentAuthContext")});
                         return new OkObjectResult(result);
                     }}
                 }}
