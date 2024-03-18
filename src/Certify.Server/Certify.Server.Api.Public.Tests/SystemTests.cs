@@ -13,7 +13,7 @@ namespace Certify.Service.Api.Tests
             await PerformAuth();
 
             var responseVersion = await _clientWithAuthorizedAccess.GetSystemVersionAsync();
-           
+
             // Assert
             var expectedVersion = typeof(Certify.Models.AppVersion).GetTypeInfo().Assembly.GetName().Version;
             Assert.AreEqual(expectedVersion, responseVersion);
