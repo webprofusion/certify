@@ -4,7 +4,7 @@
     <AssemblyVersion>6.0.17</AssemblyVersion>
     <Authors>Webprofusion Pty Ltd</Authors>
     <Company>Webprofusion Pty Ltd</Company>
-    <Product>Certify The Web - Certify SSL Manager</Product>
+    <Product>Certify The Web - Certify Certificate Manager</Product>
     <PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
     <Deterministic>false</Deterministic>
