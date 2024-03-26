@@ -14,55 +14,6 @@ namespace Certify.UI.Tests.Integration
     [TestClass]
     public class ViewModelTest
     {
-        [TestMethod, Ignore]
-        public async Task TestViewModelSetup()
-        {
-            var mockClient = new Mock<ICertifyClient>();
-
-            AuthContext authContext = null;
-            mockClient.Setup(c => c.GetPreferences(authContext)).Returns(
-                Task.FromResult(new Models.Preferences { })
-                );
-
-            mockClient.Setup(c => c.GetManagedCertificates(It.IsAny<Models.ManagedCertificateFilter>(), authContext))
-                .Returns(
-                Task.FromResult(new List<ManagedCertificate> {
-                    new ManagedCertificate{
-                         Id= Guid.NewGuid().ToString(),
-                         Name="Test  Managed Certificate"
-                    }
-                })
-                );
-
-            mockClient.Setup(c => c.GetAccounts(authContext))
-                .Returns(
-                Task.FromResult(
-                    new List<AccountDetails> {
-                        new AccountDetails {
-                            Email = "test@example.com",
-                            IsStagingAccount = true,
-                            CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT
-                        }
-                    })
-                );
-
-            mockClient.Setup(c => c.GetCredentials(authContext))
-              .Returns(
-              Task.FromResult(new List<StoredCredential> { })
-              );
-
-            var appModel = new AppViewModel(mockClient.Object);
-
-            await appModel.LoadSettingsAsync();
-
-            Assert.IsTrue(appModel.ManagedCertificates.Count > 0, "Should have managed sites");
-
-            Assert.IsTrue(appModel.HasRegisteredContacts, "Should have a registered contact");
-
-            await appModel.RefreshStoredCredentialsList();
-
-            appModel.RenewAll(new RenewalSettings { });
-        }
 
         [TestMethod]
         public void TestManagedCertViewModelValidationWithDomains()
@@ -231,6 +182,12 @@ namespace Certify.UI.Tests.Integration
 
             Assert.IsFalse(result.IsValid, result.Message);
             Assert.AreEqual(ValidationErrorCodes.SAN_LIMIT.ToString(), result.ErrorCode);
+
+            model.SelectedItem = null;
+            result = model.Validate(applyAutoConfiguration: true);
+
+            Assert.IsFalse(result.IsValid, result.Message);
+            Assert.AreEqual(ValidationErrorCodes.ITEM_NOT_FOUND.ToString(), result.ErrorCode);
 
         }
 
