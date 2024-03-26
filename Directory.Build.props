@@ -1,10 +1,10 @@
 <Project>
   <PropertyGroup>
-    <Version>6.0.15</Version>
-    <AssemblyVersion>6.0.15</AssemblyVersion>
+    <Version>6.0.16</Version>
+    <AssemblyVersion>6.0.16</AssemblyVersion>
     <Authors>Webprofusion Pty Ltd</Authors>
     <Company>Webprofusion Pty Ltd</Company>
-    <Product>Certify The Web - Certify SSL Manager</Product>
+    <Product>Certify The Web - Certify Certificate Manager</Product>
     <PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
     <Deterministic>false</Deterministic>
