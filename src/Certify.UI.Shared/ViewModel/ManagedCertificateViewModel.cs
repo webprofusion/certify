@@ -541,6 +541,11 @@ namespace Certify.UI.ViewModel
         public ValidationResult Validate(bool applyAutoConfiguration)
         {
 
+            if (SelectedItem == null)
+            {
+                return new ValidationResult(false, "No item selected", ValidationErrorCodes.ITEM_NOT_FOUND.ToString());
+            }
+
             var caId = Preferences.DefaultCertificateAuthority.WithDefault(StandardCertAuthorities.LETS_ENCRYPT);
             if (SelectedItem.CertificateAuthorityId != null)
             {
