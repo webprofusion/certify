@@ -17,7 +17,8 @@ namespace Certify.Models.Shared.Validation
         MIXED_WILDCARD_WITH_LABELS,
         REQUIRED_CHALLENGE_CONFIG_PARAM,
         SAN_LIMIT,
-        CN_LIMIT
+        CN_LIMIT,
+        ITEM_NOT_FOUND
     }
 
     public class CertificateEditorService
