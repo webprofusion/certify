@@ -29,30 +29,43 @@ namespace Certify.Management
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
         {
             var list = await _itemManager.Find(filter);
-
             if (filter?.IncludeExternal == true)
             {
-                if (_pluginManager?.CertificateManagerProviders?.Any() == true)
+                var external = GetExternallyManagedCertificates(filter);
+                if (external != null)
                 {
-                    // TODO: cache providers/results
-                    // check if we have any external sources of managed certificates
-                    foreach (var p in _pluginManager.CertificateManagerProviders)
+                    list.AddRange(await external);
+                }
+            }
+
+            return list;
+        }
+
+        private async Task<List<ManagedCertificate>> GetExternallyManagedCertificates(ManagedCertificateFilter filter)
+        {
+            var externalList = new List<ManagedCertificate>();
+            if (_pluginManager?.CertificateManagerProviders?.Any() == true)
+            {
+                // TODO: cache providers/results
+
+                // check if we have any external sources of managed certificates
+                foreach (var p in _pluginManager.CertificateManagerProviders)
+                {
+                    if (p != null)
                     {
-                        if (p != null)
+                        var pluginType = p.GetType();
+                        var providers = p.GetProviders(pluginType);
+
+                        foreach (var cp in providers)
                         {
-                            var pluginType = p.GetType();
-                            var providers = p.GetProviders(pluginType);
-                            foreach (var cp in providers)
+                            if (cp?.IsEnabled == true)
                             {
                                 try
                                 {
-                                    if (cp.IsEnabled)
-                                    {
-                                        var certManager = p.GetProvider(pluginType, cp.Id);
-                                        var certs = await certManager.GetManagedCertificates(filter);
+                                    var certManager = p.GetProvider(pluginType, cp.Id);
+                                    var certs = await certManager.GetManagedCertificates(filter);
 
-                                        list.AddRange(certs);
-                                    }
+                                    externalList.AddRange(certs);
                                 }
                                 catch (Exception ex)
                                 {
@@ -60,15 +73,15 @@ namespace Certify.Management
                                 }
                             }
                         }
-                        else
-                        {
-                            _serviceLog?.Error($"Failed to create one or more certificate manager plugins");
-                        }
+                    }
+                    else
+                    {
+                        _serviceLog?.Error($"Failed to create one or more certificate manager plugins");
                     }
                 }
             }
 
-            return list;
+            return externalList;
         }
 
         /// <summary>
@@ -80,7 +93,19 @@ namespace Certify.Management
         {
             var result = new ManagedCertificateSearchResult();
 
-            result.Results = await _itemManager.Find(filter);
+            var list = await _itemManager.Find(filter);
+            result.Results = list;
+
+            if (filter?.IncludeExternal == true)
+            {
+                // TODO: overall set still has to be paged and sorted
+                var external = GetExternallyManagedCertificates(filter);
+                if (external != null)
+                {
+                    list.AddRange(await external);
+                    result.Results = list;
+                }
+            }
 
             if (filter.PageSize > 0)
             {
