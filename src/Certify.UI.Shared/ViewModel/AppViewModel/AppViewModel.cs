@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -81,6 +81,20 @@ namespace Certify.UI.ViewModel
             ProgressResults = new ObservableCollection<RequestProgressState>();
 
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
+
+                // include external managed certs if enabled
+                filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
+                filter.PageSize = _filterPageSize;
+                filter.PageIndex = _filterPageIndex;
+
+                filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
+
+                var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+
+                
+                TotalManagedCertificates = result.TotalResults;
+                return result.Results;
+            });
 
             StartProgressCleanupTask();
 
