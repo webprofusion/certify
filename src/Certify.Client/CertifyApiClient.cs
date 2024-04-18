@@ -156,15 +156,15 @@ namespace Certify.Client
                 {
                     SetAuthContextForRequest(request, authContext);
 
-                    var response = await _client.SendAsync(request);
+                    var response = await _client.SendAsync(request).ConfigureAwait(false);
 
                     if (response.IsSuccessStatusCode)
                     {
-                        return await response.Content.ReadAsStringAsync();
+                        return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     }
                     else
                     {
-                        var error = await response.Content.ReadAsStringAsync();
+                        var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                         throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
                     }
                 }
@@ -195,7 +195,7 @@ namespace Certify.Client
 
                         request.Content = content;
 
-                        var response = await _client.SendAsync(request);
+                        var response = await _client.SendAsync(request).ConfigureAwait(false);
                         if (response.IsSuccessStatusCode)
                         {
                             return response;
@@ -231,14 +231,14 @@ namespace Certify.Client
             }
             else
             {
-                var response = await _client.PostAsync(_baseUri + endpoint, new StringContent(""));
+                var response = await _client.PostAsync(_baseUri + endpoint, new StringContent("")).ConfigureAwait(false);
                 if (response.IsSuccessStatusCode)
                 {
                     return response;
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -250,7 +250,7 @@ namespace Certify.Client
             {
                 SetAuthContextForRequest(request, authContext);
 
-                var response = await _client.SendAsync(request);
+                var response = await _client.SendAsync(request).ConfigureAwait(false);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -258,7 +258,7 @@ namespace Certify.Client
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
+                    var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
                 }
             }
@@ -413,10 +413,10 @@ namespace Certify.Client
         /// <returns></returns>
         public async Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter, AuthContext authContext = null)
         {
-            var response = await PostAsync("managedcertificates/results/", filter, authContext);
+            var response = await PostAsync("managedcertificates/results/", filter, authContext).ConfigureAwait(false);
             var serializer = new JsonSerializer();
 
-            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
+            using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync().ConfigureAwait(false)))
             using (var reader = new JsonTextReader(sr))
             {
                 var result = serializer.Deserialize<ManagedCertificateSearchResult>(reader);
