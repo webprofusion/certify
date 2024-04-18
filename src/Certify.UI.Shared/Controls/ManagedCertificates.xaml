@@ -88,43 +88,23 @@
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
                     TextChanged="TxtFilter_TextChanged" />
             </DockPanel>
-            <DockPanel
-                Margin="4,8,4,4"
-                LastChildFill="False" Visibility="{Binding HasPagesOfResults, Converter={StaticResource BoolToVisConverter }}"
-                DockPanel.Dock="Bottom">
-                <Button x:Name="Prev" Click="Prev_Click" DockPanel.Dock="Left"> <fa:FontAwesome
-                        Margin="4,4,4,4"
-                        VerticalAlignment="top"
-                        FontSize="10"
-                        Icon="ChevronLeft" />
-                </Button>
-                <TextBlock Margin="16,4,16,4" DockPanel.Dock="Left" TextAlignment="Center"
-                           Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
-                           Text="{Binding ResultPageDescription}" />
-                <Button x:Name="Next" Click="Next_Click" DockPanel.Dock="Right">
-                    <fa:FontAwesome
-                        Margin="4,4,4,4"
-                        VerticalAlignment="top"
-                        FontSize="10"
-                        Icon="ChevronRight" />
-                </Button>
-            </DockPanel>
+
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
                 Background="{DynamicResource MahApps.Brushes.Control.Background}"
                 DockPanel.Dock="Top"
-                ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                ScrollViewer.IsDeferredScrollingEnabled="True"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                SelectedItem="{Binding SelectedItem, Mode=OneWay}"
+                SelectedItem="{Binding SelectedData, Mode=OneWay}"
                 SelectionChanged="lvManagedCertificates_SelectionChanged"
                 SelectionMode="Single"
-                VirtualizingPanel.IsVirtualizing="True">
+                VirtualizingPanel.IsVirtualizing="True"
+                VirtualizingPanel.VirtualizationMode="Recycling">
                 <ListView.ContextMenu>
-                    <ContextMenu x:Name="ListContextMenu"
-                                 PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
+                    <ContextMenu x:Name="ListContextMenu" PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
                         <MenuItem
                             Click="SetListSortOrder_Click"
                             Header="Sort By Name"
@@ -160,7 +140,7 @@
 
                         <StackPanel
                             Margin="0,4,0,0"
-                            AutomationProperties.Name="{Binding Name}"
+                            AutomationProperties.Name="{Binding Item.Name}"
                             Orientation="Vertical">
 
                             <StackPanel Orientation="Horizontal">
@@ -168,7 +148,7 @@
                                     Margin="0,4,8,0"
                                     VerticalAlignment="top"
                                     FontSize="12"
-                                    Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverterEx}}"
+                                    Foreground="{Binding Path=Item.Health, Converter={StaticResource HealthColourConverterEx}}"
                                     Icon="Circle" />
 
                                 <StackPanel Orientation="Vertical">
@@ -176,18 +156,17 @@
                                     <TextBlock
                                         Margin="0,0,8,0"
                                         FontWeight="SemiBold"
-                                        Foreground="{Binding Path=Health, Converter={StaticResource HealthColourConverter}}"
-                                        Text="{Binding Name}" />
+                                        Foreground="{Binding Path=Item.Health, Converter={StaticResource HealthColourConverter}}"
+                                        Text="{Binding Item.Name}" />
 
 
                                     <TextBlock
                                         Margin="0,0,0,0"
                                         FontSize="10"
-                                        Foreground="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateColourConverter}}"
-                                        Text="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateConverter}}" />
+                                        Foreground="{Binding Path=Item.CertificateLifetime, Converter={StaticResource ExpiryDateColourConverter}}"
+                                        Text="{Binding Path=Item.CertificateLifetime, Converter={StaticResource ExpiryDateConverter}}" />
 
-                                    <StackPanel Orientation="Horizontal"
-                                                Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding Item.SourceId, Converter={StaticResource NullCollapsedConverter}}">
                                         <TextBlock
                                             Margin="0,0,0,0"
                                             FontSize="10"
@@ -199,7 +178,7 @@
                                             FontSize="10"
                                             FontWeight="DemiBold"
                                             Foreground="DarkGray"
-                                            Text="{Binding Path=SourceName}" />
+                                            Text="{Binding Path=Item.SourceName}" />
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>

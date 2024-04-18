@@ -35,63 +35,66 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
-
-                // show status tab for existing managed certs
-                var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
-
-                if (showStatus)
+                Application.Current.Dispatcher.Invoke(()=>
                 {
-                    TabStatusInfo.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    TabStatusInfo.Visibility = Visibility.Collapsed;
-                }
-
-                if (_lastSelectedItemId != ItemViewModel.SelectedItem?.Id)
-                {
-                    // switch tab to default if the selected item has changed
-
-                    _lastSelectedItemId = ItemViewModel.SelectedItem?.Id;
+                    // show status tab for existing managed certs
+                    var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
 
                     if (showStatus)
                     {
-                        SettingsTab.SelectedItem = TabStatusInfo;
+                        TabStatusInfo.Visibility = Visibility.Visible;
                     }
                     else
                     {
-                        SettingsTab.SelectedItem = TabDomains;
+                        TabStatusInfo.Visibility = Visibility.Collapsed;
                     }
-                }
 
-                ItemViewModel.RaiseSelectedItemChanges();
+                    if (_lastSelectedItemId != ItemViewModel.SelectedItem?.Id)
+                    {
+                        // switch tab to default if the selected item has changed
 
-                if (!ItemViewModel.IsEditable)
-                {
-                    TabDeployment.Visibility = Visibility.Collapsed;
-                    TabDomains.Visibility = Visibility.Collapsed;
-                    TabAuthorization.Visibility = Visibility.Collapsed;
-                    TabTasks.Visibility = Visibility.Collapsed;
-                    TabPreview.Visibility = Visibility.Collapsed;
+                        _lastSelectedItemId = ItemViewModel.SelectedItem?.Id;
 
-                }
-                else
-                {
-                    TabDeployment.Visibility = Visibility.Visible;
-                    TabDomains.Visibility = Visibility.Visible;
-                    TabAuthorization.Visibility = Visibility.Visible;
-                    TabTasks.Visibility = Visibility.Visible;
-                    TabPreview.Visibility = Visibility.Visible;
-                }
+                        if (showStatus)
+                        {
+                            SettingsTab.SelectedItem = TabStatusInfo;
+                        }
+                        else
+                        {
+                            SettingsTab.SelectedItem = TabDomains;
+                        }
+                    }
 
-                if (ItemViewModel.SelectedItem?.Id == null)
-                {
-                    // show name in edit mode when starting a new item
-                    ItemViewModel.IsNameEditMode = true;
-                    EditName.Focus();
-                }
+                    ItemViewModel.RaiseSelectedItemChanges();
 
-                AppViewModel.IsChanged = false;
+                    if (!ItemViewModel.IsEditable)
+                    {
+                        TabDeployment.Visibility = Visibility.Collapsed;
+                        TabDomains.Visibility = Visibility.Collapsed;
+                        TabAuthorization.Visibility = Visibility.Collapsed;
+                        TabTasks.Visibility = Visibility.Collapsed;
+                        TabPreview.Visibility = Visibility.Collapsed;
+
+                    }
+                    else
+                    {
+                        TabDeployment.Visibility = Visibility.Visible;
+                        TabDomains.Visibility = Visibility.Visible;
+                        TabAuthorization.Visibility = Visibility.Visible;
+                        TabTasks.Visibility = Visibility.Visible;
+                        TabPreview.Visibility = Visibility.Visible;
+                    }
+
+                    if (ItemViewModel.SelectedItem?.Id == null)
+                    {
+                        // show name in edit mode when starting a new item
+                        ItemViewModel.IsNameEditMode = true;
+                        EditName.Focus();
+                    }
+
+                    AppViewModel.IsChanged = false;
+                });
+               
 
             }
         }
@@ -209,7 +212,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             await AppViewModel.DeleteManagedCertificate(ItemViewModel.SelectedItem);
             if (ItemViewModel.SelectedItem?.Id == null)
             {
-                AppViewModel.SelectedItem = AppViewModel.ManagedCertificates.FirstOrDefault();
+                AppViewModel.SelectedItem = AppViewModel.ManagedCertificates.FirstOrDefault().Item;
             }
         }
 

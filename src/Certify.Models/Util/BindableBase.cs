@@ -171,7 +171,7 @@ namespace Certify.Models
                     p.PropertyType.IsSubclassOf(typeof(BindableBase))))
                 {
                     var val = prop.GetValue(obj);
-                    if (val is ICollection propertyCollection)
+                    if (val is ICollection propertyCollection && prop.Name!="ManagedCertificates")
                     {
                         foreach (var subObj in propertyCollection)
                         {

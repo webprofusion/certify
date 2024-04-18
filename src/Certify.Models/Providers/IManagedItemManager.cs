@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 
 namespace Certify.Providers
 {
@@ -20,5 +21,6 @@ namespace Certify.Providers
         Task PerformMaintenance();
 
         Task<bool> IsInitialised();
+        Task<Summary> GetSummary(ManagedCertificateFilter filter);
     }
 }

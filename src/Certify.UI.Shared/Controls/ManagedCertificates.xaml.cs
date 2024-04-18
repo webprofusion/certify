@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -7,6 +8,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using Certify.Models;
+using Certify.UI.Shared.Utils.Collections.Virtualization;
 
 namespace Certify.UI.Controls
 {
@@ -34,8 +37,6 @@ namespace Certify.UI.Controls
             DataContext = _appViewModel;
             MainItemView.DataContext = _itemViewModel;
 
-            SetFilter(); // start listening
-
             _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
 
@@ -47,6 +48,14 @@ namespace Certify.UI.Controls
                     _appViewModel.ManagedCertificates != null))
             {
                 SetFilter(); // reset listeners when ManagedCertificates are reset
+
+                if (e.PropertyName == "ManagedCertificates" && lvManagedCertificates.ItemsSource == null)
+                {
+                    // first load of managed certs, populate list view
+                    lvManagedCertificates.ItemsSource = _appViewModel.ManagedCertificates;
+
+                }
+
                 _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
                 _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
             }
@@ -54,7 +63,7 @@ namespace Certify.UI.Controls
 
         private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
+            /*CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
             {
                 var filter = txtFilter.Text.Trim();
                 var matchItem = item as Models.ManagedCertificate;
@@ -97,25 +106,25 @@ namespace Certify.UI.Controls
                 CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
                    new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
                );
-            }
+            }*/
         }
 
         private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
         {
-            var item = (ListViewItem)sender;
+            var listViewItem = (ListViewItem)sender;
             var ctrl = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
 
-            if (item != null && item.DataContext != null && item.DataContext is Models.ManagedCertificate)
+            if (listViewItem != null && listViewItem.DataContext != null && listViewItem.DataContext is DataWrapper<Models.ManagedCertificate>)
             {
-                var site = (Models.ManagedCertificate)item.DataContext;
+                var itemWrapper = listViewItem.DataContext as DataWrapper<Models.ManagedCertificate>;
 
-                site = site == _appViewModel.SelectedItem && ctrl ? null : site;
+                var item = itemWrapper.Item == _appViewModel.SelectedItem && ctrl ? null : itemWrapper.Item;
 
-                if (_appViewModel.SelectedItem != site)
+                if (_appViewModel.SelectedItem != item)
                 {
                     if (await _itemViewModel.ConfirmDiscardUnsavedChanges())
                     {
-                        SelectAndFocus(site);
+                        SelectAndFocus(itemWrapper);
                     }
 
                     e.Handled = true;
@@ -210,10 +219,10 @@ namespace Certify.UI.Controls
                 {
                     // get selected index of filtered list or 0
                     var index = lvManagedCertificates.Items.IndexOf(_appViewModel.SelectedItem);
-                    var item = lvManagedCertificates.Items[index == -1 ? 0 : index];
+                    var itemWrapper = lvManagedCertificates.Items[index == -1 ? 0 : index] as DataWrapper<Models.ManagedCertificate>;
 
                     // if navigating away, confirm discard
-                    if (item != _appViewModel.SelectedItem &&
+                    if (itemWrapper.Item != _appViewModel.SelectedItem &&
                         !await _itemViewModel.ConfirmDiscardUnsavedChanges())
                     {
                         return;
@@ -221,7 +230,7 @@ namespace Certify.UI.Controls
 
                     // if confirmed, select and focus
                     e.Handled = true;
-                    SelectAndFocus(item);
+                    SelectAndFocus(itemWrapper);
                 }
             }
         }
@@ -239,25 +248,25 @@ namespace Certify.UI.Controls
             }
         }
 
-        private void SelectAndFocus(object obj)
+        private void SelectAndFocus(DataWrapper<Models.ManagedCertificate> itemWrapper)
         {
-            var managedCert = obj as Models.ManagedCertificate;
-
-            lvManagedCertificates.Items.Refresh();
-
-            if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(managedCert))
+            if (itemWrapper == null)
             {
+                return;
+            }
 
-                // lvManagedCertificates.UpdateLayout(); // ensure containers exist
+            //lvManagedCertificates.Items.Refresh();
 
-                if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(managedCert) is ListViewItem item)
+            if (lvManagedCertificates.Items.Count > 0 && lvManagedCertificates.Items.Contains(itemWrapper))
+            {
+                if (lvManagedCertificates.ItemContainerGenerator.ContainerFromItem(itemWrapper) is ListViewItem item)
                 {
                     item.Focus();
                     item.IsSelected = true;
                 }
             }
 
-            Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = managedCert; }));
+            Dispatcher.Invoke(new Action(() => { _appViewModel.SelectedItem = itemWrapper.Item; }));
         }
 
         private async void ListViewItem_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -270,16 +279,17 @@ namespace Certify.UI.Controls
 
             if (e.Key == Key.Delete && lvManagedCertificates.SelectedItem != null)
             {
-                var itemToDelete = lvManagedCertificates.SelectedItem as Certify.Models.ManagedCertificate;
-                if (itemToDelete != null)
+                var itemToDeleteWrapper = lvManagedCertificates.SelectedItem as DataWrapper<Models.ManagedCertificate>;
+                if (itemToDeleteWrapper != null)
                 {
-                    await _appViewModel.DeleteManagedCertificate(itemToDelete);
+                    await _appViewModel.DeleteManagedCertificate(itemToDeleteWrapper.Item);
 
+                    // when item is deleted, select next item in list
                     if (lvManagedCertificates.Items.Count > 0)
                     {
                         if (lvManagedCertificates.SelectedItem != null)
                         {
-                            SelectAndFocus(lvManagedCertificates.SelectedItem);
+                            SelectAndFocus(lvManagedCertificates.SelectedItem as DataWrapper<Models.ManagedCertificate>);
                         }
                     }
                 }
@@ -332,11 +342,11 @@ namespace Certify.UI.Controls
                     break;
             }
 
-            if (next != _appViewModel.SelectedItem)
+            if ((next as DataWrapper<Models.ManagedCertificate>)?.Item != _appViewModel.SelectedItem)
             {
                 if (await _itemViewModel.ConfirmDiscardUnsavedChanges())
                 {
-                    SelectAndFocus(next);
+                    SelectAndFocus(next as DataWrapper<Models.ManagedCertificate>);
                 }
 
                 e.Handled = true;
@@ -347,27 +357,19 @@ namespace Certify.UI.Controls
 
         private void lvManagedCertificates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_appViewModel.SelectedItem != null &&
-                !_appViewModel.ManagedCertificates.Contains(_appViewModel.SelectedItem))
+            // when we have a current selected item in our model that doesn't exist in the list, clear it
+            /*if (_appViewModel.SelectedItem != null &&
+                !_appViewModel.ManagedCertificates.Contains(d => d.Item == _appViewModel.SelectedItem))
             {
                 if (lvManagedCertificates.Items.Count == 0)
                 {
                     _appViewModel.SelectedItem = null;
+                    lvManagedCertificates.SelectedIndex = -1;
                     txtFilter.Focus();
                 }
-                else
-                {
-                    // selected item was deleted
-                    var newIndex = lastSelectedIndex;
-
-                    while (newIndex >= lvManagedCertificates.Items.Count && newIndex >= -1)
-                    {
-                        newIndex--;
-                    }
-
-                    SelectAndFocus(newIndex == -1 ? null : lvManagedCertificates.Items[newIndex]);
-                }
+               
             }
+            */
 
             lastSelectedIndex = lvManagedCertificates.SelectedIndex;
         }
@@ -431,16 +433,6 @@ namespace Certify.UI.Controls
         private void GettingStarted_FilterApplied(string filter)
         {
             txtFilter.Text = filter;
-        }
-
-        private async void Prev_Click(object sender, RoutedEventArgs e)
-        {
-            await _appViewModel.ManagedCertificatesPrevPage();
-        }
-
-        private async void Next_Click(object sender, RoutedEventArgs e)
-        {
-            await _appViewModel.ManagedCertificatesNextPage();
         }
     }
 

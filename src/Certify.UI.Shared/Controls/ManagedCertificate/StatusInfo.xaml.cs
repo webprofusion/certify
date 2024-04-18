@@ -30,40 +30,44 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (e.PropertyName == "SelectedItem")
             {
-                if (ItemViewModel.SelectedItem != null)
+                Application.Current.Dispatcher.Invoke((Action)delegate
                 {
-                    if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+                    if (ItemViewModel.SelectedItem != null)
                     {
-                        RenewalSuccess.Visibility = Visibility.Visible;
-                        RenewalFailed.Visibility = Visibility.Collapsed;
-                        RenewalPaused.Visibility = Visibility.Collapsed;
-                    }
-                    else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
-                    {
-                        RenewalSuccess.Visibility = Visibility.Collapsed;
-                        RenewalFailed.Visibility = Visibility.Collapsed;
-                        RenewalPaused.Visibility = Visibility.Visible;
-                    }
-                    else if (
-                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
-                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
-                      )
-                    {
-                        RenewalSuccess.Visibility = Visibility.Collapsed;
-                        RenewalFailed.Visibility = Visibility.Visible;
-                        RenewalPaused.Visibility = Visibility.Collapsed;
-                    }
+                        if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+                        {
+                            RenewalSuccess.Visibility = Visibility.Visible;
+                            RenewalFailed.Visibility = Visibility.Collapsed;
+                            RenewalPaused.Visibility = Visibility.Collapsed;
+                        }
+                        else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
+                        {
+                            RenewalSuccess.Visibility = Visibility.Collapsed;
+                            RenewalFailed.Visibility = Visibility.Collapsed;
+                            RenewalPaused.Visibility = Visibility.Visible;
+                        }
+                        else if (
+                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
+                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
+                          )
+                        {
+                            RenewalSuccess.Visibility = Visibility.Collapsed;
+                            RenewalFailed.Visibility = Visibility.Visible;
+                            RenewalPaused.Visibility = Visibility.Collapsed;
+                        }
 
-                    if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
-                    {
-                        // hide log option if from external source
-                        OpenLogFile.Visibility = Visibility.Hidden;
+                        if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
+                        {
+                            // hide log option if from external source
+                            OpenLogFile.Visibility = Visibility.Hidden;
+                        }
+                        else
+                        {
+                            OpenLogFile.Visibility = Visibility.Visible;
+                        }
                     }
-                    else
-                    {
-                        OpenLogFile.Visibility = Visibility.Visible;
-                    }
-                }
+                });
+                
             }
         }
 

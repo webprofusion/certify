@@ -10,6 +10,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Shared.Validation;
 using Certify.Shared.Utils;
+using Certify.UI.Shared.Utils.Collections.Virtualization;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
@@ -223,6 +224,14 @@ namespace Certify.UI.ViewModel
             set
             {
                 _appViewModel.SelectedItem = value;
+            }
+        }
+
+        public DataWrapper<ManagedCertificate> SelectedData
+        {
+            set
+            {
+                _appViewModel.SelectedItem = value.Item;
             }
         }
 

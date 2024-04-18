@@ -35,7 +35,7 @@ namespace Certify.UI.Windows
             {
                 if (_appViewModel != null && _appViewModel.ManagedCertificates != null)
                 {
-                    return _appViewModel.ManagedCertificates.Count;
+                    return _appViewModel.ManagedCertificates.Count();
                 }
                 else
                 {

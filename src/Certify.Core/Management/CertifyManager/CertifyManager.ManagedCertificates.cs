@@ -112,6 +112,16 @@ namespace Certify.Management
                 filter.PageSize = null;
                 filter.PageIndex = null;
                 result.TotalResults = await _itemManager.CountAll(filter);
+
+                if (result.TotalResults< list.Count)
+                {
+                    // when list has external items count may exceed the results from data store
+                    result.TotalResults = list.Count;
+                }
+            }
+            else
+            {
+                result.TotalResults = list.Count;
             }
 
             return result;
@@ -119,8 +129,9 @@ namespace Certify.Management
 
         public async Task<Certify.Models.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
         {
-            var ms = await _itemManager.Find(filter);
+            Summary summary = await _itemManager.GetSummary(filter);
 
+            /*
             var summary = new Summary();
             summary.Total = ms.Count;
             summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
@@ -133,7 +144,7 @@ namespace Certify.Management
             summary.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
 
             summary.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
-
+            */
             return summary;
         }
 

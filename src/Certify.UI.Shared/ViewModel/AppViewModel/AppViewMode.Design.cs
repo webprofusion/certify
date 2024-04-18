@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Models;
 using Certify.Shared.Utils;
+using Certify.UI.Shared.Utils.Collections;
 using Newtonsoft.Json;
 
 namespace Certify.UI
@@ -22,13 +23,13 @@ namespace Certify.UI
             GenerateMockData();
 
             // auto-load data if in WPF designer
-            SelectedItem = ManagedCertificates.FirstOrDefault();
+            SelectedItem = ManagedCertificates.FirstOrDefault().Item;
         }
 
         private void GenerateMockData()
         {
             // generate 20 mock sites
-            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(0, 10, null);
+            var managedCertificates = new List<ManagedCertificate>();
             
             for (var i = 1; i <= 20; i++)
             {
@@ -74,24 +75,24 @@ namespace Certify.UI
                     });
                 }
 
-                ManagedCertificates.Add(site);
+                managedCertificates.Add(site);
             }
 
-            ManagedCertificates.Last().SourceId = "Certbot.org";
-            ManagedCertificates.Last().SourceName = "Certbot";
+            managedCertificates.Last().SourceId = "Certbot.org";
+            managedCertificates.Last().SourceName = "Certbot";
 
-            MockDataStore = JsonConvert.SerializeObject(ManagedCertificates);
-            foreach (var site in ManagedCertificates)
+            MockDataStore = JsonConvert.SerializeObject(managedCertificates);
+            
+            foreach (var site in managedCertificates)
             {
                 site.IsChanged = false;
             }
 
-            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(ManagedCertificates.Count, 10, null);
-
+            ManagedCertificates = new Shared.Utils.Collections.Virtualization.AsyncVirtualizingCollection<ManagedCertificate>(null, 1, 1);
             ProgressResults = new ObservableCollection<RequestProgressState>
             {
-                new RequestProgressState( RequestState.Running, "This is a long message to test text overflow and wrapping", ManagedCertificates[0], false),
-                new RequestProgressState( RequestState.Error, "This is another long message to test text overflow and wrapping", ManagedCertificates[1], false),
+                new RequestProgressState( RequestState.Running, "This is a long message to test text overflow and wrapping", ManagedCertificates.ElementAt(0).Item, false),
+                new RequestProgressState( RequestState.Error, "This is another long message to test text overflow and wrapping", ManagedCertificates.ElementAt(1).Item, false),
             };
 
             AccountDetails = new ObservableCollection<AccountDetails>
@@ -113,7 +114,7 @@ namespace Certify.UI
                 site.IsChanged = false;
             }
 
-            ManagedCertificates = new Shared.Utils.ManagedCertificateVirtualObservableCollection(mockSites.Count, 10, null);
+            ManagedCertificates =  new Shared.Utils.Collections.Virtualization.AsyncVirtualizingCollection<ManagedCertificate>(null, 1, 1); 
             ImportedManagedCertificates = new ObservableCollection<ManagedCertificate>();
         }
         public override bool IsIISAvailable => true;

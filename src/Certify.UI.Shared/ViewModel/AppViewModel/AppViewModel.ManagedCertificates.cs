@@ -11,7 +11,8 @@ using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
 using Certify.UI.Shared;
-using Certify.UI.Shared.Utils;
+using Certify.UI.Shared.Utils.Collections;
+using Certify.UI.Shared.Utils.Collections.Virtualization;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
@@ -43,22 +44,22 @@ namespace Certify.UI.ViewModel
             get => _selectedItem;
             set
             {
-                if (value?.Id != null && !ManagedCertificates.Contains(value))
+                /*if (value?.Id != null && !ManagedCertificates.Any(c => c?.Item == value))
                 {
-                    value = ManagedCertificates.FirstOrDefault(s => s.Id == value.Id);
-                }
+                    value = ManagedCertificates.FirstOrDefault(c => c?.Item?.Id == value.Id)?.Item;
+                }*/
 
                 _selectedItem = value;
             }
         }
 
         private object _managedCertificatesLock = new object();
-        private ManagedCertificateVirtualObservableCollection _managedCertificates;
+        private AsyncVirtualizingCollection<ManagedCertificate> _managedCertificates;
 
         /// <summary>
         /// Cached list of all the sites we currently manage 
         /// </summary>
-        public ManagedCertificateVirtualObservableCollection ManagedCertificates
+        public AsyncVirtualizingCollection<ManagedCertificate> ManagedCertificates
         {
             get
             {
@@ -72,7 +73,7 @@ namespace Certify.UI.ViewModel
             {
                 _managedCertificates = value;
 
-                System.Windows.Data.BindingOperations.EnableCollectionSynchronization(_managedCertificates, _managedCertificatesLock);
+                // System.Windows.Data.BindingOperations.EnableCollectionSynchronization(_managedCertificates, _managedCertificatesLock);
 
                 if (SelectedItem != null)
                 {
@@ -90,7 +91,8 @@ namespace Certify.UI.ViewModel
         [DependsOn(nameof(ManagedCertificates))]
         public long NumManagedCerts
         {
-            get {
+            get
+            {
                 return TotalManagedCertificates;
             }
         }
@@ -110,15 +112,34 @@ namespace Certify.UI.ViewModel
 
             // include external managed certs if enabled
             filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
-            filter.PageSize = _filterPageSize;
+            
             filter.PageIndex = _filterPageIndex;
 
             filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
 
+            // fetch first batch to get initial total count to allocate async collection
+            filter.PageSize = 1;
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
-
-            ManagedCertificates.UpdatePage(result.TotalResults,result.Results, _filterPageIndex, _filterPageSize);
             TotalManagedCertificates = result.TotalResults;
+
+            filter.PageSize = _filterPageSize;
+
+            var provider = new ManagedCertificateProvider((int)TotalManagedCertificates, async (int pageIndex, int pageSize, ManagedCertificateFilter f) =>
+            {
+                System.Diagnostics.Debug.WriteLine("Fetch page: " + pageIndex + " of " + pageSize + " items");
+
+                var searchResult = new ManagedCertificateSearchResult();
+                filter.PageIndex = pageIndex;
+                filter.PageSize = pageSize;
+                searchResult = await _certifyClient.GetManagedCertificateSearchResult(filter).ConfigureAwait(false);
+                return searchResult;
+            });
+
+            var items = new AsyncVirtualizingCollection<ManagedCertificate>(provider, 100, 3000);
+           
+
+            ManagedCertificates = items;
+
         }
 
         public async Task<Summary> GetManagedCertificateSummary()
@@ -131,34 +152,6 @@ namespace Certify.UI.ViewModel
             var filter = new ManagedCertificateFilter();
 
             return await _certifyClient?.GetManagedCertificateSummary(filter);
-        }
-
-        public async Task ManagedCertificatesNextPage()
-        {
-            if (ManagedCertificates.Count >= _filterPageSize)
-            {
-                _filterPageIndex++;
-                await RefreshManagedCertificates();
-                RaisePropertyChangedEvent(nameof(ResultPageDescription));
-            }
-        }
-
-        public async Task ManagedCertificatesPrevPage()
-        {
-            if (_filterPageIndex > 0)
-            {
-                _filterPageIndex--;
-                await RefreshManagedCertificates();
-                RaisePropertyChangedEvent(nameof(ResultPageDescription));
-            }
-        }
-
-        /// <summary>
-        /// Formatted description of the current page index in the result set
-        /// </summary>
-        public string ResultPageDescription
-        {
-            get { return $"Page {_filterPageIndex + 1} of {Math.Ceiling((decimal)TotalManagedCertificates / _filterPageSize)}"; }
         }
 
         /// <summary>
@@ -199,7 +192,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> DeleteManagedCertificate(ManagedCertificate selectedItem)
         {
-            var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id);
+            var existing = ManagedCertificates.FirstOrDefault(s => s.Item.Id == selectedItem.Id)?.Item;
             if (existing != null)
             {
                 if (existing.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
@@ -219,7 +212,7 @@ namespace Certify.UI.ViewModel
 
                         try
                         {
-                            ManagedCertificates.Remove(existing);
+                            // ManagedCertificates.Remove(existing);
                             RaisePropertyChangedEvent(nameof(ManagedCertificates));
                         }
                         finally
@@ -244,7 +237,7 @@ namespace Certify.UI.ViewModel
         public async Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused = true)
         {
             //begin request process
-            var managedCertificate = ManagedCertificates.FirstOrDefault(s => s.Id == managedItemId);
+            var managedCertificate = await _certifyClient.GetManagedCertificate(managedItemId);
 
             if (managedCertificate != null)
             {
@@ -317,7 +310,7 @@ namespace Certify.UI.ViewModel
 
             try
             {
-                var existing = ManagedCertificates.FirstOrDefault(i => i.Id == managedCertificate.Id);
+                var existing = ManagedCertificates.FirstOrDefault(i => i.Item?.Id == managedCertificate.Id);
                 var newItem = managedCertificate;
 
                 // optional reload managed site details (for refresh)
@@ -331,9 +324,8 @@ namespace Certify.UI.ViewModel
                     newItem.IsChanged = false;
 
                     // update our cached copy of the managed site details
-                    ManagedCertificates.AddOrUpdate(newItem);
-
-                    
+                    //ManagedCertificates.AddOrUpdate(newItem);
+                    await RefreshManagedCertificates();
                 }
 
                 // refresh SelectedItem value if it matches our updated item
@@ -499,7 +491,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        internal async Task<List<CertificateRequestResult>> RedeployManagedCertificatess(bool isPreviewOnly, bool includeDeploymentTasks)
+        internal async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks)
         {
             return await _certifyClient.RedeployManagedCertificates(isPreviewOnly, includeDeploymentTasks);
         }
