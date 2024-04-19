@@ -454,7 +454,7 @@ namespace Certify.UI.ViewModel
 
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
-        internal async Task<List<CertificateRequestResult>> RedeployManagedCertificatess(bool isPreviewOnly, bool includeDeploymentTasks)
+        internal async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks)
         {
             return await _certifyClient.RedeployManagedCertificates(isPreviewOnly, includeDeploymentTasks);
         }

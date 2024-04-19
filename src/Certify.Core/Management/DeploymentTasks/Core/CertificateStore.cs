@@ -24,7 +24,7 @@ namespace Certify.Providers.DeploymentTasks.Core
                 DefaultTitle = "Store Certificate",
                 IsExperimental = false,
                 UsageType = DeploymentProviderUsage.PostRequest,
-                Description = "Store certificate in the local Certificate Store with custom name. Note that standard Deployment already includes storing the certificate in the local computer store so this task is normally not required. ",
+                Description = "[NOTE: not normally required as cert is stored automatically by standard auto deployment.] This task stores the certificate in the local Certificate Store with custom name.",
                 SupportedContexts = DeploymentContextType.LocalAsService | DeploymentContextType.LocalAsUser,
                 ProviderParameters = new System.Collections.Generic.List<ProviderParameter>
                 {

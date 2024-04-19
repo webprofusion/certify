@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Input;
 
@@ -66,7 +66,7 @@ namespace Certify.UI.Windows
                     }
                     else
                     {
-                        MessageBox.Show("Server registration could not complete.");
+                        MessageBox.Show("Server registration could not complete. Check your username and password is correct and that outgoing https connections are allowed from this machine.");
                     }
                 }
                 catch (Exception)

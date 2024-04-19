@@ -273,7 +273,7 @@ namespace Certify.UI.Controls.Settings
 
             if (MessageBox.Show(msg, "Perform Certificate Redeployment?", MessageBoxButton.YesNoCancel) == MessageBoxResult.Yes)
             {
-                await ViewModel.AppViewModel.Current.RedeployManagedCertificatess(isPreviewOnly: false, IncludeDeploymentTasks.IsChecked == true);
+                await ViewModel.AppViewModel.Current.RedeployManagedCertificates(isPreviewOnly: false, IncludeDeploymentTasks.IsChecked == true);
             }
         }
 
