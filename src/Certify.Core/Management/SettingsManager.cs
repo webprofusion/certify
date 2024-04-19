@@ -172,6 +172,11 @@ namespace Certify.Management
         public bool EnableParallelRenewals { get; set; }
     
         /// <summary>
+        /// If set, customizes the ACME retry interval for operations such as polling order status where Retry After not supported by CA
+        /// </summary>
+        public int DefaultACMERetryInterval { get; set; }
+
+        /// <summary>
         /// If true, challenge cleanup will only happen after all auth challenges in an order have been processed
         /// </summary>
         public bool PerformChallengeCleanupsLast { get; set; }
@@ -229,6 +234,8 @@ namespace Certify.Management
             CoreAppSettings.Current.DefaultKeyType = prefs.DefaultKeyType;
 
             CoreAppSettings.Current.EnableParallelRenewals = prefs.EnableParallelRenewals;
+
+            CoreAppSettings.Current.DefaultACMERetryInterval = prefs.DefaultACMERetryInterval;
             return true;
         }
 
@@ -264,7 +271,8 @@ namespace Certify.Management
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
                 ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId,
                 DefaultKeyType = CoreAppSettings.Current.DefaultKeyType,
-                EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
+                EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
+                DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval
             };
 
             return prefs;

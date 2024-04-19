@@ -21,6 +21,40 @@ using Org.BouncyCastle.X509;
 
 namespace Certify.Providers.ACME.Anvil
 {
+
+    public class AnvilACMEProviderSettings
+    {
+        /// <summary>
+        /// ACME Directory URI
+        /// </summary>
+        public string AcmeBaseUri { get; set; }
+
+        /// <summary>
+        /// Base path for general service settings
+        /// </summary>
+        public string ServiceSettingsBasePath { get; set; }
+
+        /// <summary>
+        /// Directory path for legacy provider settings
+        /// </summary>
+        public string LegacySettingsPath { get; set; }
+
+        /// <summary>
+        /// User Agent name to use in http requests
+        /// </summary>
+        public string UserAgentName { get; set; } = "Certify Certificate Manager";
+
+        /// <summary>
+        /// Optionally allow ACME service to use an untrusted TLS certificate, e.g. internal CAs
+        /// </summary>
+        public bool AllowUntrustedTls { get; set; } = false;
+
+        /// <summary>
+        /// If set, customizes the ACME retry interval for operations such as polling order status where Retry After not supported by CA
+        /// </summary>
+        public int DefaultACMERetryIntervalSeconds { get; set; }
+    }
+
     /// <summary>
     /// ACME Provider using Anvil https://github.com/webprofusion/anvil which is a fork based on https://github.com/fszlin/certes
     /// </summary>
@@ -29,9 +63,6 @@ namespace Certify.Providers.ACME.Anvil
         private AcmeContext _acme;
 
         private Uri _serviceUri = null;
-
-        private readonly string _settingsFolder = null;
-        private readonly string _settingsBaseFolder = null;
 
         private AnvilSettings _settings = null;
         private ConcurrentDictionary<string, IOrderContext> _currentOrders;
@@ -42,22 +73,19 @@ namespace Certify.Providers.ACME.Anvil
         private AcmeHttpClient _httpClient;
         private LoggingHandler _loggingHandler;
 
-        private readonly string _userAgentName = "Certify Certificate Manager";
         private ILog _log = null;
 
         private List<byte[]> _issuerCertCache = new List<byte[]>();
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
-        private bool _allowInvalidTls = false;
 
         public bool EnableUnknownCARoots { get; set; } = true;
 
         /// <summary>
-        /// Standard ms to wait before attempting to check for an attempted challenge to be validated (e.g. an HTTP check or DNS lookup)
+        /// Standard ms to wait before attempting to check for an attempted challenge to be validated etc (e.g. an HTTP check or DNS lookup)
         /// </summary>
 
-        private const int _challengeValidationWaitMS = 5000;
-        private const int _orderRetryWaitMS = 1000;
+        private int _operationRetryWaitMS = 3000;
 
         /// <summary>
         /// Default output when finalizing a certificate download: pfx (single file container), pem (multiple files), all (pfx, pem etc)
@@ -71,17 +99,26 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         private AcmeDirectoryInfo _dir;
 
-        public AnvilACMEProvider(string acmeBaseUri, string settingsBasePath, string settingsPath, string userAgentName, bool allowInvalidTls = false)
+        private AnvilACMEProviderSettings _providerSettings = null;
+
+        public AnvilACMEProvider(AnvilACMEProviderSettings providerSettings)
         {
-            _settingsFolder = settingsPath;
+            _providerSettings = providerSettings;
+            _serviceUri = new Uri(providerSettings.AcmeBaseUri);
 
-            _settingsBaseFolder = settingsBasePath;
-
-            _userAgentName = $"{userAgentName}";
-
-            _serviceUri = new Uri(acmeBaseUri);
-
-            _allowInvalidTls = allowInvalidTls;
+            // optionally 
+            if (providerSettings.DefaultACMERetryIntervalSeconds > 0)
+            {
+                _operationRetryWaitMS = providerSettings.DefaultACMERetryIntervalSeconds * 1000;
+                if (_operationRetryWaitMS < 1000)
+                {
+                    _operationRetryWaitMS = 1000;
+                }
+                else if (_operationRetryWaitMS > 20000)
+                {
+                    _operationRetryWaitMS = 20000;
+                }
+            }
         }
 
         public string GetProviderName() => "Anvil";
@@ -98,7 +135,7 @@ namespace Certify.Providers.ACME.Anvil
 
             var httpHandler = new HttpClientHandler();
 
-            if (_allowInvalidTls)
+            if (_providerSettings.AllowUntrustedTls)
             {
                 httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
             }
@@ -106,7 +143,7 @@ namespace Certify.Providers.ACME.Anvil
             _loggingHandler = new LoggingHandler(httpHandler, _log);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
 
-            customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_userAgentName);
+            customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_providerSettings.UserAgentName);
 
             _httpClient = new AcmeHttpClient(_serviceUri, customHttpClient);
         }
@@ -128,7 +165,7 @@ namespace Certify.Providers.ACME.Anvil
                 if (account == null)
                 {
                     // if initalising without a known account, attempt to load details from storage
-                    var settingsFilePath = Path.Combine(_settingsFolder, "c-settings.json");
+                    var settingsFilePath = Path.Combine(_providerSettings.LegacySettingsPath, "c-settings.json");
                     if (File.Exists(settingsFilePath))
                     {
                         var json = File.ReadAllText(settingsFilePath);
@@ -141,10 +178,10 @@ namespace Certify.Providers.ACME.Anvil
 
                     if (!string.IsNullOrEmpty(_settings.AccountKey))
                     {
-                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (File.Exists(Path.Combine(_providerSettings.LegacySettingsPath, "c-acc.key")))
                         {
                             //remove legacy key info
-                            File.Delete(Path.Combine(_settingsFolder, "c-acc.key"));
+                            File.Delete(Path.Combine(_providerSettings.LegacySettingsPath, "c-acc.key"));
                         }
 
                         SetAcmeContextAccountKey(_settings.AccountKey);
@@ -152,9 +189,9 @@ namespace Certify.Providers.ACME.Anvil
                     else
                     {
                         // no account key in settings, check .key (legacy key file)
-                        if (File.Exists(Path.Combine(_settingsFolder, "c-acc.key")))
+                        if (File.Exists(Path.Combine(_providerSettings.LegacySettingsPath, "c-acc.key")))
                         {
-                            var pem = File.ReadAllText(Path.Combine(_settingsFolder, "c-acc.key"));
+                            var pem = File.ReadAllText(Path.Combine(_providerSettings.LegacySettingsPath, "c-acc.key"));
                             SetAcmeContextAccountKey(pem);
                         }
                     }
@@ -763,7 +800,7 @@ namespace Certify.Providers.ACME.Anvil
                                 log.Warning(message);
 
                                 // pause before next attempt
-                                await Task.Delay(_orderRetryWaitMS);
+                                await Task.Delay(_operationRetryWaitMS);
                             }
                         }
 
@@ -1228,7 +1265,7 @@ namespace Certify.Providers.ACME.Anvil
             await _acme.HttpClient.ConsumeNonce();
 
             // wait a couple of seconds to allow CA to complete validation
-            await Task.Delay(_challengeValidationWaitMS);
+            await Task.Delay(_operationRetryWaitMS);
 
             var res = await authz.Resource();
 
@@ -1248,7 +1285,7 @@ namespace Certify.Providers.ACME.Anvil
                 if (attempts > 0 && res.Status != AuthorizationStatus.Valid && res.Status != AuthorizationStatus.Invalid)
                 {
                     log.Verbose("Validation not yet completed. Pausing..");
-                    await Task.Delay(_challengeValidationWaitMS);
+                    await Task.Delay(_operationRetryWaitMS);
                 }
             }
 
@@ -1314,7 +1351,7 @@ namespace Certify.Providers.ACME.Anvil
             var attempts = 5;
             while (attempts > 0 && (order?.Status != OrderStatus.Ready && order?.Status != OrderStatus.Valid))
             {
-                await Task.Delay(2000);
+                await Task.Delay(_operationRetryWaitMS);
                 order = await orderContext.Resource();
                 attempts--;
             }
@@ -1461,7 +1498,14 @@ namespace Certify.Providers.ACME.Anvil
 
                         while (attempts > 0 && order.Status == OrderStatus.Processing)
                         {
-                            await Task.Delay(TimeSpan.FromSeconds(Math.Max(orderContext.RetryAfter, 3)));
+                            var waitMS = _operationRetryWaitMS;
+                            if (orderContext.RetryAfter > 0 && orderContext.RetryAfter < 60)
+                            {
+                                waitMS = orderContext.RetryAfter * 1000;
+                            }
+
+                            await Task.Delay(waitMS);
+
                             order = await orderContext.Resource();
                             attempts--;
                         }
@@ -1617,8 +1661,8 @@ namespace Certify.Providers.ACME.Anvil
         {
             try
             {
-                var customCertPemPath = Path.Combine(_settingsBaseFolder, "custom_ca_certs", "pem");
-                var customCertDerPath = Path.Combine(_settingsBaseFolder, "custom_ca_certs", "der");
+                var customCertPemPath = Path.Combine(_providerSettings.ServiceSettingsBasePath, "custom_ca_certs", "pem");
+                var customCertDerPath = Path.Combine(_providerSettings.ServiceSettingsBasePath, "custom_ca_certs", "der");
 
                 var x509CertificateParser = new X509CertificateParser();
 
@@ -1758,7 +1802,7 @@ namespace Certify.Providers.ACME.Anvil
             {
                 var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
 
-                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", domainAsPath, "privkey.pem" }));
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", domainAsPath, "privkey.pem" }));
 
                 if (File.Exists(storedPrivateKey))
                 {
@@ -1785,7 +1829,7 @@ namespace Certify.Providers.ACME.Anvil
             {
                 var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
 
-                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", domainAsPath, "privkey.pem" }));
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", domainAsPath, "privkey.pem" }));
 
                 if (!File.Exists(storedPrivateKey))
                 {
@@ -1809,7 +1853,7 @@ namespace Certify.Providers.ACME.Anvil
 
         private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryDomainPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {
@@ -1905,7 +1949,7 @@ namespace Certify.Providers.ACME.Anvil
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryDomainPath)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _settingsFolder, "..", "assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryDomainPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {

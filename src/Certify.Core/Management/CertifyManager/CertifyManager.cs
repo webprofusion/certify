@@ -408,9 +408,9 @@ namespace Certify.Management
         /// <param name="storageKey"></param>
         /// <param name="acmeApiEndpoint"></param>
         /// <param name="account"></param>
-        /// <param name="allowUntrustedTsl"></param>
+        /// <param name="allowUntrustedTls"></param>
         /// <returns></returns>
-        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTsl = false)
+        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTls = false)
         {
             // get or init acme provider required for the given account
             if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
@@ -423,7 +423,15 @@ namespace Certify.Management
                 var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
-                var newProvider = new AnvilACMEProvider(acmeApiEndpoint, settingBaseFolder, providerPath, userAgent, allowUntrustedTsl);
+                var newProvider = new AnvilACMEProvider(new AnvilACMEProviderSettings
+                {
+                    AcmeBaseUri = acmeApiEndpoint,
+                    ServiceSettingsBasePath = settingBaseFolder,
+                    LegacySettingsPath = providerPath,
+                    UserAgentName = userAgent,
+                    AllowUntrustedTls = allowUntrustedTls,
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval
+                });
 
                 if (!_useWindowsNativeFeatures)
                 {

@@ -458,7 +458,15 @@ namespace Certify.Management
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
                 var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
                 var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
-                var provider = new AnvilACMEProvider(apiEndpoint, settingBaseFolder, providerPath, Util.GetUserAgent());
+                var provider = new AnvilACMEProvider(new AnvilACMEProviderSettings
+                {
+                    AcmeBaseUri = apiEndpoint,
+                    ServiceSettingsBasePath = settingBaseFolder,
+                    LegacySettingsPath = providerPath,
+                    UserAgentName = Util.GetUserAgent(),
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval
+                });
+
                 await provider.InitProvider(_serviceLog);
 
                 var acc = provider.GetCurrentAcmeAccount();
