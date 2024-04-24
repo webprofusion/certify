@@ -1,4 +1,4 @@
-﻿# Wrapper script to call user scripts with result paramater marshalled from JSON
+﻿# Wrapper script to call user scripts with result parameter marshalled from JSON
 param(
     $scriptFile, 
     $resultJsonFile,  
@@ -11,22 +11,21 @@ $wrappedArguments = @{}
 $result = $null
 
 # load results object from json, if supplied
-if ($null -ne $resultJsonFile)
-{
+if ($null -ne $resultJsonFile) {
     $result = Get-Content -Raw -Path $resultJsonFile | ConvertFrom-Json
 
-    $wrappedArguments.Add("result",$result)
+    $wrappedArguments.Add("result", $result)
 }
 
-if ($additionalParams.Count -gt 0)
-{
+if ($additionalParams.Count -gt 0) {
     # https://stackoverflow.com/questions/27764394/get-valuefromremainingarguments-as-an-hashtable
     $additionalParams | ForEach-Object {
-        if($_ -match '^-') {
+        if ($_ -match '^-') {
             # add a new parameter with default value True, discarding the -prefix
             $lastvar = $_ -replace '^-'
             $wrappedArguments[$lastvar] = $true
-        } else {
+        }
+        else {
             # set a specific value for the last parameter added
             $wrappedArguments[$lastvar] = $_
         }
