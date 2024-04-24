@@ -176,6 +176,8 @@ namespace Certify.Management
         /// </summary>
         public int DefaultACMERetryInterval { get; set; }
 
+        public bool EnableIssuerCache { get; set; }
+
         /// <summary>
         /// If true, challenge cleanup will only happen after all auth challenges in an order have been processed
         /// </summary>
@@ -236,6 +238,8 @@ namespace Certify.Management
             CoreAppSettings.Current.EnableParallelRenewals = prefs.EnableParallelRenewals;
 
             CoreAppSettings.Current.DefaultACMERetryInterval = prefs.DefaultACMERetryInterval;
+
+            CoreAppSettings.Current.EnableIssuerCache = prefs.EnableIssuerCache;
             return true;
         }
 

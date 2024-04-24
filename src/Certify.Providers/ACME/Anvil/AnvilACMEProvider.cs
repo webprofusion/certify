@@ -53,6 +53,17 @@ namespace Certify.Providers.ACME.Anvil
         /// If set, customizes the ACME retry interval for operations such as polling order status where Retry After not supported by CA
         /// </summary>
         public int DefaultACMERetryIntervalSeconds { get; set; }
+
+        /// <summary>
+        /// If true, known/trusted issuers are loaded from system and may be used in cert chain build
+        /// </summary>
+        public bool EnableIssuerCache { get; set; } = false;
+
+        /// <summary>
+        /// If false, cert chain build will require known/trusted roots
+        /// </summary>
+        public bool AllowUnknownCARoots { get; set; } = true;
+
     }
 
     /// <summary>
@@ -79,8 +90,7 @@ namespace Certify.Providers.ACME.Anvil
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
-        public bool EnableUnknownCARoots { get; set; } = true;
-
+      
         /// <summary>
         /// Standard ms to wait before attempting to check for an attempted challenge to be validated etc (e.g. an HTTP check or DNS lookup)
         /// </summary>
@@ -91,8 +101,6 @@ namespace Certify.Providers.ACME.Anvil
         /// Default output when finalizing a certificate download: pfx (single file container), pem (multiple files), all (pfx, pem etc)
         /// </summary>
         public string DefaultCertificateFormat { get; set; } = "pfx";
-
-        private bool _enableIssuerCache { get; set; } = false;
 
         /// <summary>
         /// Cache for last retrieved copy of ACME drectory info
@@ -1744,7 +1752,7 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         private void RefreshIssuerCertCache()
         {
-            if (_enableIssuerCache)
+            if (_providerSettings.EnableIssuerCache)
             {
                 try
                 {
@@ -1775,7 +1783,6 @@ namespace Certify.Providers.ACME.Anvil
                     {
                         foreach (var cert in ca.TrustedRoots)
                         {
-
                             using (TextReader textReader = new StringReader(cert.Value))
                             {
                                 var pemReader = new PemReader(textReader);
@@ -1913,7 +1920,7 @@ namespace Certify.Providers.ACME.Anvil
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: _providerSettings.AllowUnknownCARoots);
                 File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
@@ -1934,7 +1941,7 @@ namespace Certify.Providers.ACME.Anvil
 
                 try
                 {
-                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: EnableUnknownCARoots);
+                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: _providerSettings.AllowUnknownCARoots);
                     File.WriteAllBytes(pfxPath, pfxBytes);
                 }
                 catch (Exception ex)

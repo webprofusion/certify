@@ -430,7 +430,8 @@ namespace Certify.Management
                     LegacySettingsPath = providerPath,
                     UserAgentName = userAgent,
                     AllowUntrustedTls = allowUntrustedTls,
-                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval,
+                    EnableIssuerCache = CoreAppSettings.Current.EnableIssuerCache
                 });
 
                 if (!_useWindowsNativeFeatures)

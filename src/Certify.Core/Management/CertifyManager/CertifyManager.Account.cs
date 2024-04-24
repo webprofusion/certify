@@ -464,7 +464,8 @@ namespace Certify.Management
                     ServiceSettingsBasePath = settingBaseFolder,
                     LegacySettingsPath = providerPath,
                     UserAgentName = Util.GetUserAgent(),
-                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval,
+                    EnableIssuerCache = CoreAppSettings.Current.EnableIssuerCache
                 });
 
                 await provider.InitProvider(_serviceLog);
