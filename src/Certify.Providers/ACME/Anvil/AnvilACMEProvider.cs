@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -90,7 +90,6 @@ namespace Certify.Providers.ACME.Anvil
 
         private ACMECompatibilityMode _compatibilityMode = ACMECompatibilityMode.Standard;
 
-      
         /// <summary>
         /// Standard ms to wait before attempting to check for an attempted challenge to be validated etc (e.g. an HTTP check or DNS lookup)
         /// </summary>
@@ -1920,12 +1919,11 @@ namespace Certify.Providers.ACME.Anvil
                 var pfx = certificateChain.ToPfx(csrKey);
 
                 // attempt to build pfx cert chain using known issuers and known roots, if this fails it throws an AcmeException
-                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: _providerSettings.AllowUnknownCARoots);
+                pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, skipChainBuild: false);
                 File.WriteAllBytes(pfxPath, pfxBytes);
             }
             catch (Exception)
             {
-
                 // if build failed, try refreshing issuer certs and rebuild
                 RefreshIssuerCertCache();
 
@@ -1941,12 +1939,22 @@ namespace Certify.Providers.ACME.Anvil
 
                 try
                 {
-                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, allowBuildWithoutKnownRoot: _providerSettings.AllowUnknownCARoots);
+                    pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, skipChainBuild: false);
                     File.WriteAllBytes(pfxPath, pfxBytes);
                 }
-                catch (Exception ex)
+                catch (Exception buildExp)
                 {
-                    throw new Exception($"{failedBuildMsg} {ex.Message}");
+                    _log?.Warning("Failed to build PFX using full chain, build will be attempted using end entity only. {exp}", buildExp);
+
+                    try
+                    {
+                        pfxBytes = pfx.Build(certFriendlyName, pwd, useLegacyKeyAlgorithms: !useModernKeyAlgorithms, skipChainBuild: true);
+                        File.WriteAllBytes(pfxPath, pfxBytes);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"{failedBuildMsg} {ex.Message}");
+                    }
                 }
             }
 
