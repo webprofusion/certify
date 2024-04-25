@@ -1584,7 +1584,7 @@ namespace Certify.Providers.ACME.Anvil
             {
                 if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
                 {
-                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs);
+                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs, itemLog: log);
                 }
             }
             catch (Exception ex)
@@ -1857,7 +1857,7 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false, ILog itemLog = null)
         {
             var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryDomainPath }));
 
@@ -1944,7 +1944,7 @@ namespace Certify.Providers.ACME.Anvil
                 }
                 catch (Exception buildExp)
                 {
-                    _log?.Warning("Failed to build PFX using full chain, build will be attempted using end entity only. {exp}", buildExp);
+                    itemLog?.Warning("Failed to build PFX using full chain, build will be attempted using end entity only: {exp}", buildExp.Message);
 
                     try
                     {
