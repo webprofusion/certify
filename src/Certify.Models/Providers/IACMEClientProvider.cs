@@ -37,7 +37,5 @@ namespace Certify.Models.Providers
         Task<ActionResult<AccountDetails>> ChangeAccountKey(ILog log, string newKeyPEM = null);
 
         Task<RenewalInfo> GetRenewalInfo(string certificateId);
-
-        Task UpdateRenewalInfo(string certificateId, bool replaced);
     }
 }

@@ -855,14 +855,7 @@ namespace Certify.Management
 
                         var previousCertId = managedCertificate.CertificateId;
 
-                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(managedCertificate.CertificatePath), pfxPwd);
-
-                        if (!string.IsNullOrEmpty(previousCertId))
-                        {
-                            // update ARI renewal info for replaced certId if supported
-
-                            await _acmeClientProvider.UpdateRenewalInfo(previousCertId, true);
-                        }
+                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(File.ReadAllBytes(managedCertificate.CertificatePath), pfxPwd);
                     }
                     catch (Exception exp)
                     {

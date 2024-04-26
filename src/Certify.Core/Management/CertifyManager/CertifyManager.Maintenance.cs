@@ -216,9 +216,14 @@ namespace Certify.Management
                                         if (item.CertificatePath != null)
                                         {
                                             _serviceLog.Verbose($"Checking renewal info for {item.Name}");
+                                            if (item.CertificateId != null && !item.CertificateId.Contains("."))
+                                            {
+                                                // ARI certificate ID not current format, will need to be recomputed.
+                                                item.CertificateId = null;
+                                            }
 
-                                            var certId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetCertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
-                                            var info = await provider.GetRenewalInfo(certId);
+                                            var ariCertId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var info = await provider.GetRenewalInfo(ariCertId);
 
                                             if (info != null && item.DateExpiry != null)
                                             {
@@ -241,7 +246,6 @@ namespace Certify.Management
                                                         if (!itemsWhichRequireRenewal.Contains(item.Id))
                                                         {
                                                             itemsWhichRequireRenewal.Add(item.Id);
-
                                                         }
                                                     }
                                                 }

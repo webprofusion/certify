@@ -2060,23 +2060,5 @@ namespace Certify.Providers.ACME.Anvil
                 return null;
             }
         }
-
-        public async Task UpdateRenewalInfo(string certificateId, bool replaced)
-        {
-            try
-            {
-                await _acme.UpdateRenewalInfo(certificateId, replaced);
-            }
-            catch (Exception ex)
-            {
-                // provider doesn't support ARI or update sent to CA failed, we fail silently because lack of ARI support is expected for many CAs
-                // and the response doesn't matter to our system
-#if DEBUG
-                _log?.Warning($"ARI Update Renewal Info Failed [{certificateId}] {ex.Message}");
-#else
-                _log?.Debug($"ARI Update Renewal Info Failed [{certificateId}] {ex.Message}");
-#endif
-            }
-        }
     }
 }
