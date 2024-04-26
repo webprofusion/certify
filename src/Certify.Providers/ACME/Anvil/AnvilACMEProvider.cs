@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -1407,6 +1406,8 @@ namespace Certify.Providers.ACME.Anvil
 
             IKey csrKey = null;
 
+            var primaryIdentifierAsPath = GetPrimaryIdentifierAsPath(config, internalId);
+
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
                 csrKey = KeyFactory.FromPem(config.CustomPrivateKey);
@@ -1414,7 +1415,7 @@ namespace Certify.Providers.ACME.Anvil
             else if (config.ReusePrivateKey)
             {
                 // check if we have a stored private key already and want to use it again
-                var savedKey = LoadSavedPrivateKey(config);
+                var savedKey = LoadSavedPrivateKey(primaryIdentifierAsPath);
 
                 if (savedKey != null)
                 {
@@ -1561,18 +1562,16 @@ namespace Certify.Providers.ACME.Anvil
             // file will be named as {expiration yyyyMMdd}_{guid} e.g. 20290301_4fd1b2ea-7b6e-4dca-b5d9-e0e7254e568b
             var certId = certExpiration.Value.ToString("yyyyMMdd") + "_" + Guid.NewGuid().ToString().Substring(0, 8);
 
-            var domainAsPath = GetDomainAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
-
             if (config.ReusePrivateKey)
             {
-                SavePrivateKey(config, csrKey);
+                SavePrivateKey(csrKey, primaryIdentifierAsPath);
             }
 
             var primaryCertOutputFile = string.Empty;
 
             if (DefaultCertificateFormat == "pem" || DefaultCertificateFormat == "all")
             {
-                var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, domainAsPath);
+                var pemOutputFile = ExportFullCertPEM(csrKey, certificateChain, primaryIdentifierAsPath);
 
                 if (string.IsNullOrEmpty(primaryCertOutputFile))
                 {
@@ -1584,7 +1583,7 @@ namespace Certify.Providers.ACME.Anvil
             {
                 if (DefaultCertificateFormat == "pfx" || DefaultCertificateFormat == "all")
                 {
-                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, domainAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs, itemLog: log);
+                    primaryCertOutputFile = ExportFullCertPFX(certFriendlyName, pwd, csrKey, certificateChain, certId, primaryIdentifierAsPath, includeCleanup: true, useModernKeyAlgorithms: useModernPFXBuildAlgs, itemLog: log);
                 }
             }
             catch (Exception ex)
@@ -1608,7 +1607,9 @@ namespace Certify.Providers.ACME.Anvil
             };
         }
 
-        private string GetDomainAsPath(string domain) => domain?.Replace("*", "_") ?? "";
+        private string GetIdentifierAsPath(string identifier) => identifier?.Replace("*", "_") ?? "";
+
+        private string GetPrimaryIdentifierAsPath(CertRequestConfig config, string internalId) => GetIdentifierAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {
@@ -1802,13 +1803,11 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        private IKey LoadSavedPrivateKey(CertRequestConfig config)
+        private IKey LoadSavedPrivateKey(string primaryIdentifierAsPath)
         {
             try
             {
-                var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
-
-                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", domainAsPath, "privkey.pem" }));
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryIdentifierAsPath, "privkey.pem" }));
 
                 if (File.Exists(storedPrivateKey))
                 {
@@ -1829,13 +1828,18 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        private bool SavePrivateKey(CertRequestConfig config, IKey key)
+        private bool SavePrivateKey(IKey key, string primaryIdentifierAsPath)
         {
             try
             {
-                var domainAsPath = GetDomainAsPath(config.PrimaryDomain);
+                var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryIdentifierAsPath }));
 
-                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", domainAsPath, "privkey.pem" }));
+                if (!System.IO.Directory.Exists(storePath))
+                {
+                    System.IO.Directory.CreateDirectory(storePath);
+                }
+
+                var storedPrivateKey = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryIdentifierAsPath, "privkey.pem" }));
 
                 if (!File.Exists(storedPrivateKey))
                 {
@@ -1857,9 +1861,9 @@ namespace Certify.Providers.ACME.Anvil
             }
         }
 
-        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryDomainPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false, ILog itemLog = null)
+        private string ExportFullCertPFX(string certFriendlyName, string pwd, IKey csrKey, CertificateChain certificateChain, string certId, string primaryIdentifierPath, bool includeCleanup = true, bool useModernKeyAlgorithms = false, ILog itemLog = null)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryIdentifierPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {
@@ -1962,9 +1966,9 @@ namespace Certify.Providers.ACME.Anvil
 
         }
 
-        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryDomainPath)
+        private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryIdentifierPath)
         {
-            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryDomainPath }));
+            var storePath = Path.GetFullPath(Path.Combine(new string[] { _providerSettings.ServiceSettingsBasePath, "assets", primaryIdentifierPath }));
 
             if (!System.IO.Directory.Exists(storePath))
             {
