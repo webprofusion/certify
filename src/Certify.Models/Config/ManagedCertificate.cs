@@ -256,6 +256,12 @@ namespace Certify.Models
         /// The Base64 encoded ARI Certificate Id (ACME ARI etc) for the current certificate
         /// </summary>
         public string? CertificateId { get; set; }
+
+        /// <summary>
+        /// Id of the last CA this cert was successfully ordered/renewed with. 
+        /// Particularly important for ARI replacement as attempting to replace a cert with the id from another CA will result in order rejection.
+        /// </summary>
+        public string? CertificateCurrentCA { get; set; }
         public string? CertificatePath { get; set; }
         public string? CertificateFriendlyName { get; set; }
         public string? CertificateThumbprintHash { get; set; }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -730,14 +730,18 @@ namespace Certify.Providers.ACME.Anvil
                 var orderCreated = false;
                 var orderAttemptAbandoned = false;
                 object lastException = null;
+                var caSupportsARI = false;
 
                 try
                 {
                     // first check we can access the ACME API
                     try
                     {
-                        _ = await _acme.GetDirectory(throwOnError: true);
-
+                        var dir = await _acme.GetDirectory(throwOnError: true);
+                        if (dir.RenewalInfo != null)
+                        {
+                            caSupportsARI = true;
+                        }
                     }
                     catch (Exception exp)
                     {
@@ -781,7 +785,23 @@ namespace Certify.Providers.ACME.Anvil
                                     notAfter = new DateTimeOffset(notAfterDate.Year, notAfterDate.Month, notAfterDate.Day, notAfterDate.Hour, 0, 0, TimeSpan.Zero);
                                 }
 
-                                order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter);
+                                // if the CA supports ARI, the last CA is the same one we are attempting and the certificate id appears to have a valid value, provide that in the new order to replace the old cert via ARI
+                                // for safety we also stop trying to provide the replaces ID if we have failed repeatedly for any reason, as the order could be failing due to trying to provide an invalid Replaces ID.
+                                string ariReplacesCertId = null;
+
+                                if (
+                                    caSupportsARI &&
+                                    managedCertificate.CertificateCurrentCA == managedCertificate.LastAttemptedCA
+                                    && !string.IsNullOrWhiteSpace(managedCertificate.CertificateId)
+                                    && managedCertificate.CertificateId.Contains(".")
+                                    && managedCertificate.RenewalFailureCount < 3
+                                )
+                                {
+
+                                    ariReplacesCertId = managedCertificate.CertificateId;
+                                }
+
+                                order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter, ariReplacesCertId: ariReplacesCertId);
                             }
 
                             if (order != null)

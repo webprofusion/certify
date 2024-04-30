@@ -222,7 +222,8 @@ namespace Certify.Management
                                                 item.CertificateId = null;
                                             }
 
-                                            var ariCertId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var ariCertId = item.CertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(x509Cert2);
                                             var info = await provider.GetRenewalInfo(ariCertId);
 
                                             if (info != null && item.DateExpiry != null)

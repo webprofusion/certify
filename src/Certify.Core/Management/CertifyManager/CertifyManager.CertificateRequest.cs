@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -860,7 +860,8 @@ namespace Certify.Management
 
                         var previousCertId = managedCertificate.CertificateId;
 
-                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(File.ReadAllBytes(managedCertificate.CertificatePath), pfxPwd);
+                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(certInfo);
+                        managedCertificate.CertificateCurrentCA = managedCertificate.LastAttemptedCA;
                     }
                     catch (Exception exp)
                     {
