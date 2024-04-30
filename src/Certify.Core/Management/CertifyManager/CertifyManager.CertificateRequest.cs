@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -135,8 +135,6 @@ namespace Certify.Management
             // start with a failure result, set to success when succeeding
             var requestResult = new CertificateRequestResult(managedCertificate);
 
-            var config = managedCertificate.RequestConfig;
-
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
             var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
 
@@ -199,7 +197,7 @@ namespace Certify.Management
                             else
                             {
                                 // perform normal certificate challenge/response/renewal (acme-dns etc)
-                                result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
+                                result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, isInteractive, resumeExistingOrder: true);
                             }
 
                             // copy result from sub-request, preserve existing logged actions
@@ -211,7 +209,7 @@ namespace Certify.Management
                             if (managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                             {
                                 // perform normal certificate challenge/response/renewal
-                                var result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, config, isInteractive);
+                                var result = await PerformCoreCertificateRequest(log, managedCertificate, progress, requestResult, isInteractive, resumeExistingOrder: false);
                                 requestResult.ApplyChanges(result);
                             }
                             else
@@ -366,7 +364,7 @@ namespace Certify.Management
         /// <param name="config"></param>
         /// <param name="isInteractive"></param>
         /// <returns></returns>
-        private async Task<CertificateRequestResult> PerformCoreCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, CertRequestConfig config, bool isInteractive)
+        private async Task<CertificateRequestResult> PerformCoreCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, CertificateRequestResult result, bool isInteractive, bool resumeExistingOrder)
         {
             //primary identifier and each subject alternative name must now be registered as an identifier with ACME CA and validated
             log?.Information($"{Util.GetUserAgent()}");
@@ -381,6 +379,11 @@ namespace Certify.Management
                 result.Message = $"There is no matching ACME account for the currently selected Certificate Authority. Check you have added a {(managedCertificate.UseStagingMode ? "Staging" : "Production")} account for the CA under the app Settings.";
 
                 return result;
+            }
+            
+            if (!resumeExistingOrder)
+            {
+                managedCertificate.CurrentOrderUri = null;
             }
 
             log?.Information("Beginning certificate request process: {Name} using ACME provider {Provider}", managedCertificate.Name, _acmeClientProvider.GetProviderName());
@@ -409,6 +412,8 @@ namespace Certify.Management
             );
 
 #pragma warning disable CS0618 // Type or member is obsolete
+            var config = managedCertificate.RequestConfig;
+                
             if (config.ChallengeType == null && (config.Challenges == null || !config.Challenges.Any()))
             {
                 config.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
@@ -428,7 +433,7 @@ namespace Certify.Management
             // authorizations per identifier. Authorizations may already be validated or we may still
             // have to complete the authorization challenge. When rate limits are encountered, this
             // step may fail.
-            var pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, config);
+            var pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate, resumeExistingOrder);
 
             if (pendingOrder.IsFailure)
             {
@@ -604,7 +609,7 @@ namespace Certify.Management
             // if we don't have a pending order, load the details of the most recent order (can be used to re-fetch the existing cert)
             if (pendingOrder == null && managedCertificate.CurrentOrderUri != null)
             {
-                pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate.RequestConfig, managedCertificate.CurrentOrderUri);
+                pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate, resumeExistingOrder: true);
 
                 if (pendingOrder.IsFailure)
                 {
@@ -811,7 +816,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate.Id, managedCertificate.RequestConfig, pendingOrder.OrderUri, pfxPwd, preferredChain, CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain, CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
 
                 if (certRequestResult.IsSuccess)
                 {

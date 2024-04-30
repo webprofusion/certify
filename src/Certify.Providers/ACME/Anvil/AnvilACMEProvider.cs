@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -672,10 +672,10 @@ namespace Certify.Providers.ACME.Anvil
         /// to complete
         /// </summary>
         /// <param name="log">  </param>
-        /// <param name="config">  </param>
-        /// <param name="orderUri"> Uri of existing order to resume </param>
+        /// <param name="managedCertificate"> </param>
+        /// <param name="resumeExistingOrder">Use uri of existing order to resume</param>
         /// <returns>  </returns>
-        public async Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null)
+        public async Task<PendingOrder> BeginCertificateOrder(ILog log, ManagedCertificate managedCertificate, bool resumeExistingOrder)
         {
             if (DateTimeOffset.UtcNow.Subtract(_lastInitDateTime).TotalMinutes > 30)
             {
@@ -686,12 +686,15 @@ namespace Certify.Providers.ACME.Anvil
 
             var isResumedOrder = false;
             var pendingOrder = new PendingOrder { IsPendingAuthorizations = true };
+            var orderUri = managedCertificate.CurrentOrderUri;
 
             // prepare a list of all pending authorization we need to complete, or those we have already satisfied
             var authzList = new List<PendingAuthorization>();
 
             //if no alternative domain specified, use the primary domain as the subject
             var domainOrders = new List<string>();
+
+            var config = managedCertificate.RequestConfig;
 
             if (!string.IsNullOrEmpty(config.PrimaryDomain))
             {
@@ -759,9 +762,9 @@ namespace Certify.Providers.ACME.Anvil
                         {
                             log.Debug($"Creating/retrieving order. Attempts remaining:{remainingAttempts}");
 
-                            if (orderUri != null)
+                            if (resumeExistingOrder && managedCertificate.CurrentOrderUri != null)
                             {
-                                order = _acme.Order(new Uri(orderUri));
+                                order = _acme.Order(new Uri(managedCertificate.CurrentOrderUri));
                                 isResumedOrder = true;
                             }
                             else
@@ -1175,7 +1178,11 @@ namespace Certify.Providers.ACME.Anvil
 
                 log?.Error(msg);
 
-                _currentOrders.TryRemove(orderUri, out var existingOrderContext);
+                if (!string.IsNullOrEmpty(orderUri))
+                {
+                    _currentOrders.TryRemove(orderUri, out var existingOrderContext);
+                }
+
                 return new PendingOrder(msg);
             }
         }
@@ -1342,7 +1349,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
         {
             if (!_currentOrders.TryGetValue(orderId, out var orderContext))
             {
@@ -1370,6 +1377,8 @@ namespace Certify.Providers.ACME.Anvil
             // generate temp keypair for signing CSR, default to RSA 256, 2048. Popular Microsoft products such as Exchange do not support ECDSA keys
             var keyAlg = KeyAlgorithm.RS256;
             var rsaKeySize = 2048;
+
+            var config = managedCertificate.RequestConfig;
 
             // use item specific key type if set, or global default key type setting if present 
             var preferredKeyType = !string.IsNullOrEmpty(config.CSRKeyAlg) ? config.CSRKeyAlg : defaultKeyType;
@@ -1406,7 +1415,7 @@ namespace Certify.Providers.ACME.Anvil
 
             IKey csrKey = null;
 
-            var primaryIdentifierAsPath = GetPrimaryIdentifierAsPath(config, internalId);
+            var primaryIdentifierAsPath = GetPrimaryIdentifierAsPath(config, managedCertificate.Id);
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1874,32 +1883,7 @@ namespace Certify.Providers.ACME.Anvil
                 // attempt old pfx asset cleanup
                 if (includeCleanup)
                 {
-                    try
-                    {
-                        var dirInfo = new DirectoryInfo(storePath);
-
-                        var pfxFiles = dirInfo.GetFiles("*.pfx")
-                                             .Where(p => p.Extension == ".pfx")
-                                             .OrderByDescending(f => f.CreationTimeUtc)
-                                             .ToArray();
-
-                        // keep last 3 pfx in order of most recent first
-                        var pfxToKeep = pfxFiles.Take(3);
-
-                        foreach (var file in pfxFiles)
-                        {
-                            // remove pfx assets not in top 3 list
-                            if (!pfxToKeep.Any(f => f.FullName == file.FullName))
-                            {
-                                try
-                                {
-                                    File.Delete(file.FullName);
-                                }
-                                catch { }
-                            }
-                        }
-                    }
-                    catch { }
+                    PerformAssetCleanup(storePath);
                 }
             }
 
@@ -1964,6 +1948,36 @@ namespace Certify.Providers.ACME.Anvil
 
             return pfxPath;
 
+        }
+
+        private static void PerformAssetCleanup(string storePath)
+        {
+            try
+            {
+                var dirInfo = new DirectoryInfo(storePath);
+
+                var pfxFiles = dirInfo.GetFiles("*.pfx")
+                                     .Where(p => p.Extension == ".pfx")
+                                     .OrderByDescending(f => f.CreationTimeUtc)
+                                     .ToArray();
+
+                // keep last 3 pfx in order of most recent first
+                var pfxToKeep = pfxFiles.Take(3);
+
+                foreach (var file in pfxFiles)
+                {
+                    // remove pfx assets not in top 3 list
+                    if (!pfxToKeep.Any(f => f.FullName == file.FullName))
+                    {
+                        try
+                        {
+                            File.Delete(file.FullName);
+                        }
+                        catch { }
+                    }
+                }
+            }
+            catch { }
         }
 
         private string ExportFullCertPEM(IKey csrKey, CertificateChain certificateChain, string primaryIdentifierPath)

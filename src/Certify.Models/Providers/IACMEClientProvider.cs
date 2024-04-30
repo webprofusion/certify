@@ -24,13 +24,13 @@ namespace Certify.Models.Providers
 
         Task<ActionResult<AccountDetails>> UpdateAccount(ILog log, string email, bool termsAgreed);
 
-        Task<PendingOrder> BeginCertificateOrder(ILog log, CertRequestConfig config, string orderUri = null);
+        Task<PendingOrder> BeginCertificateOrder(ILog log, ManagedCertificate managedCertificate, bool resumeExistingOrder);
 
         Task<StatusMessage> SubmitChallenge(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
         Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, string internalId, CertRequestConfig config, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs);
+        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 

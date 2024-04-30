@@ -292,7 +292,7 @@ namespace Certify.CLI
                     var caAccount = await c.GetAccountDetails(dummyManagedCert);
                     var acmeClient = await c.GetACMEProvider(dummyManagedCert, caAccount);
 
-                    var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert.RequestConfig, url);
+                    var pendingOrder = await acmeClient.BeginCertificateOrder(logger, dummyManagedCert, resumeExistingOrder: true);
 
                     foreach (var auth in pendingOrder.Authorizations)
                     {
