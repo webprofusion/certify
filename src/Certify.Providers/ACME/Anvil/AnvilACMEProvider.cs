@@ -756,7 +756,7 @@ namespace Certify.Providers.ACME.Anvil
                     }
                     catch (Exception ex)
                     {
-                        log.Information($"Error consuming replay none during new order. {ex.Message}");
+                        log.Information($"Could not refresh replay nonce value during new order. {ex.Message}");
                     }
 
                     // attempt to start our certificate order
