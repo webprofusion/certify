@@ -255,7 +255,7 @@ namespace Certify.Models
         /// <summary>
         /// The Base64 encoded ARI Certificate Id (ACME ARI etc) for the current certificate
         /// </summary>
-        public string? CertificateId { get; set; }
+        public string? ARICertificateId { get; set; }
 
         /// <summary>
         /// Id of the last CA this cert was successfully ordered/renewed with. 
@@ -589,7 +589,7 @@ namespace Certify.Models
             managedCert.LastRenewalStatus = null;
             managedCert.CurrentOrderUri = null;
             managedCert.CertificatePath = null;
-            managedCert.CertificateId = null;
+            managedCert.ARICertificateId = null;
             managedCert.CertificateFriendlyName = null;
             managedCert.ItemType = ManagedCertificateType.SSL_ACME;
 

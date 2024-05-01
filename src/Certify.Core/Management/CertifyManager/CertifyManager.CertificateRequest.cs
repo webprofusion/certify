@@ -858,9 +858,9 @@ namespace Certify.Management
                         managedCertificate.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedCertificate.CertificateRevoked = false;
 
-                        var previousCertId = managedCertificate.CertificateId;
+                        var previousCertId = managedCertificate.ARICertificateId;
 
-                        managedCertificate.CertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(certInfo);
+                        managedCertificate.ARICertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(certInfo);
                         managedCertificate.CertificateCurrentCA = managedCertificate.LastAttemptedCA;
                     }
                     catch (Exception exp)

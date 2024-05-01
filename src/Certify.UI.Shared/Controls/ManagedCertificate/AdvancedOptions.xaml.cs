@@ -279,12 +279,17 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void ResetFailureInfo_Click(object sender, RoutedEventArgs e)
         {
+            // clear all items which affect renewal status decisions
             ItemViewModel.SelectedItem.RenewalFailureCount = 0;
             ItemViewModel.SelectedItem.RenewalFailureMessage = null;
             ItemViewModel.SelectedItem.LastAttemptedCA = null;
             ItemViewModel.SelectedItem.CurrentOrderUri = null;
-            ItemViewModel.SelectedItem.LastRenewalStatus = Models.RequestState.Success;
+            ItemViewModel.SelectedItem.ARICertificateId = null;
+            ItemViewModel.SelectedItem.DateNextScheduledRenewalAttempt = null;
+            ItemViewModel.SelectedItem.DateLastOcspCheck = null;
+            ItemViewModel.SelectedItem.DateLastRenewalInfoCheck = null;
             ItemViewModel.SelectedItem.DateLastRenewalAttempt = null;
+            ItemViewModel.SelectedItem.LastRenewalStatus = Models.RequestState.Success;
 
         }
 

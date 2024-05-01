@@ -792,13 +792,13 @@ namespace Certify.Providers.ACME.Anvil
                                 if (
                                     caSupportsARI &&
                                     managedCertificate.CertificateCurrentCA == managedCertificate.LastAttemptedCA
-                                    && !string.IsNullOrWhiteSpace(managedCertificate.CertificateId)
-                                    && managedCertificate.CertificateId.Contains(".")
+                                    && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId)
+                                    && managedCertificate.ARICertificateId.Contains(".")
                                     && managedCertificate.RenewalFailureCount < 3
                                 )
                                 {
 
-                                    ariReplacesCertId = managedCertificate.CertificateId;
+                                    ariReplacesCertId = managedCertificate.ARICertificateId;
                                 }
 
                                 order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter, ariReplacesCertId: ariReplacesCertId);
