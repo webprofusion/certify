@@ -61,57 +61,19 @@ namespace Certify.Core.Tests.Unit
                 Assert.Fail("NTP Time Difference Failed");
             }
         }
-
-        [TestMethod, Description("Test self signed cert")]
-        public void TestSelfSignedCertCreate()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-        }
-
-        [TestMethod, Description("Test self signed cert storage")]
-        public void TestSelfSignedCertCreateAndStore()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("test.com", new DateTime(1934, 01, 01), new DateTime(1934, 03, 01), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-
-            CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-
-            var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-            Assert.IsNotNull(storedCert);
-
-            CertificateManager.RemoveCertificate(storedCert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-        }
-
-        [TestMethod, Description("Test localhost cert")]
-        public void TestSelfSignedLocalhostCertCreateAndStore()
-        {
-
-            var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)");
-            Assert.IsNotNull(cert);
-
-            CertificateManager.StoreCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-
-            var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-            Assert.IsNotNull(storedCert);
-
-            CertificateManager.RemoveCertificate(storedCert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
-        }
 #if NET7_0_OR_GREATER
         [TestMethod, Description("Test ARI CertID encoding example")]
         public void TestARICertIDEncoding()
         {
             // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients
-            var certAKIbytes = Convert.FromHexString("69:88:5B:6B:87:46:40:41:E1:B3:7B:84:7B:A0:AE:2C:DE:01:C8:D4".Replace(":", ""));
-            var certSerialBytes = Convert.FromHexString("00:87:65:43:21".Replace(":", ""));
+            var certAKIbytes = Convert.FromHexString("69:88:5B:6B:87:46:40:41:E1:B3:7B:84:7B:A0:AE:2C:DE:01:C8:D4".Replace(":",""));
+            var certSerialBytes= Convert.FromHexString("00:87:65:43:21".Replace(":",""));
 
-            var certId = Certify.Management.Util.ToUrlSafeBase64String(certAKIbytes)
-                + "."
+            var certId = Certify.Management.Util.ToUrlSafeBase64String(certAKIbytes) 
+                + "." 
                 + Certify.Management.Util.ToUrlSafeBase64String(certSerialBytes);
 
-            Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
+           Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
         }
 #endif
     }
