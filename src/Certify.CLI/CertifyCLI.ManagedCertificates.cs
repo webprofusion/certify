@@ -75,10 +75,7 @@ namespace Certify.CLI
                 InitTelematics();
             }
 
-            if (_tc != null)
-            {
-                _tc.TrackEvent("CLI_BeginAutoRenew");
-            }
+            _tc?.TrackEvent("CLI_BeginAutoRenew");
 
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("\nPerforming Auto Renewals..\n");

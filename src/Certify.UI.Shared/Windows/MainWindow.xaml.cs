@@ -405,7 +405,7 @@ namespace Certify.UI.Windows
             if (_appViewModel.Preferences.EnableAppTelematics)
             {
                 tc = new TelemetryManager(Certify.Locales.ConfigResources.AIInstrumentationKey);
-                tc.TrackEvent("Start");
+                tc?.TrackEvent("Start");
             }
             else
             {
