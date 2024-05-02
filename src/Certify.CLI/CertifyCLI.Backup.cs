@@ -26,7 +26,7 @@ namespace Certify.CLI
 
             var exportRequest = new ExportRequest { IsPreviewMode = false, Settings = new ExportSettings { EncryptionSecret = secret, ExportAllStoredCredentials = true } };
 
-            var export = await _certifyClient.PerformExport(exportRequest, null);
+            var export = await _certifyClient.PerformExport(exportRequest);
 
             System.IO.File.WriteAllText(filename, JsonConvert.SerializeObject(export));
 
@@ -64,7 +64,7 @@ namespace Certify.CLI
                 return;
             }
 
-            var importSteps = await _certifyClient.PerformImport(importRequest, null);
+            var importSteps = await _certifyClient.PerformImport(importRequest);
 
             foreach (var s in importSteps)
             {
