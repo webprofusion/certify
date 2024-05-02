@@ -459,7 +459,7 @@ namespace Certify.Management
             // authorizations per identifier. Authorizations may already be validated or we may still
             // have to complete the authorization challenge. When rate limits are encountered, this
             // step may fail.
-            var pendingOrder = await _acmeClientProvider.BeginCertificateOrder(log, managedCertificate, resumeExistingOrder);
+            var pendingOrder = await acmeClientProvider.BeginCertificateOrder(log, managedCertificate, resumeExistingOrder);
 
             if (pendingOrder.IsFailure)
             {
