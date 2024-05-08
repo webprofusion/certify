@@ -690,37 +690,48 @@ namespace Certify.Core.Tests
 
             var result = await certifyManager.PerformCertificateRequest(_log, dummyManagedCertificate);
 
-            //ensure cert request was successful
-            Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
+            X509Certificate2 certInfo = null;
 
-            //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
-            var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { Id = dummyManagedCertificate.Id });
-            var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
+            try
+            {
+                //ensure cert request was successful
+                Assert.IsTrue(result.IsSuccess, "Certificate Request Not Completed");
 
-            //ensure we have a new managed site
-            Assert.IsNotNull(managedCertificate);
+                //check details of cert, subject alternative name should include domain and expiry must be great than 89 days in the future
+                var managedCertificates = await certifyManager.GetManagedCertificates(new ManagedCertificateFilter { Id = dummyManagedCertificate.Id });
+                var managedCertificate = managedCertificates.FirstOrDefault(m => m.Id == dummyManagedCertificate.Id);
 
-            //have cert file details
-            Assert.IsNotNull(managedCertificate.CertificatePath);
+                //ensure we have a new managed site
+                Assert.IsNotNull(managedCertificate);
 
-            var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
-            Assert.IsTrue(fileExists);
+                //have cert file details
+                Assert.IsNotNull(managedCertificate.CertificatePath);
 
-            //check cert is correct
-            var certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
-            Assert.IsNotNull(certInfo);
+                var fileExists = System.IO.File.Exists(managedCertificate.CertificatePath);
+                Assert.IsTrue(fileExists);
 
-            var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
-            Assert.IsTrue(isRecentlyCreated);
+                //check cert is correct
+                certInfo = CertificateManager.LoadCertificate(managedCertificate.CertificatePath);
+                Assert.IsNotNull(certInfo);
 
-            var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
-            Assert.IsTrue(expiresInFuture);
+                var isRecentlyCreated = Math.Abs((DateTimeOffset.UtcNow - certInfo.NotBefore).TotalDays) < 2;
+                Assert.IsTrue(isRecentlyCreated);
 
-            // remove managed site
-            await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+                var expiresInFuture = (certInfo.NotAfter - DateTimeOffset.UtcNow).TotalDays >= 89;
+                Assert.IsTrue(expiresInFuture);
+            }
+            finally
+            {
 
-            // cleanup certificate
-            CertificateManager.RemoveCertificate(certInfo);
+                // remove managed site
+                await certifyManager.DeleteManagedCertificate(dummyManagedCertificate.Id);
+
+                // cleanup certificate
+                if (certInfo != null)
+                {
+                    CertificateManager.RemoveCertificate(certInfo);
+                }
+            }
         }
     }
 #pragma warning restore CS0618 // Type or member is obsolete
