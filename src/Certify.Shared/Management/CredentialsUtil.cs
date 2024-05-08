@@ -11,17 +11,9 @@ using Certify.Providers;
 
 namespace Certify.Management
 {
-    public class CredentialsManagerBase
+    public static class CredentialsUtil
     {
-
-        protected bool _useWindowsNativeFeatures = true;
-
-        public CredentialsManagerBase(bool useWindowsNativeFeatures = true)
-        {
-            _useWindowsNativeFeatures = useWindowsNativeFeatures;
-        }
-
-        public async Task<bool> IsCredentialInUse(IManagedItemStore itemStore, string storageKey)
+        public static async Task<bool> IsCredentialInUse(IManagedItemStore itemStore, string storageKey)
         {
             if (itemStore == null)
             {
@@ -41,18 +33,6 @@ namespace Certify.Management
             }
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public virtual async Task<StoredCredential> GetCredential(string storageKey)
-        {
-            throw new NotImplementedException();
-        }
-
-        public virtual async Task<Dictionary<string, string>> GetUnlockedCredentialsDictionary(string storageKey)
-        {
-            throw new NotImplementedException();
-        }
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-
         /// <summary>
         /// Get protected version of a secret 
         /// </summary>
@@ -60,7 +40,7 @@ namespace Certify.Management
         /// <param name="optionalEntropy"></param>
         /// <param name="scope"></param>
         /// <returns></returns>
-        public string Protect(
+        public static string Protect(
                 string clearText,
                 string optionalEntropy = null,
                 DataProtectionScope? scope = null)
@@ -72,7 +52,7 @@ namespace Certify.Management
                 return null;
             }
 
-            if (_useWindowsNativeFeatures && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (scope == null)
                 {
@@ -105,7 +85,7 @@ namespace Certify.Management
         /// <param name="optionalEntropy"></param>
         /// <param name="scope"></param>
         /// <returns></returns>
-        public string Unprotect(
+        public static string Unprotect(
             string encryptedText,
             string optionalEntropy = null,
             DataProtectionScope? scope = null)
@@ -117,7 +97,7 @@ namespace Certify.Management
                 throw new ArgumentNullException("encryptedText");
             }
 
-            if (_useWindowsNativeFeatures && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (scope == null)
                 {
