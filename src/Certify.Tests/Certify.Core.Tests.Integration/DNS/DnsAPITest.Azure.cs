@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Certify.Datastore.SQLite;
 using Certify.Management;
 using Certify.Models.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
