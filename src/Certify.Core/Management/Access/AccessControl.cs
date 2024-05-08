@@ -25,18 +25,19 @@ namespace Certify.Core.Management.Access
 
         public async Task AuditWarning(string template, params object[] propertyvalues)
         {
-            _log.Warning(template, propertyvalues);
+            _log?.Warning(template, propertyvalues);
         }
 
         public async Task AuditError(string template, params object[] propertyvalues)
         {
-            _log.Error(template, propertyvalues);
+            _log?.Error(template, propertyvalues);
         }
 
         public async Task AuditInformation(string template, params object[] propertyvalues)
         {
-            _log.Information(template, propertyvalues);
+            _log?.Information(template, propertyvalues);
         }
+
         /// <summary>
         /// Check if the system has been initialized with a security principle
         /// </summary>
@@ -106,7 +107,7 @@ namespace Certify.Core.Management.Access
 
             if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning($"User {contextUserId} attempted to use UpdateSecurityPrinciple [{principle?.Id}] without being in required role.");
+                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple [{principleId}] without being in required role.", contextUserId, principle?.Id);
                 return false;
             }
 
@@ -123,11 +124,11 @@ namespace Certify.Core.Management.Access
             }
             catch
             {
-                await AuditWarning($"User {contextUserId} attempted to use UpdateSecurityPrinciple [{principle?.Id}], but was not successful");
+                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple [{principleId}], but was not successful", contextUserId, principle?.Id);
                 return false;
             }
 
-            _log?.Information($"User {contextUserId} updated security principle [{principle?.Id}] {principle?.Username}");
+            await AuditInformation("User {contextUserId} updated security principle [{principleId}] {principleUsername}", contextUserId, principle?.Id, principle?.Username);
             return true;
         }
 
@@ -141,13 +142,13 @@ namespace Certify.Core.Management.Access
         {
             if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning($"User {contextUserId} attempted to use DeleteSecurityPrinciple [{id}] without being in required role.");
+                await AuditWarning("User {contextUserId} attempted to use DeleteSecurityPrinciple [{id}] without being in required role.", contextUserId, id);
                 return false;
             }
 
             if (!allowSelfDelete && id == contextUserId)
             {
-                _log?.Information($"User {contextUserId} tried to delete themselves.");
+                await AuditWarning("User {contextUserId} tried to delete themselves.", contextUserId);
                 return false;
             }
 
@@ -157,12 +158,17 @@ namespace Certify.Core.Management.Access
 
             if (deleted != true)
             {
-                await AuditWarning($"User {contextUserId} attempted to delete security principle [{id}] {existing?.Username}, but was not successful");
+                await AuditWarning("User {contextUserId} attempted to delete security principle [{id}] {existingUsername}, but was not successful", contextUserId, id, existing?.Username);
                 return false;
             }
-            // TODO: remove assigned roles
 
-            _log?.Information($"User {contextUserId} deleted security principle [{id}] {existing?.Username}");
+            var assignedRoles = await GetAssignedRoles(contextUserId, id);
+            foreach (var a in assignedRoles)
+            {
+                await _store.Delete<AssignedRole>(nameof(AssignedRole), a.Id);
+            }
+
+            await AuditInformation("User {contextUserId} deleted security principle [{id}] {existingUsername}", contextUserId, id, existing?.Username);
 
             return true;
         }
@@ -175,7 +181,7 @@ namespace Certify.Core.Management.Access
             }
             catch (Exception exp)
             {
-                _log.Error(exp, $"User {contextUserId} attempted to retrieve security principle [{id}] but was not successful");
+                await AuditError("User {contextUserId} attempted to retrieve security principle [{id}] but was not successful : {exp}", contextUserId, id, exp);
 
                 return default;
             }
@@ -283,13 +289,13 @@ namespace Certify.Core.Management.Access
         {
             if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning($"User {contextUserId} attempted to use AddResourcePolicy [{resourceProfile.Id}] without being in required role.");
+                await AuditWarning("User {contextUserId} attempted to use AddResourcePolicy [{resourceProfileId}] without being in required role.", contextUserId, resourceProfile?.Id);
                 return false;
             }
 
             await _store.Add(nameof(ResourcePolicy), resourceProfile);
 
-            _log?.Information($"User {contextUserId} added resource policy [{resourceProfile.Id}]");
+            await AuditInformation("User {contextUserId} added resource policy [{resourceProfile.Id}]", contextUserId, resourceProfile?.Id);
             return true;
         }
 
@@ -316,18 +322,18 @@ namespace Certify.Core.Management.Access
                 }
                 catch
                 {
-                    await AuditWarning($"User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principle?.Id}], but was not successful");
+                    await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principleId}], but was not successful", contextUserId, principle?.Id);
                     return false;
                 }
             }
             else
             {
-                _log?.Information("Previous password did not match while updating security principle password", contextUserId, principle.Username, principle.Id);
+                await AuditInformation("Previous password did not match while updating security principle password", contextUserId, principle.Username, principle.Id);
             }
 
             if (updated)
             {
-                _log?.Information("User {contextUserId} updated password for [{username} - {id}]", contextUserId, principle.Username, principle.Id);
+                await AuditInformation("User {contextUserId} updated password for [{username} - {id}]", contextUserId, principle.Username, principle.Id);
             }
             else
             {

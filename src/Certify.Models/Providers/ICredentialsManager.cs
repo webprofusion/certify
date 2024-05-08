@@ -9,7 +9,7 @@ namespace Certify.Management
 {
     public interface ICredentialsManager
     {
-        bool Init(string connectionString, bool useWindowsNativeFeatures, ILog log);
+        bool Init(string connectionString, ILog log);
         Task<bool> IsInitialised();
 
         Task<bool> Delete(IManagedItemStore itemStore, string storageKey);
