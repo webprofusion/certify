@@ -46,7 +46,7 @@ namespace Certify.Core.Tests.DataStores
 
             if (storeType == "sqlite")
             {
-                return new SQLiteManagedItemStore(TEST_PATH, highPerformanceMode: true);
+                return new SQLiteManagedItemStore(TEST_PATH);
             }
             else if (storeType == "postgres")
             {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Datastore.Postgres;
+using Certify.Datastore.SQLite;
 using Certify.Datastore.SQLServer;
 using Certify.Management;
 using Certify.Models.Config;
@@ -14,7 +15,7 @@ namespace Certify.Core.Tests.DataStores
     public class StoredCredentialsDataStoreTests
     {
         private string _storeType = "postgres";
-        private const string TEST_PATH = "Tests\\credentials";
+        private const string TEST_PATH = "Tests";
 
         public static IEnumerable<object[]> TestDataStores
         {

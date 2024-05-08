@@ -80,11 +80,11 @@ namespace Certify.Management
                         {
                             if (provider.ProviderCategoryId == "sqlite" && string.IsNullOrEmpty(dataStore.ConnectionConfig))
                             {
-                                pr.Init("credentials", _useWindowsNativeFeatures, _serviceLog);
+                                pr.Init(string.Empty, _serviceLog);
                             }
                             else
                             {
-                                pr.Init(dataStore.ConnectionConfig, _useWindowsNativeFeatures, _serviceLog);
+                                pr.Init(dataStore.ConnectionConfig, _serviceLog);
                             }
 
                             if (!await pr.IsInitialised())
