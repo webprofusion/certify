@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management.Challenges;
+using Certify.Datastore.SQLite;
 using Certify.Management;
 using Certify.Models.Config;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,7 +21,7 @@ namespace Certify.Core.Tests.Unit
             var pluginManager = new PluginManager();
             pluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_DNS_PROVIDERS });
             var TEST_PATH = "Tests\\credentials";
-            credentialsManager = new SQLiteCredentialStore(RuntimeInformation.IsOSPlatform(OSPlatform.Windows), TEST_PATH);
+            credentialsManager = new SQLiteCredentialStore(TEST_PATH);
             dnsHelper = new DnsChallengeHelper(credentialsManager);
         }
 

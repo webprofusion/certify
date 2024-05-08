@@ -280,7 +280,7 @@ namespace Certify.Management
                     {
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                        _credentialsManager = new SQLiteCredentialStore(_useWindowsNativeFeatures, storageSubfolder: "credentials");
+                        _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
                     }
                     else
                     {
@@ -308,7 +308,7 @@ namespace Certify.Management
                 else
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                    _credentialsManager = new SQLiteCredentialStore(_useWindowsNativeFeatures, storageSubfolder: "credentials");
+                    _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
                 }
 
                 // attempt to create and delete a test item

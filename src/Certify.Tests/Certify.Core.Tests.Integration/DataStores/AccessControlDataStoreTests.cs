@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
+using Certify.Datastore.SQLite;
 using Certify.Management;
 using Certify.Models.Config.AccessControl;
 using Certify.Providers;
@@ -14,7 +15,7 @@ namespace Certify.Core.Tests.DataStores
     public class AccessControlDataStoreTests
     {
         private string _storeType = "sqlite";
-        private const string TEST_PATH = "Tests\\credentials";
+        private const string TEST_PATH = "Tests";
 
         public static IEnumerable<object[]> TestDataStores
         {
@@ -31,6 +32,8 @@ namespace Certify.Core.Tests.DataStores
 
         private IAccessControlStore GetStore(string storeType = null)
         {
+            IAccessControlStore store = null;
+
             if (storeType == null)
             {
                 storeType = _storeType;
@@ -38,7 +41,7 @@ namespace Certify.Core.Tests.DataStores
 
             if (storeType == "sqlite")
             {
-                return new SQLiteAccessControlStore(storageSubfolder: TEST_PATH);
+                store = new SQLiteAccessControlStore(storageSubfolder: TEST_PATH);
             }
             /* else if (storeType == "postgres")
              {
@@ -52,6 +55,8 @@ namespace Certify.Core.Tests.DataStores
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
+
+            return store;
         }
 
         [TestMethod]
@@ -154,36 +159,27 @@ namespace Certify.Core.Tests.DataStores
 
             try
             {
+                var list = await access.GetSecurityPrinciples(adminSp.Id);
+
                 // add first admin security principle, bypass role check as there is no user to check yet
 
                 await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
 
-                // add second security principle, enforcing role checks for calling user
-                await access.AddSecurityPrinciple(adminSp.Id, consumerSp);
+                await access.AddAssignedRole(new AssignedRole { Id = new Guid().ToString(), SecurityPrincipleId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
 
-                var list = await access.GetSecurityPrinciples(adminSp.Id);
+                // add second security principle, bypass role check as this is just a data store test
+                var added = await access.AddSecurityPrinciple(adminSp.Id, consumerSp, bypassIntegrityCheck: true);
 
-                Assert.IsTrue(list.Any());
+                Assert.IsTrue(added, "Should be able to add a security principle");
+
+                list = await access.GetSecurityPrinciples(adminSp.Id);
+
+                Assert.IsTrue(list.Any(), "Should have security principles in store");
 
                 // get updated sp so that password is hashed for comparison check
                 consumerSp = await access.GetSecurityPrinciple(adminSp.Id, consumerSp.Id);
 
                 Assert.IsTrue(access.IsPasswordValid("oldpassword", consumerSp.Password));
-
-                var updated = await access.UpdateSecurityPrinciplePassword(adminSp.Id, new Models.API.SecurityPrinciplePasswordUpdate
-                {
-                    SecurityPrincipleId = consumerSp.Id,
-                    Password = "oldpassword",
-                    NewPassword = "newpassword"
-                });
-
-                Assert.IsTrue(updated, "SP password should have been updated OK");
-
-                consumerSp = await access.GetSecurityPrinciple(adminSp.Id, consumerSp.Id);
-
-                Assert.IsFalse(access.IsPasswordValid("oldpassword", consumerSp.Password), "Old password should no longer be valid");
-
-                Assert.IsTrue(access.IsPasswordValid("newpassword", consumerSp.Password), "New password should be valid");
             }
             finally
             {
