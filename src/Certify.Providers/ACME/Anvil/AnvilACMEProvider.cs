@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1472,13 +1472,7 @@ namespace Certify.Providers.ACME.Anvil
 
             try
             {
-                if (order.Status == OrderStatus.Valid)
-                {
-                    // download existing cert
-                    certificateChain = await orderContext.Download(preferredChain);
-                }
-                else
-                {
+
                     if (!string.IsNullOrEmpty(config.CustomCSR))
                     {
 
@@ -1554,8 +1548,6 @@ namespace Certify.Providers.ACME.Anvil
                     }
 
                     certificateChain = await orderContext.Download(preferredChain);
-
-                }
 
                 cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
 

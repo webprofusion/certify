@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -276,17 +276,6 @@ namespace Certify.Service.Controllers
             {
                 return new List<CertificateRequestResult>();
             }
-        }
-
-        [HttpGet, Route("fetch/{managedItemId}/{isPreviewOnly}")]
-        public async Task<CertificateRequestResult> FetchCertificate(string managedItemId, bool isPreviewOnly)
-        {
-            DebugLog();
-
-            var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
-
-            var result = await _certifyManager.FetchCertificate(managedCertificate);
-            return result;
         }
 
         [HttpGet, Route("deploymentproviders/")]

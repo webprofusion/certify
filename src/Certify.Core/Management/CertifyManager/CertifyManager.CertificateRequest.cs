@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1368,26 +1368,6 @@ namespace Certify.Management
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Fetch an existing certificate from the certificate authority
-        /// </summary>
-        /// <param name="managedCertificate"></param>
-        /// <param name="progress"></param>
-        /// <param name="isPreviewOnly"></param>
-        /// <returns></returns>
-        public async Task<CertificateRequestResult> FetchCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null, bool isPreviewOnly = false)
-        {
-
-            if (!isPreviewOnly)
-            {
-                _tc?.TrackEvent("RefetchCertificate");
-            }
-
-            _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Refetch: {managedCertificate.Name}");
-
-            return await CompleteCertificateRequest(_serviceLog, managedCertificate, progress, pendingOrder: null);
         }
 
         /// <summary>

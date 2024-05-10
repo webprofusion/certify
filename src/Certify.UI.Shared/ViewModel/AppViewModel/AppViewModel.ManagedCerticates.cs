@@ -381,15 +381,6 @@ namespace Certify.UI.ViewModel
         /// <param name="item"></param>
         /// <returns></returns>
         public async Task<List<ActionStep>> GetPreviewActions(ManagedCertificate item) => await _certifyClient.PreviewActions(item);
-        /// <summary>
-        /// Perform re-download last certificate for a given managed certificate
-        /// </summary>
-        /// <param name="managedItemId"></param>
-        /// <returns></returns>
-        internal async Task<CertificateRequestResult> RefetchCertificate(string managedItemId)
-        {
-            return await _certifyClient.RefetchCertificate(managedItemId);
-        }
 
         /// <summary>
         /// Perform set of challenge response tests for the given managed certificate

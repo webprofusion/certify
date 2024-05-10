@@ -390,16 +390,6 @@
                                 HorizontalAlignment="Left"
                                 Click="ReapplyCertBindings_Click"
                                 Content="{x:Static Resources:SR.ManagedCertificateSettings_ReapplyCertificate}" />
-
-
-                            <Button
-                                x:Name="RefetchCertificate"
-                                Width="220"
-                                Margin="0,4,0,0"
-                                HorizontalAlignment="Left"
-                                Click="RefetchCertificate_Click">
-                                Re-fetch Latest Certificate
-                            </Button>
                             <Button
                                 x:Name="ResetFailureInfo"
                                 Width="220"
@@ -412,7 +402,8 @@
                                 x:Name="ChallengeCleanup"
                                 Width="220"
                                 Margin="0,4,0,0"
-                                HorizontalAlignment="Left" Click="ChallengeCleanup_Click">
+                                HorizontalAlignment="Left"
+                                Click="ChallengeCleanup_Click">
                                 Perform Challenge Cleanup
                             </Button>
                         </StackPanel>

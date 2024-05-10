@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -87,6 +87,29 @@ namespace Certify.Service.Controllers
             }
         }
 
+        [HttpPost, Route("challengecleanup")]
+        public async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate managedCertificate)
+        {
+            DebugLog();
+
+            var progressState = new RequestProgressState(RequestState.Running, "Performing Challenge Cleanup..", managedCertificate);
+
+            var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+            // perform challenge response test, log to string list and return in result
+            var logList = new List<string>();
+            using (var log = new LoggerConfiguration()
+
+                     .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
+                     .CreateLogger())
+            {
+                var theLog = new Loggy(log);
+                var results = await _certifyManager.PerformChallengeCleanup(theLog, managedCertificate, progress: progressIndicator);
+
+                return results;
+            }
+        }
+
         [HttpPost, Route("preview")]
         public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site)
         {
@@ -138,7 +161,17 @@ namespace Certify.Service.Controllers
         {
             DebugLog();
 
-            return await _certifyManager.PerformRenewAll(settings, null);
+            if (settings.AwaitResults)
+            {
+                return await _certifyManager.PerformRenewAll(settings);
+            }
+            else
+            {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                _certifyManager.PerformRenewAll(settings);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                return await Task.FromResult(new List<CertificateRequestResult>());
+            }
         }
 
         [HttpGet, Route("renewcert/{managedItemId}/{resumePaused}/{isInteractive}")]
@@ -244,17 +277,6 @@ namespace Certify.Service.Controllers
             {
                 return new List<CertificateRequestResult>();
             }
-        }
-
-        [HttpGet, Route("fetch/{managedItemId}/{isPreviewOnly}")]
-        public async Task<CertificateRequestResult> FetchCertificate(string managedItemId, bool isPreviewOnly)
-        {
-            DebugLog();
-
-            var managedCertificate = await _certifyManager.GetManagedCertificate(managedItemId);
-
-            var result = await _certifyManager.FetchCertificate(managedCertificate);
-            return result;
         }
 
         [HttpGet, Route("deploymentproviders/")]

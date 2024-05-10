@@ -35,9 +35,6 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                     if (cert != null)
                     {
-                        //var test = cert.PrivateKey.KeyExchangeAlgorithm;
-                        // System.Diagnostics.Debug.WriteLine(test.ToString());
-
                         X509Certificate2UI.DisplayCertificate(cert);
                     }
                 }
@@ -96,45 +93,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             else
             {
                 MessageBox.Show(SR.ManagedCertificateSettings_CertificateNotReady);
-            }
-        }
-
-        private async void RefetchCertificate_Click(object sender, RoutedEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.CurrentOrderUri))
-            {
-                if (MessageBox.Show("Re-fetch certificate from Certificate Authority?", "Confirm Re-Fetch?", MessageBoxButton.OKCancel) == MessageBoxResult.OK)
-                {
-
-                    try
-                    {
-                        Cursor = System.Windows.Input.Cursors.Wait;
-                        var result = await ItemViewModel.RefetchCertificate(ItemViewModel.SelectedItem.Id);
-
-                        Cursor = System.Windows.Input.Cursors.Arrow;
-
-                        if (result.IsSuccess)
-                        {
-                            MessageBox.Show("Latest cert re-fetched from Certificate Authority.");
-                        }
-                        else
-                        {
-                            MessageBox.Show($"Failed to re-fetch cert from Certificate Authority: {result.Message}");
-                        }
-                    }
-                    catch (Client.ServiceCommsException exp)
-                    {
-                        MessageBox.Show(exp.Message);
-                    }
-                    finally
-                    {
-                        Cursor = System.Windows.Input.Cursors.Arrow;
-                    }
-                }
-            }
-            else
-            {
-                MessageBox.Show("You have not ordered this certificate yet or you have changed certificate authority, so it cannot be downloaded again. Use Request Certificate to perform the certificate order.");
             }
         }
 
