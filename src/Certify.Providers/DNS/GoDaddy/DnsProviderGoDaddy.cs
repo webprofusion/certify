@@ -70,7 +70,7 @@ namespace Certify.Providers.DNS.GoDaddy
         {
             Id = "DNS01.API.GoDaddy",
             Title = "GoDaddy DNS API",
-            Description = "Validates via GoDaddy DNS APIs using credentials",
+            Description = "Validates via GoDaddy DNS APIs using credentials. Requires account with 10+ domains hosted on GoDaddy DNS.",
             HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/godaddy",
             PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
@@ -218,7 +218,7 @@ namespace Certify.Providers.DNS.GoDaddy
                 return new ActionResult
                 {
                     IsSuccess = false,
-                    Message = $"Could not update dns record {record.RecordName} to zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
+                    Message = $"Could not update dns record {record.RecordName} in zone {zoneName}. Result: {result.StatusCode} - {await result.Content.ReadAsStringAsync()}"
                 };
             }
             else
@@ -234,7 +234,7 @@ namespace Certify.Providers.DNS.GoDaddy
 
             if (string.IsNullOrWhiteSpace(domainInfo?.RootDomain))
             {
-                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone." };
+                return new ActionResult { IsSuccess = false, Message = "Failed to determine root domain in zone. Ensure your GoDaddy account meets their current API requirements (10+ domains etc) and discuss with GoDaddy support if appropriate." };
             }
 
             var recordName = NormaliseRecordName(domainInfo, request.RecordName);
