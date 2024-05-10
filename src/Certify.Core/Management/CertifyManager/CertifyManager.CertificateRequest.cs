@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,6 +24,7 @@ namespace Certify.Management
         private IdnMapping _idnMapping = new IdnMapping();
 
         private bool _isRenewAllInProgress { get; set; }
+        private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
         /// <summary>
         /// Perform Renew All: identify all items to renew then initiate renewal process
@@ -116,6 +117,27 @@ namespace Certify.Management
                 string reason = null
             )
         {
+
+            // check if we have an existing request in progress, if so skip for now (max request in progress age 10 mins)
+            _renewalsInProgress.TryGetValue(managedCertificate.Id, out var existingRequest);
+
+            if (existingRequest.HasValue)
+            {
+                var age = existingRequest.Value - DateTimeOffset.Now;
+
+                if (Math.Abs(age.TotalMinutes) > 10)
+                {
+                    // if we have a stuck request, let the user start it again
+                    _renewalsInProgress.TryRemove(managedCertificate.Id, out existingRequest);
+                }
+                else
+                {
+                    return new CertificateRequestResult { Abort = true, IsSuccess = false, ManagedItem = managedCertificate, Message = "Certificate request already in progress." };
+                }
+            }
+
+            _renewalsInProgress.TryAdd(managedCertificate.Id, DateTimeOffset.Now);
+
             _serviceLog?.Information("Performing Certificate Request: {Name} [{Id}]", managedCertificate.Name, managedCertificate.Id);
 
             // Perform pre-request checks and scripting hooks, invoke main request process, then
@@ -331,6 +353,8 @@ namespace Certify.Management
                 await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
             }
 
+            _renewalsInProgress.TryRemove(managedCertificate.Id, out _);
+
             if (isInteractive)
             {
                 await SendQueuedStatusReports();
@@ -380,7 +404,7 @@ namespace Certify.Management
 
                 return result;
             }
-            
+
             if (!resumeExistingOrder)
             {
                 managedCertificate.CurrentOrderUri = null;
@@ -413,7 +437,7 @@ namespace Certify.Management
 
 #pragma warning disable CS0618 // Type or member is obsolete
             var config = managedCertificate.RequestConfig;
-                
+
             if (config.ChallengeType == null && (config.Challenges == null || !config.Challenges.Any()))
             {
                 config.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
@@ -857,8 +881,6 @@ namespace Certify.Management
                         managedCertificate.CertificatePreviousThumbprintHash = managedCertificate.CertificateThumbprintHash;
                         managedCertificate.CertificateThumbprintHash = certInfo.Thumbprint;
                         managedCertificate.CertificateRevoked = false;
-
-                        var previousCertId = managedCertificate.ARICertificateId;
 
                         managedCertificate.ARICertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(certInfo);
                         managedCertificate.CertificateCurrentCA = managedCertificate.LastAttemptedCA;
