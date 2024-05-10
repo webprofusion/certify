@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -641,11 +641,18 @@ namespace Certify.Providers.ACME.Anvil
                         orderErrorMsg += string.Join("; ", err.Subproblems.Select(a => $" [Subproblem] {a.Type} :: {a.Detail}"));
                     }
 
+                    var abandonRequest = true;
+
                     // Add additional explanation for common error types
                     if ((int)err.Status == 429)
                     {
                         // hit an ACME API rate limit 
                         itemLog.Warning($"Encountered a rate limit while communicating with the ACME API");
+                    }
+                    else if (err.Status == System.Net.HttpStatusCode.Conflict)
+                    {
+                        abandonRequest = false;
+                        itemLog.Warning($"Encountered an order conflict. Action maybe re-attempted by resolving the conflict.");
                     }
                     else if (err.Type?.EndsWith("accountDoesNotExist") == true)
                     {
@@ -653,7 +660,7 @@ namespace Certify.Providers.ACME.Anvil
                         itemLog.Warning($"Attempted to use invalid account details with the ACME API");
                     }
 
-                    return (exceptionHandled: true, abandonRequest: true, message: orderErrorMsg, exp);
+                    return (exceptionHandled: true, abandonRequest: abandonRequest, message: orderErrorMsg, exp);
                 }
                 else
                 {
@@ -760,6 +767,9 @@ namespace Certify.Providers.ACME.Anvil
                     }
 
                     // attempt to start our certificate order
+
+                    var skipAriReplace = false;
+
                     while (!orderCreated && !orderAttemptAbandoned && remainingAttempts >= 0)
                     {
                         try
@@ -795,9 +805,9 @@ namespace Certify.Providers.ACME.Anvil
                                     && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId)
                                     && managedCertificate.ARICertificateId.Contains(".")
                                     && managedCertificate.RenewalFailureCount < 3
+                                    && !skipAriReplace
                                 )
                                 {
-
                                     ariReplacesCertId = managedCertificate.ARICertificateId;
                                 }
 
@@ -814,6 +824,12 @@ namespace Certify.Providers.ACME.Anvil
                             var (exceptionHandled, abandonRequest, message, unwrappedException) = HandleAndLogAcmeException(log, exp);
 
                             lastException = unwrappedException;
+
+                            if (caSupportsARI && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId) && unwrappedException is AcmeRequestException acmeExp && acmeExp.Error.Status == System.Net.HttpStatusCode.Conflict)
+                            {
+                                //likely an ARI replaces conflict, skip ari replace on retry
+                                skipAriReplace = true;
+                            }
 
                             if (abandonRequest || remainingAttempts == 0)
                             {
@@ -1473,81 +1489,81 @@ namespace Certify.Providers.ACME.Anvil
             try
             {
 
-                    if (!string.IsNullOrEmpty(config.CustomCSR))
+                if (!string.IsNullOrEmpty(config.CustomCSR))
+                {
+
+                    // read custom CSR as pem, convert to bytes/der
+                    var pemString = string.Join("",
+                            config.CustomCSR
+                            .Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
+                            .Where(s => !s.Contains("BEGIN ") && !s.Contains("END ")).ToArray()
+                            );
+
+                    var csrBytes = Convert.FromBase64String(pemString);
+
+                    order = await orderContext.Finalize(csrBytes);
+                }
+                else
+                {
+                    if (config.AuthorityTokens?.Any() == true)
                     {
+                        // CSR is for TnAuthList
+                        var csrBuilder = await orderContext.CreateCsr(csrKey);
 
-                        // read custom CSR as pem, convert to bytes/der
-                        var pemString = string.Join("",
-                                config.CustomCSR
-                                .Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
-                                .Where(s => !s.Contains("BEGIN ") && !s.Contains("END ")).ToArray()
-                                );
+                        foreach (var token in config.AuthorityTokens)
+                        {
+                            var parsedToken = CertRequestConfig.GetParsedAtc(token.Token);
+                            var tokenValueBytes = CertRequestConfig.GetAuthorityTokenValueBytes(token);
+                            if (tokenValueBytes != null)
+                            {
+                                csrBuilder.CrlDistributionPoints.Add(new Uri(token.Crl));
+                                csrBuilder.TnAuthList.Add(tokenValueBytes);
+                            }
+                        }
 
-                        var csrBytes = Convert.FromBase64String(pemString);
+                        var csrBytes = csrBuilder.Generate();
 
                         order = await orderContext.Finalize(csrBytes);
                     }
                     else
                     {
-                        if (config.AuthorityTokens?.Any() == true)
+                        order = await orderContext.Finalize(new CsrInfo
                         {
-                            // CSR is for TnAuthList
-                            var csrBuilder = await orderContext.CreateCsr(csrKey);
-
-                            foreach (var token in config.AuthorityTokens)
-                            {
-                                var parsedToken = CertRequestConfig.GetParsedAtc(token.Token);
-                                var tokenValueBytes = CertRequestConfig.GetAuthorityTokenValueBytes(token);
-                                if (tokenValueBytes != null)
-                                {
-                                    csrBuilder.CrlDistributionPoints.Add(new Uri(token.Crl));
-                                    csrBuilder.TnAuthList.Add(tokenValueBytes);
-                                }
-                            }
-
-                            var csrBytes = csrBuilder.Generate();
-
-                            order = await orderContext.Finalize(csrBytes);
-                        }
-                        else
-                        {
-                            order = await orderContext.Finalize(new CsrInfo
-                            {
-                                CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
-                                RequireOcspMustStaple = config.RequireOcspMustStaple
-                            }, csrKey);
-                        }
+                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
+                            RequireOcspMustStaple = config.RequireOcspMustStaple
+                        }, csrKey);
                     }
+                }
 
-                    //Theoretically we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state, however we still do for some custom CAs
-                    if (order.Status == OrderStatus.Processing)
+                //Theoretically we can remove this as ACME lib now provides this functionality, so we shouldn't hit the Processing state, however we still do for some custom CAs
+                if (order.Status == OrderStatus.Processing)
+                {
+                    // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
+                    // https://tools.ietf.org/html/rfc8555#section-7.1.6
+
+                    attempts = 10;
+
+                    while (attempts > 0 && order.Status == OrderStatus.Processing)
                     {
-                        // some CAs enter the processing state while they generate the final certificate, so we may need to check the status a few times
-                        // https://tools.ietf.org/html/rfc8555#section-7.1.6
-
-                        attempts = 10;
-
-                        while (attempts > 0 && order.Status == OrderStatus.Processing)
+                        var waitMS = _operationRetryWaitMS;
+                        if (orderContext.RetryAfter > 0 && orderContext.RetryAfter < 60)
                         {
-                            var waitMS = _operationRetryWaitMS;
-                            if (orderContext.RetryAfter > 0 && orderContext.RetryAfter < 60)
-                            {
-                                waitMS = orderContext.RetryAfter * 1000;
-                            }
-
-                            await Task.Delay(waitMS);
-
-                            order = await orderContext.Resource();
-                            attempts--;
+                            waitMS = orderContext.RetryAfter * 1000;
                         }
-                    }
 
-                    if (order.Status != OrderStatus.Valid)
-                    {
-                        return new ProcessStepResult { ErrorMessage = $"The CA did not to finalise the certificate order in the allowed time. The final order status was \"{order.Status}\". Your CA can allow more time for order processing by setting the RetryAfter header in their service implementation.", IsSuccess = false };
-                    }
+                        await Task.Delay(waitMS);
 
-                    certificateChain = await orderContext.Download(preferredChain);
+                        order = await orderContext.Resource();
+                        attempts--;
+                    }
+                }
+
+                if (order.Status != OrderStatus.Valid)
+                {
+                    return new ProcessStepResult { ErrorMessage = $"The CA did not to finalise the certificate order in the allowed time. The final order status was \"{order.Status}\". Your CA can allow more time for order processing by setting the RetryAfter header in their service implementation.", IsSuccess = false };
+                }
+
+                certificateChain = await orderContext.Download(preferredChain);
 
                 cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
 
