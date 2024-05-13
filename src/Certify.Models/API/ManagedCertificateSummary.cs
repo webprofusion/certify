@@ -26,7 +26,7 @@ namespace Certify.Models.API
         /// <summary>
         /// Primary identifier (e.g. primary subject domain name)
         /// </summary>
-        public CertIdentifierItem PrimaryIdentifier { get; set; } = new CertIdentifierItem();
+        public CertIdentifierItem? PrimaryIdentifier { get; set; } = new CertIdentifierItem();
 
         /// <summary>
         /// Date request/renewal was last attempted (if any)

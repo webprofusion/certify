@@ -9,6 +9,7 @@
         <StartupObject>Certify.UI.App</StartupObject>
         <Platforms>AnyCPU;</Platforms>
         <XamlDebuggingInformation>True</XamlDebuggingInformation>
+        <NoWarn>NU1701</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
