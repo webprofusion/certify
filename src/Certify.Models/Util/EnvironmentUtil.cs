@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -22,17 +22,20 @@ namespace Certify.Models
 
             var processUserSid = WindowsIdentity.GetCurrent().User;
 
-            foreach (FileSystemAccessRule rule in currentRules)
+            if (processUserSid != null)
             {
-                if (rule.IdentityReference == allUsersSid || rule.IdentityReference == processUserSid)
+                foreach (FileSystemAccessRule rule in currentRules)
                 {
-                    acl.RemoveAccessRuleAll(rule);
+                    if (rule.IdentityReference == allUsersSid || rule.IdentityReference == processUserSid)
+                    {
+                        acl.RemoveAccessRuleAll(rule);
+                    }
                 }
-            }
 
-            // add full control for the current (process) user 
-            var currentUserRights = new FileSystemAccessRule(processUserSid, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow);
-            acl.AddAccessRule(currentUserRights);
+                // add full control for the current (process) user 
+                var currentUserRights = new FileSystemAccessRule(processUserSid, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow);
+                acl.AddAccessRule(currentUserRights);
+            }
 
             // add full control for administrators
             var adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
