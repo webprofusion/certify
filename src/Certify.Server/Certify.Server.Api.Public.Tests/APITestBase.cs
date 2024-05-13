@@ -73,7 +73,7 @@ namespace Certify.Service.Api.Tests
             _serverProcess.Dispose();
         }
 
-        static Process? _serverProcess = null;
+        static Process _serverProcess = null;
         private static void CreateCoreServer()
         {
             if (_serverProcess == null)
