@@ -58,7 +58,7 @@ namespace Certify.Server.Api.Public.Controllers
             // check users login, if valid issue new JWT access token and refresh token based on their identity
             var validation = await _client.ValidateSecurityPrinciplePassword(new SecurityPrinciplePasswordCheck() { Username = login.Username, Password = login.Password }, CurrentAuthContext);
 
-            if (validation.IsSuccess)
+            if (validation.IsSuccess && validation.SecurityPrinciple != null)
             {
                 // TODO: get user details from API and return as part of response instead of returning as json
 
@@ -94,7 +94,7 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(typeof(AuthResponse), 200)]
         public async Task<IActionResult> Refresh(string refreshToken)
         {
-            var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]).Parameter;
+            var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]!).Parameter;
 
             if (string.IsNullOrEmpty(authToken))
             {

@@ -119,13 +119,13 @@ namespace Certify.Server.Api.Public.Controllers
 
             var list = managedCertResult.Results.Select(i => new ManagedCertificateSummary
             {
-                Id = i.Id,
-                Title = i.Name,
+                Id = i.Id ?? "",
+                Title = i.Name ?? "",
                 PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
                 Identifiers = i.GetCertificateIdentifiers(),
                 DateRenewed = i.DateRenewed,
                 DateExpiry = i.DateExpiry,
-                Comments = i.Comments,
+                Comments = i.Comments ?? "",
                 Status = i.LastRenewalStatus?.ToString() ?? "",
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
             }).OrderBy(a => a.Title);
