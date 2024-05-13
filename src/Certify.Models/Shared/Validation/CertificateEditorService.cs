@@ -79,7 +79,7 @@ namespace Certify.Models.Shared.Validation
         /// Check the currently selected options and auto set where we can, transpose selected identifier options to update the final request configuration
         /// </summary>
         /// <returns></returns>
-        public static void ApplyAutoConfiguration(ManagedCertificate item, SiteInfo selectedTargetSite)
+        public static void ApplyAutoConfiguration(ManagedCertificate item, SiteInfo? selectedTargetSite)
         {
 
             var config = item.RequestConfig;
@@ -252,7 +252,7 @@ namespace Certify.Models.Shared.Validation
             return (domainList, wildcardAdded);
         }
 
-        public static ValidationResult Validate(ManagedCertificate item, SiteInfo selectedTargetSite, CertificateAuthority preferredCA, bool applyAutoConfiguration)
+        public static ValidationResult Validate(ManagedCertificate item, SiteInfo? selectedTargetSite, CertificateAuthority? preferredCA, bool applyAutoConfiguration)
         {
             try
             {

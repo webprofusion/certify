@@ -14,9 +14,9 @@ namespace Certify.Server.Api.Public.Services
     /// </summary>
     public class JwtService
     {
-        private readonly string _secret;
-        private readonly string _issuer;
-        private readonly string _expDate;
+        private readonly string _secret = default!;
+        private readonly string _issuer = default!;
+        private readonly string _expDate = default!;
 
         /// <summary>
         /// Constructor
@@ -24,9 +24,9 @@ namespace Certify.Server.Api.Public.Services
         /// <param name="config"></param>
         public JwtService(IConfiguration config)
         {
-            _secret = config.GetSection("JwtSettings").GetSection("secret").Value;
-            _issuer = config.GetSection("JwtSettings").GetSection("issuer").Value;
-            _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value;
+            _secret = config.GetSection("JwtSettings").GetSection("secret").Value ?? "";
+            _issuer = config.GetSection("JwtSettings").GetSection("issuer").Value ?? "";
+            _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value ?? DateTimeOffset.Now.AddDays(1).ToString();
         }
 
         /// <summary>

@@ -422,7 +422,9 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 zoneId = challengeConfig.ZoneId?.Trim();
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             if (dnsAPIProvider != null)

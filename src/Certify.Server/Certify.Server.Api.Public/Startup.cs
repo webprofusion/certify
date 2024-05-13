@@ -30,6 +30,10 @@ namespace Certify.Server.API
         /// </summary>
         public IConfiguration Configuration { get; }
 
+        /// <summary>
+        /// Configure services
+        /// </summary>
+        /// <param name="services"></param>
         public void ConfigureServices(IServiceCollection services)
         {
             _ = ConfigureServicesWithResults(services);
@@ -223,6 +227,11 @@ namespace Certify.Server.API
 #endif
         }
 
+        /// <summary>
+        /// Connect to status stream of backend service
+        /// </summary>
+        /// <param name="app"></param>
+        /// <returns></returns>
         public async Task SetupStatusHubConnection(WebApplication app)
         {
             var internalServiceClient = app.Services.GetRequiredService<ICertifyInternalApiClient>() as CertifyServiceClient;
@@ -241,8 +250,11 @@ namespace Certify.Server.API
                 {
                     try
                     {
-                        await internalServiceClient.ConnectStatusStreamAsync();
-                        connected = true;
+                        if (internalServiceClient != null)
+                        {
+                            await internalServiceClient.ConnectStatusStreamAsync();
+                            connected = true;
+                        }
                     }
                     catch
                     {
@@ -261,18 +273,22 @@ namespace Certify.Server.API
             }
         }
 
-        private StatusHubReporting _statusReporting;
+        private StatusHubReporting _statusReporting = default!;
 
         private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
         {
             System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             _statusReporting.ReportManagedCertificateUpdated(obj);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
         private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj)
         {
             System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             _statusReporting.ReportRequestProgress(obj);
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
         private void InternalServiceClient_OnMessageFromService(string arg1, string arg2)
         {

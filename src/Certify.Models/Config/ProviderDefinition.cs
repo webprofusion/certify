@@ -15,8 +15,8 @@ namespace Certify.Models.Config
 
     public class ProviderDefinition
     {
-        public string? Id { get; set; } = string.Empty;
-        public string? Title { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public string? Description { get; set; } = string.Empty;
         public string? HelpUrl { get; set; } = string.Empty;
         public List<ProviderParameter>? ProviderParameters { get; set; } = new();

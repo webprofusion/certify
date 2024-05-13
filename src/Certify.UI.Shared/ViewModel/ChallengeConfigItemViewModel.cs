@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -258,11 +258,13 @@ namespace Certify.UI.ViewModel
                     // if zoneid previously stored, migrate to provider param
                     if (pa.Key == "zoneid")
                     {
+#pragma warning disable CS0618 // Type or member is obsolete
                         if (!string.IsNullOrEmpty(SelectedItem.ZoneId))
                         {
                             pa.Value = SelectedItem.ZoneId;
                             SelectedItem.ZoneId = null;
                         }
+#pragma warning restore CS0618 // Type or member is obsolete
                     }
 
                     if (!SelectedItem.Parameters.Any(p => p.Key == pa.Key))
