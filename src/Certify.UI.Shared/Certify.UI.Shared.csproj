@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net462;net8.0-windows;</TargetFrameworks>
@@ -33,8 +33,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="ControlzEx" Version="7.0.0-alpha0104" />
-		<PackageReference Include="Fody" Version="6.8.0" PrivateAssets="All" />
+		<PackageReference Include="ControlzEx" Version="7.0.0-alpha0106" />
+		<PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9">
 		  <NoWarn>NU1701</NoWarn>
 		</PackageReference>

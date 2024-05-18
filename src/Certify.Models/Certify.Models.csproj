@@ -17,11 +17,11 @@
 		<PlatformTarget>AnyCPU</PlatformTarget>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Fody" Version="6.8.0">
+		<PackageReference Include="Fody" Version="6.8.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.5.1" />
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.0" />
 		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.9.2">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
