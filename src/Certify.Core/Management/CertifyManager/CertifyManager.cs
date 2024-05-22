@@ -164,10 +164,10 @@ namespace Certify.Management
             {
                 await InitDataStore();
             }
-            catch
+            catch (Exception exp)
             {
-                var msg = "Certify Manager failed to start. Failed to load datastore";
-                _serviceLog.Error(msg);
+                var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
+                _serviceLog.Error(exp, msg);
                 throw (new Exception(msg));
             }
 
