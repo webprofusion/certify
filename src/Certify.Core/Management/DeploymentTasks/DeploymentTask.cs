@@ -31,16 +31,16 @@ namespace Certify.Providers.DeploymentTasks
             ILog log,
             ICredentialsManager credentialsManager,
             object subject,
-            CancellationToken cancellationToken,
             DeploymentContext deploymentContext,
-            bool isPreviewOnly = true
+            bool isPreviewOnly,
+            CancellationToken cancellationToken
             )
         {
             if (TaskProvider != null && TaskConfig != null)
             {
                 try
                 {
-                    var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, cancellationToken, deploymentContext);
+                    var execParams = new DeploymentTaskExecutionParams(log, credentialsManager, subject, TaskConfig, _credentials, isPreviewOnly, null, deploymentContext, cancellationToken);
                     if (!isPreviewOnly)
                     {
                         return await TaskProvider.Execute(execParams);
