@@ -236,7 +236,7 @@ namespace Certify.Management
                     log?.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
-                    taskResults = await task.Execute(log, _credentialsManager, result, CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
+                    taskResults = await task.Execute(log, _credentialsManager, result, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly, cancellationToken: CancellationToken.None);
 
                     if (!isPreviewOnly)
                     {
@@ -359,7 +359,7 @@ namespace Certify.Management
 
             try
             {
-                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider?.GetDefinition(), CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy });
+                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider?.GetDefinition(), new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, CancellationToken.None);
                 var validationResult = await provider.Validate(execParams);
                 return validationResult;
             }
