@@ -1,7 +1,14 @@
-using System;
+﻿using System;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
+using Certify.Management;
 using Certify.Models.API;
+using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.X509;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -61,7 +68,8 @@ namespace Certify.Core.Tests.Unit
                 Assert.Fail("NTP Time Difference Failed");
             }
         }
-#if NET7_0_OR_GREATER
+
+#if NET8_0_OR_GREATER
         [TestMethod, Description("Test ARI CertID encoding example")]
         public void TestARICertIDEncoding()
         {
@@ -75,6 +83,32 @@ namespace Certify.Core.Tests.Unit
 
            Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
         }
+
+        [TestMethod, Description("Test ARI CertID encoding example 2")]
+        public void TestARICertIDEncodingWithTestCert()
+        {
+            // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients
+
+            // https://www.ietf.org/archive/id/draft-ietf-acme-ari-03.html#name-appendix-a-example-certific
+
+            var testCertPem = @"-----BEGIN CERTIFICATE-----
+MIIBQzCB66ADAgECAgUAh2VDITAKBggqhkjOPQQDAjAVMRMwEQYDVQQDEwpFeGFt
+cGxlIENBMCIYDzAwMDEwMTAxMDAwMDAwWhgPMDAwMTAxMDEwMDAwMDBaMBYxFDAS
+BgNVBAMTC2V4YW1wbGUuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeBZu
+7cbpAYNXZLbbh8rNIzuOoqOOtmxA1v7cRm//AwyMwWxyHz4zfwmBhcSrf47NUAFf
+qzLQ2PPQxdTXREYEnKMjMCEwHwYDVR0jBBgwFoAUaYhba4dGQEHhs3uEe6CuLN4B
+yNQwCgYIKoZIzj0EAwIDRwAwRAIge09+S5TZAlw5tgtiVvuERV6cT4mfutXIlwTb
++FYN/8oCIClDsqBklhB9KAelFiYt9+6FDj3z4KGVelYM5MdsO3pK
+-----END CERTIFICATE-----
+
+";
+            var cert = new X509CertificateParser().ReadCertificate(ASCIIEncoding.ASCII.GetBytes(testCertPem));
+                                  
+            var certId= CertUtils.GetARICertIdBase64(cert);
+
+            Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
+        }
 #endif
+
     }
 }
