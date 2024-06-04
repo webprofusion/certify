@@ -4,7 +4,7 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:9695"
+      "applicationUrl": "http://127.0.0.2:9695"
     }
   },
 
@@ -15,15 +15,15 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:9695"
+        "ASPNETCORE_URLS": "http://127.0.0.2:9695"
       }
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "launchUrl": "http://localhost:9695/docs",
+      "launchUrl": "http://127.0.0.2:9695/docs",
       "iisExpress": {
-        "applicationUrl": "http://localhost:9695"
+        "applicationUrl": "http://127.0.0.2:9695"
       },
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
