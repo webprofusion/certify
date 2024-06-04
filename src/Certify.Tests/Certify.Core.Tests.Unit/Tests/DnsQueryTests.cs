@@ -51,7 +51,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(result.All(r => r.IsSuccess), "incorrectly configured DNSSEC record should fail dns check");
         }
 
-#if NET6_0_OR_GREATER
+#if NET9_0_OR_GREATER
         [TestMethod, Description("Check for a DNS TXT record")]
         public async Task TestDNS_CheckTXT()
         {

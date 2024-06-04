@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net462;net8.0-windows;</TargetFrameworks>
+		<TargetFrameworks>net462;net9.0-windows;</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 		<UseWindowsForms>true</UseWindowsForms>
 		<!--assembly version specified here to allow WPF to load windows via startupUI without version dependency-->
