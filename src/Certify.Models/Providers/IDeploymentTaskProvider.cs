@@ -26,9 +26,9 @@ namespace Certify.Providers.DeploymentTasks
             Dictionary<string, string> credentials,
             bool isPreviewOnly,
             DeploymentProviderDefinition definition,
-            CancellationToken cancellationToken,
             DeploymentContext context
-            )
+,
+            CancellationToken cancellationToken)
         {
             Log = log;
             CredentialsManager = credentialsManager;
