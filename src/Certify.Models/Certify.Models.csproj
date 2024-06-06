@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net462;net9.0</TargetFrameworks>
 		<RootNamespace>Certify</RootNamespace>
 		<Platforms>AnyCPU</Platforms>
 		<LangVersion>10.0</LangVersion>
@@ -21,8 +21,8 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.0" />
-		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.9.2">
+		<PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.1" />
+		<PackageReference Include="Microsoft.Net.Compilers.Toolset" Version="4.10.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
