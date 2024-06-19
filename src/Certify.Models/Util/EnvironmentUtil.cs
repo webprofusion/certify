@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -84,6 +84,11 @@ namespace Certify.Models
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 Models.SharedConstants.APPDATASUBFOLDER
             };
+
+            if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_PER_INSTANCE_SETTINGS")?.ToLowerInvariant() == "true")
+            {
+                parts.Add(Environment.MachineName.ToLowerInvariant().Trim());
+            }
 
             var path = Path.Combine(parts.ToArray());
             CreateAndApplyRestrictedACL(path);
