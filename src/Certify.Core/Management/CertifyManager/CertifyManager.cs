@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Certify.API.Management;
+using Certify.Client;
 using Certify.Core.Management;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
@@ -192,6 +194,13 @@ namespace Certify.Management
             await UpgradeSettings();
 
             _serviceLog?.Information("Certify Manager Started");
+
+#if DEBUG
+            if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
+            {
+                GenerateDemoItems();
+            }
+#endif
         }
        
         /// <summary>
@@ -236,6 +245,20 @@ namespace Certify.Management
             catch
             {
                 // failed to perform garbage collection, ignore.
+            }
+        }
+
+        private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            // connect/reconnect to management hub if enabled
+            if (_managementServerClient == null || !_managementServerClient.IsConnected())
+            {
+                var mgmtHubUri = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") ?? _serverConfig.ManagementServerHubUri;
+
+                if (!string.IsNullOrWhiteSpace(mgmtHubUri))
+                {
+                    await StartManagementHubConnection(mgmtHubUri);
+                }
             }
         }
 

@@ -1,9 +1,12 @@
 ﻿using Certify.Client;
 using Certify.Models.API;
 using Certify.Models.Reporting;
+using Certify.Server.Api.Public.Services;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Controllers
 {
@@ -19,15 +22,21 @@ namespace Certify.Server.Api.Public.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        private IInstanceManagementStateProvider _mgmtStateProvider;
+
+        private IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client)
+        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
         {
             _logger = logger;
             _client = client;
+            _mgmtStateProvider = mgmtStateProvider;
+            _mgmtHubContext = mgmtHubContext;
         }
 
         /// <summary>
@@ -119,6 +128,7 @@ namespace Certify.Server.Api.Public.Controllers
 
             var list = managedCertResult.Results.Select(i => new ManagedCertificateSummary
             {
+                InstanceId = i.InstanceId,
                 Id = i.Id ?? "",
                 Title = i.Name ?? "",
                 PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
@@ -165,16 +175,19 @@ namespace Certify.Server.Api.Public.Controllers
         /// <summary>
         /// Gets the full settings for a specific managed certificate
         /// </summary>
-        /// <param name="managedCertId"></param>
+        /// <param name="instanceId">target instance</param>
+        /// <param name="managedCertId">managed item</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("settings/{managedCertId}")]
+        [Route("settings/{instanceId}/{managedCertId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> GetManagedCertificateDetails(string managedCertId)
+        public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
 
-            var managedCert = await _client.GetManagedCertificate(managedCertId, CurrentAuthContext);
+            var mgmtClient = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
+
+            var managedCert = await mgmtClient.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
             return new OkObjectResult(managedCert);
         }
@@ -185,13 +198,15 @@ namespace Certify.Server.Api.Public.Controllers
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("settings/update")]
+        [Route("settings/{instanceId}/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> UpdateManagedCertificateDetails(Models.ManagedCertificate managedCertificate)
+        public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)
         {
+            var mgmtClient = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
 
-            var result = await _client.UpdateManagedCertificate(managedCertificate, CurrentAuthContext);
+            var result = await mgmtClient.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
+
             if (result != null)
             {
                 return new OkObjectResult(result);

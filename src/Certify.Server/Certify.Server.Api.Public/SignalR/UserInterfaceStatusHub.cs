@@ -3,20 +3,20 @@ using Certify.Models;
 using Certify.Providers;
 using Microsoft.AspNetCore.SignalR;
 
-namespace Certify.Server.API
+namespace Certify.Server.Api.Public.SignalR
 {
     /// <summary>
-    /// Forwards status messages via SignalR
+    /// Forwards status messages via SignalR back to UI client(s)
     /// </summary>
-    public class StatusHubReporting : Providers.IStatusReporting
+    public class UserInterfaceStatusHubReporting : IStatusReporting
     {
-        private IHubContext<StatusHub> _hubContext;
+        private IHubContext<UserInterfaceStatusHub> _hubContext;
 
         /// <summary>
         /// constructor
         /// </summary>
         /// <param name="hubContext"></param>
-        public StatusHubReporting(IHubContext<StatusHub> hubContext)
+        public UserInterfaceStatusHubReporting(IHubContext<UserInterfaceStatusHub> hubContext)
         {
             _hubContext = hubContext;
         }
@@ -28,7 +28,7 @@ namespace Certify.Server.API
         /// <returns></returns>
         public async Task ReportRequestProgress(RequestProgressState state)
         {
-            System.Diagnostics.Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
+            Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, state);
 
         }
@@ -40,7 +40,7 @@ namespace Certify.Server.API
         /// <returns></returns>
         public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
         {
-            System.Diagnostics.Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
+            Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
     }
@@ -48,7 +48,7 @@ namespace Certify.Server.API
     /// <summary>
     /// Status Hub interface
     /// </summary>
-    public interface IStatusHub
+    public interface IUserInterfaceStatusHub
     {
         /// <summary>
         /// Send progress result back to subscribed UIs
@@ -68,7 +68,7 @@ namespace Certify.Server.API
     /// <summary>
     /// Status hub
     /// </summary>
-    public class StatusHub : Hub<IStatusHub>
+    public class UserInterfaceStatusHub : Hub<IUserInterfaceStatusHub>
     {
         /// <summary>
         /// Handle connection event
@@ -81,7 +81,7 @@ namespace Certify.Server.API
         }
 
         /// <summary>
-        /// Handle disonnection event
+        /// Handle disconnection event
         /// </summary>
         /// <param name="exception"></param>
         /// <returns></returns>
