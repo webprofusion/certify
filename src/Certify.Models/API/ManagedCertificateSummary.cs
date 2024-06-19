@@ -8,6 +8,8 @@ namespace Certify.Models.API
     /// </summary>
     public class ManagedCertificateSummary
     {
+        public string? InstanceId { get; set; } = string.Empty;
+        public string? InstanceTitle { get; set; } = string.Empty;
         /// <summary>
         /// Id for this managed item
         /// </summary>

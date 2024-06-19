@@ -31,6 +31,6 @@ app.MapDefaultEndpoints();
 
 startup.Configure(app, builder.Environment);
 
-app.Lifetime.ApplicationStarted.Register(async () => await startup.SetupStatusHubConnection(app));
+app.Lifetime.ApplicationStarted.Register(async () => await startup.SetupStatusHubConnections(app));
 
 app.Run();
