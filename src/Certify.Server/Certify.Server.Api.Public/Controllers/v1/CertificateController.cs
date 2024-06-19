@@ -1,6 +1,7 @@
 ﻿using Certify.Client;
 using Certify.Models.API;
 using Certify.Models.Reporting;
+using Certify.Server.Api.Public.SignalR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +20,18 @@ namespace Certify.Server.Api.Public.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        private IInstanceManagementStateProvider _mgmtStateProvider;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client)
+        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider)
         {
             _logger = logger;
             _client = client;
+            _mgmtStateProvider = mgmtStateProvider;
         }
 
         /// <summary>
@@ -130,12 +134,29 @@ namespace Certify.Server.Api.Public.Controllers
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
             }).OrderBy(a => a.Title);
 
+            var remoteItems = _mgmtStateProvider.GetManagedInstanceItems();
+
+            managedCertResult.TotalResults += remoteItems.Values.SelectMany(s => s.Items).Count();
+            var compositeList = new List<ManagedCertificateSummary>(list);
+            compositeList.AddRange(remoteItems.Values.SelectMany(s => s.Items).Select(i => new ManagedCertificateSummary
+            {
+                Id = i.Id ?? "",
+                Title = $"[remote] {i.Name}" ?? "",
+                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
+                Identifiers = i.GetCertificateIdentifiers(),
+                DateRenewed = i.DateRenewed,
+                DateExpiry = i.DateExpiry,
+                Comments = i.Comments ?? "",
+                Status = i.LastRenewalStatus?.ToString() ?? "",
+                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
+            }).ToList());
+
             var result = new ManagedCertificateSummaryResult
             {
-                Results = list,
+                Results = compositeList,
                 TotalResults = managedCertResult.TotalResults,
                 PageIndex = page ?? 0,
-                PageSize = pageSize ?? list.Count()
+                PageSize = pageSize ?? compositeList.Count()
             };
 
             return new OkObjectResult(result);
