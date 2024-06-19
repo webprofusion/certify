@@ -33,7 +33,7 @@ Testing Configuration
         "Cloudflare_ZoneId": "5265262gdd562s4x6xd64zxczxcv",
         "Cloudflare_TestDomain": "anothertest.com"
     }
-- In addition, the test domain for some tests can be set using the CERTIFYSSLDOMAIN environment variable.
-		
+- In addition, the test domain for some tests can be set using the CERTIFY_TESTDOMAIN environment variable.
+
 
 
