@@ -64,7 +64,7 @@ namespace Certify.Client
                 _legacyConnection.TraceLevel = TraceLevels.All;
                 _legacyConnection.TraceWriter = writer;
 #endif
-
+                
                 await _legacyConnection.Start();
 
             }

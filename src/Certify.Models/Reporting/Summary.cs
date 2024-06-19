@@ -2,6 +2,7 @@
 {
     public class Summary : BindableBase
     {
+        public string InstanceId { get; set; } = string.Empty;
         public int Total { get; set; }
         public int Healthy { get; set; }
         public int Error { get; set; }
