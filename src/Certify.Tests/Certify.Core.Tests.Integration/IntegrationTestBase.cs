@@ -18,9 +18,9 @@ namespace Certify.Core.Tests
 
         public IntegrationTestBase()
         {
-            if (Environment.GetEnvironmentVariable("CERTIFYSSLDOMAIN") != null)
+            if (Environment.GetEnvironmentVariable("CERTIFY_TESTDOMAIN") != null)
             {
-                PrimaryTestDomain = Environment.GetEnvironmentVariable("CERTIFYSSLDOMAIN");
+                PrimaryTestDomain = Environment.GetEnvironmentVariable("CERTIFY_TESTDOMAIN");
             }
 
             /* ConfigSettings.Add("AWS_ZoneId", "example");

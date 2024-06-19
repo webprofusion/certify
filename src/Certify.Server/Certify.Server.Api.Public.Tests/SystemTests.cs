@@ -16,7 +16,7 @@ namespace Certify.Service.Api.Tests
 
             // Assert
             var expectedVersion = typeof(Certify.Models.AppVersion).GetTypeInfo().Assembly.GetName().Version;
-            Assert.AreEqual(expectedVersion, responseVersion);
+            Assert.AreEqual(expectedVersion.ToString(), responseVersion);
 
         }
     }
