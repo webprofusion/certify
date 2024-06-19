@@ -1,6 +1,10 @@
 ﻿using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using Certify.Client;
 using Certify.Server.Api.Public.Middleware;
+using Certify.Server.Api.Public.Services;
+using Certify.Server.Api.Public.SignalR;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -60,7 +64,8 @@ namespace Certify.Server.API
             services.AddRouting(r => r.LowercaseUrls = true);
 
             services
-                .AddSignalR()
+                .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
+
                 .AddMessagePackProtocol();
 
             services.AddResponseCompression(opts =>
@@ -169,6 +174,9 @@ namespace Certify.Server.API
 
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
 
+            services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
+
+            services.AddHostedService<ManagementWorker>();
             return results;
         }
 
@@ -178,7 +186,7 @@ namespace Certify.Server.API
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
 
-            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<StatusHub>>();
+            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
 
             if (statusHubContext == null)
             {
@@ -186,7 +194,7 @@ namespace Certify.Server.API
             }
 
             // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
-            _statusReporting = new StatusHubReporting(statusHubContext);
+            _statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
 
             if (env.IsDevelopment())
             {
@@ -199,6 +207,7 @@ namespace Certify.Server.API
             app.UseCors((p) =>
             {
                 p.AllowAnyOrigin()
+                // .AllowCredentials()
                 .AllowAnyMethod()
                 .AllowAnyHeader();
             });
@@ -209,7 +218,8 @@ namespace Certify.Server.API
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<StatusHub>("/api/internal/status");
+                endpoints.MapHub<UserInterfaceStatusHub>("/api/internal/status");
+                endpoints.MapHub<InstanceManagementHub>("/api/internal/managementhub");
             });
 
 #if DEBUG
@@ -232,8 +242,9 @@ namespace Certify.Server.API
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>
-        public async Task SetupStatusHubConnection(WebApplication app)
+        public async Task SetupStatusHubConnections(WebApplication app)
         {
+
             var internalServiceClient = app.Services.GetRequiredService<ICertifyInternalApiClient>() as CertifyServiceClient;
 
             if (internalServiceClient == null)
@@ -273,7 +284,7 @@ namespace Certify.Server.API
             }
         }
 
-        private StatusHubReporting _statusReporting = default!;
+        private UserInterfaceStatusHubReporting _statusReporting = default!;
 
         private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
         {
