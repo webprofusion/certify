@@ -740,7 +740,7 @@ namespace Certify.Management
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-            var machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "RSA", "MachineKeys");
+            var machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "RSA", "MachineKeys" });
 
             var fileList = Directory.GetFiles(machineKeyPath, keyFileName);
 
@@ -751,7 +751,7 @@ namespace Certify.Management
             }
 
             // if EC/CNG key may be under /keys
-            machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "Keys");
+            machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "Keys" });
 
             fileList = Directory.GetFiles(machineKeyPath, keyFileName);
 
@@ -762,7 +762,7 @@ namespace Certify.Management
 
             //if no results from common app data path, try alternative use specific app data (files may be under user specific subfolder)
             appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "RSA");
+            machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "RSA" });
             fileList = Directory.GetDirectories(machineKeyPath);
 
             if (fileList.Any())

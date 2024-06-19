@@ -482,38 +482,6 @@ namespace Certify.Management
                     accounts.Add(acc);
                     await StoreAccountAsCredential(acc);
                 }
-
-                if (accounts.Count() == 0)
-                {
-                    // still no accounts, check for old vault upgrade
-                    var acmeVaultMigration = new Models.Compat.ACMEVaultUpgrader();
-
-                    if (acmeVaultMigration.HasACMEVault())
-                    {
-                        var email = acmeVaultMigration.GetContact();
-
-                        if (!string.IsNullOrEmpty(email))
-                        {
-                            var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email, null, null, null);
-                            if (registerResult?.IsSuccess ?? false)
-                            {
-                                var newId = Guid.NewGuid().ToString();
-                                acc = registerResult.Result;
-                                acc.ID = newId;
-                                acc.StorageKey = newId;
-                                acc.IsStagingAccount = false;
-                                acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
-                                accounts.Add(acc);
-                                await StoreAccountAsCredential(acc);
-                                _serviceLog?.Information("Account upgrade completed (vault)");
-                            }
-                            else
-                            {
-                                _serviceLog?.Information($"Account upgrade failed (vault):{registerResult?.Message}");
-                            }
-                        }
-                    }
-                }
             }
 
             // invalidate accounts cache
