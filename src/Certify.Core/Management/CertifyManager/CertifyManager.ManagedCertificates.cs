@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Management.Automation;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.API;
@@ -14,12 +15,29 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        public string InstanceId
+        {
+            get
+            {
+                return CoreAppSettings.Current.InstanceId;
+            }
+        }
+
         /// <summary>
         /// Get managed certificate details by ID
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<ManagedCertificate> GetManagedCertificate(string id) => await _itemManager.GetById(id);
+        public async Task<ManagedCertificate> GetManagedCertificate(string id)
+        {
+            var item = await _itemManager.GetById(id);
+            if (item != null)
+            {
+                item.InstanceId = InstanceId;
+            }
+
+            return item;
+        }
 
         /// <summary>
         /// Get list of managed certificates based on then given filter criteria
@@ -29,6 +47,7 @@ namespace Certify.Management
         public async Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter)
         {
             var list = await _itemManager.Find(filter);
+
             if (filter?.IncludeExternal == true)
             {
                 var external = GetExternallyManagedCertificates(filter);
@@ -37,6 +56,8 @@ namespace Certify.Management
                     list.AddRange(await external);
                 }
             }
+
+            list.ForEach(i => i.InstanceId = InstanceId);
 
             return list;
         }
@@ -94,15 +115,20 @@ namespace Certify.Management
             var result = new ManagedCertificateSearchResult();
 
             var list = await _itemManager.Find(filter);
+
+            list.ForEach(i => i.InstanceId = InstanceId);
+
             result.Results = list;
 
             if (filter?.IncludeExternal == true)
             {
                 // TODO: overall set still has to be paged and sorted
                 var external = GetExternallyManagedCertificates(filter);
+
                 if (external != null)
                 {
                     list.AddRange(await external);
+                    list.ForEach(i => i.InstanceId = InstanceId);
                     result.Results = list;
                 }
             }
@@ -122,6 +148,7 @@ namespace Certify.Management
             var ms = await _itemManager.Find(filter);
 
             var summary = new Summary();
+            summary.InstanceId = InstanceId;
             summary.Total = ms.Count;
             summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
             summary.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
@@ -149,6 +176,8 @@ namespace Certify.Management
 
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
+
+            managedCert.InstanceId = InstanceId;
 
             // report request state to status hub clients
             _statusReporting?.ReportManagedCertificateUpdated(managedCert);
@@ -242,7 +271,7 @@ namespace Certify.Management
 
             var report = new Models.Shared.RenewalStatusReport
             {
-                InstanceId = CoreAppSettings.Current.InstanceId,
+                InstanceId = this.InstanceId,
                 MachineName = Environment.MachineName,
                 PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
                 ManagedSite = reportedCert,
