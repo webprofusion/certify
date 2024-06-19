@@ -750,7 +750,7 @@ namespace Certify.Management
             }
 
             // if EC/CNG key may be under /keys
-            machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "Keys");
+            machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "Keys" });
 
             // if EC/CNG key may be under /keys
             machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "Keys" });

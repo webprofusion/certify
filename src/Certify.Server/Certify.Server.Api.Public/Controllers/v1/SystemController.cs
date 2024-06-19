@@ -50,7 +50,7 @@ namespace Certify.Server.Api.Public.Controllers
         public async Task<IActionResult> GetHealth()
         {
             var serviceAvailable = false;
-            var versionInfo = "Not available. Cannot connect to service worker.";
+            var versionInfo = "Not available. Cannot connect to core service.";
             try
             {
                 versionInfo = await _client.GetAppVersion();
