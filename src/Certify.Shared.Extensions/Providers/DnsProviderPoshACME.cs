@@ -398,8 +398,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "DNSPodKeyID", Name = "Key ID", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "DNSPodKeyTokenInsecure", Name = "Key Token", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","DNSPodToken")},
+                    new ProviderParameter { Key = "DNSPodKeyId", Name = "Key ID", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DNSPodKeyTokenInsecure", Name = "Key Token", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","DNSPodKeyToken")},
                     new ProviderParameter { Key = "DNSPodApiRoot", Name = "API Root", IsRequired = true, IsCredential = false, Value="https://api.dnspod.com" },
                     _defaultPropagationDelayParam
                 },
