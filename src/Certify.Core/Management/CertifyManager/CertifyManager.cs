@@ -96,6 +96,7 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
+        private System.Timers.Timer _heartbeatTimer;
         private System.Timers.Timer _frequentTimer;
         private System.Timers.Timer _hourlyTimer;
         private System.Timers.Timer _dailyTimer;
@@ -192,12 +193,17 @@ namespace Certify.Management
 
             _serviceLog?.Information("Certify Manager Started");
         }
-
+       
         /// <summary>
         /// Setup the continuous job tasks for renewals and maintenance
         /// </summary>
         private void SetupJobs()
         {
+            // 30 second job timer (reporting etc)
+            _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every 30 seconds
+            _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
+            _heartbeatTimer.Start();
+
             // 5 minute job timer (maintenance etc)
             _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
             _frequentTimer.Elapsed += _frequentTimer_Elapsed;
@@ -381,86 +387,7 @@ namespace Certify.Management
         {
             _statusReporting = statusReporting;
         }
-        /// <summary>
-        /// used to set a specific account for testing, instead of loading from config
-        /// </summary>
-        public AccountDetails OverrideAccountDetails { get; set; }
-        /// <summary>
-        /// Get the ACME client applicable for the given managed certificate
-        /// </summary>
-        /// <param name="managedItem"></param>
-        /// <returns></returns>
-        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
-        {
-            // determine account to use for the given managed cert
-
-            if (caAccount != null)
-            {
-                _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var ca);
-
-                if (ca != null)
-                {
-                    var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
-
-                    return await GetACMEProvider(caAccount.StorageKey, acmeBaseUrl, caAccount, ca.AllowUntrustedTls);
-                }
-                else
-                {
-                    // Unknown acme CA. May have been removed from CA list.
-                    return null;
-                }
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Get the ACME client for the given storage key or create and add a new one
-        /// </summary>
-        /// <param name="storageKey"></param>
-        /// <param name="acmeApiEndpoint"></param>
-        /// <param name="account"></param>
-        /// <param name="allowUntrustedTls"></param>
-        /// <returns></returns>
-        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTls = false)
-        {
-            // get or init acme provider required for the given account
-            if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
-            {
-                return provider;
-            }
-            else
-            {
-                var userAgent = Util.GetUserAgent();
-                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
-                var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
-
-                var newProvider = new AnvilACMEProvider(new AnvilACMEProviderSettings
-                {
-                    AcmeBaseUri = acmeApiEndpoint,
-                    ServiceSettingsBasePath = settingBaseFolder,
-                    LegacySettingsPath = providerPath,
-                    UserAgentName = userAgent,
-                    AllowUntrustedTls = allowUntrustedTls,
-                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval,
-                    EnableIssuerCache = CoreAppSettings.Current.EnableIssuerCache
-                });
-
-                if (!_useWindowsNativeFeatures)
-                {
-                    newProvider.DefaultCertificateFormat = "pem";
-                }
-
-                await newProvider.InitProvider(_serviceLog, account);
-
-                _acmeClientProviders.TryAdd(storageKey, newProvider);
-
-                return newProvider;
-            }
-        }
-
+    
         /// <summary>
         /// Update progress tracking and send status report to client(s). optionally logging to service log
         /// </summary>
@@ -504,33 +431,6 @@ namespace Certify.Management
             Message = msg
         }, _loggingLevelSwitch);
 
-        /// <summary>
-        /// When called, look for periodic maintenance tasks we can perform such as renewal
-        /// </summary>
-        /// <returns>  </returns>
-        public async Task<bool> PerformRenewalTasks()
-        {
-            try
-            {
-                Debug.WriteLine("Checking for renewal tasks..");
-
-                SettingsManager.LoadAppSettings();
-
-                // perform pending renewals
-                await PerformRenewAll(new RenewalSettings { });
-
-                // flush status report queue
-                await SendQueuedStatusReports();
-            }
-            catch (Exception exp)
-            {
-                _tc?.TrackException(exp);
-                return await Task.FromResult(false);
-            }
-
-            return await Task.FromResult(true);
-        }
-
         public void Dispose() => Cleanup();
 
         private void Cleanup()
@@ -540,66 +440,6 @@ namespace Certify.Management
             {
                 _tc.Dispose();
             }
-        }
-
-        /// <summary>
-        /// Perform (or preview) an import of settings from another instance
-        /// </summary>
-        /// <param name="importRequest"></param>
-        /// <returns></returns>
-        public async Task<List<ActionStep>> PerformImport(ImportRequest importRequest)
-        {
-            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
-
-            var importResult = await migrationManager.PerformImport(importRequest.Package, importRequest.Settings, importRequest.IsPreviewMode);
-
-            // store and apply certs if we have no errors
-
-            var hasError = false;
-            if (!importResult.Any(i => i.HasError))
-            {
-                if (importRequest.Settings.IncludeDeployment)
-                {
-
-                    var deploySteps = new List<ActionStep>();
-                    foreach (var m in importRequest.Package.Content.ManagedCertificates)
-                    {
-                        var managedCert = await GetManagedCertificate(m.Id);
-
-                        if (managedCert != null && !string.IsNullOrEmpty(managedCert.CertificatePath))
-                        {
-                            var deployResult = await DeployCertificate(managedCert, null, isPreviewOnly: importRequest.IsPreviewMode);
-
-                            deploySteps.Add(new ActionStep { Category = "Deployment", HasError = !deployResult.IsSuccess, Key = managedCert.Id, Description = deployResult.Message });
-                        }
-                    }
-
-                    importResult.Add(new ActionStep { Title = "Deployment" + (importRequest.IsPreviewMode ? " [Preview]" : ""), Substeps = deploySteps });
-                }
-            }
-            else
-            {
-                hasError = true;
-            }
-
-            _tc?.TrackEvent("Import" + (importRequest.IsPreviewMode ? "_Preview" : ""), new Dictionary<string, string> {
-                { "hasErrors", hasError.ToString() }
-            });
-
-            return importResult;
-        }
-
-        /// <summary>
-        /// Perform (or preview) and export of settings from this instance
-        /// </summary>
-        /// <param name="exportRequest"></param>
-        /// <returns></returns>
-        public async Task<ImportExportPackage> PerformExport(ExportRequest exportRequest)
-        {
-            _tc?.TrackEvent("Export" + (exportRequest.IsPreviewMode ? "_Preview" : ""));
-
-            var migrationManager = new MigrationManager(_itemManager, _credentialsManager, _serverProviders);
-            return await migrationManager.PerformExport(exportRequest.Filter, exportRequest.Settings, exportRequest.IsPreviewMode);
         }
 
         /// <summary>
