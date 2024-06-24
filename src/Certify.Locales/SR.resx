@@ -433,7 +433,7 @@
     <value>A name is required for this item.</value>
   </data>
   <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
-    <value>A Primary Domain must be included</value>
+    <value>A Primary Domain/identifier must be included</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
     <value>The {0} challenge is only available for IIS versions 8+.</value>
