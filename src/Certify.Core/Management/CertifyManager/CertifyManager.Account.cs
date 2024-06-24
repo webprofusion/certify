@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -14,6 +15,87 @@ namespace Certify.Management
     {
         private static object _accountsLock = new object();
         private List<AccountDetails> _accounts;
+
+        /// <summary>
+        /// used to set a specific account for testing, instead of loading from config
+        /// </summary>
+        public AccountDetails OverrideAccountDetails { get; set; }
+
+        /// <summary>
+        /// Get the ACME client applicable for the given managed certificate
+        /// </summary>
+        /// <param name="managedItem"></param>
+        /// <returns></returns>
+        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
+        {
+            // determine account to use for the given managed cert
+
+            if (caAccount != null)
+            {
+                _certificateAuthorities.TryGetValue(caAccount?.CertificateAuthorityId, out var ca);
+
+                if (ca != null)
+                {
+                    var acmeBaseUrl = managedItem.UseStagingMode ? ca.StagingAPIEndpoint : ca.ProductionAPIEndpoint;
+
+                    return await GetACMEProvider(caAccount.StorageKey, acmeBaseUrl, caAccount, ca.AllowUntrustedTls);
+                }
+                else
+                {
+                    // Unknown acme CA. May have been removed from CA list.
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the ACME client for the given storage key or create and add a new one
+        /// </summary>
+        /// <param name="storageKey"></param>
+        /// <param name="acmeApiEndpoint"></param>
+        /// <param name="account"></param>
+        /// <param name="allowUntrustedTls"></param>
+        /// <returns></returns>
+        private async Task<IACMEClientProvider> GetACMEProvider(string storageKey, string acmeApiEndpoint = null, AccountDetails account = null, bool allowUntrustedTls = false)
+        {
+            // get or init acme provider required for the given account
+            if (_acmeClientProviders.TryGetValue(storageKey, out var provider))
+            {
+                return provider;
+            }
+            else
+            {
+                var userAgent = Util.GetUserAgent();
+                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
+                var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
+
+                var newProvider = new AnvilACMEProvider(new AnvilACMEProviderSettings
+                {
+                    AcmeBaseUri = acmeApiEndpoint,
+                    ServiceSettingsBasePath = settingBaseFolder,
+                    LegacySettingsPath = providerPath,
+                    UserAgentName = userAgent,
+                    AllowUntrustedTls = allowUntrustedTls,
+                    DefaultACMERetryIntervalSeconds = CoreAppSettings.Current.DefaultACMERetryInterval,
+                    EnableIssuerCache = CoreAppSettings.Current.EnableIssuerCache
+                });
+
+                if (!_useWindowsNativeFeatures)
+                {
+                    newProvider.DefaultCertificateFormat = "pem";
+                }
+
+                await newProvider.InitProvider(_serviceLog, account);
+
+                _acmeClientProviders.TryAdd(storageKey, newProvider);
+
+                return newProvider;
+            }
+        }
 
         /// <summary>
         /// Get the applicable Account Details for this managed item
@@ -585,6 +667,35 @@ namespace Certify.Management
             else
             {
                 return new ActionResult($"The certificate authority {id} was not found in the list of custom CAs and could not be removed.", false);
+            }
+        }
+
+        /// <summary>
+        /// Load cached set of ACME Certificate authorities
+        /// </summary>
+        private void LoadCertificateAuthorities()
+        {
+            _certificateAuthorities.Clear();
+
+            // load core CAs and custom CAs
+            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
+            {
+                _certificateAuthorities.TryAdd(ca.Id, ca);
+            }
+
+            try
+            {
+                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                foreach (var ca in customCAs)
+                {
+                    _certificateAuthorities.TryAdd(ca.Id, ca);
+                }
+            }
+            catch (Exception exp)
+            {
+                // failed to load custom CAs
+                _serviceLog?.Error(exp.Message);
             }
         }
     }
