@@ -1070,7 +1070,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A Primary Domain must be included.
+        ///   Looks up a localized string similar to A Primary Domain/identifier must be included.
         /// </summary>
         public static string ManagedCertificateSettings_NeedPrimaryDomain {
             get {
