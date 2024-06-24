@@ -9,6 +9,7 @@ namespace Certify.Models.Shared.Validation
     public enum ValidationErrorCodes
     {
         NONE,
+        IDENTIFIER_REQUIRED,
         PRIMARY_IDENTIFIER_REQUIRED,
         PRIMARY_IDENTIFIER_TOOMANY,
         CHALLENGE_TYPE_INVALID,
@@ -281,6 +282,15 @@ namespace Certify.Models.Shared.Validation
 
                 if (validateDomains)
                 {
+                    if (item.GetCertificateDomains().Count == 0)
+                    {
+                        return new ValidationResult(
+                          false,
+                          "A certificate order requires one or more identifiers/domains to be included on the certificate.",
+                          ValidationErrorCodes.IDENTIFIER_REQUIRED.ToString()
+                      );
+                    }
+
                     // a primary subject domain must be set
                     if (GetPrimarySubjectDomain(item) == null)
                     {
