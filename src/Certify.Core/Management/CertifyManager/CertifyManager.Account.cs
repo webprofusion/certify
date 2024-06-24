@@ -669,5 +669,34 @@ namespace Certify.Management
                 return new ActionResult($"The certificate authority {id} was not found in the list of custom CAs and could not be removed.", false);
             }
         }
+
+        /// <summary>
+        /// Load cached set of ACME Certificate authorities
+        /// </summary>
+        private void LoadCertificateAuthorities()
+        {
+            _certificateAuthorities.Clear();
+
+            // load core CAs and custom CAs
+            foreach (var ca in CertificateAuthority.CoreCertificateAuthorities)
+            {
+                _certificateAuthorities.TryAdd(ca.Id, ca);
+            }
+
+            try
+            {
+                var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                foreach (var ca in customCAs)
+                {
+                    _certificateAuthorities.TryAdd(ca.Id, ca);
+                }
+            }
+            catch (Exception exp)
+            {
+                // failed to load custom CAs
+                _serviceLog?.Error(exp.Message);
+            }
+        }
     }
 }
