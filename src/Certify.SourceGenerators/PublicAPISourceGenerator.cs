@@ -119,7 +119,6 @@ using System.Threading.Tasks;
             }}", Encoding.UTF8));
                     }
 
-
                     if (config.OperationMethod == "HttpPost")
                     {
                         context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From($@"
@@ -156,7 +155,6 @@ using System.Threading.Tasks;
                 }}
             }}", Encoding.UTF8));
                     }
-
 
                     if (config.OperationMethod == "HttpDelete")
                     {
@@ -219,10 +217,8 @@ using Certify.Models.Config.AccessControl;
         }}
     }}", Encoding.UTF8));
                 }
-
             }
         }
-
         public void Initialize(GeneratorInitializationContext context)
         {
 #if DEBUG
