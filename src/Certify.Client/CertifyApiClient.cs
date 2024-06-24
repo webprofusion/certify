@@ -492,7 +492,7 @@ namespace Certify.Client
                 return new CertificateRequestResult
                 {
                     IsSuccess = false,
-                    Message = exp.ToString(),
+                    Message = exp.Message.ToString(),
                     Result = exp
                 };
             }
