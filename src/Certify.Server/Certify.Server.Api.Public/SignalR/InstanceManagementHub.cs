@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Certify.API.Management;
@@ -29,6 +29,11 @@ namespace Certify.Server.Api.Public.SignalR
         private ConcurrentDictionary<Guid, InstanceCommandRequest> _awaitedCommandResults = [];
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
+        private ILogger<InstanceManagementStateProvider> _logger;
+        public InstanceManagementStateProvider(ILogger<InstanceManagementStateProvider> logger)
+        {
+            _logger = logger;
+        }
 
         public List<ManagedInstanceInfo> GetConnectedInstances()
         {
@@ -41,6 +46,14 @@ namespace Certify.Server.Api.Public.SignalR
         /// <param name="instanceInfo"></param>
         public void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo)
         {
+            var existingOther = _instanceConnections.FirstOrDefault(a => a.Value.InstanceId == instanceInfo.InstanceId && a.Key != connectionId);
+
+            if (existingOther.Value != null)
+            {
+                _logger.LogWarning("[InstanceManagementStateProvider] Connection ID for instance {instance} changed to {connection}", instanceInfo.Title, connectionId);
+                _instanceConnections.Remove(existingOther.Key, out _);
+            }
+
             _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) => { return instanceInfo; });
         }
 

@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using Certify.Client;
 using Certify.Server.Api.Public.Middleware;
@@ -172,8 +172,7 @@ namespace Certify.Server.API
 
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
 
-            var managementHubStateProvider = new InstanceManagementStateProvider();
-            services.AddSingleton(typeof(IInstanceManagementStateProvider), managementHubStateProvider);
+            services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
             
             services.AddHostedService<ManagementWorker>();
             return results;
