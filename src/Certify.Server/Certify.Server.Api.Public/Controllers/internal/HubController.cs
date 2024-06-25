@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Frozen;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models.API;
@@ -51,16 +52,21 @@ namespace Certify.Server.Api.Public.Controllers
 
             var result = new ManagedCertificateSummaryResult();
 
-            var remoteItems = _mgmtStateProvider.GetManagedInstanceItems();
+            var managedInstances = _mgmtStateProvider.GetConnectedInstances();
 
-            result.TotalResults = remoteItems.Values.SelectMany(s => s.Items).Count();
+            var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
+
+            result.TotalResults = managedItems.Values.SelectMany(s => s.Items).Count();
 
             var list = new List<ManagedCertificateSummary>();
-            foreach (var remote in remoteItems.Values)
+            foreach (var remote in managedItems.Values)
             {
-                list.AddRange(remoteItems.Values.SelectMany(s => s.Items).Select(i => new ManagedCertificateSummary
+                var instance = managedInstances.FirstOrDefault(m => m.InstanceId == remote.InstanceId);
+
+                list.AddRange(managedItems.Values.SelectMany(s => s.Items).Select(i => new ManagedCertificateSummary
                 {
                     InstanceId = remote.InstanceId,
+                    InstanceTitle = instance?.Title,
                     Id = i.Id ?? "",
                     Title = $"[remote] {i.Name}" ?? "",
                     PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),

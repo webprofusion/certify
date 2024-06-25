@@ -18,6 +18,15 @@ namespace Certify.API.Management
     /// </summary>
     public class InstanceCommandRequest
     {
+        public InstanceCommandRequest()
+        {
+
+        }
+
+        public InstanceCommandRequest(string commandType) {
+            CommandId = Guid.NewGuid();
+            CommandType = commandType;
+        }
         /// <summary>
         /// Unique ID of this command
         /// </summary>

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.Shared.Validation;
 
 namespace Certify.Management
 {
@@ -71,13 +72,31 @@ namespace Certify.Management
             var numItems = new Random().Next(10, 50);
             for (var i = 0; i < numItems; i++)
             {
+
                 var item = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = GenerateName()
+                    Name = GenerateName(),
+                    RequestConfig = new CertRequestConfig
+                    {
+                        Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig> { new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP } }
+                    }
                 };
 
-                UpdateManagedCertificate(item);
+                item.DomainOptions.Add(new DomainOption { Domain = $"{item.Name}.dev.projectbids.co.uk", IsManualEntry = true, IsPrimaryDomain = true, IsSelected = true, Type = CertIdentifierType.Dns });
+                item.RequestConfig.PrimaryDomain = item.DomainOptions[0].Domain;
+                item.RequestConfig.SubjectAlternativeNames = new string[] { item.DomainOptions[0].Domain };
+
+                var validation = CertificateEditorService.Validate(item, null, null, applyAutoConfiguration: true);
+                if (validation.IsValid)
+                {
+                    UpdateManagedCertificate(item);
+                }
+                else
+                {
+                    // generated invalid test item
+                    System.Diagnostics.Debug.WriteLine(validation.Message);
+                }
             }
         }
 

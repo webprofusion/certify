@@ -18,6 +18,7 @@ namespace Certify.Server.Api.Public.SignalR
         public InstanceCommandRequest? GetAwaitedCommandRequest(Guid commandId);
         public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
         public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string instanceId = null);
+        public bool HasItemsForManagedInstance(string instanceId);
     }
 
     /// <summary>
@@ -123,6 +124,11 @@ namespace Certify.Server.Api.Public.SignalR
         {
             return _managedInstanceItems;
         }
+
+        public bool HasItemsForManagedInstance(string instanceId)
+        {
+            return _managedInstanceItems.ContainsKey(instanceId);
+        }
     }
 
     /// <summary>
@@ -190,11 +196,16 @@ namespace Certify.Server.Api.Public.SignalR
                 CommandType = ManagementHubCommands.GetInstanceInfo
             };
 
-            _stateProvider.AddAwaitedCommandRequest(request);
-
-            Clients.Caller.SendCommandRequest(request);
+            IssueCommand(request);
 
             return base.OnConnectedAsync();
+        }
+
+        private void IssueCommand(InstanceCommandRequest cmd)
+        {
+            _stateProvider.AddAwaitedCommandRequest(cmd);
+
+            Clients.Caller.SendCommandRequest(cmd);
         }
 
         /// <summary>
@@ -242,6 +253,18 @@ namespace Certify.Server.Api.Public.SignalR
                         _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, instanceInfo);
 
                         _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
+
+                        if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
+                        {
+
+                            var request = new InstanceCommandRequest
+                            {
+                                CommandId = Guid.NewGuid(),
+                                CommandType = ManagementHubCommands.GetInstanceItems
+                            };
+
+                            IssueCommand(request);
+                        }
                     }
                 }
                 else
