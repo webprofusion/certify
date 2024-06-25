@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Certify.API.Management;
@@ -248,7 +248,7 @@ namespace Certify.Server.Api.Public.SignalR
                 {
                     // for all other command result we need to resolve which instance id we are communicating with
                     var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
-                    if (instanceId != null)
+                    if (!string.IsNullOrWhiteSpace(instanceId))
                     {
                         // action this message from this instance
                         _logger?.LogInformation("Received instance command result {result}", result);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -58,6 +58,10 @@ namespace Certify.Management
             var instanceItems = new ManagedInstanceItems();
             instanceItems.InstanceId = CoreAppSettings.Current.InstanceId;
             instanceItems.Items = GetManagedCertificates(new ManagedCertificateFilter { }).Result;
+            foreach (var item in instanceItems.Items)
+            {
+                item.Name = "[Agent] " + item.Name;
+            }
 
             return instanceItems;
         }
@@ -70,11 +74,47 @@ namespace Certify.Management
                 var item = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = $"Test Item {i} {Guid.NewGuid().ToString().Substring(0, 6)}"
+                    Name = GenerateName()
                 };
 
                 UpdateManagedCertificate(item);
             }
+        }
+
+        private string GenerateName()
+        {
+            // generate test item names using verb,animal
+            var subjects = new string[] {
+                "Lion",
+                "Tiger",
+                "Leopard",
+                "Cheetah",
+                "Elephant",
+                "Giraffe",
+                "Rhinoceros",
+                "Gorilla"
+            };
+            var adjectives = new string[] {
+                "active",
+                "adaptable",
+                "alert",
+                "clever" ,
+                "comfortable" ,
+                "conscientious",
+                "considerate",
+                "courageous" ,
+                "decisive",
+                "determined" ,
+                "diligent" ,
+                "energetic",
+                "entertaining",
+                "enthusiastic" ,
+                "fabulous"
+            };
+
+            var rnd = new Random();
+
+            return $"{adjectives[rnd.Next(0, adjectives.Length - 1)]}-{subjects[rnd.Next(0, subjects.Length - 1)]}".ToLower();
         }
     }
 }

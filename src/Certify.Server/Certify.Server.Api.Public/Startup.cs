@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using Certify.Client;
 using Certify.Server.Api.Public.Middleware;
@@ -63,7 +63,8 @@ namespace Certify.Server.API
             services.AddRouting(r => r.LowercaseUrls = true);
 
             services
-                .AddSignalR()
+                .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
+
                 .AddMessagePackProtocol();
 
             services.AddResponseCompression(opts =>
@@ -173,7 +174,7 @@ namespace Certify.Server.API
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
 
             services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
-            
+
             services.AddHostedService<ManagementWorker>();
             return results;
         }
@@ -205,7 +206,7 @@ namespace Certify.Server.API
             app.UseCors((p) =>
             {
                 p.AllowAnyOrigin()
-               // .AllowCredentials()
+                // .AllowCredentials()
                 .AllowAnyMethod()
                 .AllowAnyHeader();
             });

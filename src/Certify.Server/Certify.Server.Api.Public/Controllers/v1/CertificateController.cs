@@ -134,29 +134,12 @@ namespace Certify.Server.Api.Public.Controllers
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
             }).OrderBy(a => a.Title);
 
-            var remoteItems = _mgmtStateProvider.GetManagedInstanceItems();
-
-            managedCertResult.TotalResults += remoteItems.Values.SelectMany(s => s.Items).Count();
-            var compositeList = new List<ManagedCertificateSummary>(list);
-            compositeList.AddRange(remoteItems.Values.SelectMany(s => s.Items).Select(i => new ManagedCertificateSummary
-            {
-                Id = i.Id ?? "",
-                Title = $"[remote] {i.Name}" ?? "",
-                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                Identifiers = i.GetCertificateIdentifiers(),
-                DateRenewed = i.DateRenewed,
-                DateExpiry = i.DateExpiry,
-                Comments = i.Comments ?? "",
-                Status = i.LastRenewalStatus?.ToString() ?? "",
-                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
-            }).ToList());
-
             var result = new ManagedCertificateSummaryResult
             {
-                Results = compositeList,
+                Results = list,
                 TotalResults = managedCertResult.TotalResults,
                 PageIndex = page ?? 0,
-                PageSize = pageSize ?? compositeList.Count()
+                PageSize = pageSize ?? list.Count()
             };
 
             return new OkObjectResult(result);
