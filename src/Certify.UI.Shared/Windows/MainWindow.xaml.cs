@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -268,7 +268,7 @@ namespace Certify.UI.Windows
             }
 
             sw.Stop();
-
+            
             _appViewModel.Log.Information("Service connection init process took {total}ms.", sw.ElapsedMilliseconds);
 
             if (_appViewModel.IsServiceAvailable)
