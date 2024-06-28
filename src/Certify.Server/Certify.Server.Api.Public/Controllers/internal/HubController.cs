@@ -3,7 +3,7 @@ using System.Collections.Frozen;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models.API;
-using Certify.Server.Api.Public.SignalR;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,21 +52,18 @@ namespace Certify.Server.Api.Public.Controllers
 
             var result = new ManagedCertificateSummaryResult();
 
-            var managedInstances = _mgmtStateProvider.GetConnectedInstances();
-
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
+            var instances = _mgmtStateProvider.GetConnectedInstances();
 
             result.TotalResults = managedItems.Values.SelectMany(s => s.Items).Count();
 
             var list = new List<ManagedCertificateSummary>();
             foreach (var remote in managedItems.Values)
             {
-                var instance = managedInstances.FirstOrDefault(m => m.InstanceId == remote.InstanceId);
-
-                list.AddRange(managedItems.Values.SelectMany(s => s.Items).Select(i => new ManagedCertificateSummary
+                list.AddRange(remote.Items.Select(i => new ManagedCertificateSummary
                 {
                     InstanceId = remote.InstanceId,
-                    InstanceTitle = instance?.Title,
+                    InstanceTitle = instances.FirstOrDefault(i=>i.InstanceId==remote.InstanceId)?.Title,
                     Id = i.Id ?? "",
                     Title = $"[remote] {i.Name}" ?? "",
                     PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),

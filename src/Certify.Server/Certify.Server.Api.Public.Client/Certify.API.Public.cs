@@ -1593,21 +1593,28 @@ namespace Certify.API.Public
         /// <summary>
         /// Gets the full settings for a specific managed certificate
         /// </summary>
+        /// <param name="instanceId">target instance</param>
+        /// <param name="managedCertId">managed item</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string managedCertId)
+        public virtual System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string instanceId, string managedCertId)
         {
-            return GetManagedCertificateDetailsAsync(managedCertId, System.Threading.CancellationToken.None);
+            return GetManagedCertificateDetailsAsync(instanceId, managedCertId, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
         /// Gets the full settings for a specific managed certificate
         /// </summary>
+        /// <param name="instanceId">target instance</param>
+        /// <param name="managedCertId">managed item</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string managedCertId, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             if (managedCertId == null)
                 throw new System.ArgumentNullException("managedCertId");
 
@@ -1622,8 +1629,10 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/settings/{managedCertId}"
+                    // Operation Path: "api/v1/certificate/settings/{instanceId}/{managedCertId}"
                     urlBuilder_.Append("api/v1/certificate/settings/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append('/');
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
@@ -1683,9 +1692,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(ManagedCertificate body)
+        public virtual System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(string instanceId, ManagedCertificate body)
         {
-            return UpdateManagedCertificateDetailsAsync(body, System.Threading.CancellationToken.None);
+            return UpdateManagedCertificateDetailsAsync(instanceId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1694,8 +1703,11 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(ManagedCertificate body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(string instanceId, ManagedCertificate body, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -1711,8 +1723,10 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/settings/update"
-                    urlBuilder_.Append("api/v1/certificate/settings/update");
+                    // Operation Path: "api/v1/certificate/settings/{instanceId}/update"
+                    urlBuilder_.Append("api/v1/certificate/settings/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/update");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 

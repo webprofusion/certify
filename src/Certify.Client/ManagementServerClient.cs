@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certify.API.Management;
+using Certify.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ namespace Certify.Client
         public event Action OnConnectionClosed;
 
         public event Func<ManagedInstanceItems> OnGetInstanceItems;
+        public event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
 
         private HubConnection _connection;
 
@@ -95,14 +97,10 @@ namespace Certify.Client
                 result.ObjectValue = _instanceInfo;
                 _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
+            else { 
+                var task = OnGetCommandResult?.Invoke(s);
 
-            if (s.CommandType == ManagementHubCommands.GetInstanceItems)
-            {
-                var items = OnGetInstanceItems?.Invoke() ?? new ManagedInstanceItems { };
-
-                var result = new InstanceCommandResult { CommandId = s.CommandId, Value = System.Text.Json.JsonSerializer.Serialize(items) };
-                result.ObjectValue = items;
-                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
             }
         }
     }

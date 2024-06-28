@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -64,6 +64,7 @@ namespace Certify.Client
                 _legacyConnection.TraceLevel = TraceLevels.All;
                 _legacyConnection.TraceWriter = writer;
 #endif
+                
                 await _legacyConnection.Start();
 
             }

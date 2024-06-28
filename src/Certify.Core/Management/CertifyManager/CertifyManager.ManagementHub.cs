@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Shared.Validation;
+using System.Text.Json;
 
 namespace Certify.Management
 {
@@ -22,14 +22,14 @@ namespace Certify.Management
 
             var instanceInfo = new ManagedInstanceInfo
             {
-                InstanceId = $"{CoreAppSettings.Current.InstanceId}_{Environment.MachineName}",
-
+                InstanceId = $"{this.InstanceId}",
                 Title = Environment.MachineName
             };
 
             if (_managementServerClient != null)
             {
-                _managementServerClient.OnGetInstanceItems -= _managementServerClient_OnGetInstanceItems;
+                _managementServerClient.OnGetCommandResult -= _managementServerClient_OnGetCommandResult;
+                _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
             }
 
             _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
@@ -38,7 +38,7 @@ namespace Certify.Management
             {
                 await _managementServerClient.ConnectAsync();
 
-                _managementServerClient.OnGetInstanceItems += _managementServerClient_OnGetInstanceItems;
+                _managementServerClient.OnGetCommandResult += _managementServerClient_OnGetCommandResult;
                 _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
             }
             catch (Exception ex)
@@ -49,22 +49,42 @@ namespace Certify.Management
             }
         }
 
+        private async Task<InstanceCommandResult> _managementServerClient_OnGetCommandResult(InstanceCommandRequest arg)
+        {
+            object val = null;
+
+            if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItem)
+            {
+                // Get a single managed item by id
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                val = await GetManagedCertificate(managedCertIdArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItems)
+            {
+                // Get all managed items
+                var items = await GetManagedCertificates(new ManagedCertificateFilter { });
+                val = new ManagedInstanceItems { InstanceId = InstanceId, Items = items };
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateInstanceManagedItem)
+            {
+                // update a single managed item 
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
+                var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+                val = await UpdateManagedCertificate(managedCertObj);
+            }
+
+            var result = new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val) };
+
+            result.ObjectValue = val;
+
+            return result;
+        }
+
         private void _managementServerClient_OnConnectionReconnecting()
         {
             _serviceLog.Warning("Reconnecting to Management.");
-        }
-
-        private ManagedInstanceItems _managementServerClient_OnGetInstanceItems()
-        {
-            var instanceItems = new ManagedInstanceItems();
-            instanceItems.InstanceId = CoreAppSettings.Current.InstanceId;
-            instanceItems.Items = GetManagedCertificates(new ManagedCertificateFilter { }).Result;
-            foreach (var item in instanceItems.Items)
-            {
-                item.Name = "[Agent] " + item.Name;
-            }
-
-            return instanceItems;
         }
 
         private void GenerateDemoItems()

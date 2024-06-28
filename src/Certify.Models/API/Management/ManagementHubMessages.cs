@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Certify.API.Management
 {
@@ -6,13 +7,17 @@ namespace Certify.API.Management
     {
         public const string SendCommandRequest = "SendCommandRequest";
         public const string ReceiveCommandResult = "ReceiveCommandResult";
+        public const string GetCommandResult = "GetCommandResult";
     }
 
     public class ManagementHubCommands
     {
         public const string GetInstanceInfo = "GetInstanceInfo";
-        public const string GetInstanceItems = "GetInstanceItems";
+        public const string GetInstanceManagedItems = "GetInstanceManagedItems";
+        public const string GetInstanceManagedItem = "GetInstanceManagedItem";
+        public const string UpdateInstanceManagedItem = "UpdateInstanceManagedItem";
     }
+
     /// <summary>
     /// A command that can be sent asynchronously to an instance (each instance is a hub client)
     /// </summary>
@@ -23,9 +28,14 @@ namespace Certify.API.Management
 
         }
 
-        public InstanceCommandRequest(string commandType) {
+        public InstanceCommandRequest(string commandType)
+        {
             CommandId = Guid.NewGuid();
             CommandType = commandType;
+        }
+        public InstanceCommandRequest(string commandType, KeyValuePair<string, string>[] values) : this(commandType)
+        {
+            Value = System.Text.Json.JsonSerializer.Serialize(values);
         }
         /// <summary>
         /// Unique ID of this command
@@ -53,6 +63,8 @@ namespace Certify.API.Management
         /// </summary>
         public Guid CommandId { get; set; }
 
+        public string? InstanceId { get; set; }
+        public DateTimeOffset? Received { get; set; }
         /// <summary>
         /// Response value
         /// </summary>

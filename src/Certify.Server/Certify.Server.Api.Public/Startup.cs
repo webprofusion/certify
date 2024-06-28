@@ -4,6 +4,7 @@ using Certify.Client;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Server.Api.Public.Services;
 using Certify.Server.Api.Public.SignalR;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;

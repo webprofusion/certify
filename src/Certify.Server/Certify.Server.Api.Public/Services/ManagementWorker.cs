@@ -1,5 +1,5 @@
 ﻿using Certify.API.Management;
-using Certify.Server.Api.Public.SignalR;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Services
@@ -47,7 +47,7 @@ namespace Certify.Server.Api.Public.Services
             var instances = _stateProvider.GetConnectedInstances();
             _logger.LogInformation("{svc} connected instances: {count}", _serviceName, instances.Count());
 
-            foreach (var instance in instances)
+            /*foreach (var instance in instances)
             {
                 _logger.LogInformation("{svc} requesting info from instance: id:{id} title:{title}", _serviceName, instance.InstanceId, instance.Title);
 
@@ -60,6 +60,7 @@ namespace Certify.Server.Api.Public.Services
             // 
             var items = _stateProvider.GetManagedInstanceItems();
             _logger.LogInformation("{svc} total items managed across instances: {count}", _serviceName, items.SelectMany(s=>s.Value.Items).Count());
+            */
 
         }
 
