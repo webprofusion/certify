@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
@@ -81,6 +82,7 @@ namespace Certify.Service
             // inject single CertifyManager for service to use
             _container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
 
+            
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
 
             var sw = Stopwatch.StartNew();
