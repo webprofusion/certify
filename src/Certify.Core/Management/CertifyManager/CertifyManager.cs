@@ -332,6 +332,21 @@ namespace Certify.Management
                     _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
                 }
 
+                // attempt to create and delete a test item
+                try
+                {
+                    var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
+
+                    await _itemManager.Update(item);
+
+                    await _itemManager.Delete(item);
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
+                    throw;
+                }
+
                 if (!_itemManager.IsInitialised().Result)
                 {
                     _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");

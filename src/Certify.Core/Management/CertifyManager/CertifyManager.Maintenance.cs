@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -37,17 +37,17 @@ namespace Certify.Management
 
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
                 SettingsManager.SaveAppSettings();
-            }
 
-            var accessControl = await GetCurrentAccessControl();
+                var accessControl = await GetCurrentAccessControl();
 
-            if (await accessControl.IsInitialized() == false)
-            {
-                await BootstrapTestAdminUserAndRoles(accessControl);
-            }
-            else
-            {
-                await UpdateStandardRoles(accessControl);
+                if (await accessControl.IsInitialized() == false)
+                {
+                    await BootstrapTestAdminUserAndRoles(accessControl);
+                }
+                else
+                {
+                    await UpdateStandardRoles(accessControl);
+                }
             }
         }
 

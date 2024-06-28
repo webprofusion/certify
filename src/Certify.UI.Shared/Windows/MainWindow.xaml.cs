@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -250,6 +251,8 @@ namespace Certify.UI.Windows
 
             var cts = new CancellationTokenSource();
 
+            var sw = Stopwatch.StartNew();
+
             var connectedOk = await _appViewModel.InitServiceConnections(null, cts.Token);
 
             if (_appViewModel.IsServiceAvailable && !connectedOk)
@@ -263,6 +266,10 @@ namespace Certify.UI.Windows
                     _appViewModel.Log.Error("Service connected, but status stream failed.");
                 }
             }
+
+            sw.Stop();
+            
+            _appViewModel.Log.Information("Service connection init process took {total}ms.", sw.ElapsedMilliseconds);
 
             if (_appViewModel.IsServiceAvailable)
             {
