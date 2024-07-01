@@ -117,6 +117,12 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
             // check we are awaiting this result
             var cmd = _stateProvider.GetAwaitedCommandRequest(result.CommandId);
 
+            if (cmd == null && !result.IsCommandResponse)
+            {
+                // message was not requested and has been sent by the instance (e.g. heartbeat)
+                cmd = new InstanceCommandRequest { CommandId = result.CommandId, CommandType = result.CommandType };
+            }
+
             if (cmd != null)
             {
                 _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
@@ -150,7 +156,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                 {
                     // for all other command results we need to resolve which instance id we are communicating with
                     var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
-                    result.InstanceId= instanceId;
+                    result.InstanceId = instanceId;
 
                     if (!string.IsNullOrWhiteSpace(instanceId))
                     {
