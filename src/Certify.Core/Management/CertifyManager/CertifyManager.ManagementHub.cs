@@ -14,7 +14,10 @@ namespace Certify.Management
     {
         private ManagementServerClient _managementServerClient;
         private string _managementServerConnectionId = string.Empty;
-
+        private void SendHeartbeatToManagementHub()
+        {
+            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
+        }
         private async Task StartManagementHubConnection(string hubUri)
         {
 
