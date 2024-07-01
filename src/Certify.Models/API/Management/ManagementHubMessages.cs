@@ -63,6 +63,12 @@ namespace Certify.API.Management
         /// </summary>
         public Guid CommandId { get; set; }
 
+        public string CommandType { get; set; } = string.Empty;
+
+        /// <summary>
+        /// If false, message was sent without being requested by the management hub
+        /// </summary>
+        public bool IsCommandResponse { get; set; } = true;
         public string? InstanceId { get; set; }
         public DateTimeOffset? Received { get; set; }
         /// <summary>
