@@ -6,14 +6,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.API.Management;
-using Certify.Client;
-using Certify.Core.Management;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
-using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Serilog;
@@ -264,6 +260,12 @@ namespace Certify.Management
                 {
                     await StartManagementHubConnection(mgmtHubUri);
                 }
+            }
+            else
+            {
+
+                // send heartbeat message to management hub
+                SendHeartbeatToManagementHub();
             }
         }
 
