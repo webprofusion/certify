@@ -86,22 +86,40 @@ namespace Certify.Client
 
         }
 
-        private void PerformRequestedCommand(InstanceCommandRequest s)
+        private void PerformRequestedCommand(InstanceCommandRequest cmd)
         {
-            System.Diagnostics.Debug.WriteLine($"Got command from management server {s}");
+            System.Diagnostics.Debug.WriteLine($"Got command from management server {cmd}");
 
-            if (s.CommandType == ManagementHubCommands.GetInstanceInfo)
+            if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
             {
-                // send this clients instance ID back to the hub to identify it in the connection: should send a shared secret before this to confirm this client knows and is not impersonating another instance
-                var result = new InstanceCommandResult { CommandId = s.CommandId, Value = System.Text.Json.JsonSerializer.Serialize(_instanceInfo) };
-                result.ObjectValue = _instanceInfo;
-                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                SendInstanceInfo(cmd.CommandId);
             }
-            else { 
-                var task = OnGetCommandResult?.Invoke(s);
+            else
+            {
+                var task = OnGetCommandResult?.Invoke(cmd);
 
                 _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
             }
+        }
+
+        /// <summary>
+        /// Send instance info back to the management hub
+        /// </summary>
+        /// <param name="commandId">Unique ID for this command, New Guid if command is not a response</param>
+        /// <param name="isCommandResponse">If false, message is not being sent in response to an existing query </param>
+        public void SendInstanceInfo(Guid commandId, bool isCommandResponse = true)
+        {
+            // send this clients instance ID back to the hub to identify it in the connection: should send a shared secret before this to confirm this client knows and is not impersonating another instance
+            var result = new InstanceCommandResult
+            {
+                CommandId = commandId,
+                CommandType = ManagementHubCommands.GetInstanceInfo,
+                Value = System.Text.Json.JsonSerializer.Serialize(_instanceInfo),
+                IsCommandResponse = isCommandResponse
+            };
+
+            result.ObjectValue = _instanceInfo;
+            _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
         }
     }
 }
