@@ -66,14 +66,45 @@ namespace Certify.Server.Api.Public.Services
 
             if (result?.Value != null)
             {
-                var update =  JsonSerializer.Deserialize<ManagedCertificate>(result.Value);
-                
+                var update = JsonSerializer.Deserialize<ManagedCertificate>(result.Value);
+
                 _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, update);
                 return update;
             }
             else
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Delete a managed certificate
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCertId"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
+        public async Task<bool> RemoveManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
+        {
+            // delete managed cert via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId",managedCertId)
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteInstanceManagedItem, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            try
+            {
+                _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
