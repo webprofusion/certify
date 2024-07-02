@@ -16,6 +16,7 @@ namespace SourceGenerator
         public string PublicAPIController { get; set; } = string.Empty;
 
         public string PublicAPIRoute { get; set; } = string.Empty;
+        public bool UseManagementAPI { get; set; } = false;
         public string ServiceAPIRoute { get; set; } = string.Empty;
         public string ReturnType { get; set; } = string.Empty;
         public Dictionary<string, string> Params { get; set; } = new Dictionary<string, string>();
@@ -72,7 +73,7 @@ using Certify.Models.Config.AccessControl;
                     [Route(""""""{config.PublicAPIRoute}"""""")]
                     public async Task<IActionResult> {config.OperationName}({apiParamDeclWithoutAuthContext})
                     {{
-                        var result = await _client.{config.OperationName}({apiParamCall.Replace("authContext", "CurrentAuthContext")});
+                        var result = await {(config.UseManagementAPI ? "_mgmtAPI" : "_client")}.{config.OperationName}({apiParamCall.Replace("authContext", "CurrentAuthContext")});
                         return new OkObjectResult(result);
                     }}
                 }}
@@ -226,7 +227,7 @@ using Certify.Models.Config.AccessControl;
             // then add a watch on 
             if (!Debugger.IsAttached)
             {
-                // Debugger.Launch();
+                 //Debugger.Launch();
             }
 #endif
         }
