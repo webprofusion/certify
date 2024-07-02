@@ -26,6 +26,8 @@ namespace Certify.Server.Api.Public.Controllers
 
         private IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
 
+        private ManagementAPI _mgmtAPI;
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -37,6 +39,8 @@ namespace Certify.Server.Api.Public.Controllers
             _client = client;
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
+
+            _mgmtAPI = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
         }
 
         /// <summary>
@@ -116,6 +120,7 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
+        [Route("search")]
         public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
         {
             var managedCertResult = await _client.GetManagedCertificateSearchResult(
@@ -184,10 +189,7 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
         public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
-
-            var mgmtClient = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
-
-            var managedCert = await mgmtClient.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
+            var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
             return new OkObjectResult(managedCert);
         }
@@ -203,9 +205,7 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)
         {
-            var mgmtClient = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
-
-            var result = await mgmtClient.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
+            var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
 
             if (result != null)
             {
