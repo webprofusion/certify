@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models.API;
+using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Org.BouncyCastle.Asn1.X509;
@@ -109,7 +110,13 @@ yNQwCgYIKoZIzj0EAwIDRwAwRAIge09+S5TZAlw5tgtiVvuERV6cT4mfutXIlwTb
             Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
         }
 #endif
+        [TestMethod, Description("Test Demo Managed Cert Generation")]
+        public void TestDemoDataGeneration()
+        {
+            var items= DemoDataGenerator.GenerateDemoItems();
 
+            Assert.IsTrue(items.Any());
+        }
         [TestMethod, Description("Test loading X509 does not leave RSA keys behind on disk")]
         public void TestX509Load()
         {
