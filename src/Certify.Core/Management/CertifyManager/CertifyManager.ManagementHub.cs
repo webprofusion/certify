@@ -7,6 +7,7 @@ using Certify.Client;
 using Certify.Models;
 using Certify.Models.Shared.Validation;
 using System.Text.Json;
+using Certify.Shared.Core.Utils;
 
 namespace Certify.Management
 {
@@ -77,6 +78,21 @@ namespace Certify.Management
                 var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
                 val = await UpdateManagedCertificate(managedCertObj);
             }
+            else if (arg.CommandType == ManagementHubCommands.DeleteInstanceManagedItem)
+            {
+                // delete a single managed item 
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                await DeleteManagedCertificate(managedCertIdArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.TestInstanceManagedItem)
+            {
+                // test challenge response config for a single managed item 
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
+                var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+                await TestChallenge(null, managedCertObj, isPreviewMode: true);
+            }
 
             var result = new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val) };
 
@@ -92,71 +108,11 @@ namespace Certify.Management
 
         private void GenerateDemoItems()
         {
-            var numItems = new Random().Next(10, 50);
-            for (var i = 0; i < numItems; i++)
+            var items = DemoDataGenerator.GenerateDemoItems();
+            foreach (var item in items)
             {
-
-                var item = new ManagedCertificate
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Name = GenerateName(),
-                    RequestConfig = new CertRequestConfig
-                    {
-                        Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig> { new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP } }
-                    }
-                };
-
-                item.DomainOptions.Add(new DomainOption { Domain = $"{item.Name}.dev.projectbids.co.uk", IsManualEntry = true, IsPrimaryDomain = true, IsSelected = true, Type = CertIdentifierType.Dns });
-                item.RequestConfig.PrimaryDomain = item.DomainOptions[0].Domain;
-                item.RequestConfig.SubjectAlternativeNames = new string[] { item.DomainOptions[0].Domain };
-
-                var validation = CertificateEditorService.Validate(item, null, null, applyAutoConfiguration: true);
-                if (validation.IsValid)
-                {
-                    UpdateManagedCertificate(item);
-                }
-                else
-                {
-                    // generated invalid test item
-                    System.Diagnostics.Debug.WriteLine(validation.Message);
-                }
+                _ = UpdateManagedCertificate(item);
             }
-        }
-
-        private string GenerateName()
-        {
-            // generate test item names using verb,animal
-            var subjects = new string[] {
-                "Lion",
-                "Tiger",
-                "Leopard",
-                "Cheetah",
-                "Elephant",
-                "Giraffe",
-                "Rhinoceros",
-                "Gorilla"
-            };
-            var adjectives = new string[] {
-                "active",
-                "adaptable",
-                "alert",
-                "clever" ,
-                "comfortable" ,
-                "conscientious",
-                "considerate",
-                "courageous" ,
-                "decisive",
-                "determined" ,
-                "diligent" ,
-                "energetic",
-                "entertaining",
-                "enthusiastic" ,
-                "fabulous"
-            };
-
-            var rnd = new Random();
-
-            return $"{adjectives[rnd.Next(0, adjectives.Length - 1)]}-{subjects[rnd.Next(0, subjects.Length - 1)]}".ToLower();
         }
     }
 }
