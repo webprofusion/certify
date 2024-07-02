@@ -19,6 +19,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
         public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string instanceId = null);
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
+        public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
         public bool HasItemsForManagedInstance(string instanceId);
     }
 
@@ -180,6 +181,23 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public bool HasItemsForManagedInstance(string instanceId)
         {
             return _managedInstanceItems.ContainsKey(instanceId);
+        }
+
+        public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId)
+        {
+            _managedInstanceItems.TryGetValue(instanceId, out var instance);
+
+            if (instance != null)
+            {
+                foreach (var item in instance.Items)
+                {
+                    if (item.Id == managedCertificateId)
+                    {
+                        instance.Items.Remove(item);
+                        return;
+                    }
+                }
+            }
         }
     }
 }
