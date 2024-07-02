@@ -157,16 +157,17 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{{ "certificateAuthority", "Certify.Models.CertificateAuthority" } }
                     },
-                     new GeneratedAPI {
+                    new GeneratedAPI {
 
                         OperationName = "RemoveManagedCertificate",
                         OperationMethod = "HttpDelete",
                         Comment = "Remove Managed Certificate",
                         PublicAPIController = "Certificate",
-                        PublicAPIRoute = "certificate/{id}",
-                        ServiceAPIRoute = "managedcertificates/delete/{id}",
+                        PublicAPIRoute = "settings/{instanceId}/{managedCertId}",
+                        UseManagementAPI = true,
+                        ServiceAPIRoute = "managedcertificates/delete/{managedCertId}",
                         ReturnType = "bool",
-                        Params =new Dictionary<string, string>{{ "id", "string" } }
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
                     },
                     new GeneratedAPI {
 

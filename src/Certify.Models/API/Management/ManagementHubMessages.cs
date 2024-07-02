@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Certify.API.Management
@@ -16,6 +16,7 @@ namespace Certify.API.Management
         public const string GetInstanceManagedItems = "GetInstanceManagedItems";
         public const string GetInstanceManagedItem = "GetInstanceManagedItem";
         public const string UpdateInstanceManagedItem = "UpdateInstanceManagedItem";
+        public const string DeleteInstanceManagedItem = "DeleteInstanceManagedItem";
     }
 
     /// <summary>
