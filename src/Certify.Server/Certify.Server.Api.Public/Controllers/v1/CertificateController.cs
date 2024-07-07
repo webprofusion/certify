@@ -164,15 +164,11 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpPost]
         [Route("summary")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Summary))]
-        public async Task<IActionResult> GetManagedCertificateSummary(string? keyword)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
+        public async Task<IActionResult> GetManagedCertificateSummary()
         {
-
-            var summary = await _client.GetManagedCertificateSummary(
-                new Models.ManagedCertificateFilter
-                {
-                    Keyword = keyword
-                }, CurrentAuthContext);
+            var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
+         
 
             return new OkObjectResult(summary);
         }

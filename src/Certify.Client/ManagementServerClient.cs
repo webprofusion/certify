@@ -86,6 +86,11 @@ namespace Certify.Client
 
         }
 
+        public async Task Disconnect()
+        {
+            await _connection.StopAsync();
+
+        }
         private void PerformRequestedCommand(InstanceCommandRequest cmd)
         {
             System.Diagnostics.Debug.WriteLine($"Got command from management server {cmd}");
@@ -97,8 +102,17 @@ namespace Certify.Client
             else
             {
                 var task = OnGetCommandResult?.Invoke(cmd);
-
-                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
+                if (task != null)
+                {
+                    if (cmd.CommandType != ManagementHubCommands.Reconnect)
+                    {
+                        _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
+                    }
+                    else
+                    {
+                        task.Wait();
+                    }
+                }
             }
         }
 

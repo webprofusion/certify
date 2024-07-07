@@ -44,7 +44,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("summary")]
-        public async Task<Summary> GetSummary(ManagedCertificateFilter filter)
+        public async Task<StatusSummary> GetSummary(ManagedCertificateFilter filter)
         {
             DebugLog();
             return await _certifyManager.GetManagedCertificateSummary(filter);
