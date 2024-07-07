@@ -7,6 +7,7 @@ using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Controllers
 {
@@ -23,17 +24,19 @@ namespace Certify.Server.Api.Public.Controllers
         private readonly ICertifyInternalApiClient _client;
 
         private IInstanceManagementStateProvider _mgmtStateProvider;
+        private IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider)
+        public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
         {
             _logger = logger;
             _client = client;
             _mgmtStateProvider = mgmtStateProvider;
+            _mgmtHubContext = mgmtHubContext;
         }
 
         /// <summary>
@@ -63,7 +66,7 @@ namespace Certify.Server.Api.Public.Controllers
                 list.AddRange(remote.Items.Select(i => new ManagedCertificateSummary
                 {
                     InstanceId = remote.InstanceId,
-                    InstanceTitle = instances.FirstOrDefault(i=>i.InstanceId==remote.InstanceId)?.Title,
+                    InstanceTitle = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId)?.Title,
                     Id = i.Id ?? "",
                     Title = $"[remote] {i.Name}" ?? "",
                     PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
@@ -89,6 +92,17 @@ namespace Certify.Server.Api.Public.Controllers
         {
             var managedInstances = _mgmtStateProvider.GetConnectedInstances();
             return new OkObjectResult(managedInstances);
+        }
+
+        [HttpGet]
+        [Route("flush")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedInstanceInfo>))]
+        public async Task<IActionResult> FlushHubManagedInstances()
+        {
+            _mgmtStateProvider.Clear();
+            await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
+            return new OkResult();
         }
     }
 }

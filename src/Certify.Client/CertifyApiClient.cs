@@ -424,7 +424,7 @@ namespace Certify.Client
             }
         }
 
-        public async Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null)
+        public async Task<StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null)
         {
             var response = await PostAsync("managedcertificates/summary/", filter, authContext);
             var serializer = new JsonSerializer();
@@ -432,7 +432,7 @@ namespace Certify.Client
             using (var sr = new StreamReader(await response.Content.ReadAsStreamAsync()))
             using (var reader = new JsonTextReader(sr))
             {
-                var result = serializer.Deserialize<Summary>(reader);
+                var result = serializer.Deserialize<StatusSummary>(reader);
                 return result;
             }
         }
