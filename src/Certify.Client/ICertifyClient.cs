@@ -73,7 +73,7 @@ namespace Certify.Client
 
         Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter, AuthContext authContext = null);
         Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter, AuthContext authContext = null);
-        Task<Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null);
+        Task<StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null);
 
         Task<ManagedCertificate> GetManagedCertificate(string managedItemId, AuthContext authContext = null);
 

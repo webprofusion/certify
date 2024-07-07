@@ -70,6 +70,12 @@ namespace Certify.Management
                 var items = await GetManagedCertificates(new ManagedCertificateFilter { });
                 val = new ManagedInstanceItems { InstanceId = InstanceId, Items = items };
             }
+            else if (arg.CommandType == ManagementHubCommands.GetInstanceStatusSummary)
+            {
+                var s=  await GetManagedCertificateSummary(new ManagedCertificateFilter { });
+                s.InstanceId = InstanceId;
+                val = s;
+            }
             else if (arg.CommandType == ManagementHubCommands.UpdateInstanceManagedItem)
             {
                 // update a single managed item 
@@ -92,6 +98,10 @@ namespace Certify.Management
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
                 var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
                 await TestChallenge(null, managedCertObj, isPreviewMode: true);
+            }
+            else if (arg.CommandType == ManagementHubCommands.Reconnect)
+            {
+                await _managementServerClient.Disconnect();
             }
 
             var result = new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val) };
