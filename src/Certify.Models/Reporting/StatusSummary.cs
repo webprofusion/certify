@@ -1,6 +1,6 @@
 ﻿namespace Certify.Models.Reporting
 {
-    public class Summary : BindableBase
+    public class StatusSummary : BindableBase
     {
         public string InstanceId { get; set; } = string.Empty;
         public int Total { get; set; }

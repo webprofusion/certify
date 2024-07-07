@@ -118,7 +118,7 @@ namespace Certify.UI.ViewModel
             TotalManagedCertificates = result.TotalResults;
         }
 
-        public async Task<Summary> GetManagedCertificateSummary()
+        public async Task<StatusSummary> GetManagedCertificateSummary()
         {
             if (!IsServiceAvailable)
             {

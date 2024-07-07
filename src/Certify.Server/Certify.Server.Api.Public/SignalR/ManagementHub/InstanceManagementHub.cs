@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using Certify.API.Management;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.SignalR.ManagementHub
@@ -150,6 +151,18 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
 
                             IssueCommand(request);
                         }
+
+                        // if we dont have a status summary, ask for that
+                        if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
+                        {
+                            var request = new InstanceCommandRequest
+                            {
+                                CommandId = Guid.NewGuid(),
+                                CommandType = ManagementHubCommands.GetInstanceStatusSummary
+                            };
+
+                            IssueCommand(request);
+                        }
                     }
                 }
                 else
@@ -166,9 +179,16 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                         if (cmd.CommandType == ManagementHubCommands.GetInstanceManagedItems)
                         {
                             // got items from an instance
-                            var itemInfo = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
+                            var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
 
-                            _stateProvider.UpdateInstanceItemInfo(instanceId, itemInfo.Items);
+                            _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
+                        }
+                        else if (cmd.CommandType == ManagementHubCommands.GetInstanceStatusSummary && result?.Value!=null)
+                        {
+                            // got status summary
+                            var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
+
+                            _stateProvider.UpdateInstanceStatusSummary(instanceId, val);
                         }
                         else
                         {
