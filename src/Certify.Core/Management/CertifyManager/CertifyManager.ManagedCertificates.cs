@@ -143,11 +143,11 @@ namespace Certify.Management
             return result;
         }
 
-        public async Task<Certify.Models.Reporting.Summary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
+        public async Task<Certify.Models.Reporting.StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter filter)
         {
             var ms = await _itemManager.Find(filter);
 
-            var summary = new Summary();
+            var summary = new StatusSummary();
             summary.InstanceId = InstanceId;
             summary.Total = ms.Count;
             summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);

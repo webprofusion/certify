@@ -12,6 +12,8 @@ namespace Certify.Shared.Core.Utils
     {
         public static List<ManagedCertificate> GenerateDemoItems()
         {
+            var rnd = new Random();
+
             var items = new List<ManagedCertificate>();
             var numItems = new Random().Next(10, 50);
             for (var i = 0; i < numItems; i++)
@@ -20,7 +22,7 @@ namespace Certify.Shared.Core.Utils
                 var item = new ManagedCertificate
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = GenerateName(),
+                    Name = GenerateName(rnd),
                     RequestConfig = new CertRequestConfig
                     {
                         Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig> { new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP } }
@@ -35,6 +37,10 @@ namespace Certify.Shared.Core.Utils
                 if (validation.IsValid)
                 {
                     var demoState = new Random().Next(1, 3);
+                    var certLifetime = new Random().Next(7, 30);
+                    var certElapsed = new Random().Next(1, certLifetime);
+                    var certStart = DateTime.UtcNow.AddDays(-certElapsed);
+
                     if (demoState == 1)
                     {
                         // not yet requested
@@ -44,9 +50,9 @@ namespace Certify.Shared.Core.Utils
                     {
                         // failed
                         item.CertificateCurrentCA = "demo-ca.org";
-                        item.DateStart = DateTime.UtcNow;
-                        item.DateLastRenewalAttempt = item.DateStart;
-                        item.DateExpiry = DateTime.UtcNow.AddDays(5);
+                        item.DateStart = certStart;
+                        item.DateLastRenewalAttempt = certStart;
+                        item.DateExpiry = certStart.AddDays(certLifetime);
                         item.CertificateFriendlyName = $"{item.GetCertificateIdentifiers().First().Value} [CertifyDemo] - {item.DateStart} to {item.DateExpiry}";
                         item.Comments = "This is an example item showing failure.";
                         item.LastAttemptedCA = item.CertificateCurrentCA;
@@ -59,9 +65,9 @@ namespace Certify.Shared.Core.Utils
                     {
                         //success
                         item.CertificateCurrentCA = "demo-ca.org";
-                        item.DateStart = DateTime.UtcNow;
-                        item.DateExpiry = DateTime.UtcNow.AddDays(5);
-                        item.DateLastRenewalAttempt = item.DateStart;
+                        item.DateStart = certStart;
+                        item.DateLastRenewalAttempt = certStart;
+                        item.DateExpiry = certStart.AddDays(certLifetime);
                         item.CertificateFriendlyName = $"{item.GetCertificateIdentifiers().First().Value} [CertifyDemo] - {item.DateStart} to {item.DateExpiry}";
                         item.Comments = "This is an example item showing success";
                         item.LastAttemptedCA = item.CertificateCurrentCA;
@@ -80,7 +86,7 @@ namespace Certify.Shared.Core.Utils
             return items;
         }
 
-        public static string GenerateName()
+        public static string GenerateName(Random rnd)
         {
             // generate test item names using verb,animal
             var subjects = new string[] {
@@ -111,7 +117,7 @@ namespace Certify.Shared.Core.Utils
                 "fabulous"
             };
 
-            var rnd = new Random();
+         
 
             return $"{adjectives[rnd.Next(0, adjectives.Length - 1)]}-{subjects[rnd.Next(0, subjects.Length - 1)]}".ToLower();
         }

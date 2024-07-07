@@ -2,6 +2,7 @@
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
 
@@ -123,5 +124,29 @@ namespace Certify.Server.Api.Public.Services
 
             return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd.CommandId);
         }
+
+        public async Task<StatusSummary> GetManagedCertificateSummary(AuthContext? currentAuthContext)
+        {
+
+            var allSummary = _mgmtStateProvider.GetManagedInstanceStatusSummaries();
+            var sum = new StatusSummary();
+
+            foreach (var item in allSummary)
+            {
+                if (item.Value != null)
+                {
+                    sum.Total += item.Value.Total;
+                    sum.Error += item.Value.Error;
+                    sum.Warning += item.Value.Warning;
+                    sum.AwaitingUser += item.Value.AwaitingUser;
+                    sum.Healthy += item.Value.Healthy;
+                    sum.NoCertificate += item.Value.NoCertificate;
+
+                }
+            }
+
+            return await Task.FromResult(sum);
+        }
     }
 }
+
