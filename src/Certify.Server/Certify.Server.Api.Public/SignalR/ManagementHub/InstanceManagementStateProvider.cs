@@ -1,13 +1,16 @@
 ﻿using System.Collections.Concurrent;
 using Certify.API.Management;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Microsoft.IdentityModel.Logging;
 
 namespace Certify.Server.Api.Public.SignalR.ManagementHub
 {
     public interface IInstanceManagementStateProvider
     {
+        public void Clear();
         public void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
+        public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
         public string GetConnectionIdForInstance(string instanceId);
         public string GetInstanceIdForConnection(string connectionId);
         public List<ManagedInstanceInfo> GetConnectedInstances();
@@ -21,10 +24,13 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
         public bool HasItemsForManagedInstance(string instanceId);
+        
+        public bool HasStatusSummaryForManagedInstance(string instanceId);
+        public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
     }
 
     /// <summary>
-    /// Track state across pool of instance connections to management hub
+    /// Track state across pool of instance connections to the management hub
     /// </summary>
     public class InstanceManagementStateProvider : IInstanceManagementStateProvider
     {
@@ -33,10 +39,22 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         private ConcurrentDictionary<Guid, InstanceCommandResult> _awaitedCommandResults = [];
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
+        private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
         private ILogger<InstanceManagementStateProvider> _logger;
         public InstanceManagementStateProvider(ILogger<InstanceManagementStateProvider> logger)
         {
             _logger = logger;
+        }
+
+        public void Clear()
+        {
+            _logger.LogWarning("Flushing management hub state, clients will need to reconnect.");
+            _instanceConnections.Clear();
+            _managedInstanceItems.Clear();
+            _awaitedCommandRequests.Clear();
+            _awaitedCommandResults.Clear();
+            _managedInstanceStatusSummary.Clear();
+
         }
 
         public List<ManagedInstanceInfo> GetConnectedInstances()
@@ -59,6 +77,11 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
             }
 
             _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) => { return instanceInfo; });
+        }
+
+        public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary)
+        {
+            _managedInstanceStatusSummary.AddOrUpdate(instanceId, summary, (i, oldValue) => summary);
         }
 
         /// <summary>
@@ -159,11 +182,16 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
             return _managedInstanceItems;
         }
 
+        public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries()
+        {
+            return _managedInstanceStatusSummary;
+        }
+
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate)
         {
             _managedInstanceItems.TryGetValue(instanceId, out var instance);
-            
-            if (instance!=null)
+
+            if (instance != null)
             {
                 foreach (var item in instance.Items)
                 {
@@ -181,6 +209,11 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public bool HasItemsForManagedInstance(string instanceId)
         {
             return _managedInstanceItems.ContainsKey(instanceId);
+        }
+
+        public bool HasStatusSummaryForManagedInstance(string instanceId)
+        {
+            return _managedInstanceStatusSummary.ContainsKey(instanceId);
         }
 
         public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId)

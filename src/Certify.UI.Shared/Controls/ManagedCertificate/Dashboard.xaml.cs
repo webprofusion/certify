@@ -19,7 +19,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         }
 
-        public Summary ViewModel { get; set; } = new Summary();
+        public StatusSummary ViewModel { get; set; } = new StatusSummary();
 
         protected ViewModel.AppViewModel _appViewModel => AppViewModel.Current;
 
