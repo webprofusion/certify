@@ -1,4 +1,5 @@
-﻿using Certify.Client;
+using Certify.Client;
+using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.Services;
@@ -91,21 +92,15 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("{managedCertId}/log")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
-        public async Task<IActionResult> DownloadLog(string managedCertId, int maxLines = 1000)
+        public async Task<IActionResult> DownloadLog(string instanceId, string managedCertId, int maxLines = 1000)
         {
-            var managedCert = await _client.GetManagedCertificate(managedCertId, CurrentAuthContext);
-
-            if (managedCert == null)
-            {
-                return new NotFoundResult();
-            }
 
             if (maxLines > 1000)
             {
                 maxLines = 1000;
             }
 
-            var log = await _client.GetItemLog(managedCertId, maxLines, CurrentAuthContext);
+            LogItem[] log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, maxLines, CurrentAuthContext);
 
             return new OkObjectResult(new LogResult { Items = log });
         }
@@ -168,8 +163,6 @@ namespace Certify.Server.Api.Public.Controllers
         public async Task<IActionResult> GetManagedCertificateSummary()
         {
             var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
-         
-
             return new OkObjectResult(summary);
         }
 
@@ -268,10 +261,11 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("test")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.StatusMessage>))]
-        public async Task<IActionResult> PerformConfigurationTest(Models.ManagedCertificate item)
+        public async Task<IActionResult> PerformConfigurationTest(string instanceId, Models.ManagedCertificate item)
         {
 
-            var results = await _client.TestChallengeConfiguration(item, CurrentAuthContext);
+            List<StatusMessage> results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
+
             if (results != null)
             {
                 return new OkObjectResult(results);
