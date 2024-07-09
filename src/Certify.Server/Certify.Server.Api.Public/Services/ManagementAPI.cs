@@ -39,7 +39,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCertId", managedCertId)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetInstanceManagedItem, args);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItem, args);
             var result = await GetCommandResult(instanceId, cmd);
 
             if (result?.Value != null)
@@ -62,7 +62,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCert", JsonSerializer.Serialize(managedCert))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateInstanceManagedItem, args);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateManagedItem, args);
 
             var result = await GetCommandResult(instanceId, cmd);
 
@@ -95,7 +95,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCertId",managedCertId)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteInstanceManagedItem, args);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteManagedItem, args);
 
             var result = await GetCommandResult(instanceId, cmd);
 
@@ -124,6 +124,20 @@ namespace Certify.Server.Api.Public.Services
             await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
 
             return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd.CommandId);
+        }
+
+        private async Task SendCommandWithNoResult(string instanceId, InstanceCommandRequest cmd)
+        {
+            var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
+
+            if (connectionId == null)
+            {
+                throw new Exception("Instance connection info not known, cannot send commands to instance.");
+            }
+
+            _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
+
+            await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
         }
 
         public async Task<StatusSummary> GetManagedCertificateSummary(AuthContext? currentAuthContext)
@@ -157,7 +171,7 @@ namespace Certify.Server.Api.Public.Services
                     new("limit",maxLines.ToString())
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetInstanceManagedItemLog, args);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItemLog, args);
 
             var result = await GetCommandResult(instanceId, cmd);
 
@@ -178,7 +192,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCert",JsonSerializer.Serialize(managedCert))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.TestInstanceManagedItem, args);
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.TestManagedItemConfiguration, args);
 
             var result = await GetCommandResult(instanceId, cmd);
 
@@ -190,6 +204,39 @@ namespace Certify.Server.Api.Public.Services
             {
                 return [];
             }
+        }
+
+        internal async Task<List<ActionStep>> GetPreviewActions(string instanceId, ManagedCertificate managedCert, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCert",JsonSerializer.Serialize(managedCert))
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItemRenewalPreview, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<List<ActionStep>>(result.Value);
+            }
+            else
+            {
+                return [];
+            }
+        }
+
+        internal async Task PerformManagedCertificateRequest(string instanceId, string managedCertId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId",managedCertId)
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.PerformManagedItemRequest, args);
+
+            await SendCommandWithNoResult(instanceId, cmd);
         }
     }
 }
