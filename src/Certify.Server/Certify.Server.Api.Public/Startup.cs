@@ -9,6 +9,7 @@ using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.API
@@ -175,6 +176,14 @@ namespace Certify.Server.API
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
 
             services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
+
+            services.AddTransient(s =>
+            {
+                var p = s.GetService(typeof(IInstanceManagementStateProvider)) as IInstanceManagementStateProvider;
+                var h = s.GetService(typeof(IHubContext<InstanceManagementHub, IInstanceManagementHub>)) as IHubContext<InstanceManagementHub, IInstanceManagementHub>;
+                var c = s.GetService(typeof(ICertifyInternalApiClient)) as ICertifyInternalApiClient;
+                return new ManagementAPI(p, h, c);
+            });
 
             services.AddHostedService<ManagementWorker>();
             return results;

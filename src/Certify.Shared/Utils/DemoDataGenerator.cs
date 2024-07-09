@@ -15,7 +15,7 @@ namespace Certify.Shared.Core.Utils
             var rnd = new Random();
 
             var items = new List<ManagedCertificate>();
-            var numItems = new Random().Next(10, 50);
+            var numItems = new Random().Next(10, 500);
             for (var i = 0; i < numItems; i++)
             {
 
@@ -116,8 +116,6 @@ namespace Certify.Shared.Core.Utils
                 "enthusiastic" ,
                 "fabulous"
             };
-
-         
 
             return $"{adjectives[rnd.Next(0, adjectives.Length - 1)]}-{subjects[rnd.Next(0, subjects.Length - 1)]}".ToLower();
         }

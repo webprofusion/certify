@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -200,6 +200,8 @@ namespace Certify.Management
                 GenerateDemoItems();
             }
 #endif
+
+            await EnsureMgmtHubConnection();
         }
 
         /// <summary>
@@ -252,6 +254,11 @@ namespace Certify.Management
         }
 
         private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await EnsureMgmtHubConnection();
+        }
+
+        private async Task EnsureMgmtHubConnection()
         {
             // connect/reconnect to management hub if enabled
             if (_managementServerClient == null || !_managementServerClient.IsConnected())
