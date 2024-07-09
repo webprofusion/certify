@@ -7,6 +7,7 @@ using Certify.Core.Management.Access;
 using Certify.Models;
 using Certify.Models.Config.AccessControl;
 using Certify.Providers;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Serilog;
@@ -164,9 +165,8 @@ namespace Certify.Core.Tests.Unit
         [TestInitialize]
         public void TestInitialize()
         {
-            this.loggy = new Loggy(new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger());
+            this.loggy = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<AccessControlTests>());
+
             this.access = new AccessControl(loggy, new MemoryObjectStore());
         }
 

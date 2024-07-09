@@ -11,6 +11,7 @@ using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Certify.Service.Controllers
@@ -93,7 +94,7 @@ namespace Certify.Service.Controllers
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
-                var theLog = new Loggy(log);
+                var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
                 var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
 
                 return results;
