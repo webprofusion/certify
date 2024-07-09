@@ -35,11 +35,7 @@ namespace Certify.Core.Tests
 
         public CertRequestTests()
         {
-            var log = new LoggerConfiguration()
-                     .WriteTo.Debug()
-                     .CreateLogger();
-
-            _log = new Loggy(log);
+            
             certifyManager = new CertifyManager();
             certifyManager.Init().Wait();
 

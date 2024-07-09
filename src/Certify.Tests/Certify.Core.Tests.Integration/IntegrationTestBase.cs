@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using Certify.Models;
 using Certify.Models.Providers;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -31,12 +32,7 @@ namespace Certify.Core.Tests
 
             ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
 
-            var logImp = new LoggerConfiguration()
-           .WriteTo.Debug()
-           .CreateLogger();
-
-            _log = new Loggy(logImp);
-
+            _log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<IntegrationTestBase>());
         }
 
         public ManagedCertificate GetMockManagedCertificate(string siteName, string testDomain, string siteId = null, string testPath = null)

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Certify.Management;
 using Certify.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -118,12 +119,7 @@ namespace Certify.Core.Tests.Unit
                 return;
             }
 
-            var logCfg = new LoggerConfiguration()
-              .MinimumLevel.Debug()
-              .WriteTo.Debug()
-              .CreateLogger();
-
-            var log = new Loggy(logCfg);
+            var log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<CertificateOperationTests>());
 
             var cert = CertificateManager.GenerateSelfSignedCertificate("localhost", DateTime.UtcNow, DateTime.UtcNow.AddDays(30), suffix: "[Certify](test)", keyType: keyType);
 

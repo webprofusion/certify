@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Shared.Core.Utils;
-
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -17,11 +17,7 @@ namespace Certify.Core.Tests.Unit
         {
             var net = new NetworkUtils(enableProxyValidationAPI: true);
 
-            var logImp = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-
-            var log = new Loggy(logImp);
+            var log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<DnsQueryTests>());
 
             // check invalid domain
             var result = await net.CheckDNS(log, "fdlsakdfoweinoijsjdfpsdkfspdf.com");
