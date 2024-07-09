@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -72,8 +72,17 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetInstanceStatusSummary)
             {
-                var s=  await GetManagedCertificateSummary(new ManagedCertificateFilter { });
+                var s = await GetManagedCertificateSummary(new ManagedCertificateFilter { });
                 s.InstanceId = InstanceId;
+                val = s;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItemLog)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                var limit = args.FirstOrDefault(a => a.Key == "limit");
+                var s = await GetItemLog(managedCertIdArg.Value, int.Parse(limit.Value));
+               
                 val = s;
             }
             else if (arg.CommandType == ManagementHubCommands.UpdateInstanceManagedItem)
@@ -97,7 +106,7 @@ namespace Certify.Management
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
                 var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
-                await TestChallenge(null, managedCertObj, isPreviewMode: true);
+                val = await TestChallenge(null, managedCertObj, isPreviewMode: true);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

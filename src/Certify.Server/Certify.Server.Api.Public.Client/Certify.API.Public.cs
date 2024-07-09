@@ -1311,9 +1311,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string managedCertId, int? maxLines)
+        public virtual System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines)
         {
-            return DownloadLogAsync(managedCertId, maxLines, System.Threading.CancellationToken.None);
+            return DownloadLogAsync(instanceId, managedCertId, maxLines, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1322,7 +1322,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string managedCertId, int? maxLines, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines, System.Threading.CancellationToken cancellationToken)
         {
             if (managedCertId == null)
                 throw new System.ArgumentNullException("managedCertId");
@@ -1343,6 +1343,10 @@ namespace Certify.API.Public
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
                     urlBuilder_.Append("/log");
                     urlBuilder_.Append('?');
+                    if (instanceId != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("instanceId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
                     if (maxLines != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("maxLines")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(maxLines, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
@@ -1504,9 +1508,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync(string keyword)
+        public virtual System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync()
         {
-            return GetManagedCertificateSummaryAsync(keyword, System.Threading.CancellationToken.None);
+            return GetManagedCertificateSummaryAsync(System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1515,7 +1519,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync(string keyword, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1531,12 +1535,6 @@ namespace Certify.API.Public
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
                     // Operation Path: "api/v1/certificate/summary"
                     urlBuilder_.Append("api/v1/certificate/summary");
-                    urlBuilder_.Append('?');
-                    if (keyword != null)
-                    {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("keyword")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(keyword, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                    }
-                    urlBuilder_.Length--;
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
