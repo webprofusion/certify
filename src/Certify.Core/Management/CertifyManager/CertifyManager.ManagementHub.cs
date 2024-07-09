@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.Shared.Validation;
 using System.Text.Json;
 using Certify.Shared.Core.Utils;
+using Serilog;
 
 namespace Certify.Management
 {
@@ -17,8 +18,9 @@ namespace Certify.Management
         private string _managementServerConnectionId = string.Empty;
         private void SendHeartbeatToManagementHub()
         {
-            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
+            //_managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
         }
+
         private async Task StartManagementHubConnection(string hubUri)
         {
 
@@ -57,56 +59,89 @@ namespace Certify.Management
         {
             object val = null;
 
-            if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItem)
+            if (arg.CommandType == ManagementHubCommands.GetManagedItem)
             {
                 // Get a single managed item by id
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 val = await GetManagedCertificate(managedCertIdArg.Value);
             }
-            else if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItems)
+            else if (arg.CommandType == ManagementHubCommands.GetManagedItems)
             {
                 // Get all managed items
                 var items = await GetManagedCertificates(new ManagedCertificateFilter { });
                 val = new ManagedInstanceItems { InstanceId = InstanceId, Items = items };
             }
-            else if (arg.CommandType == ManagementHubCommands.GetInstanceStatusSummary)
+            else if (arg.CommandType == ManagementHubCommands.GetStatusSummary)
             {
                 var s = await GetManagedCertificateSummary(new ManagedCertificateFilter { });
                 s.InstanceId = InstanceId;
                 val = s;
             }
-            else if (arg.CommandType == ManagementHubCommands.GetInstanceManagedItemLog)
+            else if (arg.CommandType == ManagementHubCommands.GetManagedItemLog)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var limit = args.FirstOrDefault(a => a.Key == "limit");
-                var s = await GetItemLog(managedCertIdArg.Value, int.Parse(limit.Value));
-               
-                val = s;
+
+                val = await GetItemLog(managedCertIdArg.Value, int.Parse(limit.Value));
             }
-            else if (arg.CommandType == ManagementHubCommands.UpdateInstanceManagedItem)
+            else if (arg.CommandType == ManagementHubCommands.GetManagedItemRenewalPreview)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+
+                val = await GeneratePreview(managedCert);
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateManagedItem)
             {
                 // update a single managed item 
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
-                var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
-                val = await UpdateManagedCertificate(managedCertObj);
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+
+                val = await UpdateManagedCertificate(managedCert);
             }
-            else if (arg.CommandType == ManagementHubCommands.DeleteInstanceManagedItem)
+            else if (arg.CommandType == ManagementHubCommands.DeleteManagedItem)
             {
                 // delete a single managed item 
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+
                 await DeleteManagedCertificate(managedCertIdArg.Value);
             }
-            else if (arg.CommandType == ManagementHubCommands.TestInstanceManagedItem)
+            else if (arg.CommandType == ManagementHubCommands.TestManagedItemConfiguration)
             {
                 // test challenge response config for a single managed item 
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
-                var managedCertObj = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
-                val = await TestChallenge(null, managedCertObj, isPreviewMode: true);
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+
+                var log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
+
+                val = await TestChallenge(log, managedCert, isPreviewMode: true);
+
+            }
+            else if (arg.CommandType == ManagementHubCommands.PerformManagedItemRequest)
+            {
+                // attempt certificate order
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                var managedCert = await GetManagedCertificate(managedCertIdArg.Value);
+
+                var progressState = new RequestProgressState(RequestState.Running, "Starting..", managedCert);
+                var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+                _ = await PerformCertificateRequest(
+                                                        null,
+                                                        managedCert,
+                                                        progressIndicator,
+                                                        resumePaused: true,
+                                                        isInteractive: true
+                                                        );
+
+                val = true;
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

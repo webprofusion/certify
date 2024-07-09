@@ -1,4 +1,4 @@
-using Certify.Client;
+﻿using Certify.Client;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
@@ -23,10 +23,6 @@ namespace Certify.Server.Api.Public.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
-        private IInstanceManagementStateProvider _mgmtStateProvider;
-
-        private IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
-
         private ManagementAPI _mgmtAPI;
 
         /// <summary>
@@ -34,14 +30,12 @@ namespace Certify.Server.Api.Public.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
+        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtApi)
         {
             _logger = logger;
             _client = client;
-            _mgmtStateProvider = mgmtStateProvider;
-            _mgmtHubContext = mgmtHubContext;
 
-            _mgmtAPI = new ManagementAPI(_mgmtStateProvider, _mgmtHubContext, _client);
+            _mgmtAPI = mgmtApi;
         }
 
         /// <summary>
@@ -214,19 +208,12 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpPost]
         [Route("order")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> BeginOrder(string id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> BeginOrder(string instanceId, string id)
         {
+            await _mgmtAPI.PerformManagedCertificateRequest(instanceId, id, CurrentAuthContext);
 
-            var result = await _client.BeginCertificateRequest(id, true, false, CurrentAuthContext);
-            if (result != null)
-            {
-                return new OkObjectResult(result);
-            }
-            else
-            {
-                return new BadRequestResult();
-            }
+            return new OkResult();
         }
 
         /// <summary>
@@ -238,9 +225,9 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("renew")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> PerformRenewal(Models.RenewalSettings settings)
+        public async Task<IActionResult> PerformRenewal(string instanceId, Models.RenewalSettings settings)
         {
-
+            // TODO: send to instance
             var results = await _client.BeginAutoRenewal(settings, CurrentAuthContext);
             if (results != null)
             {
@@ -264,7 +251,7 @@ namespace Certify.Server.Api.Public.Controllers
         public async Task<IActionResult> PerformConfigurationTest(string instanceId, Models.ManagedCertificate item)
         {
 
-            List<StatusMessage> results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
+            var results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
 
             if (results != null)
             {
