@@ -16,6 +16,7 @@ namespace Certify.API.Management
         public const string GetInstanceStatusSummary = "GetInstanceStatusSummary";
         public const string GetInstanceManagedItems = "GetInstanceManagedItems";
         public const string GetInstanceManagedItem = "GetInstanceManagedItem";
+        public const string GetInstanceManagedItemLog = "GetInstanceManagedItemLog";
         public const string UpdateInstanceManagedItem = "UpdateInstanceManagedItem";
         public const string DeleteInstanceManagedItem = "DeleteInstanceManagedItem";
         public const string TestInstanceManagedItem = "TestInstanceManagedItem";
