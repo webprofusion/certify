@@ -1,4 +1,4 @@
-using Certify.Config;
+﻿using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.API;
@@ -89,7 +89,8 @@ namespace Certify.Service.Controllers
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
-                var theLog = new Loggy(log);
+                var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
+
                 var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
 
                 return results;
@@ -112,7 +113,8 @@ namespace Certify.Service.Controllers
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
-                var theLog = new Loggy(log);
+                var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
+
                 var results = await _certifyManager.PerformChallengeCleanup(theLog, managedCertificate, progress: progressIndicator);
 
                 return results;

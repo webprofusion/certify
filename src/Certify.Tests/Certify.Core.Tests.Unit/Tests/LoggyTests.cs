@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Certify.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Serilog;
 
@@ -43,7 +44,8 @@ namespace Certify.Core.Tests.Unit
             var logImp = new LoggerConfiguration()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Log an error message using Loggy.Error()
             var logMessage = "New Loggy Error";
@@ -65,7 +67,7 @@ namespace Certify.Core.Tests.Unit
             var logImp = new LoggerConfiguration()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Trigger an exception error and log it using Loggy.Error()
             var logMessage = "New Loggy Exception Error";
@@ -80,6 +82,7 @@ namespace Certify.Core.Tests.Unit
             {
                 log.Error(e, logMessage);
             }
+
             logImp.Dispose();
 
             // Read in logged out exception error text
@@ -98,7 +101,7 @@ namespace Certify.Core.Tests.Unit
             var logImp = new LoggerConfiguration()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Log an info message using Loggy.Information()
             var logMessage = "New Loggy Information";
@@ -121,7 +124,7 @@ namespace Certify.Core.Tests.Unit
                 .MinimumLevel.Debug()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Log a debug message using Loggy.Debug()
             var logMessage = "New Loggy Debug";
@@ -144,7 +147,7 @@ namespace Certify.Core.Tests.Unit
                 .MinimumLevel.Verbose()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Log a verbose message using Loggy.Verbose()
             var logMessage = "New Loggy Verbose";
@@ -166,7 +169,8 @@ namespace Certify.Core.Tests.Unit
             var logImp = new LoggerConfiguration()
                 .WriteTo.File(this.logFilePath)
                 .CreateLogger();
-            var log = new Loggy(logImp);
+
+            var log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(logImp).CreateLogger<LoggyTests>());
 
             // Log a warning message using Loggy.Warning()
             var logMessage = "New Loggy Warning";

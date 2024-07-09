@@ -23,12 +23,6 @@ namespace Certify.Core.Tests
 
         public DeploymentTaskTests()
         {
-            var log = new LoggerConfiguration()
-                     .WriteTo.Debug()
-                     .CreateLogger();
-
-            _log = new Loggy(log);
-
             certifyManager = new CertifyManager();
             certifyManager.Init().Wait();
 
