@@ -2,6 +2,7 @@
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.API;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
@@ -146,6 +147,49 @@ namespace Certify.Server.Api.Public.Services
             }
 
             return await Task.FromResult(sum);
+        }
+
+        public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId",managedCertId),
+                    new("limit",maxLines.ToString())
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetInstanceManagedItemLog, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<LogItem[]>(result.Value);
+            }
+            else
+            {
+                return [];
+            }
+        }
+
+        internal async Task<List<StatusMessage>> TestManagedCertificateConfiguration(string instanceId, ManagedCertificate managedCert, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCert",JsonSerializer.Serialize(managedCert))
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.TestInstanceManagedItem, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<List<StatusMessage>>(result.Value);
+            }
+            else
+            {
+                return [];
+            }
         }
     }
 }
