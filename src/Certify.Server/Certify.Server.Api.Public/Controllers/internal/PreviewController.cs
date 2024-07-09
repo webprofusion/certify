@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models;
+using Certify.Server.Api.Public.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,17 +17,17 @@ namespace Certify.Server.Api.Public.Controllers
 
         private readonly ILogger<PreviewController> _logger;
 
-        private readonly ICertifyInternalApiClient _client;
+        private readonly ManagementAPI _mgmtAPI;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
-        /// <param name="client"></param>
-        public PreviewController(ILogger<PreviewController> logger, ICertifyInternalApiClient client)
+        /// <param name="mgmtAPI"></param>
+        public PreviewController(ILogger<PreviewController> logger, ManagementAPI mgmtAPI)
         {
             _logger = logger;
-            _client = client;
+            _mgmtAPI = mgmtAPI;
         }
 
         /// <summary>
@@ -39,7 +40,7 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
         public async Task<IActionResult> GetPreview([FromBody] ManagedCertificate item)
         {
-            var previewSteps = await _client.PreviewActions(item);
+            var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);
             return new OkObjectResult(previewSteps);
         }
     }

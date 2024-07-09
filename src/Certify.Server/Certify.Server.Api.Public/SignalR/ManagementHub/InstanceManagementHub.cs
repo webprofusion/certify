@@ -146,7 +146,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                             var request = new InstanceCommandRequest
                             {
                                 CommandId = Guid.NewGuid(),
-                                CommandType = ManagementHubCommands.GetInstanceManagedItems
+                                CommandType = ManagementHubCommands.GetManagedItems
                             };
 
                             IssueCommand(request);
@@ -158,7 +158,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                             var request = new InstanceCommandRequest
                             {
                                 CommandId = Guid.NewGuid(),
-                                CommandType = ManagementHubCommands.GetInstanceStatusSummary
+                                CommandType = ManagementHubCommands.GetStatusSummary
                             };
 
                             IssueCommand(request);
@@ -176,14 +176,14 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                         // action this message from this instance
                         _logger?.LogInformation("Received instance command result {result}", result);
 
-                        if (cmd.CommandType == ManagementHubCommands.GetInstanceManagedItems)
+                        if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
                         {
                             // got items from an instance
                             var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
 
                             _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
                         }
-                        else if (cmd.CommandType == ManagementHubCommands.GetInstanceStatusSummary && result?.Value!=null)
+                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value!=null)
                         {
                             // got status summary
                             var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
