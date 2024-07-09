@@ -15,6 +15,7 @@ using Certify.Providers.ACME.Anvil;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 using DotNet.Testcontainers.Volumes;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Serilog;
@@ -39,7 +40,8 @@ namespace Certify.Core.Tests.Unit
         [ClassInitialize]
         public static async Task ClassInit(TestContext context)
         {
-            _log = new Loggy(new LoggerConfiguration().WriteTo.Debug().CreateLogger());
+            
+            _log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<CertifyManagerAccountTests>());
 
             _caDomain = _isContainer ? "step-ca" : "localhost";
             _caPort = 9000;

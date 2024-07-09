@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using Certify.Models.Providers;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Certify.Models
@@ -26,11 +27,11 @@ namespace Certify.Models
 
     public static class ManagedCertificateLog
     {
-        private static ConcurrentDictionary<string, Serilog.Core.Logger> _managedItemLoggers { get; set; }
+        private static ConcurrentDictionary<string, Microsoft.Extensions.Logging.ILogger> _managedItemLoggers { get; set; }
 
         public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
 
-        public static ILog GetLogger(string managedItemId, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
+        public static ILog GetLogger(string managedItemId, LogLevel logLevelSwitch)
         {
             if (string.IsNullOrEmpty(managedItemId))
             {
@@ -39,10 +40,10 @@ namespace Certify.Models
 
             if (_managedItemLoggers == null)
             {
-                _managedItemLoggers = new ConcurrentDictionary<string, Serilog.Core.Logger>();
+                _managedItemLoggers = new ConcurrentDictionary<string, Microsoft.Extensions.Logging.ILogger>();
             }
 
-            Serilog.Core.Logger log = _managedItemLoggers.GetOrAdd(managedItemId, (key) =>
+            var log = _managedItemLoggers.GetOrAdd(managedItemId, (key) =>
             {
                 var logPath = GetLogPath(key);
 
@@ -55,26 +56,22 @@ namespace Certify.Models
                 }
                 catch { }
 
-                Serilog.Debugging.SelfLog.Enable(Console.Error);
-
-                log = new LoggerConfiguration()
-                    .MinimumLevel.ControlledBy(logLevelSwitch)
-#if DEBUG
-                    .WriteTo.Debug()
-#endif
+                var serilogLog = new Serilog.LoggerConfiguration()
+                    .Enrich.FromLogContext()
                     .WriteTo.File(
                         logPath, shared: true,
                         flushToDiskInterval: new TimeSpan(0, 0, 10)
                     )
                     .CreateLogger();
 
-                return log;
+                return new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<ManagedCertificate>();
+
             });
 
             return new Loggy(log);
         }
 
-        public static void AppendLog(string managedItemId, ManagedCertificateLogItem logItem, Serilog.Core.LoggingLevelSwitch logLevelSwitch)
+        public static void AppendLog(string managedItemId, ManagedCertificateLogItem logItem, LogLevel logLevelSwitch)
         {
             var log = GetLogger(managedItemId, logLevelSwitch);
 
@@ -106,7 +103,10 @@ namespace Certify.Models
             {
                 foreach (var l in _managedItemLoggers.Values)
                 {
-                    l?.Dispose();
+                    if (l is IDisposable tmp)
+                    {
+                        tmp?.Dispose();
+                    }
                 }
             }
         }

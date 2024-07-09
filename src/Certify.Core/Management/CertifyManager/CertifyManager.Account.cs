@@ -7,6 +7,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers.ACME.Anvil;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace Certify.Management
@@ -184,7 +185,7 @@ namespace Certify.Management
 
             if (defaultMatchingAccount == null)
             {
-                var log = ManagedCertificateLog.GetLogger(item.Id, new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error));
+                var log = ManagedCertificateLog.GetLogger(item.Id, LogLevel.Error);
                 log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode ? "[Staging Mode]" : "[Production]")}");
                 return null;
             }
