@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +7,9 @@ using System.Reflection;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
+using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Certify.Management
 {
@@ -52,12 +54,15 @@ namespace Certify.Management
 
         public PluginManager()
         {
-            _log = new Models.Loggy(
-                    new LoggerConfiguration()
+            var serilogLogger = new LoggerConfiguration()
+                        .Enrich.FromLogContext()
                         .MinimumLevel.Information()
                         .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
-                        .CreateLogger()
-                );
+                        .CreateLogger();
+
+           var msLogger = new SerilogLoggerFactory(serilogLogger).CreateLogger<PluginManager>(); 
+
+            _log = new Models.Loggy(msLogger);
 
             if (CurrentInstance == null)
             {

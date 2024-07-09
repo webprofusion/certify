@@ -27,11 +27,7 @@ namespace Certify.Core.Tests
 
         public DeploymentPreviewTests()
         {
-            var log = new LoggerConfiguration()
-                     .WriteTo.Debug()
-                     .CreateLogger();
 
-            _log = new Loggy(log);
             certifyManager = new CertifyManager();
             certifyManager.Init().Wait();
             iisManager = new ServerProviderIIS();
