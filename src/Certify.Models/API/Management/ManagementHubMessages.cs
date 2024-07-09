@@ -13,13 +13,16 @@ namespace Certify.API.Management
     public class ManagementHubCommands
     {
         public const string GetInstanceInfo = "GetInstanceInfo";
-        public const string GetInstanceStatusSummary = "GetInstanceStatusSummary";
-        public const string GetInstanceManagedItems = "GetInstanceManagedItems";
-        public const string GetInstanceManagedItem = "GetInstanceManagedItem";
-        public const string GetInstanceManagedItemLog = "GetInstanceManagedItemLog";
-        public const string UpdateInstanceManagedItem = "UpdateInstanceManagedItem";
-        public const string DeleteInstanceManagedItem = "DeleteInstanceManagedItem";
-        public const string TestInstanceManagedItem = "TestInstanceManagedItem";
+        public const string GetStatusSummary = "GetStatusSummary";
+        public const string GetManagedItems = "GetManagedItems";
+        public const string GetManagedItem = "GetManagedItem";
+        public const string GetManagedItemLog = "GetManagedItemLog";
+        public const string GetManagedItemRenewalPreview = "GetManagedItemRenewalPreview";
+
+        public const string UpdateManagedItem = "UpdateManagedItem";
+        public const string DeleteManagedItem = "DeleteManagedItem";
+        public const string TestManagedItemConfiguration = "TestManagedItemConfiguration";
+        public const string PerformManagedItemRequest = "PerformManagedItemRequest";
 
         public const string Reconnect = "Reconnect";
     }

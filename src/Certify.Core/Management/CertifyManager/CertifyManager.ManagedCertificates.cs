@@ -517,6 +517,11 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Genereate a preview of the actions which will be performed on renewal of the given item
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item)
         {
             var serverProvider = GetTargetServerProvider(item);
@@ -547,14 +552,23 @@ namespace Certify.Management
             {
                 try
                 {
+                    LogItem[] results = [];
                     // TODO: use reverse stream reader for large files
+                    var stream = System.IO.File.Open(logPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
+                    using (var streamReader = new System.IO.StreamReader(stream))
+                    {
+                        var str = await streamReader.ReadToEndAsync();
+                        stream.Close();
 
-                    var log = System.IO.File.ReadAllLines(logPath)
-                        .Reverse()
-                        .Take(limit)
-                        .ToArray();
-                    var parsed = LogParser.Parse(log);
-                    return parsed;
+                        var log =str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Reverse()
+                            .Take(limit)
+                            .ToArray();
+
+                        results = LogParser.Parse(log);
+                    }
+
+                    return results;
                 }
                 catch (Exception exp)
                 {
