@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Certify.Management;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +12,9 @@ using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Providers;
+using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Core;
 
 namespace Certify.Management
 {
@@ -56,7 +58,7 @@ namespace Certify.Management
         /// <summary>
         /// Current service log level setting
         /// </summary>
-        private Serilog.Core.LoggingLevelSwitch _loggingLevelSwitch { get; set; }
+        private LogLevel _loggingLevelSwitch { get; set; }
 
         /// <summary>
         /// If true, http challenge service is started
@@ -197,7 +199,7 @@ namespace Certify.Management
             }
 #endif
         }
-       
+
         /// <summary>
         /// Setup the continuous job tasks for renewals and maintenance
         /// </summary>
@@ -371,20 +373,37 @@ namespace Certify.Management
         /// <param name="serverConfig"></param>
         private void InitLogging(Shared.ServiceConfig serverConfig)
         {
-            _loggingLevelSwitch = new Serilog.Core.LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
+            _loggingLevelSwitch = LogLevel.Information;
 
             SetLoggingLevel(serverConfig?.LogLevel);
 
-            _serviceLog = new Loggy(
-                new LoggerConfiguration()
-               .MinimumLevel.ControlledBy(_loggingLevelSwitch)
+            var serilogLog = new Serilog.LoggerConfiguration()
+               .Enrich.FromLogContext()
+               .MinimumLevel.ControlledBy(LogLevelSwitchFromLogLevel(_loggingLevelSwitch))
                .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
-               .CreateLogger()
-               );
+               .CreateLogger();
 
-            _serviceLog?.Information($"-------------------- Logging started: {_loggingLevelSwitch.MinimumLevel} --------------------");
+            var msLogger = new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<ManagedCertificate>();
+
+            _serviceLog = new Loggy(msLogger);
+
+            _serviceLog?.Information($"-------------------- Logging started: {_loggingLevelSwitch} --------------------");
         }
 
+        private LoggingLevelSwitch LogLevelSwitchFromLogLevel(LogLevel level)
+        {
+            switch (level)
+            {
+               case  LogLevel.Error:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error);
+                case LogLevel.Debug:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
+                case LogLevel.Warning:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Warning);
+                default: 
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
+            }
+        }
         /// <summary>
         /// Update the current service log level
         /// </summary>
@@ -394,15 +413,15 @@ namespace Certify.Management
             switch (logLevel?.ToLower())
             {
                 case "debug":
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Debug;
+                    _loggingLevelSwitch = LogLevel.Trace;
                     break;
 
                 case "verbose":
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Verbose;
+                    _loggingLevelSwitch = LogLevel.Debug;
                     break;
 
                 default:
-                    _loggingLevelSwitch.MinimumLevel = Serilog.Events.LogEventLevel.Information;
+                    _loggingLevelSwitch = LogLevel.Information;
                     break;
             }
         }
@@ -415,7 +434,7 @@ namespace Certify.Management
         {
             _statusReporting = statusReporting;
         }
-    
+
         /// <summary>
         /// Update progress tracking and send status report to client(s). optionally logging to service log
         /// </summary>

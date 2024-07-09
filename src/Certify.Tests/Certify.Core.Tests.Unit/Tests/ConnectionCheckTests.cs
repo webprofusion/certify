@@ -14,12 +14,6 @@ namespace Certify.Core.Tests.Unit
         {
             var net = new NetworkUtils(enableProxyValidationAPI: true);
 
-            var logImp = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-
-            var log = new Loggy(logImp);
-
             var result = await net.CheckServiceConnection("webprofusion.com", 80);
 
             Assert.IsTrue(result.IsSuccess, "hostname should connect ok on port 80");

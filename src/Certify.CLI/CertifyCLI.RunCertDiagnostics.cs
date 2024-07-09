@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Certify.CLI
@@ -279,11 +280,7 @@ namespace Certify.CLI
                 var c = new CertifyManager();
                 await c.Init();
 
-                var log = new LoggerConfiguration()
-                  .WriteTo.Debug()
-                  .CreateLogger();
-
-                var logger = new Loggy(log);
+                var logger = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<CertifyCLI>());
 
                 foreach (var url in orderUrls)
                 {
