@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Formatting;
@@ -81,8 +82,13 @@ namespace Certify.Service
             // inject single CertifyManager for service to use
             _container.Register<Management.ICertifyManager, Management.CertifyManager>(new PerContainerLifetime());
 
+            
             var currentCertifyManager = _container.GetInstance<Management.ICertifyManager>();
+
+            var sw = Stopwatch.StartNew();
             currentCertifyManager.Init().Wait();
+            sw.Stop();
+            System.Diagnostics.Debug.WriteLine($"Certify Manager Init took {sw.ElapsedMilliseconds} ms");
 
             // attached handlers for SignalR hub updates
             currentCertifyManager.SetStatusReporting(new StatusHubReporting());

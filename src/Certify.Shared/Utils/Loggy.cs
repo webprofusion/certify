@@ -1,5 +1,5 @@
 ﻿using System;
-using Serilog;
+using Microsoft.Extensions.Logging;
 
 namespace Certify.Models
 {
@@ -12,16 +12,16 @@ namespace Certify.Models
             _log = log;
         }
 
-        public void Error(string template, params object[] propertyValues) => _log.Error(template, propertyValues);
+        public void Error(string template, params object[] propertyValues) => _log?.LogError(template, propertyValues);
 
-        public void Error(Exception exp, string template, params object[] propertyValues) => _log.Error(exp, template, propertyValues);
+        public void Error(Exception exp, string template, params object[] propertyValues) => _log?.LogError(exp, template, propertyValues);
 
-        public void Information(string template, params object[] propertyValues) => _log.Information(template, propertyValues);
+        public void Information(string template, params object[] propertyValues) => _log?.LogInformation(template, propertyValues);
 
-        public void Debug(string template, params object[] propertyValues) => _log.Debug(template, propertyValues);
+        public void Debug(string template, params object[] propertyValues) => _log?.LogDebug(template, propertyValues);
 
-        public void Verbose(string template, params object[] propertyValues) => _log.Verbose(template, propertyValues);
+        public void Verbose(string template, params object[] propertyValues) => _log?.LogTrace(template, propertyValues);
 
-        public void Warning(string template, params object[] propertyValues) => _log.Warning(template, propertyValues);
+        public void Warning(string template, params object[] propertyValues) => _log?.LogWarning(template, propertyValues);
     }
 }

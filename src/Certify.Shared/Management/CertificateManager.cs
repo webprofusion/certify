@@ -396,7 +396,7 @@ namespace Certify.Management
                 {
                     certificate.GetExpirationDateString();
 
-                    certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+                    certificate.FriendlyName = $"{host} [Certify] - {certificate.GetEffectiveDateString()} to {certificate.GetExpirationDateString()}";
 
                 }
             }

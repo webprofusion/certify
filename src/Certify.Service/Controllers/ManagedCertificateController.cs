@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,6 +11,7 @@ using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
+using Microsoft.Extensions.Logging;
 using Serilog;
 
 namespace Certify.Service.Controllers
@@ -44,7 +45,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("summary")]
-        public async Task<Summary> GetSummary(ManagedCertificateFilter filter)
+        public async Task<StatusSummary> GetSummary(ManagedCertificateFilter filter)
         {
             DebugLog();
             return await _certifyManager.GetManagedCertificateSummary(filter);
@@ -93,7 +94,7 @@ namespace Certify.Service.Controllers
                      .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
                      .CreateLogger())
             {
-                var theLog = new Loggy(log);
+                var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
                 var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
 
                 return results;

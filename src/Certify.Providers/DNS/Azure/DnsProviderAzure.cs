@@ -165,8 +165,6 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        private ResourceGroupResource _resourceGroup = null;
-
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             var domainInfo = await DetermineZoneDomainRoot(request.RecordName, request.ZoneId);

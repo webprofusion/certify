@@ -1,9 +1,13 @@
 ﻿using Certify.Client;
+using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
+using Certify.Server.Api.Public.Services;
+using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Controllers
 {
@@ -19,15 +23,19 @@ namespace Certify.Server.Api.Public.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        private ManagementAPI _mgmtAPI;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client)
+        public CertificateController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtApi)
         {
             _logger = logger;
             _client = client;
+
+            _mgmtAPI = mgmtApi;
         }
 
         /// <summary>
@@ -78,21 +86,15 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("{managedCertId}/log")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
-        public async Task<IActionResult> DownloadLog(string managedCertId, int maxLines = 1000)
+        public async Task<IActionResult> DownloadLog(string instanceId, string managedCertId, int maxLines = 1000)
         {
-            var managedCert = await _client.GetManagedCertificate(managedCertId, CurrentAuthContext);
-
-            if (managedCert == null)
-            {
-                return new NotFoundResult();
-            }
 
             if (maxLines > 1000)
             {
                 maxLines = 1000;
             }
 
-            var log = await _client.GetItemLog(managedCertId, maxLines, CurrentAuthContext);
+            LogItem[] log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, maxLines, CurrentAuthContext);
 
             return new OkObjectResult(new LogResult { Items = log });
         }
@@ -107,6 +109,7 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpGet]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
+        [Route("search")]
         public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
         {
             var managedCertResult = await _client.GetManagedCertificateSearchResult(
@@ -119,6 +122,7 @@ namespace Certify.Server.Api.Public.Controllers
 
             var list = managedCertResult.Results.Select(i => new ManagedCertificateSummary
             {
+                InstanceId = i.InstanceId,
                 Id = i.Id ?? "",
                 Title = i.Name ?? "",
                 PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
@@ -149,32 +153,26 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpPost]
         [Route("summary")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Summary))]
-        public async Task<IActionResult> GetManagedCertificateSummary(string? keyword)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
+        public async Task<IActionResult> GetManagedCertificateSummary()
         {
-
-            var summary = await _client.GetManagedCertificateSummary(
-                new Models.ManagedCertificateFilter
-                {
-                    Keyword = keyword
-                }, CurrentAuthContext);
-
+            var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
             return new OkObjectResult(summary);
         }
 
         /// <summary>
         /// Gets the full settings for a specific managed certificate
         /// </summary>
-        /// <param name="managedCertId"></param>
+        /// <param name="instanceId">target instance</param>
+        /// <param name="managedCertId">managed item</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("settings/{managedCertId}")]
+        [Route("settings/{instanceId}/{managedCertId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> GetManagedCertificateDetails(string managedCertId)
+        public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
-
-            var managedCert = await _client.GetManagedCertificate(managedCertId, CurrentAuthContext);
+            var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
             return new OkObjectResult(managedCert);
         }
@@ -185,13 +183,13 @@ namespace Certify.Server.Api.Public.Controllers
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("settings/update")]
+        [Route("settings/{instanceId}/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> UpdateManagedCertificateDetails(Models.ManagedCertificate managedCertificate)
+        public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)
         {
+            var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
 
-            var result = await _client.UpdateManagedCertificate(managedCertificate, CurrentAuthContext);
             if (result != null)
             {
                 return new OkObjectResult(result);
@@ -210,19 +208,12 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpPost]
         [Route("order")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> BeginOrder(string id)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> BeginOrder(string instanceId, string id)
         {
+            await _mgmtAPI.PerformManagedCertificateRequest(instanceId, id, CurrentAuthContext);
 
-            var result = await _client.BeginCertificateRequest(id, true, false, CurrentAuthContext);
-            if (result != null)
-            {
-                return new OkObjectResult(result);
-            }
-            else
-            {
-                return new BadRequestResult();
-            }
+            return new OkResult();
         }
 
         /// <summary>
@@ -234,9 +225,9 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("renew")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> PerformRenewal(Models.RenewalSettings settings)
+        public async Task<IActionResult> PerformRenewal(string instanceId, Models.RenewalSettings settings)
         {
-
+            // TODO: send to instance
             var results = await _client.BeginAutoRenewal(settings, CurrentAuthContext);
             if (results != null)
             {
@@ -257,10 +248,11 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("test")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.StatusMessage>))]
-        public async Task<IActionResult> PerformConfigurationTest(Models.ManagedCertificate item)
+        public async Task<IActionResult> PerformConfigurationTest(string instanceId, Models.ManagedCertificate item)
         {
 
-            var results = await _client.TestChallengeConfiguration(item, CurrentAuthContext);
+            var results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
+
             if (results != null)
             {
                 return new OkObjectResult(results);

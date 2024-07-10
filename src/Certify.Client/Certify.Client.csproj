@@ -16,11 +16,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.6" />
-    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.7" />
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="7.6.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Polly" Version="8.4.0" />
+    <PackageReference Include="Polly" Version="8.4.1" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
   
