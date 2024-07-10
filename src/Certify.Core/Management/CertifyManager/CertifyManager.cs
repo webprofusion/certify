@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -249,26 +249,6 @@ namespace Certify.Management
         private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             await EnsureMgmtHubConnection();
-        }
-
-        private async Task EnsureMgmtHubConnection()
-        {
-            // connect/reconnect to management hub if enabled
-            if (_managementServerClient == null || !_managementServerClient.IsConnected())
-            {
-                var mgmtHubUri = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") ?? _serverConfig.ManagementServerHubUri;
-
-                if (!string.IsNullOrWhiteSpace(mgmtHubUri))
-                {
-                    await StartManagementHubConnection(mgmtHubUri);
-                }
-            }
-            else
-            {
-
-                // send heartbeat message to management hub
-                SendHeartbeatToManagementHub();
-            }
         }
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
