@@ -16,6 +16,27 @@ namespace Certify.Management
     {
         private ManagementServerClient _managementServerClient;
         private string _managementServerConnectionId = string.Empty;
+
+        private async Task EnsureMgmtHubConnection()
+        {
+            // connect/reconnect to management hub if enabled
+            if (_managementServerClient == null || !_managementServerClient.IsConnected())
+            {
+                var mgmtHubUri = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") ?? _serverConfig.ManagementServerHubUri;
+
+                if (!string.IsNullOrWhiteSpace(mgmtHubUri))
+                {
+                    await StartManagementHubConnection(mgmtHubUri);
+                }
+            }
+            else
+            {
+
+                // send heartbeat message to management hub
+                SendHeartbeatToManagementHub();
+            }
+        }
+
         private void SendHeartbeatToManagementHub()
         {
             //_managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
