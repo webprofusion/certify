@@ -1,4 +1,4 @@
-name: build and test .NET Core 8.0 Linux
+name: build and test .NET Core 9.0 Windows
 
 on:
   push:
@@ -9,13 +9,13 @@ on:
     - '**.csproj'
 
 env:
-  DOTNET_VERSION: '8.0.100' # The .NET SDK version to use
+  DOTNET_VERSION: '9.0.100' # The .NET SDK version to use
 
 jobs:
   build-and-test:
 
-    name: build-and-test-linux
-    runs-on: ubuntu-latest
+    name: build-and-test-windows
+    runs-on: windows-latest
     steps:
     - name: Clone webprofusion/certify
       uses: actions/checkout@master
@@ -57,14 +57,15 @@ jobs:
       uses: actions/setup-dotnet@master
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-
+    
     - name: Setup Step CLI
       run: |
-        wget https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.23.0/step-cli_0.23.0_amd64.deb
-        sudo dpkg -i step-cli_0.23.0_amd64.deb
+        Invoke-WebRequest -Method 'GET' -uri 'https://dl.smallstep.com/gh-release/cli/docs-cli-install/v0.24.4/step_windows_0.24.4_amd64.zip' -Outfile 'C:\temp\step_windows_0.24.4_amd64.zip'
+        tar -oxzf C:\temp\step_windows_0.24.4_amd64.zip -C "C:\Program Files"
+        echo "C:\Program Files\step_0.24.4\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
     - name: Pull step-ca Docker Image
-      run: docker pull smallstep/step-ca
+      run: docker pull jrnelson90/step-ca-win
 
     - name: Cache NuGet Dependencies    
       uses: actions/cache@v3
@@ -79,28 +80,27 @@ jobs:
       run: |
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
         dotnet add package GitHubActionsTestLogger
-        dotnet build -c Debug -f net8.0 --property WarningLevel=0 /clp:ErrorsOnly
+        dotnet build -c Debug -f net9.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
-        export GITHUB_WORKSPACE="$GITHUB_WORKSPACE/certify"
-        export GITHUB_STEP_SUMMARY="./TestResults-${{ runner.os }}/test-summary.md"
-        dotnet test --no-build -f net8.0 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
+        $env:GITHUB_WORKSPACE="$env:GITHUB_WORKSPACE\certify"
+        $env:GITHUB_STEP_SUMMARY=".\TestResults-${{ runner.os }}\test-summary.md"
+        dotnet test --no-build -f net9.0 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
-
+    
     - name: Generate Test Results Report
       run: |
-        echo "# Test Results" > $GITHUB_STEP_SUMMARY
-        sed -i 's/<details>/<details open>/g' ./TestResults-${{ runner.os }}/test-summary.md
-        cat ./TestResults-${{ runner.os }}/test-summary.md >> $GITHUB_STEP_SUMMARY
+        echo "# Test Results" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+        (Get-Content -Path .\TestResults-${{ runner.os }}\test-summary.md).Replace('<details>', '<details open>') | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
     - name: Generated Test Coverage Report
       run: |
         reportgenerator -reports:./TestResults-${{ runner.os }}/*/*.cobertura.xml -targetdir:./TestResults-${{ runner.os }} -reporttypes:MarkdownSummaryGithub "-title:Test Coverage"
-        cat ./TestResults-${{ runner.os }}/SummaryGithub.md > $GITHUB_STEP_SUMMARY
+        Get-Content -Path ./TestResults-${{ runner.os }}/SummaryGithub.md | Out-File -FilePath $env:GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
       if: ${{ always() }}
 
@@ -108,6 +108,6 @@ jobs:
     #   uses: actions/upload-artifact@master
     #   with:
     #     name: dotnet-results-${{ runner.os }}-${{ env.DOTNET_VERSION }}
-    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/TestResults-8_0-${{ runner.os }}
+    #     path: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/TestResults-9_0-${{ runner.os }}
     #   # Use always() to always run this step to publish test results when there are test failures
     #   if: ${{ always() }}
