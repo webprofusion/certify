@@ -1,22 +1,22 @@
 ﻿name: certify-core-tests-unit-win
 services:
 
-  certify-core-tests-unit-8_0:
-    image: certify-core-tests-unit-8_0-win:latest
+  certify-core-tests-unit-9_0:
+    image: certify-core-tests-unit-9_0-win:latest
     build: 
       context: ../../../../
-      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-8_0-win.dockerfile
+      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-9_0-win.dockerfile
     # environment:
     #   VSTEST_HOST_DEBUG: 1
     ports:
       - 80:80
       - 443:443
       - 9696:9696
-    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
-    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net9.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net9.0 --filter 'Name=TestCertifyManagerGetAccountDetailsDefinedCertificateAuthorityId'"
     volumes:
       - step:C:\step_share
-    profiles: ["8_0"]
+    profiles: ["9_0"]
     depends_on:
       step-ca:
         condition: service_healthy
@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: ./step-ca-win.dockerfile   
     hostname: step-ca
-    profiles: ["4_6_2", "8_0"]
+    profiles: ["4_6_2", "9_0"]
     ports:
       - 9000:9000
     environment:

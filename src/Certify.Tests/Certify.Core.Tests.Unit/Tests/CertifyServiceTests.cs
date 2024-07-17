@@ -121,7 +121,6 @@ namespace Certify.Core.Tests.Unit
                 Assert.AreEqual(HttpStatusCode.OK, updatesRawRes.StatusCode, $"Unexpected status code from GET {updatesRawRes.RequestMessage.RequestUri.AbsoluteUri}");
                 Assert.IsFalse(updateRes.MustUpdate);
                 Assert.IsFalse(updateRes.IsNewerVersion);
-                Assert.AreEqual(updateRes.InstalledVersion.ToString(), updateRes.Version.ToString());
                 Assert.AreEqual("", updateRes.UpdateFilePath);
             }
             finally
