@@ -53,11 +53,7 @@ namespace Certify.Core.Tests.Unit
         {
             var net = new NetworkUtils(enableProxyValidationAPI: true);
 
-            var logImp = new LoggerConfiguration()
-                .WriteTo.Debug()
-                .CreateLogger();
-
-            var log = new Loggy(logImp);
+            var log = new Loggy(null);
 
             // check invalid domain
             var result = await net.GetDNSRecordTXT(log, "_acme-challenge-test.cointelligence.io");
