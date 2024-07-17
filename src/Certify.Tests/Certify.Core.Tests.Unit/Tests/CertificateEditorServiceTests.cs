@@ -22,12 +22,13 @@ namespace Certify.Core.Tests.Unit
                 RequestConfig = new CertRequestConfig
                 {
                     Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>
-                  {
-                      new CertRequestChallengeConfig
-                      {
-                          ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
-                      }
-                  }
+                    {
+                        new CertRequestChallengeConfig
+                        {
+                            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
+                        }
+                    },
+                    SubjectAlternativeNames = new[] { "test.com", "www.test.com" }
                 }
             };
 
