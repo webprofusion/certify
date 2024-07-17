@@ -1,11 +1,11 @@
 ﻿name: certify-core-tests-unit-linux
 services:
 
-  certify-core-tests-unit-8_0:
-    image: certify-core-tests-unit-8_0-linux:latest
+  certify-core-tests-unit-9_0:
+    image: certify-core-tests-unit-9_0-linux:latest
     build: 
       context: ../../../../
-      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-8_0-linux.dockerfile   
+      dockerfile: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/certify-core-tests-unit-9_0-linux.dockerfile   
     ports:
       - 80:80
       - 443:443
@@ -14,8 +14,8 @@ services:
     #   VSTEST_HOST_DEBUG: 1
     volumes:
       - step:/mnt/step_share
-    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
-    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net8.0 --filter 'Name=TestCertifyManagerGetAccountDetails'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net9.0 --filter 'ClassName=Certify.Core.Tests.Unit.CertifyManagerAccountTests'"
+    # entrypoint: "dotnet test Certify.Core.Tests.Unit.dll -f net9.0 --filter 'Name=TestCertifyManagerGetAccountDetails'"
     depends_on:
       step-ca:
         condition: service_healthy
