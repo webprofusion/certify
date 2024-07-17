@@ -1,11 +1,11 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0-windowsservercore-ltsc2022 AS base
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview-windowsservercore-ltsc2022 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 EXPOSE 9696
 
 # define build and copy required source files
-FROM mcr.microsoft.com/dotnet/sdk:8.0-windowsservercore-ltsc2022 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0-preview-windowsservercore-ltsc2022 AS build
 WORKDIR /src
 COPY ./certify/src ./certify/src
 COPY ./certify-plugins/src ./certify-plugins/src
