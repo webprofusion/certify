@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
@@ -17,18 +18,26 @@ using SimpleImpersonation;
 
 namespace Certify.Management
 {
+    /// <summary>
+    /// PowerShell script execution manager. 
+    /// Manage the execution of PowerShell scripts, either in-process or by launching a new process.
+    /// </summary>
     public class PowerShellManager
     {
         /// <summary>
-        /// 
+        /// Run a PowerShell script, either in-process or by launching a new process.
         /// </summary>
-        /// <param name="powershellExecutionPolicy">Unrestricted etc, </param>
-        /// <param name="result"></param>
-        /// <param name="scriptFile"></param>
-        /// <param name="parameters"></param>
-        /// <param name="scriptContent"></param>
-        /// <param name="credentials"></param>
-        /// <returns></returns>
+        /// <param name="powershellExecutionPolicy">Unrestricted etc, see https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3</param>
+        /// <param name="result">Result object to pass to the script</param>
+        /// <param name="scriptFile">Path to the script file</param>
+        /// <param name="parameters">Parameters to pass to the script</param>
+        /// <param name="scriptContent">Content of the script</param>
+        /// <param name="credentials">Credentials to use for running the script</param>
+        /// <param name="logonType">Logon type to use for running the script</param>
+        /// <param name="ignoredCommandExceptions">Commands to ignore exceptions for</param>
+        /// <param name="timeoutMinutes">Timeout in minutes</param>
+        /// <param name="launchNewProcess">Launch a new process</param>
+        /// <returns>ActionResult</returns>
         public static async Task<ActionResult> RunScript(
             string powershellExecutionPolicy,
             CertificateRequestResult result = null,
@@ -108,29 +117,7 @@ namespace Certify.Management
                                     return new ActionResult(err, false);
                                 }
 
-                                // logon type affects the range of abilities the impersonated user has
-                                var _defaultLogonType = LogonType.NewCredentials;
-
-                                if (logonType == "network")
-                                {
-                                    _defaultLogonType = LogonType.Network;
-                                }
-                                else if (logonType == "batch")
-                                {
-                                    _defaultLogonType = LogonType.Batch;
-                                }
-                                else if (logonType == "service")
-                                {
-                                    _defaultLogonType = LogonType.Service;
-                                }
-                                else if (logonType == "interactive")
-                                {
-                                    _defaultLogonType = LogonType.Interactive;
-                                }
-                                else if (logonType == "newcredentials")
-                                {
-                                    _defaultLogonType = LogonType.NewCredentials;
-                                }
+                                var _defaultLogonType = GetLogonType(logonType);
 
                                 ActionResult powerShellResult = null;
                                 using (var userHandle = windowsCredentials.LogonUser(_defaultLogonType))
@@ -157,6 +144,19 @@ namespace Certify.Management
                     return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
                 }
             }
+        }
+
+        private static LogonType GetLogonType(string logonType)
+        {
+            return logonType?.ToLower() switch
+            {
+                "network" => LogonType.Network,
+                "batch" => LogonType.Batch,
+                "service" => LogonType.Service,
+                "interactive" => LogonType.Interactive,
+                "newcredentials" => LogonType.NewCredentials,
+                _ => LogonType.NewCredentials,
+            };
         }
 
         /// <summary>
@@ -193,10 +193,10 @@ namespace Certify.Management
 
         private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
         {
-
             var _log = new StringBuilder();
 
             var commandExe = GetPowershellExePath(powershellPathPreference);
+
             if (commandExe == null)
             {
                 return new ActionResult("Failed to locate powershell executable. Cannot launch as new process.", false);
@@ -208,11 +208,47 @@ namespace Certify.Management
                 return new ActionResult("Script content is not yet supported when used with launch as new process.", false);
             }
 
-            var appBasePath = AppContext.BaseDirectory;
-            var wrapperScriptPath = Path.Combine(new string[] { appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1" });
+            var resultObj = parameters?.Where(p => p.Key == "result" && p.Value != null).FirstOrDefault().Value;
+            var resultJson = resultObj != null ? Newtonsoft.Json.JsonConvert.SerializeObject(resultObj) : null;
 
-            // note that the impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it and the target script
-            // if the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
+            var resultsJsonTempPath = string.Empty;
+            var resultsJsonExported = false;
+
+            var appBasePath = AppContext.BaseDirectory;
+
+            var wrapperScriptPath = Path.Combine(new string[] { appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1" });
+            var wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
+
+            var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
+
+            if (isUsingCredentials && (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
+            {
+                // The impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it. They will also need to be able to read the users supplied target script (not addressed here).
+                // If the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
+
+                try
+                {
+                    var username = GetWindowsCredentialsUsername(credentials);
+
+                    var wrapperTempPath = Path.GetTempPath();
+                    var wrapperTempFilePath = Path.GetTempFileName();
+                    wrapperScriptPath = Path.ChangeExtension(wrapperTempFilePath, ".ps1");
+                    File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
+                    ApplyFileACL(wrapperScriptPath, username);
+
+                    resultsJsonTempPath = Path.GetTempFileName();
+                    File.WriteAllText(resultsJsonTempPath, resultJson);
+                    ApplyFileACL(resultsJsonTempPath, username);
+
+                    resultsJsonExported = true;
+                }
+                catch
+                {
+                    var err = "A command with Windows Credentials requires a correct username and password. Check credentials.";
+
+                    return new ActionResult(err, false);
+                }
+            }
 
             var arguments = $" -File \"{wrapperScriptPath}\"";
 
@@ -223,12 +259,10 @@ namespace Certify.Management
 
             if (!string.IsNullOrEmpty(executionPolicy))
             {
-                arguments = $"-ExecutionPolicy {executionPolicy} " + arguments;
+                arguments = $"-ExecutionPolicy {executionPolicy} {arguments}";
             }
 
             arguments += $" -scriptFile \"{scriptFile}\"";
-
-            string resultsJsonTempPath = null;
 
             if (parameters?.Any() == true)
             {
@@ -236,11 +270,16 @@ namespace Certify.Management
                 {
                     if (p.Key == "result" && p.Value != null)
                     {
-                        // reserved parameter name for the ManagedCertificate object
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(p.Value);
+                        if (!resultsJsonExported)
+                        {   // if results file not already exported for the impersonated user export now
 
-                        resultsJsonTempPath = Path.GetTempFileName();
-                        File.WriteAllText(resultsJsonTempPath, json);
+                            // "result" is reserved parameter name for the ManagedCertificate object
+                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(p.Value);
+
+                            resultsJsonTempPath = Path.GetTempFileName();
+                            File.WriteAllText(resultsJsonTempPath, json);
+                            resultsJsonExported = true;
+                        }
 
                         arguments += $" -resultJsonFile \"{resultsJsonTempPath}\"";
                     }
@@ -292,24 +331,6 @@ namespace Certify.Management
                     sPwd.MakeReadOnly();
 
                     scriptProcessInfo.Password = sPwd;
-
-                    if (resultsJsonTempPath != null)
-                    {
-                        //allow this user to read the results file
-                        var fileInfo = new FileInfo(resultsJsonTempPath);
-                        var accessControl = fileInfo.GetAccessControl();
-                        var fullUser = domain == "." ? username : $"{domain}\\{username}";
-                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUser, FileSystemRights.Read, AccessControlType.Allow));
-
-                        try
-                        {
-                            fileInfo.SetAccessControl(accessControl);
-                        }
-                        catch
-                        {
-                            _log.AppendLine("Running PowerShell As New Process: Could not apply access control to allow this user to read the temp results file");
-                        }
-                    }
 
                     _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
                 }
@@ -396,6 +417,24 @@ namespace Certify.Management
                         _log.AppendLine("Running Powershell As New Process: Could not delete temp results file.");
                     }
                 }
+            }
+        }
+
+        private static bool ApplyFileACL(string filePath, string fullUsername)
+        {
+            var fileInfo = new FileInfo(filePath);
+            var accessControl = fileInfo.GetAccessControl();
+
+            accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.Read, AccessControlType.Allow));
+
+            try
+            {
+                fileInfo.SetAccessControl(accessControl);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
@@ -592,6 +631,30 @@ namespace Certify.Management
             }
 
             return windowsCredentials;
+        }
+
+        public static string GetWindowsCredentialsUsername(Dictionary<string, string> credentials, bool includeAutoLocalDomain = false)
+        {
+            var username = credentials["username"];
+
+            credentials.TryGetValue("domain", out var domain);
+
+            if (includeAutoLocalDomain)
+            {
+                if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+                {
+                    domain = ".";
+                }
+            }
+
+            if (domain != null)
+            {
+                return $"{domain}\\{username}";
+            }
+            else
+            {
+                return username;
+            }
         }
     }
 }
