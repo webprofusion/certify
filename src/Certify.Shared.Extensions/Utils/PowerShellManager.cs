@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +12,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Management.Utils;
 using Certify.Models;
 using Certify.Models.Config;
 using SimpleImpersonation;
@@ -70,7 +71,7 @@ namespace Certify.Management
             if (launchNewProcess)
             {
                 // spawn new process as the given user
-                return ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                return await ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, logonType, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
             }
             else
             {
@@ -101,7 +102,7 @@ namespace Certify.Management
                                 credentialsProvidedButNotSupported = true;
                             }
 
-                            if (credentials?.Any() == true && credentialsProvidedButNotSupported == false)
+                            if (credentials?.Any() == true && credentialsProvidedButNotSupported == false && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                             {
                                 // run as windows user
                                 UserCredentials windowsCredentials = null;
@@ -191,7 +192,7 @@ namespace Certify.Management
             return null;
         }
 
-        private static ActionResult ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
+        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
         {
             var _log = new StringBuilder();
 
@@ -319,6 +320,7 @@ namespace Certify.Management
                         domain = ".";
                     }
 
+                    // Note: process running as local system cannot start a process as different user due to lack of security token context
                     scriptProcessInfo.UserName = username;
                     scriptProcessInfo.Domain = domain;
 
@@ -400,7 +402,11 @@ namespace Certify.Management
             catch (Exception exp)
             {
                 _log.AppendLine("Error: " + exp.ToString());
-                return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = _log.ToString()
+                };
             }
             finally
             {
@@ -425,7 +431,7 @@ namespace Certify.Management
             var fileInfo = new FileInfo(filePath);
             var accessControl = fileInfo.GetAccessControl();
 
-            accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.Read, AccessControlType.Allow));
+            accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, AccessControlType.Allow));
 
             try
             {
