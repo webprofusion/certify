@@ -1,6 +1,4 @@
-﻿
-using System.Collections.Frozen;
-using Certify.API.Management;
+﻿using Certify.API.Management;
 using Certify.Client;
 using Certify.Models.API;
 using Certify.Server.Api.Public.SignalR.ManagementHub;

@@ -2,7 +2,6 @@
 using Certify.API.Management;
 using Certify.Models;
 using Certify.Models.Reporting;
-using Microsoft.IdentityModel.Logging;
 
 namespace Certify.Server.Api.Public.SignalR.ManagementHub
 {
@@ -24,7 +23,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
         public bool HasItemsForManagedInstance(string instanceId);
-        
+
         public bool HasStatusSummaryForManagedInstance(string instanceId);
         public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
     }

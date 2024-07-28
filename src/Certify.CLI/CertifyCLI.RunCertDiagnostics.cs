@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace Certify.CLI
 {

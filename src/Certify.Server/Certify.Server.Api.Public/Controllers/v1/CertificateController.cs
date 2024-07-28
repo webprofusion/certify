@@ -1,13 +1,10 @@
 ﻿using Certify.Client;
-using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.Services;
-using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Controllers
 {

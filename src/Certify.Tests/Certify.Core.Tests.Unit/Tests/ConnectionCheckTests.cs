@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Certify.Models;
 using Certify.Shared.Core.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Serilog;
 
 namespace Certify.Core.Tests.Unit
 {

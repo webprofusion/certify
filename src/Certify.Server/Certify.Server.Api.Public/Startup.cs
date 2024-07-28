@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using Certify.Client;
 using Certify.Server.Api.Public.Middleware;
 using Certify.Server.Api.Public.Services;
@@ -9,7 +8,6 @@ using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.API
