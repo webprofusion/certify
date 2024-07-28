@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Management.Automation;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.API;
@@ -560,7 +559,7 @@ namespace Certify.Management
                         var str = await streamReader.ReadToEndAsync();
                         stream.Close();
 
-                        var log =str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                        var log = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
                             .Reverse()
                             .Take(limit)
                             .ToArray();

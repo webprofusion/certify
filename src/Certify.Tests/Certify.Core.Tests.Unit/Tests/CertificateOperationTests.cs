@@ -5,7 +5,6 @@ using Certify.Management;
 using Certify.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Serilog;
 
 namespace Certify.Core.Tests.Unit
 {

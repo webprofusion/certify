@@ -375,13 +375,13 @@ namespace Certify.Management
         {
             switch (level)
             {
-               case  LogLevel.Error:
+                case LogLevel.Error:
                     return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error);
                 case LogLevel.Debug:
                     return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
                 case LogLevel.Warning:
                     return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Warning);
-                default: 
+                default:
                     return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
             }
         }

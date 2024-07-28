@@ -6,7 +6,6 @@ using Certify.Models;
 using Certify.Models.Providers;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace Certify.Core.Tests
 {
