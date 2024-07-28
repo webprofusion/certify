@@ -60,7 +60,7 @@ namespace Certify.Management
                         .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                         .CreateLogger();
 
-           var msLogger = new SerilogLoggerFactory(serilogLogger).CreateLogger<PluginManager>(); 
+            var msLogger = new SerilogLoggerFactory(serilogLogger).CreateLogger<PluginManager>();
 
             _log = new Models.Loggy(msLogger);
 

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Datastore.SQLite;
-using Certify.Management;
 using Certify.Models.Config.AccessControl;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

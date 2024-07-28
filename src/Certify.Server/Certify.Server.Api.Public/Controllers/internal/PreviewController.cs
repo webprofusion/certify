@@ -1,5 +1,4 @@
-﻿using Certify.Client;
-using Certify.Models;
+﻿using Certify.Models;
 using Certify.Server.Api.Public.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
