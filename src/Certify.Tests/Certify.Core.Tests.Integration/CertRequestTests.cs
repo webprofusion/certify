@@ -11,7 +11,6 @@ using Certify.Management.Servers;
 using Certify.Models;
 using Certify.Providers.ACME.Anvil;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Serilog;
 
 namespace Certify.Core.Tests
 {
@@ -35,7 +34,7 @@ namespace Certify.Core.Tests
 
         public CertRequestTests()
         {
-            
+
             certifyManager = new CertifyManager();
             certifyManager.Init().Wait();
 

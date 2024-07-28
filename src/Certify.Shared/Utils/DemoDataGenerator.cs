@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Certify.Models;
 using Certify.Models.Shared.Validation;
-using Org.BouncyCastle.Tls;
 
 namespace Certify.Shared.Core.Utils
 {

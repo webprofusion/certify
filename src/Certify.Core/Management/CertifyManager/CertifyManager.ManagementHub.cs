@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
-using Certify.Models.Shared.Validation;
-using System.Text.Json;
 using Certify.Shared.Core.Utils;
-using Serilog;
 
 namespace Certify.Management
 {

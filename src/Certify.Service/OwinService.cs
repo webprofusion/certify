@@ -74,7 +74,7 @@ namespace Certify.Service
             try
             {
                 _webApp = WebApp.Start<APIHost>(serviceUri);
-               
+
                 Program.LogEvent(null, $"Service API bound OK to {serviceUri}", false);
             }
             catch (Exception exp)
