@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certify.API.Management;
-using Certify.Models;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 

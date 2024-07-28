@@ -9,7 +9,6 @@ using Certify.Management;
 using Certify.Management.Servers;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Serilog;
 
 namespace Certify.Core.Tests
 {

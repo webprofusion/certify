@@ -16,7 +16,6 @@ using Certify.SharedUtils;
 using Certify.UI.Shared;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Core;
 
 namespace Certify.UI.ViewModel
 {

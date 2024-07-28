@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using Certify.API.Management;
-using Certify.Models;
+﻿using Certify.API.Management;
 using Certify.Models.Reporting;
 using Microsoft.AspNetCore.SignalR;
 
@@ -183,7 +179,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
 
                             _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
                         }
-                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value!=null)
+                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value != null)
                         {
                             // got status summary
                             var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
