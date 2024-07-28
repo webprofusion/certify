@@ -10,7 +10,6 @@ using Certify.Providers;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
-using Serilog;
 
 namespace Certify.Core.Tests.Unit
 {

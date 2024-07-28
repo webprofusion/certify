@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Client;
 using Certify.Models.Config.Migration;
 using Newtonsoft.Json;
 

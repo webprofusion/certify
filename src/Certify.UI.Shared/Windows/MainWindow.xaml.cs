@@ -268,7 +268,7 @@ namespace Certify.UI.Windows
             }
 
             sw.Stop();
-            
+
             _appViewModel.Log.Information("Service connection init process took {total}ms.", sw.ElapsedMilliseconds);
 
             if (_appViewModel.IsServiceAvailable)
