@@ -319,7 +319,7 @@ namespace Certify.Core.Tests.Unit
 
             httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
 
-            var loggingHandler = new LoggingHandler(httpHandler, _log);
+            var loggingHandler = new LoggingHandler(httpHandler, _log, maxRequestsPerSecond: 2);
             var stepCaHttp = new HttpClient(loggingHandler);
             var healthRes = await stepCaHttp.GetAsync($"https://{_caDomain}:{_caPort}/health");
             var healthResStr = await healthRes.Content.ReadAsStringAsync();

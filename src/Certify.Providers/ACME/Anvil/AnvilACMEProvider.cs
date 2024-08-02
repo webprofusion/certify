@@ -146,7 +146,7 @@ namespace Certify.Providers.ACME.Anvil
                 httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
             }
 
-            _loggingHandler = new LoggingHandler(httpHandler, _log);
+            _loggingHandler = new LoggingHandler(httpHandler, _log, maxRequestsPerSecond: 2);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);
 
             customHttpClient.DefaultRequestHeaders.UserAgent.ParseAdd(_providerSettings.UserAgentName);
