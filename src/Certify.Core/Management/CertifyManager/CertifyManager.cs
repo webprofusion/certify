@@ -361,7 +361,7 @@ namespace Certify.Management
 
             var serilogLog = new Serilog.LoggerConfiguration()
                .Enrich.FromLogContext()
-               .MinimumLevel.ControlledBy(LogLevelSwitchFromLogLevel(_loggingLevelSwitch))
+               .MinimumLevel.ControlledBy(ManagedCertificateLog.LogLevelSwitchFromLogLevel(_loggingLevelSwitch))
                .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger();
 
@@ -372,20 +372,6 @@ namespace Certify.Management
             _serviceLog?.Information($"-------------------- Logging started: {_loggingLevelSwitch} --------------------");
         }
 
-        private LoggingLevelSwitch LogLevelSwitchFromLogLevel(LogLevel level)
-        {
-            switch (level)
-            {
-                case LogLevel.Error:
-                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error);
-                case LogLevel.Debug:
-                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
-                case LogLevel.Warning:
-                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Warning);
-                default:
-                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
-            }
-        }
         /// <summary>
         /// Update the current service log level
         /// </summary>
