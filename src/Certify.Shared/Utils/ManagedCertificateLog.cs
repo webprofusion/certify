@@ -4,6 +4,7 @@ using System.IO;
 using Certify.Models.Providers;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Core;
 
 namespace Certify.Models
 {
@@ -58,6 +59,7 @@ namespace Certify.Models
 
                 var serilogLog = new Serilog.LoggerConfiguration()
                     .Enrich.FromLogContext()
+                    .MinimumLevel.ControlledBy(LogLevelSwitchFromLogLevel(logLevelSwitch))
                     .WriteTo.File(
                         logPath, shared: true,
                         flushToDiskInterval: new TimeSpan(0, 0, 10)
@@ -69,6 +71,23 @@ namespace Certify.Models
             });
 
             return new Loggy(log);
+        }
+
+        public static LoggingLevelSwitch LogLevelSwitchFromLogLevel(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.Trace:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Debug);
+                case LogLevel.Debug:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Verbose);
+                case LogLevel.Warning:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Warning);
+                case LogLevel.Error:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Error);
+                default:
+                    return new LoggingLevelSwitch(Serilog.Events.LogEventLevel.Information);
+            }
         }
 
         public static void AppendLog(string managedItemId, ManagedCertificateLogItem logItem, LogLevel logLevelSwitch)
