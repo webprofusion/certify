@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Certify.Models;
 using Certify.Models.Providers;
@@ -47,35 +46,27 @@ namespace Certify.Shared.Utils
 
             var data = req.GetEncoded();
 
-            var request = (HttpWebRequest)WebRequest.Create(url);
-            request.Timeout = 10000;
-            request.Method = "POST";
-            request.ContentType = "application/ocsp-request";
-            request.ContentLength = data.Length;
-            request.Accept = "application/ocsp-response";
-
-            request.ServicePoint.Expect100Continue = false;
-
-            var stream = request.GetRequestStream();
-            stream.Write(data, 0, data.Length);
-            stream.Close();
-
-            var response = (HttpWebResponse)await request.GetResponseAsync();
-            var respStream = response.GetResponseStream();
-
-            byte[] binaryResponse;
-
-            using (var ms = new MemoryStream())
+            using (var client = new HttpClient())
             {
-                respStream.CopyToAsync(ms).Wait();
-                ms.Seek(0, SeekOrigin.Begin);
-                binaryResponse = ms.ToArray();
+
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/ocsp-response"));
+
+                var content = new ByteArrayContent(data);
+                content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/ocsp-request");
+                // request.ServicePoint.Expect100Continue = false;
+
+                var response = await client.PostAsync(url, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    var bytes = await response.Content.ReadAsByteArrayAsync();
+                    return ProcessOcspResponse(endEntityCert, issuerCert, bytes);
+                }
+                else
+                {
+                    LogOrConsole(log, "Error: " + response.StatusCode);
+                    return CertificateStatusType.Unknown;
+                }
             }
-
-            respStream.Close();
-
-            return ProcessOcspResponse(endEntityCert, issuerCert, binaryResponse);
-
         }
 
         private static CertificateStatusType ProcessOcspResponse(X509Certificate eeCert, X509Certificate issuerCert, byte[] binaryResp)
@@ -92,7 +83,10 @@ namespace Certify.Shared.Utils
                     {
                         var resp = or.Responses[0];
 
-                        IsValidCertificateId(issuerCert, eeCert, resp.GetCertID());
+                        if (!IsValidCertificateId(issuerCert, eeCert, resp.GetCertID()))
+                        {
+                            return CertificateStatusType.InvalidCertId;
+                        }
 
                         var certificateStatus = resp.GetCertStatus();
 
@@ -133,7 +127,7 @@ namespace Certify.Shared.Utils
         /// <param name="certificateId"></param>
         private static bool IsValidCertificateId(X509Certificate issuerCert, X509Certificate eeCert, CertificateID certificateId)
         {
-            var expectedId = new CertificateID(CertificateID.HashSha1, issuerCert, eeCert.SerialNumber);
+            var expectedId = new CertificateID(CertificateID.DigestSha1, issuerCert, eeCert.SerialNumber);
 
             if (!expectedId.SerialNumber.Equals(certificateId.SerialNumber))
             {
@@ -154,7 +148,7 @@ namespace Certify.Shared.Utils
         {
             var ocspRequestGenerator = new OcspReqGenerator();
 
-            var id = new CertificateID(CertificateID.HashSha1, issuerCert, serialNumber);
+            var id = new CertificateID(CertificateID.DigestSha1, issuerCert, serialNumber);
 
             ocspRequestGenerator.AddRequest(id);
 
