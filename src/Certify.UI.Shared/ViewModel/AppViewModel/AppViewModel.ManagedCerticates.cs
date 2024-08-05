@@ -259,6 +259,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<ManagedCertificate> UpdatedCachedManagedCertificate(ManagedCertificate managedCertificate, bool reload = false)
         {
+            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            {
+                // external managed cert, do not update cache
+                return managedCertificate;
+            }
 
             await _managedCertCacheSemaphore.WaitAsync();
 

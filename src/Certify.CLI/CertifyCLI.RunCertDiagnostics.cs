@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -125,13 +126,15 @@ namespace Certify.CLI
                             {
                                 // cert in store, check permissions
                                 Console.WriteLine($"Stored cert :: " + storedCert.FriendlyName);
-                                var test = fileCert.PrivateKey.KeyExchangeAlgorithm;
-                                Console.WriteLine(test.ToString());
+                                Console.WriteLine($"Signature Algorithm :: " + storedCert.SignatureAlgorithm.FriendlyName);
 
-                                var access = CertificateManager.GetUserAccessInfoForCertificatePrivateKey(storedCert);
-                                foreach (System.Security.AccessControl.AuthorizationRule a in access.GetAccessRules(true, false, typeof(System.Security.Principal.NTAccount)))
+                                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                                 {
-                                    Console.WriteLine("\t Access: " + a.IdentityReference.Value.ToString());
+                                    var access = CertificateManager.GetUserAccessInfoForCertificatePrivateKey(storedCert);
+                                    foreach (System.Security.AccessControl.AuthorizationRule a in access.GetAccessRules(true, false, typeof(System.Security.Principal.NTAccount)))
+                                    {
+                                        Console.WriteLine("\t Access: " + a.IdentityReference.Value.ToString());
+                                    }
                                 }
                             }
 

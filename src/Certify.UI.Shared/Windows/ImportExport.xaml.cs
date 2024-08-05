@@ -139,7 +139,7 @@ namespace Certify.UI.Windows
 
             }
 
-            var intro = $"Importing from source: {package.SourceName}, exported {package.ExportDate.ToLongDateString()}, app version {package.SystemVersion.ToString().AsNullWhenBlank() ?? "(unknown)"}";
+            var intro = $"Importing from source: {package.SourceName}, exported {package.ExportDate.ToLongDateString()}, app version {package.SystemVersion?.ToString().AsNullWhenBlank() ?? "(unknown)"}";
             var markdown = GetStepsAsMarkdown(steps, title, intro);
 
             var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);

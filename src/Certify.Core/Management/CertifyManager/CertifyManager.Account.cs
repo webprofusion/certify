@@ -482,38 +482,6 @@ namespace Certify.Management
                     accounts.Add(acc);
                     await StoreAccountAsCredential(acc);
                 }
-
-                if (accounts.Count() == 0)
-                {
-                    // still no accounts, check for old vault upgrade
-                    var acmeVaultMigration = new Models.Compat.ACMEVaultUpgrader();
-
-                    if (acmeVaultMigration.HasACMEVault())
-                    {
-                        var email = acmeVaultMigration.GetContact();
-
-                        if (!string.IsNullOrEmpty(email))
-                        {
-                            var registerResult = await provider.AddNewAccountAndAcceptTOS(_serviceLog, email, null, null, null);
-                            if (registerResult?.IsSuccess ?? false)
-                            {
-                                var newId = Guid.NewGuid().ToString();
-                                acc = registerResult.Result;
-                                acc.ID = newId;
-                                acc.StorageKey = newId;
-                                acc.IsStagingAccount = false;
-                                acc.CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT;
-                                accounts.Add(acc);
-                                await StoreAccountAsCredential(acc);
-                                _serviceLog?.Information("Account upgrade completed (vault)");
-                            }
-                            else
-                            {
-                                _serviceLog?.Information($"Account upgrade failed (vault):{registerResult?.Message}");
-                            }
-                        }
-                    }
-                }
             }
 
             // invalidate accounts cache
@@ -524,7 +492,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Refresh cached list of known certificate authorities ands return the current list
+        /// Refresh cached list of known certificate authorities and return the current list
         /// </summary>
         /// <returns></returns>
         public async Task<List<CertificateAuthority>> GetCertificateAuthorities()
@@ -575,15 +543,19 @@ namespace Certify.Management
                 {
                     return new ActionResult("OK", true);
                 }
+                else
+                {
+                    return new ActionResult($"The certificate authority could not be updated.", false);
+                }
             }
             catch (Exception exp)
             {
                 // failed to load custom CAs
                 _serviceLog?.Error(exp.Message);
+
+                return await Task.FromResult(new ActionResult($"An error occurred saving the updated Certificate Authorities list: {exp.Message}", false));
+
             }
-
-            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
-
         }
 
         /// <summary>
@@ -603,11 +575,17 @@ namespace Certify.Management
 
                 if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
                 {
-                    return new ActionResult("OK", true);
+                    return await Task.FromResult(new ActionResult("OK", true));
+                }
+                else
+                {
+                    return new ActionResult($"An error occurred removing the indicated Custom CA {id} from the Certificate Authorities list.", false);
                 }
             }
-
-            return await Task.FromResult(new ActionResult("An error occurred saving the updated Certificate Authorities list.", false));
+            else
+            {
+                return new ActionResult($"The certificate authority {id} was not found in the list of custom CAs and could not be removed.", false);
+            }
         }
     }
 }

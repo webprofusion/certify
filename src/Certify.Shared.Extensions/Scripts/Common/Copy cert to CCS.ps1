@@ -1,4 +1,4 @@
-﻿# example script to copy the output PFX to a UNC path for Central Certificate Store
+﻿# This is a legacy example script to copy the output PFX to a UNC path for Central Certificate Store
 # Enabling CCS: https://techcommunity.microsoft.com/t5/iis-support-blog/central-certificate-store-ccs-with-iis/ba-p/377274
 $result = Get-Content -Raw -Path C:\temp\ps-test.json | ConvertFrom-Json
 
