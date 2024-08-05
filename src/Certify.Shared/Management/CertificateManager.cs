@@ -413,6 +413,11 @@ namespace Certify.Management
 
         public static X509Certificate2 GetCertificateByThumbprint(string thumbprint, string storeName = DEFAULT_STORE_NAME, bool useMachineStore = true)
         {
+            if (string.IsNullOrWhiteSpace(thumbprint))
+            {
+                return null;
+            }
+
             X509Certificate2 cert = null;
 
             using (var store = useMachineStore ? GetMachineStore(storeName) : GetUserStore(storeName))
