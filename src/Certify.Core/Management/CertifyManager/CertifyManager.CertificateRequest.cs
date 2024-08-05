@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -970,14 +970,8 @@ namespace Certify.Management
                         {
                             try
                             {
-                                _serviceLog.Information($"Checking for previous certs matching cleanup mode.");
-                                var mode = CoreAppSettings.Current.CertificateCleanupMode;
 
-                                // default to After Expiry cleanup if no preference specified
-                                if (mode == null)
-                                {
-                                    mode = CertificateCleanupMode.AfterExpiry;
-                                }
+                                var mode = CoreAppSettings.Current.CertificateCleanupMode;
 
                                 // if pref is for full cleanup, use After Renewal just for this renewal cleanup
                                 if (mode == CertificateCleanupMode.FullCleanup)
@@ -985,27 +979,32 @@ namespace Certify.Management
                                     mode = CertificateCleanupMode.AfterRenewal;
                                 }
 
-                                // cleanup certs based on the given cleanup mode
-                                var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
-                                   (CertificateCleanupMode)mode,
-                                    DateTimeOffset.UtcNow,
-                                    matchingName: certCleanupName,
-                                    excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
-                                    log: _serviceLog,
-                                    storeName: cleanupStore
-                                );
+                                if (mode == CertificateCleanupMode.AfterRenewal)
+                                {
+                                    _serviceLog.Information($"Checking for previous certs matching cleanup mode.");
 
-                                if (certsRemoved.Any())
-                                {
-                                    foreach (var c in certsRemoved)
+                                    // cleanup certs based on the given cleanup mode
+                                    var certsRemoved = CertificateManager.PerformCertificateStoreCleanup(
+                                        mode ?? CertificateCleanupMode.AfterExpiry,
+                                        DateTimeOffset.UtcNow,
+                                        matchingName: certCleanupName,
+                                        excludedThumbprints: new List<string> { managedCertificate.CertificateThumbprintHash },
+                                        log: _serviceLog,
+                                        storeName: cleanupStore
+                                    );
+
+                                    if (certsRemoved.Any())
                                     {
-                                        _serviceLog?.Information($"Cleanup removed cert: {c}");
+                                        foreach (var c in certsRemoved)
+                                        {
+                                            _serviceLog?.Information($"Cleanup removed cert: {c}");
+                                        }
                                     }
-                                }
-                                else
-                                {
-                                    _serviceLog?.Debug($"No previous certs removed during cleanup.");
-                                    log?.Debug($"No previous certs removed during cleanup.");
+                                    else
+                                    {
+                                        _serviceLog?.Debug($"No previous certs removed during cleanup.");
+                                        log?.Debug($"No previous certs removed during cleanup.");
+                                    }
                                 }
                             }
                             catch (Exception exp)
