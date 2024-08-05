@@ -400,7 +400,7 @@ namespace Certify.UI.ViewModel
                 }
 
                 // add/update edited deployment task in selectedItem config
-                if (SelectedItem.Id == null)
+                if (string.IsNullOrWhiteSpace(SelectedItem.Id))
                 {
                     //add new
                     SelectedItem.Id = Guid.NewGuid().ToString();
