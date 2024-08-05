@@ -517,7 +517,7 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Genereate a preview of the actions which will be performed on renewal of the given item
+        /// Generate a preview of the actions which will be performed on renewal of the given item
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
