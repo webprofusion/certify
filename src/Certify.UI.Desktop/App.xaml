@@ -21,7 +21,6 @@
                 <Setter Property="FontFamily" Value="Segoe UI Semibold" />
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="Padding" Value="0,0,0,4" />
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
             </Style>
             <!--  Heading With Top Margin  -->
             <Style x:Key="SubheadingWithMargin" TargetType="TextBlock">
@@ -29,7 +28,6 @@
                 <Setter Property="FontFamily" Value="Segoe UI Semibold" />
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="Padding" Value="0,8,0,4" />
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
             </Style>
             <!--  Instruction Text  -->
 
@@ -38,7 +36,6 @@
                 <Setter Property="FontFamily" Value="Segoe UI" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="0,6,0,6" />
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
                 <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
 
@@ -48,7 +45,6 @@
                 <Setter Property="FontFamily" Value="Segoe UI" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="0,2,0,2" />
-                <Setter Property="HorizontalAlignment" Value="Stretch" />
                 <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
             </Style>

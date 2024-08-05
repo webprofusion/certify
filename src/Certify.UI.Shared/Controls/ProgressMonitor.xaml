@@ -10,7 +10,7 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     HorizontalAlignment="Stretch"
-    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     d:DesignHeight="300"
     d:DesignWidth="300"

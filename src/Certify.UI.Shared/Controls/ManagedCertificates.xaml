@@ -13,7 +13,7 @@
     xmlns:utils="clr-namespace:Certify.UI.Utils"
     Width="970"
     Height="487"
-    d:DataContext="{d:DesignInstance Type=certifyui:AppDesignViewModel,
+    d:DataContext="{d:DesignInstance Type=certifyui:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     Loaded="UserControl_OnLoaded"
@@ -103,7 +103,8 @@
                 SelectionMode="Single"
                 VirtualizingPanel.IsVirtualizing="True">
                 <ListView.ContextMenu>
-                    <ContextMenu x:Name="ListContextMenu" PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
+                    <ContextMenu x:Name="ListContextMenu"
+                                 PlacementTarget="{Binding RelativeSource={RelativeSource Self}}">
                         <MenuItem
                             Click="SetListSortOrder_Click"
                             Header="Sort By Name"
@@ -165,7 +166,8 @@
                                         Foreground="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateColourConverter}}"
                                         Text="{Binding Path=CertificateLifetime, Converter={StaticResource ExpiryDateConverter}}" />
 
-                                    <StackPanel Orientation="Horizontal" Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding SourceId, Converter={StaticResource NullCollapsedConverter}}">
                                         <TextBlock
                                             Margin="0,0,0,0"
                                             FontSize="10"
@@ -186,6 +188,7 @@
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
+
         </DockPanel>
         <GridSplitter
             Grid.Column="1"

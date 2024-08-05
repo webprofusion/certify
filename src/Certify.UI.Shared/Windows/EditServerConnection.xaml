@@ -9,8 +9,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Server Connection"
-    Width="522"
-    Height="276"
+    Width="540"
+    Height="320"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
@@ -96,11 +96,18 @@
                 Width="120"
                 Margin="0,0,8,0"
                 VerticalAlignment="Top"
-                Content="Allow untrusted certificate" />
+                Content="Allow Untrusted TLS" />
             <CheckBox IsChecked="{Binding Item.AllowUntrusted}" />
         </StackPanel>
 
-
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="0,0,8,0"
+                VerticalAlignment="Top"
+                Content="Use as Default" />
+            <CheckBox IsChecked="{Binding Item.IsDefault}" />
+        </StackPanel>
 
 
         <StackPanel

@@ -8,7 +8,7 @@
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Edit Deployment Task"
-    Width="480"
+    Width="500"
     Height="460"
     ResizeMode="CanResize"
     TitleCharacterCasing="Normal"

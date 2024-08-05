@@ -15,7 +15,7 @@
     Height="640"
     MinWidth="680"
     MinHeight="400"
-    d:DataContext="{d:DesignInstance Type=local:AppDesignViewModel,
+    d:DataContext="{d:DesignInstance Type=local:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     Closing="MetroWindow_Closing"
     Loaded="Window_Loaded"
@@ -161,8 +161,10 @@
         <TabControl
             x:Name="MainTabControl"
             Grid.Row="1"
+            Width="auto"
             Height="auto"
             Margin="8,8,8,8"
+            HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
             Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
@@ -174,7 +176,6 @@
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
-                Controls:HeaderedControlHelper.HeaderForeground="Blue"
                 Header="{x:Static res:SR.Managed_Certificates}"
                 IsSelected="True">
                 <CustomControls:ManagedCertificates

@@ -185,7 +185,7 @@ namespace Certify.UI.ViewModel
         public async Task<List<ActionStep>> PerformSettingsImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
         {
             var results = await _certifyClient.PerformImport(new ImportRequest { Package = package, Settings = settings, IsPreviewMode = isPreviewMode });
-            return results;
+            return results.ToList();
         }
     }
 }
