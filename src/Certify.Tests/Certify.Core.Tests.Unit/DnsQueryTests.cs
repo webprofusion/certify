@@ -51,6 +51,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(result.All(r => r.IsSuccess), "incorrectly configured DNSSEC record should fail dns check");
         }
 
+#if NET6_0_OR_GREATER
         [TestMethod, Description("Check for a DNS TXT record")]
         public async Task TestDNS_CheckTXT()
         {
@@ -66,5 +67,6 @@ namespace Certify.Core.Tests.Unit
             var result = await net.GetDNSRecordTXT(log, "_acme-challenge-test.cointelligence.io");
             Assert.IsNull(result, "Non-existant DNS TXT record does not throw an error");
         }
+#endif
     }
 }

@@ -9,14 +9,17 @@ namespace Certify.Models.Shared.Validation
     public enum ValidationErrorCodes
     {
         NONE,
+        IDENTIFIER_REQUIRED,
         PRIMARY_IDENTIFIER_REQUIRED,
         PRIMARY_IDENTIFIER_TOOMANY,
         CHALLENGE_TYPE_INVALID,
         REQUIRED_NAME,
         INVALID_HOSTNAME,
+        MIXED_WILDCARD_WITH_LABELS,
         REQUIRED_CHALLENGE_CONFIG_PARAM,
         SAN_LIMIT,
-        CN_LIMIT
+        CN_LIMIT,
+        ITEM_NOT_FOUND
     }
 
     public class CertificateEditorService
@@ -77,7 +80,7 @@ namespace Certify.Models.Shared.Validation
         /// Check the currently selected options and auto set where we can, transpose selected identifier options to update the final request configuration
         /// </summary>
         /// <returns></returns>
-        public static void ApplyAutoConfiguration(ManagedCertificate item, SiteInfo selectedTargetSite)
+        public static void ApplyAutoConfiguration(ManagedCertificate item, SiteInfo? selectedTargetSite)
         {
 
             var config = item.RequestConfig;
@@ -250,7 +253,7 @@ namespace Certify.Models.Shared.Validation
             return (domainList, wildcardAdded);
         }
 
-        public static ValidationResult Validate(ManagedCertificate item, SiteInfo selectedTargetSite, CertificateAuthority preferredCA, bool applyAutoConfiguration)
+        public static ValidationResult Validate(ManagedCertificate item, SiteInfo? selectedTargetSite, CertificateAuthority? preferredCA, bool applyAutoConfiguration)
         {
             try
             {
@@ -262,7 +265,7 @@ namespace Certify.Models.Shared.Validation
 
                 if (applyAutoConfiguration)
                 {
-                    CertificateEditorService.ApplyAutoConfiguration(item, selectedTargetSite);
+                    ApplyAutoConfiguration(item, selectedTargetSite);
                 }
 
                 if (string.IsNullOrEmpty(item.Name))
@@ -279,6 +282,15 @@ namespace Certify.Models.Shared.Validation
 
                 if (validateDomains)
                 {
+                    if (item.GetCertificateDomains().Count == 0)
+                    {
+                        return new ValidationResult(
+                          false,
+                          "A certificate order requires one or more identifiers/domains to be included on the certificate.",
+                          ValidationErrorCodes.IDENTIFIER_REQUIRED.ToString()
+                      );
+                    }
+
                     // a primary subject domain must be set
                     if (GetPrimarySubjectDomain(item) == null)
                     {
@@ -336,6 +348,31 @@ namespace Certify.Models.Shared.Validation
                             "Wildcard domains cannot use http-01 validation for domain authorization. Use dns-01 instead.",
                             ValidationErrorCodes.CHALLENGE_TYPE_INVALID.ToString()
                         );
+                    }
+
+                    // if wildcard domain included, check first level labels not also specified, i.e.
+                    // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
+                    // test.www.example.com can
+                    var invalidLabels = new List<CertIdentifierItem>();
+                    var identifiers = item.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns);
+
+                    if (identifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            var rootDomain = wildcard.Value.Replace("*.", "");
+                            // add list of identifiers where label count exceeds root domain label count
+                            invalidLabels.AddRange(identifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith($".{rootDomain}", StringComparison.OrdinalIgnoreCase) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
+
+                            if (invalidLabels.Count > 0)
+                            {
+                                return new ValidationResult(
+                                   false,
+                                   $"Wildcard domain certificate requests (e.g. {wildcard}) cannot be mixed with requests including immediate subdomains (e.g. {invalidLabels[0]}).",
+                                   ValidationErrorCodes.MIXED_WILDCARD_WITH_LABELS.ToString()
+                               );
+                            }
+                        }
                     }
                 }
 

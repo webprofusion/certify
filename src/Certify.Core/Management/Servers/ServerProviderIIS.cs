@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
@@ -81,25 +82,28 @@ namespace Certify.Management.Servers
             //http://stackoverflow.com/questions/446390/how-to-detect-iis-version-using-c
             Version result = null;
 
-            try
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                using (var componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
+                try
                 {
-                    if (componentsKey != null)
+                    using (var componentsKey = Registry.LocalMachine.OpenSubKey(@"Software\Microsoft\InetStp", false))
                     {
-                        _isIISAvailable = true;
-
-                        var majorVersion = Convert.ToInt32(componentsKey.GetValue("MajorVersion", -1));
-                        var minorVersion = Convert.ToInt32(componentsKey.GetValue("MinorVersion", -1));
-
-                        if (majorVersion != -1 && minorVersion != -1)
+                        if (componentsKey != null)
                         {
-                            result = new Version(majorVersion, minorVersion);
+                            _isIISAvailable = true;
+
+                            var majorVersion = Convert.ToInt32(componentsKey.GetValue("MajorVersion", -1));
+                            var minorVersion = Convert.ToInt32(componentsKey.GetValue("MinorVersion", -1));
+
+                            if (majorVersion != -1 && minorVersion != -1)
+                            {
+                                result = new Version(majorVersion, minorVersion);
+                            }
                         }
                     }
                 }
+                catch { }
             }
-            catch { }
 
             if (result == null)
             {

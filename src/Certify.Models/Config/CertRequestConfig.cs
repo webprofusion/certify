@@ -78,6 +78,7 @@ namespace Certify.Models
         /// <summary>
         /// Optional, DNS Zone ID if using a DNS challenge provider 
         /// </summary>
+        [Obsolete("Populate the zone id parameter in the Parameters collection instead")]
         public string? ZoneId { get; set; }
 
         /// <summary>
@@ -340,6 +341,8 @@ namespace Certify.Models
             return allDomains.Distinct().ToList();
         }
 
+        private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
         public List<CertIdentifierItem> GetCertificateIdentifiers()
         {
             var identifiers = new List<CertIdentifierItem>();
@@ -350,7 +353,7 @@ namespace Certify.Models
                 identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.Dns, Value = d });
             }
 
-            if (SubjectIPAddresses?.Any() == true)
+            if (SubjectIPAddresses?.Length > 0)
             {
                 foreach (var ip in SubjectIPAddresses)
                 {
@@ -367,8 +370,11 @@ namespace Certify.Models
                     var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
                     if (atc != null)
                     {
-                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
+                        if (parsedAtc != null)
+                        {
+                            identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
+                        }
                     }
                 }
             }
@@ -385,7 +391,7 @@ namespace Certify.Models
                 var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
                 if (atc != null)
                 {
-                    var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
                     return parsedAtc;
                 }
                 else

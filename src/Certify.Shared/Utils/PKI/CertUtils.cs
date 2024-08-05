@@ -128,6 +128,11 @@ namespace Certify.Shared.Core.Utils.PKI
             // we use BC for the AKI and Serial because native netfx and dotnet are inconsistent and may returns the serial in reverse
             var cert = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(sourceCert.GetRawCertData());
 
+            return GetARICertIdBase64(cert);
+        }
+
+        public static string GetARICertIdBase64(Org.BouncyCastle.X509.X509Certificate cert)
+        {
             // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients
 
             var certAKI = AuthorityKeyIdentifier.GetInstance(cert.GetExtensionValue(X509Extensions.AuthorityKeyIdentifier).GetOctets());

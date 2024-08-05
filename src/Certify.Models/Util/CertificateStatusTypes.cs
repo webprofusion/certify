@@ -9,6 +9,7 @@
             Revoked,
             TryLater,
             OcspNotSupported,
+            InvalidCertId,
             Unknown
         }
     }
