@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,6 +24,31 @@ namespace Certify.Management
 
         private bool _isRenewAllInProgress { get; set; }
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
+
+        /// <summary>
+        /// When called, look for periodic maintenance tasks we can perform such as renewal
+        /// </summary>
+        /// <returns>  </returns>
+        public async Task<bool> PerformRenewalTasks()
+        {
+            try
+            {              
+                SettingsManager.LoadAppSettings();
+
+                // perform pending renewals
+                await PerformRenewAll(new RenewalSettings { });
+
+                // flush status report queue
+                await SendQueuedStatusReports();
+            }
+            catch (Exception exp)
+            {
+                _tc?.TrackException(exp);
+                return await Task.FromResult(false);
+            }
+
+            return await Task.FromResult(true);
+        }
 
         /// <summary>
         /// Perform Renew All: identify all items to renew then initiate renewal process

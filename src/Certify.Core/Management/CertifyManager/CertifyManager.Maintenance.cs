@@ -13,12 +13,35 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
+        /// <summary>
+        /// Upgrade/migrate settings from previous version if applicable
+        /// </summary>
+        /// <returns></returns>
+        private async Task UpgradeSettings()
+        {
+            var systemVersion = Util.GetAppVersion().ToString();
+            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
+
+            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
+            {
+                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
+                    { "previousVersion", previousVersion },
+                    { "currentVersion", systemVersion }
+                });
+
+                // service has been updated, run any required migrations
+                await PerformServiceUpgrades();
+
+                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
+                SettingsManager.SaveAppSettings();
+            }
+        }
 
         /// <summary>
         /// When called, perform daily cache cleanup, cert cleanup, diagnostics and maintenance
         /// </summary>
         /// <returns></returns>
-        public async Task<bool> PerformDailyTasks()
+        public async Task<bool> PerformDailyMaintenanceTasks()
         {
             try
             {
@@ -61,7 +84,7 @@ namespace Certify.Management
             return await Task.FromResult(true);
         }
 
-        public async Task<List<ActionResult>> PerformCertificateMaintenance(string managedItemId = null)
+        public async Task<List<ActionResult>> PerformCertificateMaintenanceTasks(string managedItemId = null)
         {
             if (_isRenewAllInProgress)
             {
