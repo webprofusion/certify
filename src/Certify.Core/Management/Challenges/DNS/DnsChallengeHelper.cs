@@ -105,11 +105,6 @@ namespace Certify.Core.Management.Challenges
 
             var challengeConfig = managedcertificate.GetChallengeConfig(domain);
 
-            /*if (String.IsNullOrEmpty(challengeConfig.ZoneId))
-            {
-                return new ActionResult { IsSuccess = false, Message = "DNS Challenge Zone Id not set. Set the Zone Id to proceed." };
-            }*/
-
             if (!string.IsNullOrEmpty(challengeConfig.ChallengeCredentialKey))
             {
                 // decode credentials string array
@@ -167,7 +162,9 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 zoneId = challengeConfig.ZoneId?.Trim();
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             if (dnsAPIProvider != null)
@@ -391,7 +388,9 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
+#pragma warning disable CS0618 // Type or member is obsolete
                 zoneId = challengeConfig.ZoneId?.Trim();
+#pragma warning restore CS0618 // Type or member is obsolete
             }
 
             if (dnsAPIProvider != null)

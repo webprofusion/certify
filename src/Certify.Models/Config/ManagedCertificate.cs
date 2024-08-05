@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -639,7 +639,7 @@ namespace Certify.Models
 
             if (!string.IsNullOrEmpty(hostname))
             {
-                hostname = hostname?.ToLowerInvariant();
+                hostname = hostname!.ToLowerInvariant();
 
                 // list of dns anmes has an exact match
                 if (dnsNames.Contains(hostname))

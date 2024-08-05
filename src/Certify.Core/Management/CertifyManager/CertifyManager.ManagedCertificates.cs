@@ -132,7 +132,6 @@ namespace Certify.Management
             }
             catch (Exception exp)
             {
-
                 // failed to store update, e.g. database problem or disk space has run out
                 managedCertificate.LastRenewalStatus = RequestState.Error;
                 managedCertificate.RenewalFailureMessage = "Error: Cannot store certificate status update to the Data Store. Check there is enough disk space and permission for database writes. If this problem persists, contact support. " + exp;
@@ -258,10 +257,12 @@ namespace Certify.Management
         /// Perform set of test challenges and configuration checks to determine if site appears
         /// valid for certificate requests
         /// </summary>
+        /// <param name="log">Log to use</param>
         /// <param name="managedCertificate"> managed site to check </param>
         /// <param name="isPreviewMode"> 
         /// If true, perform full set of checks (DNS etc), if false performs minimal/basic checks
         /// </param>
+        /// <param name="progress">Progress tracker</param>
         /// <returns>  </returns>
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
@@ -271,8 +272,8 @@ namespace Certify.Management
             if (managedCertificate.RequestConfig.AuthorityTokens?.Any() == true)
             {
                 ReportProgress(progress,
-                   new RequestProgressState(RequestState.Success, "All Tests Completed OK", managedCertificate,
-                       isPreviewMode));
+                    new RequestProgressState(RequestState.Success, "All Tests Completed OK", managedCertificate,
+                        isPreviewMode));
                 return results;
             }
 
@@ -281,7 +282,12 @@ namespace Certify.Management
             if (managedCertificate.RequestConfig.PerformAutoConfig && managedCertificate.GetChallengeConfig(null).ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP)
             {
                 var serverCheck = await serverProvider.RunConfigurationDiagnostics(managedCertificate.ServerSiteId);
-                results.AddRange(serverCheck.ConvertAll(x => new StatusMessage { IsOK = !x.HasError, HasWarning = x.HasWarning, Message = x.Description }));
+                results.AddRange(serverCheck.ConvertAll(x => new StatusMessage
+                {
+                    IsOK = !x.HasError,
+                    HasWarning = x.HasWarning,
+                    Message = x.Description
+                }));
             }
 
             var httpChallengeServerActive = false;
@@ -293,19 +299,28 @@ namespace Certify.Management
 
                     if (_httpChallengeServerAvailable)
                     {
-                        results.Add(new StatusMessage { IsOK = true, Message = "Http Challenge Server process available." });
+                        results.Add(new StatusMessage
+                        {
+                            IsOK = true,
+                            Message = "Http Challenge Server process available."
+                        });
 
                         httpChallengeServerActive = true;
                     }
                     else
                     {
-                        results.Add(new StatusMessage { IsOK = true, HasWarning = true, Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to the default web server process (if available)." });
+                        results.Add(new StatusMessage
+                        {
+                            IsOK = true,
+                            HasWarning = true,
+                            Message = "Built-in Http Challenge Server process unavailable or could not start. Challenge responses will fall back to the default web server process (if available)."
+                        });
                     }
                 }
             }
 
             results.AddRange(
-            await _challengeResponseService.TestChallengeResponse(
+                await _challengeResponseService.TestChallengeResponse(
                     log,
                     serverProvider,
                     managedCertificate,
@@ -315,7 +330,7 @@ namespace Certify.Management
                     _credentialsManager,
                     progress
                 )
-             );
+            );
 
             if (progress != null)
             {
@@ -405,6 +420,11 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Generate a preview of the actions which will be performed on renewal of the given item
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
         public async Task<List<ActionStep>> GeneratePreview(ManagedCertificate item)
         {
             var serverProvider = GetTargetServerProvider(item);
@@ -413,7 +433,6 @@ namespace Certify.Management
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
         {
-
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
 
             var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager, _serviceLog);
@@ -463,11 +482,10 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task PerformManagedCertificateMigrations()
         {
-
             IEnumerable<ManagedCertificate> list = await GetManagedCertificates(ManagedCertificateFilter.ALL);
 
             list = list.Where(i => !string.IsNullOrEmpty(i.RequestConfig.WebhookUrl) || !string.IsNullOrEmpty(i.RequestConfig.PreRequestPowerShellScript) || !string.IsNullOrEmpty(i.RequestConfig.PostRequestPowerShellScript)
-            || i.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true);
+                                   || i.PostRequestTasks?.Any(t => t.TaskTypeId == StandardTaskTypes.POWERSHELL && t.Parameters?.Any(p => p.Key == "url") == true) == true);
 
             foreach (var i in list)
             {
@@ -515,6 +533,7 @@ namespace Certify.Management
         /// process information for temporary http challenge response service
         /// </summary>
         private ProcessStartInfo _httpChallengeProcessInfo;
+
         private Process _httpChallengeProcess;
         private string _httpChallengeControlKey = Guid.NewGuid().ToString();
         private string _httpChallengeCheckKey = "configcheck";
@@ -582,13 +601,15 @@ namespace Certify.Management
                     RedirectStandardError = true,
                     UseShellExecute = false,
                     CreateNoWindow = false,
-
                     WorkingDirectory = AppContext.BaseDirectory
                 };
 
                 try
                 {
-                    _httpChallengeProcess = new Process { StartInfo = _httpChallengeProcessInfo };
+                    _httpChallengeProcess = new Process
+                    {
+                        StartInfo = _httpChallengeProcessInfo
+                    };
                     _httpChallengeProcess.Start();
                     await Task.Delay(1000);
                 }

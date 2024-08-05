@@ -124,7 +124,6 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
-
             // get existing
 
             var existing = await _certifyClient.GetManagedCertificate(item.Id);
@@ -399,7 +398,13 @@ namespace Certify.UI.ViewModel
             }
             catch (TaskCanceledException)
             {
-                return new List<StatusMessage> { new StatusMessage { IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again." } };
+                return new List<StatusMessage>
+                {
+                    new StatusMessage
+                    {
+                        IsOK = false, Message = "The test took too long to complete and has timed out. Please check and try again."
+                    }
+                };
             }
         }
 
@@ -446,7 +451,6 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Re-deploy all managed certificates to any applicable bindings (re-store etc as applicable), optionally including Tasks
         /// </summary>
-
         /// <param name="isPreviewOnly"></param>
         /// <returns></returns>
         internal async Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks)
