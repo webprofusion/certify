@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -777,7 +777,7 @@ namespace Certify.Models
                         }
 
                         var targetRenewalMinutesAfterCertStart = certLifetime.Value.TotalMinutes * (targetRenewalPercentage / 100);
-                        var targetRenewalDate = s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart);
+                        var targetRenewalDate = s.DateStart != null ? s.DateStart.Value.AddMinutes(targetRenewalMinutesAfterCertStart) : s.DateRenewed.Value;
                         nextRenewalAttemptDate = targetRenewalDate;
 
                         if (targetRenewalDate <= checkDate)
