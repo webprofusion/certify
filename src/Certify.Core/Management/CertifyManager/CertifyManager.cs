@@ -100,6 +100,11 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
+        private System.Timers.Timer _heartbeatTimer;
+        private System.Timers.Timer _frequentTimer;
+        private System.Timers.Timer _hourlyTimer;
+        private System.Timers.Timer _dailyTimer;
+
         public CertifyManager() : this(true)
         {
 
@@ -164,10 +169,10 @@ namespace Certify.Management
             {
                 await InitDataStore();
             }
-            catch
+            catch (Exception exp)
             {
-                var msg = "Certify Manager failed to start. Failed to load datastore";
-                _serviceLog.Error(msg);
+                var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
+                _serviceLog.Error(exp, msg);
                 throw (new Exception(msg));
             }
 
@@ -188,24 +193,66 @@ namespace Certify.Management
 
             _tc?.TrackEvent("ServiceStarted");
 
+            SetupJobs();
+
+            await UpgradeSettings();
+
             _serviceLog?.Information("Certify Manager Started");
+        }
 
-            var systemVersion = Util.GetAppVersion().ToString();
-            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
+        /// <summary>
+        /// Setup the continuous job tasks for renewals and maintenance
+        /// </summary>
+        private void SetupJobs()
+        {
+            // 60 second job timer (reporting etc)
+            _heartbeatTimer = new System.Timers.Timer(60 * 1000); // every n seconds
+            _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
+            _heartbeatTimer.Start();
 
-            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
+            // 5 minute job timer (maintenance etc)
+            _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
+            _frequentTimer.Elapsed += _frequentTimer_Elapsed;
+            _frequentTimer.Start();
+
+            // hourly jobs timer (renewal etc)
+            _hourlyTimer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
+            _hourlyTimer.Elapsed += _hourlyTimer_Elapsed;
+            _hourlyTimer.Start();
+
+            // daily jobs timer (cleanup etc)
+            _dailyTimer = new System.Timers.Timer(24 * 60 * 60 * 1000); // every 24 hrs
+            _dailyTimer.Elapsed += _dailyTimer_Elapsed;
+            _dailyTimer.Start();
+        }
+
+        private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformDailyMaintenanceTasks();
+        }
+
+        private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformCertificateMaintenanceTasks();
+
+            try
             {
-                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
-                    { "previousVersion", previousVersion },
-                    { "currentVersion", systemVersion }
-                });
-
-                // service has been updated, run any required migrations
-                await PerformServiceUpgrades();
-
-                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
-                SettingsManager.SaveAppSettings();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
             }
+            catch
+            {
+                // failed to perform garbage collection, ignore.
+            }
+        }
+
+        private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
+        }
+
+        private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            await PerformRenewalTasks();
         }
 
         private async Task PerformServiceUpgrades()
@@ -470,6 +517,7 @@ namespace Certify.Management
             }
             else if (!CoreAppSettings.Current.EnableAppTelematics && _tc != null)
             {
+                _tc?.Dispose();
                 _tc = null;
             }
 
