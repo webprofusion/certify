@@ -100,7 +100,7 @@ namespace Certify.Core.Tests
                 {
                     // expected
                 }
-                
+
                 Assert.IsFalse(challengeServer.IsRunning, "Http Challenge Server should not be running due to previous unhandled exception mid-request");
             }
             finally

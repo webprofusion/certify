@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Shared.Core.Utils;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -16,7 +15,7 @@ namespace Certify.Core.Tests.Unit
 
         [TestMethod, Description("Test domain TLD check")]
         [DataTestMethod]
-        [DataRow("example.com","com")]
+        [DataRow("example.com", "com")]
         [DataRow("www.example.com", "com")]
         [DataRow("www.example.co.uk", "uk")]
         [DataRow("www.musician.io", "io")]

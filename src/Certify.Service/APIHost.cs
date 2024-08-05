@@ -160,7 +160,8 @@ namespace Certify.Service
                 {
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
                 }
-                catch {
+                catch
+                {
                     // failed to perform garbage collection, ignore.
                 }
             }

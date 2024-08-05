@@ -63,7 +63,7 @@ namespace Certify.Models
                     .WriteTo.Debug()
 #endif
                     .WriteTo.File(
-                        logPath, shared: true, 
+                        logPath, shared: true,
                         flushToDiskInterval: new TimeSpan(0, 0, 10)
                     )
                     .CreateLogger();
