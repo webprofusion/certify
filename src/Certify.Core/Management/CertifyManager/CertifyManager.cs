@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -318,6 +318,21 @@ namespace Certify.Management
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                     _credentialsManager = new SQLiteCredentialStore(_useWindowsNativeFeatures, storageSubfolder: "credentials");
+                }
+
+                // attempt to create and delete a test item
+                try
+                {
+                    var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
+
+                    await _itemManager.Update(item);
+
+                    await _itemManager.Delete(item);
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
+                    throw;
                 }
 
                 if (!_itemManager.IsInitialised().Result)
