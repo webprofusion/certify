@@ -49,11 +49,11 @@
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" />
         <PackageReference Include="Microsoft.AspNet.SignalR.SelfHost" Version="2.4.3" />
-        <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
-        <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.9" />
-        <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.2.9" />
-        <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.2.9" />
-        <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.2.9" />
+        <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
+        <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.3.0" />
+        <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.3.0" />
+        <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.3.0" />
+        <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.3.0" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.54.0" />
         <PackageReference Include="Microsoft.Owin" Version="4.2.2" />

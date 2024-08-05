@@ -6,10 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.3.0" />
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
         <PackageReference Include="System.IO" Version="4.3.0" />
         <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
-        <PackageReference Include="Microsoft.ApplicationInsights" Version="2.21.0" />
+        <PackageReference Include="Microsoft.ApplicationInsights" Version="2.22.0" />
         <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Serilog" Version="2.12.0" />
