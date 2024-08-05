@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Security.Principal;
 using System.Threading.Tasks;
+using Certify.Models;
 using Certify.Models.Certify.Models;
 using Certify.Models.Providers;
 using Org.BouncyCastle.Asn1;
@@ -13,9 +16,9 @@ using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Generators;
 using Org.BouncyCastle.Crypto.Operators;
-using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
@@ -30,12 +33,32 @@ namespace Certify.Management
         public const string WEBHOSTING_STORE_NAME = "WebHosting";
         public const string DISALLOWED_STORE_NAME = "Disallowed";
 
-        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTimeOffset? dateFrom = null, DateTimeOffset? dateTo = null, string suffix = "[Certify]", string subject = null)
+        public static X509Certificate2 GenerateSelfSignedCertificate(string domain, DateTimeOffset? dateFrom = null, DateTimeOffset? dateTo = null, string suffix = "[Certify]", string subject = null, string keyType = StandardKeyTypes.RSA256)
         {
+
             // configure generators
             var random = new SecureRandom(new CryptoApiRandomGenerator());
-            var keyGenerationParameters = new KeyGenerationParameters(random, 2048);
-            var keyPairGenerator = new RsaKeyPairGenerator();
+            IAsymmetricCipherKeyPairGenerator keyPairGenerator = null;
+            KeyGenerationParameters keyGenerationParameters = null;
+            var sigType = "SHA256WITHRSA";
+            if (keyType == StandardKeyTypes.RSA256)
+            {
+                keyPairGenerator = new RsaKeyPairGenerator();
+                keyGenerationParameters = new KeyGenerationParameters(random, 2048);
+                sigType = "SHA256WITHRSA";
+            }
+            else if (keyType == StandardKeyTypes.ECDSA256)
+            {
+                keyGenerationParameters = new KeyGenerationParameters(random, 256);
+                keyPairGenerator = new ECKeyPairGenerator();
+                sigType = "SHA256WITHECDSA";
+            }
+
+            if (keyPairGenerator == null || keyGenerationParameters == null)
+            {
+                throw new NotSupportedException("Key type not supported");
+            }
+
             keyPairGenerator.Init(keyGenerationParameters);
 
             // create self-signed certificate
@@ -52,26 +75,30 @@ namespace Certify.Management
 
             var keyPair = keyPairGenerator.GenerateKeyPair();
             certificateGenerator.SetPublicKey(keyPair.Public);
-            var bouncy_cert = certificateGenerator.Generate(new Asn1SignatureFactory("SHA256WithRSA", keyPair.Private, random));
+            var bouncy_cert = certificateGenerator.Generate(new Asn1SignatureFactory(sigType, keyPair.Private, random));
 
-            // get private key into machine key store
-            var csp = new RSACryptoServiceProvider(
-                new CspParameters
-                {
-                    KeyContainerName = Guid.NewGuid().ToString(),
-                    KeyNumber = 1,
-                    Flags = CspProviderFlags.UseMachineKeyStore
-                });
+            var store = new Pkcs12StoreBuilder().Build();
 
-            var rp = DotNetUtilities.ToRSAParameters((RsaPrivateCrtKeyParameters)keyPair.Private);
-            csp.ImportParameters(rp);
+            var friendlyName = domain + " " + suffix + " Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter;
 
-            // convert from bouncy cert to X509Certificate2
-            return new X509Certificate2(bouncy_cert.GetEncoded(), (string)null, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet)
+            // Add the certificate.
+            var certificateEntry = new X509CertificateEntry(bouncy_cert);
+            store.SetCertificateEntry(friendlyName, certificateEntry);
+
+            // Add the private key.
+            store.SetKeyEntry(friendlyName, new AsymmetricKeyEntry(keyPair.Private), new[] { certificateEntry });
+
+            using (var stream = new MemoryStream())
             {
-                FriendlyName = domain + " " + suffix + " Self Signed - " + bouncy_cert.NotBefore + " to " + bouncy_cert.NotAfter,
-                PrivateKey = csp
-            };
+                const string password = "";
+                store.Save(stream, password.ToCharArray(), random);
+
+                var finalExportableCertificate =
+                    new X509Certificate2(stream.ToArray(),
+                                         password,
+                                         X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                return finalExportableCertificate;
+            }
         }
 
         public static bool VerifyCertificateSAN(System.Security.Cryptography.X509Certificates.X509Certificate certificate, string sni)
@@ -289,7 +316,7 @@ namespace Certify.Management
                 pwd = "";
             }
 
-            try
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (!string.IsNullOrEmpty(customFriendlyName))
                 {
@@ -299,13 +326,9 @@ namespace Certify.Management
                 {
                     certificate.GetExpirationDateString();
 
-                    certificate.FriendlyName = host + " [Certify] - " + certificate.GetEffectiveDateString() + " to " + certificate.GetExpirationDateString();
+                    certificate.FriendlyName = $"{host} [Certify] - {certificate.GetEffectiveDateString()} to {certificate.GetExpirationDateString()}";
 
                 }
-            }
-            catch (System.PlatformNotSupportedException)
-            {
-                // friendly name not supported on unix
             }
 
             var cert = StoreCertificate(certificate, storeName);
@@ -433,50 +456,216 @@ namespace Certify.Management
             }
         }
 
-        /// <summary>
-        /// For IIS to use a certificate its process user must be able to encrypt outgoing traffic,
-        /// so it needs the private key for our certificate. If a system user creates the certificate
-        /// the default permission may not allow access to the private key.
-        /// </summary>
-        /// <param name="cert"> cert including private key </param>
-        /// <param name="accountName"> user to grant read access for </param>
-        public static void GrantUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName)
+        private static SecurityIdentifier TranslateToSecurityIdentifier(string val, ILog log)
         {
-            if (cert.PrivateKey is RSACryptoServiceProvider rsa)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                try
+                {
+                    if (val.StartsWith("S-1-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return new SecurityIdentifier(val);
+                    }
+                    else
+                    {
 
-                var file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
-
-                var fs = file.GetAccessControl();
-
-                var account = new System.Security.Principal.NTAccount(accountName);
-                fs.AddAccessRule(new FileSystemAccessRule(account, FileSystemRights.Read, AccessControlType.Allow));
-
-                file.SetAccessControl(fs);
+                        return new NTAccount(val).Translate(typeof(SecurityIdentifier)) as SecurityIdentifier;
+                    }
+                }
+                catch (Exception exp)
+                {
+                    log?.Error("Failed to translate account {val} to SID: {exp}", val, exp);
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
             }
         }
 
-        public static FileSecurity GetUserAccessInfoForCertificatePrivateKey(X509Certificate2 cert)
+        public static bool HasUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName, string fileSystemRights = "fullcontrol", ILog log = null)
         {
-
-            if (cert.PrivateKey is RSACryptoServiceProvider rsa)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var privateKeyPath = GetMachineKeyLocation(rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                var keyPath = GetCertificatePrivateKeyPath(cert);
+                if (keyPath != null)
+                {
+                    var userSid = TranslateToSecurityIdentifier(accountName, log);
 
-                var file = new FileInfo(privateKeyPath + "\\" + rsa.CspKeyContainerInfo.UniqueKeyContainerName);
+                    if (userSid == null)
+                    {
+                        return false;
+                    }
 
-                return file.GetAccessControl();
+                    var file = new FileInfo(keyPath);
+
+                    var fs = file.GetAccessControl();
+
+                    var existing = fs.GetAccessRules(true, true, typeof(SecurityIdentifier));
+
+                    foreach (FileSystemAccessRule rule in existing)
+                    {
+                        if (
+                            rule.IdentityReference == userSid && rule.AccessControlType != AccessControlType.Deny
+                            && (
+                                (fileSystemRights == "read" && rule.FileSystemRights.HasFlag(FileSystemRights.Read))
+                                ||
+                                ((fileSystemRights == "fullcontrol" || fileSystemRights == "read") && rule.FileSystemRights.HasFlag(FileSystemRights.FullControl))
+                            )
+                        )
+                        {
+                            // required permission already present
+                            return true;
+                        }
+                    }
+
+                    // no matching rule found
+                    return false;
+                }
+                else
+                {
+                    // private key file path not found
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// If a system user creates the certificate the default permission may not allow access to the private key. Granting read permission to the key enables a service user to use the cert + key normally.
+        /// </summary>
+        /// <param name="cert"> cert including private key </param>
+        /// <param name="accountName"> user to grant read access for </param>
+        public static bool GrantUserAccessToCertificatePrivateKey(X509Certificate2 cert, string accountName, string fileSystemRights = "fullcontrol", ILog log = null)
+        {
+            if (HasUserAccessToCertificatePrivateKey(cert, accountName, fileSystemRights, log))
+            {
+                return true;
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var keyPath = GetCertificatePrivateKeyPath(cert);
+
+                if (keyPath != null)
+                {
+                    var userSid = TranslateToSecurityIdentifier(accountName, log);
+
+                    if (userSid == null)
+                    {
+                        return false;
+                    }
+
+                    var file = new FileInfo(keyPath);
+
+                    var fs = file.GetAccessControl();
+                    var rightsToGrant = fileSystemRights == "fullcontrol" ? FileSystemRights.FullControl : FileSystemRights.Read;
+
+                    try
+                    {
+                        fs.AddAccessRule(new FileSystemAccessRule(userSid, rightsToGrant, AccessControlType.Allow));
+
+                        file.SetAccessControl(fs);
+                    }
+                    catch (Exception exp)
+                    {
+                        log?.Error("Failed to grant access to certificate private key: {exp}", exp);
+                        return false;
+                    }
+
+                    // access rule applied
+                    return true;
+                }
+                else
+                {
+                    log?.Warning("Could not locate private key file for certificate in order to grant access.");
+                    // private key file path not found
+                    return false;
+                }
+            }
+            else
+            {
+                log?.Warning("Could not locate private key file for certificate.");
+                // platform not supported
+                return false;
+            }
+        }
+
+        public static string GetCertificatePrivateKeyPath(X509Certificate2 cert)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var rsa = cert.GetRSAPrivateKey();
+
+                if (rsa is RSA)
+                {
+                    if (rsa is RSACryptoServiceProvider rsaProvider)
+                    {
+                        var path = GetWindowsPrivateKeyLocation(rsaProvider.CspKeyContainerInfo.UniqueKeyContainerName);
+
+                        if (path == null)
+                        {
+                            return null;
+                        }
+
+                        return Path.Combine(path, rsaProvider.CspKeyContainerInfo.UniqueKeyContainerName);
+                    }
+                    else if (rsa is RSACng rsaCng)
+                    {
+                        var path = GetWindowsPrivateKeyLocation(rsaCng.Key.UniqueName);
+
+                        if (path == null)
+                        {
+                            return null;
+                        }
+
+                        return Path.Combine(path, rsaCng.Key.UniqueName);
+                    }
+                }
+                else if (cert.GetECDsaPrivateKey() is ECDsa ecdsa)
+                {
+                    if (ecdsa is ECDsaCng ecdsaCng)
+                    {
+                        var path = GetWindowsPrivateKeyLocation(ecdsaCng.Key.UniqueName);
+
+                        if (path == null)
+                        {
+                            return null;
+                        }
+
+                        return Path.Combine(path, ecdsaCng.Key.UniqueName);
+                    }
+                }
             }
 
             return null;
         }
 
-        private static string GetMachineKeyLocation(string keyFileName)
+        public static FileSecurity GetUserAccessInfoForCertificatePrivateKey(X509Certificate2 cert)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                var filePath = GetCertificatePrivateKeyPath(cert);
+
+                if (filePath != null)
+                {
+                    var file = new FileInfo(filePath);
+                    return file.GetAccessControl();
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetWindowsPrivateKeyLocation(string keyFileName)
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
 
-            var machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\MachineKeys";
+            var machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "RSA", "MachineKeys" });
 
             var fileList = Directory.GetFiles(machineKeyPath, keyFileName);
 
@@ -486,9 +675,19 @@ namespace Certify.Management
                 return machineKeyPath;
             }
 
-            //if no results from common app data path, try alternative
+            // if EC/CNG key may be under /keys
+            machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "Keys" });
+
+            fileList = Directory.GetFiles(machineKeyPath, keyFileName);
+
+            if (fileList.Any())
+            {
+                return machineKeyPath;
+            }
+
+            //if no results from common app data path, try alternative use specific app data (files may be under user specific subfolder)
             appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            machineKeyPath = appDataPath + @"\Microsoft\Crypto\RSA\";
+            machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "RSA" });
             fileList = Directory.GetDirectories(machineKeyPath);
 
             if (fileList.Any())
@@ -501,6 +700,15 @@ namespace Certify.Management
                         return filename;
                     }
                 }
+            }
+
+            appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "Keys");
+            fileList = Directory.GetFiles(machineKeyPath);
+
+            if (fileList.Any())
+            {
+                return machineKeyPath;
             }
 
             //Could not access private key file.
