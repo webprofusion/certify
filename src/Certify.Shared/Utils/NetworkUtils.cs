@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Certify.Management;
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
 #endif
@@ -209,7 +209,7 @@ namespace Certify.Shared.Core.Utils
             }
         }
 
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
         public async Task<string> GetDNSRecordTXT(ILog log, string fullyQualifiedRecordName)
         {
 
@@ -266,7 +266,7 @@ namespace Certify.Shared.Core.Utils
         public async Task<List<ActionResult>> CheckDNS(ILog log, string domain, bool? useProxyAPI = null, bool includeIPCheck = true)
         {
             var results = new List<ActionResult>();
-#if NET8_0_OR_GREATER
+#if NET6_0_OR_GREATER
             log.Information("CheckDNS: performing DNS checks. This option can be disabled in Settings if required.");
 
             if (string.IsNullOrEmpty(domain))
