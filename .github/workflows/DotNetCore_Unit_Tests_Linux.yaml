@@ -80,6 +80,8 @@ jobs:
         dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.8
         dotnet add package GitHubActionsTestLogger
         dotnet restore -f net9.0
+        pwd
+        ls
         dotnet build -c Debug -f net9.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
