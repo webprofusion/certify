@@ -77,10 +77,12 @@ jobs:
 
     - name: Install Dependencies & Build Certify.Core.Tests.Unit
       run: |
-        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.2.0
+        dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.8
         dotnet add package GitHubActionsTestLogger
         dotnet restore -f net9.0
-        dotnet build ./certify/src/Certify.Tests/Certify.Core.Tests.Unit/Certify.Core.Tests.Unit.csproj -c Debug -f net9.0 --property WarningLevel=0 /clp:ErrorsOnly
+        pwd
+        ls
+        dotnet build -c Debug -f net9.0 --property WarningLevel=0 /clp:ErrorsOnly
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Run Certify.Core.Tests.Unit Tests
