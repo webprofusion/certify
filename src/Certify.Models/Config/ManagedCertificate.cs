@@ -62,7 +62,7 @@ namespace Certify.Models
 
         public const int FailureWarning = 3;
         public const int FailureDanger = 5;
-        public const int FailureTerminal = 10;
+        public const int FailureTerminal = 1000;
     }
 
     public class Lifetime
@@ -908,12 +908,26 @@ namespace Certify.Models
                         }
                         else
                         {
-                            return new RenewalDueInfo(
-                                   reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and renewal will be periodically attempted.",
+                            if (s.RenewalFailureCount > LifetimeHealthThresholds.FailureTerminal)
+                            {
+                                // item has failed too many times and need to be fixed manually before it can resume renewal
+                                return new RenewalDueInfo(
+                                   reason: $"Renewal will no longer be attempted because the item has failed {s.RenewalFailureCount} times. The limit for failed attempts is {LifetimeHealthThresholds.FailureTerminal}. Manually request this item to resolve the issue or remove if no longer required.",
                                    isRenewalDue: true,
                                    nextAttemptByDate, certLifetime,
-                                   isRenewalOnHold: false
+                                   isRenewalOnHold: true,
+                                   holdHrs: calcWaitHrs
                                    );
+                            }
+                            else
+                            {
+                                return new RenewalDueInfo(
+                                       reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and renewal will be periodically attempted.",
+                                       isRenewalDue: true,
+                                       nextAttemptByDate, certLifetime,
+                                       isRenewalOnHold: false
+                                       );
+                            }
                         }
                     }
                     else
