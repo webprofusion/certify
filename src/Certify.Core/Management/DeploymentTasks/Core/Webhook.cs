@@ -22,7 +22,7 @@ namespace Certify.Providers.DeploymentTasks.Core
             {
                 Id = "Certify.Providers.DeploymentTasks.Webhook",
                 Title = "Webhook",
-                IsExperimental = true,
+                IsExperimental = false,
                 Description = "Call a custom webhook on renewal success or failure",
                 SupportedContexts = DeploymentContextType.LocalAsService,
                 UsageType = DeploymentProviderUsage.Any,
