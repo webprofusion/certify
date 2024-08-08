@@ -513,7 +513,7 @@
     <value>Are you sure you want to revoke this certificate?</value>
   </data>
   <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
+    <value>You are using the evaluation version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
   </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>This will renew certificates for all auto-renewed items. Proceed?</value>

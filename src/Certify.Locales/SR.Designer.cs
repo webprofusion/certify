@@ -547,7 +547,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are using the trial version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab..
+        ///   Looks up a localized string similar to You are using the evaluation version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab..
         /// </summary>
         public static string MainWindow_TrialLimitationReached {
             get {

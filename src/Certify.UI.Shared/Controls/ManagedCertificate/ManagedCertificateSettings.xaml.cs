@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -184,7 +184,13 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && renewalCheckWindow > DateTimeOffset.UtcNow)
                 {
                     // cert was recently renewed. confirm user intent
-                    var msg = "This managed certificate was recently renewed. Are you sure you wish to request it again now? \r\n\r\nThe Certificate Authority may impose rate limits on the number of duplicate certificates which can be issued, so requesting duplicate certificates should be avoided. ";
+                    var msg = "This managed certificate was recently renewed. Are you sure you wish to request it again now? \r\n\r\nThe Certificate Authority may impose rate limits on the number of duplicate certificates which can be issued, so requesting duplicate certificates should be avoided.";
+
+                    if (ItemViewModel.SelectedItem?.PostRequestTasks?.Any() == true || ItemViewModel.SelectedItem?.PreRequestTasks?.Any() == true)
+                    {
+                        msg += "\r\n\r\nIf you are testing a Deployment Task, see the Tasks tab to re-run an individual task.";
+                    }
+
                     if (MessageBox.Show(msg, "Request certificate again?", MessageBoxButton.OKCancel) == MessageBoxResult.Cancel)
                     {
                         return;
@@ -193,21 +199,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 //begin request
                 var result = await AppViewModel.BeginCertificateRequest(ItemViewModel.SelectedItem.Id);
-                if (result != null)
+
+                if (result?.IsSuccess == false && result?.Result is Exception exception)
                 {
-                    if (result.IsSuccess == false && result.Result is Exception exception)
-                    {
-                        var msg = exception?.ToString();
-                        Log?.Error($"RequestCertificate: {msg}");
-                    }
-                    else
-                    {
-                        if (!result.IsSuccess && !string.IsNullOrEmpty(result.Message))
-                        {
-                            MessageBox.Show(result.Message, "Request could not be completed", MessageBoxButton.OK);
-                            return;
-                        }
-                    }
+                    var msg = exception?.ToString();
+                    Log?.Error($"RequestCertificate: {msg}");
                 }
             }
         }
