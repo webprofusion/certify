@@ -98,9 +98,17 @@
     <NoWarn>1701;1702;NU1701</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Assets\badcert.pfx" />
+    <None Remove="Assets\dummycert.pfx" />
     <None Remove="Assets\Powershell\Simple.ps1" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\badcert.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\dummycert.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Powershell\Simple.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

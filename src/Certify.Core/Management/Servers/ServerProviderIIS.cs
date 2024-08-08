@@ -506,7 +506,7 @@ namespace Certify.Management.Servers
                                         {
                                             if (bindingSpec.IsSNIEnabled && !isSNISupported)
                                             {
-                                                result = new ActionStep { HasWarning = true, Description = $"SNI requested on on IIS Binding but is not supported by this version of IIS. Duplicate certificate bindings can occur unless each certificate is bound to a distinct IP address : {bindingSpec}" };
+                                                result = new ActionStep { HasWarning = true, Description = $"SNI was requested on this IIS Binding but is not supported by this version of IIS. Duplicate certificate bindings can occur unless each certificate is bound to a distinct IP address : {bindingSpec}" };
                                             }
                                         }
                                     }
@@ -718,6 +718,14 @@ namespace Certify.Management.Servers
                 }
                 catch { }
 
+                var hasSNI = false;
+                try
+                {
+                    // some bindings may error checking SNI
+                    hasSNI = binding.SslFlags.HasFlag(SslFlags.Sni);
+                }
+                catch { }
+
                 return new BindingInfo()
                 {
                     ServerType = StandardServerTypes.IIS.ToString(),
@@ -728,6 +736,7 @@ namespace Certify.Management.Servers
                     IP = binding.EndPoint?.Address?.ToString(),
                     Port = binding.EndPoint?.Port ?? 0,
                     IsHTTPS = binding.Protocol.ToLower() == "https",
+                    IsSNIEnabled = hasSNI,
                     Protocol = binding.Protocol.ToLower(),
                     HasCertificate = (bindingHash != null),
                     CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,
@@ -771,6 +780,14 @@ namespace Certify.Management.Servers
                     }
                 }
 
+                var hasSNI = false;
+                try
+                {
+                    // some bindings may error checking SNI
+                    hasSNI = binding.SslFlags.HasFlag(SslFlags.Sni);
+                }
+                catch { }
+
                 return new BindingInfo()
                 {
                     ServerType = StandardServerTypes.IIS.ToString(),
@@ -781,6 +798,7 @@ namespace Certify.Management.Servers
                     IP = bindingComponents[0],
                     Port = port,
                     IsHTTPS = false,
+                    IsSNIEnabled = hasSNI,
                     Protocol = binding.Protocol.ToLower(),
                     HasCertificate = (bindingHash != null),
                     CertificateHash = bindingHash != null ? HashBytesToThumprint(bindingHash) : null,

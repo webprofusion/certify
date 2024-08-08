@@ -12,12 +12,24 @@ namespace Certify.Models
         public List<ActionStep>? Substeps { get; set; }
         public string Key { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Optional object result of the action
+        /// </summary>
+        public object? ObjectResult { get; set; }
+
         public ActionStep() { }
-        public ActionStep(string title, string descripton, bool hasError)
+        public ActionStep(string title, string description, bool hasError)
         {
             Title = title;
-            Description = descripton;
+            Description = description;
             HasError = hasError;
+        }
+
+        public ActionStep(string category, string title, string description)
+        {
+            Title = title;
+            Description = description;
+            Category = category;
         }
     }
 }

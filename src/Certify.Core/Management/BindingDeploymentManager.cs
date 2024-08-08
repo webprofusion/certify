@@ -1,18 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Providers;
+using Microsoft.Web.Administration;
 
 namespace Certify.Core.Management
 {
+    /// <summary>
+    /// Manages the deployment of TLS certificates to web server and ftp server bindings (a certificate associated with a partcular IP+Port+hostname combination).
+    /// Storage (in a certificate store) and deployment to a target server.
+    /// Typical usage is to create or update bindings for a new certificate. On most operating systems certificate bindings can be against an IP and port combination
+    /// however that quickly leads to IP address exhaustion. SNI (server name indication, available in Windows Server 2012 onwards etc) is typically used instead to host multiple certificates on a single IP+Port combination. 
+    /// Generally for SNI bindings the IP is set to * or 0.0.0.0 for non-specific IP bindings.
+    /// Operations can include a preview mode where the actual storage/deployment is not performed, and instead the changes are returned as a list of proposed actions that could be performed.
+    /// </summary>
     public class BindingDeploymentManager : IBindingDeploymentManager
     {
+
         private bool _enableCertDoubleImportBehaviour { get; set; } = true;
 
+        /// <summary>
+        /// List of IP addresses that are considered unassigned or wildcard
+        /// </summary>
         private static string[] unassignedIPs = new string[] {
                 null,
                 "",
@@ -21,6 +35,9 @@ namespace Certify.Core.Management
                 "*"
             };
 
+        /// <summary>
+        /// List of hostnames that are considered non-specific
+        /// </summary>
         private static string[] nonSpecificHostnames = new string[] {
                 null,
                 "",
@@ -129,6 +146,9 @@ namespace Certify.Core.Management
             return actions;
         }
 
+        /// <summary>
+        /// Deploy the certificate to all target bindings
+        /// </summary>
         private async Task<List<ActionStep>> DeployToAllTargetBindings(IBindingDeploymentTarget deploymentTarget,
                                                                     ManagedCertificate managedCertificate,
                                                                     CertRequestConfig requestConfig,
@@ -192,13 +212,14 @@ namespace Certify.Core.Management
 
                     // copy existing bindings so we can add/remove
                     var updatedBindings = existingBindings.ToList();
+                    var category = "Binding Details";
 
                     // for each binding create or update an https binding
                     foreach (var b in existingBindings)
                     {
                         var updateBinding = false;
+                        var bindingExplanationSteps = new List<ActionStep>();
 
-                        //if binding is http and there is no https binding, create one
                         var hostname = b.Host;
 
                         // install the cert for this binding if the hostname matches, or we have a
@@ -213,27 +234,27 @@ namespace Certify.Core.Management
                                 if (string.Equals(b.CertificateHash, managedCertificate.CertificatePreviousThumbprintHash))
                                 {
                                     updateBinding = true;
+                                    bindingExplanationSteps.Add(new ActionStep(category, "Thumbprint Match", "Certificate thumbprint on existing binding matches previous certificate."));
                                 }
                                 else if (string.Equals(b.CertificateHash, managedCertificate.CertificateThumbprintHash))
                                 {
                                     updateBinding = true;
+                                    bindingExplanationSteps.Add(new ActionStep(category, "Thumbprint Match", "Certificate thumbprint on existing binding matches current certificate."));
                                 }
                             }
                         }
 
                         if (updateBinding == false)
                         {
-                            // TODO: add wildcard match
                             if (nonSpecificHostnames.Contains(hostname) && requestConfig.DeploymentBindingBlankHostname)
                             {
                                 updateBinding = true;
+                                bindingExplanationSteps.Add(new ActionStep(category, "Blank Hostname", "Binding hostname is blank and deployment to blank hostname is enabled."));
                             }
-                            else
+                            else if (requestConfig.DeploymentBindingMatchHostname && ManagedCertificate.IsDomainOrWildcardMatch(dnsHosts, hostname))
                             {
-                                if (requestConfig.DeploymentBindingMatchHostname)
-                                {
-                                    updateBinding = ManagedCertificate.IsDomainOrWildcardMatch(dnsHosts, hostname);
-                                }
+                                updateBinding = true;
+                                bindingExplanationSteps.Add(new ActionStep(category, "Hostname Match", "Binding hostname matches domain or wildcard."));
                             }
                         }
 
@@ -259,30 +280,111 @@ namespace Certify.Core.Management
                             var sslPort = b.IsFtpSite ? 21 : 443;
                             var targetIPAddress = "*";
 
-                            if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort))
-                            {
-                                sslPort = int.Parse(requestConfig.BindingPort);
-                            }
+                            var isHostnameSpecified = !nonSpecificHostnames.Contains(hostname) && !string.IsNullOrWhiteSpace(hostname);
 
-                            // if binding already exists (https or ftp), re-use existing port and IP choices.
+                            // use sni by default if hostname is specified
+                            var useSNI = isHostnameSpecified;
+
+                            var specificIPWarning = "Specific IPs in bindings can cause binding conflicts and should only be used with extreme caution. Generally bindings should have IP set to All Unassigned, Hostname set and SNI enabled.";
 
                             if (b.Protocol == "https" || b.Protocol == "ftp")
                             {
-                                if (b.Port > 0)
+                                // Updating an existing binding
+                                bindingExplanationSteps.Add(new ActionStep(category, "Update Binding", "The existing binding will be updated with new settings."));
+
+                                // re-use existing port and IP choices, if appropriate.
+                                if (b.Port > 0 && b.Port != sslPort)
                                 {
                                     sslPort = b.Port;
+                                    bindingExplanationSteps.Add(new ActionStep(category, "Binding Port", "Existing binding uses non-default port so that will be re-used in the updated binding."));
                                 }
 
+                                // carry over the custom/manually set target IP address for the updated binding if the IP is not in the "unassigned" set
+                                // Here we are assuming that the user has intentionally specified the IP.
                                 if (!unassignedIPs.Contains(b.IP))
                                 {
                                     targetIPAddress = b.IP;
+                                    var step = new ActionStep(category, "Specific IP", $"Existing binding uses a specific IP, so that will be re-used in the updated binding. {specificIPWarning}");
+                                    step.HasWarning = true;
+                                    bindingExplanationSteps.Add(step);
+                                }
+
+                                if (!useSNI && b.IsSNIEnabled)
+                                {
+                                    // if sni not enabled/requested but source binding being updated actually uses it, use it again.   
+                                    useSNI = true;
+
+                                    var step = new ActionStep(category, "SNI Enabled", "SNI was enabled only because the existing binding uses SNI.");
+                                    step.HasWarning = true;
+                                    bindingExplanationSteps.Add(step);
+
+                                }
+                                else if (useSNI && !b.IsSNIEnabled && b.Protocol == "https")
+                                {
+                                    // if sni enabled/requested but source binding being updated doesn't use it, disable it
+                                    useSNI = false;
+
+                                    var step = new ActionStep(category, "SNI Disabled", "SNI would normally be used but was disabled because the existing binding has SNI disabled. Use non-SNI bindings with caution.");
+                                    step.HasWarning = true;
+                                    bindingExplanationSteps.Add(step);
                                 }
                             }
                             else
                             {
-                                if (!unassignedIPs.Contains(requestConfig.BindingIPAddress))
+                                // Add a new https binding, based on a source http binding
+                                bindingExplanationSteps.Add(new ActionStep(category, "Add Binding", "A new binding will be created based on the existing binding hostname."));
+
+                                // use sni if requested or if not specified then use sni if we have a hostname
+                                useSNI = requestConfig.BindingUseSNI ?? isHostnameSpecified;
+
+                                if (useSNI)
                                 {
-                                    targetIPAddress = requestConfig.BindingIPAddress;
+                                    var step = new ActionStep(category, "SNI Enabled", "SNI will be used by default.");
+                                    bindingExplanationSteps.Add(step);
+                                }
+
+                                // if a specific binding port is requested, use that
+                                if (!string.IsNullOrWhiteSpace(requestConfig.BindingPort))
+                                {
+                                    sslPort = int.Parse(requestConfig.BindingPort);
+
+                                    if (sslPort!=443)
+                                    {
+                                        var step = new ActionStep(category, "Binding Port", $"A non-standard http port has been requested ({sslPort}) .");
+                                        bindingExplanationSteps.Add(step);
+                                    }
+                                }
+
+                                // if a specific IP binding is requested only allow it if no hostname specified or SNI not enabled, otherwise targetIPAddress is * (All Unassigned)
+                                // in general IP specific bindings are not required when SNI is available and hostname is known and using specific IPs can eventually lead to binding conflicts if a non-SNI binding gets created on the same IP.
+
+                                if (!string.IsNullOrWhiteSpace(requestConfig.BindingIPAddress) && !unassignedIPs.Contains(requestConfig.BindingIPAddress))
+                                {
+                                    // if a custom target IP has been request, only permit it if hostname not specified or SNI specifically disabled.
+                                    if (!useSNI || (string.IsNullOrWhiteSpace(hostname) || nonSpecificHostnames.Contains(hostname)))
+                                    {
+                                        // no hostname specified, allow a target IP address
+                                        targetIPAddress = requestConfig.BindingIPAddress;
+
+                                        var step = new ActionStep(category, "Specific IP", $"A specific binding IP {requestConfig.BindingIPAddress} has been requested. {specificIPWarning}");
+                                        step.HasWarning = true;
+                                        bindingExplanationSteps.Add(step);
+                                    }
+                                    else
+                                    {
+                                        targetIPAddress = "*";
+                                        var step = new ActionStep(category, "Non-specific IP", $"Binding IP will be set to All Unassigned (recommended default).");
+                                        bindingExplanationSteps.Add(step);
+                                    }
+                                }
+                                else if (nonSpecificHostnames.Contains(hostname) && !unassignedIPs.Contains(b.IP) && requestConfig.DeploymentBindingBlankHostname)
+                                {
+                                    // SNI cannot be used because there is no hostname but the original http binding was IP specific
+                                    targetIPAddress = b.IP;
+
+                                    var step = new ActionStep(category, "Specific IP", $"A specific binding IP {requestConfig.BindingIPAddress} will be used because the original http binding has a specific IP and no hostname has been set on the binding. {specificIPWarning}");
+                                    step.HasWarning = true;
+                                    bindingExplanationSteps.Add(step);
                                 }
                             }
 
@@ -299,12 +401,14 @@ namespace Certify.Core.Management
                                    certHash,
                                    hostname,
                                    sslPort: sslPort,
-                                   useSNI: (requestConfig.BindingUseSNI != null ? (bool)requestConfig.BindingUseSNI : true),
+                                   useSNI: useSNI,
                                    ipAddress: targetIPAddress,
                                    alwaysRecreateBindings: requestConfig.AlwaysRecreateBindings,
                                    isPreviewOnly: isPreviewOnly
                                );
 
+                                stepActions.First().Substeps = bindingExplanationSteps;
+                                
                                 actions.AddRange(stepActions);
                             }
                             else
@@ -322,6 +426,8 @@ namespace Certify.Core.Management
                                    isPreviewOnly: isPreviewOnly
                                );
 
+                                stepActions.First().Substeps = bindingExplanationSteps;
+
                                 actions.AddRange(stepActions);
                             }
                         }
@@ -336,6 +442,9 @@ namespace Certify.Core.Management
             return actions;
         }
 
+        /// <summary>
+        /// Check if a binding already exists for the given specification
+        /// </summary>
         public static bool HasExistingBinding(List<BindingInfo> bindings, BindingInfo spec)
         {
             foreach (var b in bindings)
@@ -356,6 +465,35 @@ namespace Certify.Core.Management
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Test if two bindings are equivalent
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static bool AreBindingsEquivalent(BindingInfo a, BindingInfo b)
+        {
+            if (a == null || b == null)
+            {
+                return false;
+            }
+
+            if (
+                (a.IP == b.IP || (unassignedIPs.Contains(a.IP) && unassignedIPs.Contains(b.IP))) &&
+                (a.Host == b.Host || (nonSpecificHostnames.Contains(a.Host) && nonSpecificHostnames.Contains(b.Host))) &&
+                a.Port == b.Port &&
+                a.IsSNIEnabled == b.IsSNIEnabled &&
+                a.Protocol == b.Protocol
+                )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -390,11 +528,6 @@ namespace Certify.Core.Management
             if (unassignedIPs.Contains(ipAddress))
             {
                 ipAddress = "*";
-            }
-            else
-            {
-                // specific IP address, SNI is not applicable
-                useSNI = false;
             }
 
             // can't use SNI is hostname is blank or wildcard
@@ -462,6 +595,8 @@ namespace Certify.Core.Management
                     }
                 }
 
+                action.ObjectResult = bindingSpec;
+
                 steps.Add(action);
             }
             else
@@ -495,6 +630,8 @@ namespace Certify.Core.Management
                         }
                     }
                 }
+
+                action.ObjectResult = bindingSpec;
 
                 steps.Add(action);
             }
