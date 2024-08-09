@@ -726,8 +726,8 @@ namespace Certify.Core.Tests.Unit
         public async Task HttpsIPBindingChecks()
         {
             var bindings = new List<BindingInfo> {
-                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="https" },
-                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="https" },
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=443, Protocol="https" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=443, Protocol="https" },
             };
             var deployment = new BindingDeploymentManager();
             var testManagedCert = new ManagedCertificate
@@ -764,9 +764,10 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Storage", results[0].Title);
 
+            // because the existing binding uses an IP address with non-SNI the resulting update should also use the IP address and no SNI.
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:80:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:443:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
         }
 
@@ -1209,6 +1210,132 @@ namespace Certify.Core.Tests.Unit
 
             // this test will currently fail because we are not looking at all sites to prevent duplicate bindings
             Assert.AreEqual(1, results.Count);
+        }
+
+        [TestMethod, Description("Test that existing IP specific https bindings is preserved")]
+
+        public async Task TestIPSpecific_ExistingHttpsBinding()
+        {
+
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{  Host="ipspecific.test.com", IP="127.0.0.1", Port=80, Protocol="http", SiteId="2"},
+                new BindingInfo{  Host="ipspecific.test.com", IP="127.0.0.1", Port=443, IsSNIEnabled=true, Protocol="https",  SiteId="2"},
+                new BindingInfo{  Host="ipspecific2.test.com", IP="127.0.0.1", Port=80, Protocol="http", SiteId="2"},
+                new BindingInfo{  Host="", IP="127.0.0.1", Port=80, Protocol="http", SiteId="2"},
+                new BindingInfo{  Host="nonipspecific.test.com", IP="*", Port=80, Protocol="http", SiteId="2"},
+                new BindingInfo{  Host="nonipspecific2.test.com", IP="*", Port=443, IsSNIEnabled=true, Protocol="https", SiteId="2"},
+                new BindingInfo{  Host="nonipspecific3.test.com", IP="*", Port=443, IsSNIEnabled=false, Protocol="https", SiteId="2"},
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "IPSpecificBindings",
+                UseStagingMode = true,
+                ServerSiteId = "2", //target for single site deployment
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ipspecific.test.com",
+                    SubjectAlternativeNames = new string[] { "ipspecific.test.com", "ipspecific2.test.com", "nonipspecific.test.com", "nonipspecific2.test.com", "nonipspecific3.test.com" },
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.SingleSite,
+                    
+                    DeploymentBindingBlankHostname = true,
+                    BindingIPAddress = "127.0.0.1",
+                    BindingPort = "443",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.WEBHOSTING_STORE_NAME);
+
+            Assert.AreEqual(6, results.Count(r=>r.ObjectResult is BindingInfo));
+
+            // existing IP specific https binding should be preserved
+            var bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "ipspecific.test.com")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "ipspecific.test.com", IP = "127.0.0.1", IsSNIEnabled = true, Port = 443, Protocol = "https" }), "IP should be preserved on existing https binding");
+
+            // new https binding should not be IP specific when SNI can be used
+            bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "ipspecific2.test.com")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "ipspecific2.test.com", IP = "*", IsSNIEnabled = true, Port = 443, Protocol = "https" }), "IP should not be preserved on new https binding converted from IP specific http binding where hostname and SNI are applicable");
+
+            // new https binding blank hostname, IP specific, non-sni
+            bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "", IP = "127.0.0.1", IsSNIEnabled = false, Port = 443, Protocol = "https" }), "IP should be preserved on new https binding converted from IP specific http binding where hostname and SNI are not applicable");
+
+            // new https binding with hostname, IP unassigned, sni
+            bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "nonipspecific.test.com")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "nonipspecific.test.com", IP = "*", IsSNIEnabled = true, Port = 443, Protocol = "https" }), "Standard http binding conversion, IP unassigned, hostname set, sni enabled");
+
+            // existing https binding with hostname, IP unassigned, sni
+            bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "nonipspecific2.test.com")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "nonipspecific2.test.com", IP = null, IsSNIEnabled = true, Port = 443, Protocol = "https" }), "Should be equivalent");
+
+            // existing https binding with hostname, IP unassigned, sni not enabled on original binding
+            bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "nonipspecific3.test.com")?.ObjectResult as BindingInfo;
+            Assert.IsTrue(BindingDeploymentManager.AreBindingsEquivalent(bindingInfo, new BindingInfo { Host = "nonipspecific3.test.com", IP = "*", IsSNIEnabled = false, Port = 443, Protocol = "https" }), "Should be equivalent");
+
+        }
+
+        [TestMethod, Description("Test that new IP specific https bindings is created as All Unassigned")]
+        public async Task TestIPSpecific_NewHttpsBinding()
+        {
+
+            var bindings = new List<BindingInfo> {
+                new BindingInfo{  Host="ipspecific.test.com", IP="127.0.0.1", Port=80, Protocol="http", SiteId="2"}
+            };
+
+            var deployment = new BindingDeploymentManager();
+            var testManagedCert = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "IPSpecificBindings",
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = "ipspecific.test.com",
+                    PerformAutomatedCertBinding = true,
+                    DeploymentSiteOption = DeploymentOption.Auto,
+                    BindingIPAddress = "127.0.0.1",
+                    BindingPort = "443",
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>
+                        {
+                            new CertRequestChallengeConfig{
+                                ChallengeType= SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                                ChallengeProvider = "DNS01.API.Route53",
+                                ChallengeCredentialKey = "ABC123"
+                            }
+                        }
+                },
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            var mockTarget = new MockBindingDeploymentTarget();
+            mockTarget.AllBindings = bindings;
+
+            var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
+
+            Assert.AreEqual(2, results.Count);
+
+            var bindingResult = results.Last();
+            var bindingInfo = bindingResult.ObjectResult as BindingInfo;
+            Assert.IsNotNull(bindingInfo);
+            Assert.IsTrue(bindingInfo.IsSNIEnabled, "SNI should be enabled on the target binding");
+            Assert.AreEqual("*", bindingInfo.IP, "IP should be All Unassigned * instead of a specific IP");
+            Assert.AreEqual("ipspecific.test.com", bindingInfo.Host);
+
         }
     }
 }

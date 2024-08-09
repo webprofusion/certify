@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -34,8 +33,6 @@ namespace Certify.Management
         {
             try
             {
-                Debug.WriteLine("Checking for renewal tasks..");
-
                 SettingsManager.LoadAppSettings();
 
                 // perform pending renewals
@@ -963,6 +960,8 @@ namespace Certify.Management
                         }
                         else
                         {
+                            LogSubsteps(log, actions);
+
                             // certificate deployment was completed, log success
                             log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
                         }
@@ -1074,6 +1073,35 @@ namespace Certify.Management
             log?.Debug($"End of CompleteCertificateRequest.");
 
             return result;
+        }
+
+        private static void LogSubsteps(ILog log, List<ActionStep> actions)
+        {
+            if (actions != null)
+            {
+                foreach (var a in actions)
+                {
+                    log?.Information("{category}: {title} - {description}", a.Category, a.Title, a.Description);
+                    if (a.Substeps != null)
+                    {
+                        foreach (var b in a.Substeps)
+                        {
+                            if (b.HasError)
+                            {
+                                log?.Error("{category}: {title} - {description}", b.Category, b.Title, b.Description);
+                            }
+                            else if (b.HasWarning)
+                            {
+                                log?.Warning("{category}: {title} - {description}", b.Category, b.Title, b.Description);
+                            }
+                            else
+                            {
+                                log?.Information("{category}: {title} - {description}", b.Category, b.Title, b.Description);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -1307,7 +1335,13 @@ namespace Certify.Management
                 logPrefix = "[Preview Mode] ";
             }
 
-            _serviceLog?.Information($"{(isPreviewOnly ? "Previewing" : "Performing")} Certificate Deployment: {managedCertificate.Name}");
+            var log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+            log?.Information("{mode} Certificate Deployment: {name}", (isPreviewOnly ? "Previewing" : "Performing"), managedCertificate.Name);
+
+            if (!isPreviewOnly)
+            {
+                _serviceLog?.Information("Performing Certificate Deployment: {name}", managedCertificate.Name);
+            }
 
             var result = new CertificateRequestResult(managedCertificate);
             var config = managedCertificate.RequestConfig;
@@ -1345,6 +1379,9 @@ namespace Certify.Management
 
             if (!actions.Any(a => a.HasError))
             {
+
+                LogSubsteps(log, actions);
+
                 //all done
                 LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
@@ -1367,8 +1404,6 @@ namespace Certify.Management
 
                     // run applicable deployment tasks (whether success or failed), powershell
                     LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
-
-                    var log = ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
 
                     var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks);
 

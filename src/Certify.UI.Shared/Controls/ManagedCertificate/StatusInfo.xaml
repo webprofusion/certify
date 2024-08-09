@@ -120,7 +120,7 @@
                     <TextBlock
                         Margin="4,0,16,0"
                         Style="{StaticResource Instructions}"
-                        Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration." />
+                        Text="Renewal failures can be caused by temporary API timeouts, rate limits, configuration problems or settings which are no longer valid. Please review the renewal status error and test your configuration. Items which fail repeatedly more than 1000 times will not be attempted again and must be manually requested." />
                     <TextBlock
                         Margin="4,4,0,0"
                         FontWeight="Bold"
