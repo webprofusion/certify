@@ -13,7 +13,6 @@ using Certify.Models.Providers;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Core;
 
 namespace Certify.Management
 {
