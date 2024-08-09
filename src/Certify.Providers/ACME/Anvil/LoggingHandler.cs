@@ -66,7 +66,7 @@ namespace Certify.Providers.ACME.Anvil
                     if (response?.Content != null)
                     {
                         try
-                        {  
+                        {
                             _log.Debug("Content: {content}", await response.Content.ReadAsStringAsync());
                         }
                         catch
