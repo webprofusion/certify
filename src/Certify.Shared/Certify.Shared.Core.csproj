@@ -21,6 +21,7 @@
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="7.0.1" />
         <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
         <PackageReference Include="Arsoft.Tools.Net" Version="3.2.0" Condition="'$(TargetFramework)' == 'net6.0'" />
+        <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
 
     </ItemGroup>
 

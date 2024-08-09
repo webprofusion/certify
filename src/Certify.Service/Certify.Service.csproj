@@ -73,6 +73,8 @@
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="Topshelf" Version="4.3.0" />
         <PackageReference Include="Topshelf.Serilog" Version="4.3.0" />
+        <PackageReference Include="System.Security.Permissions" Version="7.0.0" />
+        
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Properties\" />
