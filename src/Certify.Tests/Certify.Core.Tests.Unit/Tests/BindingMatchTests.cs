@@ -1240,7 +1240,7 @@ namespace Certify.Core.Tests.Unit
                     SubjectAlternativeNames = new string[] { "ipspecific.test.com", "ipspecific2.test.com", "nonipspecific.test.com", "nonipspecific2.test.com", "nonipspecific3.test.com" },
                     PerformAutomatedCertBinding = true,
                     DeploymentSiteOption = DeploymentOption.SingleSite,
-                    
+
                     DeploymentBindingBlankHostname = true,
                     BindingIPAddress = "127.0.0.1",
                     BindingPort = "443",
@@ -1261,7 +1261,7 @@ namespace Certify.Core.Tests.Unit
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.WEBHOSTING_STORE_NAME);
 
-            Assert.AreEqual(6, results.Count(r=>r.ObjectResult is BindingInfo));
+            Assert.AreEqual(6, results.Count(r => r.ObjectResult is BindingInfo));
 
             // existing IP specific https binding should be preserved
             var bindingInfo = results.Last(r => (r.ObjectResult as BindingInfo)?.Host == "ipspecific.test.com")?.ObjectResult as BindingInfo;

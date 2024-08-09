@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Providers;
-using Microsoft.Web.Administration;
 
 namespace Certify.Core.Management
 {
@@ -348,7 +346,7 @@ namespace Certify.Core.Management
                                 {
                                     sslPort = int.Parse(requestConfig.BindingPort);
 
-                                    if (sslPort!=443)
+                                    if (sslPort != 443)
                                     {
                                         var step = new ActionStep(category, "Binding Port", $"A non-standard http port has been requested ({sslPort}) .");
                                         bindingExplanationSteps.Add(step);
@@ -408,7 +406,7 @@ namespace Certify.Core.Management
                                );
 
                                 stepActions.First().Substeps = bindingExplanationSteps;
-                                
+
                                 actions.AddRange(stepActions);
                             }
                             else
