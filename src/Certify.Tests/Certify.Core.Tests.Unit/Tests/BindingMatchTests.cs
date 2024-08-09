@@ -726,8 +726,8 @@ namespace Certify.Core.Tests.Unit
         public async Task HttpsIPBindingChecks()
         {
             var bindings = new List<BindingInfo> {
-                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=80, Protocol="https" },
-                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=80, Protocol="https" },
+                new BindingInfo{ Host="test.com", IP="127.0.0.1", Port=443, Protocol="https" },
+                new BindingInfo{ Host="www.test.com", IP="127.0.0.1", Port=443, Protocol="https" },
             };
             var deployment = new BindingDeploymentManager();
             var testManagedCert = new ManagedCertificate
@@ -764,9 +764,10 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Storage", results[0].Title);
 
+            // because the existing binding uses an IP address with non-SNI the resulting update should also use the IP address and no SNI.
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:80:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:443:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
         }
 
