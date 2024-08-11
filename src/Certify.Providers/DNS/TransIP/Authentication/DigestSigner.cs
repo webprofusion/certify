@@ -33,7 +33,7 @@ namespace Certify.Providers.DNS.TransIP.Authentication
                 case AsymmetricCipherKeyPair keyPair:
                     return keyPair.Private;
                 default:
-                    throw new NotImplementedException($"Error getting cipher parameters. '{pem.GetType()}' is not supported.");
+                    throw new NotImplementedException($"Error getting cipher parameters. '{(pem?.GetType())}' is not supported. Check key is a valid PEM format private key.");
             }
         }
 
