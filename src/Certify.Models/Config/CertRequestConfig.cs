@@ -343,8 +343,6 @@ namespace Certify.Models
 
         private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
-        private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
         public List<CertIdentifierItem> GetCertificateIdentifiers()
         {
             var identifiers = new List<CertIdentifierItem>();
