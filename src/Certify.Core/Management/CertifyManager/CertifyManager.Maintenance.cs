@@ -15,29 +15,6 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        /// <summary>
-        /// Upgrade/migrate settings from previous version if applicable
-        /// </summary>
-        /// <returns></returns>
-        private async Task UpgradeSettings()
-        {
-            var systemVersion = Util.GetAppVersion().ToString();
-            var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
-
-            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
-            {
-                _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
-                    { "previousVersion", previousVersion },
-                    { "currentVersion", systemVersion }
-                });
-
-                // service has been updated, run any required migrations
-                await PerformServiceUpgrades();
-
-                CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
-                SettingsManager.SaveAppSettings();
-            }
-        }
 
         /// <summary>
         /// Upgrade/migrate settings from previous version if applicable
