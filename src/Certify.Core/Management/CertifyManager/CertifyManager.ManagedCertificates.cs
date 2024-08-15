@@ -439,7 +439,9 @@ namespace Certify.Management
 
             if (result.Provider != null)
             {
-                return await result.Provider.GetZones();
+                var list = await result.Provider.GetZones();
+
+                return list?.OrderBy(x => x.Name).ToList();
             }
             else
             {
