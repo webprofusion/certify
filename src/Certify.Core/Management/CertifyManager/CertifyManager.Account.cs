@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -14,7 +15,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private static object _accountsLock = new object();
+        private static readonly Lock _accountsLock = new();
         private List<AccountDetails> _accounts;
 
         /// <summary>

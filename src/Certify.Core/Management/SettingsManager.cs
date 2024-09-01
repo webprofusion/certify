@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Certify.Models;
 
 namespace Certify.Management
@@ -8,7 +9,7 @@ namespace Certify.Management
     public sealed class CoreAppSettings
     {
         private static volatile CoreAppSettings instance;
-        private static object syncRoot = new object();
+        private static readonly Lock syncRoot = new();
 
         private CoreAppSettings()
         {
@@ -188,7 +189,7 @@ namespace Certify.Management
     public class SettingsManager
     {
         private const string COREAPPSETTINGSFILE = "appsettings.json";
-        private static Object settingsLocker = new Object();
+        private static readonly Lock settingsLocker = new();
 
         public static bool FromPreferences(Models.Preferences prefs)
         {
