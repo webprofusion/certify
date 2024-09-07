@@ -13,7 +13,7 @@
         <PackageReference Include="Polly" Version="8.4.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.8" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.1" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.7.3" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="8.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.8" />
