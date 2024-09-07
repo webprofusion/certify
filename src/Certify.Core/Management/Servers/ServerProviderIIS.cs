@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
@@ -24,7 +23,7 @@ namespace Certify.Management.Servers
         /// <summary>
         /// We use a lock on any method that uses CommitChanges, to avoid writing changes at the same time
         /// </summary>
-        private static readonly Lock _iisAPILock = new();
+        private static readonly Lock _iisAPILock = LockFactory.Create();
 
         private ILog _log;
 

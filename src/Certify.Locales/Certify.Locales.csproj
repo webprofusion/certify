@@ -12,6 +12,9 @@
         <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
     <ItemGroup>
+      <PackageReference Include="Backport.System.Threading.Lock" Version="2.0.0" />
+    </ItemGroup>
+    <ItemGroup>
         <Compile Update="Properties\Resources.Designer.cs">
             <DesignTime>True</DesignTime>
             <AutoGen>True</AutoGen>

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -12,7 +11,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private readonly Lock _dataStoreLocker = new();
+        private readonly Lock _dataStoreLocker = LockFactory.Create();
 
         private async Task<IManagedItemStore> GetManagedItemStoreProvider(DataStoreConnection dataStore)
         {

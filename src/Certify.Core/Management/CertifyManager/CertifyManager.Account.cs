@@ -15,7 +15,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private static readonly Lock _accountsLock = new();
+        private static readonly Lock _accountsLock = LockFactory.Create();
         private List<AccountDetails> _accounts;
 
         /// <summary>
