@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 
 #nullable disable
@@ -27,5 +28,7 @@ namespace Certify.Providers.CertificateManagers
         Task<List<CertificateRequestResult>> PerformRenewalAllManagedCertificates(RenewalSettings settings, Dictionary<string, Progress<RequestProgressState>> progressTrackers = null);
 
         Task PerformCertificateCleanup();
+
+        ProviderDefinition GetProviderDefinition();
     }
 }
