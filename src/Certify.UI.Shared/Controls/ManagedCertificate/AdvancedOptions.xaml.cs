@@ -255,7 +255,8 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             var result = await AppViewModel.Current.PerformChallengeCleanup(ItemViewModel.SelectedItem);
 
-            AppViewModel.Current.ShowNotification(result.FirstOrDefault().Message);
+            AppViewModel.Current.ShowNotification("Challenge Cleanup Completed");
+
         }
     }
 }
