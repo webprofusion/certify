@@ -302,6 +302,11 @@ namespace Certify.Models
         /// </summary>
         public string? CustomRenewalIntervalMode { get; set; }
 
+        /// <summary>
+        /// PEM encoded version of public certificate
+        /// </summary>
+        public string? CertificatePEM { get; set; }
+
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
         [JsonIgnore]
