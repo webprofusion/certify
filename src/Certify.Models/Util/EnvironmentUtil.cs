@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -12,45 +12,50 @@ namespace Certify.Models
 
         private static void ApplyRestrictedACL(DirectoryInfo dir)
         {
-            // disable default inheritance for the existing path ACL
-            var acl = dir.GetAccessControl();
-            acl.SetAccessRuleProtection(true, true);
-            dir.SetAccessControl(acl);
-
-            // removing any existing ACL entries for users group
-            acl = dir.GetAccessControl();
-            var currentRules = acl.GetAccessRules(true, true, typeof(SecurityIdentifier));
-
-            var allUsersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
-
-            var processUserSid = WindowsIdentity.GetCurrent().User;
-
-            if (processUserSid != null)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                foreach (FileSystemAccessRule rule in currentRules)
+
+                // disable default inheritance for the existing path ACL
+                var acl = dir.GetAccessControl();
+                acl.SetAccessRuleProtection(true, true);
+                dir.SetAccessControl(acl);
+
+                // removing any existing ACL entries for users group
+                acl = dir.GetAccessControl();
+                var currentRules = acl.GetAccessRules(true, true, typeof(SecurityIdentifier));
+
+                var allUsersSid = new SecurityIdentifier(WellKnownSidType.BuiltinUsersSid, null);
+
+                var processUserSid = WindowsIdentity.GetCurrent().User;
+
+                if (processUserSid != null)
                 {
-                    if (rule.IdentityReference == allUsersSid || rule.IdentityReference == processUserSid)
+                    foreach (FileSystemAccessRule rule in currentRules)
                     {
-                        acl.RemoveAccessRuleAll(rule);
+                        if (rule.IdentityReference == allUsersSid || rule.IdentityReference == processUserSid)
+                        {
+                            acl.RemoveAccessRuleAll(rule);
+                        }
                     }
+
+                    // add full control for the current (process) user 
+                    var currentUserRights = new FileSystemAccessRule(processUserSid, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow);
+                    acl.AddAccessRule(currentUserRights);
                 }
 
-                // add full control for the current (process) user 
-                var currentUserRights = new FileSystemAccessRule(processUserSid, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow);
-                acl.AddAccessRule(currentUserRights);
+                // add full control for administrators
+                var adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
+                var adminRights = new FileSystemAccessRule(adminSid, FileSystemRights.FullControl, AccessControlType.Allow);
+                acl.AddAccessRule(adminRights);
+
+                // add full control for system
+                var systemUserSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
+                var systemUserRights = new FileSystemAccessRule(systemUserSid, FileSystemRights.FullControl, AccessControlType.Allow);
+                acl.AddAccessRule(systemUserRights);
+
+                dir.SetAccessControl(acl);
+
             }
-
-            // add full control for administrators
-            var adminSid = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null);
-            var adminRights = new FileSystemAccessRule(adminSid, FileSystemRights.FullControl, AccessControlType.Allow);
-            acl.AddAccessRule(adminRights);
-
-            // add full control for system
-            var systemUserSid = new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null);
-            var systemUserRights = new FileSystemAccessRule(systemUserSid, FileSystemRights.FullControl, AccessControlType.Allow);
-            acl.AddAccessRule(systemUserRights);
-
-            dir.SetAccessControl(acl);
         }
 
         /// <summary>
