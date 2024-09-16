@@ -66,14 +66,14 @@ namespace Certify.Server.API
                 .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
 
                 .AddMessagePackProtocol();
-
+            
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
                     new[] { "application/octet-stream", "application/json" });
             });
 
-#if DEBUG
+            services.AddOpenApi(); // required in net9 to resolve warning "Unable to find service type 'Microsoft.Extensions.ApiDescriptions.IDocumentProvider' in dependency injection container."
 
             services.AddEndpointsApiExplorer();
 
@@ -139,7 +139,7 @@ namespace Certify.Server.API
                 });
 
             });
-#endif
+
             // connect to certify service 
             var configManager = new ServiceConfigManager();
             var serviceConfig = configManager.GetServiceConfig();

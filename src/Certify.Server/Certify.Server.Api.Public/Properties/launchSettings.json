@@ -4,7 +4,7 @@
       "commandName": "IISExpress",
       "launchUrl": "https://localhost:44361/docs",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
+        "ASPNETCORE_URLS": "https://localhost:44361;",
         "CERTIFY_SERVICE_HOST": "127.0.0.2", // note: aspire hosted uses this profile
         "CERTIFY_SERVICE_PORT": "9695"
       }
@@ -16,14 +16,14 @@
         "CERTIFY_SERVICE_HOST": "127.0.0.2",
         "CERTIFY_SERVICE_PORT": "9695"
       },
-      "applicationUrl": "https://0.0.0.0:44361;http://0.0.0.0:44360"
+      "applicationUrl": "https://0.0.0.0:44361;"
     },
     "WSL": {
       "commandName": "WSL2",
       "launchUrl": "https://localhost:44361/docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:44361;http://localhost:44360",
+        "ASPNETCORE_URLS": "https://localhost:44361;",
         "CERTIFY_SERVICE_HOST": "localhost",
         "CERTIFY_SERVICE_PORT": "9695"
       }
@@ -32,7 +32,7 @@
       "commandName": "Docker",
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/docs",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://0.0.0.0:44361;http://0.0.0.0:44360",
+        "ASPNETCORE_URLS": "https://0.0.0.0:44361;",
         "CERTIFY_SERVICE_HOST": "localhost",
         "CERTIFY_SERVICE_PORT": "9695"
       },
