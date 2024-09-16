@@ -15,7 +15,8 @@
       "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://127.0.0.2:9695"
+        "ASPNETCORE_URLS": "http://127.0.0.2:9695",
+        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub"
       }
     },
     "IIS Express": {
