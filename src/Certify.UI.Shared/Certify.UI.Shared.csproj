@@ -34,7 +34,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="ControlzEx" Version="7.0.0-alpha0106" />
-		<PackageReference Include="Fody" Version="6.8.1" PrivateAssets="All" />
+		<PackageReference Include="Fody" Version="6.8.2" PrivateAssets="All" />
 		<PackageReference Include="FontAwesome.WPF" Version="4.7.0.9">
 		  <NoWarn>NU1701</NoWarn>
 		</PackageReference>
