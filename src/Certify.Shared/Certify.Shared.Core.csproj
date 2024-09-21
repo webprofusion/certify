@@ -5,7 +5,7 @@
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Backport.System.Threading.Lock" Version="2.0.0" />
+        <PackageReference Include="Backport.System.Threading.Lock" Version="2.0.3" />
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
