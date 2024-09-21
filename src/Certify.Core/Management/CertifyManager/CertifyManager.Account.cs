@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +14,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private static object _accountsLock = new object();
+        private static readonly Lock _accountsLock = LockFactory.Create();
         private List<AccountDetails> _accounts;
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private object _dataStoreLocker = new object();
+        private readonly Lock _dataStoreLocker = LockFactory.Create();
 
         private async Task<IManagedItemStore> GetManagedItemStoreProvider(DataStoreConnection dataStore)
         {

@@ -51,8 +51,8 @@ namespace Certify.Core.Management.Challenges
         private int _autoCloseSeconds = 60;
         private string _baseUri = "";
         private Timer _autoCloseTimer;
-        private readonly object _challengeServerStartLock = new object();
-        private readonly object _challengeServerStopLock = new object();
+        private readonly Lock _challengeServerStartLock = LockFactory.Create();
+        private readonly Lock _challengeServerStopLock = LockFactory.Create();
 
         /// <summary>
         /// If true, challenge server has been started or a start has been attempted

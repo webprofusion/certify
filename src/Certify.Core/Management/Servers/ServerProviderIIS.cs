@@ -23,7 +23,7 @@ namespace Certify.Management.Servers
         /// <summary>
         /// We use a lock on any method that uses CommitChanges, to avoid writing changes at the same time
         /// </summary>
-        private static readonly object _iisAPILock = new object();
+        private static readonly Lock _iisAPILock = LockFactory.Create();
 
         private ILog _log;
 

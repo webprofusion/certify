@@ -8,7 +8,7 @@ namespace Certify.Management
     public sealed class CoreAppSettings
     {
         private static volatile CoreAppSettings instance;
-        private static object syncRoot = new object();
+        private static readonly Lock syncRoot = LockFactory.Create();
 
         private CoreAppSettings()
         {
@@ -188,7 +188,7 @@ namespace Certify.Management
     public class SettingsManager
     {
         private const string COREAPPSETTINGSFILE = "appsettings.json";
-        private static Object settingsLocker = new Object();
+        private static readonly Lock settingsLocker = LockFactory.Create();
 
         public static bool FromPreferences(Models.Preferences prefs)
         {
