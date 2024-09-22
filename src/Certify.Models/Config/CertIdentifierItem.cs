@@ -16,7 +16,7 @@
 
         public override string ToString()
         {
-            return $"{Value} [{IdentifierType}]";
+            return $"{Value}";
         }
 
         public CertIdentifierItem() { }
