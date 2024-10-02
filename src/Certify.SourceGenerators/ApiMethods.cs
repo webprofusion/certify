@@ -125,26 +125,28 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{{"id","string"}}
                     },
+                    /* per instance API, via management hub */
                     new GeneratedAPI {
-
                         OperationName = "GetAcmeAccounts",
                         OperationMethod = "HttpGet",
                         Comment = "Get All Acme Accounts",
+                        UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "accounts",
+                        PublicAPIRoute = "accounts/{instanceId}",
                         ServiceAPIRoute = "accounts",
-                        ReturnType = "ICollection<Models.AccountDetails>"
+                        ReturnType = "ICollection<Models.AccountDetails>",
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" } }
                     },
                     new GeneratedAPI {
-
                         OperationName = "AddAcmeAccount",
                         OperationMethod = "HttpPost",
                         Comment = "Add New Acme Account",
+                        UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "account",
+                        PublicAPIRoute = "account/{instanceId}",
                         ServiceAPIRoute = "accounts",
                         ReturnType = "Models.Config.ActionResult",
-                        Params =new Dictionary<string, string>{{"registration", "Certify.Models.ContactRegistration" } }
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "registration", "Certify.Models.ContactRegistration" } }
                     },
                     new GeneratedAPI {
 
@@ -157,18 +159,7 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{{ "certificateAuthority", "Certify.Models.CertificateAuthority" } }
                     },
-                    new GeneratedAPI {
 
-                        OperationName = "RemoveManagedCertificate",
-                        OperationMethod = "HttpDelete",
-                        Comment = "Remove Managed Certificate",
-                        PublicAPIController = "Certificate",
-                        PublicAPIRoute = "settings/{instanceId}/{managedCertId}",
-                        UseManagementAPI = true,
-                        ServiceAPIRoute = "managedcertificates/delete/{managedCertId}",
-                        ReturnType = "bool",
-                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
-                    },
                     new GeneratedAPI {
 
                         OperationName = "RemoveCertificateAuthority",
@@ -219,7 +210,19 @@ namespace Certify.SourceGenerators
                         ServiceAPIRoute = "system/migration/import",
                         ReturnType = "ICollection<ActionStep>",
                         Params =new Dictionary<string, string>{{ "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
-                    }
+                    },
+                    new GeneratedAPI {
+
+                        OperationName = "RemoveManagedCertificate",
+                        OperationMethod = "HttpDelete",
+                        Comment = "Remove Managed Certificate",
+                        PublicAPIController = "Certificate",
+                        PublicAPIRoute = "settings/{instanceId}/{managedCertId}",
+                        UseManagementAPI = true,
+                        ServiceAPIRoute = "managedcertificates/delete/{managedCertId}",
+                        ReturnType = "bool",
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
+                    },
                 };
         }
     }

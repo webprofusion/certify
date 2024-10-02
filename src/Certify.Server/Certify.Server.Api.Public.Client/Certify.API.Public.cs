@@ -2242,9 +2242,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync()
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId)
         {
-            return GetAcmeAccountsAsync(System.Threading.CancellationToken.None);
+            return GetAcmeAccountsAsync(instanceId, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -2253,8 +2253,11 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -2266,8 +2269,9 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/certificateauthority/accounts"
-                    urlBuilder_.Append("internal/v1/certificateauthority/accounts");
+                    // Operation Path: "internal/v1/certificateauthority/accounts/{instanceId}"
+                    urlBuilder_.Append("internal/v1/certificateauthority/accounts/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -2326,9 +2330,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(ContactRegistration body)
+        public virtual System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body)
         {
-            return AddAcmeAccountAsync(body, System.Threading.CancellationToken.None);
+            return AddAcmeAccountAsync(instanceId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -2337,8 +2341,11 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(ContactRegistration body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -2354,8 +2361,9 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/certificateauthority/account"
-                    urlBuilder_.Append("internal/v1/certificateauthority/account");
+                    // Operation Path: "internal/v1/certificateauthority/account/{instanceId}"
+                    urlBuilder_.Append("internal/v1/certificateauthority/account/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
