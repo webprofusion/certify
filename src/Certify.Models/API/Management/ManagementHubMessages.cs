@@ -24,6 +24,8 @@ namespace Certify.API.Management
         public const string TestManagedItemConfiguration = "TestManagedItemConfiguration";
         public const string PerformManagedItemRequest = "PerformManagedItemRequest";
 
+        public const string GetAcmeAccounts = "GetAcmeAccounts";
+        public const string AddAcmeAccount = "AddAcmeAccount";
         public const string Reconnect = "Reconnect";
     }
 
