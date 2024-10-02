@@ -114,5 +114,46 @@ namespace Certify.Models
 
             return path;
         }
+
+        public static string GetFriendlyOSName()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return $"{RuntimeInformation.OSDescription}";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                var osName = string.Empty;
+
+                string filePath = "/etc/os-release";
+
+                try
+                {
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
+                    {
+                        using (StreamReader reader = new StreamReader(fileStream))
+                        {
+                            string line;
+
+                            while ((line = reader.ReadLine()) != null)
+                            {
+
+                                if (line.StartsWith("NAME"))
+                                {
+                                    osName = line.Split('\"')[1]; //split the line string by " and get the second slice
+                                    return osName;
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    return $"Linux - {RuntimeInformation.OSDescription}";
+                }
+            }
+
+            return $"{RuntimeInformation.OSDescription}";
+        }
     }
 }
