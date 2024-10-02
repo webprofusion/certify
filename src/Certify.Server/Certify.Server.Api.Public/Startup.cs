@@ -140,7 +140,7 @@ namespace Certify.Server.API
 
             });
 
-            // connect to certify service 
+            // connect to primary certify service 
             var configManager = new ServiceConfigManager();
             var serviceConfig = configManager.GetServiceConfig();
 
@@ -245,7 +245,7 @@ namespace Certify.Server.API
         }
 
         /// <summary>
-        /// Connect to status stream of backend service
+        /// Connect to status stream of primary service
         /// </summary>
         /// <param name="app"></param>
         /// <returns></returns>

@@ -3,13 +3,14 @@ using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.API;
+using Certify.Models.Config;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Services
 {
-    public class ManagementAPI
+    public partial class ManagementAPI
     {
         IInstanceManagementStateProvider _mgmtStateProvider;
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
@@ -161,6 +162,47 @@ namespace Certify.Server.Api.Public.Services
             }
 
             return await Task.FromResult(sum);
+        }
+
+        public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) 
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetAcmeAccounts, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ICollection<Models.AccountDetails>>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<ActionResult?> AddAcmeAccount(string instanceId, ContactRegistration registration, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("registration", JsonSerializer.Serialize(registration))
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.AddAcmeAccount, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ActionResult>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
