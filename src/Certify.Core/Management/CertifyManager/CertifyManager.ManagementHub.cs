@@ -48,7 +48,7 @@ namespace Certify.Management
             var instanceInfo = new ManagedInstanceInfo
             {
                 InstanceId = $"{this.InstanceId}",
-                Title = Environment.MachineName
+                Title = $"{Environment.MachineName} [{EnvironmentUtil.GetFriendlyOSName()}]",
             };
 
             if (_managementServerClient != null)
@@ -161,6 +161,19 @@ namespace Certify.Management
                                                         );
 
                 val = true;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetAcmeAccounts)
+            {
+                val = await GetAccountRegistrations();
+            }
+            else if (arg.CommandType == ManagementHubCommands.AddAcmeAccount)
+            {
+                
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var registrationArg = args.FirstOrDefault(a => a.Key == "registration");
+                var registration = JsonSerializer.Deserialize<ContactRegistration>(registrationArg.Value);
+
+                val = await AddAccount(registration);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

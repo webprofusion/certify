@@ -176,7 +176,7 @@ namespace Certify.Management
         public static string GetUserAgent()
         {
             var versionName = "Certify/" + GetAppVersion().ToString();
-            return $"{versionName} (Windows; {Environment.OSVersion}) ";
+            return $"{versionName} ({RuntimeInformation.OSDescription}; {Environment.OSVersion}) ";
         }
 
         public static Version GetAppVersion()
