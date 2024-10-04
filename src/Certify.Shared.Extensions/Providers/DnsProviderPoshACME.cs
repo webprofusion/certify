@@ -18,52 +18,53 @@ namespace Certify.Core.Management.Challenges.DNS
 
         /*
             Implemented providers (Posh-ACME: https://github.com/rmbolger/Posh-ACME)
-            [Akamai](https://poshac.me/docs/v4/Plugins/Akamai),
-            [AutoDNS](https://poshac.me/docs/v4/Plugins/AutoDNS),
-            [All-Inkl](https://poshac.me/docs/v4/Plugins/All-Inkl),
-            [Bunny](https://poshac.me/docs/v4/Plugins/Bunny),
-            [ClouDNS](https://poshac.me/docs/v4/Plugins/ClouDNS),
-            [Combell](https://poshac.me/docs/v4/Plugins/Combell),
-            [Constellix](https://poshac.me/docs/v4/Plugins/Constellix),
-            [DMEasy](https://poshac.me/docs/v4/Plugins/DMEasy),
-            [DNSPod](https://poshac.me/docs/v4/Plugins/DNSPod),
-            [DNSimple](https://poshac.me/docs/v4/Plugins/DNSimple),
-            [DomainOffensive](https://poshac.me/docs/v4/Plugins/DomainOffensive),
-            [Domeneshop](https://poshac.me/docs/v4/Plugins/Domeneshop)
-            [deSEC](https://poshac.me/docs/v4/Plugins/DeSEC),
-            [DigitalOcean](https://poshac.me/docs/v4/Plugins/DOcean),
-            [Dreamhost](https://poshac.me/docs/v4/Plugins/Dreamhost),
-            [Dynu](https://poshac.me/docs/v4/Plugins/Dynu),
-            [EasyDNS](https://poshac.me/docs/v4/Plugins/EasyDNS),
-            [Gandi](https://poshac.me/docs/v4/Plugins/Gandi),
-            [Google Cloud](https://poshac.me/docs/v4/Plugins/GCloud),
-            [Google Domains](https://poshac.me/docs/v4/Plugins/GoogleDomains),
-            [Hetzner](https://poshac.me/docs/v4/Plugins/Hetzner),
-            [HostingDe](https://poshac.me/docs/v4/Plugins/HostingDe),
-            [Hurricane Electric](https://poshac.me/docs/v4/Plugins/HurricaneElectric),
-            [Infoblox](https://poshac.me/docs/v4/Plugins/Infoblox),
-            [Infomaniak](https://poshac.me/docs/v4/Plugins/Infomaniak)
-            [IONOS](https://poshac.me/docs/v4/Plugins/IONOS)
-            [IBM Cloud/SoftLayer](https://poshac.me/docs/v4/Plugins/IBMSoftLayer),
-            [ISPConfig](https://poshac.me/docs/v4/Plugins/ISPConfig),
-            [Leaseweb](https://poshac.me/docs/v4/Plugins/LeaseWeb/),
-            [Linode](https://poshac.me/docs/v4/Plugins/Linode),
-            [Loopia](https://poshac.me/docs/v4/Plugins/Loopia),
-            [LuaDns](https://poshac.me/docs/v4/Plugins/LuaDns),
-            [name.com](https://poshac.me/docs/v4/Plugins/NameCom),
-            [Namecheap](https://poshac.me/docs/v4/Plugins/Namecheap)
-            [NS1](https://poshac.me/docs/v4/Plugins/NS1),
-            [PointDNS](https://poshac.me/docs/v4/Plugins/PointDNS),
-            [PowerDNS](https://poshac.me/docs/v4/Plugins/PowerDNS),
-            [Rackspace](https://poshac.me/docs/v4/Plugins/Rackspace),
-            [RFC2136](https://poshac.me/docs/v4/Plugins/RFC2136),
-            [Selectel](https://poshac.me/docs/v4/Plugins/Selectel),
-            [Simply](https://poshac.me/docs/v4/Plugins/Simply),
-            [TotalUptime](https://poshac.me/docs/v4/Plugins/TotalUptime),
-            [UKFast](https://poshac.me/docs/v4/Plugins/UKFast),
-            [Yandex](https://poshac.me/docs/v4/Plugins/Yandex),
-            [Zilore](https://poshac.me/docs/v4/Plugins/Zilore)
-            [Zonomi](https://poshac.me/docs/v4/Plugins/Zonomi)
+            [Akamai](https://poshac.me/docs/latest/Plugins/Akamai),
+            [AutoDNS](https://poshac.me/docs/latest/Plugins/AutoDNS),
+            [All-Inkl](https://poshac.me/docs/latest/Plugins/All-Inkl),
+            [Bunny](https://poshac.me/docs/latest/Plugins/Bunny),
+            [ClouDNS](https://poshac.me/docs/latest/Plugins/ClouDNS),
+            [Combell](https://poshac.me/docs/latest/Plugins/Combell),
+            [Constellix](https://poshac.me/docs/latest/Plugins/Constellix),
+            [DMEasy](https://poshac.me/docs/latest/Plugins/DMEasy),
+            [DNSPod](https://poshac.me/docs/latest/Plugins/DNSPod),
+            [DNSimple](https://poshac.me/docs/latest/Plugins/DNSimple),
+            [DomainOffensive](https://poshac.me/docs/latest/Plugins/DomainOffensive),
+            [Domeneshop](https://poshac.me/docs/latest/Plugins/Domeneshop)
+            [deSEC](https://poshac.me/docs/latest/Plugins/DeSEC),
+            [DigitalOcean](https://poshac.me/docs/latest/Plugins/DOcean),
+            [Dreamhost](https://poshac.me/docs/latest/Plugins/Dreamhost),
+            [Dynu](https://poshac.me/docs/latest/Plugins/Dynu),
+            [EasyDNS](https://poshac.me/docs/latest/Plugins/EasyDNS),
+            [Gandi](https://poshac.me/docs/latest/Plugins/Gandi),
+            [Google Cloud](https://poshac.me/docs/latest/Plugins/GCloud),
+            [Google Domains](https://poshac.me/docs/latest/Plugins/GoogleDomains),
+            [Hetzner](https://poshac.me/docs/latest/Plugins/Hetzner),
+            [HostingDe](https://poshac.me/docs/latest/Plugins/HostingDe),
+            [Hurricane Electric](https://poshac.me/docs/latest/Plugins/HurricaneElectric),
+            [Infoblox](https://poshac.me/docs/latest/Plugins/Infoblox),
+            [Infomaniak](https://poshac.me/docs/latest/Plugins/Infomaniak)
+            [IONOS](https://poshac.me/docs/latest/Plugins/IONOS)
+            [IBM Cloud/SoftLayer](https://poshac.me/docs/latest/Plugins/IBMSoftLayer),
+            [ISPConfig](https://poshac.me/docs/latest/Plugins/ISPConfig),
+            [Leaseweb](https://poshac.me/docs/latest/Plugins/LeaseWeb/),
+            [Linode](https://poshac.me/docs/latest/Plugins/Linode),
+            [Loopia](https://poshac.me/docs/latest/Plugins/Loopia),
+            [LuaDns](https://poshac.me/docs/latest/Plugins/LuaDns),
+            [name.com](https://poshac.me/docs/latest/Plugins/NameCom),
+            [Namecheap](https://poshac.me/docs/latest/Plugins/Namecheap)
+            [NS1](https://poshac.me/docs/latest/Plugins/NS1),
+            [PointDNS](https://poshac.me/docs/latest/Plugins/PointDNS),
+            [PowerDNS](https://poshac.me/docs/latest/Plugins/PowerDNS),
+            [Rackspace](https://poshac.me/docs/latest/Plugins/Rackspace),
+            [RFC2136](https://poshac.me/docs/latest/Plugins/RFC2136),
+            [Selectel](https://poshac.me/docs/latest/Plugins/Selectel),
+            [Simply](https://poshac.me/docs/latest/Plugins/Simply),
+            [TencentDNS](https://poshac.me/docs/latest/Plugins/TencentDNS),
+            [TotalUptime](https://poshac.me/docs/latest/Plugins/TotalUptime),
+            [UKFast](https://poshac.me/docs/latest/Plugins/UKFast),
+            [Yandex](https://poshac.me/docs/latest/Plugins/Yandex),
+            [Zilore](https://poshac.me/docs/latest/Plugins/Zilore)
+            [Zonomi](https://poshac.me/docs/latest/Plugins/Zonomi)
 
             Adding a new provider:
             - update the list above
@@ -173,7 +174,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Akamai",
                 Title = "Akamai DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Akamai/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Akamai/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -194,7 +195,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.AkamaiEdgeRC",
                 Title = "Akamai DNS API with .edgerc file (using Posh-ACME)",
                 Description = "Validates via DNS API using .edgerc file",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Akamai/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Akamai/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -213,7 +214,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.All-Inkl",
                 Title = "All-Inkl API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/All-Inkl/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/All-Inkl/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -232,7 +233,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Aliyun",
                 Title = "Aliyun (Alibaba Cloud) DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Aliyun/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Aliyun/",
                 PropagationDelaySeconds = 120,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -251,7 +252,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.AutoDNS",
                 Title = "AutoDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/AutoDNS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/AutoDNS/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -272,7 +273,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Bunny",
                 Title = "Bunny.net DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Bunny/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Bunny/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -290,7 +291,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.ClouDNS",
                 Title = "ClouDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/ClouDNS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/ClouDNS/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -310,7 +311,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Combell",
                 Title = "Combell API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Combell/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Combell/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -329,7 +330,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Constellix",
                 Title = "Constellix API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Constellix/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Constellix/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -348,7 +349,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DMEasy",
                 Title = "DNS Made Easy DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DMEasy/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DMEasy/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -367,7 +368,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DNSPod",
                 Title = "DNSPod DNS API (Deprecated - Use v2 instead)",
                 Description = "Validates via DNS API using credentials. This provider is deprecated and you should switch to the V2 version.",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DNSPod/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DNSPod/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -386,7 +387,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DNSPod.v2",
                 Title = "DNSPod (v2) DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DNSPod/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DNSPod/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -406,7 +407,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DNSimple",
                 Title = "DNSimple DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DNSimple/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DNSimple/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -424,7 +425,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DigitalOcean",
                 Title = "DigitalOcean DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials (Personal Access Token)",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DOcean/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DOcean/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -442,7 +443,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DeSEC",
                 Title = "deSEC DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DeSEC/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DeSEC/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -461,7 +462,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.DomainOffensive",
                 Title = "DomainOffensive DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/DomainOffensive/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DomainOffensive/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -479,7 +480,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Domeneshop",
                 Title = "Domeneshop DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Domeneshop",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Domeneshop",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -498,7 +499,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Dreamhost",
                 Title = "Dreamhost DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Dreamhost/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Dreamhost/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -516,7 +517,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Dynu",
                 Title = "Dynu DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Dynu/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Dynu/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -535,7 +536,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.EasyDNS",
                 Title = "EasyDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/EasyDNS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/EasyDNS/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -555,7 +556,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.GCloud",
                 Title = "Google Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/GCloud/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/GCloud/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -573,7 +574,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.GoogleDomains",
                 Title = "Google Domains API (using Posh-ACME)",
                 Description = "Validates via Google Domains DNS ACME Challenge API",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/GoogleDomains/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/GoogleDomains/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -592,7 +593,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Gandi",
                 Title = "Gandi DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Gandi/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Gandi/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -610,7 +611,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Hetzner",
                 Title = "Hetzner DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Hetzner/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Hetzner/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -628,7 +629,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.HostingDE",
                 Title = "Hosting.de DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/HostingDE/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/HostingDE/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -646,7 +647,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.HurricaneElectric",
                 Title = "Hurricane Electric DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/HurricaneElectric/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/HurricaneElectric/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -666,7 +667,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.IBMSoftLayer",
                 Title = "IBM Cloud/SoftLayer DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/IBMSoftLayer/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/IBMSoftLayer/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -686,7 +687,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.ISPConfig",
                 Title = "ISPConfig DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/ISPConfig/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/ISPConfig/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -710,7 +711,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Infoblox",
                 Title = "Infoblox DDI DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Infoblox/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Infoblox/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -732,7 +733,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Infomaniak",
                 Title = "Infomaniak DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Infomaniak",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Infomaniak",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -750,7 +751,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.IONOS",
                 Title = "IONOS DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/IONOS",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/IONOS",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -769,7 +770,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.LeaseWeb",
                 Title = "Leaseweb DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/LeaseWeb/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/LeaseWeb/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -787,7 +788,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Linode",
                 Title = "Linode DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Linode/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Linode/",
                 PropagationDelaySeconds = 1020,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -805,7 +806,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Loopia",
                 Title = "Loopia DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Loopia/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Loopia/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -824,7 +825,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.LuaDns",
                 Title = "LuaDns API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/LuaDns/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/LuaDns/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -844,7 +845,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.NameCom",
                 Title = "name.com DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/NameCom/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/NameCom/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -864,7 +865,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.NS1",
                 Title = "NS1 DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/NS1/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/NS1/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -882,7 +883,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.NameCheap",
                 Title = "Namecheap DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Namecheap/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Namecheap/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -901,7 +902,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.PointDNS",
                 Title = "PointDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/PointDNS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/PointDNS/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -920,7 +921,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.PowerDNS",
                 Title = "PowerDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/PowerDNS/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/PowerDNS/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -939,7 +940,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Rackspace",
                 Title = "Rackspace Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Rackspace/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Rackspace/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -958,7 +959,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.RFC2136",
                 Title = "RFC2136 with nsupdate as DNS API (using Posh-ACME)",
                 Description = "Validates via nsupdate, using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/RFC2136/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/RFC2136/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -982,7 +983,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Selectel",
                 Title = "Selectel DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Selectel/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Selectel/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1000,7 +1001,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Simply",
                 Title = "Simply.com DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/SimplyCom/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/SimplyCom/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1016,10 +1017,29 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.TencentDNS",
+                Title = "Tencent DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/TencentDNS/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "TencentKeyId", Name = "Key ID", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "TencentSecret", Name = "Secret", IsRequired = true, IsCredential = true, ExtendedConfig=  _paramIsSecureStringConfig},
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=TencentDNS;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.TotalUptime",
                 Title = "TotalUptime Cloud DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/TotalUptime/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/TotalUptime/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1039,7 +1059,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.UKFast",
                 Title = "UKFast DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/UKFast/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/UKFast/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1057,7 +1077,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Yandex",
                 Title = "Yandex DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Yandex/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Yandex/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1075,7 +1095,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Zonomi",
                 Title = "Zonomi DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Zonomi/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Zonomi/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1090,10 +1110,30 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.ZoneEdit",
+                Title = "ZoneEdit DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/ZoneEdit/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters = new List<ProviderParameter>
+                {
+                    new ProviderParameter { Key = "ZEUsername", Name = "Username", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "Domain", Name = "Domain", IsRequired = true, IsCredential = true },
+                    new ProviderParameter { Key = "DomainToken", Name = "Domain Token", IsRequired = true, IsCredential = true, IsPassword=true },
+                    _defaultPropagationDelayParam
+                },
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ZoneEdit;Credential=ZEDynCredential,Domain,DomainToken;", // construct ZEDynCredential from Domain and DomainToken
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = true,
+                IsExperimental = true
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.RimuHosting",
                 Title = "Rimu Hosting DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Zonomi/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Zonomi/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
@@ -1112,7 +1152,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.Zilore",
                 Title = "Zilore DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/v4/Plugins/Zilore/",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Zilore/",
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters = new List<ProviderParameter>
                 {
