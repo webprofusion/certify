@@ -2082,6 +2082,11 @@ namespace Certify.Providers.ACME.Anvil
 
         public async Task<RenewalInfo> GetRenewalInfo(string certificateId)
         {
+            if (string.IsNullOrEmpty(certificateId))
+            {
+                return null;
+            }
+
             var info = await _acme.GetRenewalInfo(certificateId);
 
             if (info != null)

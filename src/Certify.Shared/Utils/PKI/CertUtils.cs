@@ -135,13 +135,21 @@ namespace Certify.Shared.Core.Utils.PKI
         {
             // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients
 
-            var certAKI = AuthorityKeyIdentifier.GetInstance(cert.GetExtensionValue(X509Extensions.AuthorityKeyIdentifier).GetOctets());
-            var certAKIbytes = certAKI.GetKeyIdentifier();
+            try
+            {
+                var certAKI = AuthorityKeyIdentifier.GetInstance(cert.GetExtensionValue(X509Extensions.AuthorityKeyIdentifier).GetOctets());
+                var certAKIbytes = certAKI.GetKeyIdentifier();
 
-            var certSerialBytes = cert.SerialNumber.ToByteArray();
-            var certId = $"{Util.ToUrlSafeBase64String(certAKIbytes)}.{Util.ToUrlSafeBase64String(certSerialBytes)}";
+                var certSerialBytes = cert.SerialNumber.ToByteArray();
+                var certId = $"{Util.ToUrlSafeBase64String(certAKIbytes)}.{Util.ToUrlSafeBase64String(certSerialBytes)}";
 
-            return certId;
+                return certId;
+            }
+            catch (Exception)
+            {
+                // if we cannot compute the certId (AKI not present etc), return null
+                return null;
+            }
         }
     }
 }
