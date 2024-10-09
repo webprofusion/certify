@@ -50,7 +50,7 @@
         <PackageReference Include="Owin" Version="1.0.0" />
         <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
         <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.1" />
         <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="Topshelf" Version="4.3.0" />
