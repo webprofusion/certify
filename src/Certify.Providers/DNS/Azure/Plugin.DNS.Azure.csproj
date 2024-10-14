@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Core" Version="1.44.0" />
+    <PackageReference Include="Azure.Core" Version="1.44.1" />
     <PackageReference Include="Azure.Identity" Version="1.12.1" />
     <PackageReference Include="Azure.ResourceManager.Dns" Version="1.1.1" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
