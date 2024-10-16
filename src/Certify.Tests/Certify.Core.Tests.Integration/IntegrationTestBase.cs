@@ -11,9 +11,13 @@ namespace Certify.Core.Tests
 {
     public class IntegrationTestBase
     {
-        public string PrimaryTestDomain = "test.certifytheweb.com"; // TODO: get this from debug config as it changes per dev machine
-        public string _primaryWebRoot = @"c:\inetpub\wwwroot\";
         public Dictionary<string, string> ConfigSettings = new Dictionary<string, string>();
+
+        public string PrimaryTestDomain = "test.certifytheweb.com"; // TODO: get this from debug config as it changes per dev machine
+        public string PrimaryWebRootPath = @"c:\inetpub\wwwroot\";
+
+        private string _testConfigPath = @"c:\temp\Certify\TestConfigSettings.json";
+
         internal ILog _log;
 
         public IntegrationTestBase()
@@ -23,13 +27,14 @@ namespace Certify.Core.Tests
                 PrimaryTestDomain = Environment.GetEnvironmentVariable("CERTIFY_TESTDOMAIN");
             }
 
-            /* ConfigSettings.Add("AWS_ZoneId", "example");
-             ConfigSettings.Add("Azure_ZoneId", "example");
-             ConfigSettings.Add("Cloudflare_ZoneId", "example");
-             System.IO.File.WriteAllText("C:\\temp\\TestConfigSettings.json", JsonConvert.SerializeObject(ConfigSettings));
-             */
-
-            ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText("C:\\temp\\Certify\\TestConfigSettings.json"));
+            if (File.Exists("C:\\temp\\Certify\\TestConfigSettings.json"))
+            {
+                ConfigSettings = JsonConvert.DeserializeObject<Dictionary<string, string>>(System.IO.File.ReadAllText(_testConfigPath));
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Test config file not found: " + _testConfigPath);
+            }
 
             _log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<IntegrationTestBase>());
         }
