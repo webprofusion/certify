@@ -38,6 +38,11 @@ namespace Certify.Models
         /// Request has been skipped due to temporary condition 
         /// </summary>
         Warning = 5,
+
+        /// <summary>
+        /// Request has been intentionally skipped due to a configuration or logical condition
+        /// </summary>
+        Skipped = 7
     }
 
     public class RequestProgressManagedItem

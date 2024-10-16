@@ -121,6 +121,8 @@ namespace Certify.Management
             var deploymentTasks = new List<DeploymentTask>();
             var steps = new List<ActionStep>();
 
+            var failedTasks = new List<DeploymentTask>();
+
             foreach (var taskConfig in taskList)
             {
                 // add task to execution list unless the task is deferred/manual and we are currently skipping deferred tasks
@@ -205,6 +207,19 @@ namespace Certify.Management
                             taskTriggerReason = "Task is enabled and will run because primary request was unsuccessful.";
                         }
                     }
+                    else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_TASK_ERROR)
+                    {
+                        if (!failedTasks.Any())
+                        {
+                            shouldRunCurrentTask = false;
+                            taskTriggerReason = "Task is enabled but will not run because preceding tasks were successful.";
+                        }
+                        else
+                        {
+                            shouldRunCurrentTask = true;
+                            taskTriggerReason = "Task is enabled and will run because a preceding task was unsuccessful.";
+                        }
+                    }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.MANUAL)
                     {
                         if (skipDeferredTasks)
@@ -230,13 +245,14 @@ namespace Certify.Management
                 }
 
                 var taskResults = new List<ActionResult>();
-
+                var wasTaskExecuted = false;
                 if (shouldRunCurrentTask)
                 {
                     log?.Information($"Task [{task.TaskConfig.TaskName}] :: {taskTriggerReason}");
                     task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
-                    taskResults = await task.Execute(log, _credentialsManager, result, CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
+                    wasTaskExecuted = true;
+                    taskResults = await task.Execute(log, _credentialsManager, result, cancellationToken: CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
 
                     if (!isPreviewOnly)
                     {
@@ -248,6 +264,8 @@ namespace Certify.Management
                         }
                         else
                         {
+                            failedTasks.Add(task);
+
                             if (!forceTaskExecute)
                             {
                                 _tc?.TrackEvent("TaskFailed", new Dictionary<string, string> {
@@ -328,7 +346,20 @@ namespace Certify.Management
                     Substeps = subSteps
                 };
 
-                task.TaskConfig.LastRunStatus = hasError ? RequestState.Error : RequestState.Success;
+                // task either has an error, was successful or was skipped
+                if (hasError)
+                {
+                    task.TaskConfig.LastRunStatus = RequestState.Error;
+                }
+                else if (wasTaskExecuted)
+                {
+                    task.TaskConfig.LastRunStatus = RequestState.Success;
+                }
+                else
+                {
+                    task.TaskConfig.LastRunStatus = RequestState.Skipped;
+                }
+
                 task.TaskConfig.LastResult = overallTaskResult;
 
                 steps.Add(currentStep);

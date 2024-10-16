@@ -25,6 +25,10 @@ namespace Certify.Config
         /// </summary>
         ON_ERROR = 4,
         /// <summary>
+        /// Task will run if any of the tasks failed (even if cert renewal was otherwise ok)
+        /// </summary>
+        ON_TASK_ERROR = 5,
+        /// <summary>
         /// Manual tasks don't run automatically and are only started by the user via the UI or via the command line
         /// </summary>
         MANUAL = 8
@@ -46,6 +50,7 @@ namespace Certify.Config
             { TaskTriggerType.ANY_STATUS,"Run On Success or On Error"},
             { TaskTriggerType.ON_SUCCESS,"Run On Success"},
             { TaskTriggerType.ON_ERROR,"Run On Error"},
+            { TaskTriggerType.ON_TASK_ERROR,"Run On Task Error (if any task failed)"},
             { TaskTriggerType.MANUAL,"Manual (run using UI or command line)"}
         };
     }

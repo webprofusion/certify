@@ -31,9 +31,6 @@ namespace Certify.Core.Tests
 
             certifyManager = new CertifyManager();
             certifyManager.Init().Wait();
-
-            // see integrationtestbase for environment variable replacement
-            PrimaryTestDomain = ConfigSettings["Cloudflare_TestDomain"];
         }
 
         private DeploymentTaskConfig GetMockTaskConfig(
@@ -153,6 +150,40 @@ namespace Certify.Core.Tests
                 var skippedStep = result
                     .Actions.Find(s => s.Key == "PostRequestTasks")
                     .Substeps.Find(s => s.Key == expectedSkipStepKey);
+
+                Assert.IsTrue(skippedStep.HasWarning, "Skipped step should have warning");
+            }
+            finally
+            {
+                await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+            }
+        }
+
+        [TestMethod, TestCategory("Tasks")]
+        public async Task TestRunPostTasksWithTaskFailTrigger()
+        {
+            // task 1 will fail, task 2 will run specifically because a preceeding failed
+            var managedCertificate = GetMockManagedCertificate("PostDeploymentTask3", testSiteDomain);
+
+            managedCertificate.PreRequestTasks = null;
+
+            managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
+                                                                            GetMockTaskConfig("Post Task 1 (on renewal success)", shouldError:true, triggerType: TaskTriggerType.ON_SUCCESS),
+                                                                                 GetMockTaskConfig("Post Task 2 (on renewal success)", continueOnPreviousError:true,  triggerType: TaskTriggerType.ON_SUCCESS),
+                                                                            GetMockTaskConfig("Post Task 3 (on task fail)", triggerType: TaskTriggerType.ON_TASK_ERROR)
+                                                                        };
+
+            try
+            {
+                // perform request but skip + fail main request 
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true, failOnSkip: false);
+
+                //ensure 3rd task runs because task 1 failed
+                var expectedFailureTaskStepKey = managedCertificate.PostRequestTasks.First(t => t.TaskName == "Post Task 3 (on task fail)").Id;
+               
+                var skippedStep = result
+                    .Actions.Find(s => s.Key == "PostRequestTasks")
+                    .Substeps.Find(s => s.Key == expectedFailureTaskStepKey);
 
                 Assert.IsTrue(skippedStep.HasWarning, "Skipped step should have warning");
             }
