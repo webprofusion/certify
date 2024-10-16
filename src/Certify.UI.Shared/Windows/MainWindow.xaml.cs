@@ -467,11 +467,14 @@ namespace Certify.UI.Windows
                     }
                     else
                     {
-                        MessageBox.Show(Application.Current.MainWindow, SR.Update_MandatoryUpdateQuit);
-                    }
+                        //quit
+                        var quitNow = MessageBox.Show(Application.Current.MainWindow, SR.Update_MandatoryUpdateQuit, ConfigResources.AppName, MessageBoxButton.OKCancel);
 
-                    //quit
-                    _appViewModel.GetApplication().Shutdown();
+                        if (quitNow == MessageBoxResult.OK)
+                        {
+                            _appViewModel.GetApplication().Shutdown();
+                        }
+                    }
                 }
             }
         }

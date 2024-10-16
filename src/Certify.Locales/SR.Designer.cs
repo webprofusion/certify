@@ -1755,7 +1755,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The current app version is no longer supported. Please update to proceed..
+        ///   Looks up a localized string similar to The current app version requires an essential update to ensure continued operation. Please update immediately. Close app now?.
         /// </summary>
         public static string Update_MandatoryUpdateQuit {
             get {

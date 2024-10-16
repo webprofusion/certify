@@ -117,26 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="LicenseKey" xml:space="preserve">
-    <value>Lisensnøkkel</value>
-  </data>
   <data name="Registration" xml:space="preserve">
     <value>Registrering</value>
   </data>
   <data name="RegistrationEmailAddress" xml:space="preserve">
     <value>Registrert e-postadresse</value>
   </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>Lisensnøkkel</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>Avbryt</value>
   </data>
-  <data name="New_Certificate" xml:space="preserve">
-    <value>Nytt sertifikat</value>
-  </data>
-  <data name="Settings" xml:space="preserve">
-    <value>Innstillinger</value>
-  </data>
   <data name="ValidateKey" xml:space="preserve">
     <value>Validér nøkkel</value>
+  </data>
+  <data name="New_Certificate" xml:space="preserve">
+    <value>Nytt sertifikat</value>
   </data>
   <data name="Renew_All" xml:space="preserve">
     <value>Forny alle</value>
@@ -149,6 +146,9 @@
   </data>
   <data name="In_Progress" xml:space="preserve">
     <value>Pågår</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Innstillinger</value>
   </data>
   <data name="About" xml:space="preserve">
     <value>Om</value>
@@ -345,6 +345,9 @@
   <data name="SelectAll" xml:space="preserve">
     <value>Velg alle</value>
   </data>
+  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
+    <value>Ikke velg noen</value>
+  </data>
   <data name="ManagedCertificateSettings_Primary" xml:space="preserve">
     <value>Hoved</value>
   </data>
@@ -356,9 +359,6 @@
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Avansert</value>
-  </data>
-  <data name="ManagedCertificateSettings_SelectNone" xml:space="preserve">
-    <value>Ikke velg noen</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeTypes" xml:space="preserve">
     <value>Utfordringstype:</value>
@@ -463,11 +463,11 @@
   <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
     <value>Webhook-test</value>
   </data>
-  <data name="failed" xml:space="preserve">
-    <value>feilet</value>
-  </data>
   <data name="succeed" xml:space="preserve">
     <value>lyktes</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>feilet</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
     <value>Webhook-forespørsel {0}: HTTP {1}</value>
@@ -556,5 +556,12 @@
   </data>
   <data name="General_Loading" xml:space="preserve">
     <value>Laster...</value>
+  </data>
+  <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
+    <value>Den nåværende appversjonen krever en viktig oppdatering for å sikre fortsatt drift. Vennligst oppdater umiddelbart. Vil du lukke appen nå?</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Update_ReadyToApply" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
 </root>

@@ -582,7 +582,7 @@
     <value>Loading...</value>
   </data>
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
-    <value>The current app version is no longer supported. Please update to proceed.</value>
+    <value>The current app version requires an essential update to ensure continued operation. Please update immediately. Close app now?</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
     <value>Note: these setting only apply to new https bindings, existing bindings are only updated with the new certificate. Using a fixed IP for multiple certificates will cause a binding conflict on Windows, use with caution.</value>

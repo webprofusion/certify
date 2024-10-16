@@ -579,7 +579,7 @@
     <value>Yükleniyor...</value>
   </data>
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
-    <value>Geçerli uygulama sürümü artık desteklenmiyor. Devam etmek için lütfen güncelleyin.</value>
+    <value>Mevcut uygulama sürümü, çalışmanın devamını sağlamak için önemli bir güncelleme gerektiriyor. Lütfen hemen güncelleyin. Uygulama şimdi kapatılsın mı?</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
     <value>Not: Bu ayar yalnızca yeni https bağlamaları için geçerlidir, mevcut bağlamalar yalnızca yeni sertifika ile güncellenir. Birden çok sertifika için sabit bir IP kullanmak, Windows'ta bağlama çakışmasına neden olur, dikkatli kullanın.</value>
