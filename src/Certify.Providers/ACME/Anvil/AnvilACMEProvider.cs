@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -825,10 +825,14 @@ namespace Certify.Providers.ACME.Anvil
 
                             lastException = unwrappedException;
 
-                            if (caSupportsARI && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId) && unwrappedException is AcmeRequestException acmeExp && acmeExp.Error.Status == System.Net.HttpStatusCode.Conflict)
+                            if (caSupportsARI && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId))
                             {
                                 //likely an ARI replaces conflict, skip ari replace on retry
-                                skipAriReplace = true;
+                                if (unwrappedException is AcmeRequestException acmeExp)
+                                {
+                                    log?.Warning($"Failed to begin certificate order. Skipped ARI Replace as a precaution: {acmeExp.Error?.Type} :: {acmeExp.Error?.Detail}");
+                                    skipAriReplace = true;
+                                }
                             }
 
                             if (abandonRequest || remainingAttempts == 0)
