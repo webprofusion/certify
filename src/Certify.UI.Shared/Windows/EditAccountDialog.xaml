@@ -8,8 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit ACME Account"
-    Width="514"
-    Height="416"
+    Width="592"
+    Height="466"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
@@ -22,7 +22,6 @@
 
         <TabControl
             x:Name="AccountTab"
-            Height="auto"
             Margin="0,0,0,0"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
@@ -31,14 +30,12 @@
             DockPanel.Dock="Top"
             TabStripPlacement="Top">
             <TabItem
-                Height="32"
                 MinWidth="140"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Account Settings"
                 IsSelected="true">
-                <DockPanel Margin="8,0,0,0" LastChildFill="True">
+                <DockPanel Margin="8,0,0,0">
                     <TextBlock
-                        Width="472"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
                         DockPanel.Dock="Top"
@@ -79,7 +76,6 @@
                             TextWrapping="Wrap" />
                     </StackPanel>
                     <TextBlock
-                        Width="490"
                         Margin="0,0,8,0"
                         DockPanel.Dock="Top"
                         Style="{StaticResource Instructions}"
@@ -112,11 +108,10 @@
             </TabItem>
 
             <TabItem
-                Height="32"
                 MinWidth="140"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced">
-                <ScrollViewer MaxHeight="300">
+                <ScrollViewer MaxHeight="350">
                     <DockPanel Margin="8,0,8,0">
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Mode &amp; Preferences</TextBlock>
                         <StackPanel DockPanel.Dock="Top">
@@ -203,8 +198,8 @@
                                 Text="{Binding Item.EabKeyAlgorithm}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Import Account Details</TextBlock>
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If you need to import an account from another client instead of registering a new account with the CA you can specify the Account URI and Account Key (PEM encoded private key):</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Import or Custom Account Details</TextBlock>
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">If you need to import an account from another client instead of registering a new account with the CA, or you need to customize or pre-generate the account key, you can optionally specify the Account URI and/or Account Key (PEM encoded private key):</TextBlock>
 
                         <StackPanel
                             Margin="0,0,0,4"
@@ -242,6 +237,22 @@
                                 AcceptsReturn="True"
                                 Text="{Binding Item.ImportedAccountKey}"
                                 TextWrapping="Wrap" />
+
+
+                        </StackPanel>
+                        <StackPanel
+                            x:Name="AccountKeyGen"
+                            Margin="0,0,0,4"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
+
+                            <TextBlock Style="{StaticResource Instructions}">For account pre-approval and other advanced scenarios you can optionally pre-generate a custom keypair for your ACME account:</TextBlock>
+                            <Button
+                                x:Name="AccountKeyGenerate"
+                                Margin="12,0,0,0"
+                                HorizontalAlignment="Left"
+                                Click="AccountKeyGenerate_Click"
+                                Content="Generate" />
                         </StackPanel>
                         <StackPanel
                             x:Name="AccountRollover"
@@ -263,18 +274,21 @@
         </TabControl>
 
 
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+        <DockPanel Margin="0,8,0,0" DockPanel.Dock="Bottom">
             <Button
                 x:Name="Save"
-                Margin="12,0,0,0"
+                Margin="0,0,12,0"
                 Click="Save_Click"
-                Content="{x:Static res:SR.Register_Contact}" />
+                Content="{x:Static res:SR.Register_Contact}"
+                DockPanel.Dock="Right" />
             <Button
                 x:Name="Cancel"
                 Width="100"
-                Margin="280,0,0,0"
+                Margin="12,0,0,0"
+                HorizontalAlignment="Left"
                 Click="Cancel_Click"
-                Content="{x:Static res:SR.Cancel}" />
-        </StackPanel>
+                Content="{x:Static res:SR.Cancel}"
+                DockPanel.Dock="Left" />
+        </DockPanel>
     </DockPanel>
 </Controls:MetroWindow>

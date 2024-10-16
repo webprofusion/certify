@@ -1,10 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using Certify.Models;
+using Org.BouncyCastle.Asn1.Pkcs;
+using Org.BouncyCastle.Crypto.EC;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities.IO.Pem;
 
 namespace Certify.UI.Windows
 {
@@ -161,6 +169,30 @@ namespace Certify.UI.Windows
             {
                 MainViewModel.ShowNotification(result.Message, Shared.NotificationType.Error);
             }
+        }
+
+        private void AccountKeyGenerate_Click(object sender, RoutedEventArgs e)
+        {
+            // generate a new EC key
+            var generator = GeneratorUtilities.GetKeyPairGenerator("ECDSA");
+            var generatorParams = new ECKeyGenerationParameters(CustomNamedCurves.GetOid("P-256"), new SecureRandom());
+            generator.Init(generatorParams);
+            var keyPair = generator.GenerateKeyPair();
+            var keyData = Org.BouncyCastle.Pkcs.PrivateKeyInfoFactory.CreatePrivateKeyInfo(keyPair.Private).ToAsn1Object().GetEncoded();
+
+            // convert to PEM`
+            var pem = "";
+            using (var sr = new StringWriter())
+            {
+                var pemObj = new PemObject("PRIVATE KEY", keyData);
+                var pemWriter = new PemWriter(sr);
+                pemWriter.WriteObject(pemObj);
+                pem = sr.ToString();
+            }
+
+            Item.ImportedAccountKey = pem;
+
+            BindingOperations.GetBindingExpressionBase((TextBox)AccountKey, TextBox.TextProperty).UpdateTarget();
         }
     }
 }

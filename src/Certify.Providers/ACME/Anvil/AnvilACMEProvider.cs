@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -501,11 +501,7 @@ namespace Certify.Providers.ACME.Anvil
 
             try
             {
-                if (
-                    (!string.IsNullOrEmpty(importAccountURI) && string.IsNullOrEmpty(importAccountKey))
-                    ||
-                    (string.IsNullOrEmpty(importAccountURI) && !string.IsNullOrEmpty(importAccountKey))
-                    )
+                if (!string.IsNullOrEmpty(importAccountURI) && string.IsNullOrEmpty(importAccountKey))
                 {
                     return new ActionResult<AccountDetails>("To import account details both the existing account URI and account key in PEM format are required. ", false);
                 }
@@ -545,13 +541,29 @@ namespace Certify.Providers.ACME.Anvil
                 {
                     IKey accKey = null;
 
-                    if (_newContactUseCurrentAccountKey && !string.IsNullOrEmpty(_settings.AccountKey))
+                    if (!string.IsNullOrEmpty(importAccountKey))
                     {
-                        accKey = KeyFactory.FromPem(_settings.AccountKey);
+                        try
+                        {
+                            // using a custom or pre-generated account key
+                            SetAcmeContextAccountKey(importAccountKey);
+                        }
+                        catch
+                        {
+                            return new ActionResult<AccountDetails>("The provided account key was invalid or not supported. A PEM (text) format RSA or ECDA private key is required.", false);
+                        }
                     }
+                    else
+                    {
+                        // use current account key if enabled or new one will be generated
+                        if (_newContactUseCurrentAccountKey && !string.IsNullOrEmpty(_settings.AccountKey))
+                        {
+                            accKey = KeyFactory.FromPem(_settings.AccountKey);
+                        }
 
-                    // start new account context, create new account (with new key, if not enabled)
-                    _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
+                        // start new account context, create new account (with new key, if not enabled)
+                        _acme = new AcmeContext(_serviceUri, accKey, _httpClient, accountUri: _settings.AccountUri != null ? new Uri(_settings.AccountUri) : null);
+                    }
 
                     try
                     {
