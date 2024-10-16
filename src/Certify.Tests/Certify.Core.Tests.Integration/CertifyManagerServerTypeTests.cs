@@ -37,7 +37,7 @@ namespace Certify.Core.Tests
                 await _iisManager.DeleteSite(_testSiteName);
             }
 
-            var site = await _iisManager.CreateSite(_testSiteName, _testSiteDomain, _primaryWebRoot, "DefaultAppPool", ipAddress: _testSiteIp, port: _testSiteHttpPort);
+            var site = await _iisManager.CreateSite(_testSiteName, _testSiteDomain, PrimaryWebRootPath, "DefaultAppPool", ipAddress: _testSiteIp, port: _testSiteHttpPort);
             Assert.IsTrue(await _iisManager.SiteExists(_testSiteName));
             _testSiteId = site.Id.ToString();
         }
@@ -158,7 +158,7 @@ namespace Certify.Core.Tests
             }
 
             // Add no domain site
-            var noDomainSite = await _iisManager.CreateSite(noDomainSiteName, "", _primaryWebRoot, "DefaultAppPool", port: 81);
+            var noDomainSite = await _iisManager.CreateSite(noDomainSiteName, "", PrimaryWebRootPath, "DefaultAppPool", port: 81);
             Assert.IsTrue(await _iisManager.SiteExists(_testSiteName), "Expected no domain site to be created");
             var noDomainSiteId = noDomainSite.Id.ToString();
 

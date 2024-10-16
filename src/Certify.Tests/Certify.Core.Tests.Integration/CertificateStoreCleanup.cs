@@ -29,7 +29,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteDomain);
             }
 
-            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool");
 
             await iisManager.AddOrUpdateSiteBinding(
                 new Models.BindingInfo
@@ -92,7 +92,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteDomain);
             }
 
-            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool");
 
             await iisManager.AddOrUpdateSiteBinding(
                 new Models.BindingInfo
@@ -156,7 +156,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteDomain);
             }
 
-            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool");
 
             await iisManager.AddOrUpdateSiteBinding(
                 new Models.BindingInfo
@@ -223,7 +223,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteDomain);
             }
 
-            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteDomain, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool");
 
             await iisManager.AddOrUpdateSiteBinding(
                 new Models.BindingInfo

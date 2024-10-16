@@ -35,7 +35,7 @@ namespace Certify.Core.Tests
             PrimaryTestDomain = ConfigSettings["AWS_TestDomain"];
 
             testSiteDomain = "integration1." + PrimaryTestDomain;
-            testSitePath = _primaryWebRoot;
+            testSitePath = PrimaryWebRootPath;
 
             _awsCredStorageKey = ConfigSettings["TestCredentialsKey_Route53"];
 
@@ -60,7 +60,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteName);
             }
 
-            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, _primaryWebRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool", port: testSiteHttpPort);
             Assert.IsTrue(await iisManager.SiteExists(testSiteName));
             _siteId = site.Id.ToString();
         }
@@ -85,7 +85,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testPreviewSiteName);
             }
 
-            var site = await iisManager.CreateSite(testPreviewSiteName, hostname, _primaryWebRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testPreviewSiteName, hostname, PrimaryWebRootPath, "DefaultAppPool", port: testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
@@ -166,7 +166,7 @@ namespace Certify.Core.Tests
 
             var ipAddress = GetTestStaticIP();
 
-            var site = await iisManager.CreateSite(testPreviewSiteName, hostname, _primaryWebRoot, "DefaultAppPool", "http", ipAddress, testSiteHttpPort);
+            var site = await iisManager.CreateSite(testPreviewSiteName, hostname, PrimaryWebRootPath, "DefaultAppPool", "http", ipAddress, testSiteHttpPort);
 
             ManagedCertificate managedCertificate = null;
             X509Certificate2 certInfo = null;
