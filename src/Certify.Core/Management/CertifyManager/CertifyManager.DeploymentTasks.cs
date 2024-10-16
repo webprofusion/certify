@@ -252,7 +252,7 @@ namespace Certify.Management
                     task.TaskConfig.DateLastExecuted = DateTimeOffset.UtcNow;
 
                     wasTaskExecuted = true;
-                    taskResults = await task.Execute(log, _credentialsManager, result, cancellationToken: CancellationToken.None, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly);
+                    taskResults = await task.Execute(log, _credentialsManager, result, new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, isPreviewOnly: isPreviewOnly, cancellationToken: CancellationToken.None);
 
                     if (!isPreviewOnly)
                     {
