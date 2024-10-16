@@ -51,7 +51,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testSiteName);
             }
 
-            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, _primaryWebRoot, "DefaultAppPool");
+            var site = await iisManager.CreateSite(testSiteName, testSiteDomain, PrimaryWebRootPath, "DefaultAppPool");
             _siteId = site.Id.ToString();
             Assert.IsTrue(await iisManager.SiteExists(testSiteName));
         }
@@ -111,7 +111,7 @@ namespace Certify.Core.Tests
             try
             {
                 // create net.msmq://localhost binding, no port or ip
-                await iisManager.CreateSite(siteName, "localhost", _primaryWebRoot, null, protocol: "net.msmq", ipAddress: null, port: null);
+                await iisManager.CreateSite(siteName, "localhost", PrimaryWebRootPath, null, protocol: "net.msmq", ipAddress: null, port: null);
 
                 var sites = iisManager.GetSiteBindingList(false);
             }
@@ -134,7 +134,7 @@ namespace Certify.Core.Tests
             try
             {
                 var ipAddress = Dns.GetHostEntry(Dns.GetHostName()).AddressList[0].ToString();
-                var site = await iisManager.CreateSite(testName, testDomainName, _primaryWebRoot, "DefaultAppPool", "http", ipAddress);
+                var site = await iisManager.CreateSite(testName, testDomainName, PrimaryWebRootPath, "DefaultAppPool", "http", ipAddress);
 
                 Assert.IsTrue(await iisManager.SiteExists(testSiteName));
 
@@ -165,7 +165,7 @@ namespace Certify.Core.Tests
                         await iisManager.DeleteSite(testSiteName);
                     }
 
-                    await iisManager.CreateSite(testSiteName, "site_" + i + "_toomany.com", _primaryWebRoot, null, protocol: "http");
+                    await iisManager.CreateSite(testSiteName, "site_" + i + "_toomany.com", PrimaryWebRootPath, null, protocol: "http");
                     var site = await iisManager.GetSiteBindingByDomain(domain);
                     for (var d = 0; d < 2; d++)
                     {
@@ -175,7 +175,7 @@ namespace Certify.Core.Tests
                         {
                             SiteId = site.SiteId,
                             Host = testDomain,
-                            PhysicalPath = _primaryWebRoot
+                            PhysicalPath = PrimaryWebRootPath
                         }, addNew: true));
                     }
                 }
@@ -200,7 +200,7 @@ namespace Certify.Core.Tests
                             {
                                 SiteId = site.SiteId,
                                 Host = testDomain,
-                                PhysicalPath = _primaryWebRoot
+                                PhysicalPath = PrimaryWebRootPath
                             }, addNew: true));
                         }
                         else
@@ -209,7 +209,7 @@ namespace Certify.Core.Tests
                             {
                                 SiteId = site.SiteId,
                                 Host = testDomain,
-                                PhysicalPath = _primaryWebRoot
+                                PhysicalPath = PrimaryWebRootPath
                             }, addNew: true));
                         }
                     }
@@ -261,7 +261,7 @@ namespace Certify.Core.Tests
             try
             {
                 // create net.msmq://localhost binding, no port or ip
-                await iisManager.CreateSite("ManyBindings", "toomany.com", _primaryWebRoot, null, protocol: "http");
+                await iisManager.CreateSite("ManyBindings", "toomany.com", PrimaryWebRootPath, null, protocol: "http");
                 var site = await iisManager.GetSiteBindingByDomain("toomany.com");
                 var domains = new List<string>();
                 for (var i = 0; i < 101; i++)
@@ -287,7 +287,7 @@ namespace Certify.Core.Tests
                 await iisManager.DeleteSite(testName);
             }
 
-            var site = await iisManager.CreateSite(testName, testDomainName, _primaryWebRoot, null);
+            var site = await iisManager.CreateSite(testName, testDomainName, PrimaryWebRootPath, null);
 
             try
             {
@@ -344,7 +344,7 @@ namespace Certify.Core.Tests
             }
 
             // create site with IP all unassigned, no hostname
-            var site = await iisManager.CreateSite(testBindingSiteName, "", _primaryWebRoot, "DefaultAppPool", port: testSiteHttpPort);
+            var site = await iisManager.CreateSite(testBindingSiteName, "", PrimaryWebRootPath, "DefaultAppPool", port: testSiteHttpPort);
 
             // add another hostname binding (matching cert and not matching cert)
             var testDomains = new List<string> { testSiteDomain, "label1." + testSiteDomain, "nested.label." + testSiteDomain };
