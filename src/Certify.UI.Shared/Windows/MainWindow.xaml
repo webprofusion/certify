@@ -44,8 +44,8 @@
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
                 Click="Button_NewCertificate"
-                IsEnabled="{Binding IsServiceAvailable}"
-                DockPanel.Dock="Left">
+                DockPanel.Dock="Left"
+                IsEnabled="{Binding IsServiceAvailable}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
@@ -60,8 +60,8 @@
                 Margin="8,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.Renew_All}"
                 Click="Button_RenewAll"
-                IsEnabled="{Binding IsServiceAvailable}"
-                DockPanel.Dock="Left">
+                DockPanel.Dock="Left"
+                IsEnabled="{Binding IsServiceAvailable}">
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"

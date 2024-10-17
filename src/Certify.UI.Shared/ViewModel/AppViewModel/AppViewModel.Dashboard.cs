@@ -83,7 +83,7 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                if (!IsRegisteredVersion && NumManagedCerts >= 1)
+                if (!IsRegisteredVersion && NumManagedCerts >= 0 && UISettings?.CommunityMode != "personal")
                 {
                     return true;
                 }
@@ -91,6 +91,14 @@ namespace Certify.UI.ViewModel
                 {
                     return false;
                 }
+            }
+        }
+
+        public bool IsPersonalUse
+        {
+            get
+            {
+                return UISettings?.CommunityMode == "personal";
             }
         }
 

@@ -19,6 +19,8 @@ namespace Certify.UI.Settings
 
         public string PreferredUICulture { get; set; } = "en-US";
 
+        public string CommunityMode { get; set; }
+
         public static UISettings Load()
         {
             var uiSettingsFilePath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), SETTINGS_FILE);

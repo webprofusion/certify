@@ -342,9 +342,49 @@ namespace Certify.UI.Windows
                 }
             }
 
+            // set title etc based on license status
             if (!_appViewModel.IsRegisteredVersion)
             {
                 Title += SR.MainWindow_TitleTrialPostfix;
+
+                if (_appViewModel.UISettings == null)
+                {
+                    _appViewModel.UISettings = new UISettings();
+                }
+
+                if (_appViewModel.UISettings?.CommunityMode == "personal")
+                {
+                    Title += " [Personal Use]";
+                }
+                else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
+                {
+                    var evaluating = MessageBox.Show(this, "You are currently using the Community Edition of this app intended for personal use or evaluation. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+
+                    if (evaluating == MessageBoxResult.No)
+                    {
+                        var personalUse = MessageBox.Show(this, "Are you using the app for personal use?", "Confirm Usage", MessageBoxButton.YesNo);
+
+                        if (personalUse == MessageBoxResult.No)
+                        {
+                            MessageBox.Show(this, "Please purchase a license to continue using the app for non-personal use.");
+
+                            _appViewModel.UISettings.CommunityMode = "commercial";
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
+                        else
+                        {
+                            MessageBox.Show(this, "You are using the app for personal use. Please continue using the app for free.");
+
+                            _appViewModel.UISettings.CommunityMode = "personal";
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
+                    }
+                    else
+                    {
+                        _appViewModel.UISettings.CommunityMode = "evaluating";
+                        UISettings.Save(_appViewModel.UISettings);
+                    }
+                }
             }
             else
             {
