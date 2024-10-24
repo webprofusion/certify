@@ -123,27 +123,20 @@ namespace Certify.Models
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                var osName = string.Empty;
-
-                string filePath = "/etc/os-release";
+                var filePath = "/etc/os-release";
 
                 try
                 {
-                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open))
+                    using var fileStream = new FileStream(filePath, FileMode.Open);
+                    using var reader = new StreamReader(fileStream);
+                    string? line;
+
+                    while ((line = reader.ReadLine()) != null)
                     {
-                        using (StreamReader reader = new StreamReader(fileStream))
+                        if (line.StartsWith("NAME", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            string line;
-
-                            while ((line = reader.ReadLine()) != null)
-                            {
-
-                                if (line.StartsWith("NAME"))
-                                {
-                                    osName = line.Split('\"')[1]; //split the line string by " and get the second slice
-                                    return osName;
-                                }
-                            }
+                            var osName = line.Split('\"')[1];
+                            return osName;
                         }
                     }
                 }
