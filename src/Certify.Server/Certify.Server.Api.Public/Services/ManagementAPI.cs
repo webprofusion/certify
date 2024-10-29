@@ -10,12 +10,21 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Api.Public.Services
 {
+    /// <summary>
+    /// Management Hub API
+    /// </summary>
     public partial class ManagementAPI
     {
         IInstanceManagementStateProvider _mgmtStateProvider;
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
         ICertifyInternalApiClient _backendAPIClient;
 
+        /// <summary>
+        /// Constructor for Management Hub API
+        /// </summary>
+        /// <param name="mgmtStateProvider"></param>
+        /// <param name="mgmtHubContext"></param>
+        /// <param name="backendAPIClient"></param>
         public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, ICertifyInternalApiClient backendAPIClient)
         {
             _mgmtStateProvider = mgmtStateProvider;
@@ -54,9 +63,16 @@ namespace Certify.Server.Api.Public.Services
             }
         }
 
+        /// <summary>
+        /// Add or Update Managed Certificate for target instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCert"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
         public async Task<ManagedCertificate?> UpdateManagedCertificate(string instanceId, ManagedCertificate managedCert, AuthContext authContext)
         {
-            // get managed cert via local api or via management hub
+            // update managed cert via management hub
 
             var args = new KeyValuePair<string, string>[] {
                     new("instanceId", instanceId) ,
@@ -167,7 +183,7 @@ namespace Certify.Server.Api.Public.Services
         public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
-                    new("instanceId", instanceId) 
+                    new("instanceId", instanceId)
                 };
 
             var cmd = new InstanceCommandRequest(ManagementHubCommands.GetAcmeAccounts, args);
@@ -203,6 +219,63 @@ namespace Certify.Server.Api.Public.Services
             {
                 return null;
             }
+        }
+
+        public async Task<ICollection<Models.Config.StoredCredential>?> GetStoredCredentials(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId)
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetStoredCredentials, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ICollection<Models.Config.StoredCredential>>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<ActionResult?> UpdateStoredCredential(string instanceId, StoredCredential item, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("item", JsonSerializer.Serialize(item))
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateStoredCredential, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ActionResult>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<bool> DeleteStoredCredential(string instanceId, string storageKey, AuthContext authContext)
+        {
+            // delete stored credential via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("storageKey",storageKey)
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteStoredCredential, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            return result?.ObjectValue as bool? ?? false;
         }
 
         public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
