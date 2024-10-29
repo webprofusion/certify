@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.API.Management;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Shared.Core.Utils;
 
 namespace Certify.Management
@@ -168,12 +169,30 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.AddAcmeAccount)
             {
-                
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var registrationArg = args.FirstOrDefault(a => a.Key == "registration");
                 var registration = JsonSerializer.Deserialize<ContactRegistration>(registrationArg.Value);
 
                 val = await AddAccount(registration);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetStoredCredentials)
+            {
+                val = await _credentialsManager.GetCredentials();
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateStoredCredential)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var itemArg = args.FirstOrDefault(a => a.Key == "item");
+                var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value);
+
+                val = await _credentialsManager.Update(storedCredential);
+            }
+            else if (arg.CommandType == ManagementHubCommands.DeleteStoredCredential)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
+                var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value);
+                val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {
