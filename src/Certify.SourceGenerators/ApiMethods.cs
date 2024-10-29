@@ -181,15 +181,38 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{{ "storageKey", "string" }, { "deactivate", "bool" } }
                     },
+                     new GeneratedAPI {
+                        OperationName = "GetStoredCredentials",
+                        OperationMethod = "HttpGet",
+                        Comment = "Get List of Stored Credentials",
+                        PublicAPIController = "StoredCredential",
+                        PublicAPIRoute = "credentials/{instanceId}",
+                        ServiceAPIRoute = "credentials",
+                        ReturnType = "ICollection<Models.Config.StoredCredential>",
+                        UseManagementAPI = true,    
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" } }
+                    },
                     new GeneratedAPI {
-                        OperationName = "RemoveStoredCredential",
+                        OperationName = "UpdateStoredCredential",
+                        OperationMethod = "HttpPost",
+                        Comment = "Add/Update Stored Credential",
+                        PublicAPIController = "StoredCredential",
+                        PublicAPIRoute = "credentials/{instanceId}",
+                        ServiceAPIRoute = "credentials",
+                        ReturnType = "Models.Config.ActionResult",
+                        UseManagementAPI = true,
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "DeleteStoredCredential",
                         OperationMethod = "HttpDelete",
                         Comment = "Remove Stored Credential",
                         PublicAPIController = "StoredCredential",
-                        PublicAPIRoute = "storedcredential/{storageKey}",
+                        PublicAPIRoute = "credentials/{instanceId}/{storageKey}",
                         ServiceAPIRoute = "credentials",
                         ReturnType = "Models.Config.ActionResult",
-                        Params =new Dictionary<string, string>{{ "storageKey", "string" } }
+                        UseManagementAPI = true,
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "storageKey", "string" } }
                     },
                     new GeneratedAPI {
                         OperationName = "PerformExport",
