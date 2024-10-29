@@ -493,7 +493,7 @@ namespace Certify.Models
                                 {
                                     c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
 
-                                    if (!c.DomainMatch.Contains(";"))
+                                    if (!c.DomainMatch.Contains(';'))
                                     {
                                         var domainMatchKey = c.DomainMatch.Trim();
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Locales;
@@ -318,7 +318,7 @@ namespace Certify.Models.Shared.Validation
                     if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                     {
                         // validate hostnames
-                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains(".") || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains('.') || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
                         {
                             // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 
