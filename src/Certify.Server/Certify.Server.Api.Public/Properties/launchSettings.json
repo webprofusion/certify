@@ -4,7 +4,7 @@
       "commandName": "IISExpress",
       "launchUrl": "https://localhost:44361/docs",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://localhost:44361;",
+        "ASPNETCORE_URLS": "https://0.0.0.0:44361;",
         "CERTIFY_SERVICE_HOST": "127.0.0.2", // note: aspire hosted uses this profile
         "CERTIFY_SERVICE_PORT": "9695"
       }
