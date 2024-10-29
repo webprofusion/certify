@@ -48,9 +48,8 @@ namespace Certify.Server.Api.Public.Controllers
         [Route("items")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? keyword, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, int? page = null, int? pageSize = null)
         {
-
             var result = new ManagedCertificateSummaryResult();
 
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
@@ -61,20 +60,27 @@ namespace Certify.Server.Api.Public.Controllers
             var list = new List<ManagedCertificateSummary>();
             foreach (var remote in managedItems.Values)
             {
-                list.AddRange(remote.Items.Select(i => new ManagedCertificateSummary
+                if (string.IsNullOrEmpty(instanceId) || (instanceId == remote.InstanceId))
                 {
-                    InstanceId = remote.InstanceId,
-                    InstanceTitle = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId)?.Title,
-                    Id = i.Id ?? "",
-                    Title = $"[remote] {i.Name}" ?? "",
-                    PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                    Identifiers = i.GetCertificateIdentifiers(),
-                    DateRenewed = i.DateRenewed,
-                    DateExpiry = i.DateExpiry,
-                    Comments = i.Comments ?? "",
-                    Status = i.LastRenewalStatus?.ToString() ?? "",
-                    HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
-                }));
+                    list.AddRange(
+                        remote.Items
+                        .Where(i => string.IsNullOrWhiteSpace(keyword) || (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword) == true))
+                        .Select(i => new ManagedCertificateSummary
+                        {
+                            InstanceId = remote.InstanceId,
+                            InstanceTitle = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId)?.Title,
+                            Id = i.Id ?? "",
+                            Title = $"[remote] {i.Name}" ?? "",
+                            PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
+                            Identifiers = i.GetCertificateIdentifiers(),
+                            DateRenewed = i.DateRenewed,
+                            DateExpiry = i.DateExpiry,
+                            Comments = i.Comments ?? "",
+                            Status = i.LastRenewalStatus?.ToString() ?? "",
+                            HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
+                        })
+                    );
+                }
             }
 
             result.Results = list.OrderBy(l => l.Title);
