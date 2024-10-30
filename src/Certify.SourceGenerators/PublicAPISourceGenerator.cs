@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -83,17 +83,24 @@ using Certify.Models.Config.AccessControl;
 
                 if (context.Compilation.AssemblyName.EndsWith("Certify.Client"))
                 {
-
-                    if (config.OperationMethod == "HttpGet")
-                    {
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From($@"
+                    var template = @"
 using Certify.Models;
+using Certify.Models.Config.Migration;
+using Certify.Models.Providers;
 using Certify.Models.Config.AccessControl;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-            namespace Certify.Client
-            {{
+namespace Certify.Client
+{
+   MethodTemplate
+}
+";
+
+                    if (config.OperationMethod == "HttpGet")
+                    {
+                        var source = SourceText.From(template.Replace("MethodTemplate", $@"
+
                 public partial interface ICertifyInternalApiClient
                 {{
                     /// <summary>
@@ -117,7 +124,8 @@ using System.Threading.Tasks;
                     }}
                     
                 }}
-            }}", Encoding.UTF8));
+            "), Encoding.UTF8);
+                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", source);
                     }
 
                     if (config.OperationMethod == "HttpPost")
@@ -131,15 +139,9 @@ using System.Threading.Tasks;
                             postApiCall = apiParamCall.Replace("instanceId,", "");
                             postApiParamDecl = apiParamDecl.Replace("string instanceId,", "");
                         }
-                           
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From($@"
-using Certify.Models;
-using Certify.Models.Config.AccessControl;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
-            namespace Certify.Client
-            {{
+                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
+
                 public partial interface ICertifyInternalApiClient
                 {{
                     /// <summary>
@@ -164,19 +166,13 @@ using System.Threading.Tasks;
                     }}
                     
                 }}
-            }}", Encoding.UTF8));
+            "), Encoding.UTF8));
                     }
 
                     if (config.OperationMethod == "HttpDelete")
                     {
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From($@"
-using Certify.Models;
-using Certify.Models.Config.AccessControl;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
 
-            namespace Certify.Client
-            {{
                 public partial interface ICertifyInternalApiClient
                 {{
                     /// <summary>
@@ -205,7 +201,7 @@ using System.Threading.Tasks;
                     }}
                     
                 }}
-            }}", Encoding.UTF8));
+            "), Encoding.UTF8));
                     }
                 }
 
@@ -215,6 +211,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Providers;
 using Certify.Models.Config.AccessControl;
 
             namespace Certify.UI.Client.Core
@@ -237,7 +234,7 @@ using Certify.Models.Config.AccessControl;
             // then add a watch on 
             if (!Debugger.IsAttached)
             {
-                //Debugger.Launch();
+             //   Debugger.Launch();
             }
 #endif
         }

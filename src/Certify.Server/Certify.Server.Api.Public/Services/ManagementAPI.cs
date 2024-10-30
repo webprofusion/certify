@@ -221,6 +221,28 @@ namespace Certify.Server.Api.Public.Services
             }
         }
 
+        public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialsId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId),
+                    new("providerTypeId", providerTypeId),
+                    new("credentialsId", credentialsId)
+                };
+
+            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetDnsZones, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ICollection<Models.Providers.DnsZone>>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public async Task<ICollection<Models.Config.StoredCredential>?> GetStoredCredentials(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
@@ -262,7 +284,7 @@ namespace Certify.Server.Api.Public.Services
             }
         }
 
-        public async Task<bool> DeleteStoredCredential(string instanceId, string storageKey, AuthContext authContext)
+        public async Task<ActionResult?> DeleteStoredCredential(string instanceId, string storageKey, AuthContext authContext)
         {
             // delete stored credential via management hub
 
@@ -275,7 +297,14 @@ namespace Certify.Server.Api.Public.Services
 
             var result = await GetCommandResult(instanceId, cmd);
 
-            return result?.ObjectValue as bool? ?? false;
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<ActionResult>(result.Value);
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
