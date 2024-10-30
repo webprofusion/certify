@@ -1,10 +1,31 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+
 using SourceGenerator;
 
 namespace Certify.SourceGenerators
 {
     internal class ApiMethods
     {
+        public static string HttpGet = "HttpGet";
+        public static string HttpPost = "HttpPost";
+        public static string HttpDelete = "HttpDelete";
+
+        public static string GetFormattedTypeName(Type type)
+        {
+            if (type.IsGenericType)
+            {
+                var genericArguments = type.GetGenericArguments()
+                                    .Select(x => x.FullName)
+                                    .Aggregate((x1, x2) => $"{x1}, {x2}");
+                return $"{type.FullName.Substring(0, type.FullName.IndexOf("`"))}"
+                     + $"<{genericArguments}>";
+            }
+
+            return type.FullName;
+        }
         public static List<GeneratedAPI> GetApiDefinitions()
         {
             // declaring an API definition here is then used by the source generators to:
@@ -189,7 +210,7 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "credentials/{instanceId}",
                         ServiceAPIRoute = "credentials",
                         ReturnType = "ICollection<Models.Config.StoredCredential>",
-                        UseManagementAPI = true,    
+                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" } }
                     },
                     new GeneratedAPI {
@@ -213,6 +234,21 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "storageKey", "string" } }
+                    },
+                      new GeneratedAPI {
+                        OperationName = "GetDnsZones",
+                        OperationMethod = HttpGet,
+                        Comment = "Get List of Zones with the current DNS provider and credential",
+                        PublicAPIController = "ChallengeProvider",
+                        PublicAPIRoute = "challengeprovider/dnszones/{instanceId}/{providerTypeId}/{credentialsId}",
+                        ServiceAPIRoute = "managedcertificates/dnszones/{providerTypeId}/{credentialsId}",
+                        ReturnType = "ICollection<Certify.Models.Providers.DnsZone>",
+                        UseManagementAPI = true,
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" } ,
+                            { "providerTypeId", "string" },
+                            { "credentialsId", "string" }
+                        }
                     },
                     new GeneratedAPI {
                         OperationName = "PerformExport",

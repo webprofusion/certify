@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Certify.Management;
@@ -34,7 +34,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("{storageKey}")]
-        public async Task<bool> DeleteCredential(string storageKey)
+        public async Task<Models.Config.ActionResult> DeleteCredential(string storageKey)
         {
             DebugLog();
 
