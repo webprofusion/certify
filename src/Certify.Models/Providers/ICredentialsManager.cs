@@ -12,7 +12,7 @@ namespace Certify.Management
         bool Init(string connectionString, ILog log);
         Task<bool> IsInitialised();
 
-        Task<bool> Delete(IManagedItemStore itemStore, string storageKey);
+        Task<ActionResult> Delete(IManagedItemStore itemStore, string storageKey);
         Task<List<StoredCredential>> GetCredentials(string type = null, string storageKey = null);
         Task<StoredCredential> GetCredential(string storageKey);
         Task<string> GetUnlockedCredential(string storageKey);
