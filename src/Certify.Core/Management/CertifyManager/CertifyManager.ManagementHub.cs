@@ -191,8 +191,15 @@ namespace Certify.Management
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
-                var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value);
                 val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetDnsZones)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var providerTypeArg = args.FirstOrDefault(a => a.Key == "providerTypeId");
+                var credentialsIdArg = args.FirstOrDefault(a => a.Key == "credentialsId");
+               
+                val = await GetDnsProviderZones(providerTypeArg.Value, credentialsIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

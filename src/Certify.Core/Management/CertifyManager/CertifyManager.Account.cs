@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -417,7 +417,7 @@ namespace Certify.Management
             {
                 _serviceLog?.Information($"Deleting account {storageKey}: " + account.AccountURI);
 
-                var resultOk = await _credentialsManager.Delete(_itemManager, storageKey);
+                var result = await _credentialsManager.Delete(_itemManager, storageKey);
 
                 // invalidate accounts cache
                 lock (_accountsLock)
@@ -426,7 +426,7 @@ namespace Certify.Management
                 }
 
                 // attempt acme account deactivation
-                if (resultOk && includeAccountDeactivation && acmeProvider != null)
+                if (result.IsSuccess && includeAccountDeactivation && acmeProvider != null)
                 {
                     try
                     {
@@ -443,7 +443,7 @@ namespace Certify.Management
                     }
                 }
 
-                return new ActionResult("RemoveAccount", resultOk);
+                return new ActionResult("RemoveAccount", result.IsSuccess);
             }
             else
             {

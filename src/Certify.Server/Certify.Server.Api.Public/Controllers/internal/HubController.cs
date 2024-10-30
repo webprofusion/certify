@@ -70,7 +70,7 @@ namespace Certify.Server.Api.Public.Controllers
                             InstanceId = remote.InstanceId,
                             InstanceTitle = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId)?.Title,
                             Id = i.Id ?? "",
-                            Title = $"[remote] {i.Name}" ?? "",
+                            Title = $"{i.Name}" ?? "",
                             PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
                             Identifiers = i.GetCertificateIdentifiers(),
                             DateRenewed = i.DateRenewed,

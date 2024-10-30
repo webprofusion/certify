@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models.Providers;
+using Certify.Server.Api.Public.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,16 +18,17 @@ namespace Certify.Server.Api.Public.Controllers
         private readonly ILogger<ChallengeProviderController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
-
+        private readonly ManagementAPI _mgmtAPI;
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public ChallengeProviderController(ILogger<ChallengeProviderController> logger, ICertifyInternalApiClient client)
+        public ChallengeProviderController(ILogger<ChallengeProviderController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtAPI)
         {
             _logger = logger;
             _client = client;
+            _mgmtAPI = mgmtAPI;
         }
 
         /// <summary>
@@ -41,21 +43,6 @@ namespace Certify.Server.Api.Public.Controllers
         {
             var list = await _client.GetChallengeAPIList();
             return new OkObjectResult(list);
-        }
-
-        /// <summary>
-        /// Fetch list of DNS zones for a given DNS provider and credential
-        /// </summary>
-        /// <param name="providerTypeId"></param>
-        /// <param name="credentialsId"></param>
-        /// <returns></returns>
-        [HttpGet]
-        [Route("dnszones")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DnsZone>))]
-        public async Task<List<DnsZone>> GetDnsZones(string providerTypeId, string credentialsId)
-        {
-            return await _client.GetDnsProviderZones(providerTypeId, credentialsId);
         }
     }
 }

@@ -1,4 +1,4 @@
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models.Config;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +33,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete, Route("{storageKey}")]
-        public async Task<bool> DeleteCredential(string storageKey)
+        public async Task<Models.Config.ActionResult> DeleteCredential(string storageKey)
         {
             DebugLog();
 
