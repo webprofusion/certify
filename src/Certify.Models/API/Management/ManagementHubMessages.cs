@@ -31,6 +31,7 @@ namespace Certify.API.Management
         public const string UpdateStoredCredential = "UpdateStoredCredential";
         public const string DeleteStoredCredential = "DeleteStoredCredential";
 
+        public const string GetChallengeProviders = "GetChallengeProviders";
         public const string GetDnsZones = "GetDnsZones";
 
         public const string Reconnect = "Reconnect";

@@ -96,6 +96,7 @@
         <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
         <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+        <ProjectReference Include="..\..\Certify.SourceGenerators\Certify.SourceGenerators.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
