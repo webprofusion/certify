@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SourceGenerator;
@@ -151,7 +151,7 @@ namespace Certify.SourceGenerators
                         Comment = "Get All Acme Accounts",
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "accounts/{instanceId}",
+                        PublicAPIRoute = "{instanceId}/accounts/",
                         ServiceAPIRoute = "accounts",
                         ReturnType = "ICollection<Models.AccountDetails>",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" } }
@@ -195,17 +195,17 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpDelete,
                         Comment = "Remove ACME Account",
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "accounts/{storageKey}/{deactivate}",
+                        PublicAPIRoute = "{instanceId}/accounts/{storageKey}/{deactivate}",
                         ServiceAPIRoute = "accounts/remove/{storageKey}/{deactivate}",
                         ReturnType = "Models.Config.ActionResult",
-                        Params =new Dictionary<string, string>{{ "storageKey", "string" }, { "deactivate", "bool" } }
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "storageKey", "string" }, { "deactivate", "bool" } }
                     },
                      new GeneratedAPI {
                         OperationName = "GetStoredCredentials",
                         OperationMethod = HttpGet,
                         Comment = "Get List of Stored Credentials",
                         PublicAPIController = "StoredCredential",
-                        PublicAPIRoute = "credentials/{instanceId}",
+                        PublicAPIRoute = "{instanceId}",
                         ServiceAPIRoute = "credentials",
                         ReturnType = "ICollection<Models.Config.StoredCredential>",
                         UseManagementAPI = true,
@@ -216,7 +216,7 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpPost,
                         Comment = "Add/Update Stored Credential",
                         PublicAPIController = "StoredCredential",
-                        PublicAPIRoute = "credentials/{instanceId}",
+                        PublicAPIRoute = "{instanceId}",
                         ServiceAPIRoute = "credentials",
                         ReturnType = "Models.Config.ActionResult",
                         UseManagementAPI = true,
@@ -227,7 +227,7 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpDelete,
                         Comment = "Remove Stored Credential",
                         PublicAPIController = "StoredCredential",
-                        PublicAPIRoute = "credentials/{instanceId}/{storageKey}",
+                        PublicAPIRoute = "{instanceId}/{storageKey}",
                         ServiceAPIRoute = "credentials",
                         ReturnType = "Models.Config.ActionResult",
                         UseManagementAPI = true,
@@ -251,7 +251,7 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpGet,
                         Comment = "Get List of Zones with the current DNS provider and credential",
                         PublicAPIController = "ChallengeProvider",
-                        PublicAPIRoute = "dnszones/{instanceId}/{providerTypeId}/{credentialId}",
+                        PublicAPIRoute = "{instanceId}/dnszones/{providerTypeId}/{credentialId}",
                         ServiceAPIRoute = "managedcertificates/dnszones/{providerTypeId}/{credentialId}",
                         ReturnType = "ICollection<Certify.Models.Providers.DnsZone>",
                         UseManagementAPI = true,
@@ -287,7 +287,7 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpDelete,
                         Comment = "Remove Managed Certificate",
                         PublicAPIController = "Certificate",
-                        PublicAPIRoute = "settings/{instanceId}/{managedCertId}",
+                        PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
                         UseManagementAPI = true,
                         ServiceAPIRoute = "managedcertificates/delete/{managedCertId}",
                         ReturnType = "bool",
