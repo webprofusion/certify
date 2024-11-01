@@ -96,7 +96,7 @@ namespace Certify.Client
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site, AuthContext authContext = null);
         Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site, AuthContext authContext = null);
 
-        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId, AuthContext authContext = null);
+        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null);
 
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null);
 
