@@ -42,10 +42,10 @@ namespace Certify.Core.Management.Challenges
         {
             _credentialsManager = credentialsManager;
         }
-        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialsId, Dictionary<string, string> parameters, ICredentialsManager credentialsManager, ILog log = null)
+        public async Task<DnsChallengeHelperResult> GetDnsProvider(string providerTypeId, string credentialId, Dictionary<string, string> parameters, ICredentialsManager credentialsManager, ILog log = null)
         {
             var credentials = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(credentialsId))
+            if (!string.IsNullOrEmpty(credentialId))
             {
                 var failureResult = new DnsChallengeHelperResult(
                     failureMsg: "DNS Challenge API Credentials could not be decrypted or no longer exists. The original user must be used for decryption."
@@ -54,7 +54,7 @@ namespace Certify.Core.Management.Challenges
                 // decode credentials string array
                 try
                 {
-                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(credentialsId);
+                    credentials = await credentialsManager.GetUnlockedCredentialsDictionary(credentialId);
                     if (credentials == null)
                     {
                         return failureResult;
@@ -62,7 +62,7 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception exp)
                 {
-                    log?.Error(exp, $"The required stored credential {credentialsId} could not be found or could not be decrypted.");
+                    log?.Error(exp, $"The required stored credential {credentialId} could not be found or could not be decrypted.");
                     return failureResult;
                 }
             }
