@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -372,7 +372,24 @@ namespace Certify.Management
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             X509Certificate2 certificate;
+
+#if NET9_0_OR_GREATER
             try
+            {
+                var pfxBytes = File.ReadAllBytes(pfxFile);
+                certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+               
+            }
+            catch (CryptographicException)
+            {
+                var pfxBytes = File.ReadAllBytes(pfxFile);
+                certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+
+                // success using blank pwd, continue with blank pwd
+                pwd = "";
+            }
+#else
+         try
             {
                 certificate = new X509Certificate2(pfxFile, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             }
@@ -384,6 +401,7 @@ namespace Certify.Management
                 // success using blank pwd, continue with blank pwd
                 pwd = "";
             }
+#endif
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -790,7 +808,14 @@ namespace Certify.Management
         }
 
         public static X509Store GetMachineStore(string storeName = DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.LocalMachine);
-        public static X509Store GetUserStore(string storeName = DEFAULT_STORE_NAME) => new X509Store(storeName, StoreLocation.CurrentUser);
+        public static X509Store GetUserStore(string storeName = DEFAULT_STORE_NAME)
+        {
+#if NET9_0_OR_GREATER
+            return new X509Store(storeName, StoreLocation.CurrentUser, OpenFlags.ReadWrite);
+#else
+            return new X509Store(storeName, StoreLocation.CurrentUser);
+#endif
+        }
 
         public static bool IsCertificateInStore(X509Certificate2 cert, string storeName = DEFAULT_STORE_NAME)
         {
