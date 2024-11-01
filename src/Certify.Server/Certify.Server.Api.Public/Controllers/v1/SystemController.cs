@@ -32,12 +32,12 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("version")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Version))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.API.VersionInfo))]
         public async Task<IActionResult> GetSystemVersion()
         {
             var versionInfo = await _client.GetAppVersion();
-
-            return new OkObjectResult(Version.Parse(versionInfo));
+            var result = new Models.API.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
+            return new OkObjectResult(result);
         }
 
         /// <summary>
