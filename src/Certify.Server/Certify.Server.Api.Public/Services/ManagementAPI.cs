@@ -4,6 +4,7 @@ using Certify.Client;
 using Certify.Models;
 using Certify.Models.API;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
@@ -30,101 +31,6 @@ namespace Certify.Server.Api.Public.Services
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
             _backendAPIClient = backendAPIClient;
-        }
-
-        /// <summary>
-        /// Fetch managed cert details from the target instance
-        /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="managedCertId"></param>
-        /// <param name="authContext"></param>
-        /// <returns></returns>
-        public async Task<ManagedCertificate?> GetManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
-        {
-            // get managed cert via local api or via management hub
-
-            var args = new KeyValuePair
-                <string, string>[] {
-                    new("instanceId", instanceId) ,
-                    new("managedCertId", managedCertId)
-                };
-
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItem, args);
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ManagedCertificate>(result.Value);
-
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Add or Update Managed Certificate for target instance
-        /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="managedCert"></param>
-        /// <param name="authContext"></param>
-        /// <returns></returns>
-        public async Task<ManagedCertificate?> UpdateManagedCertificate(string instanceId, ManagedCertificate managedCert, AuthContext authContext)
-        {
-            // update managed cert via management hub
-
-            var args = new KeyValuePair<string, string>[] {
-                    new("instanceId", instanceId) ,
-                    new("managedCert", JsonSerializer.Serialize(managedCert))
-                };
-
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateManagedItem, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                var update = JsonSerializer.Deserialize<ManagedCertificate>(result.Value);
-
-                _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, update);
-                return update;
-            }
-            else
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Delete a managed certificate
-        /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="managedCertId"></param>
-        /// <param name="authContext"></param>
-        /// <returns></returns>
-        public async Task<bool> RemoveManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
-        {
-            // delete managed cert via management hub
-
-            var args = new KeyValuePair<string, string>[] {
-                    new("instanceId", instanceId) ,
-                    new("managedCertId",managedCertId)
-                };
-
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteManagedItem, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            try
-            {
-                _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private async Task<InstanceCommandResult?> GetCommandResult(string instanceId, InstanceCommandRequest cmd)
@@ -157,6 +63,99 @@ namespace Certify.Server.Api.Public.Services
             await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
         }
 
+        private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType)
+        {
+            var cmd = new InstanceCommandRequest(commandType, args);
+
+            var result = await GetCommandResult(instanceId, cmd);
+
+            if (result?.Value != null)
+            {
+                return JsonSerializer.Deserialize<T>(result.Value);
+            }
+            else
+            {
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// Fetch managed cert details from the target instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCertId"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
+        public async Task<ManagedCertificate?> GetManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
+        {
+            // get managed cert via local api or via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId", managedCertId)
+                };
+
+            return await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.GetManagedItem);
+        }
+
+        /// <summary>
+        /// Add or Update Managed Certificate for target instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCert"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
+        public async Task<ManagedCertificate?> UpdateManagedCertificate(string instanceId, ManagedCertificate managedCert, AuthContext authContext)
+        {
+            // update managed cert via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCert", JsonSerializer.Serialize(managedCert))
+                };
+
+            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.UpdateManagedItem);
+
+            if (result != null)
+            {
+                _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Delete a managed certificate
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCertId"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
+        public async Task<bool> RemoveManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
+        {
+            // delete managed cert via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId",managedCertId)
+                };
+
+            var deletedOK = await PerformInstanceCommandTaskWithResult<bool>(instanceId, args, ManagementHubCommands.DeleteManagedItem);
+
+            if (deletedOK)
+            {
+                try
+                {
+                    _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
+                }
+                catch
+                {
+                }
+            }
+
+            return deletedOK;
+        }
+
         public async Task<StatusSummary> GetManagedCertificateSummary(AuthContext? currentAuthContext)
         {
 
@@ -186,18 +185,7 @@ namespace Certify.Server.Api.Public.Services
                     new("instanceId", instanceId)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetAcmeAccounts, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ICollection<Models.AccountDetails>>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+            return await PerformInstanceCommandTaskWithResult<ICollection<Models.AccountDetails>>(instanceId, args, ManagementHubCommands.GetAcmeAccounts);
         }
 
         public async Task<ActionResult?> AddAcmeAccount(string instanceId, ContactRegistration registration, AuthContext? currentAuthContext)
@@ -207,18 +195,15 @@ namespace Certify.Server.Api.Public.Services
                     new("registration", JsonSerializer.Serialize(registration))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.AddAcmeAccount, args);
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.AddAcmeAccount);
+        }
 
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ActionResult>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+        public async Task<ICollection<ChallengeProviderDefinition>?> GetChallengeProviders(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId)
+                };
+            return await PerformInstanceCommandTaskWithResult<ICollection<ChallengeProviderDefinition>>(instanceId, args, ManagementHubCommands.GetChallengeProviders);
         }
 
         public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialsId, AuthContext? currentAuthContext)
@@ -229,18 +214,7 @@ namespace Certify.Server.Api.Public.Services
                     new("credentialsId", credentialsId)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetDnsZones, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ICollection<Models.Providers.DnsZone>>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+            return await PerformInstanceCommandTaskWithResult<ICollection<DnsZone>>(instanceId, args, ManagementHubCommands.GetDnsZones);
         }
 
         public async Task<ICollection<Models.Config.StoredCredential>?> GetStoredCredentials(string instanceId, AuthContext? currentAuthContext)
@@ -249,18 +223,7 @@ namespace Certify.Server.Api.Public.Services
                     new("instanceId", instanceId)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetStoredCredentials, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ICollection<Models.Config.StoredCredential>>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+            return await PerformInstanceCommandTaskWithResult<ICollection<StoredCredential>>(instanceId, args, ManagementHubCommands.GetStoredCredentials);
         }
 
         public async Task<ActionResult?> UpdateStoredCredential(string instanceId, StoredCredential item, AuthContext? currentAuthContext)
@@ -270,18 +233,7 @@ namespace Certify.Server.Api.Public.Services
                     new("item", JsonSerializer.Serialize(item))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.UpdateStoredCredential, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ActionResult>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateStoredCredential);
         }
 
         public async Task<ActionResult?> DeleteStoredCredential(string instanceId, string storageKey, AuthContext authContext)
@@ -293,18 +245,7 @@ namespace Certify.Server.Api.Public.Services
                     new("storageKey",storageKey)
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.DeleteStoredCredential, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<ActionResult>(result.Value);
-            }
-            else
-            {
-                return null;
-            }
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.DeleteStoredCredential);
         }
 
         public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
@@ -315,18 +256,7 @@ namespace Certify.Server.Api.Public.Services
                     new("limit",maxLines.ToString())
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItemLog, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<LogItem[]>(result.Value);
-            }
-            else
-            {
-                return [];
-            }
+            return await PerformInstanceCommandTaskWithResult<LogItem[]>(instanceId, args, ManagementHubCommands.GetManagedItemLog) ?? [];
         }
 
         internal async Task<List<StatusMessage>> TestManagedCertificateConfiguration(string instanceId, ManagedCertificate managedCert, AuthContext? currentAuthContext)
@@ -336,18 +266,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCert",JsonSerializer.Serialize(managedCert))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.TestManagedItemConfiguration, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<List<StatusMessage>>(result.Value);
-            }
-            else
-            {
-                return [];
-            }
+            return await PerformInstanceCommandTaskWithResult<List<StatusMessage>>(instanceId, args, ManagementHubCommands.TestManagedItemConfiguration) ?? [];
         }
 
         internal async Task<List<ActionStep>> GetPreviewActions(string instanceId, ManagedCertificate managedCert, AuthContext? currentAuthContext)
@@ -357,18 +276,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCert",JsonSerializer.Serialize(managedCert))
                 };
 
-            var cmd = new InstanceCommandRequest(ManagementHubCommands.GetManagedItemRenewalPreview, args);
-
-            var result = await GetCommandResult(instanceId, cmd);
-
-            if (result?.Value != null)
-            {
-                return JsonSerializer.Deserialize<List<ActionStep>>(result.Value);
-            }
-            else
-            {
-                return [];
-            }
+            return await PerformInstanceCommandTaskWithResult<List<ActionStep>>(instanceId, args, ManagementHubCommands.GetManagedItemRenewalPreview) ?? [];
         }
 
         internal async Task PerformManagedCertificateRequest(string instanceId, string managedCertId, AuthContext? currentAuthContext)
