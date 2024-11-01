@@ -201,9 +201,9 @@ namespace Certify.Management
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var providerTypeArg = args.FirstOrDefault(a => a.Key == "providerTypeId");
-                var credentialsIdArg = args.FirstOrDefault(a => a.Key == "credentialsId");
+                var credentialIdArg = args.FirstOrDefault(a => a.Key == "credentialId");
                
-                val = await GetDnsProviderZones(providerTypeArg.Value, credentialsIdArg.Value);
+                val = await GetDnsProviderZones(providerTypeArg.Value, credentialIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

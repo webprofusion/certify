@@ -24,12 +24,12 @@ namespace Certify.Core.Tests.Unit
             dnsHelper = new DnsChallengeHelper(credentialsManager);
         }
 
-        [TestMethod, Description("Test Getting DNS Provider with empty CredentialsID")]
-        public async Task TestGetDnsProvidersEmptyCredentialsID()
+        [TestMethod, Description("Test Getting DNS Provider with empty CredentialID")]
+        public async Task TestGetDnsProvidersEmptyCredentialID()
         {
             var providerTypeId = "DNS01.Powershell";
-            var credentialsId = "";
-            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, credentialsManager);
+            var credentialId = "";
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialId, null, credentialsManager);
 
             // Assert
             Assert.AreEqual("DNS Challenge API Provider not set or could not load.", result.Result.Message);

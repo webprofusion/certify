@@ -238,7 +238,7 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpGet,
                         Comment = "Get Dns Challenge Providers",
                         PublicAPIController = "ChallengeProvider",
-                        PublicAPIRoute = "challengeprovider/{instanceId}",
+                        PublicAPIRoute = "{instanceId}",
                         ServiceAPIRoute = "managedcertificates/challengeapis/",
                         ReturnType = "ICollection<Certify.Models.Config.ChallengeProviderDefinition>",
                         UseManagementAPI = true,
@@ -251,14 +251,14 @@ namespace Certify.SourceGenerators
                         OperationMethod = HttpGet,
                         Comment = "Get List of Zones with the current DNS provider and credential",
                         PublicAPIController = "ChallengeProvider",
-                        PublicAPIRoute = "challengeprovider/dnszones/{instanceId}/{providerTypeId}/{credentialsId}",
-                        ServiceAPIRoute = "managedcertificates/dnszones/{providerTypeId}/{credentialsId}",
+                        PublicAPIRoute = "dnszones/{instanceId}/{providerTypeId}/{credentialId}",
+                        ServiceAPIRoute = "managedcertificates/dnszones/{providerTypeId}/{credentialId}",
                         ReturnType = "ICollection<Certify.Models.Providers.DnsZone>",
                         UseManagementAPI = true,
                         Params =new Dictionary<string, string>{
                             { "instanceId", "string" } ,
                             { "providerTypeId", "string" },
-                            { "credentialsId", "string" }
+                            { "credentialId", "string" }
                         }
                     },
                     new GeneratedAPI {

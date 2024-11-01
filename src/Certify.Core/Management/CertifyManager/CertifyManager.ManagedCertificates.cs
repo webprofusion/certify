@@ -527,11 +527,11 @@ namespace Certify.Management
             return await new PreviewManager().GeneratePreview(item, serverProvider, this, _credentialsManager);
         }
 
-        public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId)
+        public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)
         {
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
 
-            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialsId, null, _credentialsManager, _serviceLog);
+            var result = await dnsHelper.GetDnsProvider(providerTypeId, credentialId, null, _credentialsManager, _serviceLog);
 
             if (result.Provider != null)
             {

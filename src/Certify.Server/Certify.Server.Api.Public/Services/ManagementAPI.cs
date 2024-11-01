@@ -206,12 +206,12 @@ namespace Certify.Server.Api.Public.Services
             return await PerformInstanceCommandTaskWithResult<ICollection<ChallengeProviderDefinition>>(instanceId, args, ManagementHubCommands.GetChallengeProviders);
         }
 
-        public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialsId, AuthContext? currentAuthContext)
+        public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                     new("instanceId", instanceId),
                     new("providerTypeId", providerTypeId),
-                    new("credentialsId", credentialsId)
+                    new("credentialId", credentialId)
                 };
 
             return await PerformInstanceCommandTaskWithResult<ICollection<DnsZone>>(instanceId, args, ManagementHubCommands.GetDnsZones);

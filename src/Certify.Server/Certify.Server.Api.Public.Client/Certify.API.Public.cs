@@ -2718,8 +2718,8 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/challengeprovider/challengeprovider/{instanceId}"
-                    urlBuilder_.Append("internal/v1/challengeprovider/challengeprovider/");
+                    // Operation Path: "internal/v1/challengeprovider/{instanceId}"
+                    urlBuilder_.Append("internal/v1/challengeprovider/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
@@ -2779,9 +2779,9 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialsId)
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId)
         {
-            return GetDnsZonesAsync(instanceId, providerTypeId, credentialsId, System.Threading.CancellationToken.None);
+            return GetDnsZonesAsync(instanceId, providerTypeId, credentialId, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -2790,7 +2790,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialsId, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId, System.Threading.CancellationToken cancellationToken)
         {
             if (instanceId == null)
                 throw new System.ArgumentNullException("instanceId");
@@ -2798,8 +2798,8 @@ namespace Certify.API.Public
             if (providerTypeId == null)
                 throw new System.ArgumentNullException("providerTypeId");
 
-            if (credentialsId == null)
-                throw new System.ArgumentNullException("credentialsId");
+            if (credentialId == null)
+                throw new System.ArgumentNullException("credentialId");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -2812,13 +2812,13 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/challengeprovider/challengeprovider/dnszones/{instanceId}/{providerTypeId}/{credentialsId}"
-                    urlBuilder_.Append("internal/v1/challengeprovider/challengeprovider/dnszones/");
+                    // Operation Path: "internal/v1/challengeprovider/dnszones/{instanceId}/{providerTypeId}/{credentialId}"
+                    urlBuilder_.Append("internal/v1/challengeprovider/dnszones/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
                     urlBuilder_.Append('/');
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(providerTypeId, System.Globalization.CultureInfo.InvariantCulture)));
                     urlBuilder_.Append('/');
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(credentialsId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(credentialId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -3580,7 +3580,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<string> GetSystemVersionAsync()
+        public virtual System.Threading.Tasks.Task<VersionInfo> GetSystemVersionAsync()
         {
             return GetSystemVersionAsync(System.Threading.CancellationToken.None);
         }
@@ -3591,7 +3591,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<string> GetSystemVersionAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<VersionInfo> GetSystemVersionAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -3632,7 +3632,7 @@ namespace Certify.API.Public
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<string>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<VersionInfo>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);

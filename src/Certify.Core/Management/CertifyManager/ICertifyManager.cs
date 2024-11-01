@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -52,7 +52,7 @@ namespace Certify.Management
         Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate, bool isPreviewMode, IProgress<RequestProgressState> progress = null);
         Task<List<StatusMessage>> PerformChallengeCleanup(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress = null);
         Task<List<ActionResult>> PerformServiceDiagnostics();
-        Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId);
+        Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId);
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
 

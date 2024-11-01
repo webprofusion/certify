@@ -508,9 +508,9 @@ namespace Certify.Client
             var response = await PostAsync($"managedcertificates/challengecleanup", site, authContext);
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialsId, AuthContext authContext = null)
+        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null)
         {
-            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialsId}", authContext);
+            var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialId}", authContext);
             return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
         }
 
