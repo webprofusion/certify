@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Certify.Management;
@@ -53,6 +54,12 @@ namespace Certify.Core.Management
         public async Task<List<ActionStep>> StoreAndDeploy(IBindingDeploymentTarget deploymentTarget, ManagedCertificate managedCertificate, string pfxPath, string pfxPwd, bool isPreviewOnly, string certStoreName)
         {
             var actions = new List<ActionStep>();
+
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                actions.Add(new ActionStep { Title = "Certificate Store and Deploy Skipped", Category = "CertificateStorage", Description = "Platform not supported for certificate store, skipping"});
+                return actions;
+            }
 
             var requestConfig = managedCertificate.RequestConfig;
 
