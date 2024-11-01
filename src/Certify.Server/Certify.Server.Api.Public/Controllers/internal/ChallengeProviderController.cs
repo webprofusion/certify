@@ -30,19 +30,5 @@ namespace Certify.Server.Api.Public.Controllers
             _client = client;
             _mgmtAPI = mgmtAPI;
         }
-
-        /// <summary>
-        /// Get list of supported challenge providers
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.Config.ChallengeProviderDefinition>))]
-
-        public async Task<IActionResult> GetChallengeProviders()
-        {
-            var list = await _client.GetChallengeAPIList();
-            return new OkObjectResult(list);
-        }
     }
 }

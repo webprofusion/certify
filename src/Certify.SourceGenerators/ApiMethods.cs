@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-
 using SourceGenerator;
 
 namespace Certify.SourceGenerators
 {
-    internal class ApiMethods
+    public class ApiMethods
     {
         public static string HttpGet = "HttpGet";
         public static string HttpPost = "HttpPost";
@@ -38,7 +36,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "GetSecurityPrincipleAssignedRoles",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get list of Assigned Roles for a given security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/{id}/assignedroles",
@@ -49,7 +47,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "GetSecurityPrincipleRoleStatus",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get list of Assigned Roles etc for a given security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/{id}/rolestatus",
@@ -60,7 +58,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "GetAccessRoles",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get list of available security Roles",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "roles",
@@ -70,7 +68,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "GetSecurityPrinciples",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get list of available security principles",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciples",
@@ -79,7 +77,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "ValidateSecurityPrinciplePassword",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Check password valid for security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "validate",
@@ -90,7 +88,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "UpdateSecurityPrinciplePassword",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Update password for security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "updatepassword",
@@ -101,7 +99,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "AddSecurityPrinciple",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Add new security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple",
@@ -112,7 +110,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "UpdateSecurityPrinciple",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Update existing security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/update",
@@ -125,7 +123,7 @@ namespace Certify.SourceGenerators
                       new GeneratedAPI {
 
                         OperationName = "UpdateSecurityPrincipleAssignedRoles",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Update assigned roles for a security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/roles/update",
@@ -138,7 +136,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "DeleteSecurityPrinciple",
-                        OperationMethod = "HttpDelete",
+                        OperationMethod = HttpDelete,
                         Comment = "Delete security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple",
@@ -149,7 +147,7 @@ namespace Certify.SourceGenerators
                     /* per instance API, via management hub */
                     new GeneratedAPI {
                         OperationName = "GetAcmeAccounts",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get All Acme Accounts",
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
@@ -160,7 +158,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "AddAcmeAccount",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Add New Acme Account",
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
@@ -172,7 +170,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "AddCertificateAuthority",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Add New Certificate Authority",
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "authority",
@@ -184,7 +182,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "RemoveCertificateAuthority",
-                        OperationMethod = "HttpDelete",
+                        OperationMethod = HttpDelete,
                         Comment = "Remove Certificate Authority",
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "authority/{id}",
@@ -194,7 +192,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "RemoveAcmeAccount",
-                        OperationMethod = "HttpDelete",
+                        OperationMethod = HttpDelete,
                         Comment = "Remove ACME Account",
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "accounts/{storageKey}/{deactivate}",
@@ -204,7 +202,7 @@ namespace Certify.SourceGenerators
                     },
                      new GeneratedAPI {
                         OperationName = "GetStoredCredentials",
-                        OperationMethod = "HttpGet",
+                        OperationMethod = HttpGet,
                         Comment = "Get List of Stored Credentials",
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "credentials/{instanceId}",
@@ -215,7 +213,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "UpdateStoredCredential",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Add/Update Stored Credential",
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "credentials/{instanceId}",
@@ -226,7 +224,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "DeleteStoredCredential",
-                        OperationMethod = "HttpDelete",
+                        OperationMethod = HttpDelete,
                         Comment = "Remove Stored Credential",
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "credentials/{instanceId}/{storageKey}",
@@ -234,6 +232,19 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "storageKey", "string" } }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "GetChallengeProviders",
+                        OperationMethod = HttpGet,
+                        Comment = "Get Dns Challenge Providers",
+                        PublicAPIController = "ChallengeProvider",
+                        PublicAPIRoute = "challengeprovider/{instanceId}",
+                        ServiceAPIRoute = "managedcertificates/challengeapis/",
+                        ReturnType = "ICollection<Certify.Models.Config.ChallengeProviderDefinition>",
+                        UseManagementAPI = true,
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" }
+                        }
                     },
                       new GeneratedAPI {
                         OperationName = "GetDnsZones",
@@ -252,7 +263,7 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
                         OperationName = "PerformExport",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Perform an export of all settings",
                         PublicAPIController = "System",
                         PublicAPIRoute = "system/migration/export",
@@ -262,7 +273,7 @@ namespace Certify.SourceGenerators
                     },
                      new GeneratedAPI {
                         OperationName = "PerformImport",
-                        OperationMethod = "HttpPost",
+                        OperationMethod = HttpPost,
                         Comment = "Perform an import of all settings",
                         PublicAPIController = "System",
                         PublicAPIRoute = "system/migration/import",
@@ -273,7 +284,7 @@ namespace Certify.SourceGenerators
                     new GeneratedAPI {
 
                         OperationName = "RemoveManagedCertificate",
-                        OperationMethod = "HttpDelete",
+                        OperationMethod = HttpDelete,
                         Comment = "Remove Managed Certificate",
                         PublicAPIController = "Certificate",
                         PublicAPIRoute = "settings/{instanceId}/{managedCertId}",

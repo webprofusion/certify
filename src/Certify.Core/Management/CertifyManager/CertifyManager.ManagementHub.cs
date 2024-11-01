@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -192,6 +192,10 @@ namespace Certify.Management
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
                 val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetChallengeProviders)
+            {
+                val = await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
             }
             else if (arg.CommandType == ManagementHubCommands.GetDnsZones)
             {
