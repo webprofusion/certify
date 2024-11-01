@@ -65,6 +65,9 @@ namespace Certify.Client
 
                     return message;
                 };
+
+                opts.UseStatefulReconnect = true;
+                
             })
             .WithAutomaticReconnect()
             .AddMessagePackProtocol()
