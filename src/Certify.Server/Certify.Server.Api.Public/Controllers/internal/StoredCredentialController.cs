@@ -1,7 +1,5 @@
 ﻿using Certify.Client;
 using Certify.Server.Api.Public.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Api.Public.Controllers
@@ -10,7 +8,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// Internal API for extended certificate management. Not intended for general use.
     /// </summary>
     [ApiController]
-    [Route("internal/v1/[controller]")]
+    [Route("internal/v1/credentials")]
     public partial class StoredCredentialController : ApiControllerBase
     {
 
