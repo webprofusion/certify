@@ -205,8 +205,8 @@ namespace Certify.Management
         /// </summary>
         private void SetupJobs()
         {
-            // 60 second job timer (reporting etc)
-            _heartbeatTimer = new System.Timers.Timer(60 * 1000); // every n seconds
+            // n second job timer (reporting etc)
+            _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every n seconds
             _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
             _heartbeatTimer.Start();
 

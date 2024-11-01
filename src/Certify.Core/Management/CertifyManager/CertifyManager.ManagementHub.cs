@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -38,7 +38,7 @@ namespace Certify.Management
 
         private void SendHeartbeatToManagementHub()
         {
-            //_managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
+            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
         }
 
         private async Task StartManagementHubConnection(string hubUri)
