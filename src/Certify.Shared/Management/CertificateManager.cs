@@ -378,7 +378,7 @@ namespace Certify.Management
             {
                 var pfxBytes = File.ReadAllBytes(pfxFile);
                 certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-               
+
             }
             catch (CryptographicException)
             {
@@ -389,7 +389,7 @@ namespace Certify.Management
                 pwd = "";
             }
 #else
-         try
+            try
             {
                 certificate = new X509Certificate2(pfxFile, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
             }

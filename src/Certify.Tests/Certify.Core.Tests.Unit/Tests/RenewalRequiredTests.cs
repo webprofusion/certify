@@ -77,7 +77,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(renewalDueCheck.HoldHrs, 48, "Hold should be for 48 Hrs");
 
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
-            
+
             // perform check as if last attempt was over 48rs ago, item should require renewal and not be on hold
             renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
 

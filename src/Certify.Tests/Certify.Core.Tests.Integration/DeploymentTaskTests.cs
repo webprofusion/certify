@@ -179,7 +179,7 @@ namespace Certify.Core.Tests
 
                 //ensure 3rd task runs because task 1 failed
                 var expectedFailureTaskStepKey = managedCertificate.PostRequestTasks.First(t => t.TaskName == "Post Task 3 (on task fail)").Id;
-               
+
                 var skippedStep = result
                     .Actions.Find(s => s.Key == "PostRequestTasks")
                     .Substeps.Find(s => s.Key == expectedFailureTaskStepKey);

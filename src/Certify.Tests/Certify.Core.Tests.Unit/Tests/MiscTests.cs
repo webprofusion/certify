@@ -119,7 +119,7 @@ yNQwCgYIKoZIzj0EAwIDRwAwRAIge09+S5TZAlw5tgtiVvuERV6cT4mfutXIlwTb
         [TestMethod, Description("Source gen test")]
         public void TestSourceGen()
         {
-           var typeName = SourceGenerators.ApiMethods.GetFormattedTypeName(typeof(string));
+            var typeName = SourceGenerators.ApiMethods.GetFormattedTypeName(typeof(string));
 
             Assert.AreEqual("System.String", typeName);
 

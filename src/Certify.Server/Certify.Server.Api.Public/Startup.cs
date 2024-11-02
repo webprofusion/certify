@@ -66,7 +66,7 @@ namespace Certify.Server.API
                 .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
 
                 .AddMessagePackProtocol();
-            
+
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(

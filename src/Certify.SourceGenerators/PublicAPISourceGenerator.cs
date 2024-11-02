@@ -234,7 +234,7 @@ using Certify.Models.Config.AccessControl;
             // then add a watch on 
             if (!Debugger.IsAttached)
             {
-             //   Debugger.Launch();
+                //   Debugger.Launch();
             }
 #endif
         }

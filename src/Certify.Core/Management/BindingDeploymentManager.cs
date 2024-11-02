@@ -57,7 +57,7 @@ namespace Certify.Core.Management
 
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                actions.Add(new ActionStep { Title = "Certificate Store and Deploy Skipped", Category = "CertificateStorage", Description = "Platform not supported for certificate store, skipping"});
+                actions.Add(new ActionStep { Title = "Certificate Store and Deploy Skipped", Category = "CertificateStorage", Description = "Platform not supported for certificate store, skipping" });
                 return actions;
             }
 
