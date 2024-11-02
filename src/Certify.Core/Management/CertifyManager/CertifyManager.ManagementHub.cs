@@ -123,7 +123,7 @@ namespace Certify.Management
 
                 val = await UpdateManagedCertificate(managedCert);
             }
-            else if (arg.CommandType == ManagementHubCommands.DeleteManagedItem)
+            else if (arg.CommandType == ManagementHubCommands.RemoveDeleteManagedItem)
             {
                 // delete a single managed item 
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
@@ -163,6 +163,18 @@ namespace Certify.Management
 
                 val = true;
             }
+            else if (arg.CommandType == ManagementHubCommands.GetCertificateAuthorities)
+            {
+                val = await GetCertificateAuthorities();
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateCertificateAuthority)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var itemArg = args.FirstOrDefault(a => a.Key == "certificateAuthority");
+                var item = JsonSerializer.Deserialize<CertificateAuthority>(itemArg.Value);
+
+                val = await UpdateCertificateAuthority(item);
+            }
             else if (arg.CommandType == ManagementHubCommands.GetAcmeAccounts)
             {
                 val = await GetAccountRegistrations();
@@ -187,7 +199,7 @@ namespace Certify.Management
 
                 val = await _credentialsManager.Update(storedCredential);
             }
-            else if (arg.CommandType == ManagementHubCommands.DeleteStoredCredential)
+            else if (arg.CommandType == ManagementHubCommands.RemoveStoredCredential)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
@@ -202,7 +214,7 @@ namespace Certify.Management
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var providerTypeArg = args.FirstOrDefault(a => a.Key == "providerTypeId");
                 var credentialIdArg = args.FirstOrDefault(a => a.Key == "credentialId");
-               
+
                 val = await GetDnsProviderZones(providerTypeArg.Value, credentialIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
