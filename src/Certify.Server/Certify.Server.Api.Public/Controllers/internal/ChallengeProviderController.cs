@@ -1,8 +1,5 @@
 ﻿using Certify.Client;
-using Certify.Models.Providers;
 using Certify.Server.Api.Public.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Api.Public.Controllers

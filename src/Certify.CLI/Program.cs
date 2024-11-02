@@ -178,7 +178,7 @@ namespace Certify.CLI
                 {
                     await p.UpdateStoredCredential(args);
                 }
-                
+
                 if (command == "credential" && args.Contains("list"))
                 {
                     await p.ListStoredCredentials(args);
