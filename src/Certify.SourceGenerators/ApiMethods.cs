@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using SourceGenerator;
@@ -135,9 +135,9 @@ namespace Certify.SourceGenerators
                     },
                     new GeneratedAPI {
 
-                        OperationName = "DeleteSecurityPrinciple",
+                        OperationName = "RemoveSecurityPrinciple",
                         OperationMethod = HttpDelete,
-                        Comment = "Delete security principle",
+                        Comment = "Remove security principle",
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple",
                         ServiceAPIRoute = "access/securityprinciple/{id}",
@@ -162,33 +162,42 @@ namespace Certify.SourceGenerators
                         Comment = "Add New Acme Account",
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "account/{instanceId}",
+                        PublicAPIRoute = "{instanceId}/account/",
                         ServiceAPIRoute = "accounts",
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "registration", "Certify.Models.ContactRegistration" } }
                     },
                     new GeneratedAPI {
-
-                        OperationName = "AddCertificateAuthority",
-                        OperationMethod = HttpPost,
-                        Comment = "Add New Certificate Authority",
+                        OperationName = "GetCertificateAuthorities",
+                        OperationMethod = HttpGet,
+                        Comment = "Get list of defined Certificate Authorities",
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "authority",
+                        PublicAPIRoute = "{instanceId}/authority",
+                        ServiceAPIRoute = "accounts/authorities",
+                        ReturnType = "ICollection<Models.CertificateAuthority>",
+                        UseManagementAPI = true,
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" } }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "UpdateCertificateAuthority",
+                        OperationMethod = HttpPost,
+                        Comment = "Add/Update Certificate Authority",
+                        UseManagementAPI = true,
+                        PublicAPIController = "CertificateAuthority",
+                        PublicAPIRoute = "{instanceId}/authority",
                         ServiceAPIRoute = "accounts/authorities",
                         ReturnType = "Models.Config.ActionResult",
-                        Params =new Dictionary<string, string>{{ "certificateAuthority", "Certify.Models.CertificateAuthority" } }
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "ca", "Certify.Models.CertificateAuthority" } }
                     },
-
                     new GeneratedAPI {
-
                         OperationName = "RemoveCertificateAuthority",
                         OperationMethod = HttpDelete,
                         Comment = "Remove Certificate Authority",
                         PublicAPIController = "CertificateAuthority",
-                        PublicAPIRoute = "authority/{id}",
+                        PublicAPIRoute = "{instanceId}/authority/{id}",
                         ServiceAPIRoute = "accounts/authorities/{id}",
                         ReturnType = "Models.Config.ActionResult",
-                        Params =new Dictionary<string, string>{{ "id", "string" } }
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "id", "string" } }
                     },
                     new GeneratedAPI {
                         OperationName = "RemoveAcmeAccount",
@@ -223,7 +232,7 @@ namespace Certify.SourceGenerators
                         Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } }
                     },
                     new GeneratedAPI {
-                        OperationName = "DeleteStoredCredential",
+                        OperationName = "RemoveStoredCredential",
                         OperationMethod = HttpDelete,
                         Comment = "Remove Stored Credential",
                         PublicAPIController = "StoredCredential",
