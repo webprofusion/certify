@@ -20,16 +20,20 @@ namespace Certify.API.Management
         public const string GetManagedItemRenewalPreview = "GetManagedItemRenewalPreview";
 
         public const string UpdateManagedItem = "UpdateManagedItem";
-        public const string DeleteManagedItem = "DeleteManagedItem";
+        public const string RemoveDeleteManagedItem = "RemoveManagedItem";
         public const string TestManagedItemConfiguration = "TestManagedItemConfiguration";
         public const string PerformManagedItemRequest = "PerformManagedItemRequest";
+
+        public const string GetCertificateAuthorities = "GetCertificateAuthorities";
+        public const string UpdateCertificateAuthority = "UpdateCertificateAuthority";
+        public const string RemoveCertificateAuthority = "RemoveCertificateAuthority";
 
         public const string GetAcmeAccounts = "GetAcmeAccounts";
         public const string AddAcmeAccount = "AddAcmeAccount";
 
         public const string GetStoredCredentials = "GetStoredCredentials";
         public const string UpdateStoredCredential = "UpdateStoredCredential";
-        public const string DeleteStoredCredential = "DeleteStoredCredential";
+        public const string RemoveStoredCredential = "RemoveStoredCredential";
 
         public const string GetChallengeProviders = "GetChallengeProviders";
         public const string GetDnsZones = "GetDnsZones";

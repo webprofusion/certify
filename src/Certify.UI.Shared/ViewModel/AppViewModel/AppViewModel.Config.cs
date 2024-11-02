@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -44,7 +44,7 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca)
         {
-            var result = await _certifyClient.UpdateCertificateAuthority(ca);
+            var result = await _certifyClient.UpdateCertificateAuthority(ca, authContext: null);
 
             if (result.IsSuccess)
             {

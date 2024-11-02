@@ -140,7 +140,7 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCertId",managedCertId)
                 };
 
-            var deletedOK = await PerformInstanceCommandTaskWithResult<bool>(instanceId, args, ManagementHubCommands.DeleteManagedItem);
+            var deletedOK = await PerformInstanceCommandTaskWithResult<bool>(instanceId, args, ManagementHubCommands.RemoveDeleteManagedItem);
 
             if (deletedOK)
             {
@@ -177,6 +177,24 @@ namespace Certify.Server.Api.Public.Services
             }
 
             return await Task.FromResult(sum);
+        }
+
+        public async Task<ICollection<Models.CertificateAuthority>?> GetCertificateAuthorities(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId)
+                };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<Models.CertificateAuthority>>(instanceId, args, ManagementHubCommands.GetCertificateAuthorities);
+        }
+        public async Task<ActionResult?> UpdateCertificateAuthority(string instanceId, CertificateAuthority certificateAuthority, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("certificateAuthority", JsonSerializer.Serialize(certificateAuthority))
+                };
+
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateCertificateAuthority);
         }
 
         public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
@@ -236,7 +254,7 @@ namespace Certify.Server.Api.Public.Services
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateStoredCredential);
         }
 
-        public async Task<ActionResult?> DeleteStoredCredential(string instanceId, string storageKey, AuthContext authContext)
+        public async Task<ActionResult?> RemoveStoredCredential(string instanceId, string storageKey, AuthContext authContext)
         {
             // delete stored credential via management hub
 
@@ -245,7 +263,7 @@ namespace Certify.Server.Api.Public.Services
                     new("storageKey",storageKey)
                 };
 
-            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.DeleteStoredCredential);
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveStoredCredential);
         }
 
         public async Task<LogItem[]> GetItemLog(string instanceId, string managedCertId, int maxLines, AuthContext? currentAuthContext)
