@@ -25,25 +25,32 @@ namespace Certify.CLI
             var cred = new StoredCredential
             {
                 StorageKey = storageKey,
-                DateCreated = DateTime.Now,
+                DateCreated = DateTime.UtcNow,
                 ProviderType = credentialType,
                 Secret = secretValue,
                 Title = title
             };
 
-            var result = await _certifyClient.UpdateCredentials(cred);
+            try
+            {
+                var result = await _certifyClient.UpdateCredentials(cred);
+                if (result != null)
+                {
 
-            if (result != null)
-            {
-                var resultObject = new { Status = "OK", Message = "Credential updated", StorageKey = result?.StorageKey };
-                var output = JsonConvert.SerializeObject(resultObject, Formatting.Indented);
-                Console.WriteLine(output);
+                    var resultObject = new { Status = "OK", Message = "Credential updated", StorageKey = result?.StorageKey };
+                    var output = JsonConvert.SerializeObject(resultObject, Formatting.Indented);
+                    Console.WriteLine(output);
+                }
+                else
+                {
+                    var resultObject = new { Status = "Error", Message = "Credential update failed" };
+                    var output = JsonConvert.SerializeObject(resultObject, Formatting.Indented);
+                    Console.WriteLine(output);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var resultObject = new { Status = "Error", Message = "Credential update failed" };
-                var output = JsonConvert.SerializeObject(resultObject, Formatting.Indented);
-                Console.WriteLine(output);
+                Console.WriteLine($"Error updating credentials: {ex.Message}");
             }
         }
 
@@ -53,6 +60,11 @@ namespace Certify.CLI
 
             var output = JsonConvert.SerializeObject(result.Select(s => new { s.Title, s.StorageKey, s.ProviderType, s.DateCreated }), Formatting.Indented);
 
+            Console.WriteLine(output);
+        }
+        private void WriteOutput(object resultObject)
+        {
+            var output = JsonConvert.SerializeObject(resultObject, Formatting.Indented);
             Console.WriteLine(output);
         }
     }
