@@ -297,6 +297,7 @@ namespace Certify.Management
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                         _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+                        _accessControl = new AccessControl(_serviceLog, new SQLiteAccessControlStore("", _serviceLog));
                     }
                     else
                     {
@@ -325,6 +326,7 @@ namespace Certify.Management
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                     _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+                    _accessControl = new AccessControl(_serviceLog, new SQLiteAccessControlStore("",_serviceLog));
                 }
 
                 // attempt to create and delete a test item
@@ -524,12 +526,6 @@ namespace Certify.Management
         private IAccessControl _accessControl;
         public Task<IAccessControl> GetCurrentAccessControl()
         {
-            if (_accessControl == null)
-            {
-                var store = new SQLiteAccessControlStore();
-                _accessControl = new AccessControl(_serviceLog, store);
-            }
-
             return Task.FromResult(_accessControl);
         }
     }
