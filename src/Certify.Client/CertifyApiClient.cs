@@ -620,6 +620,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<CertificateAuthority>>(result);
         }
 
+        public async Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext = null)
+        {
+            var result = await PostAsync("accounts/authorities", ca, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
         public async Task<ActionResult> DeleteCertificateAuthority(string id, AuthContext authContext = null)
         {
             var result = await DeleteAsync("accounts/authorities/" + id, authContext);
