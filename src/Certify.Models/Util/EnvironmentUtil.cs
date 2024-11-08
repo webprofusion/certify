@@ -85,7 +85,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="subDirectory">optional subfolder to include</param>
         /// <returns>full app data with with optional subdirectory</returns>
-        public static string CreateAppDataPath(string? subDirectory = null)
+        public static string CreateAppDataPath(string? subDirectory = null, bool skipCreation=false)
         {
             var parts = new List<string>()
             {
@@ -99,16 +99,20 @@ namespace Certify.Models
             }
 
             var path = Path.Combine(parts.ToArray());
-            CreateAndApplyRestrictedACL(path);
 
-            if (subDirectory != null)
+            if (!skipCreation)
             {
-                parts.Add(subDirectory);
-                path = Path.Combine(parts.ToArray());
+                CreateAndApplyRestrictedACL(path);
 
-                if (!Directory.Exists(path))
+                if (subDirectory != null)
                 {
-                    Directory.CreateDirectory(path);
+                    parts.Add(subDirectory);
+                    path = Path.Combine(parts.ToArray());
+
+                    if (!Directory.Exists(path))
+                    {
+                        Directory.CreateDirectory(path);
+                    }
                 }
             }
 
