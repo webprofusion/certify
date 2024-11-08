@@ -101,7 +101,7 @@ namespace Certify.Server.Api.Public.Controllers
         [HttpGet]
         [Route("flush")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedInstanceInfo>))]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> FlushHubManagedInstances()
         {
             _mgmtStateProvider.Clear();
