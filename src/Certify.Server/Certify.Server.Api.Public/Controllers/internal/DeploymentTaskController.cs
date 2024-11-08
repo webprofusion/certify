@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Server.Api.Public.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,31 +17,18 @@ namespace Certify.Server.Api.Public.Controllers
         private readonly ILogger<DeploymentTaskController> _logger;
 
         private readonly ICertifyInternalApiClient _client;
+        private readonly ManagementAPI _mgmtAPI;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public DeploymentTaskController(ILogger<DeploymentTaskController> logger, ICertifyInternalApiClient client)
+        public DeploymentTaskController(ILogger<DeploymentTaskController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtAPI)
         {
             _logger = logger;
             _client = client;
-        }
-
-        /// <summary>
-        /// Get List of supported deployment tasks
-        /// </summary>
-        /// <returns></returns>
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.Config.DeploymentProviderDefinition>))]
-        [Route("providers")]
-        public async Task<IActionResult> GetDeploymentProviders()
-        {
-            var list = await _client.GetDeploymentProviderList();
-            return new OkObjectResult(list);
+            _mgmtAPI = mgmtAPI;
         }
     }
 }

@@ -44,7 +44,46 @@ namespace SourceGenerator
 
                 if (context.Compilation.AssemblyName.EndsWith("Api.Public"))
                 {
-                    context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From($@"
+                    ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamCall);
+                }
+
+                if (context.Compilation.AssemblyName.EndsWith("Certify.UI.Blazor"))
+                {
+                    ImplementAppModel(context, config, apiParamDeclWithoutAuthContext, apiParamCallWithoutAuthContext);
+                }
+
+                if (context.Compilation.AssemblyName.EndsWith("Certify.Client") && !config.UseManagementAPI)
+                {
+                    // for methods which directly call the backend service (e.g. main server settings), implement the client API
+                    ImplementInternalAPIClient(context, config, apiParamDecl, apiParamCall);
+                }
+            }
+        }
+
+        private static void ImplementAppModel(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCallWithoutAuthContext)
+        {
+            context.AddSource($"AppModel.{config.OperationName}.g.cs", SourceText.From($@"
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Certify.Models;
+using Certify.Models.Providers;
+using Certify.Models.Config.AccessControl;
+
+            namespace Certify.UI.Client.Core
+    {{
+        public partial class AppModel
+        {{
+            public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
+            {{
+                return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
+            }}
+        }}
+    }}", Encoding.UTF8));
+        }
+
+        private static void ImplementPublicAPI(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCall)
+        {
+            context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From($@"
 
 using Certify.Client;
 using Certify.Server.Api.Public.Controllers;
@@ -79,11 +118,11 @@ using Certify.Models.Config.AccessControl;
                 }}
             }}", Encoding.UTF8));
 
-                }
+        }
 
-                if (context.Compilation.AssemblyName.EndsWith("Certify.Client"))
-                {
-                    var template = @"
+        private static void ImplementInternalAPIClient(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDecl, string apiParamCall)
+        {
+            var template = @"
 using Certify.Models;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
@@ -97,9 +136,9 @@ namespace Certify.Client
 }
 ";
 
-                    if (config.OperationMethod == "HttpGet")
-                    {
-                        var source = SourceText.From(template.Replace("MethodTemplate", $@"
+            if (config.OperationMethod == "HttpGet")
+            {
+                var code = template.Replace("MethodTemplate", $@"
 
                 public partial interface ICertifyInternalApiClient
                 {{
@@ -124,23 +163,24 @@ namespace Certify.Client
                     }}
                     
                 }}
-            "), Encoding.UTF8);
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", source);
-                    }
+            ");
+                var source = SourceText.From(code, Encoding.UTF8);
+                context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", source);
+            }
 
-                    if (config.OperationMethod == "HttpPost")
-                    {
-                        var postAPIRoute = config.ServiceAPIRoute;
-                        var postApiCall = apiParamCall;
-                        var postApiParamDecl = apiParamDecl;
+            if (config.OperationMethod == "HttpPost")
+            {
+                var postAPIRoute = config.ServiceAPIRoute;
+                var postApiCall = apiParamCall;
+                var postApiParamDecl = apiParamDecl;
 
-                        if (config.UseManagementAPI)
-                        {
-                            postApiCall = apiParamCall.Replace("instanceId,", "");
-                            postApiParamDecl = apiParamDecl.Replace("string instanceId,", "");
-                        }
+                if (config.UseManagementAPI)
+                {
+                    postApiCall = apiParamCall.Replace("instanceId,", "");
+                    postApiParamDecl = apiParamDecl.Replace("string instanceId,", "");
+                }
 
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
+                context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
 
                 public partial interface ICertifyInternalApiClient
                 {{
@@ -167,11 +207,11 @@ namespace Certify.Client
                     
                 }}
             "), Encoding.UTF8));
-                    }
+            }
 
-                    if (config.OperationMethod == "HttpDelete")
-                    {
-                        context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
+            if (config.OperationMethod == "HttpDelete")
+            {
+                context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", SourceText.From(template.Replace("MethodTemplate", $@"
 
                 public partial interface ICertifyInternalApiClient
                 {{
@@ -202,31 +242,9 @@ namespace Certify.Client
                     
                 }}
             "), Encoding.UTF8));
-                    }
-                }
-
-                if (context.Compilation.AssemblyName.EndsWith("Certify.UI.Blazor"))
-                {
-                    context.AddSource($"AppModel.{config.OperationName}.g.cs", SourceText.From($@"
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Certify.Models;
-using Certify.Models.Providers;
-using Certify.Models.Config.AccessControl;
-
-            namespace Certify.UI.Client.Core
-    {{
-        public partial class AppModel
-        {{
-            public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
-            {{
-                return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
-            }}
-        }}
-    }}", Encoding.UTF8));
-                }
             }
         }
+
         public void Initialize(GeneratorInitializationContext context)
         {
 #if DEBUG
@@ -234,7 +252,7 @@ using Certify.Models.Config.AccessControl;
             // then add a watch on 
             if (!Debugger.IsAttached)
             {
-                //   Debugger.Launch();
+                // Debugger.Launch();
             }
 #endif
         }

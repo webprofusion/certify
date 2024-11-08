@@ -144,6 +144,7 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{{"id","string"}}
                     },
+
                     /* per instance API, via management hub */
                     new GeneratedAPI {
                         OperationName = "GetAcmeAccounts",
@@ -152,7 +153,6 @@ namespace Certify.SourceGenerators
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/accounts/",
-                        ServiceAPIRoute = "accounts",
                         ReturnType = "ICollection<Models.AccountDetails>",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" } }
                     },
@@ -163,7 +163,6 @@ namespace Certify.SourceGenerators
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/account/",
-                        ServiceAPIRoute = "accounts",
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "registration", "Certify.Models.ContactRegistration" } }
                     },
@@ -171,11 +170,10 @@ namespace Certify.SourceGenerators
                         OperationName = "GetCertificateAuthorities",
                         OperationMethod = HttpGet,
                         Comment = "Get list of defined Certificate Authorities",
+                        UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/authority",
-                        ServiceAPIRoute = "accounts/authorities",
                         ReturnType = "ICollection<Models.CertificateAuthority>",
-                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" } }
                     },
                     new GeneratedAPI {
@@ -185,7 +183,6 @@ namespace Certify.SourceGenerators
                         UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/authority",
-                        ServiceAPIRoute = "accounts/authorities",
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "ca", "Certify.Models.CertificateAuthority" } }
                     },
@@ -193,9 +190,9 @@ namespace Certify.SourceGenerators
                         OperationName = "RemoveCertificateAuthority",
                         OperationMethod = HttpDelete,
                         Comment = "Remove Certificate Authority",
+                        UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/authority/{id}",
-                        ServiceAPIRoute = "accounts/authorities/{id}",
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "id", "string" } }
                     },
@@ -203,9 +200,9 @@ namespace Certify.SourceGenerators
                         OperationName = "RemoveAcmeAccount",
                         OperationMethod = HttpDelete,
                         Comment = "Remove ACME Account",
+                        UseManagementAPI = true,
                         PublicAPIController = "CertificateAuthority",
                         PublicAPIRoute = "{instanceId}/accounts/{storageKey}/{deactivate}",
-                        ServiceAPIRoute = "accounts/remove/{storageKey}/{deactivate}",
                         ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "storageKey", "string" }, { "deactivate", "bool" } }
                     },
@@ -213,11 +210,10 @@ namespace Certify.SourceGenerators
                         OperationName = "GetStoredCredentials",
                         OperationMethod = HttpGet,
                         Comment = "Get List of Stored Credentials",
+                        UseManagementAPI = true,
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "{instanceId}",
-                        ServiceAPIRoute = "credentials",
                         ReturnType = "ICollection<Models.Config.StoredCredential>",
-                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" } }
                     },
                     new GeneratedAPI {
@@ -226,7 +222,6 @@ namespace Certify.SourceGenerators
                         Comment = "Add/Update Stored Credential",
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "{instanceId}",
-                        ServiceAPIRoute = "credentials",
                         ReturnType = "Models.Config.ActionResult",
                         UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } }
@@ -235,22 +230,32 @@ namespace Certify.SourceGenerators
                         OperationName = "RemoveStoredCredential",
                         OperationMethod = HttpDelete,
                         Comment = "Remove Stored Credential",
+                        UseManagementAPI = true,
                         PublicAPIController = "StoredCredential",
                         PublicAPIRoute = "{instanceId}/{storageKey}",
-                        ServiceAPIRoute = "credentials",
                         ReturnType = "Models.Config.ActionResult",
-                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "storageKey", "string" } }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "GetDeploymentProviders",
+                        OperationMethod = HttpGet,
+                        Comment = "Get Deployment Task Providers",
+                        UseManagementAPI = true,
+                        PublicAPIController = "DeploymentTask",
+                        PublicAPIRoute = "{instanceId}",
+                        ReturnType = "ICollection<Certify.Models.Config.DeploymentProviderDefinition>",
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" }
+                        }
                     },
                     new GeneratedAPI {
                         OperationName = "GetChallengeProviders",
                         OperationMethod = HttpGet,
                         Comment = "Get Dns Challenge Providers",
+                        UseManagementAPI = true,
                         PublicAPIController = "ChallengeProvider",
                         PublicAPIRoute = "{instanceId}",
-                        ServiceAPIRoute = "managedcertificates/challengeapis/",
                         ReturnType = "ICollection<Certify.Models.Config.ChallengeProviderDefinition>",
-                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{
                             { "instanceId", "string" }
                         }
@@ -259,17 +264,41 @@ namespace Certify.SourceGenerators
                         OperationName = "GetDnsZones",
                         OperationMethod = HttpGet,
                         Comment = "Get List of Zones with the current DNS provider and credential",
+                        UseManagementAPI = true,
                         PublicAPIController = "ChallengeProvider",
                         PublicAPIRoute = "{instanceId}/dnszones/{providerTypeId}/{credentialId}",
-                        ServiceAPIRoute = "managedcertificates/dnszones/{providerTypeId}/{credentialId}",
                         ReturnType = "ICollection<Certify.Models.Providers.DnsZone>",
-                        UseManagementAPI = true,
                         Params =new Dictionary<string, string>{
                             { "instanceId", "string" } ,
                             { "providerTypeId", "string" },
                             { "credentialId", "string" }
                         }
                     },
+                    new GeneratedAPI {
+                        OperationName = "ExecuteDeploymentTask",
+                        OperationMethod = HttpGet,
+                        Comment = "Execute Deployment Task",
+                        UseManagementAPI = true,
+                        PublicAPIController = "DeploymentTask",
+                        PublicAPIRoute = "{instanceId}/execute/{managedCertificateId}/{taskId}",
+                        ReturnType = "ICollection<ActionStep>",
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" },
+                            { "managedCertificateId", "string" },
+                            { "taskId", "string" }
+                        }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "RemoveManagedCertificate",
+                        OperationMethod = HttpDelete,
+                        Comment = "Remove Managed Certificate",
+                        UseManagementAPI = true,
+                        PublicAPIController = "Certificate",
+                        PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
+                        ReturnType = "bool",
+                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
+                    },
+                    // TODO
                     new GeneratedAPI {
                         OperationName = "PerformExport",
                         OperationMethod = HttpPost,
@@ -289,18 +318,6 @@ namespace Certify.SourceGenerators
                         ServiceAPIRoute = "system/migration/import",
                         ReturnType = "ICollection<ActionStep>",
                         Params =new Dictionary<string, string>{{ "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
-                    },
-                    new GeneratedAPI {
-
-                        OperationName = "RemoveManagedCertificate",
-                        OperationMethod = HttpDelete,
-                        Comment = "Remove Managed Certificate",
-                        PublicAPIController = "Certificate",
-                        PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
-                        UseManagementAPI = true,
-                        ServiceAPIRoute = "managedcertificates/delete/{managedCertId}",
-                        ReturnType = "bool",
-                        Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
                     },
                 };
         }

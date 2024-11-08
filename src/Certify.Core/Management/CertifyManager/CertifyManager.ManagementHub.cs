@@ -175,6 +175,12 @@ namespace Certify.Management
 
                 val = await UpdateCertificateAuthority(item);
             }
+            else if (arg.CommandType == ManagementHubCommands.RemoveCertificateAuthority)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var itemArg = args.FirstOrDefault(a => a.Key == "id");
+                val = await RemoveCertificateAuthority(itemArg.Value);
+            }
             else if (arg.CommandType == ManagementHubCommands.GetAcmeAccounts)
             {
                 val = await GetAccountRegistrations();
@@ -186,6 +192,13 @@ namespace Certify.Management
                 var registration = JsonSerializer.Deserialize<ContactRegistration>(registrationArg.Value);
 
                 val = await AddAccount(registration);
+            }
+            else if (arg.CommandType == ManagementHubCommands.RemoveAcmeAccount)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
+                var deactivateArg = args.FirstOrDefault(a => a.Key == "deactivate");
+                val = await RemoveAccount(itemArg.Value, bool.Parse(deactivateArg.Value));
             }
             else if (arg.CommandType == ManagementHubCommands.GetStoredCredentials)
             {
@@ -209,6 +222,7 @@ namespace Certify.Management
             {
                 val = await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
             }
+
             else if (arg.CommandType == ManagementHubCommands.GetDnsZones)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
@@ -216,6 +230,19 @@ namespace Certify.Management
                 var credentialIdArg = args.FirstOrDefault(a => a.Key == "credentialId");
 
                 val = await GetDnsProviderZones(providerTypeArg.Value, credentialIdArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetDeploymentProviders)
+            {
+                val = await GetDeploymentProviders();
+            }
+            else if (arg.CommandType == ManagementHubCommands.ExecuteDeploymentTask)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+
+                var managedCertificateIdArg = args.FirstOrDefault(a => a.Key == "managedCertificateId");
+                var taskIdArg = args.FirstOrDefault(a => a.Key == "taskId");
+
+                val = await PerformDeploymentTask(null, managedCertificateIdArg.Value, taskIdArg.Value, isPreviewOnly: false, skipDeferredTasks: false, forceTaskExecution: false);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

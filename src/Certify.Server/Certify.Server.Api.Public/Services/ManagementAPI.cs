@@ -197,6 +197,16 @@ namespace Certify.Server.Api.Public.Services
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateCertificateAuthority);
         }
 
+        public async Task<ActionResult?> RemoveCertificateAuthority(string instanceId, string id, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId),
+                    new("id", id)
+                };
+
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(id, args, ManagementHubCommands.RemoveCertificateAuthority);
+        }
+
         public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
@@ -215,13 +225,40 @@ namespace Certify.Server.Api.Public.Services
 
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.AddAcmeAccount);
         }
+        public async Task<ActionResult?> RemoveAcmeAccount(string instanceId, string storageKey, bool deactivate, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId),
+                    new("storageKey", storageKey),
+                    new("deactivate", deactivate.ToString())
+                };
 
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveAcmeAccount);
+        }
         public async Task<ICollection<ChallengeProviderDefinition>?> GetChallengeProviders(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                     new("instanceId", instanceId)
                 };
             return await PerformInstanceCommandTaskWithResult<ICollection<ChallengeProviderDefinition>>(instanceId, args, ManagementHubCommands.GetChallengeProviders);
+        }
+        public async Task<ICollection<DeploymentProviderDefinition>?> GetDeploymentProviders(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId)
+                };
+            return await PerformInstanceCommandTaskWithResult<ICollection<DeploymentProviderDefinition>>(instanceId, args, ManagementHubCommands.GetDeploymentProviders);
+        }
+
+        public async Task<ICollection<ActionStep>?> ExecuteDeploymentTask(string instanceId, string managedCertificateId, string taskId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId),
+                    new("managedCertificateId", managedCertificateId),
+                    new("taskId", taskId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ExecuteDeploymentTask);
         }
 
         public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialId, AuthContext? currentAuthContext)

@@ -116,6 +116,8 @@ namespace Certify.Client
 
         #region Accounts
         Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext authContext = null);
+
+        Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext authContext = null);
         Task<ActionResult> DeleteCertificateAuthority(string id, AuthContext authContext = null);
         Task<List<AccountDetails>> GetAccounts(AuthContext authContext = null);
         Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext authContext = null);

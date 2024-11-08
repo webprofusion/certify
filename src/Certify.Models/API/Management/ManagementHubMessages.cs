@@ -30,6 +30,7 @@ namespace Certify.API.Management
 
         public const string GetAcmeAccounts = "GetAcmeAccounts";
         public const string AddAcmeAccount = "AddAcmeAccount";
+        public const string RemoveAcmeAccount = "RemoveAcmeAccount";
 
         public const string GetStoredCredentials = "GetStoredCredentials";
         public const string UpdateStoredCredential = "UpdateStoredCredential";
@@ -37,6 +38,9 @@ namespace Certify.API.Management
 
         public const string GetChallengeProviders = "GetChallengeProviders";
         public const string GetDnsZones = "GetDnsZones";
+
+        public const string GetDeploymentProviders = "GetDeploymentProviders";
+        public const string ExecuteDeploymentTask = "ExecuteDeploymentTask";
 
         public const string Reconnect = "Reconnect";
     }
