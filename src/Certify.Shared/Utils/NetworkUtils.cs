@@ -7,6 +7,8 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Certify.Management;
+using Certify.Models.API;
+
 #if NET6_0_OR_GREATER
 using ARSoft.Tools.Net;
 using ARSoft.Tools.Net.Dns;
@@ -157,7 +159,7 @@ namespace Certify.Shared.Core.Utils
                     {
                         var jsonText = await response.Content.ReadAsStringAsync();
 
-                        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.API.URLCheckResult>(jsonText);
+                        var result = Newtonsoft.Json.JsonConvert.DeserializeObject<URLCheckResult>(jsonText);
 
                         if (result.IsAccessible == true)
                         {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Certify.Models;
 
-namespace Certify.API.Management
+namespace Certify.Models.Hub
 {
     public class ManagedInstanceInfo
     {

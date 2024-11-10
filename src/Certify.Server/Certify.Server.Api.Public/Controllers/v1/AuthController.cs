@@ -1,7 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Security.Claims;
 using Certify.Client;
-using Certify.Models.API;
+using Certify.Models.Hub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

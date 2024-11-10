@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using Certify.API.Management;
+using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Reporting;
 

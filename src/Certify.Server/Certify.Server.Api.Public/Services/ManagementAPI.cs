@@ -1,8 +1,7 @@
 ﻿using System.Text.Json;
-using Certify.API.Management;
 using Certify.Client;
+using Certify.Models.Hub;
 using Certify.Models;
-using Certify.Models.API;
 using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;

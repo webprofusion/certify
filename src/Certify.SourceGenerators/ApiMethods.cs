@@ -82,8 +82,8 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "Access",
                         PublicAPIRoute = "validate",
                         ServiceAPIRoute = "access/validate",
-                        ReturnType = "Certify.Models.API.SecurityPrincipleCheckResponse",
-                        Params = new Dictionary<string, string>{{"passwordCheck", "Certify.Models.API.SecurityPrinciplePasswordCheck" } }
+                        ReturnType = "Certify.Models.Hub.SecurityPrincipleCheckResponse",
+                        Params = new Dictionary<string, string>{{"passwordCheck", "Certify.Models.Hub.SecurityPrinciplePasswordCheck" } }
                     },
                     new GeneratedAPI {
 
@@ -94,7 +94,7 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "updatepassword",
                         ServiceAPIRoute = "access/updatepassword",
                         ReturnType = "Models.Config.ActionResult",
-                        Params = new Dictionary<string, string>{{"passwordUpdate", "Certify.Models.API.SecurityPrinciplePasswordUpdate" } }
+                        Params = new Dictionary<string, string>{{"passwordUpdate", "Certify.Models.Hub.SecurityPrinciplePasswordUpdate" } }
                     },
                     new GeneratedAPI {
 
@@ -105,7 +105,7 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "securityprinciple",
                         ServiceAPIRoute = "access/securityprinciple",
                         ReturnType = "Models.Config.ActionResult",
-                        Params = new Dictionary<string, string>{{"principle", "Certify.Models.Config.AccessControl.SecurityPrinciple" } }
+                        Params = new Dictionary<string, string>{{"principle", "Certify.Models.Hub.SecurityPrinciple" } }
                     },
                     new GeneratedAPI {
 
@@ -117,7 +117,7 @@ namespace Certify.SourceGenerators
                         ServiceAPIRoute = "access/securityprinciple/update",
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
-                            { "principle", "Certify.Models.Config.AccessControl.SecurityPrinciple" }
+                            { "principle", "Certify.Models.Hub.SecurityPrinciple" }
                         }
                     },
                       new GeneratedAPI {
@@ -130,7 +130,7 @@ namespace Certify.SourceGenerators
                         ServiceAPIRoute = "access/securityprinciple/roles/update",
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
-                            { "update", "Certify.Models.Config.AccessControl.SecurityPrincipleAssignedRoleUpdate" }
+                            { "update", "Certify.Models.Hub.SecurityPrincipleAssignedRoleUpdate" }
                         }
                     },
                     new GeneratedAPI {

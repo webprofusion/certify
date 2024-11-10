@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Certify.Models.Config.AccessControl
+namespace Certify.Models.Hub
 {
     public class AccessStoreItem
     {

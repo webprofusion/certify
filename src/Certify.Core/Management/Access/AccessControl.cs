@@ -4,8 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Models.API;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Providers;
 

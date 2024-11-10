@@ -6,9 +6,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
+using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
-using Certify.Models.Config.AccessControl;
 using Certify.Models.Shared;
 
 namespace Certify.Management

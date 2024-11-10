@@ -1,6 +1,5 @@
-﻿using Certify.API.Management;
-using Certify.Client;
-using Certify.Models.API;
+﻿using Certify.Client;
+using Certify.Models.Hub;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;

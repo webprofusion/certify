@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Certify.Models;
 
-namespace Certify.Models.API
+namespace Certify.Models.Hub
 {
     /// <summary>
     /// Summary information for a managed certificate

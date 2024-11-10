@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Certify.Models.API;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 
 namespace Certify.Core.Management.Access
 {

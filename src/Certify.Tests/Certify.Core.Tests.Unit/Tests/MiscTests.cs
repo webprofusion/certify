@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Models.API;
+using Certify.Models.Hub;
 using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
