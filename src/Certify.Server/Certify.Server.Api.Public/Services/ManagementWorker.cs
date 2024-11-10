@@ -1,4 +1,4 @@
-﻿using Certify.API.Management;
+﻿using Certify.Models.Hub;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
 

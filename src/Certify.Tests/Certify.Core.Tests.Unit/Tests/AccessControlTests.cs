@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
+using Certify.Models.Hub;
 using Certify.Models;
-using Certify.Models.Config.AccessControl;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -413,7 +413,7 @@ namespace Certify.Core.Tests.Unit
 
             // Update security principle in AccessControl with a new password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
             Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to succeed");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
@@ -434,7 +434,7 @@ namespace Certify.Core.Tests.Unit
 
             // Update security principle in AccessControl with a new password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword, newPassword));
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail without roles");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
@@ -470,7 +470,7 @@ namespace Certify.Core.Tests.Unit
 
             // Update security principle in AccessControl with a new password, but wrong original password
             var newPassword = "GFEDCBA";
-            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword.ToLower(), newPassword));
+            var securityPrincipleUpdated = await access.UpdateSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordUpdate(adminSecurityPrinciples[0].Id, firstPassword.ToLower(), newPassword));
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail with wrong password");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
@@ -739,7 +739,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
-            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, TestSecurityPrinciples.DevopsUser.Password));
+            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, TestSecurityPrinciples.DevopsUser.Password));
 
             Assert.IsTrue(check.IsSuccess, "Password should be valid");
         }
@@ -749,7 +749,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
-            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.API.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, "INVALID_PWD"));
+            var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, "INVALID_PWD"));
 
             Assert.IsFalse(check.IsSuccess, "Password should not be valid");
         }

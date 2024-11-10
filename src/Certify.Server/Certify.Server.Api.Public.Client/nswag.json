@@ -52,9 +52,8 @@
         "Certify.Models.Config",
         "Certify.Models.API",
         "Certify.Models.Providers",
-        "Certify.Models.Config.AccessControl",
-        "Certify.Models.Config.Migration",
-        "Certify.API.Management"
+        "Certify.Models.Hub",
+        "Certify.Models.Config.Migration"
       ],
       "additionalContractNamespaceUsages": [],
       "generateOptionalParameters": false,
