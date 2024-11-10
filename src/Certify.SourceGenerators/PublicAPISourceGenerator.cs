@@ -67,7 +67,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 
             namespace Certify.UI.Client.Core
     {{
@@ -95,7 +95,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Certify.Models;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 
 
             namespace Certify.Server.Api.Public.Controllers
@@ -126,7 +126,7 @@ using Certify.Models.Config.AccessControl;
 using Certify.Models;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

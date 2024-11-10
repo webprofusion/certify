@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Models.Hub;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Api.Public.Controllers
@@ -32,11 +33,11 @@ namespace Certify.Server.Api.Public.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("version")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.API.VersionInfo))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(VersionInfo))]
         public async Task<IActionResult> GetSystemVersion()
         {
             var versionInfo = await _client.GetAppVersion();
-            var result = new Models.API.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
+            var result = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
             return new OkObjectResult(result);
         }
 

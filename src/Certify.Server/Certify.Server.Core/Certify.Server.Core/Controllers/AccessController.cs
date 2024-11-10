@@ -1,6 +1,5 @@
-﻿using Certify.Management;
-using Certify.Models.API;
-using Certify.Models.Config.AccessControl;
+﻿using Certify.Models.Hub;
+using Certify.Management;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 
