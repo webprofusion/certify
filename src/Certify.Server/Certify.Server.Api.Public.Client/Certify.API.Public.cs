@@ -9,9 +9,8 @@ using Certify.Models.Reporting;
 using Certify.Models.Config;
 using Certify.Models.API;
 using Certify.Models.Providers;
-using Certify.Models.Config.AccessControl;
+using Certify.Models.Hub;
 using Certify.Models.Config.Migration;
-using Certify.API.Management;
 
 #pragma warning disable 108 // Disable "CS0108 '{derivedDto}.ToJson()' hides inherited member '{dtoBase}.ToJson()'. Use the new keyword if hiding was intended."
 #pragma warning disable 114 // Disable "CS0114 '{derivedDto}.RaisePropertyChanged(String)' hides inherited member 'dtoBase.RaisePropertyChanged(String)'. To make the current member override that implementation, add the override keyword. Otherwise add the new keyword."

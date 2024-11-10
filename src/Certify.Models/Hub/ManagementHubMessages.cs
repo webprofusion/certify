@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Certify.API.Management
+namespace Certify.Models.Hub
 {
     public class ManagementHubMessages
     {

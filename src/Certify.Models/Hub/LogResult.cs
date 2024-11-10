@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Certify.Models.API
+namespace Certify.Models.Hub
 {
     public class LogItem
     {

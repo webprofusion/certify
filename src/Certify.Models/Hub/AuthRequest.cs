@@ -1,6 +1,4 @@
-﻿using Certify.Models.Config.AccessControl;
-
-namespace Certify.Models.API
+﻿namespace Certify.Models.Hub
 {
     /// <summary>
     /// Required info to begin auth
@@ -40,7 +38,7 @@ namespace Certify.Models.API
         /// </summary>
         public string RefreshToken { get; set; } = string.Empty;
 
-        public Models.Config.AccessControl.SecurityPrinciple? SecurityPrinciple { get; set; }
+        public SecurityPrinciple? SecurityPrinciple { get; set; }
 
         public RoleStatus? RoleStatus { get; set; }
     }

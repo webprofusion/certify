@@ -1,5 +1,5 @@
 ﻿using Certify.Client;
-using Certify.Models.API;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
