@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +9,8 @@ using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
+using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
+        private IConfigurationStore _configStore = null;
         /// <summary>
         /// Storage service for managed certificates
         /// </summary>
@@ -290,7 +293,10 @@ namespace Certify.Management
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                         _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
-                        _accessControl = new AccessControl(_serviceLog, new SQLiteAccessControlStore("", _serviceLog));
+
+                        // config store is a generic store for settings etc
+                        _configStore = new SQLiteConfigurationStore("", _serviceLog);
+                        _accessControl = new AccessControl(_serviceLog, _configStore);
                     }
                     else
                     {
@@ -319,7 +325,9 @@ namespace Certify.Management
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                     _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
-                    _accessControl = new AccessControl(_serviceLog, new SQLiteAccessControlStore("",_serviceLog));
+                    
+                    _configStore = new SQLiteConfigurationStore("", _serviceLog);
+                    _accessControl = new AccessControl(_serviceLog, _configStore);
                 }
 
                 // attempt to create and delete a test item
