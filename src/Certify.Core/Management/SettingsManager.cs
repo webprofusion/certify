@@ -188,6 +188,11 @@ namespace Certify.Management
         /// If true, ARI checks will not be performed during periodic maintenance
         /// <summary>
 
+
+        /// <summary>
+        ///  if true, additional management hub features and data stores may be enabled
+        /// </summary>
+        public bool IsManagementHub { get; set; }
     }
 
     public class SettingsManager
