@@ -40,18 +40,21 @@ namespace Certify.Management
 
                 var accessControl = await GetCurrentAccessControl();
 
-                if (await accessControl.IsInitialized() == false)
+                if (CoreAppSettings.Current.IsManagementHub)
                 {
-                    await BootstrapTestAdminUserAndRoles(accessControl);
-                }
-                else
-                {
-                    await UpdateStandardRoles(accessControl);
+                    if (await accessControl.IsInitialized() == false)
+                    {
+                        await BootstrapAdminUserAndRoles(accessControl);
+                    }
+                    else
+                    {
+                        await UpdateStandardRoles(accessControl);
+                    }
                 }
             }
         }
 
-        private static async Task BootstrapTestAdminUserAndRoles(IAccessControl access)
+        private static async Task BootstrapAdminUserAndRoles(IAccessControl access)
         {
             // setup roles with policies
             await UpdateStandardRoles(access);

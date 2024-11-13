@@ -3,22 +3,11 @@ using System.Collections.Generic;
 
 namespace Certify.Models.Hub
 {
-    public class AccessStoreItem
-    {
-        public AccessStoreItem()
-        {
-            Id = Guid.NewGuid().ToString();
-        }
-        public string Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string ItemType { get; set; } = string.Empty;
-    }
 
     /// <summary>
     /// A Security Principle is a user or service account which can be assigned roles and other permissions
     /// </summary>
-    public class SecurityPrinciple : AccessStoreItem
+    public class SecurityPrinciple : ConfigurationStoreItem
     {
 
         public string? Username { get; set; }
@@ -42,7 +31,10 @@ namespace Certify.Models.Hub
         public string AvatarUrl { get; set; } = string.Empty;
     }
 
-    public class Role : AccessStoreItem
+    /// <summary>
+    /// A role is a collection of policies which can be assigned to a security principle via AssignedRole
+    /// </summary>
+    public class Role : ConfigurationStoreItem
     {
         public List<string> Policies { get; set; } = new List<string>();
         public Role(string id, string title, string description, List<string>? policies = null)
@@ -59,9 +51,9 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
-    /// A role assigned to a security principle
+    /// A role assigned to a security principle, optionally specific to a set of resources
     /// </summary>
-    public class AssignedRole : AccessStoreItem
+    public class AssignedRole : ConfigurationStoreItem
     {
         /// <summary>
         /// Defines the role to be assigned 
@@ -79,7 +71,7 @@ namespace Certify.Models.Hub
     /// <summary>
     /// Defines a restricted resource
     /// </summary>
-    public class Resource : AccessStoreItem
+    public class Resource : ConfigurationStoreItem
     {
         /// <summary>
         /// Type of this resource
@@ -92,7 +84,7 @@ namespace Certify.Models.Hub
         public string? Identifier { get; set; }
     }
 
-    public class ResourcePolicy : AccessStoreItem
+    public class ResourcePolicy : ConfigurationStoreItem
     {
 
         /// <summary>
@@ -114,7 +106,7 @@ namespace Certify.Models.Hub
     /// <summary>
     ///  Specific system action which may be allowed/disallowed on a specific type of resource
     /// </summary>
-    public class ResourceAction : AccessStoreItem
+    public class ResourceAction : ConfigurationStoreItem
     {
         public ResourceAction(string id, string title, string resourceType)
         {

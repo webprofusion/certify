@@ -13,10 +13,10 @@ namespace Certify.Core.Management.Access
 
     public class AccessControl : IAccessControl
     {
-        private IAccessControlStore _store;
+        private IConfigurationStore _store;
         private ILog _log;
 
-        public AccessControl(ILog log, IAccessControlStore store)
+        public AccessControl(ILog log, IConfigurationStore store)
         {
             _store = store;
             _log = log;
