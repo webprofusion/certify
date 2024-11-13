@@ -86,9 +86,9 @@ namespace Certify.Server.API
 
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    Title = "Certify Server API",
+                    Title = "Certify Management Hub API",
                     Version = "v1",
-                    Description = "The Certify Server API provides a certificate services API for use in devops, CI/CD, middleware etc. Certificates are managed by Certify The Web (https://certifytheweb.com) on the primary server using ACME, with API access controlled using API tokens."
+                    Description = "The Certify Management Hub API provides a certificate services API for use in UI, devops, CI/CD, middleware etc. See certifytheweb.com for more details."
                 });
 
                 c.UseAllOfToExtendReferenceSchemas();
@@ -137,6 +137,8 @@ namespace Certify.Server.API
                         Format = "binary",
                     };
                 });
+
+            
 
             });
 
@@ -238,8 +240,8 @@ namespace Certify.Server.API
             app.UseSwaggerUI(c =>
             {
                 c.RoutePrefix = "docs";
-                c.DocumentTitle = "Certify Server API";
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Server API");
+                c.DocumentTitle = "Certify Management Hub API";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Management Hub API");
             });
 #endif
         }
