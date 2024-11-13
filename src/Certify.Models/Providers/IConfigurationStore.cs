@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Certify.Providers
 {
-    public interface IAccessControlStore
+    public interface IConfigurationStore
     {
         Task<T> Get<T>(string itemType, string id);
         Task Add<T>(string itemType, T item);

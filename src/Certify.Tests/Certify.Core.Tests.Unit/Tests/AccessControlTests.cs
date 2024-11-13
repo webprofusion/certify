@@ -13,16 +13,16 @@ using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
-    public class MemoryObjectStore : IAccessControlStore
+    public class MemoryObjectStore : IConfigurationStore
     {
-        private ConcurrentDictionary<string, AccessStoreItem> _store = new ConcurrentDictionary<string, AccessStoreItem>();
+        private ConcurrentDictionary<string, ConfigurationStoreItem> _store = new ConcurrentDictionary<string, ConfigurationStoreItem>();
 
-        public Task Add<T>(string itemType, AccessStoreItem item)
+        public Task Add<T>(string itemType, ConfigurationStoreItem item)
         {
             item.ItemType = itemType;
 
             // clone the item to avoid reference issue mutating the same object, as we are using an in-memory store
-            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
+            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as ConfigurationStoreItem;
             return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
         }
 
@@ -48,19 +48,19 @@ namespace Certify.Core.Tests.Unit
 
         public Task Add<T>(string itemType, T item)
         {
-            var o = item as AccessStoreItem;
+            var o = item as ConfigurationStoreItem;
             o.ItemType = itemType;
 
-            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(o)) as AccessStoreItem;
+            var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(o)) as ConfigurationStoreItem;
             return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
         }
 
         public Task Update<T>(string itemType, T item)
         {
-            var o = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as AccessStoreItem;
+            var o = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as ConfigurationStoreItem;
 
             _store.TryGetValue(o.Id, out var value);
-            var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as AccessStoreItem;
+            var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as ConfigurationStoreItem;
             var r = Task.FromResult(_store.TryUpdate(o.Id, o, c));
             if (r.Result == false)
             {

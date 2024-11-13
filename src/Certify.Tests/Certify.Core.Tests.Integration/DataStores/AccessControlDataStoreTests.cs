@@ -29,9 +29,9 @@ namespace Certify.Core.Tests.DataStores
             }
         }
 
-        private IAccessControlStore GetStore(string storeType = null)
+        private IConfigurationStore GetStore(string storeType = null)
         {
-            IAccessControlStore store = null;
+            IConfigurationStore store = null;
 
             if (storeType == null)
             {
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests.DataStores
 
             if (storeType == "sqlite")
             {
-                store = new SQLiteAccessControlStore(storageSubfolder: TEST_PATH);
+                store = new SQLiteConfigurationStore(storageSubfolder: TEST_PATH);
             }
             /* else if (storeType == "postgres")
              {
