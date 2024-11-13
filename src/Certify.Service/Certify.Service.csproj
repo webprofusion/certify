@@ -27,7 +27,7 @@
         <Content Include="icon.ico" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="LightInject" Version="6.6.4" />
+        <PackageReference Include="LightInject" Version="7.0.0" />
         <PackageReference Include="LightInject.WebApi" Version="2.0.0" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
         <PackageReference Include="Microsoft.AspNet.SignalR.Core" Version="2.4.3" />
@@ -37,8 +37,8 @@
         <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.3.0" />
         <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.3.0" />
         <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.3.0" />
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.66.1" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.66.2" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
         <PackageReference Include="Microsoft.Owin" Version="4.2.2" />
         <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.2" />
         <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.2.2" />
@@ -49,13 +49,13 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Owin" Version="1.0.0" />
         <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
-        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="8.0.1" />
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="8.0.1" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="9.0.0" />
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
         <PackageReference Include="Topshelf" Version="4.3.0" />
         <PackageReference Include="Topshelf.Serilog" Version="4.3.0" />
-        <PackageReference Include="System.Security.Permissions" Version="8.0.0" />
+        <PackageReference Include="System.Security.Permissions" Version="9.0.0" />
         
     </ItemGroup>
     <ItemGroup>
