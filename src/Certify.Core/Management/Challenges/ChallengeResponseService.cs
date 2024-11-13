@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -621,7 +621,7 @@ namespace Certify.Core.Management.Challenges
 
         private DnsChallengeHelper _dnsHelper = null;
 
-        private async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
+        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_Dns01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
         {
             var dnsChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS);
 

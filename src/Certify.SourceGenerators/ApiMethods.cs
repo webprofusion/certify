@@ -144,7 +144,68 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{{"id","string"}}
                     },
+                    new GeneratedAPI {
 
+                        OperationName = "GetManagedChallenges",
+                        OperationMethod = HttpGet,
+                        Comment = "Get list of available managed challenges (DNS challenge delegation etc)",
+                        PublicAPIController = "ManagedChallenge",
+                        PublicAPIRoute = "list",
+                        ServiceAPIRoute = "managedchallenge",
+                        ReturnType = "ICollection<ManagedChallenge>"
+                    },
+
+                    new GeneratedAPI {
+
+                        OperationName = "UpdateManagedChallenge",
+                        OperationMethod = HttpPost,
+                        Comment = "Add/update a managed challenge (DNS challenge delegation etc)",
+                        PublicAPIController = "ManagedChallenge",
+                        PublicAPIRoute = "update",
+                        ServiceAPIRoute = "managedchallenge",
+                        ReturnType = "Models.Config.ActionResult",
+                        Params = new Dictionary<string, string>{
+                            { "update", "Certify.Models.Hub.ManagedChallenge" }
+                        }
+                    },
+
+                    new GeneratedAPI {
+
+                        OperationName = "RemoveManagedChallenge",
+                        OperationMethod = HttpDelete,
+                        Comment = "Delete a managed challenge (DNS challenge delegation etc)",
+                        PublicAPIController = "ManagedChallenge",
+                        PublicAPIRoute = "remove",
+                        ServiceAPIRoute = "managedchallenge",
+                        ReturnType = "Models.Config.ActionResult",
+                        Params = new Dictionary<string, string>{
+                            { "id", "string" }
+                        }
+                    },
+                    new GeneratedAPI {
+
+                        OperationName = "PerformManagedChallenge",
+                        OperationMethod = HttpPost,
+                        Comment = "Perform a managed challenge (DNS challenge delegation etc)",
+                        PublicAPIController=null, // skip public controller implementation
+                        ServiceAPIRoute = "managedchallenge/request",
+                        ReturnType = "Models.Config.ActionResult",
+                        Params = new Dictionary<string, string>{
+                            { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
+                        }
+                    },
+                    new GeneratedAPI {
+
+                        OperationName = "CleanupManagedChallenge",
+                        OperationMethod = HttpPost,
+                        Comment = "Perform cleanup for a previously managed challenge (DNS challenge delegation etc)",
+                        PublicAPIController=null, // skip public controller implementation
+                        ServiceAPIRoute = "managedchallenge/cleanup",
+                        ReturnType = "Models.Config.ActionResult",
+                        Params = new Dictionary<string, string>{
+                            { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
+                        }
+                    },
                     /* per instance API, via management hub */
                     new GeneratedAPI {
                         OperationName = "GetAcmeAccounts",

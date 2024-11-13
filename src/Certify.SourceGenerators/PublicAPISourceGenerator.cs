@@ -42,7 +42,7 @@ namespace SourceGenerator
                 var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
                 var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
-                if (context.Compilation.AssemblyName.EndsWith("Api.Public"))
+                if (context.Compilation.AssemblyName.EndsWith("Api.Public") && config.PublicAPIController!=null)
                 {
                     ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamCall);
                 }

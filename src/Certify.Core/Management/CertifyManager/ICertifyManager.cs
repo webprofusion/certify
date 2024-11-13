@@ -108,7 +108,14 @@ namespace Certify.Management
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore);
         Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
+
         Task<ActionResult> TestCredentials(string storageKey);
         Task<Core.Management.Access.IAccessControl> GetCurrentAccessControl();
+
+        Task<ICollection<ManagedChallenge>> GetManagedChallenges();
+        Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
+        Task<ActionResult> DeleteManagedChallenge(string id);
+        Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
     }
 }
