@@ -1,20 +1,21 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <Sdk Name="Aspire.AppHost.Sdk" Version="9.0.0" />
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFrameworks>net9.0;</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsAspireHost>true</IsAspireHost>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFrameworks>net9.0;</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsAspireHost>true</IsAspireHost>
-  </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
 
-  <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.2" />
-  </ItemGroup>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Certify.Server\Certify.Server.Api.Public\Certify.Server.Api.Public.csproj" />
-    <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Api.Public\Certify.Server.Api.Public.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
+    </ItemGroup>
 
 </Project>
