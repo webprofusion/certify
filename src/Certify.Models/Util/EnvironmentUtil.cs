@@ -85,7 +85,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="subDirectory">optional subfolder to include</param>
         /// <returns>full app data with with optional subdirectory</returns>
-        public static string CreateAppDataPath(string? subDirectory = null, bool skipCreation=false)
+        public static string CreateAppDataPath(string? subDirectory = null, bool skipCreation = false)
         {
             var parts = new List<string>()
             {
@@ -119,14 +119,19 @@ namespace Certify.Models
             return path;
         }
 
-        public static string GetFriendlyOSName()
+        public static string GetFriendlyOSName(bool detailed = true)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return $"{RuntimeInformation.OSDescription}";
+                return detailed ? $"{RuntimeInformation.OSDescription}" : "Windows";
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
+                if (!detailed)
+                {
+                    return "Linux";
+                }
+
                 var filePath = "/etc/os-release";
 
                 try
@@ -149,7 +154,16 @@ namespace Certify.Models
                     return $"Linux - {RuntimeInformation.OSDescription}";
                 }
             }
-
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return detailed ? $"{RuntimeInformation.OSDescription}" : "macOS";
+            }
+#if NET9_0_OR_GREATER
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            {
+                return detailed ? $"{RuntimeInformation.OSDescription}" : "FreeBSD";
+            }
+#endif
             return $"{RuntimeInformation.OSDescription}";
         }
     }
