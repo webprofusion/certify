@@ -8,6 +8,8 @@ using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Shared.Core.Utils;
+using System.Runtime.InteropServices;
+using Certify.Locales;
 
 namespace Certify.Management
 {
@@ -46,10 +48,16 @@ namespace Certify.Management
 
             _serviceLog.Debug("Attempting connection to management hub {hubUri}", hubUri);
 
+            var appVersion = Util.GetAppVersion().ToString();
+
             var instanceInfo = new ManagedInstanceInfo
             {
                 InstanceId = $"{this.InstanceId}",
-                Title = $"{Environment.MachineName} [{EnvironmentUtil.GetFriendlyOSName()}]",
+                Title = $"{Environment.MachineName}",
+                OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
+                OSVersion = EnvironmentUtil.GetFriendlyOSName(),
+                ClientVersion = appVersion,
+                ClientName = ConfigResources.AppName
             };
 
             if (_managementServerClient != null)
