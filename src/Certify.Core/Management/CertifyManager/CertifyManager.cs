@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -325,7 +325,7 @@ namespace Certify.Management
                 {
                     _itemManager = new SQLiteManagedItemStore("", _serviceLog);
                     _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
-                    
+
                     _configStore = new SQLiteConfigurationStore("", _serviceLog);
                     _accessControl = new AccessControl(_serviceLog, _configStore);
                 }
@@ -425,9 +425,11 @@ namespace Certify.Management
                 progress.Report(state);
             }
 
-            // report request state to status hub clients
+            // report request state to status hub clients and optionally mgmt hub
 
             _statusReporting?.ReportRequestProgress(state);
+
+            ReportRequestProgressToMgmtHub(state);
 
             if (state.ManagedCertificate != null && logThisEvent)
             {
