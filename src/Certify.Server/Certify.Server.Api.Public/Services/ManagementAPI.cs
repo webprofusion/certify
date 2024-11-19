@@ -130,7 +130,7 @@ namespace Certify.Server.Api.Public.Services
         /// <param name="managedCertId"></param>
         /// <param name="authContext"></param>
         /// <returns></returns>
-        public async Task<bool> RemoveManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
+        public async Task<ActionResult> RemoveManagedCertificate(string instanceId, string managedCertId, AuthContext authContext)
         {
             // delete managed cert via management hub
 
@@ -139,20 +139,14 @@ namespace Certify.Server.Api.Public.Services
                     new("managedCertId",managedCertId)
                 };
 
-            var deletedOK = await PerformInstanceCommandTaskWithResult<bool>(instanceId, args, ManagementHubCommands.RemoveDeleteManagedItem);
+            var result = await PerformInstanceCommandTaskWithResult<ActionResult>(instanceId, args, ManagementHubCommands.RemoveManagedItem);
 
-            if (deletedOK)
+            if (result.IsSuccess)
             {
-                try
-                {
-                    _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
-                }
-                catch
-                {
-                }
+                _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
             }
 
-            return deletedOK;
+            return result;
         }
 
         public async Task<StatusSummary> GetManagedCertificateSummary(AuthContext? currentAuthContext)
