@@ -7,6 +7,7 @@ namespace Certify.Models.Hub
     {
         public const string SendCommandRequest = "SendCommandRequest";
         public const string ReceiveCommandResult = "ReceiveCommandResult";
+        public const string Notification = "Notification";
         public const string GetCommandResult = "GetCommandResult";
     }
 
@@ -20,7 +21,7 @@ namespace Certify.Models.Hub
         public const string GetManagedItemRenewalPreview = "GetManagedItemRenewalPreview";
 
         public const string UpdateManagedItem = "UpdateManagedItem";
-        public const string RemoveDeleteManagedItem = "RemoveManagedItem";
+        public const string RemoveManagedItem = "RemoveManagedItem";
         public const string TestManagedItemConfiguration = "TestManagedItemConfiguration";
         public const string PerformManagedItemRequest = "PerformManagedItemRequest";
 
@@ -43,6 +44,13 @@ namespace Certify.Models.Hub
         public const string ExecuteDeploymentTask = "ExecuteDeploymentTask";
 
         public const string Reconnect = "Reconnect";
+
+        /// <summary>
+        /// Notification messages are used to send topic specific info ad-hoc back to the mgmt hub
+        /// </summary>
+        public const string NotificationRemovedManagedItem = "NotificationRemovedManagedItem";
+        public const string NotificationUpdatedManagedItem = "NotificationUpdatedManagedItem";
+        public const string NotificationManagedItemRequestProgress = "NotificationManagedItemRequestProgress";
     }
 
     /// <summary>

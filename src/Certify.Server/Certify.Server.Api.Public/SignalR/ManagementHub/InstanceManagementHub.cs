@@ -39,16 +39,18 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
     {
         private IInstanceManagementStateProvider _stateProvider;
         private ILogger<InstanceManagementHub> _logger;
+        private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
 
         /// <summary>
         /// Set up instance management hub
         /// </summary>
         /// <param name="stateProvider"></param>
         /// <param name="logger"></param>
-        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger)
+        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub)
         {
             _stateProvider = stateProvider;
             _logger = logger;
+            _uiStatusHub = uiStatusHub;
         }
 
         /// <summary>
@@ -170,7 +172,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                     if (!string.IsNullOrWhiteSpace(instanceId))
                     {
                         // action this message from this instance
-                        _logger?.LogInformation("Received instance command result {result}", result);
+                        _logger?.LogInformation("Received instance command result {result}", result.CommandType);
 
                         if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
                         {
@@ -189,12 +191,32 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                         else
                         {
                             // store for something else to consume
-                            _stateProvider.AddAwaitedCommandResult(result);
+                            if (result.IsCommandResponse)
+                            {
+                                _stateProvider.AddAwaitedCommandResult(result);
+                            }
+                            else
+                            {
+                                // item was not requested, queue for processing
+                                if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem)
+                                {
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
+                                }
+                                else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress)
+                                {
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
+                                }
+                                else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem)
+                                {
+                                    // deleted :TODO
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
+                                }
+                            }
                         }
                     }
                     else
                     {
-                        _logger?.LogError("Received instance command result for an unknown instance {result}", result);
+                        _logger?.LogError("Received instance command result for an unknown instance {result}", result.CommandType);
                     }
                 }
             }
