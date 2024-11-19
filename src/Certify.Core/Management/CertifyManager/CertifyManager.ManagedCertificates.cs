@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Models.Config;
 
 namespace Certify.Management
 {
