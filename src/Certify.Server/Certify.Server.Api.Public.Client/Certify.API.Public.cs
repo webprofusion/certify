@@ -2064,7 +2064,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<bool> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
+        public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
         {
             return RemoveManagedCertificateAsync(instanceId, managedCertId, System.Threading.CancellationToken.None);
         }
@@ -2075,7 +2075,7 @@ namespace Certify.API.Public
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<bool> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
         {
             if (instanceId == null)
                 throw new System.ArgumentNullException("instanceId");
@@ -2125,7 +2125,7 @@ namespace Certify.API.Public
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<bool>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
