@@ -189,19 +189,10 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate)
         {
             _managedInstanceItems.TryGetValue(instanceId, out var instance);
-
-            if (instance != null)
+            if (instance?.Items != null)
             {
-                foreach (var item in instance.Items)
-                {
-                    if (item.Id == managedCertificate.Id)
-                    {
-                        instance.Items.Remove(item);
-                        managedCertificate.InstanceId = instanceId;
-                        instance.Items.Add(managedCertificate);
-                        return;
-                    }
-                }
+                instance.Items.RemoveAll(r => r.Id == managedCertificate.Id);
+                instance.Items.Add(managedCertificate);
             }
         }
 
@@ -219,16 +210,9 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
         {
             _managedInstanceItems.TryGetValue(instanceId, out var instance);
 
-            if (instance != null)
+            if (instance?.Items != null)
             {
-                foreach (var item in instance.Items)
-                {
-                    if (item.Id == managedCertificateId)
-                    {
-                        instance.Items.Remove(item);
-                        return;
-                    }
-                }
+                instance.Items.RemoveAll(r => r.Id == managedCertificateId);
             }
         }
     }

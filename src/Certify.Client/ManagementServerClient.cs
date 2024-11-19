@@ -137,5 +137,24 @@ namespace Certify.Client
             result.ObjectValue = _instanceInfo;
             _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
         }
+
+        /// <summary>
+        /// Send mgmt hub a general notification message to be actioned
+        /// </summary>
+        public void SendNotificationToManagementHub(string msgCommandType, object updateMsg)
+        {
+            var result = new InstanceCommandResult
+            {
+                CommandId = Guid.NewGuid(),
+                InstanceId = _instanceInfo.InstanceId,
+                CommandType = msgCommandType,
+                Value = System.Text.Json.JsonSerializer.Serialize(updateMsg),
+                ObjectValue = updateMsg,
+                IsCommandResponse = false
+            };
+
+            result.ObjectValue = updateMsg;
+            _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+        }
     }
 }

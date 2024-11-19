@@ -129,15 +129,26 @@ namespace Certify.Management
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
                 var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
 
-                val = await UpdateManagedCertificate(managedCert);
+                var item = await UpdateManagedCertificate(managedCert);
+
+                val = item;
+
+                ReportManagedItemUpdateToMgmtHub(item);
             }
-            else if (arg.CommandType == ManagementHubCommands.RemoveDeleteManagedItem)
+            else if (arg.CommandType == ManagementHubCommands.RemoveManagedItem)
             {
                 // delete a single managed item 
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
 
-                await DeleteManagedCertificate(managedCertIdArg.Value);
+                var actionResult = await DeleteManagedCertificate(managedCertIdArg.Value);
+
+                val = actionResult;
+
+                if (actionResult.IsSuccess)
+                {
+                    ReportManagedItemDeleteToMgmtHub(managedCertIdArg.Value);
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.TestManagedItemConfiguration)
             {
@@ -264,9 +275,26 @@ namespace Certify.Management
             return result;
         }
 
+        private void ReportManagedItemUpdateToMgmtHub(ManagedCertificate item)
+        {
+            if (item != null)
+            {
+                _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationUpdatedManagedItem, item);
+            }
+        }
+        private void ReportManagedItemDeleteToMgmtHub(string id)
+        {
+            _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationRemovedManagedItem, id);
+        }
+
+        private void ReportRequestProgressToMgmtHub(RequestProgressState progress)
+        {
+            _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationManagedItemRequestProgress, progress);
+        }
+
         private void _managementServerClient_OnConnectionReconnecting()
         {
-            _serviceLog.Warning("Reconnecting to Management.");
+            _serviceLog.Warning("Reconnecting to Management Hub.");
         }
 
         private void GenerateDemoItems()
