@@ -176,7 +176,7 @@ namespace Certify.SourceGenerators
                         Comment = "Delete a managed challenge (DNS challenge delegation etc)",
                         PublicAPIController = "ManagedChallenge",
                         PublicAPIRoute = "remove",
-                        ServiceAPIRoute = "managedchallenge",
+                        ServiceAPIRoute = "managedchallenge/{id}",
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
                             { "id", "string" }
@@ -356,7 +356,7 @@ namespace Certify.SourceGenerators
                         UseManagementAPI = true,
                         PublicAPIController = "Certificate",
                         PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
-                        ReturnType = "bool",
+                        ReturnType = "Models.Config.ActionResult",
                         Params =new Dictionary<string, string>{ { "instanceId", "string" },{ "managedCertId", "string" } }
                     },
                     // TODO

@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Models.Config;
 
 namespace Certify.Management
 {
@@ -337,7 +338,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task DeleteManagedCertificate(string id)
+        public async Task<ActionResult> DeleteManagedCertificate(string id)
         {
             if (!string.IsNullOrEmpty(id))
             {
@@ -345,8 +346,11 @@ namespace Certify.Management
                 if (item != null)
                 {
                     await _itemManager.Delete(item);
+                    return new ActionResult { IsSuccess = true, Message = "Deleted" };
                 }
             }
+
+            return new ActionResult { IsSuccess = false, Message = "Delete failed." };
         }
 
         /// <summary>

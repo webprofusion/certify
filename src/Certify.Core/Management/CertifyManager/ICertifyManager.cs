@@ -33,7 +33,7 @@ namespace Certify.Management
 
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
 
-        Task DeleteManagedCertificate(string id);
+        Task<ActionResult> DeleteManagedCertificate(string id);
 
         Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
         Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
