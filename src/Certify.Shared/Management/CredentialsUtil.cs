@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Models;
 using Certify.Providers;
+using Microsoft.AspNetCore.DataProtection;
 
 namespace Certify.Management
 {
@@ -52,6 +55,7 @@ namespace Certify.Management
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
+                // protect using DAPI
                 if (scope == null)
                 {
                     scope = DataProtectionScope.CurrentUser;
@@ -66,13 +70,12 @@ namespace Certify.Management
             }
             else
             {
-#if RELEASE
-                Trace.Assert(true, "Using dummy encryption, not suitable for production use.");
-#endif
-                Trace.WriteLine("Using dummy encryption, not suitable for production use.");
+                // protect using platform data protection provider
 
-                // TODO: dummy implementation, require alternative implementation for non-windows
-                return Convert.ToBase64String(Encoding.UTF8.GetBytes(clearText).Reverse().ToArray());
+                var protector = GetDataProtector();
+                var clearBytes = Encoding.UTF8.GetBytes(clearText);
+                var protectedBytes = protector.Protect(clearBytes);
+                return Convert.ToBase64String(protectedBytes);
             }
         }
 
@@ -111,11 +114,19 @@ namespace Certify.Management
             }
             else
             {
-                Debug.WriteLine("Using dummy encryption, not suitable for production use.");
-                // TODO: dummy implementation, implement alternative implementation for non-windows
-                var bytes = Convert.FromBase64String(encryptedText);
-                return Encoding.UTF8.GetString(bytes.Reverse().ToArray());
+                // protect using platform data protection provider
+                var protector = GetDataProtector();
+                var encryptedBytes = Convert.FromBase64String(encryptedText);
+                var clearBytes = protector.Unprotect(encryptedBytes);
+                return Encoding.UTF8.GetString(clearBytes);
             }
+        }
+
+        private static IDataProtector GetDataProtector()
+        {
+            var keyDirectory = EnvironmentUtil.CreateAppDataPath("credentials");
+            var dataProtectionProvider = DataProtectionProvider.Create(new DirectoryInfo(keyDirectory));
+            return dataProtectionProvider.CreateProtector("StoredCredentials");
         }
     }
 }
