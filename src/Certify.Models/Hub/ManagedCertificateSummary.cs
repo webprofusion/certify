@@ -11,6 +11,9 @@ namespace Certify.Models.Hub
     {
         public string? InstanceId { get; set; } = string.Empty;
         public string? InstanceTitle { get; set; } = string.Empty;
+
+        public string? OS { get; set; } = string.Empty;
+        public string? ClientDetails { get; set; } = string.Empty;
         /// <summary>
         /// Id for this managed item
         /// </summary>
