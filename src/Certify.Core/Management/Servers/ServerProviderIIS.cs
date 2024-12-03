@@ -54,6 +54,11 @@ namespace Certify.Management.Servers
 
         public Task<bool> IsAvailable()
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Task.FromResult(false);
+            }
+
             if (!_isIISAvailable)
             {
                 try

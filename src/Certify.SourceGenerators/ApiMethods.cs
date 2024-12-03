@@ -310,6 +310,48 @@ namespace Certify.SourceGenerators
                         }
                     },
                     new GeneratedAPI {
+                        OperationName = "GetTargetServiceTypes",
+                        OperationMethod = HttpGet,
+                        Comment = "Get Service Types present on instance (IIS, nginx etc)",
+                        UseManagementAPI = true,
+                        ManagementHubCommandType =  Models.Hub.ManagementHubCommands.GetTargetServiceTypes,
+                        PublicAPIController = "Target",
+                        PublicAPIRoute = "{instanceId}/types",
+                        ReturnType = "ICollection<string>",
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" }
+                        }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "GetTargetServiceItems",
+                        OperationMethod = HttpGet,
+                        Comment = "Get Service items (sites) present on instance (IIS, nginx etc).",
+                        UseManagementAPI = true,
+                        ManagementHubCommandType = Models.Hub.ManagementHubCommands.GetTargetServiceItems,
+                        PublicAPIController = "Target",
+                        PublicAPIRoute = "{instanceId}/{serviceType}/items",
+                        ReturnType = "ICollection<SiteInfo>",
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" },
+                            { "serviceType", "string" }
+                        }
+                    },
+                    new GeneratedAPI {
+                        OperationName = "GetTargetServiceItemIdentifiers",
+                        OperationMethod = HttpGet,
+                        Comment = "Get Service item identifiers (domains on a website etc) present on instance (IIS, nginx etc)",
+                        UseManagementAPI = true,
+                        ManagementHubCommandType = Models.Hub.ManagementHubCommands.GetTargetServiceItemIdentifiers,
+                        PublicAPIController = "Target",
+                        PublicAPIRoute = "{instanceId}/{serviceType}/item/{itemId}/identifiers",
+                        ReturnType = "ICollection<DomainOption>",
+                        Params =new Dictionary<string, string>{
+                            { "instanceId", "string" },
+                            { "serviceType", "string" },
+                            { "itemId", "string" }
+                        }
+                    },
+                    new GeneratedAPI {
                         OperationName = "GetChallengeProviders",
                         OperationMethod = HttpGet,
                         Comment = "Get Dns Challenge Providers",
