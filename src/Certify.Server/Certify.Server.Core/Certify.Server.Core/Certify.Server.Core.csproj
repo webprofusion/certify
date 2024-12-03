@@ -18,6 +18,7 @@
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.0" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\..\certify\src\Certify.Core\Certify.Core.csproj" />
