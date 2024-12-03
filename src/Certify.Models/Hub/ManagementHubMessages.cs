@@ -43,6 +43,10 @@ namespace Certify.Models.Hub
         public const string GetDeploymentProviders = "GetDeploymentProviders";
         public const string ExecuteDeploymentTask = "ExecuteDeploymentTask";
 
+        public const string GetTargetServiceTypes = "GetTargetServiceTypes";
+        public const string GetTargetServiceItems = "GetTargetServiceItems";
+        public const string GetTargetServiceItemIdentifiers = "GetTargetServiceItemIdentifiers";
+
         public const string Reconnect = "Reconnect";
 
         /// <summary>

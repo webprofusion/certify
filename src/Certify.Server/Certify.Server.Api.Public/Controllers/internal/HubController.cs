@@ -64,20 +64,28 @@ namespace Certify.Server.Api.Public.Controllers
                     list.AddRange(
                         remote.Items
                         .Where(i => string.IsNullOrWhiteSpace(keyword) || (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword) == true))
-                        .Select(i => new ManagedCertificateSummary
+                        .Select(i =>
                         {
-                            InstanceId = remote.InstanceId,
-                            InstanceTitle = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId)?.Title,
-                            Id = i.Id ?? "",
-                            Title = $"{i.Name}" ?? "",
-                            PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                            Identifiers = i.GetCertificateIdentifiers(),
-                            DateRenewed = i.DateRenewed,
-                            DateExpiry = i.DateExpiry,
-                            Comments = i.Comments ?? "",
-                            Status = i.LastRenewalStatus?.ToString() ?? "",
-                            HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
-                        })
+                            var instance = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId);
+
+                            return new ManagedCertificateSummary
+                            {
+                                InstanceId = remote.InstanceId,
+                                InstanceTitle = instance?.Title,
+                                Id = i.Id ?? "",
+                                Title = $"{i.Name}" ?? "",
+                                OS = instance?.OS,
+                                ClientDetails = instance?.ClientName,
+                                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
+                                Identifiers = i.GetCertificateIdentifiers(),
+                                DateRenewed = i.DateRenewed,
+                                DateExpiry = i.DateExpiry,
+                                Comments = i.Comments ?? "",
+                                Status = i.LastRenewalStatus?.ToString() ?? "",
+                                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
+                            };
+                        }
+                        )
                     );
                 }
             }

@@ -9,6 +9,22 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        private async Task<ICollection<string>> GetTargetServiceTypes()
+        {
+            var list = new List<string>();
+
+            // TODO: make dynamic from service
+            if (await IsServerTypeAvailable(StandardServerTypes.IIS))
+            {
+                list.Add(StandardServerTypes.IIS.ToString());
+            };
+
+            if (await IsServerTypeAvailable(StandardServerTypes.Nginx))
+            {
+                list.Add(StandardServerTypes.Nginx.ToString());
+            };
+            return list;
+        }
 
         private ITargetWebServer GetTargetServerProvider(StandardServerTypes serverType)
         {

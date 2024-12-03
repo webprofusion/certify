@@ -263,16 +263,47 @@ namespace Certify.Management
 
                 val = await PerformDeploymentTask(null, managedCertificateIdArg.Value, taskIdArg.Value, isPreviewOnly: false, skipDeferredTasks: false, forceTaskExecution: false);
             }
+            else if (arg.CommandType == ManagementHubCommands.GetTargetServiceTypes)
+            {
+                val = await GetTargetServiceTypes();
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetTargetServiceItems)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var serviceTypeArg = args.FirstOrDefault(a => a.Key == "serviceType");
+
+                var serverType = MapStandardServerType(serviceTypeArg.Value);
+
+                val = await GetPrimaryWebSites(serverType, ignoreStoppedSites: true);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetTargetServiceItemIdentifiers)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var serviceTypeArg = args.FirstOrDefault(a => a.Key == "serviceType");
+                var itemArg = args.FirstOrDefault(a => a.Key == "itemId");
+
+                var serverType = MapStandardServerType(serviceTypeArg.Value);
+
+                val = await GetDomainOptionsFromSite(serverType, itemArg.Value);
+            }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {
                 await _managementServerClient.Disconnect();
             }
 
-            var result = new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val) };
+            return new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val), ObjectValue = val };
+        }
 
-            result.ObjectValue = val;
-
-            return result;
+        private StandardServerTypes MapStandardServerType(string type)
+        {
+            if (StandardServerTypes.TryParse(type, out StandardServerTypes standardServerType))
+            {
+                return standardServerType;
+            }
+            else
+            {
+                return StandardServerTypes.Other;
+            }
         }
 
         private void ReportManagedItemUpdateToMgmtHub(ManagedCertificate item)

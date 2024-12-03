@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Certify.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -17,6 +18,7 @@ namespace SourceGenerator
 
         public string PublicAPIRoute { get; set; } = string.Empty;
         public bool UseManagementAPI { get; set; } = false;
+        public string ManagementHubCommandType { get; set; } = string.Empty;
         public string ServiceAPIRoute { get; set; } = string.Empty;
         public string ReturnType { get; set; } = string.Empty;
         public Dictionary<string, string> Params { get; set; } = new Dictionary<string, string>();
@@ -42,9 +44,9 @@ namespace SourceGenerator
                 var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
                 var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
-                if (context.Compilation.AssemblyName.EndsWith("Api.Public") && config.PublicAPIController!=null)
+                if (context.Compilation.AssemblyName.EndsWith("Api.Public") && config.PublicAPIController != null)
                 {
-                    ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamCall);
+                    ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamDecl, apiParamCall);
                 }
 
                 if (context.Compilation.AssemblyName.EndsWith("Certify.UI.Blazor"))
@@ -63,39 +65,40 @@ namespace SourceGenerator
         private static void ImplementAppModel(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCallWithoutAuthContext)
         {
             context.AddSource($"AppModel.{config.OperationName}.g.cs", SourceText.From($@"
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Certify.Models;
-using Certify.Models.Providers;
-using Certify.Models.Hub;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
+            using Certify.Models;
+            using Certify.Models.Providers;
+            using Certify.Models.Hub;
 
-            namespace Certify.UI.Client.Core
-    {{
-        public partial class AppModel
-        {{
-            public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
-            {{
-                return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
-            }}
-        }}
-    }}", Encoding.UTF8));
+                        namespace Certify.UI.Client.Core
+                {{
+                    public partial class AppModel
+                    {{
+                        public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
+                        {{
+                            return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
+                        }}
+                    }}
+                }}
+            ", Encoding.UTF8));
         }
 
-        private static void ImplementPublicAPI(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCall)
+        private static void ImplementPublicAPI(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamDecl, string apiParamCall)
         {
             context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From($@"
 
-using Certify.Client;
-using Certify.Server.Api.Public.Controllers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Certify.Models;
-using Certify.Models.Hub;
+            using Certify.Client;
+            using Certify.Server.Api.Public.Controllers;
+            using Microsoft.AspNetCore.Authentication.JwtBearer;
+            using Microsoft.AspNetCore.Authorization;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
+            using Microsoft.AspNetCore.Http;
+            using Microsoft.AspNetCore.Mvc;
+            using Microsoft.Extensions.Logging;
+            using Certify.Models;
+            using Certify.Models.Hub;
 
 
             namespace Certify.Server.Api.Public.Controllers
@@ -116,25 +119,61 @@ using Certify.Models.Hub;
                         return new OkObjectResult(result);
                     }}
                 }}
-            }}", Encoding.UTF8));
+            }}
+            ", Encoding.UTF8));
 
+            // Management API service
+
+            if (!string.IsNullOrEmpty(config.ManagementHubCommandType))
+            {
+                var src = $@"
+
+                using Certify.Client;
+                using Certify.Models.Hub;
+                using Certify.Models;
+                using Certify.Models.Config;
+                using Certify.Models.Providers;
+                using Certify.Models.Reporting;
+                using Microsoft.AspNetCore.SignalR;
+
+                namespace Certify.Server.Api.Public.Services
+                {{
+                    public partial class ManagementAPI
+                    {{
+                        /// <summary>
+                        /// {config.Comment} [Generated by Certify.SourceGenerators]
+                        /// </summary>
+                        /// <returns></returns>
+                        internal async Task<{config.ReturnType}> {config.OperationName}({apiParamDecl})
+                        {{
+                            var args = new KeyValuePair<string, string>[] {{
+                            {string.Join(",", config.Params.Select(s => $"new (\"{s.Key}\", {s.Key})").ToArray())}
+                            }};
+
+                            return await PerformInstanceCommandTaskWithResult<{config.ReturnType}>(instanceId, args, ""{config.ManagementHubCommandType}"") ?? [];
+                        }}
+                    }}
+                }}
+            ";
+                context.AddSource($"ManagementAPI.{config.OperationName}.g.cs", SourceText.From(src, Encoding.UTF8));
+            }
         }
 
         private static void ImplementInternalAPIClient(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDecl, string apiParamCall)
         {
             var template = @"
-using Certify.Models;
-using Certify.Models.Config.Migration;
-using Certify.Models.Providers;
-using Certify.Models.Hub;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+            using Certify.Models;
+            using Certify.Models.Config.Migration;
+            using Certify.Models.Providers;
+            using Certify.Models.Hub;
+            using System.Collections.Generic;
+            using System.Threading.Tasks;
 
-namespace Certify.Client
-{
-   MethodTemplate
-}
-";
+            namespace Certify.Client
+            {
+               MethodTemplate
+            }
+            ";
 
             if (config.OperationMethod == "HttpGet")
             {
@@ -192,7 +231,6 @@ namespace Certify.Client
                     
                 }}
 
-
                 public partial class CertifyApiClient
                 {{
                     /// <summary>
@@ -204,7 +242,6 @@ namespace Certify.Client
                         var result = await PostAsync($""{postAPIRoute}"", {postApiCall});
                         return JsonToObject<{config.ReturnType}>(await result.Content.ReadAsStringAsync());
                     }}
-                    
                 }}
             "), Encoding.UTF8));
             }
@@ -220,9 +257,7 @@ namespace Certify.Client
                     /// </summary>
                     /// <returns></returns>
                     Task<{config.ReturnType}> {config.OperationName}({apiParamDecl});
-                    
                 }}
-
 
                 public partial class CertifyApiClient
                 {{
@@ -232,14 +267,10 @@ namespace Certify.Client
                     /// <returns></returns>
                     public async Task<{config.ReturnType}> {config.OperationName}({apiParamDecl})
                     {{
-                    
                         var route = $""{config.ServiceAPIRoute}"";
-
                         var result = await DeleteAsync(route, authContext);
                         return JsonToObject<{config.ReturnType}>(await result.Content.ReadAsStringAsync());
-
                     }}
-                    
                 }}
             "), Encoding.UTF8));
             }
