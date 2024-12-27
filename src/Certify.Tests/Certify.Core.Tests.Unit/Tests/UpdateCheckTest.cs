@@ -1,4 +1,4 @@
-﻿using Certify.Models;
+using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
