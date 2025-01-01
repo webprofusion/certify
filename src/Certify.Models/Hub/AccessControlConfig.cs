@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Certify.Models.Hub
 {
@@ -21,6 +20,8 @@ namespace Certify.Models.Hub
         public static Role Administrator { get; } = new Role("sysadmin", "Administrator", "Certify Server Administrator",
             policies: new List<string> {
                      StandardPolicies.ManagedItemAdmin,
+                     StandardPolicies.CertificateAuthorityAdmin,
+                     StandardPolicies.AcmeAccountAdmin,
                      StandardPolicies.StoredCredentialAdmin,
                      StandardPolicies.ManagedChallengeAdmin,
                      StandardPolicies.AccessAdmin
@@ -71,6 +72,7 @@ namespace Certify.Models.Hub
         public static string Certificate { get; } = "certificate";
         public static string StoredCredential { get; } = "storedcredential";
         public static string CertificateAuthority { get; } = "ca";
+        public static string AcmeAccount { get; } = "acmeaccount";
         public static string ManagedChallenge { get; } = "managedchallenge";
     }
 
@@ -90,6 +92,16 @@ namespace Certify.Models.Hub
         public const string ManagedItemTaskUpdate = "manageditem_task_update";
         public const string ManagedItemTaskDelete = "manageditem_task_delete";
         public const string ManagedItemLogView = "manageditem_log_view";
+
+        public const string CertificateAuthorityAdd = "ca_add";
+        public const string CertificateAuthorityUpdate = "ca_update";
+        public const string CertificateAuthorityDelete = "ca_delete";
+        public const string CertificateAuthorityList = "ca_list";
+
+        public const string AcmeAccountAdd = "acmeaccount_add";
+        public const string AcmeAccountUpdate = "acmeaccount_update";
+        public const string AcmeAccountDelete = "acmeaccount_delete";
+        public const string AcmeAccountList = "acmeaccount_list";
 
         public const string StoredCredentialAdd = "storedcredential_add";
         public const string StoredCredentialUpdate = "storedcredential_update";
@@ -115,6 +127,8 @@ namespace Certify.Models.Hub
         public const string AccessAdmin = "access_admin";
         public const string ManagedItemAdmin = "manageditem_admin";
         public const string CertificateConsumer = "certificate_consumer";
+        public const string CertificateAuthorityAdmin = "ca_admin";
+        public const string AcmeAccountAdmin = "acmeaccount_admin";
         public const string StoredCredentialAdmin = "storedcredential_admin";
         public const string StoredCredentialConsumer = "storedcredential_consumer";
         public const string ManagedChallengeConsumer = "managedchallenge_consumer";
@@ -142,6 +156,16 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.CertificateDownload, "Certificate Download", ResourceTypes.Certificate),
                 new(StandardResourceActions.CertificateKeyDownload, "Certificate Private Key Download", ResourceTypes.Certificate),
 
+                new(StandardResourceActions.CertificateAuthorityAdd, "Add New Certificate Authority", ResourceTypes.CertificateAuthority),
+                new(StandardResourceActions.CertificateAuthorityUpdate, "Update Certificate Authority", ResourceTypes.CertificateAuthority),
+                new(StandardResourceActions.CertificateAuthorityDelete, "Delete Certificate Authority", ResourceTypes.CertificateAuthority),
+                new(StandardResourceActions.CertificateAuthorityList, "List Certificate Authority", ResourceTypes.CertificateAuthority),
+
+                new(StandardResourceActions.AcmeAccountAdd, "Add New ACME Account", ResourceTypes.AcmeAccount),
+                new(StandardResourceActions.AcmeAccountUpdate, "Update ACME Account", ResourceTypes.AcmeAccount),
+                new(StandardResourceActions.AcmeAccountDelete, "Delete ACME Account", ResourceTypes.AcmeAccount),
+                new(StandardResourceActions.AcmeAccountList, "List ACME Accounts", ResourceTypes.AcmeAccount),
+
                 new(StandardResourceActions.StoredCredentialAdd, "Add New Stored Credential", ResourceTypes.StoredCredential),
                 new(StandardResourceActions.StoredCredentialUpdate, "Update Stored Credential", ResourceTypes.StoredCredential),
                 new(StandardResourceActions.StoredCredentialDelete, "Delete Stored Credential", ResourceTypes.StoredCredential),
@@ -162,7 +186,8 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedItemDelete, "Delete Managed Items", ResourceTypes.ManagedItem),
 
                 new(StandardResourceActions.ManagedItemTest, "Test Managed Item Renewal Checks", ResourceTypes.ManagedItem),
-                new(StandardResourceActions.ManagedItemRenew, "Request/Renew Managed Items", ResourceTypes.ManagedItem),
+                new(StandardResourceActions.ManagedItemRequest, "Request Managed Items", ResourceTypes.ManagedItem),
+                new(StandardResourceActions.ManagedItemRenew, "Renew Managed Items", ResourceTypes.ManagedItem),
 
                 new(StandardResourceActions.ManagedItemTaskAdd, "Add Managed Item Tasks", ResourceTypes.ManagedItem),
                 new(StandardResourceActions.ManagedItemTaskUpdate, "Update Managed Item Tasks", ResourceTypes.ManagedItem),
@@ -190,6 +215,7 @@ namespace Certify.Models.Hub
                         StandardResourceActions.ManagedItemUpdate,
                         StandardResourceActions.ManagedItemDelete,
                         StandardResourceActions.ManagedItemTest,
+                        StandardResourceActions.ManagedItemRequest,
                         StandardResourceActions.ManagedItemRenew,
                         StandardResourceActions.ManagedItemTaskAdd,
                         StandardResourceActions.ManagedItemTaskUpdate,
@@ -218,6 +244,28 @@ namespace Certify.Models.Hub
                         StandardResourceActions.CertificateKeyDownload
                     }
                 },
+                 new() {
+                      Id=StandardPolicies.CertificateAuthorityAdmin,
+                      Title="Certificate Authority Administration",
+                      SecurityPermissionType= SecurityPermissionType.ALLOW,
+                      ResourceActions= new List<string>{
+                         StandardResourceActions.CertificateAuthorityAdd,
+                         StandardResourceActions.CertificateAuthorityUpdate,
+                         StandardResourceActions.CertificateAuthorityDelete,
+                         StandardResourceActions.CertificateAuthorityList
+                      }
+                  },
+                new() {
+                     Id=StandardPolicies.AcmeAccountAdmin,
+                     Title="ACME Account Administration",
+                     SecurityPermissionType= SecurityPermissionType.ALLOW,
+                     ResourceActions= new List<string>{
+                        StandardResourceActions.AcmeAccountList,
+                        StandardResourceActions.AcmeAccountAdd,
+                        StandardResourceActions.AcmeAccountUpdate,
+                        StandardResourceActions.AcmeAccountDelete
+                     }
+                 },
                 new() {
                     Id=StandardPolicies.StoredCredentialAdmin,
                     Title="Stored Credential Administration",
