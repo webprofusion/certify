@@ -33,6 +33,16 @@ namespace Certify.SourceGenerators
 
             return new List<GeneratedAPI> {
 
+                  new GeneratedAPI {
+                        OperationName = "CheckSecurityPrincipleHasAccess",
+                        OperationMethod = HttpGet,
+                        Comment = "Get list of Assigned Roles for a given security principle",
+                        PublicAPIController = "Access",
+                        PublicAPIRoute = "securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier}",
+                        ServiceAPIRoute = "access/securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier}",
+                        ReturnType = "bool",
+                        Params =new Dictionary<string, string>{{"id","string"}, { "resourceType", "string" },{ "resourceAction", "string" }, { "identifier", "string" } }
+                    },
                     new GeneratedAPI {
 
                         OperationName = "GetSecurityPrincipleAssignedRoles",
