@@ -1,5 +1,5 @@
-﻿using Certify.Models.Hub;
-using Certify.Management;
+﻿using Certify.Management;
+using Certify.Models.Hub;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 
@@ -100,6 +100,14 @@ namespace Certify.Service.Controllers
             var accessControl = await _certifyManager.GetCurrentAccessControl();
             var roles = await accessControl.GetRoles();
             return roles;
+        }
+
+        [HttpGet, Route("securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier?}")]
+        public async Task<bool> CheckSecurityPrincipleHasAccess(string id, string resourceType, string resourceAction, string? identifier)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.IsAuthorised(GetContextUserId(), id, null, resourceType, actionId: resourceAction, identifier);
         }
 
         [HttpGet, Route("securityprinciple/{id}/assignedroles")]

@@ -101,6 +101,11 @@ namespace Certify.Server.Api.Public.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedInstanceInfo>))]
         public async Task<IActionResult> GetHubManagedInstances()
         {
+            if (!await IsAuthorized(_client, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList))
+            {
+                return Unauthorized();
+            }
+
             var managedInstances = _mgmtStateProvider.GetConnectedInstances();
             return new OkObjectResult(managedInstances);
         }

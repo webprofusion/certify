@@ -19,6 +19,7 @@ namespace Certify.Models.Hub
     {
         public static Role Administrator { get; } = new Role("sysadmin", "Administrator", "Certify Server Administrator",
             policies: new List<string> {
+                     StandardPolicies.ManagementHubAdmin,
                      StandardPolicies.ManagedItemAdmin,
                      StandardPolicies.CertificateAuthorityAdmin,
                      StandardPolicies.AcmeAccountAdmin,
@@ -29,8 +30,9 @@ namespace Certify.Models.Hub
 
         public static Role CertificateManager { get; } = new Role("cert_manager", "Certificate Manager", "Can manage and administer all certificates",
             policies: new List<string> {
-                     StandardPolicies.ManagedItemAdmin,
-                     StandardPolicies.StoredCredentialAdmin
+                StandardPolicies.ManagementHubReader,
+                StandardPolicies.ManagedItemAdmin,
+                StandardPolicies.StoredCredentialAdmin
                     });
 
         public static Role CertificateConsumer { get; } = new Role("cert_consumer", "Certificate Consumer", "User of a given certificate", policies: new List<string> { StandardPolicies.CertificateConsumer });
@@ -74,6 +76,7 @@ namespace Certify.Models.Hub
         public static string CertificateAuthority { get; } = "ca";
         public static string AcmeAccount { get; } = "acmeaccount";
         public static string ManagedChallenge { get; } = "managedchallenge";
+        public static string ManagedInstance { get; } = "managedinstance";
     }
 
     public static class StandardResourceActions
@@ -120,6 +123,8 @@ namespace Certify.Models.Hub
         public const string ManagedChallengeDelete = "managedchallenge_update";
         public const string ManagedChallengeRequest = "managedchallenge_request";
 
+        public const string ManagementHubInstancesList = "managementhub_instances_list";
+
     }
 
     public class StandardPolicies
@@ -133,6 +138,8 @@ namespace Certify.Models.Hub
         public const string StoredCredentialConsumer = "storedcredential_consumer";
         public const string ManagedChallengeConsumer = "managedchallenge_consumer";
         public const string ManagedChallengeAdmin = "managedchallenge_admin";
+        public const string ManagementHubAdmin = "managementhub_admin";
+        public const string ManagementHubReader = "managementhub_reader";
     }
 
     public static class Policies
@@ -145,7 +152,7 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateManager,
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
-                StandardRoles.ManagedChallengeConsumer
+                StandardRoles.ManagedChallengeConsumer,
             };
         }
 
@@ -199,6 +206,8 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedChallengeUpdate, "Update managed challenge", ResourceTypes.ManagedChallenge),
                 new(StandardResourceActions.ManagedChallengeDelete, "Delete managed challenge", ResourceTypes.ManagedChallenge),
                 new(StandardResourceActions.ManagedChallengeRequest, "Request to perform a managed challenge response", ResourceTypes.ManagedChallenge),
+
+                new(StandardResourceActions.ManagementHubInstancesList, "List managed instances", ResourceTypes.ManagedInstance),
             };
         }
 
@@ -206,10 +215,10 @@ namespace Certify.Models.Hub
         {
             return new List<ResourcePolicy> {
                 new() {
-                    Id=StandardPolicies.ManagedItemAdmin,
-                    Title="Managed Item Administration",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    ResourceActions= new List<string>{
+                    Id = StandardPolicies.ManagedItemAdmin,
+                    Title = "Managed Item Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
                         StandardResourceActions.ManagedItemList,
                         StandardResourceActions.ManagedItemAdd,
                         StandardResourceActions.ManagedItemUpdate,
@@ -224,87 +233,107 @@ namespace Certify.Models.Hub
                     }
                 },
                 new() {
-                    Id=StandardPolicies.AccessAdmin,
-                    Title="Access Control Administration",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    ResourceActions= new List<string>{
-                       StandardResourceActions.SecurityPrincipleList,
-                       StandardResourceActions.SecurityPrincipleAdd,
-                       StandardResourceActions.SecurityPrincipleUpdate,
-                       StandardResourceActions.SecurityPrincipleDelete,
-                       StandardResourceActions.SecurityPrinciplePasswordUpdate
+                    Id = StandardPolicies.AccessAdmin,
+                    Title = "Access Control Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.SecurityPrincipleList,
+                        StandardResourceActions.SecurityPrincipleAdd,
+                        StandardResourceActions.SecurityPrincipleUpdate,
+                        StandardResourceActions.SecurityPrincipleDelete,
+                        StandardResourceActions.SecurityPrinciplePasswordUpdate
                     }
                 },
                 new() {
-                    Id=StandardPolicies.CertificateConsumer,
-                    Title="Consume Certificates",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    ResourceActions= new List<string>{
+                    Id = StandardPolicies.CertificateConsumer,
+                    Title = "Consume Certificates",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
                         StandardResourceActions.CertificateDownload,
                         StandardResourceActions.CertificateKeyDownload
                     }
                 },
-                 new() {
-                      Id=StandardPolicies.CertificateAuthorityAdmin,
-                      Title="Certificate Authority Administration",
-                      SecurityPermissionType= SecurityPermissionType.ALLOW,
-                      ResourceActions= new List<string>{
-                         StandardResourceActions.CertificateAuthorityAdd,
-                         StandardResourceActions.CertificateAuthorityUpdate,
-                         StandardResourceActions.CertificateAuthorityDelete,
-                         StandardResourceActions.CertificateAuthorityList
-                      }
-                  },
                 new() {
-                     Id=StandardPolicies.AcmeAccountAdmin,
-                     Title="ACME Account Administration",
-                     SecurityPermissionType= SecurityPermissionType.ALLOW,
-                     ResourceActions= new List<string>{
+                    Id = StandardPolicies.CertificateAuthorityAdmin,
+                    Title = "Certificate Authority Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.CertificateAuthorityAdd,
+                        StandardResourceActions.CertificateAuthorityUpdate,
+                        StandardResourceActions.CertificateAuthorityDelete,
+                        StandardResourceActions.CertificateAuthorityList
+                    }
+                },
+                new() {
+                    Id = StandardPolicies.AcmeAccountAdmin,
+                    Title = "ACME Account Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
                         StandardResourceActions.AcmeAccountList,
                         StandardResourceActions.AcmeAccountAdd,
                         StandardResourceActions.AcmeAccountUpdate,
                         StandardResourceActions.AcmeAccountDelete
-                     }
-                 },
-                new() {
-                    Id=StandardPolicies.StoredCredentialAdmin,
-                    Title="Stored Credential Administration",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    ResourceActions= new List<string>{
-                       StandardResourceActions.StoredCredentialList,
-                       StandardResourceActions.StoredCredentialAdd,
-                       StandardResourceActions.StoredCredentialUpdate,
-                       StandardResourceActions.StoredCredentialDelete
                     }
                 },
                 new() {
-                    Id=StandardPolicies.StoredCredentialConsumer,
-                    Title="Stored Credential Consumer",
-                    Description="Provides access to fetch a decrypted stored credential.",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    IsResourceSpecific=true,
-                    ResourceActions= new List<string>{
-                       StandardResourceActions.StoredCredentialDownload
+                    Id = StandardPolicies.StoredCredentialAdmin,
+                    Title = "Stored Credential Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.StoredCredentialList,
+                        StandardResourceActions.StoredCredentialAdd,
+                        StandardResourceActions.StoredCredentialUpdate,
+                        StandardResourceActions.StoredCredentialDelete
                     }
                 },
-                 new() {
-                    Id=StandardPolicies.ManagedChallengeAdmin,
-                    Title="Managed Challenge Administration",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    ResourceActions= new List<string>{
+                new() {
+                    Id = StandardPolicies.StoredCredentialConsumer,
+                    Title = "Stored Credential Consumer",
+                    Description = "Provides access to fetch a decrypted stored credential.",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    IsResourceSpecific = true,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.StoredCredentialDownload
+                    }
+                },
+                new() {
+                    Id = StandardPolicies.ManagedChallengeAdmin,
+                    Title = "Managed Challenge Administration",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    ResourceActions = new List<string> {
                         StandardResourceActions.ManagedChallengeList,
                         StandardResourceActions.ManagedChallengeUpdate,
                         StandardResourceActions.ManagedChallengeDelete
                     }
                 },
-                  new() {
-                    Id=StandardPolicies.ManagedChallengeConsumer,
-                    Title="Managed Challenge Consumer",
-                    Description="Allows consumer to request that a managed challenge be performed.",
-                    SecurityPermissionType= SecurityPermissionType.ALLOW,
-                    IsResourceSpecific=true,
-                    ResourceActions= new List<string>{
-                       StandardResourceActions.ManagedChallengeRequest
+                new() {
+                    Id = StandardPolicies.ManagedChallengeConsumer,
+                    Title = "Managed Challenge Consumer",
+                    Description = "Allows consumer to request that a managed challenge be performed.",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    IsResourceSpecific = true,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.ManagedChallengeRequest
+                    }
+                },
+                new() {
+                    Id = StandardPolicies.ManagementHubAdmin,
+                    Title = "Management Hub Admin",
+                    Description = "Administer management hub.",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    IsResourceSpecific = true,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.ManagementHubInstancesList
+                    }
+                },
+                new() {
+                    Id = StandardPolicies.ManagementHubAdmin,
+                    Title = "Management Hub Reader",
+                    Description = "View management hub.",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    IsResourceSpecific = true,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.ManagementHubInstancesList
                     }
                 }
             };
