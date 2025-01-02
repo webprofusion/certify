@@ -223,7 +223,7 @@ namespace Certify.Core.Management.Access
             {
                 // if any of the service principles assigned roles are restricted by the type of resource type,
                 // check for identifier matches (e.g. role assignment restricted on domains )
-                if (spSpecificAssignedRoles.Any(a => a.IncludedResources.Any(r => r.ResourceType == resourceType)))
+                if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == resourceType) == true))
                 {
                     var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
 
