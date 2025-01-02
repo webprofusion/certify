@@ -12,6 +12,12 @@ namespace Certify.Server.Api.Public.Controllers
     public partial class ApiControllerBase : ControllerBase
     {
 
+        internal async Task<bool> IsAuthorized(ICertifyInternalApiClient client, string resourceType, string resourceAction, string? identifier = null)
+        {
+            var isAuthorized = await client.CheckSecurityPrincipleHasAccess(CurrentAuthContext?.UserId, resourceType, resourceAction, identifier, CurrentAuthContext);
+            return isAuthorized;
+        }
+
         /// <summary>
         /// Get the corresponding auth context to pass to the backend service
         /// </summary>
