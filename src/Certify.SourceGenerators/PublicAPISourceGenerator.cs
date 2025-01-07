@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Certify.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -17,11 +16,23 @@ namespace SourceGenerator
         public string PublicAPIController { get; set; } = string.Empty;
 
         public string PublicAPIRoute { get; set; } = string.Empty;
+        public List<PermissionSpec> RequiredPermissions { get; set; } = [];
         public bool UseManagementAPI { get; set; } = false;
         public string ManagementHubCommandType { get; set; } = string.Empty;
         public string ServiceAPIRoute { get; set; } = string.Empty;
         public string ReturnType { get; set; } = string.Empty;
         public Dictionary<string, string> Params { get; set; } = new Dictionary<string, string>();
+    }
+
+    public class PermissionSpec
+    {
+        public string ResourceType { get; set; }
+        public string Action { get; set; }
+        public PermissionSpec(string resourceType, string action)
+        {
+            ResourceType = resourceType;
+            Action = action;
+        }
     }
     [Generator]
     public class PublicAPISourceGenerator : ISourceGenerator
@@ -86,7 +97,7 @@ namespace SourceGenerator
 
         private static void ImplementPublicAPI(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamDecl, string apiParamCall)
         {
-            context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From($@"
+            var publicApiSrc = $@"
 
             using Certify.Client;
             using Certify.Server.Api.Public.Controllers;
@@ -115,12 +126,39 @@ namespace SourceGenerator
                     [Route(""""""{config.PublicAPIRoute}"""""")]
                     public async Task<IActionResult> {config.OperationName}({apiParamDeclWithoutAuthContext})
                     {{
+
+                        [RequiredPermissions]
+
                         var result = await {(config.UseManagementAPI ? "_mgmtAPI" : "_client")}.{config.OperationName}({apiParamCall.Replace("authContext", "CurrentAuthContext")});
                         return new OkObjectResult(result);
                     }}
                 }}
-            }}
-            ", Encoding.UTF8));
+            }};
+            ";
+
+            if (config.RequiredPermissions.Any())
+            {
+                var fragment = "";
+                foreach (var perm in config.RequiredPermissions)
+                {
+                    fragment += $@"
+                        if (!await IsAuthorized(_client, ""{perm.ResourceType}"" , ""{perm.Action}""))
+                        {{
+                            {{
+                                return Unauthorized();
+                            }}
+                        }}
+                    ";
+                }
+
+                publicApiSrc = publicApiSrc.Replace("[RequiredPermissions]", fragment);
+            }
+            else
+            {
+                publicApiSrc = publicApiSrc.Replace("[RequiredPermissions]", "");
+            }
+
+            context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From(publicApiSrc, Encoding.UTF8));
 
             // Management API service
 
