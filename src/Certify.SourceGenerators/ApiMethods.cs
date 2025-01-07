@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using SourceGenerator;
@@ -162,7 +162,8 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "ManagedChallenge",
                         PublicAPIRoute = "list",
                         ServiceAPIRoute = "managedchallenge",
-                        ReturnType = "ICollection<ManagedChallenge>"
+                        ReturnType = "ICollection<ManagedChallenge>",
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_list")]
                     },
 
                     new GeneratedAPI {
@@ -176,7 +177,8 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
                             { "update", "Certify.Models.Hub.ManagedChallenge" }
-                        }
+                        },
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_update")]
                     },
 
                     new GeneratedAPI {
@@ -190,7 +192,8 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
                             { "id", "string" }
-                        }
+                        },
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_delete")]
                     },
                     new GeneratedAPI {
 
@@ -202,7 +205,8 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string>{
                             { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
-                        }
+                        },
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_request")]
                     },
                     new GeneratedAPI {
 
