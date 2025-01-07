@@ -164,7 +164,7 @@ namespace Certify.Providers.DNS.CertifyDns
                 }
                 else
                 {
-                    // registration is not a valid certify dns registration, must be annother acme-dns service}
+                    // registration is not a valid certify dns registration, must be another acme-dns service
                     _log?.Warning("Existing acme-dns registration found, new registration required for Certify DNS");
                 }
             }
