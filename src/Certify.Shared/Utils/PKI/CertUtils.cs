@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using Certify.Management;
 using Org.BouncyCastle.Asn1.X509;
@@ -41,7 +42,21 @@ namespace Certify.Shared.Core.Utils.PKI
         {
             // See also https://www.digicert.com/ssl-support/pem-ssl-creation.htm
 
-            var cert = new X509Certificate2(pfxData, pwd);
+            X509Certificate2 cert = null;
+#if NET9_0_OR_GREATER
+            try
+            {
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+            catch (CryptographicException)
+            {
+                // try again using blank pwd
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+#else
+            cert = new X509Certificate2(pfxData, pwd);
+#endif
+
             var chain = new X509Chain();
             chain.Build(cert);
 

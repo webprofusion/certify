@@ -87,7 +87,7 @@ namespace Certify.Management
 
                 if (!_useWindowsNativeFeatures)
                 {
-                    newProvider.DefaultCertificateFormat = "pem";
+                    newProvider.DefaultCertificateFormat = "all";
                 }
 
                 await newProvider.InitProvider(_serviceLog, account);
