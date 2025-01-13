@@ -123,9 +123,6 @@
   <data name="RegistrationEmailAddress" xml:space="preserve">
     <value>﻿登録したメールアドレス</value>
   </data>
-  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
-    <value>はい、同意します</value>
-  </data>
   <data name="Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
@@ -159,13 +156,13 @@
   <data name="Email_Address" xml:space="preserve">
     <value>電子メール アドレス</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
+  <data name="Account_Edit_AgreeConfirm" xml:space="preserve">
     <value>はい、同意します</value>
   </data>
   <data name="Register_Contact" xml:space="preserve">
     <value>登録連絡先</value>
   </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
+  <data name="Account_Edit_Intro2" xml:space="preserve">
     <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
@@ -302,9 +299,6 @@
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>ドメイン設定の確認にプロキシAPIを有効にする</value>
-  </data>
-  <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>機密ファイル用の暗号化ファイルシステム（EFS）を有効にする。 このオプションは、すべてのバージョンのWindowsでは動作しません。</value>
   </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>新しい証明書と更新のために停止した IIS サイトを無視する</value>
@@ -606,9 +600,6 @@
   <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
     <value>バック グラウンド サービスを利用 (ローカル システムとして実行) </value>
   </data>
-  <data name="Account_Edit_Intro2" xml:space="preserve">
-    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
-  </data>
   <data name="ManagedCertificatesSettings_RefreshDomains" xml:space="preserve">
     <value>更新</value>
   </data>
@@ -641,5 +632,11 @@
   </data>
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
     <value>Http チャレンジサーバーを有効にする</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>はい、同意します</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
 </root>

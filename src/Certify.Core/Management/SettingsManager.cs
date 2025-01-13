@@ -19,7 +19,6 @@ namespace Certify.Management
             IgnoreStoppedSites = true;
             EnableValidationProxyAPI = true;
             EnableAppTelematics = true;
-            EnableEFS = false;
             EnableDNSValidationChecks = false;
             RenewalIntervalDays = 75;
             RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
@@ -75,8 +74,6 @@ namespace Certify.Management
         public bool IgnoreStoppedSites { get; set; }
 
         public bool EnableValidationProxyAPI { get; set; }
-
-        public bool EnableEFS { get; set; }
 
         public bool EnableDNSValidationChecks { get; set; }
 
@@ -209,7 +206,6 @@ namespace Certify.Management
             CoreAppSettings.Current.MaxRenewalRequests = prefs.MaxRenewalRequests;
             CoreAppSettings.Current.RenewalIntervalMode = prefs.RenewalIntervalMode;
             CoreAppSettings.Current.RenewalIntervalDays = prefs.RenewalIntervalDays;
-            CoreAppSettings.Current.EnableEFS = prefs.EnableEFS;
             CoreAppSettings.Current.IsInstanceRegistered = prefs.IsInstanceRegistered;
             CoreAppSettings.Current.Language = prefs.Language;
             CoreAppSettings.Current.EnableHttpChallengeServer = prefs.EnableHttpChallengeServer;
@@ -269,7 +265,6 @@ namespace Certify.Management
                 MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
                 RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
                 RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
-                EnableEFS = CoreAppSettings.Current.EnableEFS,
                 InstanceId = CoreAppSettings.Current.InstanceId,
                 IsInstanceRegistered = CoreAppSettings.Current.IsInstanceRegistered,
                 Language = CoreAppSettings.Current.Language,

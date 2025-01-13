@@ -46,8 +46,6 @@
 
         public bool EnableValidationProxyAPI { get; set; } = true;
 
-        public bool EnableEFS { get; set; }
-
         public bool EnableDNSValidationChecks { get; set; }
 
         public string? RenewalIntervalMode { get; set; } = RenewalIntervalModes.PercentageLifetime;

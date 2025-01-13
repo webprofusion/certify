@@ -312,9 +312,6 @@
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>Alan adı yapılandırma kontrolleri için proxy API'sini etkinleştir</value>
   </data>
-  <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>Hassas dosyalar için Şifreli Dosya Sistemini (EFS) etkinleştirin. Bu seçenek, Windows'un bazı sürümlerinde çalışmaz.</value>
-  </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>Yeni sertifikalar ve yenilemeler için durdurulan IIS sitelerini yoksay</value>
   </data>
