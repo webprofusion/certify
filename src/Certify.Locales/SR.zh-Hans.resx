@@ -303,9 +303,6 @@
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>启用域名检测配置的代理API</value>
   </data>
-  <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>启用敏感文件保存在EFS中，这个选项并不支持所有Windows系统</value>
-  </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>申请证书和自动续期时忽略已停止站点</value>
   </data>
