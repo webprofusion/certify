@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Client;
-using Certify.Models.Hub;
+using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Shared.Core.Utils;
-using System.Runtime.InteropServices;
-using Certify.Locales;
 
 namespace Certify.Management
 {
@@ -17,6 +16,27 @@ namespace Certify.Management
     {
         private ManagementServerClient _managementServerClient;
         private string _managementServerConnectionId = string.Empty;
+
+        public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey)
+        {
+
+            _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+            _serverConfig.ManagementServerHubUri = url;
+            SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+
+            _managementServerClient = null;
+
+            try
+            {
+                await EnsureMgmtHubConnection();
+            }
+            catch
+            {
+                return new ActionStep("Update Management Hub Failed", "A problem occurred when connecting to the management hub. Check URL.", hasError: true);
+            }
+
+            return new ActionStep("Updated Management Hub", "OK", false);
+        }
 
         private async Task EnsureMgmtHubConnection()
         {
