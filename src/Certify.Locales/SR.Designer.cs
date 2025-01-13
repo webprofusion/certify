@@ -1710,15 +1710,6 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows..
-        /// </summary>
-        public static string Settings_EnableEFS {
-            get {
-                return ResourceManager.GetString("Settings_EnableEFS", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Enable Http Challenge Server.
         /// </summary>
         public static string Settings_EnableHttpChallengeServer {

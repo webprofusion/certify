@@ -312,9 +312,6 @@
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
     <value>Enable Proxy API for Domain Config Checks</value>
   </data>
-  <data name="Settings_EnableEFS" xml:space="preserve">
-    <value>Enable Encrypted File System (EFS) for sensitive files. This option does not work on all versions of Windows.</value>
-  </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>Ignore stopped IIS sites for new certificates and renewals</value>
   </data>

@@ -64,7 +64,6 @@ namespace Certify.Server.API
 
             services
                 .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
-
                 .AddMessagePackProtocol();
 
             services.AddResponseCompression(opts =>
@@ -137,9 +136,6 @@ namespace Certify.Server.API
                         Format = "binary",
                     };
                 });
-
-            
-
             });
 
             // connect to primary certify service 
