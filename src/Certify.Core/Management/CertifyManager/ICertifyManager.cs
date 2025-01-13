@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Config;
-using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Certify.Shared;
@@ -118,5 +118,6 @@ namespace Certify.Management
         Task<ActionResult> DeleteManagedChallenge(string id);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ActionStep> UpdateManagementHub(string url, string joiningKey);
     }
 }
