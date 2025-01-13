@@ -88,12 +88,6 @@ namespace Certify.Server.Core
             });
 #endif
 
-            // inject instance of certify manager
-            var certifyManager = new Management.CertifyManager();
-            certifyManager.Init().Wait();
-
-            services.AddSingleton<Management.ICertifyManager>(certifyManager);
-
             var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
 
             if (useHttps)
@@ -104,6 +98,12 @@ namespace Certify.Server.Core
                     options.HttpsPort = 443;
                 });
             }
+
+            // inject instance of certify manager
+            var certifyManager = new Management.CertifyManager();
+            certifyManager.Init().Wait();
+
+            services.AddSingleton<Management.ICertifyManager>(certifyManager);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
