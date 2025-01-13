@@ -16,7 +16,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9695",
-        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub"
+        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
       }
     },
     "IIS Express": {
@@ -35,7 +36,8 @@
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://0.0.0.0:9695"
+        "ASPNETCORE_URLS": "http://0.0.0.0:9695",
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
       },
       "publishAllPorts": true,
       "httpPort": 9695
@@ -45,7 +47,10 @@
       "launchBrowser": false,
       "launchUrl": "http://localhost:9695/docs",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://0.0.0.0:9695",
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
+        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub"
       }
     }
   }

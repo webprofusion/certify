@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
-using Certify.Models.Hub;
 using Certify.Shared;
 
 namespace Certify.Client
@@ -27,6 +27,8 @@ namespace Certify.Client
         Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null);
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
+
+        Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext authContext = null);
         #endregion System
 
         #region Server

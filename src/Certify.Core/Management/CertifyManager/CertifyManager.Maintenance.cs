@@ -6,9 +6,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
-using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Shared;
 
 namespace Certify.Management
@@ -36,6 +36,12 @@ namespace Certify.Management
                 await PerformServiceUpgrades();
 
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
+
+                if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true)
+                {
+                    CoreAppSettings.Current.IsManagementHub = true;
+                }
+
                 SettingsManager.SaveAppSettings();
 
                 var accessControl = await GetCurrentAccessControl();

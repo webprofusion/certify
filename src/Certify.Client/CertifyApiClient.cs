@@ -6,9 +6,9 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -285,6 +285,12 @@ namespace Certify.Client
         {
             var result = await FetchAsync("system/diagnostics", authContext);
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
+        }
+
+        public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext authContext = null)
+        {
+            var result = await PostAsync($"system/hub/update/", new { url, joiningKey }, authContext);
+            return JsonConvert.DeserializeObject<ActionStep>(await result.Content.ReadAsStringAsync());
         }
 
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId, AuthContext authContext = null)

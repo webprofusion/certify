@@ -96,5 +96,8 @@ namespace Certify.Service.Controllers
 
         [HttpPost, Route("datastores/delete")]
         public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
+
+        [HttpPost, Route("hub/update")]
+        public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey) => await _certifyManager.UpdateManagementHub(url, joiningKey);
     }
 }

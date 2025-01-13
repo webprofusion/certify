@@ -12,7 +12,7 @@ namespace Certify.Server.Api.Public.Controllers
     /// Provides managed certificate related operations
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("internal/v1/[controller]")]
     public partial class HubController : ApiControllerBase
     {
 
@@ -119,6 +119,24 @@ namespace Certify.Server.Api.Public.Controllers
             _mgmtStateProvider.Clear();
             await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
             return new OkResult();
+        }
+
+        [HttpGet]
+        [Route("info")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubInfo))]
+        public async Task<IActionResult> GetHubInfo()
+        {
+            var hubInfo = new HubInfo();
+
+            var hubprefs = await _client.GetPreferences();
+
+            hubInfo.InstanceId = hubprefs.InstanceId;
+
+            var versionInfo = await _client.GetAppVersion();
+
+            hubInfo.Version = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
+
+            return new OkObjectResult(hubInfo);
         }
     }
 }
