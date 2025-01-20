@@ -3,6 +3,18 @@ using System.Collections.Generic;
 
 namespace Certify.Models.Hub
 {
+    public enum SecurityPrincipleType
+    {
+        User = 1,
+        Application = 2,
+        Group
+    }
+
+    public enum SecurityPermissionType
+    {
+        ALLOW = 1,
+        DENY = 0
+    }
 
     /// <summary>
     /// A Security Principle is a user or service account which can be assigned roles and other permissions
@@ -24,7 +36,7 @@ namespace Certify.Models.Hub
         /// </summary>
         public string? ExternalIdentifier { get; set; }
 
-        public SecurityPrincipleType? PrincipleType { get; set; }
+        public SecurityPrincipleType PrincipleType { get; set; } = SecurityPrincipleType.User;
 
         public string? AuthKey { get; set; }
 
@@ -58,14 +70,38 @@ namespace Certify.Models.Hub
         /// <summary>
         /// Defines the role to be assigned 
         /// </summary>
-        public string? RoleId { get; set; }
+        public string RoleId { get; set; } = default!;
 
         /// <summary>
         /// Specific security principle assigned to the role
         /// </summary>
-        public string? SecurityPrincipleId { get; set; }
+        public string SecurityPrincipleId { get; set; } = default!;
 
-        public List<Resource>? IncludedResources { get; set; }
+        public List<Resource>? IncludedResources { get; set; } = [];
+    }
+
+    public class AccessToken : ConfigurationStoreItem
+    {
+        public string TokenType { get; set; }
+        public string Secret { get; set; }
+        public string ClientId { get; set; }
+        public DateTimeOffset? DateCreated { get; set; }
+        public DateTimeOffset? DateExpiry { get; set; }
+        public DateTimeOffset? DateRevoked { get; set; }
+    }
+    public class AssignedAccessToken : ConfigurationStoreItem
+    {
+        public string SecurityPrincipleId { get; set; } = default!;
+
+        /// <summary>
+        /// Optional list of Assigned Roles this access token is scoped to
+        /// </summary>
+        public List<string> ScopedAssignedRoles { get; set; } = [];
+
+        /// <summary>
+        /// List of access tokens assigned
+        /// </summary>
+        public List<AccessToken> AccessTokens { get; set; } = [];
     }
 
     /// <summary>
@@ -76,12 +112,12 @@ namespace Certify.Models.Hub
         /// <summary>
         /// Type of this resource
         /// </summary>
-        public string? ResourceType { get; set; }
+        public string ResourceType { get; set; } = default!;
 
         /// <summary>
         /// Identifier for this resource, can include wildcards for domains etc
         /// </summary>
-        public string? Identifier { get; set; }
+        public string Identifier { get; set; } = default!;
     }
 
     public class ResourcePolicy : ConfigurationStoreItem
