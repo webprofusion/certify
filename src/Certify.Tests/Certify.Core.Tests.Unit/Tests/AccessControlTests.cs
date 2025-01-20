@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
-using Certify.Models.Hub;
 using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -77,19 +77,19 @@ namespace Certify.Core.Tests.Unit
         {
             // test administrator
             RoleId = StandardRoles.Administrator.Id,
-            SecurityPrincipleId = "[test]"
+            SecurityPrincipleId = TestSecurityPrinciples.TestAdmin.Id
         };
         public static AssignedRole Admin { get; } = new AssignedRole
         {
             // administrator
             RoleId = StandardRoles.Administrator.Id,
-            SecurityPrincipleId = "admin_01"
+            SecurityPrincipleId = TestSecurityPrinciples.Admin.Id
         };
         public static AssignedRole DevopsUserDomainConsumer { get; } = new AssignedRole
         {
             // devops user in consumer role for a specific domain
             RoleId = StandardRoles.CertificateConsumer.Id,
-            SecurityPrincipleId = "devops_user_01",
+            SecurityPrincipleId = TestSecurityPrinciples.DevopsAppDomainConsumer.Id,
             IncludedResources = new List<Resource>{
                 new Resource{ ResourceType=ResourceTypes.Domain, Identifier="www.example.com" },
             }
@@ -98,7 +98,7 @@ namespace Certify.Core.Tests.Unit
         {
             // devops user in consumer role for a wildcard domain
             RoleId = StandardRoles.CertificateConsumer.Id,
-            SecurityPrincipleId = "devops_user_01",
+            SecurityPrincipleId = TestSecurityPrinciples.DevopsUser.Id,
             IncludedResources = new List<Resource>{
                 new Resource{ ResourceType=ResourceTypes.Domain, Identifier="*.microsoft.com" },
             }
@@ -162,7 +162,7 @@ namespace Certify.Core.Tests.Unit
         private const string contextUserId = "[test]";
 
         [TestInitialize]
-        public void TestInitialize()
+        public async Task TestInitialize()
         {
             this.loggy = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<AccessControlTests>());
 
@@ -654,7 +654,7 @@ namespace Certify.Core.Tests.Unit
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
 
             // Setup security principle actions
-            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == "certificate_download"));
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
@@ -668,11 +668,11 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserDomainConsumer); // devops user in consumer role for a specific domain
 
             // Validate user can consume a cert for a given domain 
-            var isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "www.example.com");
+            var isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com");
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this domain");
 
             // Validate user can't consume a cert for a subdomain they haven't been granted
-            isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "secure.example.com");
+            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "secure.example.com");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for this domain");
         }
 
@@ -697,15 +697,15 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
 
             // Validate user can consume any subdomain via a granted wildcard
-            var isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
+            var isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this subdomain via wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "*  lkjhasdf98862364");
+            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "*  lkjhasdf98862364");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsAuthorised(contextUserId, "devops_user_01", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "lkjhasdf98862364.*.microsoft.com");
+            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "lkjhasdf98862364.*.microsoft.com");
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
         }
 
@@ -730,7 +730,7 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
 
             // Validate that random user should not be authorised
-            var isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", StandardRoles.CertificateConsumer.Id, ResourceTypes.Domain, "certificate_download", "random.microsoft.com");
+            var isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
         }
 
@@ -752,6 +752,66 @@ namespace Certify.Core.Tests.Unit
             var check = await access.CheckSecurityPrinciplePassword(contextUserId, new Models.Hub.SecurityPrinciplePasswordCheck(TestSecurityPrinciples.DevopsUser.Id, "INVALID_PWD"));
 
             Assert.IsFalse(check.IsSuccess, "Password should not be valid");
+        }
+
+        [TestMethod]
+        public async Task TestUserAPIToken()
+        {
+            // setup a test security principle, add them to the certificate consumer role, assign an API token then test if they are authorized based on the API token
+
+            // allow test admin to perform access checks
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(r));
+
+            // Add test devops user security principle
+            _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
+
+            // Setup security principle actions
+            await access.AddResourceAction(Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload));
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(role);
+
+            // Assign security principles to roles and add roles and policy assignments to store
+            await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
+
+            var assignedRolesForDevopsUser = await access.GetAssignedRoles(contextUserId, TestSecurityPrinciples.DevopsUser.Id);
+
+            // create and assign a new API token
+            var apiToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example API token" };
+            var apiExpiredToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example expired API token", DateExpiry = DateTimeOffset.UtcNow.AddDays(-1) };
+            var apiRevokedToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example revoked API token", DateRevoked = DateTimeOffset.UtcNow.AddDays(-1) };
+            var apiTokenBad = new AccessToken { ClientId = TestSecurityPrinciples.DomainOwner.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example bad API token (invalid client id)" };
+            var assignedToken = new AssignedAccessToken
+            {
+                AccessTokens = [apiToken, apiExpiredToken, apiRevokedToken],
+                SecurityPrincipleId = TestSecurityPrinciples.DevopsUser.Id,
+                Title = "test token",
+                ScopedAssignedRoles = [assignedRolesForDevopsUser.First(r => r.RoleId == StandardRoles.CertificateConsumer.Id).Id]
+            };
+
+            await access.AddAssignedAccessToken(assignedToken);
+
+            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            Assert.IsTrue(isAuthorized.IsSuccess, "Token should have access");
+
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.test.com");
+            Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (wrong domain identifier resource)");
+
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiTokenBad, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (bad token)");
+
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiExpiredToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (expired)");
+
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiRevokedToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (revoked)");
+
         }
     }
 }

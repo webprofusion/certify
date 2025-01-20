@@ -107,7 +107,7 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.IsAuthorised(GetContextUserId(), id, null, resourceType, actionId: resourceAction, identifier);
+            return await accessControl.IsAuthorised(GetContextUserId(), id, resourceType, actionId: resourceAction, identifier);
         }
 
         [HttpGet, Route("securityprinciple/{id}/assignedroles")]
