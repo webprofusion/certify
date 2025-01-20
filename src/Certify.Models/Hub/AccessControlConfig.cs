@@ -2,19 +2,6 @@
 
 namespace Certify.Models.Hub
 {
-    public enum SecurityPrincipleType
-    {
-        User = 1,
-        Application = 2,
-        Group
-    }
-
-    public enum SecurityPermissionType
-    {
-        ALLOW = 1,
-        DENY = 0
-    }
-
     public class StandardRoles
     {
         public static Role Administrator { get; } = new Role("sysadmin", "Administrator", "Certify Server Administrator",

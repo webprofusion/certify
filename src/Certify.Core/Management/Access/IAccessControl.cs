@@ -17,7 +17,7 @@ namespace Certify.Core.Management.Access
         /// </summary>
         /// <returns></returns>
         Task<List<Role>> GetRoles();
-        Task<bool> IsAuthorised(string contextUserId, string principleId, string roleId, string resourceType, string actionId, string identifier);
+        Task<bool> IsAuthorised(string contextUserId, string principleId, string resourceType, string actionId, string identifier = null, List<string> scopedAssignedRoles = null);
         Task<bool> IsPrincipleInRole(string contextUserId, string id, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
         Task<RoleStatus> GetSecurityPrincipleRoleStatus(string contextUserId, string id);

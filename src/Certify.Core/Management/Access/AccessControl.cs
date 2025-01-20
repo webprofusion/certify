@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Providers;
@@ -198,31 +199,56 @@ namespace Certify.Core.Management.Access
             return list?.SingleOrDefault(sp => sp.Username?.ToLowerInvariant() == username.ToLowerInvariant());
         }
 
-        public async Task<bool> IsAuthorised(string contextUserId, string principleId, string roleId, string resourceType, string actionId, string identifier)
+        /// <summary>
+        /// Check if a security principle has access to the given resource action
+        /// </summary>
+        /// <param name="contextUserId">Security principle performing access check</param>
+        /// <param name="principleId">Security principle to check access for</param>
+        /// <param name="resourceType">resource type being accessed</param>
+        /// <param name="actionId">resource action required</param>
+        /// <param name="identifier">optional resource identifier, if access is limited by specific resource</param>
+        /// <param name="scopedAssignedRoles">optional scoped assigned roles to limit access to (for scoped access token checks etc)</param>
+        /// <returns></returns>
+        public async Task<bool> IsAuthorised(string contextUserId, string principleId, string resourceType, string actionId, string identifier = null, List<string> scopedAssignedRoles = null)
         {
             // to determine is a principle has access to perform a particular action
             // for each group the principle is part of
 
-            // TODO: cache results for performance
+            // TODO: cache results for performance based on last update of access control config, which will be largely static
 
+            // get all assigned roles (all users)
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
-            var spAssigned = allAssignedRoles.Where(a => a.SecurityPrincipleId == principleId);
-
+            // get all defined roles
             var allRoles = await _store.GetItems<Role>(nameof(Role));
 
-            var spAssignedRoles = allRoles.Where(r => spAssigned.Any(t => t.RoleId == r.Id));
-
-            var spSpecificAssignedRoles = spAssigned.Where(a => spAssignedRoles.Any(r => r.Id == a.RoleId));
-
+            // get all defined policies
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
 
-            var spAssignedPolicies = allPolicies.Where(r => spAssignedRoles.Any(p => p.Policies.Contains(r.Id)));
+            // get the assigned roles for this specific security principle
+            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == principleId);
 
+            // if scoped assigned role ID specified (access token check etc), reduce scope of assigned roles to check
+            if (scopedAssignedRoles?.Any() == true)
+            {
+                spAssignedRoles = spAssignedRoles.Where(a => scopedAssignedRoles.Contains(a.Id));
+            }
+
+            // get all role definitions included in the principles assigned roles 
+            var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
+
+            var spSpecificAssignedRoles = spAssignedRoles.Where(a => spAssignedRoleDefinitions.Any(r => r.Id == a.RoleId));
+
+            // get all resource policies included in the principles assigned roles
+            var spAssignedPolicies = allPolicies.Where(r => spAssignedRoleDefinitions.Any(p => p.Policies.Contains(r.Id)));
+
+            // check an assigned policy allows the required resource action
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(actionId)))
             {
-                // if any of the service principles assigned roles are restricted by the type of resource type,
+
+                // if any of the service principles assigned roles are restricted by resource type,
                 // check for identifier matches (e.g. role assignment restricted on domains )
+
                 if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == resourceType) == true))
                 {
                     var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
@@ -260,6 +286,36 @@ namespace Certify.Core.Management.Access
             else
             {
                 return false;
+            }
+        }
+
+        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, string resourceType, string actionId, string identifier)
+        {
+            // resolve security principle from access token
+
+            var assignedTokens = await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
+
+            // check if a non-expired/non-revoked access token exists matching the given client ID
+            var knownAssignedToken = assignedTokens.SingleOrDefault(t => t.AccessTokens.Any(a => a.ClientId == accessToken.ClientId && a.Secret == accessToken.Secret && a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow)));
+
+            if (knownAssignedToken == null)
+            {
+                return new ActionResult("Access token unknown, expired or revoked.", false);
+            }
+
+            // check related principle has access
+
+            var isAuthorised = await IsAuthorised(contextUserId, knownAssignedToken.SecurityPrincipleId, resourceType, actionId, identifier, knownAssignedToken.ScopedAssignedRoles);
+
+            if (isAuthorised)
+            {
+                // TODO: check token scope restrictions
+
+                return new ActionResult("OK", true);
+            }
+            else
+            {
+                return new ActionResult("Access token not authorized or invalid for action, resource or identifier", false);
             }
         }
 
@@ -396,6 +452,11 @@ namespace Certify.Core.Management.Access
         public async Task AddAssignedRole(AssignedRole r)
         {
             await _store.Add(nameof(AssignedRole), r);
+        }
+
+        public async Task AddAssignedAccessToken(AssignedAccessToken t)
+        {
+            await _store.Add(nameof(AssignedAccessToken), t);
         }
 
         public async Task AddResourceAction(ResourceAction action)
