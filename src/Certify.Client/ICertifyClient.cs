@@ -29,6 +29,7 @@ namespace Certify.Client
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
 
         Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext authContext = null);
+        Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null);
         #endregion System
 
         #region Server
