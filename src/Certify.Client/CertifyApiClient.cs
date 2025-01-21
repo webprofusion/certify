@@ -749,8 +749,13 @@ namespace Certify.Client
             return JsonToObject<List<SecurityPrinciple>>(result);
         }
 
-        #endregion
+        public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null)
+        {
+            var result = await PostAsync("access/checkapitoken", new AccessTokenCheck { Check = check, Token = token }, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
 
+        #endregion
         private T JsonToObject<T>(string json)
         {
             return JsonConvert.DeserializeObject<T>(json);

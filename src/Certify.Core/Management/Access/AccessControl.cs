@@ -209,7 +209,7 @@ namespace Certify.Core.Management.Access
         /// <param name="identifier">optional resource identifier, if access is limited by specific resource</param>
         /// <param name="scopedAssignedRoles">optional scoped assigned roles to limit access to (for scoped access token checks etc)</param>
         /// <returns></returns>
-        public async Task<bool> IsAuthorised(string contextUserId, string principleId, string resourceType, string actionId, string identifier = null, List<string> scopedAssignedRoles = null)
+        public async Task<bool> IsSecurityPrincipleAuthorised(string contextUserId, AccessCheck check)
         {
             // to determine is a principle has access to perform a particular action
             // for each group the principle is part of
@@ -226,12 +226,12 @@ namespace Certify.Core.Management.Access
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
 
             // get the assigned roles for this specific security principle
-            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == principleId);
+            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == check.SecurityPrincipleId);
 
             // if scoped assigned role ID specified (access token check etc), reduce scope of assigned roles to check
-            if (scopedAssignedRoles?.Any() == true)
+            if (check.ScopedAssignedRoles?.Any() == true)
             {
-                spAssignedRoles = spAssignedRoles.Where(a => scopedAssignedRoles.Contains(a.Id));
+                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
             }
 
             // get all role definitions included in the principles assigned roles 
@@ -243,20 +243,20 @@ namespace Certify.Core.Management.Access
             var spAssignedPolicies = allPolicies.Where(r => spAssignedRoleDefinitions.Any(p => p.Policies.Contains(r.Id)));
 
             // check an assigned policy allows the required resource action
-            if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(actionId)))
+            if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(check.ResourceActionId)))
             {
 
                 // if any of the service principles assigned roles are restricted by resource type,
                 // check for identifier matches (e.g. role assignment restricted on domains )
 
-                if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == resourceType) == true))
+                if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true))
                 {
                     var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
 
-                    if (resourceType == ResourceTypes.Domain && !identifier.Trim().StartsWith("*") && identifier.Contains("."))
+                    if (check.ResourceType == ResourceTypes.Domain && !check.Identifier.Trim().StartsWith("*") && check.Identifier.Contains("."))
                     {
                         // get wildcard for respective domain identifier
-                        var identifierComponents = identifier.Split('.');
+                        var identifierComponents = check.Identifier.Split('.');
 
                         var wildcard = "*." + string.Join(".", identifierComponents.Skip(1));
 
@@ -264,11 +264,11 @@ namespace Certify.Core.Management.Access
 
                         foreach (var includedResource in allIncludedResources)
                         {
-                            if (includedResource.ResourceType == resourceType && includedResource.Identifier == wildcard)
+                            if (includedResource.ResourceType == check.ResourceType && includedResource.Identifier == wildcard)
                             {
                                 return true;
                             }
-                            else if (includedResource.ResourceType == resourceType && includedResource.Identifier == identifier)
+                            else if (includedResource.ResourceType == check.ResourceType && includedResource.Identifier == check.Identifier)
                             {
                                 return true;
                             }
@@ -289,7 +289,7 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, string resourceType, string actionId, string identifier)
+        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
         {
             // resolve security principle from access token
 
@@ -305,7 +305,16 @@ namespace Certify.Core.Management.Access
 
             // check related principle has access
 
-            var isAuthorised = await IsAuthorised(contextUserId, knownAssignedToken.SecurityPrincipleId, resourceType, actionId, identifier, knownAssignedToken.ScopedAssignedRoles);
+            var scopedCheck = new AccessCheck
+            {
+                SecurityPrincipleId = knownAssignedToken.SecurityPrincipleId,
+                ResourceActionId = check.ResourceActionId,
+                Identifier = check.Identifier,
+                ResourceType = check.ResourceType,
+                ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles
+            };
+
+            var isAuthorised = await IsSecurityPrincipleAuthorised(contextUserId, scopedCheck);
 
             if (isAuthorised)
             {

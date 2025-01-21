@@ -35,13 +35,13 @@ namespace Certify.SourceGenerators
 
                   new() {
                         OperationName = "CheckSecurityPrincipleHasAccess",
-                        OperationMethod = HttpGet,
-                        Comment = "Check a given security principle has permissions to perform a specific action for a specific resource type",
+                        OperationMethod = HttpPost,
+                        Comment = "Check a given security principle has permissions to perform a specific action for a specific resource action",
                         PublicAPIController = "Access",
-                        PublicAPIRoute = "securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier}",
-                        ServiceAPIRoute = "access/securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier}",
+                        PublicAPIRoute = "securityprinciple/allowedaction",
+                        ServiceAPIRoute = "access/securityprinciple/allowedaction",
                         ReturnType = "bool",
-                        Params =new Dictionary<string, string>{{"id","string"}, { "resourceType", "string" },{ "resourceAction", "string" }, { "identifier", "string" } }
+                        Params =new Dictionary<string, string>{{"check","Certify.Models.Hub.AccessCheck"} }
                     },
                     new() {
                         OperationName = "GetSecurityPrincipleAssignedRoles",

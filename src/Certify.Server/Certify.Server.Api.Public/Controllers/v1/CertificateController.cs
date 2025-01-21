@@ -1,4 +1,5 @@
-﻿using Certify.Client;
+﻿using System.Net;
+using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.Services;
@@ -36,19 +37,64 @@ namespace Certify.Server.Api.Public.Controllers
         }
 
         /// <summary>
-        /// Download the latest certificate for the given managed certificate
+        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers)
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="managedCertId"></param>
         /// <param name="format"></param>
         /// <param name="mode"></param>
         /// <returns>The certificate file in the chosen format</returns>
         [HttpGet]
-        [Route("{managedCertId}/download/{format?}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-
+        [Route("{instanceId}/{managedCertId}/download/{format?}")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        public async Task<IActionResult> Download(string managedCertId, string format, string? mode = null)
+        public async Task<IActionResult> Download(string instanceId, string managedCertId, string format, string? mode = null)
         {
+            var accessPermitted = false;
+
+            if (CurrentAuthContext != null)
+            {
+                // auth based on JWT identity
+                var authCheckOK = await IsAuthorized(_client, new AccessCheck(CurrentAuthContext.UserId, default!, StandardResourceActions.CertificateDownload));
+                if (!authCheckOK)
+                {
+                    return Problem(detail: "Identity not authorized for this action", statusCode: (int)HttpStatusCode.Unauthorized);
+                }
+                else
+                {
+                    accessPermitted = true;
+                }
+            }
+            else
+            {
+                // auth based on client id and client secret
+                // check token and access control before allowing download
+                var clientId = Request.Headers["X-Client-ID"];
+                var secret = Request.Headers["X-Client-Secret"];
+
+                if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+                {
+                    return Problem(detail: "X-Client-ID or X-Client-Secret HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
+                }
+
+                var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret, TokenType = "Simple" }, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
+
+                if (accessPermittedResult.IsSuccess)
+                {
+                    accessPermitted = true;
+                }
+                else
+                {
+                    return Problem(detail: accessPermittedResult.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+                }
+            }
+
+            if (!accessPermitted)
+            {
+                return Unauthorized();
+            }
+
+            // default to PFX output
             if (format == null)
             {
                 format = "pfx";
@@ -60,17 +106,35 @@ namespace Certify.Server.Api.Public.Controllers
             }
 
             // TODO: certify manager to do all the cert conversion work, server may be on another machine
-            var managedCert = await _client.GetManagedCertificate(managedCertId, CurrentAuthContext);
+            var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
-            if (managedCert?.CertificatePath == null)
+            if (managedCert == null)
             {
                 return new NotFoundResult();
             }
 
+            if (managedCert != null && managedCert.DateRenewed == null)
+            {
+                // item exists but a cert is not yet available, set Retry-After header in RC1123 date format
+                var nextAttempt = managedCert.DateNextScheduledRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(1);
+                Response.Headers.RetryAfter = nextAttempt.ToString("r");
+            }
+
+            var headers = Request.GetTypedHeaders();
+            if (headers.IfModifiedSince.HasValue && headers.IfModifiedSince.Value > managedCert.DateRenewed)
+            {
+                // if item has not been modified since the provided date return 304 not modified
+                return StatusCode((int)HttpStatusCode.NotModified);
+            }
+
             var content = await System.IO.File.ReadAllBytesAsync(managedCert.CertificatePath);
 
-            return new FileContentResult(content, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
+            if (!string.IsNullOrEmpty(managedCert.CertificateThumbprintHash))
+            {
+                Response.Headers.Append("ETag", managedCert.CertificateThumbprintHash.ToLowerInvariant());
+            }
 
+            return new FileContentResult(content, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
         }
 
         /// <summary>

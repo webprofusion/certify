@@ -668,11 +668,11 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserDomainConsumer); // devops user in consumer role for a specific domain
 
             // Validate user can consume a cert for a given domain 
-            var isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com");
+            var isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com"));
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this domain");
 
             // Validate user can't consume a cert for a subdomain they haven't been granted
-            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "secure.example.com");
+            isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "secure.example.com"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for this domain");
         }
 
@@ -697,15 +697,15 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
 
             // Validate user can consume any subdomain via a granted wildcard
-            var isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            var isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this subdomain via wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "*  lkjhasdf98862364");
+            isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "*  lkjhasdf98862364"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsAuthorised(contextUserId, TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "lkjhasdf98862364.*.microsoft.com");
+            isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "lkjhasdf98862364.*.microsoft.com"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
         }
 
@@ -730,7 +730,7 @@ namespace Certify.Core.Tests.Unit
             await access.AddAssignedRole(TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
 
             // Validate that random user should not be authorised
-            var isAuthorised = await access.IsAuthorised(contextUserId, "randomuser", ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            var isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck("randomuser", ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
         }
 
@@ -797,19 +797,19 @@ namespace Certify.Core.Tests.Unit
 
             await access.AddAssignedAccessToken(assignedToken);
 
-            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsTrue(isAuthorized.IsSuccess, "Token should have access");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.test.com");
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.test.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (wrong domain identifier resource)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiTokenBad, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiTokenBad, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (bad token)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiExpiredToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiExpiredToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (expired)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiRevokedToken, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com");
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiRevokedToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (revoked)");
 
         }

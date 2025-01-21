@@ -102,12 +102,20 @@ namespace Certify.Service.Controllers
             return roles;
         }
 
-        [HttpGet, Route("securityprinciple/{id}/allowedaction/{resourceType}/{resourceAction}/{identifier?}")]
-        public async Task<bool> CheckSecurityPrincipleHasAccess(string id, string resourceType, string resourceAction, string? identifier)
+        [HttpPost, Route("securityprinciple/allowedaction/")]
+        public async Task<bool> CheckSecurityPrincipleHasAccess(AccessCheck check)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.IsAuthorised(GetContextUserId(), id, resourceType, actionId: resourceAction, identifier);
+            return await accessControl.IsSecurityPrincipleAuthorised(GetContextUserId(), check);
+        }
+
+        [HttpPost, Route("checkapitoken/")]
+        public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessTokenCheck tokenCheck)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.IsAccessTokenAuthorised(GetContextUserId(), tokenCheck.Token, tokenCheck.Check);
         }
 
         [HttpGet, Route("securityprinciple/{id}/assignedroles")]
