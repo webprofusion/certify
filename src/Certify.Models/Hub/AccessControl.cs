@@ -80,11 +80,35 @@ namespace Certify.Models.Hub
         public List<Resource>? IncludedResources { get; set; } = [];
     }
 
+    public class AccessCheck
+    {
+        public string? SecurityPrincipleId { get; set; } = default!;
+        public string ResourceType { get; set; } = default!;
+        public string ResourceActionId { get; set; } = default!;
+        public string? Identifier { get; set; } = default!;
+
+        public List<string> ScopedAssignedRoles { get; set; } = [];
+
+        public AccessCheck() { }
+        public AccessCheck(string? securityPrincipleId, string resourceType, string resourceActionId, string? identifier = null)
+        {
+            SecurityPrincipleId = securityPrincipleId;
+            ResourceType = resourceType;
+            ResourceActionId = resourceActionId;
+            Identifier = identifier;
+        }
+    }
+
+    public class AccessTokenCheck
+    {
+        public AccessToken Token { get; set; }
+        public AccessCheck Check { get; set; }
+    }
     public class AccessToken : ConfigurationStoreItem
     {
-        public string TokenType { get; set; }
-        public string Secret { get; set; }
-        public string ClientId { get; set; }
+        public string TokenType { get; set; } = default!;
+        public string Secret { get; set; } = default!;
+        public string ClientId { get; set; } = default!;
         public DateTimeOffset? DateCreated { get; set; }
         public DateTimeOffset? DateExpiry { get; set; }
         public DateTimeOffset? DateRevoked { get; set; }
