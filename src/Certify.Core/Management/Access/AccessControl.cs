@@ -55,7 +55,7 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<List<Role>> GetRoles()
+        public async Task<List<Role>> GetRoles(string contextUserId)
         {
             return await _store.GetItems<Role>(nameof(Role));
         }
@@ -453,24 +453,52 @@ namespace Certify.Core.Management.Access
             return hashed;
         }
 
-        public async Task AddRole(Role r)
+        public async Task<bool> AddRole(string contextUserId, Role r)
         {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to add an role action without being in required role.", contextUserId);
+                return false;
+            }
+
             await _store.Add(nameof(Role), r);
+            return true;
         }
 
-        public async Task AddAssignedRole(AssignedRole r)
+        public async Task<bool> AddAssignedRole(string contextUserId, AssignedRole r)
         {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to add an assigned role without being in required role.", contextUserId);
+                return false;
+            }
+
             await _store.Add(nameof(AssignedRole), r);
+            return true;
         }
 
-        public async Task AddAssignedAccessToken(AssignedAccessToken t)
+        public async Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken t)
         {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to add an assigned access token without being in required role.", contextUserId);
+                return false;
+            }
+
             await _store.Add(nameof(AssignedAccessToken), t);
+            return true;
         }
 
-        public async Task AddResourceAction(ResourceAction action)
+        public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action)
         {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to add a resource action without being in required role.", contextUserId);
+                return false;
+            }
+
             await _store.Add(nameof(ResourceAction), action);
+            return true;
         }
 
         public async Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id)
@@ -491,7 +519,6 @@ namespace Certify.Core.Management.Access
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read role status role for [{id}] without being in required role.", contextUserId, id);
-
             }
 
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
@@ -568,6 +595,30 @@ namespace Certify.Core.Management.Access
                     return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid password" };
                 }
             }
+        }
+
+        public async Task<List<AccessToken>> GetAccessTokens(string contextUserId)
+        {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to list access tokens without being in required role.", contextUserId);
+                return [];
+            }
+
+            return await _store.GetItems<AccessToken>(nameof(AccessToken));
+        }
+
+        public async Task<bool> AddAccessToken(string contextUserId, AccessToken a)
+        {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to add an access token without being in required role.", contextUserId);
+                return false;
+            }
+
+            await _store.Add(nameof(AccessToken), a);
+
+            return true;
         }
 
         public string GetSHA256Hash(string val)

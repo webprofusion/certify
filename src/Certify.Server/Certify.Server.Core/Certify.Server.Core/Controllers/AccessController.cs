@@ -98,8 +98,7 @@ namespace Certify.Service.Controllers
         public async Task<List<Role>> GetRoles()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var roles = await accessControl.GetRoles();
-            return roles;
+            return await accessControl.GetRoles(GetContextUserId());
         }
 
         [HttpPost, Route("securityprinciple/allowedaction/")]
@@ -110,12 +109,33 @@ namespace Certify.Service.Controllers
             return await accessControl.IsSecurityPrincipleAuthorised(GetContextUserId(), check);
         }
 
-        [HttpPost, Route("checkapitoken/")]
+        [HttpPost, Route("apitoken/check/")]
         public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessTokenCheck tokenCheck)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
             return await accessControl.IsAccessTokenAuthorised(GetContextUserId(), tokenCheck.Token, tokenCheck.Check);
+        }
+
+        [HttpGet, Route("apitoken/list/")]
+        public async Task<List<AccessToken>> GetAccessTokens()
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.GetAccessTokens(GetContextUserId());
+        }
+
+        [HttpPost, Route("apitoken/")]
+        public async Task<Models.Config.ActionResult> AddAccessToken([FromBody] AccessToken token)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var addResultOk = await accessControl.AddAccessToken(GetContextUserId(), token);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = addResultOk,
+                Message = addResultOk ? "Added" : "Failed to add"
+            };
         }
 
         [HttpGet, Route("securityprinciple/{id}/assignedroles")]

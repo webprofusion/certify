@@ -73,6 +73,25 @@ namespace Certify.SourceGenerators
                         ReturnType = "ICollection<Role>"
                     },
                     new() {
+                         OperationName = "GetAccessTokens",
+                         OperationMethod = HttpGet,
+                         Comment = "Get list of API access tokens",
+                         PublicAPIController = "Access",
+                         PublicAPIRoute = "token",
+                         ServiceAPIRoute = "access/apitoken/list",
+                         ReturnType = "ICollection<Certify.Models.Hub.AccessToken>"
+                     },
+                    new() {
+                           OperationName = "AddAccessToken",
+                           OperationMethod = HttpPost,
+                           Comment = "Add new access token",
+                           PublicAPIController = "Access",
+                           PublicAPIRoute = "token",
+                           ServiceAPIRoute = "access/apitoken",
+                           ReturnType = "Models.Config.ActionResult",
+                           Params = new Dictionary<string, string>{{"token", "Certify.Models.Hub.AccessToken" } }
+                    },
+                    new() {
 
                         OperationName = "GetSecurityPrinciples",
                         OperationMethod = HttpGet,

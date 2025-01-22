@@ -164,7 +164,7 @@ namespace Certify.Core.Tests.DataStores
 
                 await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
 
-                await access.AddAssignedRole(new AssignedRole { Id = new Guid().ToString(), SecurityPrincipleId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
+                await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipleId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
 
                 // add second security principle, bypass role check as this is just a data store test
                 var added = await access.AddSecurityPrinciple(adminSp.Id, consumerSp, bypassIntegrityCheck: true);

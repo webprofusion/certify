@@ -109,6 +109,7 @@ namespace Certify.Models.Hub
         public string TokenType { get; set; } = default!;
         public string Secret { get; set; } = default!;
         public string ClientId { get; set; } = default!;
+
         public DateTimeOffset? DateCreated { get; set; }
         public DateTimeOffset? DateExpiry { get; set; }
         public DateTimeOffset? DateRevoked { get; set; }
