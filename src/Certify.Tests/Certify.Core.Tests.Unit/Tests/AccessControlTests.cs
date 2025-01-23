@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -229,15 +229,19 @@ namespace Certify.Core.Tests.Unit
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
-            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+            var addPolicy = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            Assert.IsTrue(addPolicy, "Expected to add role");
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
-            await access.AddRole(contextUserId, role);
+            var addedRole = await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            Assert.IsTrue(addedRole, "Expected to add role");
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
             foreach (var assignedRole in assignedRoles)
@@ -255,6 +259,9 @@ namespace Certify.Core.Tests.Unit
             // Add test security principles
             var adminSecurityPrinciples = new List<SecurityPrinciple> { TestSecurityPrinciples.Admin, TestSecurityPrinciples.TestAdmin };
             adminSecurityPrinciples.ForEach(async p => await access.AddSecurityPrinciple(contextUserId, p, bypassIntegrityCheck: true));
+
+            // assigned admin role to TestAdmin (also the contextUserId) so they can check roles for the other admin user
+            await access.AddAssignedRole(TestSecurityPrinciples.TestAdmin.Id, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
 
             // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
             var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, adminSecurityPrinciples[0].Id);
@@ -303,7 +310,7 @@ namespace Certify.Core.Tests.Unit
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
@@ -363,11 +370,11 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate email of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
@@ -400,11 +407,11 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
@@ -496,11 +503,11 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before delete is not null
             var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
@@ -620,7 +627,7 @@ namespace Certify.Core.Tests.Unit
 
             // Setup security principle actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true));
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -628,11 +635,11 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate specified admin user is a principle role
             bool hasAccess;
@@ -662,10 +669,10 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
-            await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserDomainConsumer); // devops user in consumer role for a specific domain
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserDomainConsumer, true); // devops user in consumer role for a specific domain
 
             // Validate user can consume a cert for a given domain 
             var isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com"));
@@ -691,10 +698,10 @@ namespace Certify.Core.Tests.Unit
 
             // Setup and add roles and policy assignments to store
             var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
-            await access.AddRole(contextUserId, role);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             // Assign security principles to roles and add roles and policy assignments to store
-            await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserWildcardDomainConsumer, bypassIntegrityCheck: true); // devops user in consumer role for a wildcard domain
 
             // Validate user can consume any subdomain via a granted wildcard
             var isAuthorised = await access.IsSecurityPrincipleAuthorised(contextUserId, new AccessCheck(TestSecurityPrinciples.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
@@ -761,7 +768,7 @@ namespace Certify.Core.Tests.Unit
 
             // allow test admin to perform access checks
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Add test devops user security principle
             _ = await access.AddSecurityPrinciple(contextUserId, TestSecurityPrinciples.DevopsUser, bypassIntegrityCheck: true);
@@ -783,10 +790,10 @@ namespace Certify.Core.Tests.Unit
             var assignedRolesForDevopsUser = await access.GetAssignedRoles(contextUserId, TestSecurityPrinciples.DevopsUser.Id);
 
             // create and assign a new API token
-            var apiToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example API token" };
-            var apiExpiredToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example expired API token", DateExpiry = DateTimeOffset.UtcNow.AddDays(-1) };
-            var apiRevokedToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example revoked API token", DateRevoked = DateTimeOffset.UtcNow.AddDays(-1) };
-            var apiTokenBad = new AccessToken { ClientId = TestSecurityPrinciples.DomainOwner.Id, Secret = Guid.NewGuid().ToString(), TokenType = "Simple", Description = "An example bad API token (invalid client id)" };
+            var apiToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = AccessTokenTypes.Simple, Description = "An example API token" };
+            var apiExpiredToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = AccessTokenTypes.Simple, Description = "An example expired API token", DateExpiry = DateTimeOffset.UtcNow.AddDays(-1) };
+            var apiRevokedToken = new AccessToken { ClientId = TestSecurityPrinciples.DevopsUser.Id, Secret = Guid.NewGuid().ToString(), TokenType = AccessTokenTypes.Simple, Description = "An example revoked API token", DateRevoked = DateTimeOffset.UtcNow.AddDays(-1) };
+            var apiTokenBad = new AccessToken { ClientId = TestSecurityPrinciples.DomainOwner.Id, Secret = Guid.NewGuid().ToString(), TokenType = AccessTokenTypes.Simple, Description = "An example bad API token (invalid client id)" };
             var assignedToken = new AssignedAccessToken
             {
                 AccessTokens = [apiToken, apiExpiredToken, apiRevokedToken],
