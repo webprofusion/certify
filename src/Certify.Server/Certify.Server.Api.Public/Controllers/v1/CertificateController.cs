@@ -113,7 +113,7 @@ namespace Certify.Server.Api.Public.Controllers
                 return new NotFoundResult();
             }
 
-            if (managedCert != null && managedCert.DateRenewed == null)
+            if (managedCert.DateRenewed == null)
             {
                 // item exists but a cert is not yet available, set Retry-After header in RC1123 date format
                 var nextAttempt = managedCert.DateNextScheduledRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(1);
@@ -121,9 +121,16 @@ namespace Certify.Server.Api.Public.Controllers
             }
 
             var headers = Request.GetTypedHeaders();
+
+            // allow client to skip the download by sending an If-Modified-Since http header. If not renewed since that date return 304 Not Modified.
             if (headers.IfModifiedSince.HasValue && headers.IfModifiedSince.Value > managedCert.DateRenewed)
             {
-                // if item has not been modified since the provided date return 304 not modified
+                return StatusCode((int)HttpStatusCode.NotModified);
+            }
+
+            // allow client to skip the download by sending an If-None-Match header with a quote "<thumbprint hash>" of the cert they currently have. wildcard/weak tags not supported.
+            if (headers.IfNoneMatch.Any(etag => string.Equals(etag.Tag.ToString().Replace("\"", ""), managedCert.CertificateThumbprintHash, StringComparison.InvariantCultureIgnoreCase)))
+            {
                 return StatusCode((int)HttpStatusCode.NotModified);
             }
 
