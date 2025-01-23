@@ -117,19 +117,19 @@ namespace Certify.Service.Controllers
             return await accessControl.IsAccessTokenAuthorised(GetContextUserId(), tokenCheck.Token, tokenCheck.Check);
         }
 
-        [HttpGet, Route("apitoken/list/")]
-        public async Task<List<AccessToken>> GetAccessTokens()
+        [HttpGet, Route("assignedtoken/list/")]
+        public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.GetAccessTokens(GetContextUserId());
+            return await accessControl.GetAssignedAccessTokens(GetContextUserId());
         }
 
-        [HttpPost, Route("apitoken/")]
-        public async Task<Models.Config.ActionResult> AddAccessToken([FromBody] AccessToken token)
+        [HttpPost, Route("assignedtoken/")]
+        public async Task<Models.Config.ActionResult> AddAAssignedccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.AddAccessToken(GetContextUserId(), token);
+            var addResultOk = await accessControl.AddAssignedAccessToken(GetContextUserId(), token);
 
             return new Models.Config.ActionResult
             {

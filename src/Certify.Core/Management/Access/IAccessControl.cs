@@ -31,8 +31,8 @@ namespace Certify.Core.Management.Access
         Task<bool> AddAssignedRole(string contextUserId, AssignedRole assignedRole);
         Task<bool> AddResourceAction(string contextUserId, ResourceAction action);
 
-        Task<List<AccessToken>> GetAccessTokens(string contextUserId);
-        Task<bool> AddAccessToken(string contextUserId, AccessToken token);
+        Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId);
+        Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token);
         Task<bool> IsInitialized();
     }
 }

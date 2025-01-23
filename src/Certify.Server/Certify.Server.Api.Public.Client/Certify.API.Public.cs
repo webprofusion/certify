@@ -429,22 +429,22 @@ namespace Certify.API.Public
         }
 
         /// <summary>
-        /// Get list of API access tokens [Generated]
+        /// Get list of API assigned access tokens [Generated]
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccessToken>> GetAccessTokensAsync()
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync()
         {
-            return GetAccessTokensAsync(System.Threading.CancellationToken.None);
+            return GetAssignedAccessTokensAsync(System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Get list of API access tokens [Generated]
+        /// Get list of API assigned access tokens [Generated]
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccessToken>> GetAccessTokensAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -457,8 +457,8 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/access/token"
-                    urlBuilder_.Append("internal/v1/access/token");
+                    // Operation Path: "internal/v1/access/assignedtoken"
+                    urlBuilder_.Append("internal/v1/access/assignedtoken");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -485,7 +485,7 @@ namespace Certify.API.Public
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<AccessToken>>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<AssignedAccessToken>>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -513,22 +513,22 @@ namespace Certify.API.Public
         }
 
         /// <summary>
-        /// Add new access token [Generated]
+        /// Add new assigned access token [Generated]
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ActionResult> AddAccessTokenAsync(AccessToken body)
+        public virtual System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body)
         {
-            return AddAccessTokenAsync(body, System.Threading.CancellationToken.None);
+            return AddAssignedAccessTokenAsync(body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Add new access token [Generated]
+        /// Add new assigned access token [Generated]
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ActionResult> AddAccessTokenAsync(AccessToken body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -545,8 +545,8 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/access/token"
-                    urlBuilder_.Append("internal/v1/access/token");
+                    // Operation Path: "internal/v1/access/assignedtoken"
+                    urlBuilder_.Append("internal/v1/access/assignedtoken");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
