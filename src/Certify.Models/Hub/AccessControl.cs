@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Certify.Models.Hub
@@ -103,6 +103,11 @@ namespace Certify.Models.Hub
     {
         public AccessToken Token { get; set; }
         public AccessCheck Check { get; set; }
+    }
+
+    public class AccessTokenTypes
+    {
+        public const string Simple = "simple";
     }
     public class AccessToken : ConfigurationStoreItem
     {

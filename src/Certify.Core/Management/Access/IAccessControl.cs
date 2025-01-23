@@ -27,9 +27,9 @@ namespace Certify.Core.Management.Access
         Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate);
         Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck);
 
-        Task<bool> AddRole(string contextUserId, Role role);
-        Task<bool> AddAssignedRole(string contextUserId, AssignedRole assignedRole);
-        Task<bool> AddResourceAction(string contextUserId, ResourceAction action);
+        Task<bool> AddRole(string contextUserId, Role role, bool bypassIntegrityCheck = false);
+        Task<bool> AddAssignedRole(string contextUserId, AssignedRole assignedRole, bool bypassIntegrityCheck = false);
+        Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false);
 
         Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId);
         Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token);
