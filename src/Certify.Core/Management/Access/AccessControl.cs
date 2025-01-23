@@ -453,9 +453,9 @@ namespace Certify.Core.Management.Access
             return hashed;
         }
 
-        public async Task<bool> AddRole(string contextUserId, Role r)
+        public async Task<bool> AddRole(string contextUserId, Role r, bool bypassIntegrityCheck = false)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an role action without being in required role.", contextUserId);
                 return false;
@@ -465,9 +465,9 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<bool> AddAssignedRole(string contextUserId, AssignedRole r)
+        public async Task<bool> AddAssignedRole(string contextUserId, AssignedRole r, bool bypassIntegrityCheck = false)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an assigned role without being in required role.", contextUserId);
                 return false;
@@ -477,9 +477,9 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action)
+        public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add a resource action without being in required role.", contextUserId);
                 return false;
@@ -494,7 +494,7 @@ namespace Certify.Core.Management.Access
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read assigned role for [{id}] without being in required role.", contextUserId, id);
-                return new List<AssignedRole>();
+                return null;
             }
 
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
@@ -507,6 +507,7 @@ namespace Certify.Core.Management.Access
             if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read role status role for [{id}] without being in required role.", contextUserId, id);
+                return null;
             }
 
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
@@ -590,7 +591,7 @@ namespace Certify.Core.Management.Access
             if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to list assigned access tokens without being in required role.", contextUserId);
-                return [];
+                return null;
             }
 
             return await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
