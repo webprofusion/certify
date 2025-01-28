@@ -19,6 +19,7 @@ namespace Certify.Models.Hub
         public const string GetManagedItem = "GetManagedItem";
         public const string GetManagedItemLog = "GetManagedItemLog";
         public const string GetManagedItemRenewalPreview = "GetManagedItemRenewalPreview";
+        public const string ExportCertificate = "ExportCertificate";
 
         public const string UpdateManagedItem = "UpdateManagedItem";
         public const string RemoveManagedItem = "RemoveManagedItem";

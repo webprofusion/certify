@@ -37,18 +37,18 @@ namespace Certify.Server.Api.Public.Controllers
         }
 
         /// <summary>
-        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers)
+        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers).
+        /// 
         /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="managedCertId"></param>
-        /// <param name="format"></param>
-        /// <param name="mode"></param>
+        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
+        /// <param name="managedCertId">Id of managed cert to fetch</param>
+        /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key </param>
         /// <returns>The certificate file in the chosen format</returns>
         [HttpGet]
-        [Route("{instanceId}/{managedCertId}/download/{format?}")]
+        [Route("{instanceId}/download/{managedCertId}/{format?}")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(FileContentResult), 200)]
-        public async Task<IActionResult> Download(string instanceId, string managedCertId, string format, string? mode = null)
+        public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
         {
             var accessPermitted = false;
 
@@ -77,7 +77,7 @@ namespace Certify.Server.Api.Public.Controllers
                     return Problem(detail: "X-Client-ID or X-Client-Secret HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
                 }
 
-                var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret, TokenType = "Simple" }, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
+                var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret }, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
 
                 if (accessPermittedResult.IsSuccess)
                 {
@@ -100,12 +100,7 @@ namespace Certify.Server.Api.Public.Controllers
                 format = "pfx";
             }
 
-            if (mode == null)
-            {
-                mode = "fullchain";
-            }
-
-            // TODO: certify manager to do all the cert conversion work, server may be on another machine
+            // fetch managed cert info an check if we have a cert available and if any of our caching headers are applicable
             var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
             if (managedCert == null)
@@ -134,14 +129,23 @@ namespace Certify.Server.Api.Public.Controllers
                 return StatusCode((int)HttpStatusCode.NotModified);
             }
 
-            var content = await System.IO.File.ReadAllBytesAsync(managedCert.CertificatePath);
+            // perform the export from the instance holding the cert
+            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, format, CurrentAuthContext);
 
-            if (!string.IsNullOrEmpty(managedCert.CertificateThumbprintHash))
+            //return the cert or cert component as a file
+            if (exportResult.IsSuccess && exportResult.Result != null)
             {
-                Response.Headers.Append("ETag", managedCert.CertificateThumbprintHash.ToLowerInvariant());
-            }
+                if (!string.IsNullOrEmpty(managedCert.CertificateThumbprintHash))
+                {
+                    Response.Headers.Append("ETag", managedCert.CertificateThumbprintHash.ToLowerInvariant());
+                }
 
-            return new FileContentResult(content, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
+                return new FileContentResult(exportResult.Result, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
+            }
+            else
+            {
+                return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.BadRequest);
+            }
         }
 
         /// <summary>
@@ -235,7 +239,7 @@ namespace Certify.Server.Api.Public.Controllers
         /// <param name="managedCertId">managed item</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("settings/{instanceId}/{managedCertId}")]
+        [Route("{instanceId}/settings/{managedCertId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
         public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
@@ -251,7 +255,7 @@ namespace Certify.Server.Api.Public.Controllers
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("settings/{instanceId}/update")]
+        [Route("/{instanceId}/settings/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)
