@@ -1,8 +1,8 @@
-using Certify.Config;
-using Certify.Models.Hub;
+﻿using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Microsoft.AspNetCore.Mvc;
