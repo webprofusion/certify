@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using Certify.Client;
-using Certify.Models.Hub;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Server.Api.Public.SignalR.ManagementHub;
@@ -95,6 +95,27 @@ namespace Certify.Server.Api.Public.Services
                 };
 
             return await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.GetManagedItem);
+        }
+
+        /// <summary>
+        /// Fetch managed cert details from the target instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCertId"></param>
+        /// <param name="format"></param>
+        /// <param name="authContext"></param>
+        /// <returns></returns>
+        public async Task<ActionResult<byte[]?>> ExportCertificate(string instanceId, string managedCertId, string format, AuthContext authContext)
+        {
+            // get managed cert via local api or via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("managedCertId", managedCertId),
+                    new("format", format)
+                };
+
+            return await PerformInstanceCommandTaskWithResult<ActionResult<byte[]?>>(instanceId, args, ManagementHubCommands.ExportCertificate);
         }
 
         /// <summary>

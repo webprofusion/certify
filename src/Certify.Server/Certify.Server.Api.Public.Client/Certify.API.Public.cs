@@ -1474,22 +1474,28 @@ namespace Certify.API.Public
         }
 
         /// <summary>
-        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers)
+        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers).
         /// </summary>
+        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
+        /// <param name="managedCertId">Id of managed cert to fetch</param>
+        /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format, string mode)
+        public virtual System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format)
         {
-            return DownloadAsync(instanceId, managedCertId, format, mode, System.Threading.CancellationToken.None);
+            return DownloadAsync(instanceId, managedCertId, format, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <summary>
-        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers)
+        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers).
         /// </summary>
+        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
+        /// <param name="managedCertId">Id of managed cert to fetch</param>
+        /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format, string mode, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format, System.Threading.CancellationToken cancellationToken)
         {
             if (instanceId == null)
                 throw new System.ArgumentNullException("instanceId");
@@ -1511,19 +1517,13 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/{instanceId}/{managedCertId}/download/{format}"
+                    // Operation Path: "api/v1/certificate/{instanceId}/download/{managedCertId}/{format}"
                     urlBuilder_.Append("api/v1/certificate/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append('/');
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
                     urlBuilder_.Append("/download/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append('/');
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(format, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append('?');
-                    if (mode != null)
-                    {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("mode")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(mode, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                    }
-                    urlBuilder_.Length--;
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -1896,10 +1896,10 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/settings/{instanceId}/{managedCertId}"
-                    urlBuilder_.Append("api/v1/certificate/settings/");
+                    // Operation Path: "api/v1/certificate/{instanceId}/settings/{managedCertId}"
+                    urlBuilder_.Append("api/v1/certificate/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append('/');
+                    urlBuilder_.Append("/settings/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
@@ -1928,6 +1928,99 @@ namespace Certify.API.Public
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ManagedCertificate>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Remove Managed Certificate [Generated]
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
+        {
+            return RemoveManagedCertificateAsync(instanceId, managedCertId, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Remove Managed Certificate [Generated]
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
+        {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
+            if (managedCertId == null)
+                throw new System.ArgumentNullException("managedCertId");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/v1/certificate/{instanceId}/settings/{managedCertId}"
+                    urlBuilder_.Append("api/v1/certificate/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/settings/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1990,10 +2083,9 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/settings/{instanceId}/update"
-                    urlBuilder_.Append("api/v1/certificate/settings/");
+                    // Operation Path: "{instanceId}/settings/update"
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append("/update");
+                    urlBuilder_.Append("/settings/update");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -2298,99 +2390,6 @@ namespace Certify.API.Public
                         if (status_ == 200)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<StatusMessage>>(response_, headers_, cancellationToken).ConfigureAwait(false);
-                            if (objectResponse_.Object == null)
-                            {
-                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
-                            }
-                            return objectResponse_.Object;
-                        }
-                        else
-                        {
-                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
-                        }
-                    }
-                    finally
-                    {
-                        if (disposeResponse_)
-                            response_.Dispose();
-                    }
-                }
-            }
-            finally
-            {
-                if (disposeClient_)
-                    client_.Dispose();
-            }
-        }
-
-        /// <summary>
-        /// Remove Managed Certificate [Generated]
-        /// </summary>
-        /// <returns>OK</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
-        {
-            return RemoveManagedCertificateAsync(instanceId, managedCertId, System.Threading.CancellationToken.None);
-        }
-
-        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove Managed Certificate [Generated]
-        /// </summary>
-        /// <returns>OK</returns>
-        /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
-        {
-            if (instanceId == null)
-                throw new System.ArgumentNullException("instanceId");
-
-            if (managedCertId == null)
-                throw new System.ArgumentNullException("managedCertId");
-
-            var client_ = _httpClient;
-            var disposeClient_ = false;
-            try
-            {
-                using (var request_ = new System.Net.Http.HttpRequestMessage())
-                {
-                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
-                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain"));
-
-                    var urlBuilder_ = new System.Text.StringBuilder();
-                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/certificate/{instanceId}/settings/{managedCertId}"
-                    urlBuilder_.Append("api/v1/certificate/");
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
-                    urlBuilder_.Append("/settings/");
-                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(managedCertId, System.Globalization.CultureInfo.InvariantCulture)));
-
-                    PrepareRequest(client_, request_, urlBuilder_);
-
-                    var url_ = urlBuilder_.ToString();
-                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
-
-                    PrepareRequest(client_, request_, url_);
-
-                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                    var disposeResponse_ = true;
-                    try
-                    {
-                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
-                        foreach (var item_ in response_.Headers)
-                            headers_[item_.Key] = item_.Value;
-                        if (response_.Content != null && response_.Content.Headers != null)
-                        {
-                            foreach (var item_ in response_.Content.Headers)
-                                headers_[item_.Key] = item_.Value;
-                        }
-
-                        ProcessResponse(client_, response_);
-
-                        var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
-                        {
-                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);

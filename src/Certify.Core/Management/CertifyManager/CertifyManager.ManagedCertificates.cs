@@ -2,14 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Models.Hub;
 using Certify.Models;
+using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
-using Certify.Models.Config;
+using Certify.Shared.Core.Utils.PKI;
 
 namespace Certify.Management
 {
@@ -529,6 +531,87 @@ namespace Certify.Management
         {
             var serverProvider = GetTargetServerProvider(item);
             return await new PreviewManager().GeneratePreview(item, serverProvider, this, _credentialsManager);
+        }
+
+        /// <summary>
+        /// Prepare an export of a managed certificate in the given format (if certificate present)
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public async Task<ActionResult<byte[]>> ExportCertificate(string managedCertId, string format)
+        {
+            var item = await GetManagedCertificate(managedCertId);
+
+            if (string.IsNullOrEmpty(item?.CertificatePath) || !File.Exists(item?.CertificatePath))
+            {
+                return new ActionResult<byte[]>("Source certificate file is not present. Export cannot continue.", false);
+            }
+
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                format = "pfx";
+            }
+
+            try
+            {
+                var pfxData = File.ReadAllBytes(item.CertificatePath);
+
+                var certPwd = "";
+
+                // if credential used for private key, check if we can decrypt that (unless we exporting PFX which is just a file copy)
+                if (!string.IsNullOrWhiteSpace(item.CertificatePasswordCredentialId) && format != "pfx")
+                {
+                    var cred = await GetCredentialsManager().GetUnlockedCredentialsDictionary(item.CertificatePasswordCredentialId);
+                    if (cred != null)
+                    {
+                        certPwd = cred["password"];
+                    }
+                    else
+                    {
+                        return new ActionResult<byte[]>($"Export - the credentials for this export could not be unlocked or were not accessible {item.CertificatePasswordCredentialId}.", false);
+                    }
+                }
+
+                byte[] result = [];
+
+                if (format == "pfx")
+                {
+                    result = pfxData;
+                }
+                else if (format == "pem_key")
+                {
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey);
+                }
+                else if (format == "pem_fullchain")
+                {
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates);
+                }
+                else if (format == "pem_fullchain_key")
+                {
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates);
+                }
+                else if (format == "pem_fullchain_root")
+                {
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate);
+                }
+                else if (format == "pem_fullchain_root_key")
+                {
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate);
+                }
+
+                if (result.Length == 0)
+                {
+                    return new ActionResult<byte[]>($"Export - no files where selected for export or export could not be applied for source certificate.", false);
+                }
+                else
+                {
+                    return new ActionResult<byte[]> { Result = result, IsSuccess = true };
+                }
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult<byte[]>($"Export - {exp}", false);
+            }
         }
 
         public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)

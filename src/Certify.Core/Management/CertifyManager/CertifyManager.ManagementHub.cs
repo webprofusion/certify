@@ -142,6 +142,13 @@ namespace Certify.Management
 
                 val = await GeneratePreview(managedCert);
             }
+            else if (arg.CommandType == ManagementHubCommands.ExportCertificate)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
+                var format = args.FirstOrDefault(a => a.Key == "format");
+                val = await ExportCertificate(managedCertIdArg.Value, format.Value);
+            }
             else if (arg.CommandType == ManagementHubCommands.UpdateManagedItem)
             {
                 // update a single managed item 
