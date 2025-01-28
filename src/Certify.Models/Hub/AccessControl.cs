@@ -21,7 +21,6 @@ namespace Certify.Models.Hub
     /// </summary>
     public class SecurityPrinciple : ConfigurationStoreItem
     {
-
         public string? Username { get; set; }
         public string? Password { get; set; }
         public string? Email { get; set; }
@@ -111,7 +110,7 @@ namespace Certify.Models.Hub
     }
     public class AccessToken : ConfigurationStoreItem
     {
-        public string TokenType { get; set; } = default!;
+        public string? TokenType { get; set; } = default!;
         public string Secret { get; set; } = default!;
         public string ClientId { get; set; } = default!;
 

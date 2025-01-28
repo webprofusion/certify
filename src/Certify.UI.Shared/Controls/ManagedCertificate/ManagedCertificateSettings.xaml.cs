@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -120,7 +120,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     {
                         // opted not to save
                         return false;
-                    };
+                    }
                 }
 
                 //create/update managed item

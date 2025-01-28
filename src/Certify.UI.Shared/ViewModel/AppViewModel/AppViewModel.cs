@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -110,7 +110,7 @@ namespace Certify.UI.ViewModel
                                 foreach (var item in items.ToList())
                                 {
                                     ProgressResults.Remove(item);
-                                };
+                                }
                             });
                         }
                     }

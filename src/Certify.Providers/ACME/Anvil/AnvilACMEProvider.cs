@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -1434,7 +1434,7 @@ namespace Certify.Providers.ACME.Anvil
                 log.Warning($"Order context was not cached: {orderId}");
                 // didn't have cached info
                 orderContext = _acme.Order(new Uri(orderId));
-            };
+            }
 
             // check order status, if it's not 'ready' then try a few more times before giving up
             var order = await orderContext.Resource();

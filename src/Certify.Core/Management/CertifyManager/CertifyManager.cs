@@ -9,8 +9,6 @@ using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Datastore.SQLite;
 using Certify.Models;
-using Certify.Models.Config;
-using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;

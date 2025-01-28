@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using Certify.Models.Hub;
+using System.Collections.Concurrent;
 using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 
 namespace Certify.Server.Api.Public.SignalR.ManagementHub
@@ -145,7 +145,7 @@ namespace Certify.Server.Api.Public.SignalR.ManagementHub
                 attempts--;
                 await Task.Delay(100);
                 _logger.LogInformation("Still waiting for command result {commandId}..", commandId);
-            };
+            }
 
             _awaitedCommandResults.Remove(commandId, out var cmd);
 
