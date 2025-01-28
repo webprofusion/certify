@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,12 +17,12 @@ namespace Certify.Management
             if (await IsServerTypeAvailable(StandardServerTypes.IIS))
             {
                 list.Add(StandardServerTypes.IIS.ToString());
-            };
+            }
 
             if (await IsServerTypeAvailable(StandardServerTypes.Nginx))
             {
                 list.Add(StandardServerTypes.Nginx.ToString());
-            };
+            }
             return list;
         }
 
