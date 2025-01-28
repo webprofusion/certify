@@ -1,5 +1,4 @@
 ﻿using Certify.Management;
-using Certify.Models.Config;
 using Certify.Models.Hub;
 using Microsoft.AspNetCore.Mvc;
 

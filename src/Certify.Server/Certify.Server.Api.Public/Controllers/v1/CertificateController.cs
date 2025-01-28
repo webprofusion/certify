@@ -255,7 +255,7 @@ namespace Certify.Server.Api.Public.Controllers
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
         [HttpPost]
-        [Route("/{instanceId}/settings/update")]
+        [Route("{instanceId}/settings/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)

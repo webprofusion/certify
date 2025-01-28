@@ -2083,7 +2083,8 @@ namespace Certify.API.Public
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "{instanceId}/settings/update"
+                    // Operation Path: "api/v1/certificate/{instanceId}/settings/update"
+                    urlBuilder_.Append("api/v1/certificate/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
                     urlBuilder_.Append("/settings/update");
 

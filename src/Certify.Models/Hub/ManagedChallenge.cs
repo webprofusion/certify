@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Certify.Models.Hub
+﻿namespace Certify.Models.Hub
 {
     /// <summary>
     /// Configuration for a managed challenge, such as a DNS challenge for a specific domain/zone

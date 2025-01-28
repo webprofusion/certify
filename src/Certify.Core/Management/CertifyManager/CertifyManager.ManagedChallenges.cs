@@ -7,7 +7,6 @@ using Certify.Core.Management.Challenges;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
-using Serilog;
 
 namespace Certify.Management
 {
