@@ -55,7 +55,7 @@ namespace SourceGenerator
                 var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
                 var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
-                if (context.Compilation.AssemblyName.EndsWith("Api.Public") && config.PublicAPIController != null)
+                if (context.Compilation.AssemblyName.EndsWith("Hub.Api") && config.PublicAPIController != null)
                 {
                     ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamDecl, apiParamCall);
                 }
@@ -100,7 +100,7 @@ namespace SourceGenerator
             var publicApiSrc = $@"
 
             using Certify.Client;
-            using Certify.Server.Api.Public.Controllers;
+            using Certify.Server.Hub.Api.Controllers;
             using Microsoft.AspNetCore.Authentication.JwtBearer;
             using Microsoft.AspNetCore.Authorization;
             using System.Collections.Generic;
@@ -112,7 +112,7 @@ namespace SourceGenerator
             using Certify.Models.Hub;
 
 
-            namespace Certify.Server.Api.Public.Controllers
+            namespace Certify.Server.Hub.Api.Controllers
             {{
                 public partial class {config.PublicAPIController}Controller
                 {{
@@ -174,7 +174,7 @@ namespace SourceGenerator
                 using Certify.Models.Reporting;
                 using Microsoft.AspNetCore.SignalR;
 
-                namespace Certify.Server.Api.Public.Services
+                namespace Certify.Server.Hub.Api.Services
                 {{
                     public partial class ManagementAPI
                     {{

@@ -31,6 +31,6 @@
         <Folder Include="Properties\" />
     </ItemGroup>
     <ItemGroup>
-        <InternalsVisibleTo Include="Certify.Server.Api.Public.Tests" />
+        <InternalsVisibleTo Include="Certify.Server.Hub.Api.Tests" />
     </ItemGroup>
 </Project>
