@@ -39,14 +39,14 @@ namespace Certify.Management
 
                 if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true)
                 {
-                    CoreAppSettings.Current.IsManagementHub = true;
+                    CoreAppSettings.Current.IsManagementHubService = true;
                 }
 
                 SettingsManager.SaveAppSettings();
 
                 var accessControl = await GetCurrentAccessControl();
 
-                if (CoreAppSettings.Current.IsManagementHub)
+                if (CoreAppSettings.Current.IsManagementHubService)
                 {
                     if (await accessControl.IsInitialized() == false)
                     {
