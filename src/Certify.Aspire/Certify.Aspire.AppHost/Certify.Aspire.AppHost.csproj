@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Api.Public\Certify.Server.Api.Public.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj" />
         <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
     </ItemGroup>
 

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+
+        <IsPackable>false</IsPackable>
+
+    </PropertyGroup>
+
+
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.10" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+        <PackageReference Include="coverlet.collector" Version="6.0.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Certify.Server.Hub.Api.Client\Certify.Server.Hub.Api.Client.csproj" />
+        <ProjectReference Include="..\Certify.Server.Hub.Api.Public\Certify.Server.Hub.Api.csproj" />
+        <ProjectReference Include="..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
+    </ItemGroup>
+
+</Project>

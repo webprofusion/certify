@@ -69,7 +69,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Providers.ACME.Anvi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.ACME.Anvil", "..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj", "{443202E1-B6E5-4625-BC3E-B3CB54CF4055}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Server.Api.Public", "Certify.Server\Certify.Server.Api.Public\Certify.Server.Api.Public.csproj", "{2DB50C13-7535-4D01-8EA5-1839F1472D7B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Certify.Server.Hub.Api", "Certify.Server\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj", "{2DB50C13-7535-4D01-8EA5-1839F1472D7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
