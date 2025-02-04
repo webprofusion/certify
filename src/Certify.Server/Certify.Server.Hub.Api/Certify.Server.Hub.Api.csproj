@@ -28,6 +28,7 @@
         <ProjectReference Include="..\..\..\..\certify\src\Certify.Client\Certify.Client.csproj" />
         <ProjectReference Include="..\..\..\..\certify\src\Certify.Shared\Certify.Shared.Core.csproj" />
         <ProjectReference Include="..\..\Certify.Aspire\Certify.Aspire.ServiceDefaults\Certify.Aspire.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
 
     </ItemGroup>
 </Project>
