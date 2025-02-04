@@ -38,6 +38,11 @@ namespace Certify.Management
             return new ActionStep("Updated Management Hub", "OK", false);
         }
 
+        public void SetDirectManagementClient(IManagementServerClient client)
+        {
+            _managementServerClient = client;
+        }
+
         private async Task EnsureMgmtHubConnection()
         {
             // connect/reconnect to management hub if enabled
