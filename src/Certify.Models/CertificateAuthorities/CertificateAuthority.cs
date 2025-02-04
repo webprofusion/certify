@@ -110,7 +110,7 @@ namespace Certify.Models
 
         public string? Id { get; set; }
         public string APIType { get; set; } = CertAuthorityAPIType.ACME_V2.ToString();
-        public List<string> SupportedFeatures { get; set; } = new();
+        public List<string> SupportedFeatures { get; set; } = [];
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string WebsiteUrl { get; set; } = string.Empty;
@@ -132,21 +132,21 @@ namespace Certify.Models
         public bool AllowInternalHostnames { get; set; }
         public bool SupportsCachedValidations { get; set; } = true;
         public string EabInstructions { get; set; } = string.Empty;
-        public List<string> SupportedKeyTypes { get; set; } = new();
+        public List<string> SupportedKeyTypes { get; set; } = [];
 
         /// <summary>
         /// If set, lists intermediate cert for this CA which should be disabled or removed
         /// </summary>
-        public List<string> DisabledIntermediates { get; set; } = new();
+        public List<string> DisabledIntermediates { get; set; } = [];
 
         /// <summary>
         /// Optional list of Trusted Root certificates to install for chain building and verification
         /// </summary>
-        public Dictionary<string, string> TrustedRoots { get; set; } = new();
+        public Dictionary<string, string> TrustedRoots { get; set; } = [];
 
         /// <summary>
         /// Optional list of Intermediate certificates to install for chain building and verification
         /// </summary>
-        public Dictionary<string, string> Intermediates { get; set; } = new();
+        public Dictionary<string, string> Intermediates { get; set; } = [];
     }
 }
