@@ -94,6 +94,7 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
 
+        private System.Timers.Timer _initTimer;
         private System.Timers.Timer _heartbeatTimer;
         private System.Timers.Timer _frequentTimer;
         private System.Timers.Timer _hourlyTimer;
@@ -197,8 +198,6 @@ namespace Certify.Management
                 GenerateDemoItems();
             }
 #endif
-
-            await EnsureMgmtHubConnection();
         }
 
         /// <summary>
@@ -206,6 +205,19 @@ namespace Certify.Management
         /// </summary>
         private void SetupJobs()
         {
+            // 1 shot init of async startup dependencyies (e.g. initial connection to mgmt hub instance)
+            _initTimer = new System.Timers.Timer(2 * 1000); // 2 seconds
+            _initTimer.Elapsed += async (s, e) =>
+            {
+                _initTimer.Stop();
+                await EnsureMgmtHubConnection();
+            };
+            _initTimer.Start();
+
+            _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every n seconds
+            _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
+            _heartbeatTimer.Start();
+
             // n second job timer (reporting etc)
             _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every n seconds
             _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;

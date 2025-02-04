@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -14,7 +14,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private ManagementServerClient _managementServerClient;
+        private IManagementServerClient _managementServerClient;
         private string _managementServerConnectionId = string.Empty;
 
         public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey)
@@ -63,6 +63,18 @@ namespace Certify.Management
             _managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
         }
 
+        public ManagedInstanceInfo GetManagedInstanceInfo()
+        {
+            return new ManagedInstanceInfo
+            {
+                InstanceId = InstanceId,
+                Title = $"{Environment.MachineName}",
+                OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
+                OSVersion = EnvironmentUtil.GetFriendlyOSName(),
+                ClientVersion = Util.GetAppVersion().ToString(),
+                ClientName = ConfigResources.AppName
+            };
+        }
         private async Task StartManagementHubConnection(string hubUri)
         {
 
@@ -70,19 +82,11 @@ namespace Certify.Management
 
             var appVersion = Util.GetAppVersion().ToString();
 
-            var instanceInfo = new ManagedInstanceInfo
-            {
-                InstanceId = $"{this.InstanceId}",
-                Title = $"{Environment.MachineName}",
-                OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
-                OSVersion = EnvironmentUtil.GetFriendlyOSName(),
-                ClientVersion = appVersion,
-                ClientName = ConfigResources.AppName
-            };
+            var instanceInfo = GetManagedInstanceInfo();
 
             if (_managementServerClient != null)
             {
-                _managementServerClient.OnGetCommandResult -= _managementServerClient_OnGetCommandResult;
+                _managementServerClient.OnGetCommandResult -= PerformDirectHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
             }
 
@@ -92,7 +96,7 @@ namespace Certify.Management
             {
                 await _managementServerClient.ConnectAsync();
 
-                _managementServerClient.OnGetCommandResult += _managementServerClient_OnGetCommandResult;
+                _managementServerClient.OnGetCommandResult += PerformDirectHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
             }
             catch (Exception ex)
@@ -103,7 +107,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<InstanceCommandResult> _managementServerClient_OnGetCommandResult(InstanceCommandRequest arg)
+        public async Task<InstanceCommandResult> PerformDirectHubCommandWithResult(InstanceCommandRequest arg)
         {
             object val = null;
 

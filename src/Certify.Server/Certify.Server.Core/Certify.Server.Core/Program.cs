@@ -1,5 +1,7 @@
-
+﻿
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("appsettings-core.json", optional: false, reloadOnChange: true);
 
 builder.AddServiceDefaults();
 

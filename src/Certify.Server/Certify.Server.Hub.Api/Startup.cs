@@ -173,13 +173,8 @@ namespace Certify.Server.Hub.Api
 
             services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
 
-            services.AddTransient(s =>
-            {
-                var p = s.GetService(typeof(IInstanceManagementStateProvider)) as IInstanceManagementStateProvider;
-                var h = s.GetService(typeof(IHubContext<InstanceManagementHub, IInstanceManagementHub>)) as IHubContext<InstanceManagementHub, IInstanceManagementHub>;
-                var c = s.GetService(typeof(ICertifyInternalApiClient)) as ICertifyInternalApiClient;
-                return new ManagementAPI(p, h, c);
-            });
+            // we create a new instance of the management API for each request
+            services.AddTransient<ManagementAPI>();
 
             services.AddHostedService<ManagementWorker>();
             return results;

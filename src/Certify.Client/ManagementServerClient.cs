@@ -9,7 +9,7 @@ namespace Certify.Client
     /// <summary>
     /// Implements hub communication with a central management server
     /// </summary>
-    public class ManagementServerClient
+    public class ManagementServerClient : IManagementServerClient
     {
 
         public event Action OnConnectionReconnecting;
