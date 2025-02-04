@@ -17,7 +17,7 @@ namespace Certify.Server.Hub.Api.Services
     {
         IInstanceManagementStateProvider _mgmtStateProvider;
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
-        ICertifyInternalApiClient _backendAPIClient;
+        Certify.Management.ICertifyManager _certifyManager;
 
         /// <summary>
         /// Constructor for Management Hub API
@@ -25,11 +25,17 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="mgmtStateProvider"></param>
         /// <param name="mgmtHubContext"></param>
         /// <param name="backendAPIClient"></param>
-        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, ICertifyInternalApiClient backendAPIClient)
+        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
         {
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
-            _backendAPIClient = backendAPIClient;
+        }
+
+        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager)
+        {
+            _mgmtStateProvider = mgmtStateProvider;
+            _mgmtHubContext = mgmtHubContext;
+            _certifyManager = certifyManager;
         }
 
         private async Task<InstanceCommandResult?> GetCommandResult(string instanceId, InstanceCommandRequest cmd)
@@ -64,9 +70,19 @@ namespace Certify.Server.Hub.Api.Services
 
         private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType)
         {
+            InstanceCommandResult result;
             var cmd = new InstanceCommandRequest(commandType, args);
 
-            var result = await GetCommandResult(instanceId, cmd);
+            if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
+            {
+                // get command result directly from in-process instance
+                result = await _certifyManager.PerformDirectHubCommandWithResult(cmd);
+            }
+            else
+            {
+                // get command result via SignalR
+                result = await GetCommandResult(instanceId, cmd);
+            }
 
             if (result?.Value != null)
             {
