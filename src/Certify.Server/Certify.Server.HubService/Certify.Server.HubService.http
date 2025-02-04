@@ -1,0 +1,6 @@
+@Certify.Server.HubService_HostAddress = https://localhost:7187
+
+GET {{Certify.Server.HubService_HostAddress}}/api/v1/health/
+Accept: application/json
+
+###
