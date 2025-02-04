@@ -132,6 +132,8 @@ namespace Certify.Server.Hub.Api.Controllers
 
             hubInfo.InstanceId = hubprefs.InstanceId;
 
+            _mgmtStateProvider.SetManagementHubInstanceId(hubInfo.InstanceId);
+
             var versionInfo = await _client.GetAppVersion();
 
             hubInfo.Version = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };

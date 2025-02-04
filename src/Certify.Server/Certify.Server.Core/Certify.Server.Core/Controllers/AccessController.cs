@@ -18,14 +18,6 @@ namespace Certify.Service.Controllers
             _dataProtectionProvider = dataProtectionProvider;
         }
 
-        private string GetContextUserId()
-        {
-            // TODO: sign passed value provided by public API using public APIs access token
-            var contextUserId = Request.Headers["X-Context-User-Id"];
-
-            return contextUserId;
-        }
-
         [HttpPost, Route("securityprinciple")]
         public async Task<Models.Config.ActionResult> AddSecurityPrinciple([FromBody] SecurityPrinciple principle)
         {
@@ -79,7 +71,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("securityprinciples")]
-        public async Task<List<SecurityPrinciple>> GetSecurityPrinciples()
+        public async Task<ICollection<SecurityPrinciple>> GetSecurityPrinciples()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
@@ -95,7 +87,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("roles")]
-        public async Task<List<Role>> GetRoles()
+        public async Task<ICollection<Role>> GetRoles()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
             return await accessControl.GetRoles(GetContextUserId());
@@ -118,7 +110,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("assignedtoken/list/")]
-        public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens()
+        public async Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
@@ -126,7 +118,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("assignedtoken/")]
-        public async Task<Models.Config.ActionResult> AddAAssignedccessToken([FromBody] AssignedAccessToken token)
+        public async Task<Models.Config.ActionResult> AddAssignedccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
             var addResultOk = await accessControl.AddAssignedAccessToken(GetContextUserId(), token);
@@ -139,7 +131,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("securityprinciple/{id}/assignedroles")]
-        public async Task<List<AssignedRole>> GetSecurityPrincipleAssignedRoles(string id)
+        public async Task<ICollection<AssignedRole>> GetSecurityPrincipleAssignedRoles(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 

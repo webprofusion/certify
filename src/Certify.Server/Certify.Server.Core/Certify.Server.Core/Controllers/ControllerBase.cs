@@ -47,5 +47,32 @@ namespace Certify.Service.Controllers
             Console.ForegroundColor = ConsoleColor.White;
 #endif
         }
+
+        Client.AuthContext _currentAuthContext = null;
+
+        /// <summary>
+        /// Set the current auth context for the current request, only used internally when invoking controller outside of an http request
+        /// </summary>
+        /// <param name="authContext"></param>
+        /// 
+        [NonAction]
+        public void SetCurrentAuthContext(Client.AuthContext authContext)
+        {
+            _currentAuthContext = authContext;
+        }
+
+        [NonAction]
+        public string GetContextUserId()
+        {
+            if (_currentAuthContext != null)
+            {
+                return _currentAuthContext.UserId;
+            }
+
+            // TODO: sign passed value provided by public API using public APIs access token
+            var contextUserId = Request?.Headers["X-Context-User-Id"];
+
+            return contextUserId;
+        }
     }
 }
