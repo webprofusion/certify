@@ -8,6 +8,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
     public interface IInstanceManagementStateProvider
     {
         public void Clear();
+        public void SetManagementHubInstanceId(string instanceId);
+        public string GetManagementHubInstanceId();
         public void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
         public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
         public string GetConnectionIdForInstance(string instanceId);
@@ -40,6 +42,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
         private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
         private ILogger<InstanceManagementStateProvider> _logger;
+        private string _mgmtHubInstanceId = string.Empty;
+
         public InstanceManagementStateProvider(ILogger<InstanceManagementStateProvider> logger)
         {
             _logger = logger;
@@ -54,6 +58,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             _awaitedCommandResults.Clear();
             _managedInstanceStatusSummary.Clear();
 
+        }
+
+        public void SetManagementHubInstanceId(string instanceId)
+        {
+            _mgmtHubInstanceId = instanceId;
+        }
+
+        public string GetManagementHubInstanceId()
+        {
+            return _mgmtHubInstanceId;
         }
 
         public List<ManagedInstanceInfo> GetConnectedInstances()
