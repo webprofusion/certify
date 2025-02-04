@@ -223,6 +223,14 @@ namespace Certify.Core.Management.Challenges
         public static async Task<List<ChallengeProviderDefinition>> GetChallengeAPIProviders()
         {
             var result = PluginManager.CurrentInstance.DnsProviderProviders.SelectMany(pp => pp.GetProviders(pp.GetType())).ToList();
+
+#if DEBUG
+            // output list of providers which require credentials plus list of potential stored credential parameters
+            foreach (var resultItem in result.Where(p => p.ProviderParameters.Any(p => p.IsCredential)).OrderBy(r => r.Title))
+            {
+                System.Diagnostics.Debug.WriteLine($"[{resultItem.Title}] ID: {resultItem.Id} {{{string.Join(",", resultItem.ProviderParameters.Where(p => p.IsCredential).Select(p => $"'{p.Key}','<{p.Name}>'"))}}}");
+            }
+#endif
             return await Task.FromResult(result);
         }
     }
