@@ -1,0 +1,35 @@
+{
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5028",
+      "CERTIFY_MANAGEMENT_HUB": "http://localhost:5028/api/internal/managementhub",
+      "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+    },
+    "https": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7187;http://localhost:5028",
+      "CERTIFY_MANAGEMENT_HUB": "https://localhost:7187/api/internal/managementhub",
+      "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+    },
+    "Container (.NET SDK)": {
+      "commandName": "SdkContainer",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "environmentVariables": {
+        "ASPNETCORE_HTTPS_PORTS": "8081",
+        "ASPNETCORE_HTTP_PORTS": "8080"
+      },
+      "publishAllPorts": true,
+      "useSSL": true
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
+}
