@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+        <ContainerRuntimeIdentifier>linux-x64</ContainerRuntimeIdentifier>
+        <EnableSdkContainerDebugging>True</EnableSdkContainerDebugging>
+        <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
+        <UserSecretsId>c6402661-abaa-463e-ab79-e40d979f8b77</UserSecretsId>
+        <DockerfileContext>..\..\..\..\certify-manager</DockerfileContext>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.1" />
+
+        <!-- included to prevent conflict with older versions in plugins-->
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ContainerPort Include="8081" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Certify.Aspire\Certify.Aspire.ServiceDefaults\Certify.Aspire.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
+        <ProjectReference Include="..\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj">
+            <PrivateAssets>all</PrivateAssets>
+        </ProjectReference>
+    </ItemGroup>
+
+</Project>
