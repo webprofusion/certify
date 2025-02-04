@@ -1,0 +1,11 @@
+[Unit]
+Description=Certify Core Service
+
+[Service]
+Type=notify
+ExecStart=/usr/sbin/certifytheweb
+WorkingDirectory=/opt/certifytheweb
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
