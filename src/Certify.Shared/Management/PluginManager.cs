@@ -7,6 +7,7 @@ using System.Reflection;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Extensions.Logging;
@@ -52,6 +53,16 @@ namespace Certify.Management
 
         private Models.Providers.ILog _log = null;
 
+        private IServiceProvider _services;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="serviceProvider"></param>
+        public PluginManager(IServiceProvider serviceProvider) : this()
+        {
+            _services = serviceProvider;
+        }
         public PluginManager()
         {
             var serilogLogger = new LoggerConfiguration()
@@ -124,9 +135,14 @@ namespace Certify.Management
 
                     if (pluginType != null)
                     {
-                        var obj = (T)Activator.CreateInstance(pluginType);
-
-                        return obj;
+                        if (_services == null)
+                        {
+                            return (T)Activator.CreateInstance(pluginType);
+                        }
+                        else
+                        {
+                            return (T)ActivatorUtilities.CreateInstance(_services, pluginType);
+                        }
                     }
                     else
                     {
