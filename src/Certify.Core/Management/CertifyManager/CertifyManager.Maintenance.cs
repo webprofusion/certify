@@ -90,7 +90,7 @@ namespace Certify.Management
             foreach (var r in assignedRoles)
             {
                 // add roles and policy assignments to store
-                await access.AddAssignedRole(adminSp.Id, r);
+                await access.AddAssignedRole(adminSp.Id, r, bypassIntegrityCheck: true);
             }
         }
 
@@ -109,7 +109,7 @@ namespace Certify.Management
 
             foreach (var action in actions)
             {
-                await access.AddResourceAction(adminSvcPrinciple, action);
+                await access.AddResourceAction(adminSvcPrinciple, action, bypassIntegrityCheck: true);
             }
 
             // setup policies with actions
@@ -128,7 +128,7 @@ namespace Certify.Management
             foreach (var r in roles)
             {
                 // add roles and policy assignments to store
-                await access.AddRole(adminSvcPrinciple, r);
+                await access.AddRole(adminSvcPrinciple, r, bypassIntegrityCheck: true);
             }
         }
 
