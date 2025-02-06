@@ -141,7 +141,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Update failed: API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
+                    return new ActionResult { IsSuccess = false, Message = $"Update failed [{result.StatusCode}] : check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
                 }
             }
             catch (Exception exp)
@@ -185,7 +185,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
+                    return new ActionResult { IsSuccess = false, Message = $"Cleanup failed [{result.StatusCode}] : check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
                 }
             }
             catch (Exception exp)
