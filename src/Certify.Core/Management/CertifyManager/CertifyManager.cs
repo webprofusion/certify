@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -100,14 +100,16 @@ namespace Certify.Management
         private System.Timers.Timer _hourlyTimer;
         private System.Timers.Timer _dailyTimer;
 
-        public CertifyManager() : this(true)
+        private IServiceProvider _injectedServiceProvider;
+        public CertifyManager(IServiceProvider injectedServiceProvider) : this()
         {
-
+            _injectedServiceProvider = injectedServiceProvider;
         }
 
-        public CertifyManager(bool useWindowsNativeFeatures = true)
+        public CertifyManager()
         {
-            _useWindowsNativeFeatures = useWindowsNativeFeatures;
+            // load setting here so that we know our instance ID etc early on. Other longer tasks are deferred until Init is called.
+            SettingsManager.LoadAppSettings();
         }
 
         public async Task Init()
@@ -116,13 +118,11 @@ namespace Certify.Management
 
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            SettingsManager.LoadAppSettings();
-
             InitLogging(_serverConfig);
 
             Util.SetSupportedTLSVersions();
 
-            _pluginManager = new PluginManager
+            _pluginManager = new PluginManager(_injectedServiceProvider)
             {
                 EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
             };
