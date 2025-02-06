@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -87,7 +87,7 @@ namespace Certify.Management
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
         Task<ActionStep> UpdateManagementHub(string url, string joiningKey);
-        Task<InstanceCommandResult> PerformDirectHubCommandWithResult(InstanceCommandRequest arg);
+        Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
 
         void SetDirectManagementClient(IManagementServerClient client);
         ManagedInstanceInfo GetManagedInstanceInfo();

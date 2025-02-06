@@ -91,7 +91,7 @@ namespace Certify.Management
 
             if (_managementServerClient != null)
             {
-                _managementServerClient.OnGetCommandResult -= PerformDirectHubCommandWithResult;
+                _managementServerClient.OnGetCommandResult -= PerformHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
             }
 
@@ -101,7 +101,7 @@ namespace Certify.Management
             {
                 await _managementServerClient.ConnectAsync();
 
-                _managementServerClient.OnGetCommandResult += PerformDirectHubCommandWithResult;
+                _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
             }
             catch (Exception ex)
@@ -112,7 +112,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<InstanceCommandResult> PerformDirectHubCommandWithResult(InstanceCommandRequest arg)
+        public async Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg)
         {
             object val = null;
 
