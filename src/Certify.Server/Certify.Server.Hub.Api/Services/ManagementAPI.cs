@@ -65,7 +65,16 @@ namespace Certify.Server.Hub.Api.Services
 
             _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
 
-            await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
+            if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
+            {
+                // get command result directly from in-process instance
+                await _certifyManager.PerformHubCommandWithResult(cmd);
+            }
+            else
+            {
+
+                await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
+            }
         }
 
         private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType)
@@ -76,7 +85,7 @@ namespace Certify.Server.Hub.Api.Services
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
                 // get command result directly from in-process instance
-                result = await _certifyManager.PerformDirectHubCommandWithResult(cmd);
+                result = await _certifyManager.PerformHubCommandWithResult(cmd);
             }
             else
             {
