@@ -10,7 +10,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.1" />
-        <PackageReference Include="Polly" Version="8.5.1" />
+        <PackageReference Include="Polly" Version="8.5.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.1" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
