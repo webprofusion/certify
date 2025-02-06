@@ -409,6 +409,7 @@ namespace Certify.Providers.DNS.Cloudflare
                 }
                 else
                 {
+                    _log?.Warning("{provider} Failed to fetching DNS Zones: {resultStatus}", nameof(DnsProviderCloudflare), result.StatusCode);
                     return new List<DnsZone>();
                 }
             }
@@ -428,7 +429,6 @@ namespace Certify.Providers.DNS.Cloudflare
             {
                 throw new ArgumentException(credentialError);
             }
-            ;
 
             _authKey = credentials.ContainsKey("authkey") ? credentials["authkey"] : null;
             _apiToken = credentials.ContainsKey("apitoken") ? credentials["apitoken"] : null;
