@@ -20,7 +20,7 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.1" />
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Polly" Version="8.5.1" />
+    <PackageReference Include="Polly" Version="8.5.2" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
   </ItemGroup>
   
