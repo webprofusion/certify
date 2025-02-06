@@ -381,10 +381,11 @@ namespace Certify.Management
             var serilogLog = new Serilog.LoggerConfiguration()
                .Enrich.FromLogContext()
                .MinimumLevel.ControlledBy(ManagedCertificateLog.LogLevelSwitchFromLogLevel(_loggingLevelSwitch))
+               .WriteTo.Console()
                .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger();
 
-            var msLogger = new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<ManagedCertificate>();
+            var msLogger = new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<CertifyManager>();
 
             _serviceLog = new Loggy(msLogger);
 
