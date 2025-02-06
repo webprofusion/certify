@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Management;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -7,6 +8,7 @@ using Certify.Server.HubService.Services;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,11 +41,11 @@ builder.Services.AddResponseCompression();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var certifyManager = new Certify.Management.CertifyManager();
-await certifyManager.Init();
+builder.Services.AddLogging(loggingBuilder =>
+        loggingBuilder.AddSerilog(dispose: true));
 
 // setup public/hub api
-builder.Services.AddSingleton<Certify.Management.ICertifyManager>(certifyManager);
+builder.Services.AddSingleton<Certify.Management.ICertifyManager, Certify.Management.CertifyManager>();
 
 builder.Services.AddTransient(typeof(ICertifyInternalApiClient), typeof(CertifyHubService));
 
@@ -114,7 +116,11 @@ if (statusHubContext == null)
 
 // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
 var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
-//UserInterfaceStatusHubReporting _statusReporting = new UserInterfaceStatusHubReporting();
+
+// wire up internal service to our hub
+
+var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
+await certifyManager.Init();
 
 var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
 certifyManager.SetDirectManagementClient(directServerClient);
