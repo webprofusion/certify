@@ -3,11 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Certify.Plugins
 {
     public class PluginProviderBase<TProviderInterface, TProviderDefinition> : IProviderPlugin<TProviderInterface, TProviderDefinition>
     {
+
+        public PluginProviderBase()
+        {
+        }
+
+        // optionally support dependency injection
+        public PluginProviderBase(IServiceProvider serviceProvider)
+        {
+            _services = serviceProvider;
+        }
+
+        private IServiceProvider? _services { get; }
 
         public TProviderInterface GetProvider(Type pluginType, string? id)
         {
@@ -26,7 +39,14 @@ namespace Certify.Plugins
                 {
                     if ((def as ProviderDefinition)?.Id?.ToLowerInvariant() == id)
                     {
-                        return (TProviderInterface)Activator.CreateInstance(t);
+                        if (_services == null)
+                        {
+                            return (TProviderInterface)Activator.CreateInstance(t);
+                        }
+                        else
+                        {
+                            return (TProviderInterface)ActivatorUtilities.CreateInstance(_services, t);
+                        }
                     }
                 }
             }
