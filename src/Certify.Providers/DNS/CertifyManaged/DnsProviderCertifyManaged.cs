@@ -200,6 +200,12 @@ namespace Certify.Providers.DNS.CertifyManaged
             _log = log;
             _parameters = parameters;
 
+            if (_credentials == null || _credentials.Count == 0)
+            {
+                _log.Error("Certify Managed Challenge DNS Provider could not be created: credentials missing or not set for managed challenge API.");
+                return false;
+            }
+
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
                 if (int.TryParse(parameters["propagationdelay"], out var customPropDelay))
@@ -218,6 +224,11 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
 
                 _client.BaseAddress = _apiBaseUri;
+            }
+            else
+            {
+                _log.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
+                return false;
             }
 
             return await Task.FromResult(true);
