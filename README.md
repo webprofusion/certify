@@ -9,8 +9,7 @@ Windows ACME Certificate Manager, powered by [Let's Encrypt](https://letsencrypt
 
 **Certify The Web is used by hundreds of thousands of organisations to manage millions of certificates each month** and is the perfect solution for administrators who want visibility of certificate management for their domains. Centralised dashboard status reporting is also available.
 
-![Stars](
-https://img.shields.io/github/stars/webprofusion/certify.svg)
+**If you use our app, spread the word and don't forget to Star us on GitHub!**
 
 ![Certify App Screenshot](docs/images/app-screenshot.png)
 
