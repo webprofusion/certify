@@ -128,15 +128,15 @@ namespace Certify.UI.ViewModel
         {
             get
             {
-                if (SelectedItem != null)
+                if (SelectedItem != null && _appViewModel?.StoredCredentials != null)
                 {
                     return new ObservableCollection<StoredCredential>(
-                  _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider)
-                  );
+                      _appViewModel.StoredCredentials?.Where(s => s.ProviderType == SelectedItem.ChallengeProvider)
+                      );
                 }
                 else
                 {
-                    return new ObservableCollection<StoredCredential>();
+                    return [];
                 }
             }
         }
