@@ -25,6 +25,6 @@
 
         public string? Title { get; set; } = string.Empty;
 
-        public string Type { get; set; } = "dns";
+        public string Type { get; set; } = CertIdentifierType.Dns;
     }
 }
