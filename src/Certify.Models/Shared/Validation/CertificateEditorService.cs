@@ -14,7 +14,8 @@ namespace Certify.Models.Shared.Validation
         PRIMARY_IDENTIFIER_TOOMANY,
         CHALLENGE_TYPE_INVALID,
         REQUIRED_NAME,
-        INVALID_HOSTNAME,
+        INVALID_IDENTIFIER_DNS,
+        INVALID_IDENTIFIER_IP,
         MIXED_WILDCARD_WITH_LABELS,
         REQUIRED_CHALLENGE_CONFIG_PARAM,
         SAN_LIMIT,
@@ -96,7 +97,7 @@ namespace Certify.Models.Shared.Validation
             }
 
             // requests with a primary domain need to set the primary domain in the request config
-            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true && d.Type == "dns");
+            var primaryDomain = item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain == true && d.Type == CertIdentifierType.Dns);
 
             if (primaryDomain != null)
             {
@@ -109,7 +110,7 @@ namespace Certify.Models.Shared.Validation
 
             //apply remaining selected domains as subject alternative names
             var sanList =
-                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == "dns" && dm.Domain != null)
+                item.DomainOptions.Where(dm => dm.IsSelected && dm.Type == CertIdentifierType.Dns && dm.Domain != null)
                 .Select(i => i.Domain ?? string.Empty)
                 .ToArray();
 
@@ -184,7 +185,7 @@ namespace Certify.Models.Shared.Validation
             }
         }
         /// <summary>
-        /// Add set of domains as domain options froma given string
+        /// Add set of domains as domain options from a given string
         /// </summary>
         /// <param name="domains"></param>
         /// <returns>return true if one or more items was a wildcard</returns>
@@ -275,7 +276,9 @@ namespace Certify.Models.Shared.Validation
 
                 var validateDomains = true;
 
-                if (item.RequestConfig.AuthorityTokens?.Any() == true)
+                var identifiers = item.GetCertificateIdentifiers();
+
+                if (identifiers.Count > 0 && !identifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns) == true)
                 {
                     validateDomains = false;
                 }
@@ -318,14 +321,14 @@ namespace Certify.Models.Shared.Validation
                     if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                     {
                         // validate hostnames
-                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == "dns" && d.Domain != null && (!d.Domain.Contains('.') || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
+                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == CertIdentifierType.Dns && d.Domain != null && (!d.Domain.Contains('.') || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
                         {
                             // one or more selected domains does not include a label separator (is an internal host name) or end in .local
 
                             return new ValidationResult(
                                 false,
                                 "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
-                                ValidationErrorCodes.INVALID_HOSTNAME.ToString()
+                                ValidationErrorCodes.INVALID_IDENTIFIER_DNS.ToString()
                             );
                         }
                     }
@@ -354,15 +357,15 @@ namespace Certify.Models.Shared.Validation
                     // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
                     // test.www.example.com can
                     var invalidLabels = new List<CertIdentifierItem>();
-                    var identifiers = item.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns);
+                    var dnsIdentifiers = item.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns);
 
-                    if (identifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                    if (dnsIdentifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
                     {
-                        foreach (var wildcard in identifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                        foreach (var wildcard in dnsIdentifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
                         {
                             var rootDomain = wildcard.Value.Replace("*.", "");
                             // add list of identifiers where label count exceeds root domain label count
-                            invalidLabels.AddRange(identifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith($".{rootDomain}", StringComparison.OrdinalIgnoreCase) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
+                            invalidLabels.AddRange(dnsIdentifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith($".{rootDomain}", StringComparison.OrdinalIgnoreCase) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
 
                             if (invalidLabels.Count > 0)
                             {
@@ -372,6 +375,21 @@ namespace Certify.Models.Shared.Validation
                                    ValidationErrorCodes.MIXED_WILDCARD_WITH_LABELS.ToString()
                                );
                             }
+                        }
+                    }
+                }
+
+                if (identifiers.Any(i => i.IdentifierType == CertIdentifierType.Ip))
+                {
+                    foreach (var identifier in identifiers.Where((i => i.IdentifierType == CertIdentifierType.Ip)))
+                    {
+                        if (!System.Net.IPAddress.TryParse(identifier.Value, out _))
+                        {
+                            return new ValidationResult(
+                                false,
+                                $"Invalid IP address: {identifier.Value}",
+                                ValidationErrorCodes.INVALID_IDENTIFIER_IP.ToString()
+                            );
                         }
                     }
                 }
