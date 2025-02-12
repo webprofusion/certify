@@ -18,12 +18,12 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Clone webprofusion/certify
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
       with:
         path: ./certify
 
     - name: Clone webprofusion/anvil
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
       with:
         repository: webprofusion/anvil
         ref: refs/heads/main
@@ -31,7 +31,7 @@ jobs:
 
     - name: Clone webprofusion/certify-plugins (development branch push)
       if: ${{ github.event_name == 'push' && (contains(github.ref_name, '_dev') || github.ref_name == 'development') }}
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/development    
@@ -39,7 +39,7 @@ jobs:
 
     - name: Clone webprofusion/certify-plugins (release branch push)
       if: ${{ github.event_name == 'push' && (contains(github.ref_name, '_rel') || github.ref_name == 'release') }}
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
       with:
         repository: webprofusion/certify-plugins
         ref: refs/heads/release    
@@ -47,14 +47,14 @@ jobs:
 
     - name: Clone webprofusion/certify-plugins (pull request)
       if: ${{ github.event_name == 'pull_request' }}
-      uses: actions/checkout@master
+      uses: actions/checkout@v4
       with:
         repository: webprofusion/certify-plugins
         ref: ${{ github.base_ref }}    
         path: ./certify-plugins
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@master
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
