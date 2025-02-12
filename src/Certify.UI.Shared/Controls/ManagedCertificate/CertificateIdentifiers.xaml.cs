@@ -124,6 +124,11 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (MessageBox.Show($"Remove {opt.Domain}?", "Confirm Domain Option Removal", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     ItemViewModel.SelectedItem.DomainOptions.Remove(opt);
+
+                    if (ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain == opt.Domain)
+                    {
+                        ItemViewModel.SelectedItem.RequestConfig.PrimaryDomain = null;
+                    }
                 }
             }
         }
