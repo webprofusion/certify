@@ -608,8 +608,8 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
 
-        [TestMethod, Description("Test for CertifyManager.AddAccount() when ImportedAccountURI is a blank value")]
-        public async Task TestCertifyManagerAddAccountMissingAccountUri()
+        [TestMethod, Description("Test for CertifyManager.AddAccount() should be able to specify custom account key without account URI")]
+        public async Task TestCertifyManagerAddAccountWithKeyMissingAccountUri()
         {
             // Setup account registration info
             var contactRegEmail = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com";
@@ -625,10 +625,10 @@ namespace Certify.Core.Tests.Unit
 
             // Attempt to add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
-            Assert.IsFalse(addAccountRes.IsSuccess, $"Expected account creation to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(addAccountRes.Message, "To import account details both the existing account URI and account key in PEM format are required. ", "Unexpected error message");
+            Assert.IsTrue(addAccountRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
+
             var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
-            Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
+            Assert.IsNotNull(accountDetails, $"Expected an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
 
         [TestMethod, Description("Test for CertifyManager.AddAccount() when ImportedAccountKey is a bad value")]
