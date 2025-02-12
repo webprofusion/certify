@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -715,27 +715,7 @@ namespace Certify.Providers.ACME.Anvil
             // prepare a list of all pending authorization we need to complete, or those we have already satisfied
             var authzList = new List<PendingAuthorization>();
 
-            //if no alternative domain specified, use the primary domain as the subject
-            var domainOrders = new List<string>();
-
             var config = managedCertificate.RequestConfig;
-
-            if (!string.IsNullOrEmpty(config.PrimaryDomain))
-            {
-                // order all of the distinct domains in the config (primary + SAN).
-                domainOrders.Add(_idnMapping.GetAscii(config.PrimaryDomain));
-            }
-
-            if (config.SubjectAlternativeNames != null)
-            {
-                foreach (var s in config.SubjectAlternativeNames)
-                {
-                    if (!domainOrders.Contains(s))
-                    {
-                        domainOrders.Add(_idnMapping.GetAscii(s));
-                    }
-                }
-            }
 
             var certificateIdentifiers = config.GetCertificateIdentifiers()
                 .Select(i => new Identifier

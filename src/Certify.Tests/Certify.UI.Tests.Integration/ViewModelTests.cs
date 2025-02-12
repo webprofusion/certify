@@ -19,7 +19,7 @@ namespace Certify.UI.Tests.Integration
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                    new DomainOption{ Domain="test1.test.com", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= "dns"}
+                    new DomainOption{ Domain="test1.test.com", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= CertIdentifierType.Dns}
                 }
             };
 
@@ -31,7 +31,7 @@ namespace Certify.UI.Tests.Integration
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                    new DomainOption{ Domain="test1.test.com", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= "dns"}
+                    new DomainOption{ Domain="test1.test.com", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= CertIdentifierType.Dns}
                 }
             };
 
@@ -53,20 +53,20 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
 
             // ensure item with no selected identifiers (but present) is invalid
             model.SelectedItem = new ManagedCertificate
             {
                 DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
-                        new DomainOption{ Domain="www.test.com", IsPrimaryDomain=false, IsSelected=false }
+                        new DomainOption{ Domain="www.test.com", IsPrimaryDomain=false, IsSelected=false, IsManualEntry=true, Type=CertIdentifierType.Dns }
                 }
             };
 
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.IDENTIFIER_REQUIRED.ToString(), result.ErrorCode);
 
             // ensure item with local host name is invalid
             model.SelectedItem = new ManagedCertificate
@@ -79,7 +79,7 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsFalse(result.IsValid, result.Message);
-            Assert.AreEqual(ValidationErrorCodes.INVALID_HOSTNAME.ToString(), result.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.INVALID_IDENTIFIER_DNS.ToString(), result.ErrorCode);
 
             // ensure item with wildcard cannot use http validation
             model.SelectedItem = new ManagedCertificate
@@ -227,6 +227,20 @@ namespace Certify.UI.Tests.Integration
             result = model.Validate(applyAutoConfiguration: true);
 
             Assert.IsTrue(result.IsValid, result.Message);
+
+            // ensure item is rejected with invalid IP
+            model.SelectedItem = new ManagedCertificate
+            {
+                DomainOptions = new System.Collections.ObjectModel.ObservableCollection<DomainOption> {
+                    new DomainOption{ Domain="192.168.1.1", IsSelected=true, IsPrimaryDomain=true, IsManualEntry=true, Type= CertIdentifierType.Ip},
+                    new DomainOption{ Domain="2typo001:db8:3333:4444:5555:6666:7777:8888", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= CertIdentifierType.Ip},
+                    new DomainOption{ Domain="www.test.com", IsSelected=true, IsPrimaryDomain=false, IsManualEntry=true, Type= CertIdentifierType.Dns}
+                }
+            };
+
+            result = model.Validate(applyAutoConfiguration: true);
+
+            Assert.IsFalse(result.IsValid, result.Message);
 
         }
     }
