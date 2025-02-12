@@ -1,7 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,14 +53,13 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public static AppViewModel GetModel()
         {
-            var stack = new StackTrace();
-            if (stack.GetFrames().Last().GetMethod().Name == "Main")
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
             {
-                return new AppViewModel();
+                return new AppViewModelDesign();
             }
             else
             {
-                return new AppViewModelDesign();
+                return new AppViewModel();
             }
         }
 
