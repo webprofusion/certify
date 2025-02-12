@@ -1427,7 +1427,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs, bool includeCommonName)
         {
             if (!_currentOrders.TryGetValue(orderId, out var orderContext))
             {
@@ -1569,11 +1569,15 @@ namespace Certify.Providers.ACME.Anvil
                     }
                     else
                     {
-                        order = await orderContext.Finalize(new CsrInfo
+                        var commonNameIsDns = managedCertificate.GetCertificateIdentifiers().Exists(d => d.Value == config.PrimaryDomain && d.IdentifierType == CertIdentifierType.Dns);
+
+                        var csrInfo = new CsrInfo
                         {
-                            CommonName = _idnMapping.GetAscii(config.PrimaryDomain),
+                            CommonName = includeCommonName ? (commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain) : null,
                             RequireOcspMustStaple = config.RequireOcspMustStaple
-                        }, csrKey);
+                        };
+
+                        order = await orderContext.Finalize(csrInfo, csrKey);
                     }
                 }
 

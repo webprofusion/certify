@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -867,7 +867,7 @@ namespace Certify.Management
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain, CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs);
+                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log, managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain, CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs, includeCommonName: true);
 
                 if (certRequestResult.IsSuccess)
                 {
