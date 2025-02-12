@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -19,7 +20,6 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Provide single static instance of model for all consumers 
         /// </summary>
-        //public static AppModel AppViewModel = new DesignViewModel(); // for UI testing
         public static ManagedCertificateViewModel Current = ManagedCertificateViewModel.GetModel();
 
         private Certify.UI.ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
@@ -449,14 +449,13 @@ namespace Certify.UI.ViewModel
 
         public static ManagedCertificateViewModel GetModel()
         {
-            var stack = new System.Diagnostics.StackTrace();
-            if (stack.GetFrames().Last().GetMethod().Name == "Main")
+            if (DesignerProperties.GetIsInDesignMode(new DependencyObject()))
             {
-                return new ManagedCertificateViewModel();
+                return new ManagedCertificateViewModelDesign();
             }
             else
             {
-                return new ManagedCertificateViewModelDesign();
+                return new ManagedCertificateViewModel();
             }
         }
 
