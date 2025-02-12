@@ -255,7 +255,7 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsNotNull(validationResult);
             Assert.IsFalse(validationResult.IsValid);
-            Assert.AreEqual(ValidationErrorCodes.INVALID_HOSTNAME.ToString(), validationResult.ErrorCode);
+            Assert.AreEqual(ValidationErrorCodes.INVALID_IDENTIFIER_DNS.ToString(), validationResult.ErrorCode);
         }
     }
 }
