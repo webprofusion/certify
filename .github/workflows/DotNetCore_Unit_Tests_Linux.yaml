@@ -84,12 +84,13 @@ jobs:
     - name: Run Certify.Core.Tests.Unit Tests
       run: |
         export GITHUB_WORKSPACE="$GITHUB_WORKSPACE/certify"
-        dotnet test --no-build -f net9.0 -l "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
+        export GITHUB_STEP_SUMMARY="./TestResults-${{ runner.os }}/test-summary.md"
+        dotnet test --no-build -f net9.0 --logger "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true;annotations.messageFormat=@error\n@trace"
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
 
     - name: Generate Test Results Report
       run: |
-        echo "# Test Results" > ./TestResults-${{ runner.os }}/test-summary.md
+        echo "# Test Results" > $GITHUB_STEP_SUMMARY
         sed -i 's/<details>/<details open>/g' ./TestResults-${{ runner.os }}/test-summary.md
         cat ./TestResults-${{ runner.os }}/test-summary.md >> $GITHUB_STEP_SUMMARY
       working-directory: ./certify/src/Certify.Tests/Certify.Core.Tests.Unit
