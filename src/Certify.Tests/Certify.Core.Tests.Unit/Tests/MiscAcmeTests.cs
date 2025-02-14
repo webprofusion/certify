@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
+using Newtonsoft.Json;
 
 namespace Certify.Core.Tests.Unit
 {
@@ -217,6 +218,29 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsNotNull(dir);
             Assert.IsNotNull(dir.NewOrder);
+        }
+
+        [TestMethod, Description("Test Renewal Info DateTime Precision")]
+        public async Task TestAcmeRenewalInfoDateTimePrecision()
+        {
+            var exampleJson = """
+             {
+               "suggestedWindow": {
+                 "start": "2021-01-03T00:01:00.12345678999Z",
+                 "end": "2021-01-07T00:01:00.12345678999Z"
+               },
+               "explanationURL": "https://example.com/docs/ari"
+             }
+
+             """;
+
+            var result = JsonConvert.DeserializeObject<AcmeRenewalInfo>(exampleJson);
+
+            Assert.IsTrue(result.SuggestedWindow.Start.Value.Millisecond == 123);
+
+#if NET9_0_OR_GREATER
+            Assert.IsTrue(result.SuggestedWindow.Start.Value.Nanosecond == 800);
+#endif
         }
     }
 }
