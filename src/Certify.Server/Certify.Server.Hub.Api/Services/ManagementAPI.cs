@@ -236,14 +236,14 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateCertificateAuthority);
         }
 
-        public async Task<ActionResult?> RemoveCertificateAuthority(string instanceId, string id, AuthContext? currentAuthContext)
+        public async Task<ActionResult?> RemoveCertificateAuthority(string instanceId, string caId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                     new("instanceId", instanceId),
-                    new("id", id)
+                    new("id", caId)
                 };
 
-            return await PerformInstanceCommandTaskWithResult<ActionResult?>(id, args, ManagementHubCommands.RemoveCertificateAuthority);
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveCertificateAuthority);
         }
 
         public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
