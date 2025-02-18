@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -800,7 +801,10 @@ namespace Certify.Management
             {
                 _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
 
-                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, "certify.exe");
+                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, isWindows ? "certify.exe" : "certify");
+
                 _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
                 {
                     RedirectStandardInput = true,
