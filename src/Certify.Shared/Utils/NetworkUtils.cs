@@ -145,8 +145,14 @@ namespace Certify.Shared.Core.Utils
             //check http request to test path works
             try
             {
-
-                log.Information($"Checking URL is accessible: {url} [proxyAPI: {useProxy}, timeout: {_httpClient.Timeout.TotalMilliseconds}ms]");
+                if (useProxyAPI == true)
+                {
+                    log.Information($"Checking if URL is accessible (via remote proxy API request): {url}, timeout: {_httpClient.Timeout.TotalMilliseconds}ms]");
+                }
+                else
+                {
+                    log.Information($"Checking if URL is accessible (using a local http request): {url}, timeout: {_httpClient.Timeout.TotalMilliseconds}ms]");
+                }
 
                 var requestUrl = useProxy ? Models.API.Config.APIBaseURI + "configcheck/testurl?url=" + url : url;
 
@@ -169,7 +175,7 @@ namespace Certify.Shared.Core.Utils
                         }
                         else
                         {
-                            log.Information($"(proxy api) URL is not accessible. Result: [{result.StatusCode}] {result.Message}");
+                            log.Information($"URL is not accessible (when checking via remote proxy API), HTTP domain validation may fail. Check firewalls (TCP port 80 etc) and external incoming http connectivity. Result: [{result.StatusCode}] {result.Message}");
                         }
                     }
 
@@ -180,13 +186,13 @@ namespace Certify.Shared.Core.Utils
                 {
                     if (response.IsSuccessStatusCode)
                     {
-                        log.Information($"(local check) URL is accessible. Check passed. HTTP {response.StatusCode}");
+                        log.Information($"URL is accessible when checking with a local HTTP request. Check passed, but external requests could still fail if blocked by firewalls etc. HTTP {response.StatusCode}");
 
                         return true;
                     }
                     else
                     {
-                        log.Warning($"(local check) URL is not accessible. Check failed. HTTP {response.StatusCode}");
+                        log.Warning($"URL is not accessible when checking with a local HTTP request. Check failed. HTTP {response.StatusCode}");
 
                         return false;
                     }
