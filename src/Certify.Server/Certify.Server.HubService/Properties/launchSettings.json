@@ -16,7 +16,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7187;http://localhost:5028",
+      "applicationUrl": "https://0.0.0.0:44361",
       "CERTIFY_MANAGEMENT_HUB": "https://localhost:7187/api/internal/managementhub",
       "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
     },
