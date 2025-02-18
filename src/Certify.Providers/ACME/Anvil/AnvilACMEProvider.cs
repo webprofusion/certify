@@ -63,6 +63,9 @@ namespace Certify.Providers.ACME.Anvil
         /// </summary>
         public bool AllowUnknownCARoots { get; set; } = true;
 
+        public int HttpChallengePort { get; set; } = 80;
+        public string HttpChallengePathSuffix { get; set; } = "/.well-known/acme-challenge/";
+
     }
 
     /// <summary>
@@ -1091,7 +1094,7 @@ namespace Certify.Providers.ACME.Anvil
                                         Key = httpChallenge.Token,
                                         Value = httpChallenge.KeyAuthz,
                                         ChallengeContext = httpChallenge,
-                                        ResourceUri = $"http://{authzDomain.Replace("*.", "")}/.well-known/acme-challenge/{httpChallenge.Token}",
+                                        ResourceUri = $"http://{authzDomain.Replace("*.", "")}:{_providerSettings.HttpChallengePort}{_providerSettings.HttpChallengePathSuffix}{httpChallenge.Token}",
                                         ResourcePath = $".well-known\\acme-challenge\\{httpChallenge.Token}",
                                         IsValidated = (httpChallengeStatus.Status == ChallengeStatus.Valid)
                                     });
