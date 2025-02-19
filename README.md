@@ -34,7 +34,7 @@ Windows ACME Certificate Manager, powered by [Let's Encrypt](https://letsencrypt
 The Community edition is free and supports up to 5 managed certificates, the licensed version supports unlimited managed certificates. License keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
 ## Requirements:
-- Windows Server 2012 R2 or higher (.Net 4.6.2 or higher), 64-bit
+- Windows (64-bit). Supported operating systems are limited to those Microsoft currently support.
 - PowerShell 5.1 or higher (for functionality like Deployment Tasks and some DNS providers).
 
 ----------
