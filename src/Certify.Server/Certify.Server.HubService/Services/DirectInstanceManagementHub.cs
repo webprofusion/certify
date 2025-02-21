@@ -47,7 +47,7 @@ namespace Certify.Server.HubService.Services
                     if (instanceInfo != null)
                     {
 
-                        instanceInfo.LastReported = DateTimeOffset.Now;
+                        instanceInfo.LastReported = DateTimeOffset.UtcNow;
                         _stateProvider.UpdateInstanceConnectionInfo("internal", instanceInfo);
 
                         _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
