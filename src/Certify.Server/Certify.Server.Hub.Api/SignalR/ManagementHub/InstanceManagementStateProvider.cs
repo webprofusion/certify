@@ -89,7 +89,10 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 _instanceConnections.Remove(existingOther.Key, out _);
             }
 
-            _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) => { return instanceInfo; });
+            _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) =>
+            {
+                return instanceInfo;
+            });
         }
 
         public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary)
