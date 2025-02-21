@@ -3349,9 +3349,9 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, int? page, int? pageSize)
+        public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, ManagedCertificateHealth? health, int? page, int? pageSize)
         {
-            return GetHubManagedItemsAsync(instanceId, keyword, page, pageSize, System.Threading.CancellationToken.None);
+            return GetHubManagedItemsAsync(instanceId, keyword, health, page, pageSize, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -3360,7 +3360,7 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, ManagedCertificateHealth? health, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -3383,6 +3383,10 @@ namespace Certify.Server.Hub.Api
                     if (keyword != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("keyword")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(keyword, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (health != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("health")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(health, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     if (page != null)
                     {
