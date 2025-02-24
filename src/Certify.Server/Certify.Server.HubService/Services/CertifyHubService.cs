@@ -49,6 +49,7 @@ namespace Certify.Server.HubService.Services
         public Task<RoleStatus> GetSecurityPrincipleRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipleRoleStatus(id);
         public Task<ICollection<SecurityPrinciple>> GetSecurityPrinciples(AuthContext authContext) => _accessController(authContext).GetSecurityPrinciples();
         public Task<ActionResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
+        public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);
         public Task<ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });
         public Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens(AuthContext authContext) => _accessController(authContext).GetAssignedAccessTokens();
         public Task<ActionResult> RemoveSecurityPrinciple(string id, AuthContext authContext) => _accessController(authContext).DeleteSecurityPrinciple(id);
@@ -90,8 +91,6 @@ namespace Certify.Server.HubService.Services
         public Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificateSearchResult> GetManagedCertificateSearchResult(ManagedCertificateFilter filter, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter filter, AuthContext authContext = null) => throw new NotImplementedException();
-
-
         public Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType, string itemId = null, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<Version> GetServerVersion(StandardServerTypes serverType, AuthContext authContext = null) => throw new NotImplementedException();

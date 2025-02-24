@@ -91,6 +91,16 @@ namespace Certify.SourceGenerators
                            ReturnType = "Models.Config.ActionResult",
                            Params = new Dictionary<string, string>{{"token", "Certify.Models.Hub.AssignedAccessToken" } }
                     },
+                     new() {
+                           OperationName = "RemoveAssignedAccessToken",
+                           OperationMethod = HttpDelete,
+                           Comment = "Remove assigned access token",
+                           PublicAPIController = "Access",
+                           PublicAPIRoute = "assignedtoken",
+                           ServiceAPIRoute = "access/assignedtoken/{id}",
+                           ReturnType = "Models.Config.ActionResult",
+                           Params = new Dictionary<string, string>{{"id", "string" } }
+                    },
                     new() {
 
                         OperationName = "GetSecurityPrinciples",

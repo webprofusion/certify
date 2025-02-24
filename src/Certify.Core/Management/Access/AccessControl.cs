@@ -610,6 +610,17 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
+        public async Task<bool> DeleteAssignedAccessToken(string contextUserId, string id)
+        {
+            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to delete an assigned access token without being in required role.", contextUserId);
+                return false;
+            }
+
+            return await _store.Delete<AssignedAccessToken>(nameof(AssignedAccessToken), id);
+        }
+
         public string GetSHA256Hash(string val)
         {
             using (var sha256Hash = SHA256.Create())

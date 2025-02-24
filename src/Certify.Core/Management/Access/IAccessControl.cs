@@ -33,6 +33,8 @@ namespace Certify.Core.Management.Access
 
         Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId);
         Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken token);
+
+        Task<bool> DeleteAssignedAccessToken(string contextUserId, string id);
         Task<bool> IsInitialized();
     }
 }

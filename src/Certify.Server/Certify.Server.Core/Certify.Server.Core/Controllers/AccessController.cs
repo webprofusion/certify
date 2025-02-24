@@ -121,7 +121,23 @@ namespace Certify.Service.Controllers
         public async Task<Models.Config.ActionResult> AddAssignedccessToken([FromBody] AssignedAccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            token.AccessTokens?.ForEach(a => a.DateCreated = DateTime.UtcNow);
+
             var addResultOk = await accessControl.AddAssignedAccessToken(GetContextUserId(), token);
+
+            return new Models.Config.ActionResult
+            {
+                IsSuccess = addResultOk,
+                Message = addResultOk ? "Added" : "Failed to add"
+            };
+        }
+
+        [HttpDelete, Route("assignedtoken/{id}")]
+        public async Task<Models.Config.ActionResult> RemoveAssignedAccessToken(string id)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var addResultOk = await accessControl.DeleteAssignedAccessToken(GetContextUserId(), id);
 
             return new Models.Config.ActionResult
             {
