@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -265,7 +265,15 @@ namespace Certify.Management
                 var itemArg = args.FirstOrDefault(a => a.Key == "item");
                 var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value);
 
-                val = await _credentialsManager.Update(storedCredential);
+                var updated = await _credentialsManager.Update(storedCredential);
+                if (updated != null)
+                {
+                    val = new ActionResult { IsSuccess = true, Message = "Updated", Result = updated };
+                }
+                else
+                {
+                    val = new ActionResult("Update failed", false);
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveStoredCredential)
             {

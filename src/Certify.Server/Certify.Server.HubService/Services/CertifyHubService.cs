@@ -58,9 +58,12 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> UpdateSecurityPrinciplePassword(SecurityPrinciplePasswordUpdate passwordUpdate, AuthContext authContext) => _accessController(authContext).UpdatePassword(passwordUpdate);
         public Task<SecurityPrincipleCheckResponse> ValidateSecurityPrinciplePassword(SecurityPrinciplePasswordCheck passwordCheck, AuthContext authContext) => _accessController(authContext).Validate(passwordCheck);
         public Task<ICollection<Role>> GetAccessRoles(AuthContext authContext) => _accessController(authContext).GetRoles();
+
         public Task<ICollection<ManagedChallenge>> GetManagedChallenges(AuthContext authContext) => _managedChallengeController(authContext).Get();
         public Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update, AuthContext authContext) => _managedChallengeController(authContext).Update(update);
         public Task<ActionResult> CleanupManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(request);
+        public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => _managedChallengeController(authContext).Delete(id);
+        public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(request);
 
         public Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext authContext = null) => throw new NotImplementedException();
@@ -100,14 +103,13 @@ namespace Certify.Server.HubService.Services
         public Task<ImportExportPackage> PerformExport(ExportRequest exportRequest, AuthContext authContext) => throw new NotImplementedException();
         public Task<ICollection<ActionStep>> PerformImport(ImportRequest importRequest, AuthContext authContext) => throw new NotImplementedException();
         public Task<List<ActionResult>> PerformManagedCertMaintenance(string id = null, AuthContext authContext = null) => throw new NotImplementedException();
-        public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => throw new NotImplementedException();
+
         public Task<List<ActionResult>> PerformServiceDiagnostics(AuthContext authContext = null) => throw new NotImplementedException();
         public Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<CertificateRequestResult> ReapplyCertificateBindings(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<CertificateRequestResult> RefetchCertificate(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> RemoveAccount(string storageKey, bool deactivate, AuthContext authContext = null) => throw new NotImplementedException();
-        public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => throw new NotImplementedException();
 
         public Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
         public Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null) => throw new NotImplementedException();
