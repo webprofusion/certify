@@ -26,16 +26,19 @@ namespace Certify.Core.Management.Access
         public async Task AuditWarning(string template, params object[] propertyvalues)
         {
             _log?.Warning(template, propertyvalues);
+            await Task.CompletedTask;
         }
 
         public async Task AuditError(string template, params object[] propertyvalues)
         {
             _log?.Error(template, propertyvalues);
+            await Task.CompletedTask;
         }
 
         public async Task AuditInformation(string template, params object[] propertyvalues)
         {
             _log?.Information(template, propertyvalues);
+            await Task.CompletedTask;
         }
 
         /// <summary>
