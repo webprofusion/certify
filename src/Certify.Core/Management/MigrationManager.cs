@@ -26,6 +26,7 @@ namespace Certify.Core.Management
         private IManagedItemStore _itemManager;
         private ICredentialsManager _credentialsManager;
         private List<ITargetWebServer> _targetServers;
+        private string _encryptionScheme = "default";
 
         public MigrationManager(IManagedItemStore itemManager, ICredentialsManager credentialsManager, List<ITargetWebServer> targetServers)
         {
@@ -227,32 +228,61 @@ namespace Certify.Core.Management
 
         private Aes GetAlg(string secret, string salt)
         {
-            var saltBytes = Encoding.ASCII.GetBytes(salt);
-            var key = new Rfc2898DeriveBytes(secret, saltBytes);
+#if NET9_0_OR_GREATER
+            if (_encryptionScheme == "default")
+            {
+                var saltBytes = Encoding.ASCII.GetBytes(salt);
+#pragma warning disable SYSLIB0041 // Type or member is obsolete
+                var key = new Rfc2898DeriveBytes(secret, saltBytes);
+#pragma warning restore SYSLIB0041 // Type or member is obsolete
 
-            var aesAlg = Aes.Create();
-            aesAlg.Mode = CipherMode.CBC;
-            aesAlg.Padding = PaddingMode.PKCS7;
+                var aesAlg = Aes.Create();
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
 
-            aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
-            aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
+                aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+                aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
 
-            return aesAlg;
+                return aesAlg;
+            }
+            else
+            {
+
+                var saltBytes = Encoding.ASCII.GetBytes(salt);
+                var key = new Rfc2898DeriveBytes(secret, saltBytes, 600000, HashAlgorithmName.SHA256);
+
+                var aesAlg = Aes.Create();
+                aesAlg.Mode = CipherMode.CBC;
+                aesAlg.Padding = PaddingMode.PKCS7;
+
+                aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+                aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
+
+                return aesAlg;
+            }
+#else
+             var saltBytes = Encoding.ASCII.GetBytes(salt);
+             var key = new Rfc2898DeriveBytes(secret, saltBytes);
+
+             var aesAlg = Aes.Create();
+             aesAlg.Mode = CipherMode.CBC;
+             aesAlg.Padding = PaddingMode.PKCS7;
+
+             aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+             aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
+
+             return aesAlg;
+#endif
         }
 
         public byte[] EncryptBytes(byte[] source, string secret, string salt)
         {
-            using (var rmCrypto = GetAlg(secret, salt))
-            {
-                using (var memoryStream = new MemoryStream())
-                using (var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(), CryptoStreamMode.Write))
-                {
-                    cryptoStream.Write(source, 0, source.Length);
-                    cryptoStream.FlushFinalBlock();
-                    cryptoStream.Close();
-                    return memoryStream.ToArray();
-                }
-            }
+            using var rmCrypto = GetAlg(secret, salt);
+            using var memoryStream = new MemoryStream();
+            using var cryptoStream = new CryptoStream(memoryStream, rmCrypto.CreateEncryptor(), CryptoStreamMode.Write);
+            cryptoStream.Write(source, 0, source.Length);
+            cryptoStream.FlushFinalBlock();
+            return memoryStream.ToArray();
         }
 
         public byte[] DecryptBytes(byte[] source, string secret, string salt)
@@ -261,30 +291,12 @@ namespace Certify.Core.Management
             {
                 using (var decryptor = rmCrypto.CreateDecryptor())
                 {
-                    using (var memoryStream = new MemoryStream(source))
-                    {
-                        using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
-                        {
-                            var decryptedBytes = new byte[source.Length];
+                    using var memoryStream = new MemoryStream(source);
+                    using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+                    using var resultStream = new MemoryStream();
+                    cryptoStream.CopyTo(resultStream);
 
-                            var totalRead = 0;
-                            while (totalRead < source.Length)
-                            {
-                                var bytesRead = cryptoStream.Read(decryptedBytes, totalRead, source.Length - totalRead);
-                                if (bytesRead == 0)
-                                {
-                                    break;
-                                }
-
-                                totalRead += bytesRead;
-                            }
-
-                            memoryStream.Close();
-                            cryptoStream.Close();
-
-                            return decryptedBytes;
-                        }
-                    }
+                    return resultStream.ToArray();
                 }
             }
         }

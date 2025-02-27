@@ -7,6 +7,7 @@ using Certify.Client;
 using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Shared.Core.Utils;
 
@@ -329,6 +330,22 @@ namespace Certify.Management
                 var serverType = MapStandardServerType(serviceTypeArg.Value);
 
                 val = await GetDomainOptionsFromSite(serverType, itemArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.PerformImport)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var requestArg = args.FirstOrDefault(a => a.Key == "importRequest");
+                var importRequest = JsonSerializer.Deserialize<ImportRequest>(requestArg.Value);
+
+                val = await PerformImport(importRequest);
+            }
+            else if (arg.CommandType == ManagementHubCommands.PerformExport)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var requestArg = args.FirstOrDefault(a => a.Key == "exportRequest");
+                var exportRequest = JsonSerializer.Deserialize<ExportRequest>(requestArg.Value);
+
+                val = await PerformExport(exportRequest);
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

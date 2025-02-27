@@ -237,6 +237,22 @@ namespace Certify.SourceGenerators
                             { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
                         }
                     },
+                     new() {
+                        OperationName = "PerformExport",
+                        OperationMethod = HttpPost,
+                        Comment = "Perform an export of all settings",
+                        ServiceAPIRoute = "system/migration/export",
+                        ReturnType = "Models.Config.Migration.ImportExportPackage",
+                        Params = new Dictionary<string, string> { { "exportRequest", "Certify.Models.Config.Migration.ExportRequest" } }
+                    },
+                     new() {
+                         OperationName = "PerformImport",
+                         OperationMethod = HttpPost,
+                         Comment = "Perform an import of all settings",
+                         ServiceAPIRoute = "system/migration/import",
+                         ReturnType = "ICollection<ActionStep>", 
+                         Params = new Dictionary<string, string> { { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
+                     },
                     /* per instance API, via management hub */
                     new() {
                         OperationName = "GetAcmeAccounts",
@@ -432,26 +448,26 @@ namespace Certify.SourceGenerators
                         ReturnType = "Models.Config.ActionResult",
                         Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } }
                     },
-                    // TODO
+
                     new() {
-                        OperationName = "PerformExport",
+                        OperationName = "PerformInstanceExport",
                         OperationMethod = HttpPost,
                         Comment = "Perform an export of all settings",
+                        UseManagementAPI = true,
                         PublicAPIController = "System",
-                        PublicAPIRoute = "system/migration/export",
-                        ServiceAPIRoute = "system/migration/export",
+                        PublicAPIRoute = "{instanceId}/system/migration/export",
                         ReturnType = "Models.Config.Migration.ImportExportPackage",
-                        Params = new Dictionary<string, string> { { "exportRequest", "Certify.Models.Config.Migration.ExportRequest" } }
+                        Params = new Dictionary<string, string> {  { "instanceId", "string" }, { "exportRequest", "Certify.Models.Config.Migration.ExportRequest" } }
                     },
                      new() {
-                         OperationName = "PerformImport",
+                         OperationName = "PerformInstanceImport",
                          OperationMethod = HttpPost,
                          Comment = "Perform an import of all settings",
+                         UseManagementAPI = true,
                          PublicAPIController = "System",
-                         PublicAPIRoute = "system/migration/import",
-                         ServiceAPIRoute = "system/migration/import",
+                         PublicAPIRoute = "{instanceId}/system/migration/import",
                          ReturnType = "ICollection<ActionStep>",
-                         Params = new Dictionary<string, string> { { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
+                         Params = new Dictionary<string, string> {  { "instanceId", "string" }, { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
                      },
                 };
         }

@@ -72,6 +72,29 @@ namespace Certify.Core.Tests
 
         }
 
+        [TestMethod, Description("Ensure basic encrypt/decrypt with short secret")]
+        public void TestDecryptEncryptShortSecret()
+        {
+            var secretPwd = "test";
+            var salt = "8add3854-7819-4220-99a8-29bcdc32e9be";
+            // setup
+            var migrationManager = new MigrationManager(GetManagedItemStore(), GetCredentialsStore(), new List<Models.Providers.ITargetWebServer> { new ServerProviderMock() });
+
+            // encrypt
+
+            var sourceString = "The /cat/ sat on the {mat}. The /cat/ sat on the {mat}. The /cat/ sat on the {mat} 12345.";
+
+            var encrypted = migrationManager.EncryptBytes(System.Text.Encoding.ASCII.GetBytes(sourceString), secretPwd, salt);
+
+            var decrypted = migrationManager.DecryptBytes(encrypted, secretPwd, salt);
+
+            var decryptedString = System.Text.Encoding.ASCII.GetString(decrypted).TrimEnd('\0');
+
+            // assert
+            Assert.AreEqual(sourceString, decryptedString, "Source and decrypted values should be the same.");
+
+        }
+
         [TestMethod, Description("Ensure bundled certs can be decrypted")]
         public async Task TestDecryptExportedCerts()
         {

@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -16,15 +17,18 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        private ManagementAPI _mgmtAPI;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public SystemController(ILogger<SystemController> logger, ICertifyInternalApiClient client)
+        public SystemController(ILogger<SystemController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtApi)
         {
             _logger = logger;
             _client = client;
+            _mgmtAPI = mgmtApi;
         }
 
         /// <summary>
