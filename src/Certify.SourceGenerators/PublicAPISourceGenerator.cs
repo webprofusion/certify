@@ -64,12 +64,12 @@ namespace SourceGenerator
                     var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
                     var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
-                    if (assemblyName.EndsWith("Hub.Api") && config.PublicAPIController != null)
+                    if (assemblyName.EndsWith("Hub.Api") && !string.IsNullOrEmpty(config.PublicAPIController))
                     {
                         ImplementPublicAPI(spc, config, apiParamDeclWithoutAuthContext, apiParamDecl, apiParamCall);
                     }
 
-                    if (assemblyName.EndsWith("Certify.UI.Blazor"))
+                    if (assemblyName.EndsWith("Certify.UI.Blazor") && !string.IsNullOrEmpty(config.PublicAPIController))
                     {
                         ImplementAppModel(spc, config, apiParamDeclWithoutAuthContext, apiParamCallWithoutAuthContext);
                     }
