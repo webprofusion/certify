@@ -5,6 +5,8 @@ using System.Text;
 using Certify.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace SourceGenerator
 {
@@ -16,7 +18,7 @@ namespace SourceGenerator
         public string PublicAPIController { get; set; } = string.Empty;
 
         public string PublicAPIRoute { get; set; } = string.Empty;
-        public List<PermissionSpec> RequiredPermissions { get; set; } = [];
+        public List<PermissionSpec> RequiredPermissions { get; set; } = new List<PermissionSpec>();
         public bool UseManagementAPI { get; set; } = false;
         public string ManagementHubCommandType { get; set; } = string.Empty;
         public string ServiceAPIRoute { get; set; } = string.Empty;
@@ -34,47 +36,53 @@ namespace SourceGenerator
             Action = action;
         }
     }
+
     [Generator]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCompatibility", "RS1042:Implementations of this interface are not allowed", Justification = "Source generator needs ported to incremental generator")]
-    public class PublicAPISourceGenerator : ISourceGenerator
+    public class PublicAPISourceGenerator : IIncrementalGenerator
     {
-        public void Execute(GeneratorExecutionContext context)
+        public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            var compilationProvider = context.CompilationProvider;
+            var apiDefinitions = context.CompilationProvider
+                .Select((compilation, _) => ApiMethods.GetApiDefinitions());
 
-            // get list of items we want to generate for our API glue
-            var list = ApiMethods.GetApiDefinitions();
+            var combined = compilationProvider.Combine(apiDefinitions);
 
-            Debug.WriteLine(context.Compilation.AssemblyName);
-
-            foreach (var config in list)
+            context.RegisterSourceOutput(combined, (spc, source) =>
             {
-                var paramSet = config.Params.ToList();
-                paramSet.Add(new KeyValuePair<string, string>("authContext", "AuthContext"));
-                var apiParamDecl = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Value} {p.Key}")) : "";
-                var apiParamDeclWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Value} {p.Key}")) : "";
+                var compilation = source.Left;
+                var list = source.Right;
+                var assemblyName = compilation.AssemblyName;
 
-                var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
-                var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
-
-                if (context.Compilation.AssemblyName.EndsWith("Hub.Api") && config.PublicAPIController != null)
+                foreach (var config in list)
                 {
-                    ImplementPublicAPI(context, config, apiParamDeclWithoutAuthContext, apiParamDecl, apiParamCall);
-                }
+                    var paramSet = config.Params.ToList();
+                    paramSet.Add(new KeyValuePair<string, string>("authContext", "AuthContext"));
+                    var apiParamDecl = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Value} {p.Key}")) : "";
+                    var apiParamDeclWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Value} {p.Key}")) : "";
 
-                if (context.Compilation.AssemblyName.EndsWith("Certify.UI.Blazor"))
-                {
-                    ImplementAppModel(context, config, apiParamDeclWithoutAuthContext, apiParamCallWithoutAuthContext);
-                }
+                    var apiParamCall = paramSet.Any() ? string.Join(", ", paramSet.Select(p => $"{p.Key}")) : "";
+                    var apiParamCallWithoutAuthContext = config.Params.Any() ? string.Join(", ", config.Params.Select(p => $"{p.Key}")) : "";
 
-                if (context.Compilation.AssemblyName.EndsWith("Certify.Client") && !config.UseManagementAPI)
-                {
-                    // for methods which directly call the backend service (e.g. main server settings), implement the client API
-                    ImplementInternalAPIClient(context, config, apiParamDecl, apiParamCall);
+                    if (assemblyName.EndsWith("Hub.Api") && config.PublicAPIController != null)
+                    {
+                        ImplementPublicAPI(spc, config, apiParamDeclWithoutAuthContext, apiParamDecl, apiParamCall);
+                    }
+
+                    if (assemblyName.EndsWith("Certify.UI.Blazor"))
+                    {
+                        ImplementAppModel(spc, config, apiParamDeclWithoutAuthContext, apiParamCallWithoutAuthContext);
+                    }
+
+                    if (assemblyName.EndsWith("Certify.Client") && !config.UseManagementAPI)
+                    {
+                        ImplementInternalAPIClient(spc, config, apiParamDecl, apiParamCall);
+                    }
                 }
-            }
+            });
         }
 
-        private static void ImplementAppModel(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCallWithoutAuthContext)
+        private static void ImplementAppModel(SourceProductionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamCallWithoutAuthContext)
         {
             context.AddSource($"AppModel.{config.OperationName}.g.cs", SourceText.From($@"
             using System.Collections.Generic;
@@ -83,20 +91,20 @@ namespace SourceGenerator
             using Certify.Models.Providers;
             using Certify.Models.Hub;
 
-                        namespace Certify.UI.Client.Core
+            namespace Certify.UI.Client.Core
+            {{
+                public partial class AppModel
                 {{
-                    public partial class AppModel
+                    public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
                     {{
-                        public async Task<{config.ReturnType}> {config.OperationName}({apiParamDeclWithoutAuthContext})
-                        {{
-                            return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
-                        }}
+                        return await _api.{config.OperationName}Async({apiParamCallWithoutAuthContext});
                     }}
                 }}
+            }}
             ", Encoding.UTF8));
         }
 
-        private static void ImplementPublicAPI(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamDecl, string apiParamCall)
+        private static void ImplementPublicAPI(SourceProductionContext context, GeneratedAPI config, string apiParamDeclWithoutAuthContext, string apiParamDecl, string apiParamCall)
         {
             var publicApiSrc = $@"
 
@@ -111,7 +119,6 @@ namespace SourceGenerator
             using Microsoft.Extensions.Logging;
             using Certify.Models;
             using Certify.Models.Hub;
-
 
             namespace Certify.Server.Hub.Api.Controllers
             {{
@@ -134,8 +141,7 @@ namespace SourceGenerator
                         return new OkObjectResult(result);
                     }}
                 }}
-            }};
-            ";
+            }}";
 
             if (config.RequiredPermissions.Any())
             {
@@ -145,9 +151,7 @@ namespace SourceGenerator
                     fragment += $@"
                         if (!await IsAuthorized(_client, ""{perm.ResourceType}"" , ""{perm.Action}""))
                         {{
-                            {{
-                                return Unauthorized();
-                            }}
+                            return Unauthorized();
                         }}
                     ";
                 }
@@ -160,8 +164,6 @@ namespace SourceGenerator
             }
 
             context.AddSource($"{config.PublicAPIController}Controller.{config.OperationName}.g.cs", SourceText.From(publicApiSrc, Encoding.UTF8));
-
-            // Management API service
 
             if (!string.IsNullOrEmpty(config.ManagementHubCommandType))
             {
@@ -192,13 +194,12 @@ namespace SourceGenerator
                             return await PerformInstanceCommandTaskWithResult<{config.ReturnType}>(instanceId, args, ""{config.ManagementHubCommandType}"") ?? [];
                         }}
                     }}
-                }}
-            ";
+                }}";
                 context.AddSource($"ManagementAPI.{config.OperationName}.g.cs", SourceText.From(src, Encoding.UTF8));
             }
         }
 
-        private static void ImplementInternalAPIClient(GeneratorExecutionContext context, GeneratedAPI config, string apiParamDecl, string apiParamCall)
+        private static void ImplementInternalAPIClient(SourceProductionContext context, GeneratedAPI config, string apiParamDecl, string apiParamCall)
         {
             var template = @"
             using Certify.Models;
@@ -211,8 +212,7 @@ namespace SourceGenerator
             namespace Certify.Client
             {
                MethodTemplate
-            }
-            ";
+            }";
 
             if (config.OperationMethod == "HttpGet")
             {
@@ -225,7 +225,6 @@ namespace SourceGenerator
                     /// </summary>
                     /// <returns></returns>
                     Task<{config.ReturnType}> {config.OperationName}({apiParamDecl});
-                    
                 }}
 
                 public partial class CertifyApiClient
@@ -239,9 +238,7 @@ namespace SourceGenerator
                         var result = await FetchAsync($""{config.ServiceAPIRoute}"", authContext);
                         return JsonToObject<{config.ReturnType}>(result);
                     }}
-                    
-                }}
-            ");
+                }}");
                 var source = SourceText.From(code, Encoding.UTF8);
                 context.AddSource($"{config.PublicAPIController}.{config.OperationName}.ICertifyInternalApiClient.g.cs", source);
             }
@@ -267,7 +264,6 @@ namespace SourceGenerator
                     /// </summary>
                     /// <returns></returns>
                     Task<{config.ReturnType}> {config.OperationName}({postApiParamDecl});
-                    
                 }}
 
                 public partial class CertifyApiClient
@@ -281,8 +277,7 @@ namespace SourceGenerator
                         var result = await PostAsync($""{postAPIRoute}"", {postApiCall});
                         return JsonToObject<{config.ReturnType}>(await result.Content.ReadAsStringAsync());
                     }}
-                }}
-            "), Encoding.UTF8));
+                }}"), Encoding.UTF8));
             }
 
             if (config.OperationMethod == "HttpDelete")
@@ -306,25 +301,12 @@ namespace SourceGenerator
                     /// <returns></returns>
                     public async Task<{config.ReturnType}> {config.OperationName}({apiParamDecl})
                     {{
-                        var route = $""{config.ServiceAPIRoute}"";
+                        var route = $""{config.ServiceAPIRoute}""; 
                         var result = await DeleteAsync(route, authContext);
                         return JsonToObject<{config.ReturnType}>(await result.Content.ReadAsStringAsync());
                     }}
-                }}
-            "), Encoding.UTF8));
+                }}"), Encoding.UTF8));
             }
-        }
-
-        public void Initialize(GeneratorInitializationContext context)
-        {
-#if DEBUG
-            // uncomment this to launch a debug session which code generation runs
-            // then add a watch on 
-            if (!Debugger.IsAttached)
-            {
-                // Debugger.Launch();
-            }
-#endif
         }
     }
 }
