@@ -541,7 +541,7 @@ namespace Certify.Management.Servers
                     if (remainingAttempts == 0 && !isCompleted)
                     {
                         // failed to create this binding, possible due to settings serialisation conflict
-                        throw exp;
+                        throw;
                     }
                     else
                     {
@@ -604,7 +604,7 @@ namespace Certify.Management.Servers
                     if (remainingAttempts == 0 && !isCompleted)
                     {
                         // failed to create this binding, possible due to settings serialisation conflict
-                        throw exp;
+                        throw;
                     }
                     else
                     {
