@@ -35,6 +35,7 @@ namespace SourceGenerator
         }
     }
     [Generator]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("MicrosoftCodeAnalysisCompatibility", "RS1042:Implementations of this interface are not allowed", Justification = "Source generator needs ported to incremental generator")]
     public class PublicAPISourceGenerator : ISourceGenerator
     {
         public void Execute(GeneratorExecutionContext context)
