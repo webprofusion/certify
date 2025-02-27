@@ -1,7 +1,9 @@
 ﻿using System.Text.Json;
+using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
@@ -383,6 +385,26 @@ namespace Certify.Server.Hub.Api.Services
             var cmd = new InstanceCommandRequest(ManagementHubCommands.PerformManagedItemRequest, args);
 
             await SendCommandWithNoResult(instanceId, cmd);
+        }
+
+        internal async Task<List<ActionStep>> PerformInstanceImport(string instanceId, ImportRequest importRequest, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("importRequest", JsonSerializer.Serialize(importRequest))
+                };
+
+            return await PerformInstanceCommandTaskWithResult<List<ActionStep>>(instanceId, args, ManagementHubCommands.PerformImport) ?? [];
+        }
+
+        internal async Task<Models.Config.Migration.ImportExportPackage> PerformInstanceExport(string instanceId, ExportRequest exportRequest, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                    new("instanceId", instanceId) ,
+                    new("exportRequest", JsonSerializer.Serialize(exportRequest))
+                };
+
+            return await PerformInstanceCommandTaskWithResult<Models.Config.Migration.ImportExportPackage>(instanceId, args, ManagementHubCommands.PerformExport);
         }
     }
 }

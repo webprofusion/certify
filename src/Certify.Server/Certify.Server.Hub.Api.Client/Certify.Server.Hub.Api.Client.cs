@@ -4740,9 +4740,9 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ImportExportPackage> PerformExportAsync(ExportRequest body)
+        public virtual System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body)
         {
-            return PerformExportAsync(body, System.Threading.CancellationToken.None);
+            return PerformInstanceExportAsync(instanceId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -4751,8 +4751,11 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ImportExportPackage> PerformExportAsync(ExportRequest body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -4768,8 +4771,10 @@ namespace Certify.Server.Hub.Api
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/system/system/migration/export"
-                    urlBuilder_.Append("api/v1/system/system/migration/export");
+                    // Operation Path: "api/v1/system/{instanceId}/system/migration/export"
+                    urlBuilder_.Append("api/v1/system/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/system/migration/export");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
@@ -4828,9 +4833,9 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformImportAsync(ImportRequest body)
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body)
         {
-            return PerformImportAsync(body, System.Threading.CancellationToken.None);
+            return PerformInstanceImportAsync(instanceId, body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -4839,8 +4844,11 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformImportAsync(ImportRequest body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body, System.Threading.CancellationToken cancellationToken)
         {
+            if (instanceId == null)
+                throw new System.ArgumentNullException("instanceId");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -4856,8 +4864,10 @@ namespace Certify.Server.Hub.Api
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "api/v1/system/system/migration/import"
-                    urlBuilder_.Append("api/v1/system/system/migration/import");
+                    // Operation Path: "api/v1/system/{instanceId}/system/migration/import"
+                    urlBuilder_.Append("api/v1/system/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(instanceId, System.Globalization.CultureInfo.InvariantCulture)));
+                    urlBuilder_.Append("/system/migration/import");
 
                     PrepareRequest(client_, request_, urlBuilder_);
 
