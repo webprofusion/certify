@@ -190,7 +190,9 @@ namespace Certify.Management
             return null;
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var _log = new StringBuilder();
 
@@ -220,7 +222,7 @@ namespace Certify.Management
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
 
-            if (isUsingCredentials && (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
+            if (isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // The impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it. They will also need to be able to read the users supplied target script (not addressed here).
                 // If the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
@@ -424,21 +426,28 @@ namespace Certify.Management
             }
         }
 
-        private static bool ApplyFileACL(string filePath, string fullUsername)
+        private static async Task<bool> ApplyFileACL(string filePath, string fullUsername)
         {
-            var fileInfo = new FileInfo(filePath);
-            var accessControl = fileInfo.GetAccessControl();
-
-            accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, AccessControlType.Allow));
-
-            try
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                fileInfo.SetAccessControl(accessControl);
-                return true;
+                var fileInfo = new FileInfo(filePath);
+                var accessControl = fileInfo.GetAccessControl();
+
+                accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, AccessControlType.Allow));
+
+                try
+                {
+                    fileInfo.SetAccessControl(accessControl);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }
-            catch
+            else
             {
-                return false;
+                return await Task.FromResult(false);
             }
         }
 

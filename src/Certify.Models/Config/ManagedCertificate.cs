@@ -77,11 +77,6 @@ namespace Certify.Models
 
         public int? GetPercentageElapsed(DateTimeOffset testDateTime)
         {
-            if (DateStart == null || DateEnd == null)
-            {
-                return null;
-            }
-
             var lifetime = DateEnd - DateStart;
 
             if (lifetime.TotalMinutes <= 0)
@@ -523,7 +518,7 @@ namespace Certify.Models
                         }
 
                         // if exact match exists, use that
-                        var identifierKey = identifier?.Value.ToLowerInvariant() ?? "";
+                        var identifierKey = identifier!.Value.ToLowerInvariant();
                         if (configsPerDomain.TryGetValue(identifierKey, out var value))
                         {
                             return value;
@@ -548,7 +543,7 @@ namespace Certify.Models
 
                         foreach (var configDomain in allMatchingConfigKeys)
                         {
-                            if (configDomain.EndsWith(identifier?.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
+                            if (configDomain.EndsWith(identifier!.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
                             {
                                 // use longest matching identifier (so subdomain.test.com takes priority
                                 // over test.com, )
