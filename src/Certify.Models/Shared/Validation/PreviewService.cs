@@ -22,6 +22,7 @@ namespace Certify.UI.Blazor.Core.Models.Services
                     {
                         if (!string.IsNullOrEmpty(sub.Description))
                         {
+#pragma warning disable CA1847 // Use char literal for a single character lookup
                             if (sub.Description.Contains("|"))
                             {
                                 // table items
@@ -36,6 +37,7 @@ namespace Certify.UI.Blazor.Core.Models.Services
                                 // list items
                                 sb.AppendLine(" - " + sub.Description);
                             }
+#pragma warning restore CA1847 // Use char literal for a single character lookup
                         }
                         else
                         {

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Certify.Management;
 using Certify.Models.API;
 
 #if NET6_0_OR_GREATER
@@ -39,102 +37,6 @@ namespace Certify.Shared.Core.Utils
         }
 
         public Action<string> Log = (message) => { };
-
-        public async Task<bool> CheckSNI(string host, string sni, bool? useProxyAPI = null)
-        {
-            // if validation proxy enabled, access to the domain being validated is checked via our
-            // remote API rather than directly on the servers
-            var useProxy = useProxyAPI ?? _enableValidationProxyAPI;
-
-            if (useProxy)
-            {
-                // TODO: check proxy here, needs server support. if successful "return true"; and "LogAction(...)"
-                System.Diagnostics.Debug.WriteLine("ProxyAPI is not implemented for Checking SNI config, trying local");
-                Log($"Proxy TLS SNI binding check error: {host}, {sni}");
-
-                return await CheckSNI(host, sni, false); // proxy failed, try local
-            }
-
-            var hosts = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), @"drivers\etc\hosts");
-
-            try
-            {
-                var req = new HttpRequestMessage(HttpMethod.Get, $"https://{sni}");
-                ServicePointManager.ServerCertificateValidationCallback = (obj, cert, chain, errors) =>
-                {
-                    // verify SNI-selected certificate is correctly configured
-                    return CertificateManager.VerifyCertificateSAN(cert, sni);
-                };
-
-                // modify the hosts file so we can resolve this request locally: create an entry for
-                // the primary IP address and also for 127.0.0.1 (where primary IP will not resolve
-                // internally i.e. the default resolution is an external IP)
-
-                var testHostEntries = new List<string> {
-                    $"\n127.0.0.1\t{sni}",
-                };
-
-                var ip = Dns.GetHostEntry(host)?.AddressList?.FirstOrDefault();
-
-                if (ip != null)
-                {
-                    testHostEntries.Add($"\n{ip}\t{sni}");
-                }
-
-                using (var writer = File.AppendText(hosts))
-                {
-                    foreach (var hostEntry in testHostEntries)
-                    {
-                        writer.Write(hostEntry);
-                    }
-                }
-
-                await Task.Delay(250); // wait a bit for hosts file to take effect
-
-                try
-                {
-                    var resp = await _httpClient.SendAsync(req);
-                    // if the GET request succeeded, the Cert validation succeeded
-                    Log($"Local TLS SNI binding check OK: {host}, {sni}");
-
-                }
-                finally
-                {
-                    // clean up temp entries in hosts file
-                    try
-                    {
-                        var txt = File.ReadAllText(hosts);
-                        foreach (var hostEntry in testHostEntries)
-                        {
-                            //should we just remove all .acme.invalid entries instead of looking for our current entries?
-                            txt = txt.Substring(0, txt.Length - hostEntry.Length);
-                        }
-
-                        File.WriteAllText(hosts, txt);
-                    }
-                    catch
-                    {
-                        // if this fails the user will have to clean up manually
-                        Log($"Error cleaning up hosts file: {hosts}");
-                        throw;
-                    }
-                }
-
-                return true; // success!
-            }
-            catch (Exception ex)
-            {
-                // eat the error that HttpClient throws, either cert validation failed or the site is
-                // inaccessible via https://host name
-                Log($"Local TLS SNI binding check error: {host}, {sni}\n{ex.GetType()}: {ex.Message}\n{ex.StackTrace}");
-                return false;
-            }
-            finally
-            {
-                // reset the callback for other http requests
-                ServicePointManager.ServerCertificateValidationCallback = null;
-            }
-        }
 
         public async Task<bool> CheckURL(ILog log, string url, bool? useProxyAPI = null)
         {

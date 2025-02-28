@@ -44,6 +44,6 @@ namespace Certify.Models.Shared
             return output;
         }
 
-        public ActionLogItem GetLastActionLogItem() => _actionLogs.LastOrDefault();
+        public ActionLogItem? GetLastActionLogItem() => _actionLogs.LastOrDefault();
     }
 }

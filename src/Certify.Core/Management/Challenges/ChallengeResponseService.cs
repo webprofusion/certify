@@ -315,17 +315,6 @@ namespace Certify.Core.Management.Challenges
                         }
                     }
 
-                    if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI)
-                    {
-                        // perform tls-sni-01 challenge response
-                        var check = PrepareChallengeResponse_TlsSni01(log, iisManager, pendingAuth.Identifier, managedCertificate, pendingAuth);
-                        if (requestConfig.PerformTlsSniBindingConfigChecks)
-                        {
-                            // set config check OK if all checks return true
-                            pendingAuth.AttemptedChallenge.ConfigCheckedOK = check();
-                        }
-                    }
-
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                     {
                         // perform dns-01 challenge response
@@ -341,15 +330,6 @@ namespace Certify.Core.Management.Challenges
                     if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH)
                     {
                         pendingAuth.AttemptedChallenge.ConfigCheckedOK = true;
-                        // perform tkauth-01 challenge response
-                        //var check = await PerformChallengeResponse_Dns01(log, domain, managedCertificate, pendingAuth, isTestMode: false, credentialsManager);
-                        /*
-                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
-                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
-                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
-                         pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
-                         pendingAuth.IsFailure = !check.Result.IsSuccess;
-                         pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";*/
                     }
                 }
             }
@@ -553,70 +533,6 @@ namespace Certify.Core.Management.Challenges
                     Message = $"Config checks disabled. Did not verify URL access: {httpChallenge.ResourceUri}"
                 };
             }
-        }
-
-        private Func<bool> PrepareChallengeResponse_TlsSni01(ILog log, ITargetWebServer iisManager, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth)
-        {
-            var requestConfig = managedCertificate.RequestConfig;
-
-            var tlsSniChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI);
-
-            if (tlsSniChallenge == null)
-            {
-                log.Warning($"No tls-sni-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.");
-                return () => false;
-            }
-
-            var sha256 = System.Security.Cryptography.SHA256.Create();
-
-            var z = new byte[tlsSniChallenge.HashIterationCount][];
-
-            // compute n sha256 hashes, where n=challengedata.iterationcount
-            z[0] = sha256.ComputeHash(Encoding.UTF8.GetBytes(tlsSniChallenge.Value));
-
-            for (var i = 1; i < z.Length; i++)
-            {
-                z[i] = sha256.ComputeHash(z[i - 1]);
-            }
-
-            // generate certs and install iis bindings
-            var cleanupQueue = new List<Func<Task>>();
-
-            var checkQueue = new List<Func<bool>>();
-
-            foreach (var hex in z.Select(b =>
-                BitConverter.ToString(b).Replace("-", "").ToLower()))
-            {
-                var sni = $"{hex.Substring(0, 32)}.{hex.Substring(32)}.acme.invalid";
-
-                log.Information($"Preparing binding at: https://{domain}, sni: {sni}");
-
-                var x509 = CertificateManager.GenerateSelfSignedCertificate(sni);
-
-                CertificateManager.StoreCertificate(x509);
-
-                var certStoreName = CertificateManager.GetMachineStore().Name;
-
-                // iisManager.InstallCertificateforBinding(certStoreName, x509.GetCertHash(),
-                // managedCertificate.ServerSiteId, sni);
-
-                // add check to the queue
-                checkQueue.Add(() => _netUtil.CheckSNI(domain.Value, sni).Result);
-
-                // add cleanup actions to queue
-                cleanupQueue.Add(() => iisManager.RemoveHttpsBinding(managedCertificate.ServerSiteId, sni));
-
-                cleanupQueue.Add(() => Task.Run(() => CertificateManager.RemoveCertificate(x509)));
-            }
-
-            // configure cleanup to execute the cleanup queue
-            pendingAuth.Cleanup = async () =>
-            {
-                cleanupQueue.ForEach(a => a());
-            };
-
-            // perform our own config checks
-            return () => checkQueue.All(check => check());
         }
 
         private DnsChallengeHelper _dnsHelper = null;

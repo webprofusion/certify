@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace Certify.Models.Hub
@@ -100,8 +100,8 @@ namespace Certify.Models.Hub
 
     public class AccessTokenCheck
     {
-        public AccessToken Token { get; set; }
-        public AccessCheck Check { get; set; }
+        public AccessToken Token { get; set; } = default!;
+        public AccessCheck Check { get; set; } = default!;
     }
 
     public class AccessTokenTypes

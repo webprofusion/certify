@@ -92,7 +92,7 @@ namespace Certify.Models
             }
         }
 
-        private void HandleChangeEvent(object src, EventArgs args)
+        private void HandleChangeEvent(object? src, EventArgs args)
         {
             if (_isChangeDetectionPaused)
             {
@@ -103,7 +103,7 @@ namespace Certify.Models
 
             if (args is NotifyCollectionChangedEventArgs ccArgs)
             {
-                if (ccArgs.Action == NotifyCollectionChangedAction.Remove)
+                if (ccArgs.Action == NotifyCollectionChangedAction.Remove && ccArgs.OldItems != null)
                 {
                     foreach (var obj in ccArgs.OldItems)
                     {
@@ -111,7 +111,7 @@ namespace Certify.Models
                     }
                 }
 
-                if (ccArgs.Action == NotifyCollectionChangedAction.Add)
+                if (ccArgs.Action == NotifyCollectionChangedAction.Add && ccArgs.NewItems != null)
                 {
                     foreach (var obj in ccArgs.NewItems)
                     {

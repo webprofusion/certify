@@ -121,9 +121,8 @@ namespace Certify.Models.Shared.Validation
             }
 
             // update our list of selected subject ip addresses, if any
-            if (!config.SubjectIPAddresses.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip).Select(s => s.Domain).ToArray()))
+            if (config.SubjectIPAddresses?.SequenceEqual(item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip).Select(s => s.Domain).ToArray()) == false)
             {
-
                 config.SubjectIPAddresses = item.DomainOptions.Where(i => i.IsSelected && i.Type == CertIdentifierType.Ip && i.Domain != null)
                                                               .Select(s => s.Domain ?? string.Empty)
                                                               .ToArray();
@@ -343,7 +342,7 @@ namespace Certify.Models.Shared.Validation
                     if (
                         item.DomainOptions?.Any(d => d.IsSelected && d.Domain != null && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
                         &&
-                        !item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
+                        item.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) == false
                         )
                     {
                         return new ValidationResult(
@@ -395,7 +394,7 @@ namespace Certify.Models.Shared.Validation
                 }
 
                 // TLS-SNI-01 (is now not supported)
-                if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI))
+                if (item.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI) == true)
                 {
                     return new ValidationResult(
                         false,
@@ -404,7 +403,7 @@ namespace Certify.Models.Shared.Validation
                     );
                 }
 
-                if (item.RequestConfig.Challenges.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && string.IsNullOrEmpty(c.ChallengeProvider)))
+                if (item.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && string.IsNullOrEmpty(c.ChallengeProvider)) == true)
                 {
                     return new ValidationResult(
                         false,
@@ -413,7 +412,7 @@ namespace Certify.Models.Shared.Validation
                     );
                 }
 
-                if (item.RequestConfig.Challenges.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
+                if (item.RequestConfig.Challenges?.Count(c => string.IsNullOrEmpty(c.DomainMatch)) > 1)
                 {
                     return new ValidationResult(
                        false,
@@ -455,7 +454,7 @@ namespace Certify.Models.Shared.Validation
                 }
 
                 // check certificate will not exceed 100 name limit. TODO: make this dynamic per selected CA
-                var numSelectedDomains = item.DomainOptions.Count(d => d.IsSelected);
+                var numSelectedDomains = item.DomainOptions?.Count(d => d.IsSelected) ?? 0;
 
                 if (numSelectedDomains > 100)
                 {
