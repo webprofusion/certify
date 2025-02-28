@@ -158,6 +158,9 @@ namespace Certify.Management
 
         public static void SetSupportedTLSVersions()
         {
+#if NET9_0_OR_GREATER
+            return;
+#else
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | (SecurityProtocolType)12288;
@@ -170,7 +173,7 @@ namespace Certify.Management
 
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
             Debug.WriteLine("ServicePointManager.SecurityProtocol : Tls 1.2 is the highest supported protocol");
-
+#endif
         }
 
         public static string GetUserAgent()

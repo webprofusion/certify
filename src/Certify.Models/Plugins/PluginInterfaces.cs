@@ -51,7 +51,7 @@ namespace Certify.Models.Plugins
     public interface IProviderPlugin<TProviderInterface, TProviderDefinition>
     {
         List<TProviderDefinition> GetProviders(Type pluginType);
-        TProviderInterface GetProvider(Type pluginType, string id);
+        TProviderInterface? GetProvider(Type pluginType, string id);
     }
 
     /// <summary>
