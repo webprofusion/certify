@@ -22,7 +22,7 @@ namespace Certify.Plugins
 
         private IServiceProvider? _services { get; }
 
-        public TProviderInterface GetProvider(Type pluginType, string? id)
+        public TProviderInterface? GetProvider(Type pluginType, string? id)
         {
 
             id = id?.ToLowerInvariant();
@@ -34,27 +34,29 @@ namespace Certify.Plugins
 
             foreach (var t in typeList)
             {
-                var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
-                if (def != null && def is ProviderDefinition)
+                var defProperty = t.GetProperty("Definition");
+                if (defProperty != null)
                 {
-                    if ((def as ProviderDefinition)?.Id?.ToLowerInvariant() == id)
+                    var def = (TProviderDefinition?)defProperty.GetValue(null);
+                    if (def != null && def is ProviderDefinition)
                     {
-                        if (_services == null)
+                        if ((def as ProviderDefinition)?.Id?.ToLowerInvariant() == id)
                         {
-                            return (TProviderInterface)Activator.CreateInstance(t);
-                        }
-                        else
-                        {
-                            return (TProviderInterface)ActivatorUtilities.CreateInstance(_services, t);
+                            if (_services == null)
+                            {
+                                return (TProviderInterface?)Activator.CreateInstance(t);
+                            }
+                            else
+                            {
+                                return (TProviderInterface?)ActivatorUtilities.CreateInstance(_services, t);
+                            }
                         }
                     }
                 }
             }
 
             // the requested provider id is not present in this provider plugin, could be in another assembly
-#pragma warning disable CS8603 // Possible null reference return.
             return default;
-#pragma warning restore CS8603 // Possible null reference return.
         }
 
         public List<TProviderDefinition> GetProviders(Type pluginType)
@@ -70,8 +72,15 @@ namespace Certify.Plugins
             {
                 try
                 {
-                    var def = (TProviderDefinition)t.GetProperty("Definition").GetValue(null);
-                    list.Add(def);
+                    var defProperty = t.GetProperty("Definition");
+                    if (defProperty != null)
+                    {
+                        var def = (TProviderDefinition?)defProperty.GetValue(null);
+                        if (def != null)
+                        {
+                            list.Add(def);
+                        }
+                    }
                 }
                 catch (Exception)
                 {
