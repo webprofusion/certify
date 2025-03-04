@@ -250,7 +250,7 @@ namespace Certify.SourceGenerators
                          OperationMethod = HttpPost,
                          Comment = "Perform an import of all settings",
                          ServiceAPIRoute = "system/migration/import",
-                         ReturnType = "ICollection<ActionStep>", 
+                         ReturnType = "ICollection<ActionStep>",
                          Params = new Dictionary<string, string> { { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
                      },
                     /* per instance API, via management hub */
