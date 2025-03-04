@@ -261,17 +261,17 @@ namespace Certify.Core.Management
                 return aesAlg;
             }
 #else
-             var saltBytes = Encoding.ASCII.GetBytes(salt);
-             var key = new Rfc2898DeriveBytes(secret, saltBytes);
+            var saltBytes = Encoding.ASCII.GetBytes(salt);
+            var key = new Rfc2898DeriveBytes(secret, saltBytes);
 
-             var aesAlg = Aes.Create();
-             aesAlg.Mode = CipherMode.CBC;
-             aesAlg.Padding = PaddingMode.PKCS7;
+            var aesAlg = Aes.Create();
+            aesAlg.Mode = CipherMode.CBC;
+            aesAlg.Padding = PaddingMode.PKCS7;
 
-             aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
-             aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
+            aesAlg.Key = key.GetBytes(aesAlg.KeySize / 8);
+            aesAlg.IV = key.GetBytes(aesAlg.BlockSize / 8);
 
-             return aesAlg;
+            return aesAlg;
 #endif
         }
 
