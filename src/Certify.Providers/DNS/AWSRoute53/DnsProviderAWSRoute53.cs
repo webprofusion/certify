@@ -236,15 +236,58 @@ namespace Certify.Providers.DNS.AWSRoute53
                 {
                     _log?.Information($"Route53 :: Delete Record : Fetched TXT record set OK {targetRecordSet.Name} ");
 
-                    try
-                    {
-                        var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+                    // within reason, patch the record set to remove the record we want to remove instead of deleting all entries with the same name
+                    // we limit this approach because other things can update the same recordset and cause it to grow beyond reasonable limits
 
-                        return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
-                    }
-                    catch (AmazonRoute53Exception exp)
+                    var snapshot = targetRecordSet.ResourceRecords.ToList();
+
+                    if (targetRecordSet.ResourceRecords.Count > 0 && targetRecordSet.ResourceRecords.Count < 10)
                     {
-                        return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
+
+                        // reduce record set ones we want to keep
+                        var preservedResourceRecords = targetRecordSet.ResourceRecords.Where(r => r.Value != "\"" + request.RecordValue + "\"").ToList();
+
+                        if (preservedResourceRecords.Count == 0)
+                        {
+                            // no records left, delete the record set
+                            try
+                            {
+                                targetRecordSet.ResourceRecords = snapshot;
+                                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+                                return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+                            }
+                            catch (AmazonRoute53Exception exp)
+                            {
+                                return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
+                            }
+                        }
+                        else
+                        {
+                            targetRecordSet.ResourceRecords = preservedResourceRecords;
+
+                            try
+                            {
+                                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
+                                return new ActionResult { IsSuccess = true, Message = $"Dns Record Removed: {request.RecordName}" };
+                            }
+                            catch (AmazonRoute53Exception exp)
+                            {
+                                return new ActionResult { IsSuccess = false, Message = $"Dns Record Remove failed: {request.RecordName} - {exp.Message}" };
+                            }
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
+
+                            return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
+                        }
+                        catch (AmazonRoute53Exception exp)
+                        {
+                            return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
+                        }
                     }
                 }
                 else
