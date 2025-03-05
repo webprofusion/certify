@@ -3,6 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.0;net9.0;</TargetFrameworks>
         <Platforms>AnyCPU</Platforms>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
@@ -31,12 +32,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Assets\public_suffix_list.dat">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-      <None Update="Assets\rdap_dns.json.dat">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="Assets\public_suffix_list.dat">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="Assets\rdap_dns.json.dat">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>
