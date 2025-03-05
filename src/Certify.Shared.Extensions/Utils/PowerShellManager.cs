@@ -235,11 +235,11 @@ namespace Certify.Management
                     var wrapperTempFilePath = Path.GetTempFileName();
                     wrapperScriptPath = Path.ChangeExtension(wrapperTempFilePath, ".ps1");
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
-                    ApplyFileACL(wrapperScriptPath, username);
+                    await ApplyFileACL(wrapperScriptPath, username);
 
                     resultsJsonTempPath = Path.GetTempFileName();
                     File.WriteAllText(resultsJsonTempPath, resultJson);
-                    ApplyFileACL(resultsJsonTempPath, username);
+                    await ApplyFileACL(resultsJsonTempPath, username);
 
                     resultsJsonExported = true;
                 }
