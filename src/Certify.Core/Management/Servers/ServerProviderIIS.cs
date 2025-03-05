@@ -44,12 +44,19 @@ namespace Certify.Management.Servers
         private IISBindingDeploymentTarget _iisBindingDeploymentTarget = null;
         public IBindingDeploymentTarget GetDeploymentTarget()
         {
-            if (_iisBindingDeploymentTarget == null)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _iisBindingDeploymentTarget = new IISBindingDeploymentTarget(this);
-            }
+                if (_iisBindingDeploymentTarget == null)
+                {
+                    _iisBindingDeploymentTarget = new IISBindingDeploymentTarget(this);
+                }
 
-            return _iisBindingDeploymentTarget;
+                return _iisBindingDeploymentTarget;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public Task<bool> IsAvailable()
