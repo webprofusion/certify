@@ -85,7 +85,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="subDirectory">optional subfolder to include</param>
         /// <returns>full app data with with optional subdirectory</returns>
-        public static string CreateAppDataPath(string? subDirectory = null, bool skipCreation = false)
+        public static string CreateAppDataPath(string subDirectory = null, bool skipCreation = false)
         {
             var parts = new List<string>()
             {
@@ -138,7 +138,7 @@ namespace Certify.Models
                 {
                     using var fileStream = new FileStream(filePath, FileMode.Open);
                     using var reader = new StreamReader(fileStream);
-                    string? line;
+                    string line;
 
                     while ((line = reader.ReadLine()) != null)
                     {
