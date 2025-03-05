@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.Services
 {
+    /// <summary>
+    /// Simple worker to monitor for connected instances and manage instance state
+    /// </summary>
     public class ManagementWorker : IHostedService, IDisposable
     {
         private readonly ILogger<ManagementWorker> _logger;
@@ -13,6 +16,12 @@ namespace Certify.Server.Hub.Api.Services
         private int _updateFrequency = 10;
         private string _serviceName = "[Management Worker]";
 
+        /// <summary>
+        /// Create a new instance of the management worker
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="hubContext"></param>
+        /// <param name="stateProvider"></param>
         public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider)
         {
             _logger = logger;
@@ -20,6 +29,11 @@ namespace Certify.Server.Hub.Api.Services
             _stateProvider = stateProvider;
         }
 
+        /// <summary>
+        /// Start the management worker
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
         public Task StartAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{svc} running.", _serviceName);
@@ -28,6 +42,11 @@ namespace Certify.Server.Hub.Api.Services
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Dispatch a command to a connected instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="cmd"></param>
         private void DispatchCommand(string instanceId, InstanceCommandRequest cmd)
         {
             var connectionId = _stateProvider.GetConnectionIdForInstance(instanceId);
@@ -42,28 +61,21 @@ namespace Certify.Server.Hub.Api.Services
             }
         }
 
+        /// <summary>
+        /// Perform simple monitoring of connected instances
+        /// </summary>
+        /// <param name="state"></param>
         private void DoWork(object? state)
         {
             var instances = _stateProvider.GetConnectedInstances();
             _logger.LogInformation("{svc} connected instances: {count}", _serviceName, instances.Count());
-
-            /*foreach (var instance in instances)
-            {
-                _logger.LogInformation("{svc} requesting info from instance: id:{id} title:{title}", _serviceName, instance.InstanceId, instance.Title);
-
-                // refresh instance status
-                var cmd = new InstanceCommandRequest { CommandId = Guid.NewGuid(), CommandType = ManagementHubCommands.GetInstanceItems, Value = null };
-
-                DispatchCommand(instance.InstanceId, cmd);
-            }
-
-            // 
-            var items = _stateProvider.GetManagedInstanceItems();
-            _logger.LogInformation("{svc} total items managed across instances: {count}", _serviceName, items.SelectMany(s=>s.Value.Items).Count());
-            */
-
         }
 
+        /// <summary>
+        /// Stop the management worker
+        /// </summary>
+        /// <param name="stoppingToken"></param>
+        /// <returns></returns>
         public Task StopAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("{svc} is stopping.", _serviceName);
@@ -73,6 +85,9 @@ namespace Certify.Server.Hub.Api.Services
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Dispose of the management worker timer etc
+        /// </summary>
         public void Dispose()
         {
             _timer?.Dispose();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,7 +9,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Principal;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Models.Certify.Models;
 using Certify.Models.Providers;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.X509;
@@ -96,11 +95,17 @@ namespace Certify.Management
                 const string password = "";
                 store.Save(stream, password.ToCharArray(), random);
 
+#if NET9_0_OR_GREATER
+
+                return X509CertificateLoader.LoadPkcs12(stream.ToArray(), password, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+#else
                 var finalExportableCertificate =
-                    new X509Certificate2(stream.ToArray(),
-                                         password,
-                                         X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                   new X509Certificate2(stream.ToArray(),
+                                        password,
+                                        X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
                 return finalExportableCertificate;
+#endif
+
             }
         }
 
@@ -120,36 +125,6 @@ namespace Certify.Management
 
             // if subject matches sni and SAN is ok, return true
             return x509.SubjectDN.ToString() == $"CN={sni}" && sniOK;
-        }
-
-        /// <summary>
-        /// Gets the certificate the file is signed with.
-        /// </summary>
-        /// <param name="filename"> 
-        /// The path of the signed file from which to create the X.509 certificate.
-        /// </param>
-        /// <returns> The certificate the file is signed with </returns>
-        public static X509Certificate2 GetFileCertificate(string filename)
-        {
-            // https://blogs.msdn.microsoft.com/windowsmobile/2006/05/17/programmatically-checking-the-authenticode-signature-on-a-file/
-            X509Certificate2 cert;
-
-            try
-            {
-                cert = new X509Certificate2(System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromSignedFile(filename));
-
-                CheckCertChain(cert);
-
-            }
-            catch (CryptographicException e)
-            {
-                Console.WriteLine("Error {0} : {1}", e.GetType(), e.Message);
-                Console.WriteLine("Couldn't parse the certificate." +
-                                  "Be sure it is an X.509 certificate");
-                return null;
-            }
-
-            return cert;
         }
 
         /// <summary>
@@ -204,11 +179,11 @@ namespace Certify.Management
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        public static async Task<CertificateStatusType> CheckOcspRevokedStatus(string filename, string pwd, ILog log = null)
+        public static async Task<Models.Certify.Models.CertificateStatusType> CheckOcspRevokedStatus(string filename, string pwd, ILog log = null)
         {
             if (string.IsNullOrEmpty(filename) || !File.Exists(filename))
             {
-                return CertificateStatusType.Unknown;
+                return Models.Certify.Models.CertificateStatusType.Unknown;
             }
 
             try
@@ -233,7 +208,7 @@ namespace Certify.Management
                     return await Shared.Utils.OcspUtils.Query(endEntityCert, issuerCert, log);
                 }
 
-                return CertificateStatusType.Unknown;
+                return Models.Certify.Models.CertificateStatusType.Unknown;
             }
             catch (Exception)
             {
@@ -244,6 +219,25 @@ namespace Certify.Management
 
         public static X509Certificate2 LoadCertificate(string filename, string pwd = "", bool throwOnError = false)
         {
+#if NET9_0_OR_GREATER
+            try
+            {
+                var pfxBytes = File.ReadAllBytes(filename);
+                return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+            catch (Exception exp)
+            {
+                if (throwOnError)
+                {
+                    throw;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"LoadCertificate: Failed to load certificate: {filename}" + exp.Message);
+                    return null;
+                }
+            }
+#else
             try
             {
                 var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
@@ -261,6 +255,8 @@ namespace Certify.Management
                     return null;
                 }
             }
+#endif
+
         }
 
         public static Org.BouncyCastle.X509.X509Certificate ReadCertificateFromPem(string pemFile)
