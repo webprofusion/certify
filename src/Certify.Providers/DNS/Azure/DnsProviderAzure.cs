@@ -51,7 +51,7 @@ namespace Certify.Providers.DNS.Azure
             HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/azuredns",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany; usgov=Azure US Government" },
+                        new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany (deprecated); usgov=Azure US Government" },
                         new ProviderParameter{ Key="tenantid", Name="Directory (tenant) Id", IsRequired=false },
                         new ProviderParameter{ Key="clientid", Name="Application (client) Id", IsRequired=false },
                         new ProviderParameter{ Key="secret",Name="Client Secret", IsRequired=true , IsPassword=true},
@@ -106,7 +106,9 @@ namespace Certify.Providers.DNS.Azure
                 case "china":
                     return AzureAuthorityHosts.AzureChina;
                 case "germany":
+#pragma warning disable CS0618 // Type or member is obsolete
                     return AzureAuthorityHosts.AzureGermany;
+#pragma warning restore CS0618 // Type or member is obsolete
                 default:
                     return AzureAuthorityHosts.AzurePublicCloud;
             }

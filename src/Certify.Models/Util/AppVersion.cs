@@ -40,7 +40,7 @@
             return current;
         }
 
-        public static bool IsOtherVersionNewer(AppVersion currentVersion, AppVersion otherVersion)
+        public static bool IsOtherVersionNewer(AppVersion? currentVersion, AppVersion? otherVersion)
         {
             if (currentVersion == null)
             {

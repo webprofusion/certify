@@ -187,15 +187,5 @@ namespace Certify.Service.Controllers
 
             return result;
         }
-
-        [HttpPost, Route("serviceauth")]
-        public async Task<Models.Config.ActionResult> ValidateServiceAuth()
-        {
-            var protector = _dataProtectionProvider.CreateProtector("serviceauth");
-
-            protector.Unprotect(Request.Headers["X-Service-Auth"]);
-
-            return new Models.Config.ActionResult();
-        }
     }
 }
