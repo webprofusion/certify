@@ -22,6 +22,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
+        /// <param name="mgmtAPI"></param>
         public DeploymentTaskController(ILogger<DeploymentTaskController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtAPI)
         {
             _logger = logger;

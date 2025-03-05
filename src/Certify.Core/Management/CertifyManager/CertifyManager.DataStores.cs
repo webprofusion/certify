@@ -162,7 +162,7 @@ namespace Certify.Management
                 allProviders.AddRange(providers);
             }
 
-            return allProviders.OrderBy(p => p.Title).ToList();
+            return await Task.FromResult(allProviders.OrderBy(p => p.Title).ToList());
         }
 
         public async Task<List<DataStoreConnection>> GetDataStores()
@@ -187,7 +187,7 @@ namespace Certify.Management
                 dataStores.Add(new DataStoreConnection { Id = "(default)", Title = "(Default SQLite)", TypeId = "sqlite" });
             }
 
-            return dataStores.OrderBy(t => t.Title).ToList();
+            return await Task.FromResult(dataStores.OrderBy(t => t.Title).ToList());
         }
         public async Task<List<ActionStep>> CopyDateStoreToTarget(string sourceId, string destId)
         {
