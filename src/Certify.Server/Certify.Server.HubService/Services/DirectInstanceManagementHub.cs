@@ -40,7 +40,7 @@ namespace Certify.Server.HubService.Services
             {
                 _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
 
-                if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
+                if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo && result.Value != null)
                 {
                     var instanceInfo = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value);
 
@@ -88,24 +88,24 @@ namespace Certify.Server.HubService.Services
                         // action this message from this instance
                         _logger?.LogInformation("Received instance command result {result}", result.CommandType);
 
-                        if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
+                        if (cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
                         {
                             // got items from an instance
                             var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
 
-                            _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
+                            _stateProvider.UpdateInstanceItemInfo(instanceId, val!.Items);
                         }
-                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value != null)
+                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result.Value != null)
                         {
                             // got status summary
                             var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
 
-                            _stateProvider.UpdateInstanceStatusSummary(instanceId, val);
+                            _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
                         }
-                        else
+                        else if (result != null)
                         {
                             // store for something else to consume
-                            if (result.IsCommandResponse)
+                            if (result.IsCommandResponse == true)
                             {
                                 _stateProvider.AddAwaitedCommandResult(result);
                             }

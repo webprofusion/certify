@@ -452,15 +452,18 @@ namespace Certify.Core.Management.Challenges
                 // renewing may all point to the same web root, we keep the configcheck file
                 pendingAuth.Cleanup = async () =>
                 {
-                    if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
+                    await Task.Run(() =>
                     {
-                        log.Debug("Challenge Cleanup: Removing {file}", destFile);
-                        try
+                        if (!destFile.EndsWith("configcheck") && File.Exists(destFile))
                         {
-                            File.Delete(destFile);
+                            log.Debug("Challenge Cleanup: Removing {file}", destFile);
+                            try
+                            {
+                                File.Delete(destFile);
+                            }
+                            catch { }
                         }
-                        catch { }
-                    }
+                    });
                 };
 
                 performFilesystemBasedValidation = true;
