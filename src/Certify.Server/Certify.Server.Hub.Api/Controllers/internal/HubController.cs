@@ -28,6 +28,8 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
+        /// <param name="mgmtStateProvider"></param>
+        /// <param name="mgmtHubContext"></param>
         public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
         {
             _logger = logger;
@@ -39,7 +41,9 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Get all managed certificates matching criteria
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="keyword"></param>
+        /// <param name="health"></param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
@@ -97,6 +101,10 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkObjectResult(result);
         }
 
+        /// <summary>
+        /// Get all hub managed instances
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("instances")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -112,6 +120,10 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkObjectResult(managedInstances);
         }
 
+        /// <summary>
+        /// Flush all hub managed instances
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("flush")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -123,6 +135,10 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkResult();
         }
 
+        /// <summary>
+        /// Get info about the hub instance
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("info")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubInfo))]

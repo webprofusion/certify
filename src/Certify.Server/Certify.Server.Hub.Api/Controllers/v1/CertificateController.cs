@@ -152,6 +152,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Download text log for the given managed certificate
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="managedCertId"></param>
         /// <param name="maxLines"></param>
         /// <returns>Log file in text format</returns>
@@ -221,7 +222,6 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Get summary counts of all managed certs
         /// </summary>
-        /// <param name="keyword"></param>
         /// <returns></returns>
         [HttpPost]
         [Route("summary")]
@@ -253,6 +253,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Add/update the full settings for a specific managed certificate
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
         [HttpPost]
@@ -292,6 +293,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Begin the managed certificate request/renewal process a set of managed certificates
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="settings"></param>
         /// <returns></returns>
         [HttpPost]
@@ -315,6 +317,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Perform default tests for the given configuration
         /// </summary>
+        /// <param name="instanceId"></param>
         /// <param name="item"></param>
         /// <returns></returns>
         [HttpPost]

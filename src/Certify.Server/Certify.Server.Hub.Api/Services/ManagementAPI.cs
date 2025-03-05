@@ -557,7 +557,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="exportRequest">The export request details.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>An <see cref="ImportExportPackage"/> containing the exported configuration.</returns>
-        internal async Task<Models.Config.Migration.ImportExportPackage> PerformInstanceExport(string instanceId, ExportRequest exportRequest, AuthContext? currentAuthContext)
+        internal async Task<Models.Config.Migration.ImportExportPackage?> PerformInstanceExport(string instanceId, ExportRequest exportRequest, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId) ,

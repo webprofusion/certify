@@ -7,11 +7,11 @@ namespace Certify.Server.HubService.Services
 {
     public class DirectManagementServerClient : Client.IManagementServerClient
     {
-        public event Action OnConnectionClosed;
-        public event Action OnConnectionReconnected;
-        public event Action OnConnectionReconnecting;
-        public event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
-        public event Func<ManagedInstanceItems> OnGetInstanceItems;
+        public event Action? OnConnectionClosed;
+        public event Action? OnConnectionReconnected;
+        public event Action? OnConnectionReconnecting;
+        public event Func<InstanceCommandRequest, Task<InstanceCommandResult>>? OnGetCommandResult;
+        public event Func<ManagedInstanceItems>? OnGetInstanceItems;
 
         private ICertifyManager _certifyManager;
         private IInstanceManagementHub _managementHub;

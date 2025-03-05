@@ -24,6 +24,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
+        /// <param name="mgmtApi"></param>
         public SystemController(ILogger<SystemController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtApi)
         {
             _logger = logger;

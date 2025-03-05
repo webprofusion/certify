@@ -50,7 +50,7 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<SecurityPrinciple>> GetSecurityPrinciples(AuthContext authContext) => _accessController(authContext).GetSecurityPrinciples();
         public Task<ActionResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
         public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);
-        public Task<ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext? authContext = null) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });
+        public Task<ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });
         public Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens(AuthContext authContext) => _accessController(authContext).GetAssignedAccessTokens();
         public Task<ActionResult> RemoveSecurityPrinciple(string id, AuthContext authContext) => _accessController(authContext).DeleteSecurityPrinciple(id);
         public Task<ActionResult> UpdateSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrinciple(principle);
