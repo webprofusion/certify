@@ -1,10 +1,12 @@
 ﻿using Certify.Client;
 using Certify.Management;
+using Certify.Models;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Server.HubService.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
@@ -36,6 +38,15 @@ builder.Services.AddDataProtection(a =>
 {
     a.ApplicationDiscriminator = "certify";
 });
+
+var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
+
+builder.Services
+    .AddDataProtection(a =>
+    {
+        a.ApplicationDiscriminator = "certify";
+    })
+    .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
 
 builder.Services.AddResponseCompression();
 
