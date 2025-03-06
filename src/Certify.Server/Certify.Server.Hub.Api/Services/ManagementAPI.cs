@@ -18,7 +18,7 @@ namespace Certify.Server.Hub.Api.Services
     {
         IInstanceManagementStateProvider _mgmtStateProvider;
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
-        Certify.Management.ICertifyManager _certifyManager;
+        Certify.Management.ICertifyManager _certifyManager = default!;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ManagementAPI"/> class.
