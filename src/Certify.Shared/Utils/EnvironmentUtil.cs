@@ -87,12 +87,19 @@ namespace Certify.Models
         /// <returns>full app data with with optional subdirectory</returns>
         public static string CreateAppDataPath(string subDirectory = null, bool skipCreation = false)
         {
+            // use the environment variable CERTIFY_APPDATA_PATH if set, otherwise use the common app data folder
             var parts = new List<string>()
             {
                 Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
                 Models.SharedConstants.APPDATASUBFOLDER
             };
 
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CERTIFY_APPDATA_PATH")))
+            {
+                parts = new List<string> { Environment.GetEnvironmentVariable("CERTIFY_APPDATA_PATH") };
+            }
+
+            // if per instance settings are enabled, include the machine name in the path
             if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_PER_INSTANCE_SETTINGS")?.ToLowerInvariant() == "true")
             {
                 parts.Add(Environment.MachineName.ToLowerInvariant().Trim());
