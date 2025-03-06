@@ -50,7 +50,6 @@
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
         <PackageReference Include="System.Text.Json" Version="9.0.2" />
-        <PackageReference Include="System.IO.FileSystem.AccessControl" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
