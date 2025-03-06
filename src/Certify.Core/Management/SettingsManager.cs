@@ -187,6 +187,11 @@ namespace Certify.Management
 
 
         /// <summary>
+        /// If true, ARI checks will not be performed during periodic maintenance
+        /// </summary>
+        public bool DisableARIChecks { get; set; }
+
+        /// <summary>
         ///  if true, additional management hub features and data stores may be enabled
         /// </summary>
         public bool IsManagementHubService { get; set; }
