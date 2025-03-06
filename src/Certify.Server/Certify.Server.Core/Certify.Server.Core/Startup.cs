@@ -1,5 +1,7 @@
 ﻿using System.Text;
 using Certify.Management;
+using Certify.Models;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
@@ -24,10 +26,15 @@ namespace Certify.Server.Core
                 .AddSignalR()
                 .AddMessagePackProtocol();
 
-            services.AddDataProtection(a =>
-            {
-                a.ApplicationDiscriminator = "certify";
-            });
+            var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
+
+            services
+                .AddDataProtection(a =>
+                {
+                    a.ApplicationDiscriminator = "certify";
+                })
+                .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
+
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream", "application/json" });
