@@ -15,7 +15,8 @@ try {
 # iwr https://tls13.1d.pw # TLS 1.3 test
 
 # Load Assembly without using Add-Type to avoid locking assembly dll
-$assemblyBytes = [System.IO.File]::ReadAllBytes("$($PoshACMERoot)\..\..\..\BouncyCastle.Cryptography.dll")
+$bcPath = [IO.Path]::Combine($PoshACMERoot, '..', '..','..','BouncyCastle.Cryptography.dll')
+$assemblyBytes = [System.IO.File]::ReadAllBytes($bcPath)
 [System.Reflection.Assembly]::Load($assemblyBytes) | out-null
 
 # Dot source the files (in the same manner as Posh-ACME would)
