@@ -1283,6 +1283,16 @@ namespace Certify.Core.Management.Challenges.DNS
 
             if (parameterDefinition.Type == OptionType.Boolean)
             {
+                if (val == "on")
+                {
+                    val = "true";
+                }
+
+                if (val == "off")
+                {
+                    val = "false";
+                }
+
                 // boolean
                 return key + "=" + (bool.Parse(val) == true ? "$true" : "$false");
             }
