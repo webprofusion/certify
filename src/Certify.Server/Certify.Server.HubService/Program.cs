@@ -1,4 +1,4 @@
-﻿using Certify.Client;
+using Certify.Client;
 using Certify.Management;
 using Certify.Models;
 using Certify.Server.Hub.Api.Middleware;
@@ -132,9 +132,25 @@ if (statusHubContext == null)
 var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
 
 // wire up internal service to our hub
+var managementServerClient = app.Services.GetService<DirectManagementServerClient>();
 
 var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
 await certifyManager.Init();
+
+// wire up status reporting, include management hub cached state ahndlers for request progress state updates and item updates
+certifyManager.SetStatusReporting(statusReporting);
+
+statusReporting.OnRequestProgressStateUpdated += (RequestProgressState state) =>
+{
+
+};
+
+statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
+{
+    var mgmtHubState = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
+    mgmtHubState.UpdateCachedManagedInstanceItem(item.InstanceId, item);
+
+};
 
 var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
 certifyManager.SetDirectManagementClient(directServerClient);
