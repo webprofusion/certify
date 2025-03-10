@@ -13,6 +13,16 @@ namespace Certify.Server.Hub.Api.SignalR
         private IHubContext<UserInterfaceStatusHub> _hubContext;
 
         /// <summary>
+        /// Event raised when a progress update is available
+        /// </summary>
+        public event Action<RequestProgressState>? OnRequestProgressStateUpdated;
+
+        /// <summary>
+        /// Event raised when a managed certificate has been updated
+        /// </summary>
+        public event Action<ManagedCertificate>? OnManagedCertificateUpdated;
+
+        /// <summary>
         /// constructor
         /// </summary>
         /// <param name="hubContext"></param>
@@ -29,6 +39,11 @@ namespace Certify.Server.Hub.Api.SignalR
         public async Task ReportRequestProgress(RequestProgressState state)
         {
             Debug.WriteLine($"Sending progress update message to UI: {state.Message}");
+            if (OnRequestProgressStateUpdated != null)
+            {
+                OnRequestProgressStateUpdated.Invoke(state);
+            }
+
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, state);
 
         }
@@ -41,6 +56,12 @@ namespace Certify.Server.Hub.Api.SignalR
         public async Task ReportManagedCertificateUpdated(ManagedCertificate item)
         {
             Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
+
+            if (OnManagedCertificateUpdated != null)
+            {
+                OnManagedCertificateUpdated.Invoke(item);
+            }
+
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
     }

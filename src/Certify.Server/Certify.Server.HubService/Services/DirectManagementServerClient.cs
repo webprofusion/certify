@@ -47,7 +47,18 @@ namespace Certify.Server.HubService.Services
         }
         void IManagementServerClient.SendNotificationToManagementHub(string msgCommandType, object updateMsg)
         {
-            System.Diagnostics.Debug.WriteLine("SendInstanceInfo");
+            var result = new InstanceCommandResult
+            {
+                CommandId = Guid.NewGuid(),
+                InstanceId = _instanceInfo.InstanceId,
+                CommandType = msgCommandType,
+                Value = System.Text.Json.JsonSerializer.Serialize(updateMsg),
+                ObjectValue = updateMsg,
+                IsCommandResponse = false
+            };
+
+            result.ObjectValue = updateMsg;
+            _managementHub.ReceiveCommandResult(result);
 
         }
     }
