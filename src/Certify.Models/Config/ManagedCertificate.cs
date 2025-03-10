@@ -240,6 +240,11 @@ namespace Certify.Models
         public DateTimeOffset? DateLastRenewalAttempt { get; set; }
 
         /// <summary>
+        /// Timestamp of last data fetch from source instance
+        /// </summary>
+        public DateTimeOffset? DateRetrieved { get; set; }
+
+        /// <summary>
         /// Status of most recent renewal attempt
         /// </summary>
         public RequestState? LastRenewalStatus { get; set; }
