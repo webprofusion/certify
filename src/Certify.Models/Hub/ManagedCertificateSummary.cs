@@ -44,6 +44,11 @@ namespace Certify.Models.Hub
         public DateTimeOffset? DateExpiry { get; set; }
 
         /// <summary>
+        /// Timestamp of the most recent item fetch
+        /// </summary>
+        public DateTimeOffset? DateRetrieved { get; set; }
+
+        /// <summary>
         /// Most recent request/renewal status for this item
         /// </summary>
         public string Status { get; set; } = string.Empty;

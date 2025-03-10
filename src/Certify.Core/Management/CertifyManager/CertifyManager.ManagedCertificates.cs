@@ -37,6 +37,7 @@ namespace Certify.Management
             if (item != null)
             {
                 item.InstanceId = InstanceId;
+                item.DateRetrieved = DateTime.UtcNow;
             }
 
             return item;
@@ -60,7 +61,7 @@ namespace Certify.Management
                 }
             }
 
-            list.ForEach(i => i.InstanceId = InstanceId);
+            list.ForEach(i => { i.InstanceId = InstanceId; i.DateRetrieved = DateTime.UtcNow; });
 
             return list;
         }
@@ -119,7 +120,7 @@ namespace Certify.Management
 
             var list = await _itemManager.Find(filter);
 
-            list.ForEach(i => i.InstanceId = InstanceId);
+            list.ForEach(i => { i.InstanceId = InstanceId; i.DateRetrieved = DateTime.UtcNow; });
 
             result.Results = list;
 
@@ -183,6 +184,7 @@ namespace Certify.Management
             managedCert.InstanceId = InstanceId;
 
             // report request state to status hub clients
+
             _statusReporting?.ReportManagedCertificateUpdated(managedCert);
 
             return managedCert;
