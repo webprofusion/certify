@@ -56,7 +56,7 @@ namespace Certify.Server.Hub.Api.Controllers
             if (CurrentAuthContext != null)
             {
                 // auth based on JWT identity
-                var authCheckOK = await IsAuthorized(_client, new AccessCheck(CurrentAuthContext.UserId, default!, StandardResourceActions.CertificateDownload));
+                var authCheckOK = await IsAuthorized(_client, new AccessCheck(CurrentAuthContext.UserId, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
                 if (!authCheckOK)
                 {
                     return Problem(detail: "Identity not authorized for this action", statusCode: (int)HttpStatusCode.Unauthorized);
