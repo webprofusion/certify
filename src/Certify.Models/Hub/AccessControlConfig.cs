@@ -12,7 +12,11 @@ namespace Certify.Models.Hub
                      StandardPolicies.AcmeAccountAdmin,
                      StandardPolicies.StoredCredentialAdmin,
                      StandardPolicies.ManagedChallengeAdmin,
-                     StandardPolicies.AccessAdmin
+                     StandardPolicies.AccessAdmin,
+                     StandardPolicies.CertificateConsumer,
+                     StandardPolicies.AccessAdmin,
+                     StandardPolicies.ManagementHubAdmin,
+                     StandardPolicies.ManagedChallengeAdmin
                     });
 
         public static Role CertificateManager { get; } = new Role("cert_manager", "Certificate Manager", "Can manage and administer all certificates",
