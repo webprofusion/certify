@@ -1,18 +1,18 @@
 <Project>
-  <PropertyGroup>
-    <Version>7.0.0</Version>
-    <AssemblyVersion>7.0.0</AssemblyVersion>
-    <Authors>Webprofusion Pty Ltd</Authors>
-    <Company>Webprofusion Pty Ltd</Company>
-    <Product>Certify Certificate Manager - Community Edition [dev version via github]</Product>
-    <PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
-    <Deterministic>false</Deterministic>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup>
-	<Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
-	<DebugType>portable</DebugType>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Version>7.0.0.2</Version>
+		<AssemblyVersion>7.0.0.2</AssemblyVersion>
+		<Authors>Webprofusion Pty Ltd</Authors>
+		<Company>Webprofusion Pty Ltd</Company>
+		<Product>Certify Certificate Manager - Community Edition [dev version via github]</Product>
+		<PackageProjectUrl>https://certifytheweb.com</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/webprofusion/certify</RepositoryUrl>
+		<Deterministic>false</Deterministic>
+		<DebugSymbols>true</DebugSymbols>
+		<DebugType>full</DebugType>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
 </Project>
