@@ -1,20 +1,32 @@
 ﻿using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Server.Hub.Api.Services;
+using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.HubService.Services
 {
+
+    /// <summary>
+    /// Instance mgmt hub which talks directly to the in process backend certify core service, skipping HTTP API layer and signalr
+    /// </summary>
     public class DirectInstanceManagementHub : IInstanceManagementHub
     {
         private IInstanceManagementStateProvider _stateProvider;
         private ILogger<DirectInstanceManagementHub> _logger;
         private ICertifyManager _certifyManager;
-        public DirectInstanceManagementHub(ILogger<DirectInstanceManagementHub> logger, IInstanceManagementStateProvider stateProvider, ICertifyManager certifyManager)
+        private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
+        private ManagementAPI _mgmtAPI;
+        public DirectInstanceManagementHub(ILogger<DirectInstanceManagementHub> logger, IInstanceManagementStateProvider stateProvider, ICertifyManager certifyManager, IHubContext<UserInterfaceStatusHub> uiStatusHub, Server.Hub.Api.Services.ManagementAPI mgmtAPI)
         {
             _stateProvider = stateProvider;
             _logger = logger;
             _certifyManager = certifyManager;
+            _uiStatusHub = uiStatusHub;
+            _mgmtAPI = mgmtAPI;
+
         }
 
         /// <summary>
@@ -114,16 +126,16 @@ namespace Certify.Server.HubService.Services
                                 // item was not requested, queue for processing
                                 if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem)
                                 {
-                                    //_uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
                                 }
                                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress)
                                 {
-                                    //_uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
                                 }
                                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem)
                                 {
                                     // deleted :TODO
-                                    //_uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
+                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
                                 }
                             }
                         }

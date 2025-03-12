@@ -147,6 +147,22 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Issue request for updated status summary from this instance
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="currentAuthContext"></param>
+        /// <returns></returns>
+        public async Task RefreshManagedCertificateSummary(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                 new("instanceId", instanceId)
+             };
+
+            var result = await PerformInstanceCommandTaskWithResult<StatusSummary?>(instanceId, args, ManagementHubCommands.GetStatusSummary);
+            _mgmtStateProvider.UpdateInstanceStatusSummary(instanceId, result);
+        }
+
+        /// <summary>
         /// Exports a managed certificate from the target instance in the specified format.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>

@@ -158,7 +158,7 @@ namespace Certify.Management
             summary.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
             summary.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
             summary.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
-            summary.NoCertificate = ms.Count(c => c.CertificatePath == null);
+            summary.NoCertificate = ms.Count(c => c.DateStart == null);
 
             // count items with invalid config (e.g. multiple primary domains)
             summary.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
