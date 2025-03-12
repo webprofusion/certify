@@ -389,7 +389,17 @@ namespace Certify.Server.Hub.Api.Services
                         new("taskId", taskId)
                 };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ExecuteDeploymentTask);
+            var result = await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ExecuteDeploymentTask);
+
+            // a deployment task may take more time to execute than the SignalR/messaging timeout
+            if (result != null)
+            {
+                return result;
+            }
+            else
+            {
+                return new List<ActionStep> { new ActionStep("Task Still Running", "The deployment task is still running and took longer than the default wait time. Check logs for task status.", hasError: false) };
+            }
         }
 
         /// <summary>
