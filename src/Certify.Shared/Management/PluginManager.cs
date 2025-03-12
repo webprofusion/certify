@@ -69,6 +69,7 @@ namespace Certify.Management
                         .Enrich.FromLogContext()
                         .MinimumLevel.Information()
                         .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .WriteTo.Console()
                         .CreateLogger();
 
             var msLogger = new SerilogLoggerFactory(serilogLogger).CreateLogger<PluginManager>();
