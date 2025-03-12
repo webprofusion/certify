@@ -64,6 +64,7 @@ namespace Certify.Models
                         logPath, shared: true,
                         flushToDiskInterval: new TimeSpan(0, 0, 10)
                     )
+                    .WriteTo.Console()
                     .CreateLogger();
 
                 return new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<ManagedCertificate>();
