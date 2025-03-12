@@ -87,7 +87,7 @@ namespace Certify.Server.Hub.Api.Controllers
                                 DateRenewed = i.DateRenewed,
                                 DateExpiry = i.DateExpiry,
                                 Comments = i.Comments ?? "",
-                                Status = i.LastRenewalStatus?.ToString() ?? "",
+                                Status = i.Health.ToString(),
                                 DateRetrieved = i.DateRetrieved,
                                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
                             };

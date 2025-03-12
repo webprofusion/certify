@@ -13,6 +13,9 @@ namespace Certify.Server.Hub.Api.Services
         private Timer? _timer = null;
         IHubContext<InstanceManagementHub> _hubContext;
         IInstanceManagementStateProvider _stateProvider;
+
+        private ManagementAPI _mgmtAPI;
+
         private int _updateFrequency = 10;
         private string _serviceName = "[Management Worker]";
 
@@ -22,11 +25,12 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="logger"></param>
         /// <param name="hubContext"></param>
         /// <param name="stateProvider"></param>
-        public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider)
+        public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider, ManagementAPI mgmtAPI)
         {
             _logger = logger;
             _hubContext = hubContext;
             _stateProvider = stateProvider;
+            _mgmtAPI = mgmtAPI;
         }
 
         /// <summary>
@@ -69,6 +73,11 @@ namespace Certify.Server.Hub.Api.Services
         {
             var instances = _stateProvider.GetConnectedInstances();
             _logger.LogInformation("{svc} connected instances: {count}", _serviceName, instances.Count());
+
+            foreach (var instance in instances)
+            {
+                _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
+            }
         }
 
         /// <summary>
