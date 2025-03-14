@@ -10,15 +10,16 @@
         <ContainerBaseImage>mcr.microsoft.com/dotnet/aspnet:9.0</ContainerBaseImage>
         <UserSecretsId>c6402661-abaa-463e-ab79-e40d979f8b77</UserSecretsId>
         <DockerfileContext>..\..\..\..\certify-manager</DockerfileContext>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.0.27" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.0.30" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.0" />
 
         <!-- included to prevent conflict with older versions in plugins-->
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.2" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.3" />
     </ItemGroup>
 
     <ItemGroup>
@@ -34,6 +35,12 @@
         <ProjectReference Include="..\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj">
             <PrivateAssets>all</PrivateAssets>
         </ProjectReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="NewFolder1\" />
+      <Folder Include="NewFolder2\" />
+      <Folder Include="NewFolder\" />
     </ItemGroup>
 
 </Project>
