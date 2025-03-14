@@ -14,8 +14,16 @@ namespace Certify.Models.Hub
 
         public List<string> Tags { get; set; } = new List<string>();
         public DateTimeOffset LastReported { get; set; }
+
+        public string ConnectionStatus { get; set; } = string.Empty;
     }
 
+    public class ConnectionStatus
+    {
+        public const string Connected = "connected";
+        public const string Disconnected = "disconnected";
+        public const string Away = "away";
+    }
     public class ManagedInstanceItems
     {
         public string InstanceId { get; set; } = string.Empty;

@@ -1,82 +1,71 @@
-﻿using Certify.Models.Hub;
+﻿using Certify.Management;
+using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 {
-    /// <summary>
-    /// Interface for instance management hub events
-    /// </summary>
-    public interface IInstanceManagementHub
-    {
-        /// <summary>
-        /// Send command to an instance or the current caller if instance not provided
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        Task SendCommandRequest(InstanceCommandRequest cmd);
-
-        /// <summary>
-        /// Receive command result from an instance
-        /// </summary>
-        /// <param name="result"></param>
-        /// <returns></returns>
-        Task ReceiveCommandResult(InstanceCommandResult result);
-
-        /// <summary>
-        /// Receive adhoc message from an instance
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        Task ReceiveInstanceMessage(InstanceMessage message);
-    }
 
     /// <summary>
     /// Individual backend/agent instances connect as clients to this hub to send back managed item updates, progress reports, config settings. 
     /// Instances receive commands (managed item updates etc, config updates)
+    /// This also uses direct communication with certifyManager if talking to the local management hub instance
+    /// This works in conjunction with the InstanceManagementStateProvider to track instance connections and state and Management API to send commands to instances
     /// </summary>
     public class InstanceManagementHub : Hub<IInstanceManagementHub>, IInstanceManagementHub
     {
         private IInstanceManagementStateProvider _stateProvider;
         private ILogger<InstanceManagementHub> _logger;
         private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
+        private ICertifyManager? _certifyManager;
+        private readonly string _localInstanceId;
+        private bool _hasLocalInstance => _certifyManager != null;
 
         /// <summary>
         /// Set up instance management hub
         /// </summary>
         /// <param name="stateProvider"></param>
         /// <param name="logger"></param>
-        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub)
+        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub, ICertifyManager? certifyManager = null)
         {
             _stateProvider = stateProvider;
             _logger = logger;
             _uiStatusHub = uiStatusHub;
+            _certifyManager = certifyManager;
+
+            // If we have a local certify manager, register it as a special local instance
+            // this is so we can talk to it directly without going via SignalR
+            if (_hasLocalInstance)
+            {
+                // Create a unique local instance connection id
+                _localInstanceId = _certifyManager!.GetManagedInstanceInfo().InstanceId;
+            }
         }
 
         /// <summary>
-        /// Handle connection event
+        /// Handle connection event from an instance using SignalR
         /// </summary>
         /// <returns></returns>
         public override Task OnConnectedAsync()
         {
-            _logger?.LogInformation("InstanceManagementHub: Instance connected to instance management hub..");
+            _logger?.LogInformation("InstanceManagementHub: Remote instance connected to instance management hub..");
 
             // begin tracking connection 
-            _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo { InstanceId = string.Empty, LastReported = DateTimeOffset.Now });
+            _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo { InstanceId = string.Empty, ConnectionStatus = ConnectionStatus.Connected, LastReported = DateTimeOffset.Now });
 
-            // issue command for instance to identify itself
+            // at this stage we don't know which instance this is, we need to issue a command for it to identify itself before it can participate
             var request = new InstanceCommandRequest
             {
                 CommandId = Guid.NewGuid(),
                 CommandType = ManagementHubCommands.GetInstanceInfo
             };
 
-            IssueCommand(request);
+            IssueCommandViaSignalR(request);
 
             return base.OnConnectedAsync();
         }
 
-        private void IssueCommand(InstanceCommandRequest cmd)
+        private void IssueCommandViaSignalR(InstanceCommandRequest cmd)
         {
             _stateProvider.AddAwaitedCommandRequest(cmd);
 
@@ -84,13 +73,58 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         }
 
         /// <summary>
-        /// Handle disconnection event
+        /// Issue command directly to the local instance
+        /// </summary>
+        private async Task IssueCommandDirectly(InstanceCommandRequest cmd)
+        {
+            if (!_hasLocalInstance)
+            {
+                _logger?.LogWarning("Attempted direct command but local instance not available");
+                return;
+            }
+
+            _stateProvider.AddAwaitedCommandRequest(cmd);
+
+            var result = await _certifyManager!.PerformHubCommandWithResult(cmd);
+            if (result != null)
+            {
+                result.CommandType = cmd.CommandType;
+                result.CommandId = cmd.CommandId;
+                result.InstanceId = _stateProvider.GetInstanceIdForConnection(_localInstanceId);
+
+                await ReceiveCommandResult(result);
+            }
+            else
+            {
+                _logger?.LogWarning("Attempted direct command but result was null {cmdType}", cmd.CommandType);
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+            }
+        }
+
+        private async Task IssueInstanceCommand(string instanceId, InstanceCommandRequest cmd)
+        {
+            if (_hasLocalInstance && instanceId == _localInstanceId)
+            {
+                await IssueCommandDirectly(cmd);
+            }
+            else
+            {
+                // send command to instance via SignalR on the current caller context
+                IssueCommandViaSignalR(cmd);
+            }
+        }
+
+        /// <summary>
+        /// Handle SignalR disconnection event
         /// </summary>
         /// <param name="exception"></param>
         /// <returns></returns>
         public override Task OnDisconnectedAsync(Exception? exception)
         {
             var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
+
+            _stateProvider.UpdateInstanceConnectionStatus(instanceId, ConnectionStatus.Disconnected);
+
             if (exception != null)
             {
                 _logger?.LogError("InstanceManagementHub: Instance {instanceId} disconnected unexpectedly from instance management hub. {exp}", instanceId, exception);
@@ -108,13 +142,15 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// </summary>
         /// <param name="result"></param>
         /// <returns></returns>
-        public Task ReceiveCommandResult(InstanceCommandResult result)
+        public async Task ReceiveCommandResult(InstanceCommandResult result)
         {
-
+            var instanceId = _stateProvider.GetInstanceIdForConnection(Context?.ConnectionId ?? _localInstanceId);
             result.Received = DateTimeOffset.Now;
 
             // check we are awaiting this result
             var cmd = _stateProvider.GetAwaitedCommandRequest(result.CommandId);
+
+            _logger?.LogDebug("[InstanceManagementHub.ReceiveCommandResult] Received instance command result {result} {instance}", result.CommandType, instanceId);
 
             if (cmd == null && !result.IsCommandResponse)
             {
@@ -124,95 +160,21 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (cmd != null)
             {
-                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+                //_stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
 
                 if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
                 {
-                    var instanceInfo = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value);
-
-                    if (instanceInfo != null)
-                    {
-
-                        instanceInfo.LastReported = DateTimeOffset.UtcNow;
-                        _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, instanceInfo);
-
-                        _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
-
-                        // if we don't yet have any managed items for this instance, ask for them
-                        if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
-                        {
-                            var request = new InstanceCommandRequest
-                            {
-                                CommandId = Guid.NewGuid(),
-                                CommandType = ManagementHubCommands.GetManagedItems
-                            };
-
-                            IssueCommand(request);
-                        }
-
-                        // if we dont have a status summary, ask for that
-                        if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
-                        {
-                            var request = new InstanceCommandRequest
-                            {
-                                CommandId = Guid.NewGuid(),
-                                CommandType = ManagementHubCommands.GetStatusSummary
-                            };
-
-                            IssueCommand(request);
-                        }
-                    }
+                    await ProcessInstanceInfoResult(result);
                 }
                 else
                 {
                     // for all other command results we need to resolve which instance id we are communicating with
-                    var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
+
                     result.InstanceId = instanceId;
 
                     if (!string.IsNullOrWhiteSpace(instanceId))
                     {
-                        // action this message from this instance
-                        _logger?.LogInformation("Received instance command result {result}", result.CommandType);
-
-                        if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
-                        {
-                            // got items from an instance
-                            var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
-
-                            _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
-                        }
-                        else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value != null)
-                        {
-                            // got status summary
-                            var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
-
-                            _stateProvider.UpdateInstanceStatusSummary(instanceId, val);
-                        }
-                        else
-                        {
-                            // store for something else to consume
-                            if (result.IsCommandResponse)
-                            {
-                                _stateProvider.AddAwaitedCommandResult(result);
-                            }
-                            else
-                            {
-                                // item was not requested, queue for processing
-                                if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem)
-                                {
-                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
-                                }
-                                else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress)
-                                {
-                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
-                                }
-                                else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem)
-                                {
-                                    // deleted :TODO
-                                    _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
-                                }
-                            }
-                        }
+                        await ProcessInstanceCommandResult(result, cmd, instanceId);
                     }
                     else
                     {
@@ -220,14 +182,102 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     }
                 }
             }
+            else
+            {
+                _logger?.LogError("Received instance command result for an unknown command {cmdId} {result}", result.CommandId, result.CommandType);
+            }
+        }
 
-            return Task.CompletedTask;
+        /// <summary>
+        /// Processes the result of a command sent to an instance, handling various command types accordingly.
+        /// </summary>
+        /// <param name="result">Contains the outcome of the command executed on the instance.</param>
+        /// <param name="cmd">Represents the command that was sent to the instance.</param>
+        /// <param name="instanceId">Identifies the specific instance being processed.</param>
+        private async Task ProcessInstanceCommandResult(InstanceCommandResult result, InstanceCommandRequest cmd, string instanceId)
+        {
+            // action this message from this instance
+            _logger?.LogDebug("[ProcessInstanceCommandResult] Received instance command result {instanceId} {cmdType}", instanceId, cmd.CommandType);
+
+            if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
+            {
+                // got items from an instance
+                var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
+
+                _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
+            }
+            else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value != null)
+            {
+                // got status summary
+                var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
+
+                _stateProvider.UpdateInstanceStatusSummary(instanceId, val);
+            }
+            else if (result.IsCommandResponse)
+            {
+                _stateProvider.AddAwaitedCommandResult(result);
+            }
+            else
+            {
+                // item was not requested, queue for processing
+                if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem)
+                {
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
+                }
+                else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress)
+                {
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
+                }
+                else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem)
+                {
+                    // deleted :TODO
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
+                }
+            }
+        }
+
+        private async Task ProcessInstanceInfoResult(InstanceCommandResult result)
+        {
+            var instanceInfo = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value);
+
+            if (instanceInfo != null)
+            {
+
+                instanceInfo.LastReported = DateTimeOffset.UtcNow;
+                _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
+
+                _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
+
+                // if we don't yet have any managed items for this instance, ask for them
+                if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
+                {
+                    var request = new InstanceCommandRequest
+                    {
+                        CommandId = Guid.NewGuid(),
+                        CommandType = ManagementHubCommands.GetManagedItems
+                    };
+
+                    await IssueInstanceCommand(instanceInfo.InstanceId, request);
+                }
+
+                // if we dont have a status summary, ask for that
+                if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
+                {
+                    var request = new InstanceCommandRequest
+                    {
+                        CommandId = Guid.NewGuid(),
+                        CommandType = ManagementHubCommands.GetStatusSummary
+                    };
+
+                    await IssueInstanceCommand(instanceInfo.InstanceId, request);
+                }
+            }
         }
 
         public Task ReceiveInstanceMessage(InstanceMessage message)
         {
 
-            var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
+            var instanceId = _stateProvider.GetInstanceIdForConnection(Context?.ConnectionId ?? _localInstanceId);
             if (instanceId != null)
             {
                 // action this message from this instance
@@ -235,17 +285,33 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
             else
             {
-                _logger?.LogError("Received instance command result for an unknown instance {msg}", message);
+                _logger?.LogError("[ReceiveInstanceMessage] Received Instance Message result for an unknown instance {msgType}", message.MessageType);
             }
 
             return Task.CompletedTask;
         }
 
-        public Task SendCommandRequest(InstanceCommandRequest cmd)
+        /// <summary>
+        /// Sends a command request either via SignalR or directly to a local instance based on the connection context.
+        /// </summary>
+        /// <param name="cmd">Contains the details of the command to be executed.</param>
+        /// <returns>This method does not return a value.</returns>
+        public async Task SendCommandRequest(InstanceCommandRequest cmd)
         {
-            IssueCommand(cmd);
-
-            return Task.CompletedTask;
+            // If called in SignalR context, send to caller
+            if (Context?.ConnectionId != null)
+            {
+                IssueCommandViaSignalR(cmd);
+            }
+            // Otherwise attempt direct communication with local instance
+            else if (_hasLocalInstance)
+            {
+                await IssueCommandDirectly(cmd);
+            }
+            else
+            {
+                _logger?.LogError("SendCommandRequest: No connection context and no local instance available");
+            }
         }
     }
 }
