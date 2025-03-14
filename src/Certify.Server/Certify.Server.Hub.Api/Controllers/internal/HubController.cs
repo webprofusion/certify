@@ -1,10 +1,10 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.Controllers
 {
@@ -21,8 +21,7 @@ namespace Certify.Server.Hub.Api.Controllers
         private readonly ICertifyInternalApiClient _client;
 
         private IInstanceManagementStateProvider _mgmtStateProvider;
-        private IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
-
+        private ManagementAPI _mgmtAPI;
         /// <summary>
         /// Constructor
         /// </summary>
@@ -30,12 +29,12 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="client"></param>
         /// <param name="mgmtStateProvider"></param>
         /// <param name="mgmtHubContext"></param>
-        public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
+        public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, ManagementAPI mgmtAPI)
         {
             _logger = logger;
             _client = client;
             _mgmtStateProvider = mgmtStateProvider;
-            _mgmtHubContext = mgmtHubContext;
+            _mgmtAPI = mgmtAPI;
         }
 
         /// <summary>
@@ -131,8 +130,8 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> FlushHubManagedInstances()
         {
-            _mgmtStateProvider.Clear();
-            await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
+            _mgmtAPI.ReconnectInstances();
+
             return new OkResult();
         }
 
@@ -151,6 +150,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             hubInfo.InstanceId = hubprefs.InstanceId;
 
+            // TODO: there is probably be a better place to set this
             _mgmtStateProvider.SetManagementHubInstanceId(hubInfo.InstanceId);
 
             var versionInfo = await _client.GetAppVersion();

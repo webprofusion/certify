@@ -66,7 +66,7 @@ namespace Certify.Management
 
         private void SendHeartbeatToManagementHub()
         {
-            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), false);
+            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), isCommandResponse: false);
         }
 
         public ManagedInstanceInfo GetManagedInstanceInfo()
@@ -104,10 +104,12 @@ namespace Certify.Management
 
                 _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
+
+                _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
             }
             catch (Exception ex)
             {
-                _serviceLog.Error(ex, "Failed to create connection to management hub {hubUri}", hubUri);
+                _serviceLog.Error(ex, "Failed to connect to management hub {hubUri}", hubUri);
 
                 _managementServerClient = null;
             }

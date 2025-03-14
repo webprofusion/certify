@@ -14,6 +14,7 @@ using ServiceControllers = Certify.Service.Controllers;
 
 namespace Certify.Server.HubService.Services
 {
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     /// <summary>
     /// The HubService is a surrogate for the Certify Server Core Service, Service API and Client. The Hub hosts a Certify Server Core instead of talking to a Service instance over http, skipping a layer of abstraction and a communication layer.
     /// A further layer of abstraction can be skipped by implementing all controller logic in Certify.Core and using that directly
@@ -22,6 +23,12 @@ namespace Certify.Server.HubService.Services
     {
         private ICertifyManager _certifyManager;
         private IDataProtectionProvider _dataProtectionProvider;
+
+        /// <summary>
+        /// Initializes a new instance of the CertifyHubService class.
+        /// </summary>
+        /// <param name="certifyManager">Used to manage certification processes within the service.</param>
+        /// <param name="dataProtectionProvider">Provides data protection functionalities for secure data handling.</param>
         public CertifyHubService(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider)
         {
             _certifyManager = certifyManager;
@@ -43,7 +50,14 @@ namespace Certify.Server.HubService.Services
         }
 
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
+
         public Task<ActionResult> AddSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).AddSecurityPrinciple(principle);
+        /// <summary>
+        /// Checks if the security principle has access to the specified resource.
+        /// </summary>
+        /// <param name="check">The access check details.</param>
+        /// <param name="authContext">The authentication context.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the security principle has access.</returns>
         public Task<bool> CheckSecurityPrincipleHasAccess(AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckSecurityPrincipleHasAccess(check);
         public Task<ICollection<AssignedRole>> GetSecurityPrincipleAssignedRoles(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipleAssignedRoles(id);
         public Task<RoleStatus> GetSecurityPrincipleRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipleRoleStatus(id);
@@ -126,6 +140,6 @@ namespace Certify.Server.HubService.Services
 
         public Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext? authContext = null) => throw new NotImplementedException();
-
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
