@@ -60,7 +60,6 @@ namespace Certify.Server.Hub.Api.Services
             }
             else
             {
-                _stateProvider.AddAwaitedCommandRequest(cmd);
                 _hubContext.Clients.Client(connectionId).SendAsync(ManagementHubMessages.SendCommandRequest, cmd);
             }
         }
