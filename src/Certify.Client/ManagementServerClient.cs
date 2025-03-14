@@ -31,6 +31,12 @@ namespace Certify.Client
         {
             _hubUri = $"{hubUri}";
             _instanceInfo = instanceInfo;
+
+        }
+
+        private void Log(string msg)
+        {
+            System.Diagnostics.Debug.WriteLine(msg);
         }
 
         public bool IsConnected()
@@ -95,11 +101,11 @@ namespace Certify.Client
         }
         private void PerformRequestedCommand(InstanceCommandRequest cmd)
         {
-            System.Diagnostics.Debug.WriteLine($"Got command from management server {cmd}");
+            Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
 
             if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
             {
-                SendInstanceInfo(cmd.CommandId);
+                SendInstanceInfo(cmd.CommandId, isCommandResponse: true);
             }
             else
             {
@@ -108,6 +114,10 @@ namespace Certify.Client
                 {
                     if (cmd.CommandType != ManagementHubCommands.Reconnect)
                     {
+                        task.Result.IsCommandResponse = true;
+                        task.Result.CommandType = cmd.CommandType;
+                        task.Result.CommandId = cmd.CommandId;
+
                         _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
                     }
                     else

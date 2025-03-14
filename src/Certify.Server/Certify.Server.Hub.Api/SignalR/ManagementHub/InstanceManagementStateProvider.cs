@@ -11,7 +11,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         public void Clear();
         public void SetManagementHubInstanceId(string instanceId);
         public string GetManagementHubInstanceId();
-        public void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
+        public void UpdateInstanceConnectionInfo(string? connectionId, ManagedInstanceInfo instanceInfo);
         public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
         public string GetConnectionIdForInstance(string instanceId);
         public string GetInstanceIdForConnection(string connectionId);
@@ -20,7 +20,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         public void RemoveAwaitedCommandRequest(Guid commandId);
         public InstanceCommandRequest? GetAwaitedCommandRequest(Guid commandId);
         public void AddAwaitedCommandResult(InstanceCommandResult result);
-        public Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(Guid commandId);
+
+        /// <summary>
+        /// Wait for a command result to be available
+        /// </summary>
+        /// <param name="commandId"></param>
+        /// <returns></returns>
+        public Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
         public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
         public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string instanceId = null);
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
@@ -29,6 +35,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         public bool HasStatusSummaryForManagedInstance(string instanceId);
         public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
+        public void UpdateInstanceConnectionStatus(string instanceId, string status);
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -113,6 +120,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             _instanceConnections.AddOrUpdate(connectionId, instanceInfo, (i, oldValue) =>
             {
+                instanceInfo.ConnectionStatus = ConnectionStatus.Connected;
                 return instanceInfo;
             });
         }
@@ -165,6 +173,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="command"></param>
         public void AddAwaitedCommandRequest(InstanceCommandRequest command)
         {
+            _logger.LogDebug("[AddAwaitedCommandRequest] Issued command {commandId} {cmdType}.", command.CommandId, command.CommandType);
+
             _awaitedCommandRequests.AddOrUpdate(command.CommandId, command, (i, oldValue) => { return command; });
         }
 
@@ -185,38 +195,38 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="result"></param>
         public void AddAwaitedCommandResult(InstanceCommandResult result)
         {
+            _logger.LogDebug("[AddAwaitedCommandResult] {commandId} {cmdType}.", result.CommandId, result.CommandType);
             _awaitedCommandResults.AddOrUpdate(result.CommandId, result, (i, oldValue) => result);
         }
 
         /// <summary>
         /// Wait for a command result to be available
         /// </summary>
-        /// <param name="commandId"></param>
+        /// <param name="cmd"></param>
         /// <returns></returns>
-        public async Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(Guid commandId)
+        public async Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd)
         {
-            _logger.LogInformation("Waiting for command result {commandId}..", commandId);
+            _logger.LogDebug("[ConsumeAwaitedCommandResult] Waiting for command result {commandId}..", cmd.CommandId);
             var attempts = 50;
 
-            while (attempts > 0 && !_awaitedCommandResults.TryGetValue(commandId, out _))
+            while (attempts > 0 && !_awaitedCommandResults.TryGetValue(cmd.CommandId, out _))
             {
                 attempts--;
                 await Task.Delay(100);
-                _logger.LogInformation("Still waiting for command result {commandId}..", commandId);
             }
 
-            _awaitedCommandResults.Remove(commandId, out var cmd);
+            _awaitedCommandResults.Remove(cmd.CommandId, out var cmdResult);
 
-            if (cmd == null)
+            if (cmdResult == null)
             {
-                _logger.LogError("Gave up waiting for command result {commandId}..", commandId);
+                _logger.LogError("[ConsumeAwaitedCommandResult] Gave up waiting for command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
             }
             else
             {
-                _logger.LogInformation("Got command result {commandId}..", commandId);
+                _logger.LogDebug("[ConsumeAwaitedCommandResult] Got command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
             }
 
-            return cmd;
+            return cmdResult;
         }
 
         /// <summary>
@@ -225,7 +235,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="commandId"></param>
         public void RemoveAwaitedCommandRequest(Guid commandId)
         {
-            _awaitedCommandRequests.Remove(commandId, out _);
+            _awaitedCommandRequests.Remove(commandId, out var request);
+
+            if (request != null)
+            {
+                _logger.LogDebug("[RemoveAwaitedCommandRequest] Removed command request {commandId} {cmdType}..", request.CommandId, request.CommandType);
+            }
+            else
+            {
+                _logger.LogWarning("[RemoveAwaitedCommandRequest] Could not remove unknown command request {commandId}..", commandId);
+            }
         }
 
         /// <summary>
@@ -305,6 +324,17 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instance?.Items != null)
             {
                 instance.Items.RemoveAll(r => r.Id == managedCertificateId);
+            }
+        }
+
+        public void UpdateInstanceConnectionStatus(string instanceId, string status)
+        {
+            var info = _instanceConnections.FirstOrDefault(k => k.Value.InstanceId == instanceId);
+            if (info.Value != null)
+            {
+                info.Value.ConnectionStatus = status;
+                UpdateInstanceConnectionInfo(info.Key, info.Value);
+
             }
         }
     }

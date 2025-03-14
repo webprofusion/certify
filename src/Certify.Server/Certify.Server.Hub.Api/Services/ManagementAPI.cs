@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace Certify.Server.Hub.Api.Services
 {
     /// <summary>
-    /// Management Hub API for handling commands and requests.
+    /// Management Hub API for handling commands and requests. This sends commands to instances (local ICertifyManager instance or remote) and handles the results.
     /// </summary>
     public partial class ManagementAPI
     {
@@ -20,15 +20,18 @@ namespace Certify.Server.Hub.Api.Services
         IHubContext<InstanceManagementHub, IInstanceManagementHub> _mgmtHubContext;
         Certify.Management.ICertifyManager _certifyManager = default!;
 
+        ILogger<ManagementAPI> _log;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ManagementAPI"/> class.
         /// </summary>
         /// <param name="mgmtStateProvider">The instance management state provider.</param>
         /// <param name="mgmtHubContext">The management hub context for SignalR or Direct communication.</param>
-        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext)
+        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, ILogger<ManagementAPI> log)
         {
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
+            _log = log;
         }
 
         /// <summary>
@@ -37,11 +40,24 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="mgmtStateProvider">The instance management state provider.</param>
         /// <param name="mgmtHubContext">The management hub context for SignalR communication.</param>
         /// <param name="certifyManager">The in-process Certify manager instance.</param>
-        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager)
+        public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager, ILogger<ManagementAPI> log)
         {
             _mgmtStateProvider = mgmtStateProvider;
             _mgmtHubContext = mgmtHubContext;
+            _log = log;
             _certifyManager = certifyManager;
+
+        }
+
+        /// <summary>
+        /// Flush connections and reconnect all instances.
+        /// </summary>
+        /// <returns></returns>
+        public async Task ReconnectInstances()
+        {
+            _mgmtStateProvider.Clear();
+            //TODO: send command to local instance if present, then send to signalr hub clients
+            await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
         }
 
         /// <summary>
@@ -56,14 +72,20 @@ namespace Certify.Server.Hub.Api.Services
 
             if (connectionId == null)
             {
-                throw new Exception("Instance connection info not known, cannot send commands to instance.");
+                _log.LogError("Instance connection info not known for {instanceId}, cannot send command {cmdId} {cmdType} to instance.", instanceId, cmd.CommandId, cmd.CommandType);
             }
 
-            _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
-
-            await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
-
-            return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd.CommandId);
+            if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
+            {
+                // get command result directly from in-process instance
+                return await _certifyManager.PerformHubCommandWithResult(cmd);
+            }
+            else
+            {
+                _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
+                await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
+                return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd);
+            }
         }
 
         /// <summary>
@@ -80,11 +102,9 @@ namespace Certify.Server.Hub.Api.Services
                 throw new Exception("Instance connection info not known, cannot send commands to instance.");
             }
 
-            _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
-
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
-                // get command result directly from in-process instance
+                // send directly to in-process instance
                 await _certifyManager.PerformHubCommandWithResult(cmd);
             }
             else
@@ -106,16 +126,7 @@ namespace Certify.Server.Hub.Api.Services
             InstanceCommandResult result;
             var cmd = new InstanceCommandRequest(commandType, args);
 
-            if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
-            {
-                // get command result directly from in-process instance
-                result = await _certifyManager.PerformHubCommandWithResult(cmd);
-            }
-            else
-            {
-                // get command result via SignalR
-                result = await GetCommandResult(instanceId, cmd);
-            }
+            result = await GetCommandResult(instanceId, cmd);
 
             if (result?.Value != null)
             {
