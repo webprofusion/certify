@@ -70,8 +70,8 @@ namespace Certify.Management
                 Id = "admin_01",
                 Description = "Primary default admin",
                 PrincipleType = SecurityPrincipleType.User,
-                Username = "admin",
-                Password = "admin",
+                Username = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTUSERNAME") ?? "admin",
+                Password = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTPWD") ?? "changeme!",
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
