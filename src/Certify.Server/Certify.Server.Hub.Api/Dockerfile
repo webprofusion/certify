@@ -10,7 +10,7 @@ WORKDIR /app
 EXPOSE 32768
 EXPOSE 44360
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Certify.Server/Certify.Server.Hub.Api/Certify.Server.Hub.Api.csproj", "Certify.Server/Certify.Server.Hub.Api/"]
