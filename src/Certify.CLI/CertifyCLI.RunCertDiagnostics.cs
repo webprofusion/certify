@@ -112,6 +112,7 @@ namespace Certify.CLI
                     }
                 }
 
+#if !NET9_0_OR_GREATER
                 if (!string.IsNullOrEmpty(site.CertificatePath) && System.IO.File.Exists(site.CertificatePath))
                 {
                     Console.WriteLine($"{site.Name}");
@@ -136,6 +137,7 @@ namespace Certify.CLI
                                         Console.WriteLine("\t Access: " + a.IdentityReference.Value.ToString());
                                     }
                                 }
+
                             }
 
                             if (includeOcspCheck)
@@ -212,7 +214,7 @@ namespace Certify.CLI
                         }
                     }
                 }
-
+#endif
                 Debug.WriteLine($"Item update took {itemTiming.Elapsed.TotalSeconds}s");
             }
 
