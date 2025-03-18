@@ -1594,7 +1594,11 @@ namespace Certify.Providers.ACME.Anvil
 
                 certificateChain = await orderContext.Download(preferredChain);
 
+#if NET9_0_OR_GREATER
+                cert = X509CertificateLoader.LoadCertificate(certificateChain.Certificate.ToDer());
+#else
                 cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(certificateChain.Certificate.ToDer());
+#endif
 
                 certExpiration = cert.NotAfter;
                 certFriendlyName += $"{cert.GetEffectiveDateString()} to {cert.GetExpirationDateString()}";
