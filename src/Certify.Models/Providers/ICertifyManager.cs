@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Config;
+using Certify.Core.Management.Access;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
@@ -78,7 +79,7 @@ namespace Certify.Management
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
 
         Task<ActionResult> TestCredentials(string storageKey);
-        Task<Core.Management.Access.IAccessControl> GetCurrentAccessControl();
+        Task<IAccessControl> GetCurrentAccessControl();
 
         Task<ICollection<ManagedChallenge>> GetManagedChallenges();
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
