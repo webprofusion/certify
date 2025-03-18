@@ -775,27 +775,42 @@ namespace Certify.Management
             //if no results from common app data path, try alternative use specific app data (files may be under user specific subfolder)
             appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             machineKeyPath = Path.Combine(new string[] { appDataPath, "Microsoft", "Crypto", "RSA" });
-            fileList = Directory.GetDirectories(machineKeyPath);
-
-            if (fileList.Any())
+            try
             {
-                foreach (var filename in fileList)
+                fileList = Directory.GetDirectories(machineKeyPath);
+
+                if (fileList.Any())
                 {
-                    var dirList = Directory.GetFiles(filename, keyFileName);
-                    if (dirList.Any())
+                    foreach (var filename in fileList)
                     {
-                        return filename;
+                        var dirList = Directory.GetFiles(filename, keyFileName);
+                        if (dirList.Any())
+                        {
+                            return filename;
+                        }
                     }
                 }
+            }
+            catch (System.IO.DirectoryNotFoundException)
+            {
+                // user has no appdata path
             }
 
             appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             machineKeyPath = Path.Combine(appDataPath, "Microsoft", "Crypto", "Keys");
-            fileList = Directory.GetFiles(machineKeyPath);
 
-            if (fileList.Any())
+            try
             {
-                return machineKeyPath;
+                fileList = Directory.GetFiles(machineKeyPath);
+
+                if (fileList.Any())
+                {
+                    return machineKeyPath;
+                }
+            }
+            catch (System.IO.DirectoryNotFoundException)
+            {
+                // user has no appdata path
             }
 
             //Could not access private key file.
