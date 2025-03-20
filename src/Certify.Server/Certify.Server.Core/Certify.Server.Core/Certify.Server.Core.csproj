@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <TargetFrameworks>net9.0</TargetFrameworks>
         <UserSecretsId>3648c5f3-f642-441e-979e-d4624cd39e49</UserSecretsId>
@@ -13,12 +13,15 @@
         <PackageReference Include="Polly" Version="8.5.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.3" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.3" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.3" />
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.3" />
+
+        <!-- only include swashbuckle in debug build -->
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\..\certify\src\Certify.Core\Certify.Core.csproj" />
