@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net462;net9.0</TargetFrameworks>
-        <Configurations>Debug;Release;Debug;Release</Configurations>
+        <TargetFrameworks>net9.0;</TargetFrameworks>
+        <Configurations>Debug;Release;</Configurations>
         <AssemblyName>Certify</AssemblyName>
         <OutputType>Exe</OutputType>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug' ">
+
         <Optimize>false</Optimize>
         <OutputPath>bin\Debug\</OutputPath>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
@@ -17,14 +17,15 @@
         <CodeAnalysisRuleSet>..\CodeAnalysis.ruleset</CodeAnalysisRuleSet>
         <Prefer32Bit>false</Prefer32Bit>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release' ">
+
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
         <Prefer32Bit>false</Prefer32Bit>
+
     </PropertyGroup>
     <PropertyGroup>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -33,12 +34,7 @@
         <OutputType>Exe</OutputType>
         <RootNamespace>Certify.CLI</RootNamespace>
         <AssemblyName>Certify</AssemblyName>
-        <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-        <TargetFrameworkProfile />
-        <NuGetPackageImportStamp />
-        <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <StartupObject>Certify.CLI.Program</StartupObject>
     </PropertyGroup>
@@ -51,18 +47,12 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Certify.Client\Certify.Client.csproj" />
-        <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
         <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
         <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
-        <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="App.config" />
         <None Include="app.manifest" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
     </ItemGroup>
 </Project>
