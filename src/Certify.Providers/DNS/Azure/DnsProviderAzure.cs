@@ -105,10 +105,6 @@ namespace Certify.Providers.DNS.Azure
                     return AzureAuthorityHosts.AzureGovernment;
                 case "china":
                     return AzureAuthorityHosts.AzureChina;
-                case "germany":
-#pragma warning disable CS0618 // Type or member is obsolete
-                    return AzureAuthorityHosts.AzureGermany;
-#pragma warning restore CS0618 // Type or member is obsolete
                 default:
                     return AzureAuthorityHosts.AzurePublicCloud;
             }
