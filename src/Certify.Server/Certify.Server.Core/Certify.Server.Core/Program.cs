@@ -1,6 +1,9 @@
-﻿
+﻿using Certify.Server.Core;
+
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddWindowsService();
+builder.Services.AddHostedService<WindowsBackgroundService>();
 builder.Configuration.AddJsonFile("appsettings-core.json", optional: false, reloadOnChange: true);
 
 builder.AddServiceDefaults();
