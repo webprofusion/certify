@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,8 +8,8 @@ using Certify.Core.Management.DeploymentTasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Models.Utils;
 using Certify.Providers.DeploymentTasks;
-using Certify.Shared.Utils;
 
 namespace Certify.Management
 {
