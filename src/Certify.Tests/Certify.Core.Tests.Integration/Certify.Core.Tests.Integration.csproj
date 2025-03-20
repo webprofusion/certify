@@ -4,8 +4,18 @@
         <Configurations>Debug;Release;</Configurations>
         <RootNamespace>Certify.Core.Tests</RootNamespace>
         <AssemblyName>Certify.Core.Tests</AssemblyName>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{7D4DEE0D-88B3-4DB8-B214-C0EC4FC4711F}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>Certify.Core.Tests</RootNamespace>
+        <AssemblyName>Certify.Core.Tests</AssemblyName>
+        <FileAlignment>512</FileAlignment>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug' ">
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
         <Optimize>false</Optimize>
@@ -13,9 +23,9 @@
         <DefineConstants>DEBUG;TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
-        <PlatformTarget>AnyCPU</PlatformTarget>
+
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release' ">
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
@@ -24,27 +34,8 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
 
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{7D4DEE0D-88B3-4DB8-B214-C0EC4FC4711F}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Certify.Core.Tests</RootNamespace>
-        <AssemblyName>Certify.Core.Tests</AssemblyName>
-        <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <NuGetPackageImportStamp />
-        <TargetFrameworkProfile />
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-        <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-        <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-        <StartupObject />
-    </PropertyGroup>
     <Import Project="..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props')" />
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-    </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
@@ -82,14 +73,6 @@
         <PackageReference Include="Npgsql" Version="8.0.6" />
         <PackageReference Include="Polly" Version="8.5.2" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
-
-
-    </ItemGroup>
-    <ItemGroup>
-        <Reference Include="System.ComponentModel.Composition" />
-        <Reference Include="System.Configuration" />
-        <Reference Include="System.ServiceProcess" />
-        <Reference Include="System.Data.DataSetExtensions" />
     </ItemGroup>
     <ItemGroup>
         <None Include="app.config" />
