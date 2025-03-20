@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Management;
@@ -147,11 +146,10 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod]
-        [Ignore]
         public async Task TestManySiteBindingUpdates()
         {
             var numSites = 100;
-            // create a large number of site bindings, to see if we encounter isses saving IIS changes
+            // create a large number of site bindings, to see if we encounter issues saving IIS changes
 
             try
             {
@@ -215,22 +213,12 @@ namespace Certify.Core.Tests
                     }
                 }
 
-                ThreadPool.QueueUserWorkItem(async x =>
-                {
-                    Thread.Sleep(500);
-                    var results = await Task.WhenAll<ActionStep>(allBindingTasksSet1);
+                var resultsSet1 = await Task.WhenAll(allBindingTasksSet1);
+                var resultsSet2 = await Task.WhenAll(allBindingTasksSet2);
 
-                    // verify all actions ok
-                    Assert.IsFalse(results.Any(r => r.HasError), "Thread1: One or more actions failed");
-                });
-
-                ThreadPool.QueueUserWorkItem(async x =>
-                {
-                    var results = await Task.WhenAll<ActionStep>(allBindingTasksSet2);
-
-                    // verify all actions ok
-                    Assert.IsFalse(results.Any(r => r.HasError), "Thread2: One or more actions failed");
-                });
+                // verify all actions ok
+                Assert.IsFalse(resultsSet1.Any(r => r.HasError), "Thread1: One or more actions failed");
+                Assert.IsFalse(resultsSet2.Any(r => r.HasError), "Thread2: One or more actions failed");
             }
             finally
             {

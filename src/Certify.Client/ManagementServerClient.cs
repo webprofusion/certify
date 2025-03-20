@@ -11,7 +11,7 @@ namespace Certify.Client
     /// </summary>
     public class ManagementServerClient : IManagementServerClient
     {
-
+#pragma warning disable CS0067 // The event is never used
         public event Action OnConnectionReconnecting;
 
         public event Action OnConnectionReconnected;
@@ -19,6 +19,8 @@ namespace Certify.Client
         public event Action OnConnectionClosed;
 
         public event Func<ManagedInstanceItems> OnGetInstanceItems;
+#pragma warning restore CS0067 // The event is never used
+
         public event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
 
         private HubConnection _connection;
