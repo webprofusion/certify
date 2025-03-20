@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Shared.Utils;
+using Certify.Models.Utils;
 
 namespace Certify.CLI
 {

@@ -10,7 +10,7 @@ using Certify.Locales;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Shared.Validation;
-using Certify.Shared.Utils;
+using Certify.Models.Utils;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
