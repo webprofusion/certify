@@ -166,7 +166,7 @@
       <Version>4.3.4</Version>
     </PackageReference>
     <PackageReference Include="System.ValueTuple">
-      <Version>4.5.0</Version>
+      <Version>4.6.1</Version>
     </PackageReference>
     <PackageReference Include="ToastNotifications">
       <Version>2.5.1</Version>

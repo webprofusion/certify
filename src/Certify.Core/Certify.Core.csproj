@@ -4,6 +4,11 @@
         <Configurations>Debug;Release;</Configurations>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>latest</LangVersion>
+        <ProjectGuid>{58881E46-4A76-47B9-9725-FA7C5F0090D0}</ProjectGuid>
+        <OutputType>Library</OutputType>
+
+        <RootNamespace>Certify.Core</RootNamespace>
+        <AssemblyName>Certify.Core</AssemblyName>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
 
@@ -26,19 +31,6 @@
 
     </PropertyGroup>
 
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{58881E46-4A76-47B9-9725-FA7C5F0090D0}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Certify.Core</RootNamespace>
-        <AssemblyName>Certify.Core</AssemblyName>
-        <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <NuGetPackageImportStamp />
-        <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
         <NoWarn>1701;1702;CA1068</NoWarn>
     </PropertyGroup>
@@ -65,10 +57,6 @@
         <ProjectReference Include="..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
         <ProjectReference Include="..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
         <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Reference Include="System.Security" />
     </ItemGroup>
 
 </Project>

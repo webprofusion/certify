@@ -11,14 +11,9 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <PlatformTarget>AnyCPU</PlatformTarget>
         <DefineConstants>DEBUG;TRACE</DefineConstants>
     </PropertyGroup>
 
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <OutputPath>bin\Release\</OutputPath>
-    </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Certify.Core\Certify.Core.csproj" />
     </ItemGroup>
@@ -37,7 +32,7 @@
         <PackageReference Include="Microsoft.AspNet.WebApi.Cors" Version="5.3.0" />
         <PackageReference Include="Microsoft.AspNet.WebApi.Owin" Version="5.3.0" />
         <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.3.0" />
-        <PackageReference Include="Microsoft.Identity.Client" Version="4.69.1" />
+        <PackageReference Include="Microsoft.Identity.Client" Version="4.70.0" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.3" />
         <PackageReference Include="Microsoft.Owin" Version="4.2.2" />
         <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.2" />
@@ -52,13 +47,11 @@
         <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.3" />
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.3" />
         <PackageReference Include="System.Text.Encodings.Web" Version="9.0.3" />
-        <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+        <PackageReference Include="System.ValueTuple" Version="4.6.1" />
         <PackageReference Include="Topshelf" Version="4.3.0" />
         <PackageReference Include="Topshelf.Serilog" Version="4.3.0" />
         <PackageReference Include="System.Security.Permissions" Version="9.0.3" />
-        
+
     </ItemGroup>
-    <ItemGroup>
-        <Folder Include="Properties\" />
-    </ItemGroup>
+
 </Project>
