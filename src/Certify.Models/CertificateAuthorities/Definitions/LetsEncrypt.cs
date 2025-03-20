@@ -20,12 +20,11 @@ namespace Certify.CertificateAuthorities.Definitions
                 ProductionAPIEndpoint = "https://acme-v02.api.letsencrypt.org/directory",
                 StagingAPIEndpoint = "https://acme-staging-v02.api.letsencrypt.org/directory",
                 StatusUrl = "https://letsencrypt.status.io/",
-                DefaultPreferredChain = "ISRG Root X1",
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit = 100,
                 StandardExpiryDays = 90,
-                RequiresEmailAddress = true,
+                RequiresEmailAddress = false,
                 SupportsCachedValidations = true,
                 SupportedFeatures = new List<string>{
                     CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
