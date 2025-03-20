@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Certify.Models;
-using Certify.Shared.Utils;
+using Certify.Models.Utils;
 using Newtonsoft.Json;
 
 namespace Certify.UI
