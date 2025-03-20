@@ -1,10 +1,8 @@
-﻿using System.Text;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.OpenApi.Models;
 
 namespace Certify.Server.Core
 {
@@ -59,7 +57,7 @@ namespace Certify.Server.Core
             services.AddSwaggerGen(c =>
             {
 
-                c.SwaggerDoc("v1", new OpenApiInfo
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
                 {
                     Title = "Certify Core Internal API",
                     Version = "v1",
@@ -67,25 +65,25 @@ namespace Certify.Server.Core
                 });
 
                 // declare authorization method
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                     Name = "Authorization",
                     Scheme = "bearer",
                     BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http
                 });
 
                 // set security requirement
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
                 {
                     {
-                        new OpenApiSecurityScheme
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                         {
-                            Reference = new OpenApiReference
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
                             {
-                                Type = ReferenceType.SecurityScheme,
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
                                 Id = "Bearer"
                             }
                         }, new List<string>()
@@ -129,6 +127,7 @@ namespace Certify.Server.Core
                 throw new Exception("Certify Manager not registered");
             }
 
+#if DEBUG
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -145,7 +144,7 @@ namespace Certify.Server.Core
                     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
                 });
             }
-
+#endif
             // set status report context provider
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
 
@@ -170,7 +169,7 @@ namespace Certify.Server.Core
 #if DEBUG
                 endpoints.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
                 {
-                    var sb = new StringBuilder();
+                    var sb = new System.Text.StringBuilder();
                     var endpoints = endpointSources.SelectMany(es => es.Endpoints);
                     foreach (var endpoint in endpoints)
                     {
