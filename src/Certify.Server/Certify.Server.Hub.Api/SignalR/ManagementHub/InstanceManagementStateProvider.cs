@@ -28,7 +28,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns></returns>
         public Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
         public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
-        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string instanceId = null);
+        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
         public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
         public bool HasItemsForManagedInstance(string instanceId);
@@ -263,7 +263,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// </summary>
         /// <param name="instanceId"></param>
         /// <returns></returns>
-        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string instanceId = null)
+        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null)
         {
             return _managedInstanceItems;
         }
