@@ -7,7 +7,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="AWSSDK.Route53" Version="3.7.406.1" />
+    <PackageReference Include="AWSSDK.Route53" Version="3.7.406.3" />
   </ItemGroup>
 
   <ItemGroup>
