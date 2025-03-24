@@ -219,7 +219,7 @@ namespace Certify.UI.ViewModel
             catch (Exception exp)
             {
                 // failed to connect to status signalr hub
-                Log?.Error($"Failed to connect to status hub: {exp}");
+                Log?.Error($"Failed to connect to status hub {(conn?.UseHTTPS == true ? "https" : "http")}{conn?.Host}:{conn?.Port}/api/status: {exp}");
 
                 ConnectionState = IsServiceAvailable ? "Connected" : "Not Connected";
 
