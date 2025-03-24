@@ -11,8 +11,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Certify Certificate Manager"
-    Width="940"
-    Height="640"
+    Width="1085"
+    Height="656"
     MinWidth="680"
     MinHeight="400"
     d:DataContext="{d:DesignInstance Type=local:AppViewModelDesign,
@@ -41,7 +41,7 @@
 
             <Button
                 Height="32"
-                Margin="8,0,0,5"
+                Margin="0,0,0,5"
                 AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
                 Click="Button_NewCertificate"
                 DockPanel.Dock="Left"
