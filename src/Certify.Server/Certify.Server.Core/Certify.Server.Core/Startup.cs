@@ -243,6 +243,7 @@ namespace Certify.Server.Core
                 return Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") != "none" &&
                        Configuration["Service:AuthMode"] != "none";
             }
+
             return false;
         }
     }
