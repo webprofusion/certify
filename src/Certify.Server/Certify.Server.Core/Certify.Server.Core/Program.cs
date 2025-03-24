@@ -2,14 +2,15 @@
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddWindowsService();
-builder.Services.AddHostedService<WindowsBackgroundService>();
-builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true);
-builder.Configuration.AddJsonFile("appsettings-core.Development.json", optional: true, reloadOnChange: true);
+builder.Services.AddWindowsService()
+                .AddHostedService<WindowsBackgroundService>();
+
+builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true)
+                     .AddJsonFile("appsettings-core.Development.json", optional: true, reloadOnChange: true);
 
 builder.AddServiceDefaults();
 
-var startup = new Certify.Server.Core.Startup(builder.Configuration);
+var startup = new Startup(builder.Configuration);
 
 startup.ConfigureServices(builder.Services);
 
