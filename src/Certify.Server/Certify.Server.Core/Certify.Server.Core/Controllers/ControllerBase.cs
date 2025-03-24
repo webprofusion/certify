@@ -1,33 +1,71 @@
 ﻿using System.Diagnostics;
+using System.Security.Claims;
+using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Certify.Service.Controllers
 {
-    public class CustomAuthCheckAttribute : AuthorizeAttribute
+    public class ServiceAuthSchemeOptions : AuthenticationSchemeOptions { }
+    public class ServiceAuthSchemeHandler : AuthenticationHandler<ServiceAuthSchemeOptions>
     {
-        /* protected override bool IsAuthorized(HttpActionContext actionContext)
-         {
- #if DEBUG_NO_AUTH
-     return true;
- #endif
-             var user = actionContext.RequestContext.Principal as System.Security.Principal.WindowsPrincipal;
-             if (user.IsInRole(WindowsBuiltInRole.Administrator))
-             {
-                 return true;
-             }
+        public ServiceAuthSchemeHandler(
+            IOptionsMonitor<ServiceAuthSchemeOptions> options,
+            ILoggerFactory logger,
+            UrlEncoder encoder) : base(options, logger, encoder)
+        {
+        }
 
-             if (user.IsInRole(WindowsBuiltInRole.PowerUser))
-             {
-                 return true;
-             }
+        protected async override Task<AuthenticateResult> HandleAuthenticateAsync()
+        {
+            // provide and an artificial default identify when this auth scheme is used (for non-window auth)
+            var claims = new[] { new Claim(ClaimTypes.Name, "service_user") };
+            var principal = new ClaimsPrincipal(new ClaimsIdentity(claims));
+            var ticket = new AuthenticationTicket(principal, this.Scheme.Name);
+            return AuthenticateResult.Success(ticket);
+        }
+    }
 
-             return false;
-         }*/
+    public class ClaimsTransformer : IClaimsTransformation
+    {
+        private bool _requireWindowsAuth;
+        public ClaimsTransformer(bool requireWindowsAuth = true)
+        {
+            _requireWindowsAuth = requireWindowsAuth;
+        }
+        public Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
+        {
+            var ci = (ClaimsIdentity)principal.Identity;
+
+            if (_requireWindowsAuth)
+            {
+                // on windows, add group claims for the user
+
+                var isAdmin = ci.Claims
+                    .Where(x => x.Type == ClaimTypes.GroupSid || x.Type == ClaimTypes.PrimaryGroupSid)
+                    .Any(x => x.Value == "S-1-5-32-544"); //Administrator group
+
+                if (isAdmin)
+                {
+                    var roleClaim = new Claim(ClaimTypes.Role, "service_admin");
+                    ci.AddClaim(roleClaim);
+                }
+            }
+            else
+            {
+                // auto enable role for the current identity
+                var roleClaim = new Claim(ClaimTypes.Role, "service_admin");
+                ci.AddClaim(roleClaim);
+            }
+
+            return Task.FromResult(principal);
+        }
     }
 
     [ApiController]
-    //   [CustomAuthCheck]
+    [Authorize(Policy = "CertifyServiceAuth")]
     public class ControllerBase : Controller
     {
         internal void DebugLog(string msg = null,

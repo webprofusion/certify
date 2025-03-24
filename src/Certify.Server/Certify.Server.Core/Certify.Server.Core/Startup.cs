@@ -1,5 +1,10 @@
-﻿using Certify.Management;
+﻿using System.Runtime.InteropServices;
+using System.Security.Claims;
+using Certify.Management;
 using Certify.Models;
+using Certify.Service.Controllers;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
@@ -49,6 +54,57 @@ namespace Certify.Server.Core
                                   });
             });
 
+            // determine whether we require auth via Kerberos/windows auth, can be overridden by env var
+            var windowsAuthRequired = true;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // windows auth is required by default
+                if (Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") == "none")
+                {
+                    windowsAuthRequired = false;
+                }
+                else if (Configuration["Service:AuthMode"] == "none")
+                {
+                    windowsAuthRequired = false;
+                }
+            }
+            else
+            {
+                // on non-windows platforms we don't support windows auth
+                windowsAuthRequired = false;
+            }
+
+            services
+                    .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+                    .AddScheme<ServiceAuthSchemeOptions, ServiceAuthSchemeHandler>("ServiceAuthScheme", opts => { }) // allow custom service auth when windows auth not used
+                    .AddNegotiate(); //add windows auth/kerberos
+
+            services.AddAuthorization(options =>
+            {
+                // add policy to require admin role claim
+
+                if (windowsAuthRequired)
+                {
+                    // when using windows auth we require the user to be in the admin group which we check via our ClaimsTransformer
+                    options.AddPolicy("CertifyServiceAuth", policy =>
+                    {
+                        policy.AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+                        policy.RequireClaim(ClaimTypes.Role, new[] { "service_admin" });
+                    });
+                }
+                else
+                {
+                    // when not using windows auth we use our custom service auth scheme
+                    options.AddPolicy("CertifyServiceAuth", policy =>
+                    {
+                        policy.AddAuthenticationSchemes("ServiceAuthScheme");
+                        policy.RequireClaim(ClaimTypes.Role, new[] { "service_admin" });
+                    });
+                }
+            });
+
 #if DEBUG
             services.AddEndpointsApiExplorer();
 
@@ -93,7 +149,7 @@ namespace Certify.Server.Core
             });
 #endif
 
-            var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
+            var useHttps = Configuration["API:Service:UseHttps"] != null ? bool.Parse(Configuration["API:Service:UseHttps"]) : false;
 
             if (useHttps)
             {
@@ -103,6 +159,9 @@ namespace Certify.Server.Core
                     options.HttpsPort = 443;
                 });
             }
+
+            // add claims transformation service, this is used to optionally check auth requirements
+            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>(c => new ClaimsTransformer(windowsAuthRequired));
 
             // inject instance of certify manager
             var certifyManager = new Management.CertifyManager();
@@ -148,7 +207,7 @@ namespace Certify.Server.Core
             // set status report context provider
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
 
-            var useHttps = bool.Parse(Configuration["API:Service:UseHttps"]);
+            var useHttps = Configuration["API:Service:UseHttps"] != null ? bool.Parse(Configuration["API:Service:UseHttps"]) : false;
 
             if (useHttps)
             {
@@ -157,9 +216,11 @@ namespace Certify.Server.Core
 
             app.UseRouting();
 
-            app.UseCors();
-
+            // enable authentication middleware 
+            app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseCors();
 
             app.UseEndpoints(endpoints =>
             {
