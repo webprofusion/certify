@@ -75,7 +75,6 @@
                 <Setter Property="controls:ControlsHelper.CornerRadius" Value="0" />
             </Style>
 
-
             <!--  control templates  -->
             <DataTemplate x:Key="ProviderHiddenParameter" />
 
