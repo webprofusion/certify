@@ -119,7 +119,7 @@ namespace Certify.Management
             // add policies to store
             foreach (var r in policies)
             {
-                _ = await access.AddResourcePolicy(null, r, bypassIntegrityCheck: true);
+                _ = await access.AddResourcePolicy(adminSvcPrinciple, r, bypassIntegrityCheck: true);
             }
 
             // setup roles with policies
