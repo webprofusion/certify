@@ -17,7 +17,7 @@ namespace Certify.Management
     {
         private IManagementServerClient _managementServerClient;
         private string _managementServerConnectionId = string.Empty;
-
+        private bool _isHubConnectionErrorLogged = false;
         public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey)
         {
 
@@ -109,7 +109,11 @@ namespace Certify.Management
             }
             catch (Exception ex)
             {
-                _serviceLog.Error(ex, "Failed to connect to management hub {hubUri}", hubUri);
+                if (!_isHubConnectionErrorLogged)
+                {
+                    _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically, subsequent failures will not be logged.", hubUri);
+                    _isHubConnectionErrorLogged = true;
+                }
 
                 _managementServerClient = null;
             }
