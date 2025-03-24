@@ -1,6 +1,5 @@
 ﻿namespace Certify.Server.Core
 {
-
     public class WindowsBackgroundService : BackgroundService
     {
         public WindowsBackgroundService(ILoggerFactory loggerFactory)
@@ -18,8 +17,6 @@
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                Logger.LogInformation("Service is doing background work.");
-
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
 
