@@ -39,6 +39,7 @@ namespace Certify.Client
 
         public async Task ConnectStatusStreamAsync()
         {
+#if !NET9_0_OR_GREATER
             if (_connectionConfig.ServerMode == "v1")
             {
                 // older signalr client/server
@@ -69,6 +70,7 @@ namespace Certify.Client
 
             }
             else
+#endif
             {
                 // newer signalr client/server
 
@@ -92,6 +94,8 @@ namespace Certify.Client
 
                         return message;
                     };
+
+                    opts.Credentials = System.Net.CredentialCache.DefaultCredentials;
                 })
                 .WithAutomaticReconnect()
                 .AddMessagePackProtocol()
