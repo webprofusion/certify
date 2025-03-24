@@ -13,6 +13,12 @@ namespace Certify.Server.Core
 {
     public class Startup
     {
+        private const string ServiceAuthScheme = "ServiceAuthScheme";
+        private const string CertifyServiceAuthPolicy = "CertifyServiceAuth";
+        private const string SwaggerDocTitle = "Certify Agent Service Internal API";
+        private const string SwaggerDocVersion = "v1";
+        private const string SwaggerDocDescription = "Provides a private API for use by the Certify The Web Desktop UI and related components. This internal API changes between versions, you should use the public Hub API when building integrations instead.";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -20,213 +26,55 @@ namespace Certify.Server.Core
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
-            services
-                .AddSignalR()
-                .AddMessagePackProtocol();
-
-            var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
-
-            services
-                .AddDataProtection(a =>
-                {
-                    a.ApplicationDiscriminator = "certify";
-                })
-                .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
-
-            services.AddResponseCompression(opts =>
-            {
-                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream", "application/json" });
-            });
-
-            services.AddCors(options =>
-            {
-                options.AddDefaultPolicy(
-                                  builder =>
-                                  {
-
-                                      builder.AllowAnyOrigin();
-                                      builder.AllowAnyMethod();
-                                  });
-            });
-
-            // determine whether we require auth via Kerberos/windows auth, can be overridden by env var
-            var windowsAuthRequired = true;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // windows auth is required by default
-                if (Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") == "none")
-                {
-                    windowsAuthRequired = false;
-                }
-                else if (Configuration["Service:AuthMode"] == "none")
-                {
-                    windowsAuthRequired = false;
-                }
-            }
-            else
-            {
-                // on non-windows platforms we don't support windows auth
-                windowsAuthRequired = false;
-            }
-
-            services
-                    .AddAuthentication(NegotiateDefaults.AuthenticationScheme)
-                    .AddScheme<ServiceAuthSchemeOptions, ServiceAuthSchemeHandler>("ServiceAuthScheme", opts => { }) // allow custom service auth when windows auth not used
-                    .AddNegotiate(); //add windows auth/kerberos
-
-            services.AddAuthorization(options =>
-            {
-                // add policy to require admin role claim
-
-                if (windowsAuthRequired)
-                {
-                    // when using windows auth we require the user to be in the admin group which we check via our ClaimsTransformer
-                    options.AddPolicy("CertifyServiceAuth", policy =>
-                    {
-                        policy.AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme);
-                        policy.RequireAuthenticatedUser();
-                        policy.RequireClaim(ClaimTypes.Role, new[] { "service_admin" });
-                    });
-                }
-                else
-                {
-                    // when not using windows auth we use our custom service auth scheme
-                    options.AddPolicy("CertifyServiceAuth", policy =>
-                    {
-                        policy.AddAuthenticationSchemes("ServiceAuthScheme");
-                        policy.RequireClaim(ClaimTypes.Role, new[] { "service_admin" });
-                    });
-                }
-            });
-
+            ConfigureSignalR(services);
+            ConfigureDataProtection(services);
+            ConfigureResponseCompression(services);
+            ConfigureCors(services);
+            ConfigureAuthentication(services);
+            ConfigureAuthorization(services);
 #if DEBUG
-            services.AddEndpointsApiExplorer();
-
-            // Register the Swagger generator, defining 1 or more Swagger documents
-            // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio
-            services.AddSwaggerGen(c =>
-            {
-
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-                {
-                    Title = "Certify Core Internal API",
-                    Version = "v1",
-                    Description = "Provides a private API for use by the Certify The Web UI and related components. This internal API changes between versions, you should use the public API when building integrations instead."
-                });
-
-                // declare authorization method
-                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http
-                });
-
-                // set security requirement
-                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-                {
-                    {
-                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                        {
-                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                            {
-                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        }, new List<string>()
-                    }
-                });
-
-            });
+            ConfigureSwagger(services);
 #endif
-
-            var useHttps = Configuration["API:Service:UseHttps"] != null ? bool.Parse(Configuration["API:Service:UseHttps"]) : false;
-
-            if (useHttps)
-            {
-                services.AddHttpsRedirection(options =>
-                {
-                    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
-                    options.HttpsPort = 443;
-                });
-            }
-
-            // add claims transformation service, this is used to optionally check auth requirements
-            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>(c => new ClaimsTransformer(windowsAuthRequired));
-
-            // inject instance of certify manager
-            var certifyManager = new Management.CertifyManager();
-            certifyManager.Init().Wait();
-
-            services.AddSingleton<Management.ICertifyManager>(certifyManager);
+            ConfigureHttpsRedirection(services);
+            ConfigureClaimsTransformation(services);
+            ConfigureCertifyManager(services);
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<Service.StatusHub>>();
-            if (statusHubContext == null)
-            {
-                throw new Exception("Status Hub not registered");
-            }
+            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<Service.StatusHub>>()
+                                   ?? throw new Exception("Status Hub not registered");
 
-            var certifyManager = app.ApplicationServices.GetRequiredService(typeof(ICertifyManager)) as CertifyManager;
+            var certifyManager = app.ApplicationServices.GetRequiredService<ICertifyManager>() as CertifyManager
+                                 ?? throw new Exception("Certify Manager not registered");
 
-            if (certifyManager == null)
-            {
-                throw new Exception("Certify Manager not registered");
-            }
-
-#if DEBUG
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-
-                // Enable middleware to serve generated Swagger as a JSON endpoint.
-                app.UseSwagger();
-
-                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-                // specifying the Swagger JSON endpoint.
-                app.UseSwaggerUI(c =>
-                {
-                    c.RoutePrefix = "docs";
-                    c.DocumentTitle = "Certify Core Server API";
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
-                });
-            }
+#if DEBUG
+                ConfigureSwaggerUI(app);
 #endif
-            // set status report context provider
+            }
+
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
 
-            var useHttps = Configuration["API:Service:UseHttps"] != null ? bool.Parse(Configuration["API:Service:UseHttps"]) : false;
-
-            if (useHttps)
+            if (bool.TryParse(Configuration["API:Service:UseHttps"], out var useHttps) && useHttps)
             {
                 app.UseHttpsRedirection();
             }
 
             app.UseRouting();
-
-            // enable authentication middleware 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.UseCors();
-
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<Service.StatusHub>("/api/status");
                 endpoints.MapControllers();
-
 #if DEBUG
                 endpoints.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
                 {
@@ -244,6 +92,158 @@ namespace Certify.Server.Core
                 });
 #endif
             });
+        }
+
+        private void ConfigureSignalR(IServiceCollection services)
+        {
+            services.AddSignalR().AddMessagePackProtocol();
+        }
+
+        private void ConfigureDataProtection(IServiceCollection services)
+        {
+            var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
+            services.AddDataProtection(a => a.ApplicationDiscriminator = "certify")
+                    .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
+        }
+
+        private void ConfigureResponseCompression(IServiceCollection services)
+        {
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream", "application/json" });
+            });
+        }
+
+        private void ConfigureCors(IServiceCollection services)
+        {
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin().AllowAnyMethod();
+                });
+            });
+        }
+
+        private void ConfigureAuthentication(IServiceCollection services)
+        {
+            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
+                    .AddScheme<ServiceAuthSchemeOptions, ServiceAuthSchemeHandler>(ServiceAuthScheme, opts => { })
+                    .AddNegotiate();
+        }
+
+        private void ConfigureAuthorization(IServiceCollection services)
+        {
+            var windowsAuthRequired = DetermineWindowsAuthRequired();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(CertifyServiceAuthPolicy, policy =>
+                {
+                    if (windowsAuthRequired)
+                    {
+                        policy.AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme);
+                        policy.RequireAuthenticatedUser();
+                    }
+                    else
+                    {
+                        // apply custom auth scheme for service auth
+                        policy.AddAuthenticationSchemes(ServiceAuthScheme);
+                    }
+
+                    policy.RequireClaim(ClaimTypes.Role, "service_admin");
+                });
+            });
+        }
+
+#if DEBUG
+        private void ConfigureSwagger(IServiceCollection services)
+        {
+
+            services.AddEndpointsApiExplorer();
+
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc(SwaggerDocVersion, new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = SwaggerDocTitle,
+                    Version = SwaggerDocVersion,
+                    Description = SwaggerDocDescription
+                });
+
+                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    Scheme = "Bearer",
+                    BearerFormat = "JWT",
+                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http
+                });
+
+                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                {
+                    {
+                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                        {
+                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                            {
+                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        }, new List<string>()
+                    }
+                });
+            });
+
+        }
+
+        private void ConfigureSwaggerUI(IApplicationBuilder app)
+        {
+            app.UseSwagger();
+
+            app.UseSwaggerUI(c =>
+            {
+                c.RoutePrefix = "docs";
+                c.DocumentTitle = "Certify Core Server API";
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
+            });
+        }
+#endif
+
+        private void ConfigureHttpsRedirection(IServiceCollection services)
+        {
+            if (bool.TryParse(Configuration["API:Service:UseHttps"], out var useHttps) && useHttps)
+            {
+                services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status307TemporaryRedirect;
+                    options.HttpsPort = 443;
+                });
+            }
+        }
+
+        private void ConfigureClaimsTransformation(IServiceCollection services)
+        {
+            var windowsAuthRequired = DetermineWindowsAuthRequired();
+            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>(c => new ClaimsTransformer(windowsAuthRequired));
+        }
+
+        private void ConfigureCertifyManager(IServiceCollection services)
+        {
+            var certifyManager = new Management.CertifyManager();
+            certifyManager.Init().Wait();
+            services.AddSingleton<Management.ICertifyManager>(certifyManager);
+        }
+
+        private bool DetermineWindowsAuthRequired()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") != "none" &&
+                       Configuration["Service:AuthMode"] != "none";
+            }
+            return false;
         }
     }
 }
