@@ -15,7 +15,6 @@ namespace Certify.Models.Hub
                      StandardPolicies.AccessAdmin,
                      StandardPolicies.CertificateConsumer,
                      StandardPolicies.AccessAdmin,
-                     StandardPolicies.ManagementHubAdmin,
                      StandardPolicies.ManagedChallengeAdmin
                     });
 
@@ -143,7 +142,7 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateManager,
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
-                StandardRoles.ManagedChallengeConsumer,
+                StandardRoles.ManagedChallengeConsumer
             };
         }
 
@@ -318,7 +317,7 @@ namespace Certify.Models.Hub
                     }
                 },
                 new() {
-                    Id = StandardPolicies.ManagementHubAdmin,
+                    Id = StandardPolicies.ManagementHubReader,
                     Title = "Management Hub Reader",
                     Description = "View management hub.",
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
