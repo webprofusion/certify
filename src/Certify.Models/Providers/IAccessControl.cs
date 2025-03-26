@@ -9,8 +9,8 @@ namespace Certify.Core.Management.Access
         Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourceProfile, bool bypassIntegrityCheck = false);
         Task<bool> AddSecurityPrinciple(string contextUserId, SecurityPrinciple principle, bool bypassIntegrityCheck = false);
         Task<bool> DeleteSecurityPrinciple(string contextUserId, string id, bool allowSelfDelete = false);
-        Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId);
-        Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id);
+        Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId, bool includePassword = false);
+        Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id, bool includePassword = false);
 
         /// <summary>
         /// Get the list of standard roles built-in to the system

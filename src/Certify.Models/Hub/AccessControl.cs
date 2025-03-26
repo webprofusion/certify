@@ -7,7 +7,7 @@ namespace Certify.Models.Hub
     {
         User = 1,
         Application = 2,
-        Group
+        Group = 3
     }
 
     public enum SecurityPermissionType
@@ -40,6 +40,7 @@ namespace Certify.Models.Hub
         public string? AuthKey { get; set; }
 
         public string AvatarUrl { get; set; } = string.Empty;
+        public bool IsBuiltIn { get; set; } = false;
     }
 
     /// <summary>

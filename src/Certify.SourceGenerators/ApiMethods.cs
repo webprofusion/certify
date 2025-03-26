@@ -186,7 +186,7 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "list",
                         ServiceAPIRoute = "managedchallenge",
                         ReturnType = "ICollection<ManagedChallenge>",
-                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_list")]
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_list_action")]
                     },
                     new() {
                         OperationName = "UpdateManagedChallenge",
@@ -199,7 +199,7 @@ namespace Certify.SourceGenerators
                         Params = new Dictionary<string, string>{
                             { "update", "Certify.Models.Hub.ManagedChallenge" }
                         },
-                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_update")]
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_update_action")]
                     },
                     new() {
                         OperationName = "RemoveManagedChallenge",
@@ -212,7 +212,7 @@ namespace Certify.SourceGenerators
                         Params = new Dictionary<string, string>{
                             { "id", "string" }
                         },
-                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_delete")]
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_delete_action")]
                     },
                     new() {
                         OperationName = "PerformManagedChallenge",
@@ -224,7 +224,7 @@ namespace Certify.SourceGenerators
                         Params = new Dictionary<string, string>{
                             { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
                         },
-                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_request")]
+                        RequiredPermissions = [new ("managedchallenge", "managedchallenge_request_action")]
                     },
                     new() {
                         OperationName = "CleanupManagedChallenge",
