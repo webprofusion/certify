@@ -63,9 +63,17 @@ namespace Certify.Core.Management.Access
             return await _store.GetItems<Role>(nameof(Role));
         }
 
-        public async Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId)
+        public async Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId, bool includePassword = false)
         {
-            return await _store.GetItems<SecurityPrinciple>(nameof(SecurityPrinciple));
+            var results = await _store.GetItems<SecurityPrinciple>(nameof(SecurityPrinciple));
+
+            if (!includePassword)
+            {
+                // remove password hash from results
+                results.ForEach(sp => sp.Password = null);
+            }
+
+            return results;
         }
 
         public async Task<bool> AddSecurityPrinciple(string contextUserId, SecurityPrinciple principle, bool bypassIntegrityCheck = false)
@@ -157,6 +165,15 @@ namespace Certify.Core.Management.Access
 
             var existing = await GetSecurityPrinciple(contextUserId, id);
 
+            if (existing.IsBuiltIn)
+            {
+                if (!allowSelfDelete && id == contextUserId)
+                {
+                    await AuditWarning("User {contextUserId} tried to delete built-in user [{id}].", contextUserId, id);
+                    return false;
+                }
+            }
+
             var deleted = await _store.Delete<SecurityPrinciple>(nameof(SecurityPrinciple), id);
 
             if (deleted != true)
@@ -176,11 +193,18 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id)
+        public async Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id, bool includePassword = false)
         {
             try
             {
-                return await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+                var result = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+
+                if (!includePassword && result != null)
+                {
+                    result.Password = null;
+                }
+
+                return result;
             }
             catch (Exception exp)
             {
@@ -190,16 +214,23 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<SecurityPrinciple> GetSecurityPrincipleByUsername(string contextUserId, string username)
+        public async Task<SecurityPrinciple> GetSecurityPrincipleByUsername(string contextUserId, string username, bool includePassword = false)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
                 return default;
             }
 
-            var list = await GetSecurityPrinciples(contextUserId);
+            var list = await GetSecurityPrinciples(contextUserId, includePassword);
 
-            return list?.SingleOrDefault(sp => sp.Username?.ToLowerInvariant() == username.ToLowerInvariant());
+            var result = list?.SingleOrDefault(sp => sp.Username?.ToLowerInvariant() == username.ToLowerInvariant());
+
+            if (!includePassword && result != null)
+            {
+                result.Password = null;
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -234,7 +265,7 @@ namespace Certify.Core.Management.Access
             // if scoped assigned role ID specified (access token check etc), reduce scope of assigned roles to check
             if (check.ScopedAssignedRoles?.Any() == true)
             {
-                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
+                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.RoleId));
             }
 
             // get all role definitions included in the principles assigned roles 
@@ -352,17 +383,17 @@ namespace Certify.Core.Management.Access
             }
         }
 
-        public async Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourceProfile, bool bypassIntegrityCheck = false)
+        public async Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourcePolicy, bool bypassIntegrityCheck = false)
         {
             if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to use AddResourcePolicy [{resourceProfileId}] without being in required role.", contextUserId, resourceProfile?.Id);
+                await AuditWarning("User {contextUserId} attempted to use AddResourcePolicy [{resourcePolicyId}] without being in required role.", contextUserId, resourcePolicy?.Id);
                 return false;
             }
 
-            await _store.Add(nameof(ResourcePolicy), resourceProfile);
+            await _store.Add(nameof(ResourcePolicy), resourcePolicy);
 
-            await AuditInformation("User {contextUserId} added resource policy [{resourceProfile.Id}]", contextUserId, resourceProfile?.Id);
+            await AuditInformation("User {contextUserId} added resource policy [{resourcePolicy.Id}]", contextUserId, resourcePolicy?.Id);
             return true;
         }
 
@@ -569,10 +600,10 @@ namespace Certify.Core.Management.Access
         public async Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck)
         {
             var principle = string.IsNullOrWhiteSpace(passwordCheck.SecurityPrincipleId) ?
-                                await GetSecurityPrincipleByUsername(contextUserId, passwordCheck.Username) :
-                                await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId);
+                                await GetSecurityPrincipleByUsername(contextUserId, passwordCheck.Username, includePassword: true) :
+                                await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId, includePassword: true);
 
-            if (principle != null && IsPasswordValid(passwordCheck.Password, principle.Password))
+            if (principle != null && principle.PrincipleType == SecurityPrincipleType.User && IsPasswordValid(passwordCheck.Password, principle.Password))
             {
                 return new SecurityPrincipleCheckResponse { IsSuccess = true, SecurityPrinciple = principle };
             }
@@ -581,6 +612,10 @@ namespace Certify.Core.Management.Access
                 if (principle == null)
                 {
                     return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid security principle" };
+                }
+                else if (principle.PrincipleType != SecurityPrincipleType.User)
+                {
+                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid security principle for password based login" };
                 }
                 else
                 {

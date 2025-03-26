@@ -1,10 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Certify.Core.Management.Access;
 
 namespace Certify.Models.Hub
 {
     public class StandardRoles
     {
-        public static Role Administrator { get; } = new Role("sysadmin", "Administrator", "Certify Server Administrator",
+        public static Role Administrator { get; } = new Role("sysadmin_role", "Administrator", "Certify Server Administrator",
             policies: new List<string> {
                      StandardPolicies.ManagementHubAdmin,
                      StandardPolicies.ManagedItemAdmin,
@@ -18,18 +22,20 @@ namespace Certify.Models.Hub
                      StandardPolicies.ManagedChallengeAdmin
                     });
 
-        public static Role CertificateManager { get; } = new Role("cert_manager", "Certificate Manager", "Can manage and administer all certificates",
+        public static Role CertificateManager { get; } = new Role("cert_manager_role", "Certificate Manager", "Can manage and administer all certificates",
             policies: new List<string> {
                 StandardPolicies.ManagementHubReader,
                 StandardPolicies.ManagedItemAdmin,
                 StandardPolicies.StoredCredentialAdmin
                     });
 
-        public static Role CertificateConsumer { get; } = new Role("cert_consumer", "Certificate Consumer", "User of a given certificate", policies: new List<string> { StandardPolicies.CertificateConsumer });
+        public static Role CertificateConsumer { get; } = new Role("cert_consumer_role", "Certificate Consumer", "User of a given certificate", policies: new List<string> { StandardPolicies.CertificateConsumer });
 
-        public static Role StoredCredentialConsumer { get; } = new Role("storedcredential_consumer", "Stored Credential Fetch Consumer", "Can fetch a decrypted stored credential", policies: new List<string> { StandardPolicies.StoredCredentialConsumer });
+        public static Role StoredCredentialConsumer { get; } = new Role("storedcredential_consumer_role", "Stored Credential Fetch Consumer", "Can fetch a decrypted stored credential", policies: new List<string> { StandardPolicies.StoredCredentialConsumer });
 
-        public static Role ManagedChallengeConsumer { get; } = new Role("managedchallenge_consumer", "Managed Challenge Consumer", "Can perform specific managed challenges", policies: new List<string> { StandardPolicies.ManagedChallengeConsumer });
+        public static Role ManagedChallengeConsumer { get; } = new Role("managedchallenge_consumer_role", "Managed Challenge Consumer", "Can perform specific managed challenges", policies: new List<string> { StandardPolicies.ManagedChallengeConsumer });
+
+        public static Role ManagedInstance { get; } = new Role("managedinstance_role", "Hub Managed Instance", "Can join the hub and be managed via the hub.", policies: new List<string> { StandardPolicies.ManagedInstance });
     }
 
     public class StandardIdentityProviders
@@ -71,65 +77,67 @@ namespace Certify.Models.Hub
 
     public static class StandardResourceActions
     {
-        public const string CertificateDownload = "certificate_download";
-        public const string CertificateKeyDownload = "certificate_key_download";
+        public const string CertificateDownload = "certificate_download_action";
+        public const string CertificateKeyDownload = "certificate_key_download_action";
 
-        public const string ManagedItemRequest = "manageditem_requester";
-        public const string ManagedItemAdd = "manageditem_add";
-        public const string ManagedItemList = "manageditem_list";
-        public const string ManagedItemUpdate = "manageditem_update";
-        public const string ManagedItemDelete = "manageditem_delete";
-        public const string ManagedItemTest = "manageditem_test";
-        public const string ManagedItemRenew = "manageditem_renew";
-        public const string ManagedItemTaskAdd = "manageditem_task_add";
-        public const string ManagedItemTaskUpdate = "manageditem_task_update";
-        public const string ManagedItemTaskDelete = "manageditem_task_delete";
-        public const string ManagedItemLogView = "manageditem_log_view";
+        public const string ManagedItemRequest = "manageditem_requester_action";
+        public const string ManagedItemAdd = "manageditem_add_action";
+        public const string ManagedItemList = "manageditem_list_action";
+        public const string ManagedItemUpdate = "manageditem_update_action";
+        public const string ManagedItemDelete = "manageditem_delete_action";
+        public const string ManagedItemTest = "manageditem_test_action";
+        public const string ManagedItemRenew = "manageditem_renew_action";
+        public const string ManagedItemTaskAdd = "manageditem_task_add_action";
+        public const string ManagedItemTaskUpdate = "manageditem_task_update_action";
+        public const string ManagedItemTaskDelete = "manageditem_task_delete_action";
+        public const string ManagedItemLogView = "manageditem_log_view_action";
 
-        public const string CertificateAuthorityAdd = "ca_add";
-        public const string CertificateAuthorityUpdate = "ca_update";
-        public const string CertificateAuthorityDelete = "ca_delete";
-        public const string CertificateAuthorityList = "ca_list";
+        public const string CertificateAuthorityAdd = "ca_add_action";
+        public const string CertificateAuthorityUpdate = "ca_update_action";
+        public const string CertificateAuthorityDelete = "ca_delete_action";
+        public const string CertificateAuthorityList = "ca_list_action";
 
-        public const string AcmeAccountAdd = "acmeaccount_add";
-        public const string AcmeAccountUpdate = "acmeaccount_update";
-        public const string AcmeAccountDelete = "acmeaccount_delete";
-        public const string AcmeAccountList = "acmeaccount_list";
+        public const string AcmeAccountAdd = "acmeaccount_add_action";
+        public const string AcmeAccountUpdate = "acmeaccount_update_action";
+        public const string AcmeAccountDelete = "acmeaccount_delete_action";
+        public const string AcmeAccountList = "acmeaccount_list_action";
 
-        public const string StoredCredentialAdd = "storedcredential_add";
-        public const string StoredCredentialUpdate = "storedcredential_update";
-        public const string StoredCredentialDelete = "storedcredential_delete";
-        public const string StoredCredentialList = "storedcredential_list";
-        public const string StoredCredentialDownload = "storedcredential_consumer";
+        public const string StoredCredentialAdd = "storedcredential_add_action";
+        public const string StoredCredentialUpdate = "storedcredential_update_action";
+        public const string StoredCredentialDelete = "storedcredential_delete_action";
+        public const string StoredCredentialList = "storedcredential_list_action";
+        public const string StoredCredentialDownload = "storedcredential_consumer_action";
 
-        public const string SecurityPrincipleList = "securityprinciple_list";
-        public const string SecurityPrincipleAdd = "securityprinciple_add";
-        public const string SecurityPrincipleUpdate = "securityprinciple_update";
-        public const string SecurityPrincipleDelete = "securityprinciple_delete";
-        public const string SecurityPrinciplePasswordUpdate = "securityprinciple_password_update";
+        public const string SecurityPrincipleList = "securityprinciple_list_action";
+        public const string SecurityPrincipleAdd = "securityprinciple_add_action";
+        public const string SecurityPrincipleUpdate = "securityprinciple_update_action";
+        public const string SecurityPrincipleDelete = "securityprinciple_delete_action";
+        public const string SecurityPrinciplePasswordUpdate = "securityprinciple_password_update_action";
 
-        public const string ManagedChallengeList = "managedchallenge_list";
-        public const string ManagedChallengeUpdate = "managedchallenge_update";
-        public const string ManagedChallengeDelete = "managedchallenge_update";
-        public const string ManagedChallengeRequest = "managedchallenge_request";
+        public const string ManagedChallengeList = "managedchallenge_list_action";
+        public const string ManagedChallengeUpdate = "managedchallenge_update_action";
+        public const string ManagedChallengeDelete = "managedchallenge_update_action";
+        public const string ManagedChallengeRequest = "managedchallenge_request_action";
 
-        public const string ManagementHubInstancesList = "managementhub_instances_list";
+        public const string ManagementHubInstancesList = "managementhub_instances_list_action";
+        public const string ManagementHubInstanceJoin = "managementhub_instance_join_action";
 
     }
 
     public class StandardPolicies
     {
-        public const string AccessAdmin = "access_admin";
-        public const string ManagedItemAdmin = "manageditem_admin";
-        public const string CertificateConsumer = "certificate_consumer";
-        public const string CertificateAuthorityAdmin = "ca_admin";
-        public const string AcmeAccountAdmin = "acmeaccount_admin";
-        public const string StoredCredentialAdmin = "storedcredential_admin";
-        public const string StoredCredentialConsumer = "storedcredential_consumer";
-        public const string ManagedChallengeConsumer = "managedchallenge_consumer";
-        public const string ManagedChallengeAdmin = "managedchallenge_admin";
-        public const string ManagementHubAdmin = "managementhub_admin";
-        public const string ManagementHubReader = "managementhub_reader";
+        public const string AccessAdmin = "access_admin_policy";
+        public const string ManagedItemAdmin = "manageditem_admin_policy";
+        public const string CertificateConsumer = "certificate_consumer_policy";
+        public const string CertificateAuthorityAdmin = "ca_admin_policy";
+        public const string AcmeAccountAdmin = "acmeaccount_admin_policy";
+        public const string StoredCredentialAdmin = "storedcredential_admin_policy";
+        public const string StoredCredentialConsumer = "storedcredential_consumer_policy";
+        public const string ManagedChallengeConsumer = "managedchallenge_consumer_policy";
+        public const string ManagedChallengeAdmin = "managedchallenge_admin_policy";
+        public const string ManagementHubAdmin = "managementhub_admin_policy";
+        public const string ManagementHubReader = "managementhub_reader_policy";
+        public const string ManagedInstance = "managementhub_managedinstance_policy";
     }
 
     public static class Policies
@@ -142,7 +150,8 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateManager,
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
-                StandardRoles.ManagedChallengeConsumer
+                StandardRoles.ManagedChallengeConsumer,
+                StandardRoles.ManagedInstance
             };
         }
 
@@ -198,6 +207,7 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedChallengeRequest, "Request to perform a managed challenge response", ResourceTypes.ManagedChallenge),
 
                 new(StandardResourceActions.ManagementHubInstancesList, "List managed instances", ResourceTypes.ManagedInstance),
+                new(StandardResourceActions.ManagementHubInstanceJoin, "Join management hub as a managed instance", ResourceTypes.ManagedInstance),
             };
         }
 
@@ -325,8 +335,159 @@ namespace Certify.Models.Hub
                     ResourceActions = new List<string> {
                         StandardResourceActions.ManagementHubInstancesList
                     }
+                },
+                new() {
+                    Id = StandardPolicies.ManagedInstance,
+                    Title = "Management Hub Managed Instance",
+                    Description = "Join management hub and alow to be managed by hub.",
+                    SecurityPermissionType = SecurityPermissionType.ALLOW,
+                    IsResourceSpecific = true,
+                    ResourceActions = new List<string> {
+                        StandardResourceActions.ManagementHubInstanceJoin
+                    }
                 }
             };
+        }
+    }
+
+    public static class AccessControlConfig
+    {
+        /// <summary>
+        /// Add/update standard system roles, policies and resource actions
+        /// </summary>
+        /// <param name="access"></param>
+        /// <returns></returns>
+        public static async Task UpdateStandardAccessConfig(IAccessControl access)
+        {
+            // setup roles with policies
+
+            var adminSvcPrinciple = "admin_01";
+
+            var actions = Policies.GetStandardResourceActions();
+
+            foreach (var action in actions)
+            {
+                await access.AddResourceAction(adminSvcPrinciple, action, bypassIntegrityCheck: true);
+            }
+
+            // setup policies with actions
+
+            var policies = Policies.GetStandardPolicies();
+
+            // add policies to store
+            foreach (var r in policies)
+            {
+                _ = await access.AddResourcePolicy(adminSvcPrinciple, r, bypassIntegrityCheck: true);
+            }
+
+            // setup roles with policies
+            var roles = Policies.GetStandardRoles();
+
+            foreach (var r in roles)
+            {
+                // add roles and policy assignments to store
+                await access.AddRole(adminSvcPrinciple, r, bypassIntegrityCheck: true);
+            }
+        }
+
+        public static async Task ConfigureStandardUsersAndRoles(IAccessControl access)
+        {
+            // setup roles with policies
+            await UpdateStandardAccessConfig(access);
+
+            // setup standard security principles
+
+            // admin user
+            var adminSpId = "admin_01";
+            var managedInstanceSpId = "managedinstance_sp_01";
+
+            var users = await access.GetSecurityPrinciples(adminSpId);
+
+            // add admin user if not already present
+            if (!users.Any(u => u.Id == adminSpId))
+            {
+                var adminSp = new SecurityPrinciple
+                {
+                    Id = adminSpId,
+                    Description = "Primary default admin",
+                    PrincipleType = SecurityPrincipleType.User,
+                    Username = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTUSERNAME") ?? "admin",
+                    Password = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTPWD") ?? "changeme!",
+                    Provider = StandardIdentityProviders.INTERNAL,
+                    IsBuiltIn = true
+                };
+
+                await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+
+                // assign admin role to admin security principle
+                var assignedRoles = new List<AssignedRole> {
+                     // administrator
+                     new AssignedRole{
+                         Id= Guid.NewGuid().ToString(),
+                         RoleId=StandardRoles.Administrator.Id,
+                         SecurityPrincipleId=adminSpId
+                     }
+                };
+
+                foreach (var r in assignedRoles)
+                {
+                    // add roles and policy assignments to store
+                    await access.AddAssignedRole(adminSp.Id, r, bypassIntegrityCheck: true);
+                }
+            }
+
+            // add managed instance service principle if not already present
+            if (!users.Any(u => u.Id == managedInstanceSpId))
+            {
+                var managedInstanceServicePrinciple = new SecurityPrinciple
+                {
+                    Id = managedInstanceSpId,
+                    Title = "Managed Instances Service Principle",
+                    PrincipleType = SecurityPrincipleType.Application,
+                    Provider = StandardIdentityProviders.INTERNAL,
+                    IsBuiltIn = true
+                };
+
+                await access.AddSecurityPrinciple(adminSpId, managedInstanceServicePrinciple, bypassIntegrityCheck: true);
+
+                // assign managed instance role to  security principle
+                var assignedRoles = new List<AssignedRole> {
+
+                    new AssignedRole{
+                        Id= Guid.NewGuid().ToString(),
+                        RoleId=StandardRoles.ManagedInstance.Id,
+                        SecurityPrincipleId=managedInstanceSpId
+                    }
+                };
+
+                foreach (var r in assignedRoles)
+                {
+                    // add roles and policy assignments to store
+                    await access.AddAssignedRole(adminSpId, r, bypassIntegrityCheck: true);
+                }
+
+                // assign an API token for hub managed instances scoped to the managed instance role
+                var assignedApiAccessToken = new AssignedAccessToken
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    SecurityPrincipleId = managedInstanceSpId,
+                    Title = "Managed Instance Hub Joining Key",
+                    AccessTokens = new List<AccessToken> {
+                        new AccessToken {
+                            ClientId = managedInstanceSpId,
+                            Description = "System Generated",
+                            Secret = Guid.NewGuid().ToString().ToLowerInvariant(),
+                            TokenType = AccessTokenTypes.Simple,
+                            DateCreated = DateTime.UtcNow
+                        }
+                    },
+                    ScopedAssignedRoles = new List<string> {
+                        StandardRoles.ManagedInstance.Id
+                    },
+                };
+
+                await access.AddAssignedAccessToken(adminSpId, assignedApiAccessToken);
+            }
         }
     }
 }
