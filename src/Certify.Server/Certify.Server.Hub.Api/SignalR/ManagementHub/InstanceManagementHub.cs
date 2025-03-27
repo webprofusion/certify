@@ -1,6 +1,7 @@
 ﻿using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Shared;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.SignalR.ManagementHub
@@ -123,15 +124,18 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         {
             var instanceId = _stateProvider.GetInstanceIdForConnection(Context.ConnectionId);
 
-            _stateProvider.UpdateInstanceConnectionStatus(instanceId, ConnectionStatus.Disconnected);
+            if (instanceId != null)
+            {
+                _stateProvider.UpdateInstanceConnectionStatus(instanceId, ConnectionStatus.Disconnected);
 
-            if (exception != null)
-            {
-                _logger?.LogError("InstanceManagementHub: Instance {instanceId} disconnected unexpectedly from instance management hub. {exp}", instanceId, exception);
-            }
-            else
-            {
-                _logger?.LogInformation("InstanceManagementHub: Instance {instanceId} disconnected from instance management hub, with no error.", instanceId);
+                if (exception != null)
+                {
+                    _logger?.LogError("InstanceManagementHub: Instance {instanceId} disconnected unexpectedly from instance management hub. {exp}", instanceId, exception);
+                }
+                else
+                {
+                    _logger?.LogInformation("InstanceManagementHub: Instance {instanceId} disconnected from instance management hub, with no error.", instanceId);
+                }
             }
 
             return base.OnDisconnectedAsync(exception);
@@ -199,19 +203,19 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             // action this message from this instance
             _logger?.LogDebug("[ProcessInstanceCommandResult] Received instance command result {instanceId} {cmdType}", instanceId, cmd.CommandType);
 
-            if (cmd.CommandType == ManagementHubCommands.GetManagedItems)
+            if (cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
             {
                 // got items from an instance
-                var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value);
+                var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
-                _stateProvider.UpdateInstanceItemInfo(instanceId, val.Items);
+                _stateProvider.UpdateInstanceItemInfo(instanceId, val!.Items);
             }
-            else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result?.Value != null)
+            else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result.Value != null)
             {
                 // got status summary
-                var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value);
+                var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
-                _stateProvider.UpdateInstanceStatusSummary(instanceId, val);
+                _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
             }
             else if (result.IsCommandResponse)
             {
@@ -220,15 +224,15 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             else
             {
                 // item was not requested, queue for processing
-                if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem)
+                if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value));
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
-                else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress)
+                else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value));
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
-                else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem)
+                else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
                     // deleted :TODO
                     await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
@@ -238,11 +242,10 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         private async Task ProcessInstanceInfoResult(InstanceCommandResult result)
         {
-            var instanceInfo = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value);
+            var instanceInfo = result.Value == null ? null : System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceInfo>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
             if (instanceInfo != null)
             {
-
                 instanceInfo.LastReported = DateTimeOffset.UtcNow;
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
 
@@ -274,9 +277,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
         }
 
+        /// <summary>
+        /// Receives a message from an instance and logs the message details.
+        /// </summary>
+        /// <param name="message">The message received from the instance.</param>
+        /// <returns>A task that represents the asynchronous operation.</returns>
         public Task ReceiveInstanceMessage(InstanceMessage message)
         {
-
             var instanceId = _stateProvider.GetInstanceIdForConnection(Context?.ConnectionId ?? _localInstanceId);
             if (instanceId != null)
             {
