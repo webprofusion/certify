@@ -141,10 +141,16 @@ namespace Certify.Shared.Core.Utils.PKI
         {
             using (var keyReader = new StringReader(keyContent))
             {
-                var readKeyPair = (AsymmetricCipherKeyPair)new Org.BouncyCastle.OpenSsl.PemReader(keyReader).ReadObject();
-                if (readKeyPair.Private.IsPrivate)
+                var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(keyReader);
+                var readObject = pemReader.ReadObject();
+
+                if (readObject is AsymmetricCipherKeyPair keyPair)
                 {
-                    return true;
+                    return keyPair.Private.IsPrivate;
+                }
+                else if (readObject is AsymmetricKeyParameter keyParameter)
+                {
+                    return keyParameter.IsPrivate;
                 }
                 else
                 {
