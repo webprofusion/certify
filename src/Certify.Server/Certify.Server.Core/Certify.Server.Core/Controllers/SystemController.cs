@@ -2,6 +2,7 @@
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
+using Certify.Models.Hub;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -97,7 +98,13 @@ namespace Certify.Service.Controllers
         [HttpPost, Route("datastores/delete")]
         public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
 
-        [HttpPost, Route("hub/update")]
-        public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey) => await _certifyManager.UpdateManagementHub(url, joiningKey);
+        [HttpPost, Route("hub/join")]
+        public async Task<Models.Config.ActionResult> JoinManagementHub(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+
+        [HttpPost, Route("hub/checkcreds")]
+        public async Task<Models.Config.ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.CheckManagementHubCredentials(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+
+        [HttpGet, Route("hub/status")]
+        public async Task<Models.Config.ActionResult> CheckManagementHubConnectionStatus() => await _certifyManager.CheckManagementHubConnectionStatus();
     }
 }

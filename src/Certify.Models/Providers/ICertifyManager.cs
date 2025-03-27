@@ -91,10 +91,12 @@ namespace Certify.Management
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
-        Task<ActionStep> UpdateManagementHub(string url, string joiningKey);
-        Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
+        Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret);
+        Task<ActionResult<HubInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret);
 
+        Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
         void SetDirectManagementClient(IManagementServerClient client);
         ManagedInstanceInfo GetManagedInstanceInfo();
+        Task<ActionResult> CheckManagementHubConnectionStatus();
     }
 }

@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Providers;
 using Certify.Shared;
 using Certify.Shared.Core.Management;
@@ -322,6 +323,35 @@ namespace Certify.UI.ViewModel
             ServerConnectionManager.Save(Log, serverConnections);
 
             return await Task.FromResult(true);
+        }
+
+        /// <summary>
+        /// Validates the provided credentials for accessing the management hub.
+        /// </summary>
+        /// <param name="managementHubAPIUrl">Specifies the URL for the management hub API to be accessed.</param>
+        /// <param name="clientID">Identifies the client attempting to authenticate with the management hub.</param>
+        /// <param name="clientSecret">Serves as the secret key for authenticating the client with the management hub.</param>
+        /// <returns>Returns an action result indicating the success or failure of the credential check.</returns>
+        internal async Task<ActionResult> CheckManagementHubCredentials(string managementHubAPIUrl, string clientID, string clientSecret)
+        {
+            return await _certifyClient.CheckManagementHubCredentials(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
+        }
+
+        /// <summary>
+        /// Joins a management hub using provided credentials and API URL.
+        /// </summary>
+        /// <param name="managementHubAPIUrl">Specifies the URL of the management hub to connect to.</param>
+        /// <param name="clientID">Identifies the client making the request for authentication.</param>
+        /// <param name="clientSecret">Provides the secret key for secure authentication of the client.</param>
+        /// <returns>Returns an action result indicating the success or failure of the join operation.</returns>
+        internal async Task<ActionResult> JoinManagementHub(string managementHubAPIUrl, string clientID, string clientSecret)
+        {
+            return await _certifyClient.JoinManagementHub(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
+        }
+
+        internal async Task<ActionResult> CheckManagementHubConnectionStatus()
+        {
+            return await _certifyClient.CheckManagementHubConnectionStatus();
         }
     }
 }

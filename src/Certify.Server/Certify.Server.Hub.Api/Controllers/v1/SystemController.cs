@@ -1,6 +1,8 @@
-﻿using Certify.Client;
+﻿using System.Net;
+using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -71,6 +73,56 @@ namespace Certify.Server.Hub.Api.Controllers
 #endif
 
             return new OkObjectResult(health);
+        }
+
+        /// <summary>
+        /// Checks if a client can join a hub based on provided credentials and parameters.
+        /// </summary>
+        /// <returns>Returns an IActionResult indicating the success or failure of the access check.</returns>
+        [HttpGet]
+        [Route("/api/v1/hub/joincheck")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubInfo))]
+        public async Task<IActionResult> CheckJoining()
+        {
+
+            // auth based on client id and client secret
+            // check token and access control before allowing download
+            var clientId = Request.Headers["X-Client-ID"];
+            var secret = Request.Headers["X-Client-Secret"];
+
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+            {
+                return Problem(detail: "X-Client-ID or X-Client-Secret HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret }, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
+
+            if (accessPermittedResult.IsSuccess)
+            {
+                var hubInfo = new HubInfo();
+
+                var hubprefs = await _client.GetPreferences();
+
+                hubInfo.InstanceId = hubprefs.InstanceId;
+
+                var versionInfo = await _client.GetAppVersion();
+
+                hubInfo.Version = new Models.Hub.VersionInfo
+                {
+                    Version = versionInfo,
+                    Product = "Certify Management Hub",
+                };
+
+                hubInfo.HubEndpoint = "api/internal/managementhub";
+                hubInfo.Message = "Joining OK";
+
+                return new OkObjectResult(hubInfo);
+            }
+            else
+            {
+                return Problem(detail: accessPermittedResult.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
         }
     }
 }
