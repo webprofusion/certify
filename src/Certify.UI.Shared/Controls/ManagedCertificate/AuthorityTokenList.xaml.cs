@@ -36,7 +36,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     try
                     {
 
-                        var tokenWrapper = JsonSerializer.Deserialize<TkAuthToken>(fileContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        var tokenWrapper = JsonSerializer.Deserialize<TkAuthToken>(fileContent, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
 
                         if (tokenWrapper != null)
                         {

@@ -1,22 +1,49 @@
-﻿using Certify.Client;
-using Certify.Management;
+﻿using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 
 namespace Certify.Server.HubService.Services
 {
+    /// <summary>
+    /// Client for direct management server communication.
+    /// </summary>
     public class DirectManagementServerClient : Client.IManagementServerClient
     {
+        /// <summary>
+        /// Event triggered when the connection is closed.
+        /// </summary>
         public event Action? OnConnectionClosed;
+
+        /// <summary>
+        /// Event triggered when the connection is reconnected.
+        /// </summary>
         public event Action? OnConnectionReconnected;
+
+        /// <summary>
+        /// Event triggered when the connection is reconnecting.
+        /// </summary>
         public event Action? OnConnectionReconnecting;
+
+        /// <summary>
+        /// Event triggered to get the command result.
+        /// </summary>
         public event Func<InstanceCommandRequest, Task<InstanceCommandResult>>? OnGetCommandResult;
+
+        /// <summary>
+        /// Event triggered to get the instance items.
+        /// </summary>
         public event Func<ManagedInstanceItems>? OnGetInstanceItems;
 
         private ICertifyManager _certifyManager;
         private IInstanceManagementHub _managementHub;
-
         private ManagedInstanceInfo _instanceInfo;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DirectManagementServerClient"/> class.
+        /// </summary>
+        /// <param name="certifyManager">The certify manager.</param>
+        /// <param name="serviceProvider">The service provider.</param>
+        /// <param name="instanceManagementHub">The instance management hub.</param>
         public DirectManagementServerClient(ICertifyManager certifyManager, IServiceProvider serviceProvider, IInstanceManagementHub instanceManagementHub)
         {
             _certifyManager = certifyManager;
@@ -24,14 +51,20 @@ namespace Certify.Server.HubService.Services
             _instanceInfo = certifyManager.GetManagedInstanceInfo();
         }
 
-        Task IManagementServerClient.ConnectAsync() => Task.CompletedTask;
-        Task IManagementServerClient.Disconnect() => throw new NotImplementedException();
-        bool IManagementServerClient.IsConnected() => true;
-        void IManagementServerClient.SendInstanceInfo(Guid commandId, bool isCommandResponse)
+        /// <inheritdoc/>
+        public Task ConnectAsync() => Task.CompletedTask;
+
+        /// <inheritdoc/>
+        public Task Disconnect() => throw new NotImplementedException();
+
+        /// <inheritdoc/>
+        public bool IsConnected() => true;
+
+        /// <inheritdoc/>
+        public void SendInstanceInfo(Guid commandId, bool isCommandResponse)
         {
             System.Diagnostics.Debug.WriteLine("SendInstanceInfo");
 
-            // send this clients instance ID back to the hub to identify it in the connection: should send a shared secret before this to confirm this client knows and is not impersonating another instance
             var result = new InstanceCommandResult
             {
                 CommandId = commandId,
@@ -45,7 +78,9 @@ namespace Certify.Server.HubService.Services
 
             _managementHub.ReceiveCommandResult(result);
         }
-        void IManagementServerClient.SendNotificationToManagementHub(string msgCommandType, object updateMsg)
+
+        /// <inheritdoc/>
+        public void SendNotificationToManagementHub(string msgCommandType, object updateMsg)
         {
             var result = new InstanceCommandResult
             {
@@ -59,7 +94,6 @@ namespace Certify.Server.HubService.Services
 
             result.ObjectValue = updateMsg;
             _managementHub.ReceiveCommandResult(result);
-
         }
     }
 }

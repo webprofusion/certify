@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
 using Certify.Models.Config;
+using Certify.Shared;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
 
@@ -346,8 +347,6 @@ namespace Certify.Models
             return allDomains.Distinct().ToList();
         }
 
-        private static JsonSerializerOptions _defaultJsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
         public List<CertIdentifierItem> GetCertificateIdentifiers()
         {
             var identifiers = new List<CertIdentifierItem>();
@@ -375,7 +374,7 @@ namespace Certify.Models
                     var atc = jwt.Claims.FirstOrDefault(c => c.Type == "atc");
                     if (atc != null)
                     {
-                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
+                        var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, JsonOptions.DefaultJsonSerializerOptions);
                         if (parsedAtc != null)
                         {
                             identifiers.Add(new CertIdentifierItem { IdentifierType = CertIdentifierType.TnAuthList, Value = parsedAtc.TkValue });
@@ -396,7 +395,7 @@ namespace Certify.Models
                 var atc = parsedJwt.Claims.FirstOrDefault(c => c.Type == "atc");
                 if (atc != null)
                 {
-                    var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, _defaultJsonSerializerOptions);
+                    var parsedAtc = System.Text.Json.JsonSerializer.Deserialize<AtcClaim>(atc.Value, JsonOptions.DefaultJsonSerializerOptions);
                     return parsedAtc;
                 }
                 else
