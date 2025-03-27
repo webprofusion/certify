@@ -1,0 +1,53 @@
+﻿<UserControl
+    x:Class="Certify.UI.Controls.Settings.ManagementHub"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
+    <StackPanel>
+
+        <TextBlock Style="{StaticResource Subheading}">Manage this instance using Certify Management Hub</TextBlock>
+        <TextBlock Style="{StaticResource Instructions}">You can centrally manage this instance of Certify Certificate Manager using Certify Management Hub. See https://certifytheweb.com for more information.</TextBlock>
+
+        <TextBlock Style="{StaticResource SubheadingWithMargin}" Text="{Binding StatusMessage}" />
+
+        <TextBlock Style="{StaticResource Instructions}">To add or update the hub connection, enter the API URL of your management hub API plus your Client ID and Secret, then select Join Hub:</TextBlock>
+
+        <TextBlock Style="{StaticResource Instructions}">
+            Management Hub API URL:
+        </TextBlock>
+        <TextBox
+            Width="400"
+            HorizontalAlignment="left"
+            Controls:TextBoxHelper.Watermark="e.g. https://hub.internal.yourdomain.com"
+            Text="{Binding ManagementHubAPIUrl}" />
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+            Client ID:
+        </TextBlock>
+        <TextBox
+            Width="300"
+            HorizontalAlignment="left"
+            DockPanel.Dock="Top"
+            Text="{Binding ClientID}" />
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+            Client Secret:
+        </TextBlock>
+        <TextBox
+            Width="300"
+            HorizontalAlignment="left"
+            DockPanel.Dock="Top"
+            Text="{Binding ClientSecret}" />
+        <Button
+            Margin="4,8,0,0"
+            HorizontalAlignment="Left"
+            Click="Join_Click"
+            Content="Join Hub"
+            DockPanel.Dock="Top" />
+    </StackPanel>
+</UserControl>

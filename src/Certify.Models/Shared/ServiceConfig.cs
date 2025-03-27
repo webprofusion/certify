@@ -34,7 +34,8 @@ namespace Certify.Shared
         /// </summary>
         public bool EnableAutoPortNegotiation { get; set; }
 
-        public string ManagementServerHubUri { get; set; } = string.Empty;
+        public string ManagementServerHubAPI { get; set; } = string.Empty;
+        public string ManagementServerHubEndpoint { get; set; } = string.Empty;
     }
 
     public enum ConfigStatus

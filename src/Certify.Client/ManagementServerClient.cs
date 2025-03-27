@@ -28,12 +28,13 @@ namespace Certify.Client
         private string _hubUri = "";
 
         private ManagedInstanceInfo _instanceInfo;
+        private ClientSecret _clientSecret;
 
-        public ManagementServerClient(string hubUri, ManagedInstanceInfo instanceInfo)
+        public ManagementServerClient(string hubUri, ClientSecret clientSecret, ManagedInstanceInfo instanceInfo)
         {
             _hubUri = $"{hubUri}";
             _instanceInfo = instanceInfo;
-
+            _clientSecret = clientSecret;
         }
 
         private void Log(string msg)

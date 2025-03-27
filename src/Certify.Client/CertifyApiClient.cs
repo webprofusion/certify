@@ -287,10 +287,22 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<List<ActionResult>>(result);
         }
 
-        public async Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext authContext = null)
+        public async Task<ActionResult> JoinManagementHub(HubJoiningClientSecret joiningSecret, AuthContext authContext = null)
         {
-            var result = await PostAsync($"system/hub/update/", new { url, joiningKey }, authContext);
-            return JsonConvert.DeserializeObject<ActionStep>(await result.Content.ReadAsStringAsync());
+            var result = await PostAsync($"system/hub/join", joiningSecret, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret joiningSecret, AuthContext authContext = null)
+        {
+            var result = await PostAsync($"system/hub/checkcreds", joiningSecret, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext authContext = null)
+        {
+            var result = await FetchAsync($"system/hub/status", authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(result);
         }
 
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId, AuthContext authContext = null)

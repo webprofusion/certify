@@ -393,7 +393,15 @@
                         <local:Experiments />
                     </StackPanel>
                 </TabItem>
-
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Management Hub">
+                    <StackPanel Margin="16,0,0,0">
+                        <local:ManagementHub />
+                    </StackPanel>
+                </TabItem>
             </TabControl>
 
         </DockPanel>

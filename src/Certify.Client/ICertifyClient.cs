@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -28,7 +28,9 @@ namespace Certify.Client
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
 
-        Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext authContext = null);
+        Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext authContext = null);
+        Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext authContext = null);
+        Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext authContext = null);
         Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null);
         #endregion System
 

@@ -78,4 +78,15 @@
             NewPassword = newPassword;
         }
     }
+
+    public class ClientSecret
+    {
+        public string ClientId { get; set; } = string.Empty;
+        public string Secret { get; set; } = string.Empty;
+    }
+
+    public class HubJoiningClientSecret : ClientSecret
+    {
+        public string Url { get; set; } = string.Empty;
+    }
 }
