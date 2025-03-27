@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
+using Certify.Shared;
 using Certify.Shared.Core.Utils;
 
 namespace Certify.Management
@@ -230,7 +231,7 @@ namespace Certify.Management
             if (arg.CommandType == ManagementHubCommands.GetManagedItem)
             {
                 // Get a single managed item by id
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 val = await GetManagedCertificate(managedCertIdArg.Value);
             }
@@ -248,7 +249,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetManagedItemLog)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var limit = args.FirstOrDefault(a => a.Key == "limit");
 
@@ -256,15 +257,15 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetManagedItemRenewalPreview)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
-                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await GeneratePreview(managedCert);
             }
             else if (arg.CommandType == ManagementHubCommands.ExportCertificate)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var format = args.FirstOrDefault(a => a.Key == "format");
                 val = await ExportCertificate(managedCertIdArg.Value, format.Value);
@@ -272,9 +273,9 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.UpdateManagedItem)
             {
                 // update a single managed item 
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
-                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 var item = await UpdateManagedCertificate(managedCert);
 
@@ -285,7 +286,7 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.RemoveManagedItem)
             {
                 // delete a single managed item 
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
 
                 var actionResult = await DeleteManagedCertificate(managedCertIdArg.Value);
@@ -300,9 +301,9 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.TestManagedItemConfiguration)
             {
                 // test challenge response config for a single managed item 
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
-                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value);
+                var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 var log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
 
@@ -312,7 +313,7 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.PerformManagedItemRequest)
             {
                 // attempt certificate order
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var managedCert = await GetManagedCertificate(managedCertIdArg.Value);
 
@@ -335,15 +336,15 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.UpdateCertificateAuthority)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "certificateAuthority");
-                var item = JsonSerializer.Deserialize<CertificateAuthority>(itemArg.Value);
+                var item = JsonSerializer.Deserialize<CertificateAuthority>(itemArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await UpdateCertificateAuthority(item);
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveCertificateAuthority)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "id");
                 val = await RemoveCertificateAuthority(itemArg.Value);
             }
@@ -353,15 +354,15 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.AddAcmeAccount)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var registrationArg = args.FirstOrDefault(a => a.Key == "registration");
-                var registration = JsonSerializer.Deserialize<ContactRegistration>(registrationArg.Value);
+                var registration = JsonSerializer.Deserialize<ContactRegistration>(registrationArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await AddAccount(registration);
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveAcmeAccount)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
                 var deactivateArg = args.FirstOrDefault(a => a.Key == "deactivate");
                 val = await RemoveAccount(itemArg.Value, bool.Parse(deactivateArg.Value));
@@ -372,9 +373,9 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.UpdateStoredCredential)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "item");
-                var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value);
+                var storedCredential = JsonSerializer.Deserialize<StoredCredential>(itemArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 var updated = await _credentialsManager.Update(storedCredential);
                 if (updated != null)
@@ -388,7 +389,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveStoredCredential)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
                 val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
             }
@@ -399,7 +400,7 @@ namespace Certify.Management
 
             else if (arg.CommandType == ManagementHubCommands.GetDnsZones)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var providerTypeArg = args.FirstOrDefault(a => a.Key == "providerTypeId");
                 var credentialIdArg = args.FirstOrDefault(a => a.Key == "credentialId");
 
@@ -411,7 +412,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.ExecuteDeploymentTask)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 var managedCertificateIdArg = args.FirstOrDefault(a => a.Key == "managedCertificateId");
                 var taskIdArg = args.FirstOrDefault(a => a.Key == "taskId");
@@ -424,7 +425,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetTargetServiceItems)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var serviceTypeArg = args.FirstOrDefault(a => a.Key == "serviceType");
 
                 var serverType = MapStandardServerType(serviceTypeArg.Value);
@@ -433,7 +434,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetTargetServiceItemIdentifiers)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var serviceTypeArg = args.FirstOrDefault(a => a.Key == "serviceType");
                 var itemArg = args.FirstOrDefault(a => a.Key == "itemId");
 
@@ -443,17 +444,17 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.PerformImport)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var requestArg = args.FirstOrDefault(a => a.Key == "importRequest");
-                var importRequest = JsonSerializer.Deserialize<ImportRequest>(requestArg.Value);
+                var importRequest = JsonSerializer.Deserialize<ImportRequest>(requestArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await PerformImport(importRequest);
             }
             else if (arg.CommandType == ManagementHubCommands.PerformExport)
             {
-                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value);
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var requestArg = args.FirstOrDefault(a => a.Key == "exportRequest");
-                var exportRequest = JsonSerializer.Deserialize<ExportRequest>(requestArg.Value);
+                var exportRequest = JsonSerializer.Deserialize<ExportRequest>(requestArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await PerformExport(exportRequest);
             }
