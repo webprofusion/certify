@@ -26,7 +26,7 @@ namespace Certify.Server.Core
 
         public IConfiguration Configuration { get; }
 
-        public void ConfigureServices(IServiceCollection services)
+        public async Task ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
 
@@ -41,7 +41,7 @@ namespace Certify.Server.Core
 #endif
             ConfigureHttpsRedirection(services);
             ConfigureClaimsTransformation(services);
-            ConfigureCertifyManager(services);
+            await ConfigureCertifyManager(services);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -229,10 +229,10 @@ namespace Certify.Server.Core
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>(c => new ClaimsTransformer(windowsAuthRequired));
         }
 
-        private void ConfigureCertifyManager(IServiceCollection services)
+        private async Task ConfigureCertifyManager(IServiceCollection services)
         {
             var certifyManager = new Management.CertifyManager();
-            certifyManager.Init().Wait();
+            await certifyManager.Init();
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
         }
 
