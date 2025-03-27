@@ -137,9 +137,10 @@ namespace Certify.Server.HubService.Services
         public Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site, AuthContext? authContext = null) => throw new NotImplementedException();
-
-        public Task<ActionStep> UpdateManagementHub(string url, string joiningKey, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

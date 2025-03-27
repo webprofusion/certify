@@ -145,6 +145,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubInfo))]
         public async Task<IActionResult> GetHubInfo()
         {
+            // see also SystemController.CheckJoining which has similar/same info
             var hubInfo = new HubInfo();
 
             var hubprefs = await _client.GetPreferences();
@@ -157,6 +158,8 @@ namespace Certify.Server.Hub.Api.Controllers
             var versionInfo = await _client.GetAppVersion();
 
             hubInfo.Version = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
+
+            hubInfo.HubEndpoint = "api/internal/managementhub";
 
             return new OkObjectResult(hubInfo);
         }

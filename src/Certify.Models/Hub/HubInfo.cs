@@ -3,8 +3,10 @@
     public class HubInfo
     {
         public string InstanceId { get; set; } = default!;
-
         public VersionInfo Version { get; set; } = default!;
+        public string HubEndpoint { get; set; } = default!;
+
+        public string Message { get; set; } = default!;
     }
 
     public class HubHealth
