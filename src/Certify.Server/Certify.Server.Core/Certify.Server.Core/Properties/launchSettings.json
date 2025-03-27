@@ -16,9 +16,10 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
-        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
+        //"CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
         "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
-        "CERTIFY_SERVICE_AUTH_MODE": "none"
+        "CERTIFY_SERVICE_AUTH_MODE": "none",
+        "CERTIFY_UPGRADE_SETTINGS": "true"
       }
     },
     "Certify.Server.Core (windows auth)": {
@@ -27,9 +28,10 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
-        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
+        // "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
         "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
-        "CERTIFY_SERVICE_AUTH_MODE": "windows"
+        "CERTIFY_SERVICE_AUTH_MODE": "windows",
+        "CERTIFY_UPGRADE_SETTINGS": "true"
       }
     },
     "IIS Express": {
