@@ -70,7 +70,7 @@
         <PackageReference Include="MSTest.TestAdapter" Version="3.8.3" />
         <PackageReference Include="MSTest.TestFramework" Version="3.8.3" />
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-        <PackageReference Include="Npgsql" Version="8.0.6" />
+        <PackageReference Include="Npgsql" Version="8.0.7" />
         <PackageReference Include="Polly" Version="8.5.2" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
     </ItemGroup>
