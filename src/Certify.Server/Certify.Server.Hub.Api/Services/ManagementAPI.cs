@@ -68,13 +68,6 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>An <see cref="InstanceCommandResult"/> that contains the result of the command if available.</returns>
         private async Task<InstanceCommandResult?> GetCommandResult(string instanceId, InstanceCommandRequest cmd)
         {
-            var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
-
-            if (connectionId == null)
-            {
-                _log.LogError("Instance connection info not known for {instanceId}, cannot send command {cmdId} {cmdType} to instance.", instanceId, cmd.CommandId, cmd.CommandType);
-            }
-
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
                 // get command result directly from in-process instance
@@ -82,6 +75,14 @@ namespace Certify.Server.Hub.Api.Services
             }
             else
             {
+                var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
+
+                if (connectionId == null)
+                {
+                    _log.LogError("Instance connection info not known for {instanceId}, cannot send command {cmdId} {cmdType} to instance.", instanceId, cmd.CommandId, cmd.CommandType);
+                    return null;
+                }
+
                 _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
                 await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
                 return await _mgmtStateProvider.ConsumeAwaitedCommandResult(cmd);
@@ -130,7 +131,7 @@ namespace Certify.Server.Hub.Api.Services
 
             if (result?.Value != null)
             {
-                return JsonSerializer.Deserialize<T>(result.Value);
+                return JsonSerializer.Deserialize<T>(result.Value, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);
             }
             else
             {

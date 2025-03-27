@@ -8,34 +8,33 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
     public interface IInstanceManagementStateProvider
     {
-        public void Clear();
-        public void SetManagementHubInstanceId(string instanceId);
-        public string GetManagementHubInstanceId();
-        public void UpdateInstanceConnectionInfo(string? connectionId, ManagedInstanceInfo instanceInfo);
-        public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
-        public string GetConnectionIdForInstance(string instanceId);
-        public string GetInstanceIdForConnection(string connectionId);
-        public List<ManagedInstanceInfo> GetConnectedInstances();
-        public void AddAwaitedCommandRequest(InstanceCommandRequest command);
-        public void RemoveAwaitedCommandRequest(Guid commandId);
-        public InstanceCommandRequest? GetAwaitedCommandRequest(Guid commandId);
-        public void AddAwaitedCommandResult(InstanceCommandResult result);
+        void Clear();
+        void SetManagementHubInstanceId(string instanceId);
+        string GetManagementHubInstanceId();
+        void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
+        void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
+        string GetConnectionIdForInstance(string instanceId);
+        string? GetInstanceIdForConnection(string connectionId);
+        List<ManagedInstanceInfo> GetConnectedInstances();
+        void AddAwaitedCommandRequest(InstanceCommandRequest command);
+        void RemoveAwaitedCommandRequest(Guid commandId);
+        InstanceCommandRequest? GetAwaitedCommandRequest(Guid commandId);
+        void AddAwaitedCommandResult(InstanceCommandResult result);
 
         /// <summary>
         /// Wait for a command result to be available
         /// </summary>
-        /// <param name="commandId"></param>
         /// <returns></returns>
-        public Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
-        public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
-        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
-        public void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
-        public void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
-        public bool HasItemsForManagedInstance(string instanceId);
+        Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
+        void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
+        ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
+        void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
+        void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
+        bool HasItemsForManagedInstance(string instanceId);
 
-        public bool HasStatusSummaryForManagedInstance(string instanceId);
-        public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
-        public void UpdateInstanceConnectionStatus(string instanceId, string status);
+        bool HasStatusSummaryForManagedInstance(string instanceId);
+        ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
+        void UpdateInstanceConnectionStatus(string instanceId, string status);
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -327,6 +326,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
         }
 
+        /// <summary>  
+        /// Update the connection status for a given instance.  
+        /// </summary>  
+        /// <param name="instanceId">The ID of the instance.</param>  
+        /// <param name="status">The new connection status.</param>  
         public void UpdateInstanceConnectionStatus(string instanceId, string status)
         {
             var info = _instanceConnections.FirstOrDefault(k => k.Value.InstanceId == instanceId);
@@ -334,7 +338,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 info.Value.ConnectionStatus = status;
                 UpdateInstanceConnectionInfo(info.Key, info.Value);
-
             }
         }
     }
