@@ -414,7 +414,7 @@ namespace Certify.Core.Tests.Unit
             assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() before update
-            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id, includePassword: true);
             var firstPasswordHashed = access.HashPassword(firstPassword, storedSecurityPrinciple.Password.Split('.')[1]);
             Assert.AreEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
 
@@ -424,7 +424,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to succeed");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after update
-            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id, includePassword: true);
             var newPasswordHashed = access.HashPassword(newPassword, storedSecurityPrinciple.Password.Split('.')[1]);
 
             Assert.AreNotEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to not match previous Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
@@ -445,7 +445,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail without roles");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
-            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id, includePassword: true);
             var firstPasswordHashed = access.HashPassword(firstPassword, storedSecurityPrinciple.Password.Split('.')[1]);
 
             Assert.AreEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
@@ -481,7 +481,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(securityPrincipleUpdated, $"Expected security principle password update for {adminSecurityPrinciples[0].Id} to fail with wrong password");
 
             // Validate password of SecurityPrinciple object returned by AccessControl.GetSecurityPrinciple() after failed update
-            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id);
+            var storedSecurityPrinciple = await access.GetSecurityPrinciple(contextUserId, adminSecurityPrinciples[0].Id, includePassword: true);
             var firstPasswordHashed = access.HashPassword(firstPassword, storedSecurityPrinciple.Password.Split('.')[1]);
             Assert.AreEqual(storedSecurityPrinciple.Password, firstPasswordHashed, $"Expected SecurityPrinciple returned by GetSecurityPrinciple() to match Password '{firstPasswordHashed}' of SecurityPrinciple passed into AddSecurityPrinciple()");
         }
