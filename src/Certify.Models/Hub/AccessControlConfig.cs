@@ -482,7 +482,8 @@ namespace Certify.Models.Hub
                         }
                     },
                     ScopedAssignedRoles = new List<string> {
-                        StandardRoles.ManagedInstance.Id
+                        // scope assigned role is the id for AssignedRole (not the role id itself)
+                        assignedRoles.First(a=>a.RoleId==StandardRoles.ManagedInstance.Id).Id
                     },
                 };
 

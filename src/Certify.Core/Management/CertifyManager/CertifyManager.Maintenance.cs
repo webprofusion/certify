@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Core.Management.Access;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
@@ -25,7 +24,7 @@ namespace Certify.Management
             var systemVersion = Util.GetAppVersion().ToString();
             var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
 
-            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion)
+            if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion || Environment.GetEnvironmentVariable("CERTIFY_UPGRADE_SETTINGS") == "true")
             {
                 _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
                     { "previousVersion", previousVersion },
@@ -48,87 +47,8 @@ namespace Certify.Management
 
                 if (CoreAppSettings.Current.IsManagementHubService)
                 {
-                    if (await accessControl.IsInitialized() == false)
-                    {
-                        await BootstrapAdminUserAndRoles(accessControl);
-                    }
-                    else
-                    {
-                        await UpdateStandardRoles(accessControl);
-                    }
+                    await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl);
                 }
-            }
-        }
-
-        private static async Task BootstrapAdminUserAndRoles(IAccessControl access)
-        {
-            // setup roles with policies
-            await UpdateStandardRoles(access);
-
-            var adminSp = new SecurityPrinciple
-            {
-                Id = "admin_01",
-                Description = "Primary default admin",
-                PrincipleType = SecurityPrincipleType.User,
-                Username = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTUSERNAME") ?? "admin",
-                Password = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTPWD") ?? "changeme!",
-                Provider = StandardIdentityProviders.INTERNAL
-            };
-
-            await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
-
-            // assign security principles to roles
-            var assignedRoles = new List<AssignedRole> {
-                 // administrator
-                 new AssignedRole{
-                     Id= Guid.NewGuid().ToString(),
-                     RoleId=StandardRoles.Administrator.Id,
-                     SecurityPrincipleId=adminSp.Id
-                 }
-            };
-
-            foreach (var r in assignedRoles)
-            {
-                // add roles and policy assignments to store
-                await access.AddAssignedRole(adminSp.Id, r, bypassIntegrityCheck: true);
-            }
-        }
-
-        /// <summary>
-        /// Add/update standard system roles, policies and resource actions
-        /// </summary>
-        /// <param name="access"></param>
-        /// <returns></returns>
-        private static async Task UpdateStandardRoles(IAccessControl access)
-        {
-            // setup roles with policies
-
-            var adminSvcPrinciple = "admin_01";
-
-            var actions = Policies.GetStandardResourceActions();
-
-            foreach (var action in actions)
-            {
-                await access.AddResourceAction(adminSvcPrinciple, action, bypassIntegrityCheck: true);
-            }
-
-            // setup policies with actions
-
-            var policies = Policies.GetStandardPolicies();
-
-            // add policies to store
-            foreach (var r in policies)
-            {
-                _ = await access.AddResourcePolicy(adminSvcPrinciple, r, bypassIntegrityCheck: true);
-            }
-
-            // setup roles with policies
-            var roles = Policies.GetStandardRoles();
-
-            foreach (var r in roles)
-            {
-                // add roles and policy assignments to store
-                await access.AddRole(adminSvcPrinciple, r, bypassIntegrityCheck: true);
             }
         }
 

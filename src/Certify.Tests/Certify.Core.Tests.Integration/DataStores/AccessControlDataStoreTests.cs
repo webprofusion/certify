@@ -176,7 +176,7 @@ namespace Certify.Core.Tests.DataStores
                 Assert.IsTrue(list.Any(), "Should have security principles in store");
 
                 // get updated sp so that password is hashed for comparison check
-                consumerSp = await access.GetSecurityPrinciple(adminSp.Id, consumerSp.Id);
+                consumerSp = await access.GetSecurityPrinciple(adminSp.Id, consumerSp.Id, includePassword: true);
 
                 Assert.IsTrue(access.IsPasswordValid("oldpassword", consumerSp.Password));
             }

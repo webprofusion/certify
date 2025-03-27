@@ -40,7 +40,7 @@ namespace Certify.Models.Hub
         public string? AuthKey { get; set; }
 
         public string AvatarUrl { get; set; } = string.Empty;
-        public bool IsBuiltIn { get; set; } = false;
+        public bool IsBuiltIn { get; set; }
     }
 
     /// <summary>
@@ -124,7 +124,7 @@ namespace Certify.Models.Hub
         public string SecurityPrincipleId { get; set; } = default!;
 
         /// <summary>
-        /// Optional list of Assigned Roles this access token is scoped to
+        /// Optional list of Assigned Roles this access token is scoped to. Note this is not the RoleID but the AssignedRoleID.
         /// </summary>
         public List<string> ScopedAssignedRoles { get; set; } = [];
 

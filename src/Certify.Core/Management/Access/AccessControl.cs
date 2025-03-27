@@ -251,6 +251,7 @@ namespace Certify.Core.Management.Access
             // TODO: cache results for performance based on last update of access control config, which will be largely static
 
             // get all assigned roles (all users)
+            // assigned roles are assigned to a security principle (user) and include a specified role plus any restrictions on resource types or identifiers
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
             // get all defined roles
@@ -262,10 +263,10 @@ namespace Certify.Core.Management.Access
             // get the assigned roles for this specific security principle
             var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == check.SecurityPrincipleId);
 
-            // if scoped assigned role ID specified (access token check etc), reduce scope of assigned roles to check
+            // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check
             if (check.ScopedAssignedRoles?.Any() == true)
             {
-                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.RoleId));
+                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
             }
 
             // get all role definitions included in the principles assigned roles 
@@ -407,7 +408,7 @@ namespace Certify.Core.Management.Access
 
             var updated = false;
 
-            var principle = await GetSecurityPrinciple(contextUserId, passwordUpdate.SecurityPrincipleId);
+            var principle = await GetSecurityPrinciple(contextUserId, passwordUpdate.SecurityPrincipleId, includePassword: true);
 
             if (IsPasswordValid(passwordUpdate.Password, principle.Password))
             {
