@@ -231,8 +231,11 @@ statusReporting.OnRequestProgressStateUpdated += (RequestProgressState state) =>
 
 statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
 {
-    var mgmtHubState = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
-    mgmtHubState.UpdateCachedManagedInstanceItem(item.InstanceId, item);
+    if (item.InstanceId != null)
+    {
+        var mgmtHubState = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
+        mgmtHubState.UpdateCachedManagedInstanceItem(item.InstanceId, item);
+    }
 };
 
 // setup direct management client, this tells the primary backend CertifyManager instance to talk directly to the management hub instead of via SignalR

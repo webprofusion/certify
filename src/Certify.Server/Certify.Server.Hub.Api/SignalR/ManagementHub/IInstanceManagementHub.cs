@@ -11,8 +11,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// Send command to an instance or the current caller if instance not provided
         /// </summary>
         /// <param name="cmd"></param>
-        /// <param name="targetInstanceId">If null, command is targetted at all instances</param>
-        /// <param name="request"></param>
         /// <returns></returns>
         Task SendCommandRequest(InstanceCommandRequest cmd);
 

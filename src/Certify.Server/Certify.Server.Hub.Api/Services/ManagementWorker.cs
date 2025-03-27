@@ -25,6 +25,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="logger"></param>
         /// <param name="hubContext"></param>
         /// <param name="stateProvider"></param>
+        /// <param name="mgmtAPI"></param>
         public ManagementWorker(ILogger<ManagementWorker> logger, IHubContext<InstanceManagementHub> hubContext, IInstanceManagementStateProvider stateProvider, ManagementAPI mgmtAPI)
         {
             _logger = logger;
