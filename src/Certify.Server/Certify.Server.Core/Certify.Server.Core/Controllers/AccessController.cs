@@ -122,7 +122,12 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            token.AccessTokens?.ForEach(a => a.DateCreated = DateTime.UtcNow);
+            token.AccessTokens?.ForEach(a =>
+            {
+                a.DateCreated = DateTime.UtcNow;
+                a.Id = Guid.NewGuid().ToString();
+                a.Secret = Guid.NewGuid().ToString();
+            });
 
             var addResultOk = await accessControl.AddAssignedAccessToken(GetContextUserId(), token);
 
