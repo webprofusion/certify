@@ -28,13 +28,17 @@ namespace Certify.Client
         private string _hubUri = "";
 
         private ManagedInstanceInfo _instanceInfo;
-        private ClientSecret _clientSecret;
+        private string _joiningToken = default;
 
-        public ManagementServerClient(string hubUri, ClientSecret clientSecret, ManagedInstanceInfo instanceInfo)
+        public ManagementServerClient(string hubUri, ManagedInstanceInfo instanceInfo)
         {
             _hubUri = $"{hubUri}";
             _instanceInfo = instanceInfo;
-            _clientSecret = clientSecret;
+        }
+
+        public void SetJoiningToken(string joiningToken)
+        {
+            _joiningToken = joiningToken;
         }
 
         private void Log(string msg)
@@ -76,6 +80,7 @@ namespace Certify.Client
                 };
 
                 opts.UseStatefulReconnect = true;
+                opts.AccessTokenProvider = () => Task.FromResult(_joiningToken ?? "");
 
             })
             .WithAutomaticReconnect()
@@ -91,6 +96,7 @@ namespace Certify.Client
 
             _connection.Closed += async (error) =>
             {
+                // if we are disconnected, wait a random amount of time and try to reconnect
                 await Task.Delay(new Random().Next(0, 5) * 1000);
                 await _connection.StartAsync();
             };

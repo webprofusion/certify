@@ -1,4 +1,5 @@
-﻿using Certify.Management;
+﻿using System.Security.Claims;
+using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Shared;
@@ -19,7 +20,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private ILogger<InstanceManagementHub> _logger;
         private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
         private ICertifyManager? _certifyManager;
-        private readonly string _localInstanceId;
+        private IConfiguration _config;
+        private readonly string _localInstanceId = default!;
         private bool _hasLocalInstance => _certifyManager != null;
 
         /// <summary>
@@ -27,11 +29,12 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// </summary>
         /// <param name="stateProvider"></param>
         /// <param name="logger"></param>
-        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub, ICertifyManager? certifyManager = null)
+        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub, IConfiguration config, ICertifyManager? certifyManager = null)
         {
             _stateProvider = stateProvider;
             _logger = logger;
             _uiStatusHub = uiStatusHub;
+            _config = config;
             _certifyManager = certifyManager;
 
             // If we have a local certify manager, register it as a special local instance
@@ -41,20 +44,50 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 // Create a unique local instance connection id
                 _localInstanceId = _certifyManager!.GetManagedInstanceInfo().InstanceId;
             }
+
+            _config = config;
         }
 
         /// <summary>
         /// Handle connection event from an instance using SignalR
         /// </summary>
         /// <returns></returns>
-        public override Task OnConnectedAsync()
+        public async override Task OnConnectedAsync()
         {
             _logger?.LogInformation("InstanceManagementHub: Remote instance connected to instance management hub..");
 
-            // begin tracking connection 
-            _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo { InstanceId = string.Empty, ConnectionStatus = ConnectionStatus.Connected, LastReported = DateTimeOffset.Now });
+            // validate jwt passed by joining instance
+            var isAuthenticated = false;
 
-            // at this stage we don't know which instance this is, we need to issue a command for it to identify itself before it can participate
+            try
+            {
+                var accessToken = Context.GetHttpContext().Request.Headers[key: "Authorization"];
+
+                var joiningJwt = accessToken.ToString().Replace("Bearer ", "");
+                var jwtService = new Hub.Api.Services.JwtService(_config);
+                var claimsIdentity = await jwtService.ClaimsIdentityFromTokenAsync(joiningJwt, true);
+                var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
+                isAuthenticated = true;
+
+            }
+            catch (Exception)
+            {
+                // could not validate jwt
+
+                return;
+            }
+
+            // begin tracking connection 
+            _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo
+            {
+                InstanceId = string.Empty,
+                ConnectionStatus = ConnectionStatus.Connected,
+                LastReported = DateTimeOffset.Now,
+                IsAuthenticated = isAuthenticated
+            }
+            );
+
+            // at this stage we don't know which instance id this is, we need to issue a command for it to identify itself before it can participate
             var request = new InstanceCommandRequest
             {
                 CommandId = Guid.NewGuid(),
@@ -62,8 +95,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             };
 
             IssueCommandViaSignalR(request);
-
-            return base.OnConnectedAsync();
         }
 
         private void IssueCommandViaSignalR(InstanceCommandRequest cmd)

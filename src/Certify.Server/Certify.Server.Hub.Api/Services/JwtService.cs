@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -26,7 +26,7 @@ namespace Certify.Server.Hub.Api.Services
         {
             _secret = config.GetSection("JwtSettings").GetSection("secret").Value ?? "";
             _issuer = config.GetSection("JwtSettings").GetSection("issuer").Value ?? "";
-            _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value ?? DateTimeOffset.Now.AddDays(1).ToString();
+            _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value ?? "1";
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Certify.Server.Hub.Api.Services
                     new Claim(ClaimTypes.Sid, identifier)
                 }),
                 Issuer = _issuer,
-                Expires = expiryMinutes != null ? DateTime.UtcNow.AddHours((double)expiryMinutes) : DateTime.UtcNow.AddDays(double.Parse(_expDate)), //token expiry could be role specific - e.g. 1 yr vs 1 month
+                Expires = expiryMinutes != null ? DateTime.UtcNow.AddMinutes((double)expiryMinutes) : DateTime.UtcNow.AddDays(double.Parse(_expDate)), //token expiry could be role specific - e.g. 1 yr vs 1 month
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -11,6 +11,7 @@ using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Shared;
 using Certify.Shared.Core.Utils;
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Certify.Management
 {
@@ -21,6 +22,7 @@ namespace Certify.Management
         private bool _isHubConnectionErrorLogged = false;
         private ClientSecret _mgmtHubJoiningSecret;
         private const string _mgmtHubJoiningCredId = "_ManagementHubJoiningKey";
+        private string _mgmtHubJoiningToken = default!;
 
         public async Task<ActionResult> CheckManagementHubConnectionStatus()
         {
@@ -40,6 +42,8 @@ namespace Certify.Management
 
             if (check.IsSuccess)
             {
+                _mgmtHubJoiningToken = check.Result.JoiningToken;
+
                 _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
                 var hubEndpoint = check.Result.HubEndpoint;
 
@@ -119,32 +123,84 @@ namespace Certify.Management
             _managementServerClient = client;
         }
 
+        private JsonWebTokenHandler _joiningTokenHandler = new JsonWebTokenHandler();
         private async Task EnsureMgmtHubConnection()
         {
+            // check we have a current non-expired joining token
+            if (!string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
+            {
+                // check jwt has not expired
+
+                var validation = await _joiningTokenHandler.ValidateTokenAsync(_mgmtHubJoiningToken, new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+                {
+                    ValidateLifetime = true,
+                    ValidateAudience = false,
+                    ValidateIssuer = false,
+                    ValidateIssuerSigningKey = false
+                });
+
+                if (!validation.IsValid)
+                {
+                    // token has expired, will need a new one
+                    _mgmtHubJoiningToken = null;
+                }
+            }
+
             // connect/reconnect to management hub if enabled
             if (_managementServerClient == null || !_managementServerClient.IsConnected())
             {
                 var mgmtHubUri = string.Empty;
+                var api = string.Empty;
+                var endpoint = string.Empty;
+                var defaultEnpoint = "api/internal/managementhub";
 
                 // construct hub api url and status hub api endpoint
                 if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") != null)
                 {
-                    var api = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
+                    api = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
 
-                    if (api.EndsWith("api/internal/managementhub"))
+                    if (api.EndsWith(defaultEnpoint))
                     {
                         mgmtHubUri = api;
+
+                        endpoint = defaultEnpoint;
+                        api = api.Replace(defaultEnpoint, "");
                     }
                     else
                     {
-                        var endpoint = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ENDPOINT") ?? "api/internal/managementhub";
+                        endpoint = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ENDPOINT") ?? defaultEnpoint;
                         mgmtHubUri = $"{api.Trim('/')}/{endpoint.Trim('/')}";
                     }
                 }
                 else
                 {
-                    mgmtHubUri = $"{_serverConfig.ManagementServerHubAPI.Trim('/')}/{_serverConfig.ManagementServerHubEndpoint.Trim('/')}";
+                    api = _serverConfig.ManagementServerHubAPI.Trim('/');
+                    endpoint = _serverConfig.ManagementServerHubEndpoint.Trim('/');
+                    mgmtHubUri = $"{api}/{endpoint}";
+                }
 
+                if (string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
+                {
+                    if (_mgmtHubJoiningSecret == null)
+                    {
+                        var secret = await _credentialsManager.GetUnlockedCredential(_mgmtHubJoiningCredId);
+                        if (secret != null)
+                        {
+                            _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
+                        }
+                    }
+
+                    // acquire new token
+                    var check = await CheckManagementHubCredentials(api, _mgmtHubJoiningSecret);
+                    if (check.IsSuccess)
+                    {
+                        _mgmtHubJoiningToken = check.Result.JoiningToken;
+                    }
+                    else
+                    {
+                        _serviceLog.Error($"Failed to acquire new hub joining token using current joining key: {check.Message}");
+                        return;
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(mgmtHubUri))
@@ -192,16 +248,8 @@ namespace Certify.Management
                 _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
             }
 
-            if (_mgmtHubJoiningSecret == null)
-            {
-                var secret = await _credentialsManager.GetUnlockedCredential(_mgmtHubJoiningCredId);
-                if (secret != null)
-                {
-                    _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
-                }
-            }
-
-            _managementServerClient = new ManagementServerClient(hubUri, _mgmtHubJoiningSecret, instanceInfo);
+            _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
+            _managementServerClient.SetJoiningToken(_mgmtHubJoiningToken);
 
             try
             {

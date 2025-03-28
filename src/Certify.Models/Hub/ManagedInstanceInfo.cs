@@ -16,6 +16,7 @@ namespace Certify.Models.Hub
         public DateTimeOffset LastReported { get; set; }
 
         public string ConnectionStatus { get; set; } = string.Empty;
+        public bool IsAuthenticated { get; set; }
     }
 
     public class ConnectionStatus

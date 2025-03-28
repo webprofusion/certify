@@ -4,6 +4,8 @@ namespace Certify.Shared
 {
     public class JsonOptions
     {
-        public static JsonSerializerOptions DefaultJsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+        private static readonly JsonSerializerOptions _defaultJsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
+        public static JsonSerializerOptions DefaultJsonSerializerOptions => _defaultJsonSerializerOptions;
     }
 }

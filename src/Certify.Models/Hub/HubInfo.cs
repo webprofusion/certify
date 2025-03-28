@@ -7,6 +7,11 @@
         public string HubEndpoint { get; set; } = default!;
 
         public string Message { get; set; } = default!;
+
+        /// <summary>
+        /// if set, provides the authenticated caller with a JWT joining token for use in subsequent hub communication
+        /// </summary>
+        public string JoiningToken { get; set; } = default!;
     }
 
     public class HubHealth

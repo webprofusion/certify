@@ -37,7 +37,7 @@ namespace Certify.Server.HubService.Services
         private ICertifyManager _certifyManager;
         private IInstanceManagementHub _managementHub;
         private ManagedInstanceInfo _instanceInfo;
-
+        private string _joiningToken = default!;
         /// <summary>
         /// Initializes a new instance of the <see cref="DirectManagementServerClient"/> class.
         /// </summary>
@@ -94,6 +94,11 @@ namespace Certify.Server.HubService.Services
 
             result.ObjectValue = updateMsg;
             _managementHub.ReceiveCommandResult(result);
+        }
+
+        public void SetJoiningToken(string joiningToken)
+        {
+            _joiningToken = joiningToken;
         }
     }
 }

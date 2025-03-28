@@ -32,6 +32,7 @@ namespace Certify.Server.Hub.Api.Controllers
             _logger = logger;
             _client = client;
             _mgmtAPI = mgmtApi;
+
         }
 
         /// <summary>
@@ -116,6 +117,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 hubInfo.HubEndpoint = "api/internal/managementhub";
                 hubInfo.Message = "Joining OK";
+
+                var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+                var jwtService = new Hub.Api.Services.JwtService(_config);
+
+                hubInfo.JoiningToken = jwtService.GenerateSecurityToken($"clientId:{clientId}");
 
                 return new OkObjectResult(hubInfo);
             }
