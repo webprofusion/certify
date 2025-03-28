@@ -12,6 +12,8 @@ namespace Certify.Client
         event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
         event Func<ManagedInstanceItems> OnGetInstanceItems;
 
+        void SetJoiningToken(string joiningToken);
+
         Task ConnectAsync();
         Task Disconnect();
         bool IsConnected();
