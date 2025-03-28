@@ -139,23 +139,22 @@ namespace Certify.Shared.Core.Utils.PKI
 
         public static bool CanParsePrivateKey(string keyContent)
         {
-            using (var keyReader = new StringReader(keyContent))
-            {
-                var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(keyReader);
-                var readObject = pemReader.ReadObject();
+            using var keyReader = new StringReader(keyContent);
+            using var pemReader = new Org.BouncyCastle.OpenSsl.PemReader(keyReader);
 
-                if (readObject is AsymmetricCipherKeyPair keyPair)
-                {
-                    return keyPair.Private.IsPrivate;
-                }
-                else if (readObject is AsymmetricKeyParameter keyParameter)
-                {
-                    return keyParameter.IsPrivate;
-                }
-                else
-                {
-                    return false;
-                }
+            var readObject = pemReader.ReadObject();
+
+            if (readObject is AsymmetricCipherKeyPair keyPair)
+            {
+                return keyPair.Private.IsPrivate;
+            }
+            else if (readObject is AsymmetricKeyParameter keyParameter)
+            {
+                return keyParameter.IsPrivate;
+            }
+            else
+            {
+                return false;
             }
         }
     }
