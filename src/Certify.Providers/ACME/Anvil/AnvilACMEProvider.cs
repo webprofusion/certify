@@ -1866,12 +1866,14 @@ namespace Certify.Providers.ACME.Anvil
                         {
                             using (TextReader textReader = new StringReader(cert.Value))
                             {
-                                var pemReader = new PemReader(textReader);
+                                using (var pemReader = new PemReader(textReader))
+                                {
 
-                                var pemObj = pemReader.ReadPemObject();
+                                    var pemObj = pemReader.ReadPemObject();
 
-                                var certBytes = pemObj.Content;
-                                _issuerCertCache.Add(certBytes);
+                                    var certBytes = pemObj.Content;
+                                    _issuerCertCache.Add(certBytes);
+                                }
                             }
                         }
                     }

@@ -141,14 +141,6 @@ var app = builder.Build();
 
 app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-
-    app.MapScalarApiReference();
-}
-
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 
@@ -184,8 +176,10 @@ app.MapHub<InstanceManagementHub>("/api/internal/managementhub");
 
 app.MapDefaultControllerRoute().WithStaticAssets();
 
+// publish scalar api docs endpoint in dev, e.g. https://localhost:44361/scalar/
 app.MapOpenApi();
 app.MapScalarApiReference();
+
 // Enable middleware to serve generated Swagger as a JSON endpoint.
 app.UseSwagger();
 

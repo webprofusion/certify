@@ -3,7 +3,7 @@
   <Class Name="Certify.Models.ManagedCertificate">
     <Position X="6.25" Y="0.75" Width="3" />
     <TypeIdentifier>
-      <HashCode>JAACKACUAAAIAiDEAABBugRwJIggBBCAAkAgAEAAZwA=</HashCode>
+      <HashCode>JAICKACUEAAJCiTEAIBAugR0JYgoABCAAEAgAEAAZwg=</HashCode>
       <FileName>Config\ManagedCertificate.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -20,7 +20,7 @@
   <Class Name="Certify.Models.CertRequestChallengeConfig">
     <Position X="14.5" Y="9" Width="2.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAAECAAAAAACAAAAAAAAAIAAAAAAAAIAAAABAAQA=</HashCode>
+      <HashCode>AAgAAAECAAAAAACAAAAAAAAAIAAAAAAAAIAAAABAAQA=</HashCode>
       <FileName>Config\CertRequestConfig.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -30,7 +30,7 @@
   <Class Name="Certify.Models.CertRequestConfig">
     <Position X="10" Y="6.5" Width="3.5" />
     <TypeIdentifier>
-      <HashCode>ABgAIQCCKAiAICgAAgAAgGKQAAAAOCAAiSAAAAEIASA=</HashCode>
+      <HashCode>ABgCIQCKKAiAIGgAAgAAhGKSAAAgOCAEiSABAQEIASA=</HashCode>
       <FileName>Config\CertRequestConfig.cs</FileName>
     </TypeIdentifier>
     <ShowAsCollectionAssociation>
@@ -79,7 +79,7 @@
   <Enum Name="Certify.Config.TaskTriggerType">
     <Position X="0.5" Y="3.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAgAEAAAAAAAAAAAQAAAAAAAAIAAAgAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAgAEAAAAEAAAAAAQAAAAAAAAIAAAgAAAA=</HashCode>
       <FileName>Config\DeploymentTaskConfig.cs</FileName>
     </TypeIdentifier>
   </Enum>
