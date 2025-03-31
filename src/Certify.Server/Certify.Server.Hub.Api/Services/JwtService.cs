@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -48,9 +48,10 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="identifier"></param>
         /// <param name="expiryMinutes"></param>
+        /// <param name="additionalClaims"></param>
         /// <returns></returns>
 
-        public string GenerateSecurityToken(string identifier, double? expiryMinutes)
+        public string GenerateSecurityToken(string identifier, double? expiryMinutes = null, IEnumerable<Claim>? additionalClaims = null)
         {
             var tokenHandler = new JsonWebTokenHandler();
             var key = Encoding.UTF8.GetBytes(_secret);
@@ -64,6 +65,14 @@ namespace Certify.Server.Hub.Api.Services
                 Expires = expiryMinutes != null ? DateTime.UtcNow.AddMinutes((double)expiryMinutes) : DateTime.UtcNow.AddDays(double.Parse(_expDate)), //token expiry could be role specific - e.g. 1 yr vs 1 month
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
+
+            if (additionalClaims != null)
+            {
+                foreach (var c in additionalClaims)
+                {
+                    tokenDescriptor.Subject.AddClaim(c);
+                }
+            }
 
             return tokenHandler.CreateToken(tokenDescriptor);
         }

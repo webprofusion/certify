@@ -19,7 +19,7 @@ namespace Certify.Server.HubService.Services
     /// The HubService is a surrogate for the Certify Server Core Service, Service API and Client. The Hub hosts a Certify Server Core instead of talking to a Service instance over http, skipping a layer of abstraction and a communication layer.
     /// A further layer of abstraction can be skipped by implementing all controller logic in Certify.Core and using that directly
     /// </summary>
-    public class CertifyHubService : ICertifyInternalApiClient
+    public class CertifyDirectHubService : ICertifyInternalApiClient
     {
         private ICertifyManager _certifyManager;
         private IDataProtectionProvider _dataProtectionProvider;
@@ -29,7 +29,7 @@ namespace Certify.Server.HubService.Services
         /// </summary>
         /// <param name="certifyManager">Used to manage certification processes within the service.</param>
         /// <param name="dataProtectionProvider">Provides data protection functionalities for secure data handling.</param>
-        public CertifyHubService(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider)
+        public CertifyDirectHubService(ICertifyManager certifyManager, IDataProtectionProvider dataProtectionProvider)
         {
             _certifyManager = certifyManager;
             _dataProtectionProvider = dataProtectionProvider;
@@ -45,6 +45,13 @@ namespace Certify.Server.HubService.Services
         private ServiceControllers.ManagedChallengeController _managedChallengeController(AuthContext authContext)
         {
             var controller = new ServiceControllers.ManagedChallengeController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
+        private ServiceControllers.ManagedInstanceController _managedInstanceController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.ManagedInstanceController(_certifyManager);
             controller.SetCurrentAuthContext(authContext);
             return controller;
         }
@@ -78,6 +85,11 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> CleanupManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(request);
         public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => _managedChallengeController(authContext).Delete(id);
         public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(request);
+
+        public Task<ManagedInstanceInfo> GetHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Get(id);
+        public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);
+        public Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Update(item);
+        public Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances(AuthContext authContext) => _managedInstanceController(authContext).List();
 
         public Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext? authContext = null) => throw new NotImplementedException();
@@ -141,6 +153,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
+
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
