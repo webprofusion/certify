@@ -48,6 +48,7 @@ namespace Certify.Server.HubService.Services
         {
             _certifyManager = certifyManager;
             _managementHub = instanceManagementHub;
+
             _instanceInfo = certifyManager.GetManagedInstanceInfo();
         }
 

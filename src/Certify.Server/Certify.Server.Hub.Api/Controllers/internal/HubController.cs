@@ -152,14 +152,9 @@ namespace Certify.Server.Hub.Api.Controllers
 
             hubInfo.InstanceId = hubprefs.InstanceId;
 
-            // TODO: there is probably be a better place to set this
-            _mgmtStateProvider.SetManagementHubInstanceId(hubInfo.InstanceId);
-
             var versionInfo = await _client.GetAppVersion();
 
             hubInfo.Version = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
-
-            hubInfo.HubEndpoint = "api/internal/managementhub";
 
             return new OkObjectResult(hubInfo);
         }
