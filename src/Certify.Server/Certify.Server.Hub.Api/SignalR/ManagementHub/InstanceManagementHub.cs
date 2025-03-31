@@ -82,7 +82,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 InstanceId = string.Empty,
                 ConnectionStatus = ConnectionStatus.Connected,
-                LastReported = DateTimeOffset.Now,
+                DateLastReported = DateTimeOffset.Now,
                 IsAuthenticated = isAuthenticated
             }
             );
@@ -277,7 +277,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (instanceInfo != null)
             {
-                instanceInfo.LastReported = DateTimeOffset.UtcNow;
+                instanceInfo.DateLastReported = DateTimeOffset.UtcNow;
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
 
                 _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);

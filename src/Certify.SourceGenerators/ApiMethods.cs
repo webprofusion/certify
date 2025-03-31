@@ -179,6 +179,38 @@ namespace Certify.SourceGenerators
                         Params = new Dictionary<string, string>{{"id","string"}}
                     },
                     new() {
+                      OperationName = "AddHubManagedInstance",
+                      OperationMethod = HttpPost,
+                      Comment = "Add new managed instance to the hub",
+                      ServiceAPIRoute = "managedinstance",
+                      ReturnType = "Models.Config.ActionResult<ManagedInstanceInfo>",
+                      Params = new Dictionary<string, string>{{"item", "Certify.Models.Hub.ManagedInstanceInfo" } }
+                    },
+                    new() {
+                     OperationName = "UpdateHubManagedInstance",
+                     OperationMethod = HttpPost,
+                     Comment = "Update existing managed instance in the hub",
+                     ServiceAPIRoute = "managedinstance",
+                     ReturnType = "Models.Config.ActionResult",
+                     Params = new Dictionary<string, string>{{"item", "Certify.Models.Hub.ManagedInstanceInfo" } }
+                    },
+                    new() {
+                        OperationName = "GetHubManagedInstance",
+                        OperationMethod = HttpGet,
+                        Comment = "Get managed instance info",
+                        ServiceAPIRoute = "managedinstance/{id}",
+                        ReturnType = "Models.Hub.ManagedInstanceInfo",
+                        Params = new Dictionary<string, string>{{"id", "string" } }
+                    },
+                    new() {
+                       OperationName = "GetHubManagedInstances",
+                       OperationMethod = HttpGet,
+                       Comment = "Get managed instances",
+                       ServiceAPIRoute = "managedinstance",
+                       ReturnType = "ICollection<Models.Hub.ManagedInstanceInfo>",
+                       Params = new Dictionary<string, string>{ }
+                    },
+                   new() {
                         OperationName = "GetManagedChallenges",
                         OperationMethod = HttpGet,
                         Comment = "Get list of available managed challenges (DNS challenge delegation etc)",
