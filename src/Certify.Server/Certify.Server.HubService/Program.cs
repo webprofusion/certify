@@ -122,7 +122,7 @@ builder.Services.AddSwaggerGen(c =>
 // setup public/hub api
 builder.Services.AddSingleton<Certify.Management.ICertifyManager, Certify.Management.CertifyManager>();
 
-builder.Services.AddTransient(typeof(ICertifyInternalApiClient), typeof(CertifyHubService));
+builder.Services.AddTransient(typeof(ICertifyInternalApiClient), typeof(CertifyDirectHubService));
 
 // setup server core
 builder.Services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
