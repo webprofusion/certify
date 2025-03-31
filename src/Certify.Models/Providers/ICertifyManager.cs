@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -105,5 +105,9 @@ namespace Certify.Management
         Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
         Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);
 
+        Task<Certify.Models.Config.ActionResult> AddHubItemTags(ICollection<ItemTag> tags);
+        Task<Certify.Models.Config.ActionResult> RemoveHubItemTags(ICollection<string> tagsIds);
+        Task<ICollection<ItemTag>> GetAllHubItemTags();
+        Task<ICollection<ItemTag>> GetHubItemTags(string itemId, string itemTypeId);
     }
 }
