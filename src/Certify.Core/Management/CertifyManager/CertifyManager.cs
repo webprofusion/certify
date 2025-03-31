@@ -206,7 +206,7 @@ namespace Certify.Management
         /// </summary>
         private void SetupJobs()
         {
-            // 1 shot init of async startup dependencyies (e.g. initial connection to mgmt hub instance)
+            // one shot init of async startup dependencies (e.g. initial connection to mgmt hub instance)
             _initTimer = new System.Timers.Timer(2 * 1000); // 2 seconds
             _initTimer.Elapsed += async (s, e) =>
             {

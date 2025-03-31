@@ -49,23 +49,14 @@ namespace Certify.UI.Controls.Settings
 
         private async void Join_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            var credentialsCheckResult = await EditModel.MainViewModel.CheckManagementHubCredentials(EditModel.ManagementHubAPIUrl, EditModel.ClientID, EditModel.ClientSecret);
-
-            if (credentialsCheckResult.IsSuccess)
+            var result = await EditModel.MainViewModel.JoinManagementHub(EditModel.ManagementHubAPIUrl, EditModel.ClientID, EditModel.ClientSecret);
+            if (result.IsSuccess)
             {
-                var result = await EditModel.MainViewModel.JoinManagementHub(EditModel.ManagementHubAPIUrl, EditModel.ClientID, EditModel.ClientSecret);
-                if (result.IsSuccess)
-                {
-                    MessageBox.Show("Successfully joined Management Hub.");
-                }
-                else
-                {
-                    MessageBox.Show("Failed to join Management Hub.");
-                }
+                MessageBox.Show("Successfully joined Management Hub.");
             }
             else
             {
-                MessageBox.Show(credentialsCheckResult.Message);
+                MessageBox.Show(result.Message);
             }
         }
     }
