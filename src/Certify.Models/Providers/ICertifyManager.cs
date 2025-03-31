@@ -92,11 +92,18 @@ namespace Certify.Management
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
         Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret);
-        Task<ActionResult<HubInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret);
+        Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false);
 
         Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
         void SetDirectManagementClient(IManagementServerClient client);
         ManagedInstanceInfo GetManagedInstanceInfo();
         Task<ActionResult> CheckManagementHubConnectionStatus();
+
+        Task<Certify.Models.Config.ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item);
+        Task<Certify.Models.Config.ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item);
+        Task<ManagedInstanceInfo> GetHubManagedInstance(string id);
+        Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
+        Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);
+
     }
 }

@@ -18,14 +18,6 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        public string InstanceId
-        {
-            get
-            {
-                return CoreAppSettings.Current.InstanceId;
-            }
-        }
-
         /// <summary>
         /// Get managed certificate details by ID
         /// </summary>
@@ -36,7 +28,7 @@ namespace Certify.Management
             var item = await _itemManager.GetById(id);
             if (item != null)
             {
-                item.InstanceId = InstanceId;
+                item.InstanceId = _serverConfig.HubAssignedInstanceId;
                 item.DateRetrieved = DateTime.UtcNow;
             }
 
@@ -61,7 +53,7 @@ namespace Certify.Management
                 }
             }
 
-            list.ForEach(i => { i.InstanceId = InstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
 
             return list;
         }
@@ -120,7 +112,7 @@ namespace Certify.Management
 
             var list = await _itemManager.Find(filter);
 
-            list.ForEach(i => { i.InstanceId = InstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
 
             result.Results = list;
 
@@ -132,7 +124,7 @@ namespace Certify.Management
                 if (external != null)
                 {
                     list.AddRange(await external);
-                    list.ForEach(i => i.InstanceId = InstanceId);
+                    list.ForEach(i => i.InstanceId = _serverConfig.HubAssignedInstanceId);
                     result.Results = list;
                 }
             }
@@ -152,7 +144,7 @@ namespace Certify.Management
             var ms = await _itemManager.Find(filter);
 
             var summary = new StatusSummary();
-            summary.InstanceId = InstanceId;
+            summary.InstanceId = _serverConfig.HubAssignedInstanceId;
             summary.Total = ms.Count;
             summary.Healthy = ms.Count(c => c.Health == ManagedCertificateHealth.OK);
             summary.Error = ms.Count(c => c.Health == ManagedCertificateHealth.Error);
@@ -181,7 +173,7 @@ namespace Certify.Management
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
 
-            managedCert.InstanceId = InstanceId;
+            managedCert.InstanceId = _serverConfig.HubAssignedInstanceId;
 
             // report request state to status hub clients
 
@@ -276,7 +268,7 @@ namespace Certify.Management
 
             var report = new Models.Shared.RenewalStatusReport
             {
-                InstanceId = this.InstanceId,
+                InstanceId = CoreAppSettings.Current.InstanceId,
                 MachineName = Environment.MachineName,
                 PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
                 ManagedSite = reportedCert,
