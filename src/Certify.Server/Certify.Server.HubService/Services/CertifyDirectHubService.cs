@@ -56,6 +56,13 @@ namespace Certify.Server.HubService.Services
             return controller;
         }
 
+        private ServiceControllers.SystemController _systemController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.SystemController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
 
         public Task<ActionResult> AddSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).AddSecurityPrinciple(principle);
@@ -90,6 +97,8 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);
         public Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Update(item);
         public Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances(AuthContext authContext) => _managedInstanceController(authContext).List();
+
+        public Task<HubInfo> GetHubInfo(AuthContext authContext) => _systemController(authContext).GetHubInfo();
 
         public Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext? authContext = null) => throw new NotImplementedException();
