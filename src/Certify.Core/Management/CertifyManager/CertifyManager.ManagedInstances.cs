@@ -18,7 +18,23 @@ namespace Certify.Management
 
         public async Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item)
         {
-            await _configStore.Update(nameof(ManagedInstanceInfo), item);
+            var existing = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), item.Id);
+
+            existing.OS = item.OS;
+            existing.OSVersion = item.OSVersion;
+
+            existing.ClientName = item.ClientName;
+            existing.ClientVersion = item.ClientVersion;
+
+            existing.Title = item.Title;
+            existing.Description = item.Description;
+
+            existing.DateLastReported = item.DateLastReported;
+
+            existing.Tags = item.Tags;
+
+            await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+
             return new ActionResult("Updated", true);
         }
 

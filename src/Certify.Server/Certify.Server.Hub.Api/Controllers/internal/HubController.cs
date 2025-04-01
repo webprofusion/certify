@@ -117,7 +117,19 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Unauthorized();
             }
 
-            var managedInstances = _mgmtStateProvider.GetConnectedInstances();
+            var managedInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
+
+            var connectedInstances = _mgmtStateProvider.GetConnectedInstances();
+            foreach (var i in managedInstances)
+            {
+                var connected = connectedInstances.FirstOrDefault(c => c.InstanceId == i.InstanceId);
+                if (connected != null)
+                {
+                    i.DateLastReported = connected.DateLastReported;
+                    i.ConnectionStatus = connected.ConnectionStatus;
+                }
+            }
+
             return new OkObjectResult(managedInstances);
         }
 
@@ -146,16 +158,7 @@ namespace Certify.Server.Hub.Api.Controllers
         public async Task<IActionResult> GetHubInfo()
         {
             // see also SystemController.CheckJoining which has similar/same info
-            var hubInfo = new HubInfo();
-
-            var hubprefs = await _client.GetPreferences();
-
-            hubInfo.InstanceId = hubprefs.InstanceId;
-
-            var versionInfo = await _client.GetAppVersion();
-
-            hubInfo.Version = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
-
+            var hubInfo = await _client.GetHubInfo();
             return new OkObjectResult(hubInfo);
         }
     }
