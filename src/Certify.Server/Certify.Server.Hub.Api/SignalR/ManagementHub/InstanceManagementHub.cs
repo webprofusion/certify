@@ -278,9 +278,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instanceInfo != null)
             {
                 instanceInfo.DateLastReported = DateTimeOffset.UtcNow;
+
+                // update our cached instance info
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
 
                 _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
+
+                // TODO: update our stored instance info for this instance
 
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))

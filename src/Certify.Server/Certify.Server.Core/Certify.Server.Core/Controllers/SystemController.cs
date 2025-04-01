@@ -106,5 +106,8 @@ namespace Certify.Service.Controllers
 
         [HttpGet, Route("hub/status")]
         public async Task<Models.Config.ActionResult> CheckManagementHubConnectionStatus() => await _certifyManager.CheckManagementHubConnectionStatus();
+
+        [HttpGet, Route("hub/info")]
+        public async Task<HubInfo> GetHubInfo() => await _certifyManager.GetHubInfo();
     }
 }

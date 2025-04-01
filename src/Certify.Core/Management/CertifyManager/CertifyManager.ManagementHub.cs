@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -18,7 +18,8 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private IManagementServerClient _managementServerClient;
-        private bool _isDirectMgmtHubClient = false;
+        private bool _isDirectMgmtHubBackend = false;
+        private bool _isMgtmHubBackend = false;
         private bool _isHubConnectionErrorLogged = false;
         private ClientSecret _mgmtHubJoiningSecret;
         private const string _mgmtHubJoiningCredId = "_ManagementHubJoiningKey";
@@ -141,16 +142,45 @@ namespace Certify.Management
             }
         }
 
+        public void EnableManagementHubBackend(bool isDirectHubBackend)
+        {
+            _isDirectMgmtHubBackend = isDirectHubBackend;
+
+        }
+
         public void SetDirectManagementClient(IManagementServerClient client)
         {
             _managementServerClient = client;
-            _isDirectMgmtHubClient = true;
+        }
+
+        public async Task<HubInfo> GetHubInfo()
+        {
+            if (_isMgtmHubBackend)
+            {
+                var hubInfo = new HubInfo();
+
+                hubInfo.InstanceId = _serverConfig.HubAssignedInstanceId;
+
+                var versionInfo = Util.GetAppVersion().ToString();
+
+                hubInfo.Version = new Models.Hub.VersionInfo
+                {
+                    Version = versionInfo,
+                    Product = "Certify Management Hub"
+                };
+
+                return hubInfo;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private JsonWebTokenHandler _joiningTokenHandler = new JsonWebTokenHandler();
         private async Task EnsureMgmtHubConnection()
         {
-            if (!_isDirectMgmtHubClient)
+            if (!_isDirectMgmtHubBackend)
             {
                 // check we have a current non-expired joining token
                 if (!string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
@@ -181,7 +211,7 @@ namespace Certify.Management
                 var endpoint = string.Empty;
                 var defaultEnpoint = "api/internal/managementhub";
 
-                if (!_isDirectMgmtHubClient)
+                if (!_isDirectMgmtHubBackend)
                 {
                     // construct hub api url and status hub api endpoint
                     if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB") != null)

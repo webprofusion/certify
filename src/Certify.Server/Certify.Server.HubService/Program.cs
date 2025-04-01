@@ -208,14 +208,22 @@ var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
 var managementServerClient = app.Services.GetService<DirectManagementServerClient>();
 
 var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
+
+certifyManager.EnableManagementHubBackend(isDirectHubBackend: true);
+
+// initialize the CertifyManager instance, this includes initial setup of hub assigned instance id
 await certifyManager.Init();
+
+// setup direct management client, this tells the primary backend CertifyManager instance to talk directly to the management hub instead of via SignalR
+var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
+certifyManager.SetDirectManagementClient(directServerClient);
 
 // wire up status reporting, include management hub cached state handlers for request progress state updates and item updates
 certifyManager.SetStatusReporting(statusReporting);
 
 var hubStateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
 
-// inform the management hub of our local instance ID
+// inform the management hub of our assigned backend instance id, so we can tell when we are interacting with the mgmt hub vs a normal instance
 hubStateProvider.SetManagementHubInstanceId(certifyManager.GetManagedInstanceInfo().InstanceId);
 
 statusReporting.OnRequestProgressStateUpdated += (RequestProgressState state) =>
@@ -232,9 +240,6 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
     }
 };
 
-// setup direct management client, this tells the primary backend CertifyManager instance to talk directly to the management hub instead of via SignalR
-var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
-certifyManager.SetDirectManagementClient(directServerClient);
 
 // start the server and watch for shutdown signals
 

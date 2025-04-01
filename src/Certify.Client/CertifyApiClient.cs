@@ -767,6 +767,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
+        public async Task<HubInfo> GetHubInfo(AuthContext authContext = null)
+        {
+            var result = await FetchAsync("system/hub/info", authContext);
+            return JsonToObject<HubInfo>(result);
+        }
+
         #endregion
         private T JsonToObject<T>(string json)
         {
