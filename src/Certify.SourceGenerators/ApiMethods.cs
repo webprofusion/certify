@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Certify.Models.Hub;
 using SourceGenerator;
 
 namespace Certify.SourceGenerators
@@ -31,6 +32,8 @@ namespace Certify.SourceGenerators
             // - map the call from the public API to the background service API in the service API Client (interface and implementation)
             // - to then generate the public API clients, run nswag when the public API is running.
 
+            var actionResultName = "Certify.Models.Config.ActionResult";
+
             return new List<GeneratedAPI> {
 
                   new() {
@@ -41,7 +44,7 @@ namespace Certify.SourceGenerators
                         PublicAPIRoute = "securityprinciple/allowedaction",
                         ServiceAPIRoute = "access/securityprinciple/allowedaction",
                         ReturnType = "bool",
-                        Params =new Dictionary<string, string>{{"check","Certify.Models.Hub.AccessCheck"} }
+                        Params =new Dictionary<string, string>{{"check", nameof(Certify.Models.Hub.AccessCheck)} }
                     },
                     new() {
                         OperationName = "GetSecurityPrincipleAssignedRoles",
@@ -50,7 +53,7 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/{id}/assignedroles",
                         ServiceAPIRoute = "access/securityprinciple/{id}/assignedroles",
-                        ReturnType = "ICollection<AssignedRole>",
+                        ReturnType = $"ICollection<{ nameof(AssignedRole)}>",
                         Params =new Dictionary<string, string>{{"id","string"}}
                     },
                     new() {
@@ -60,7 +63,7 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple/{id}/rolestatus",
                         ServiceAPIRoute = "access/securityprinciple/{id}/rolestatus",
-                        ReturnType = "RoleStatus",
+                        ReturnType = nameof(RoleStatus),
                         Params =new Dictionary<string, string>{{"id","string"}}
                     },
                     new() {
@@ -70,7 +73,7 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "Access",
                         PublicAPIRoute = "roles",
                         ServiceAPIRoute = "access/roles",
-                        ReturnType = "ICollection<Role>"
+                        ReturnType = $"ICollection<{nameof(Role)}>"
                     },
                     new() {
                          OperationName = "GetAssignedAccessTokens",
@@ -79,7 +82,7 @@ namespace Certify.SourceGenerators
                          PublicAPIController = "Access",
                          PublicAPIRoute = "assignedtoken",
                          ServiceAPIRoute = "access/assignedtoken/list",
-                         ReturnType = "ICollection<Certify.Models.Hub.AssignedAccessToken>"
+                         ReturnType = $"ICollection<{nameof(AssignedAccessToken)}>"
                      },
                     new() {
                            OperationName = "AddAssignedAccessToken",
@@ -88,7 +91,7 @@ namespace Certify.SourceGenerators
                            PublicAPIController = "Access",
                            PublicAPIRoute = "assignedtoken",
                            ServiceAPIRoute = "access/assignedtoken",
-                           ReturnType = "Models.Config.ActionResult",
+                           ReturnType =actionResultName,
                            Params = new Dictionary<string, string>{{"token", "Certify.Models.Hub.AssignedAccessToken" } }
                     },
                      new() {
@@ -175,7 +178,7 @@ namespace Certify.SourceGenerators
                         PublicAPIController = "Access",
                         PublicAPIRoute = "securityprinciple",
                         ServiceAPIRoute = "access/securityprinciple/{id}",
-                        ReturnType = "Models.Config.ActionResult",
+                        ReturnType = actionResultName,
                         Params = new Dictionary<string, string>{{"id","string"}}
                     },
                     new() {
@@ -183,31 +186,31 @@ namespace Certify.SourceGenerators
                       OperationMethod = HttpPost,
                       Comment = "Add new managed instance to the hub",
                       ServiceAPIRoute = "managedinstance",
-                      ReturnType = "Models.Config.ActionResult<ManagedInstanceInfo>",
-                      Params = new Dictionary<string, string>{{"item", "Certify.Models.Hub.ManagedInstanceInfo" } }
+                      ReturnType = $"Models.Config.ActionResult<{nameof(Models.Hub.ManagedInstanceInfo)}>",
+                      Params = new Dictionary<string, string>{{"item", nameof(Models.Hub.ManagedInstanceInfo) } }
                     },
                     new() {
                      OperationName = "UpdateHubManagedInstance",
                      OperationMethod = HttpPost,
                      Comment = "Update existing managed instance in the hub",
                      ServiceAPIRoute = "managedinstance",
-                     ReturnType = "Models.Config.ActionResult",
-                     Params = new Dictionary<string, string>{{"item", "Certify.Models.Hub.ManagedInstanceInfo" } }
+                     ReturnType = actionResultName,
+                     Params = new Dictionary<string, string>{{"item",  nameof(Models.Hub.ManagedInstanceInfo)  } }
                     },
                     new() {
                         OperationName = "GetHubManagedInstance",
                         OperationMethod = HttpGet,
                         Comment = "Get managed instance info",
                         ServiceAPIRoute = "managedinstance/{id}",
-                        ReturnType = "Models.Hub.ManagedInstanceInfo",
+                        ReturnType = nameof(Models.Hub.ManagedInstanceInfo),
                         Params = new Dictionary<string, string>{{"id", "string" } }
                     },
                     new() {
                        OperationName = "GetHubManagedInstances",
                        OperationMethod = HttpGet,
                        Comment = "Get managed instances",
-                       ServiceAPIRoute = "managedinstance",
-                       ReturnType = "ICollection<Models.Hub.ManagedInstanceInfo>",
+                       ServiceAPIRoute = "managedinstance/list",
+                       ReturnType = $"ICollection<{nameof(Models.Hub.ManagedInstanceInfo)}>",
                        Params = new Dictionary<string, string>{ }
                     },
                    new() {
