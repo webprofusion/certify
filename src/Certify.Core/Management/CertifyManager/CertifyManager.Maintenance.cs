@@ -24,6 +24,16 @@ namespace Certify.Management
             var systemVersion = Util.GetAppVersion().ToString();
             var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
 
+            if (
+                Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true
+                || CoreAppSettings.Current.IsManagementHubService
+                || _isDirectMgmtHubBackend
+                )
+            {
+                // instance is running as a management hub backend (remote or direct)
+                _isMgtmHubBackend = true;
+            }
+
             if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion || Environment.GetEnvironmentVariable("CERTIFY_UPGRADE_SETTINGS") == "true")
             {
                 _tc?.TrackEvent("ServiceUpgrade", new Dictionary<string, string> {
@@ -34,20 +44,53 @@ namespace Certify.Management
                 // service has been updated, run any required migrations
                 await PerformServiceUpgrades();
 
+                // update the system version
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
 
-                if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true)
+                if (_isMgtmHubBackend)
                 {
                     CoreAppSettings.Current.IsManagementHubService = true;
                 }
 
                 SettingsManager.SaveAppSettings();
 
-                var accessControl = await GetCurrentAccessControl();
-
+                // if we are a management hub backend, register with the hub if not already registered
                 if (CoreAppSettings.Current.IsManagementHubService)
                 {
+                    var accessControl = await GetCurrentAccessControl();
                     await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl);
+                }
+            }
+
+            if (_isMgtmHubBackend)
+            {
+                // we are the hub backend instance directly connected, if we are not already registered, register now
+
+                var hubInstance = string.IsNullOrEmpty(_serverConfig.HubAssignedInstanceId) ? null : await GetHubManagedInstance(_serverConfig.HubAssignedInstanceId);
+
+                if (hubInstance == null)
+                {
+                    var newInstance = GetManagedInstanceInfo();
+
+                    newInstance.Description = "Primary Certify Manager Instance (Hub)";
+
+                    var newHubInstanceResult = await AddHubManagedInstance(newInstance);
+
+                    _serverConfig.HubAssignedInstanceId = newHubInstanceResult.Result.InstanceId;
+                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+                }
+                else
+                {
+                    // update instance details
+                    var updatedInstance = GetManagedInstanceInfo();
+
+                    hubInstance.OS = updatedInstance.OS;
+                    hubInstance.OSVersion = updatedInstance.OSVersion;
+                    hubInstance.Title = updatedInstance.Title;
+                    hubInstance.ClientName = updatedInstance.ClientName;
+                    hubInstance.ClientVersion = updatedInstance.ClientVersion;
+
+                    await UpdateHubManagedInstance(hubInstance);
                 }
             }
         }

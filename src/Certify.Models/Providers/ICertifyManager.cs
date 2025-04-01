@@ -96,6 +96,7 @@ namespace Certify.Management
 
         Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
         void SetDirectManagementClient(IManagementServerClient client);
+        void EnableManagementHubBackend(bool isDirectHubBackend);
         ManagedInstanceInfo GetManagedInstanceInfo();
         Task<ActionResult> CheckManagementHubConnectionStatus();
 
@@ -109,5 +110,7 @@ namespace Certify.Management
         Task<Certify.Models.Config.ActionResult> RemoveHubItemTags(ICollection<string> tagsIds);
         Task<ICollection<ItemTag>> GetAllHubItemTags();
         Task<ICollection<ItemTag>> GetHubItemTags(string itemId, string itemTypeId);
+
+        Task<HubInfo> GetHubInfo();
     }
 }

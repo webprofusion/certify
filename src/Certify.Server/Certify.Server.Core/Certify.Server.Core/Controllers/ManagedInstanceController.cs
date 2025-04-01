@@ -1,6 +1,5 @@
 ﻿using Certify.Management;
 using Certify.Models.Hub;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Service.Controllers
@@ -10,7 +9,6 @@ namespace Certify.Service.Controllers
     public class ManagedInstanceController : ControllerBase
     {
         private ICertifyManager _certifyManager;
-        private IDataProtectionProvider _dataProtectionProvider;
 
         public ManagedInstanceController(ICertifyManager certifyManager)
         {
@@ -24,10 +22,10 @@ namespace Certify.Service.Controllers
         /// <param name="id">Hub assigned instance id</param>
         /// <returns></returns>
         [HttpGet]
+        [Route("{id}")]
         public async Task<ManagedInstanceInfo> Get(string id)
         {
             return await _certifyManager.GetHubManagedInstance(id);
-
         }
 
         [HttpPost]
@@ -44,6 +42,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet]
+        [Route("list")]
         public async Task<ICollection<ManagedInstanceInfo>> List()
         {
             return await _certifyManager.GetHubManagedInstances();
