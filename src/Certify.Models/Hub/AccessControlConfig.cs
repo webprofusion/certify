@@ -418,9 +418,12 @@ namespace Certify.Models.Hub
                 };
 
                 await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+            }
+            // get assigned roles for admin and update any missing roles
+            var assignedRolesForAdmin = await access.GetAssignedRoles(adminSpId, adminSpId);
 
-                // assign admin role to admin security principle
-                var assignedRoles = new List<AssignedRole> {
+            // assign admin role to admin security principle
+            var toBeAssignedRoles = new List<AssignedRole> {
                      // administrator
                      new AssignedRole{
                          Id= Guid.NewGuid().ToString(),
@@ -429,10 +432,12 @@ namespace Certify.Models.Hub
                      }
                 };
 
-                foreach (var r in assignedRoles)
+            foreach (var r in toBeAssignedRoles)
+            {
+                if (assignedRolesForAdmin?.Any(a => a.RoleId == r.RoleId) != true)
                 {
                     // add roles and policy assignments to store
-                    await access.AddAssignedRole(adminSp.Id, r, bypassIntegrityCheck: true);
+                    await access.AddAssignedRole(adminSpId, r, bypassIntegrityCheck: true);
                 }
             }
 
