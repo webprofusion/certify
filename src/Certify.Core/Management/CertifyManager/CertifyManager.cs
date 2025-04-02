@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -277,7 +277,7 @@ namespace Certify.Management
 
         private async Task PerformServiceUpgrades()
         {
-            _serviceLog?.Error($"Service version has changed. Performing upgrade checks.");
+            _serviceLog?.Warning($"Service version has changed. Performing upgrade checks.");
 
             try
             {
