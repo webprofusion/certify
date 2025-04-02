@@ -21,7 +21,7 @@
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.3" />
 
         <!-- only include swashbuckle in debug build -->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="8.0.0" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="8.1.0" />
 
     </ItemGroup>
     <ItemGroup>
