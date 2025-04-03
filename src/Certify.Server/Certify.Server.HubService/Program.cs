@@ -131,6 +131,7 @@ builder.Services.AddTransient<ManagementAPI>();
 
 // used to directly talk back to the management server process instead of connecting back via SignalR
 builder.Services.AddTransient<IInstanceManagementHub, InstanceManagementHub>();
+
 builder.Services.AddTransient<IManagementServerClient, DirectManagementServerClient>();
 
 builder.Services.AddHostedService<ManagementWorker>();
@@ -142,10 +143,12 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 
 app.UseHttpsRedirection();
+
 app.UseResponseCompression();
 
 // serve static files from wwwroot
 app.UseDefaultFiles();
+
 // Set up custom content types - associating file extension to MIME type
 var provider = new FileExtensionContentTypeProvider();
 // Add new mappings

@@ -247,6 +247,12 @@ namespace Certify.Management
                             {
                                 _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
                             }
+
+                            if (_mgmtHubJoiningSecret == null)
+                            {
+                                _serviceLog.Error($"Hub joining secret invalid or not found.");
+                                return;
+                            }
                         }
 
                         // acquire new token
