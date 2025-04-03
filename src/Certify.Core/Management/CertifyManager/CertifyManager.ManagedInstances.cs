@@ -20,22 +20,29 @@ namespace Certify.Management
         {
             var existing = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), item.Id);
 
-            existing.OS = item.OS;
-            existing.OSVersion = item.OSVersion;
+            if (existing != null)
+            {
+                existing.OS = item.OS;
+                existing.OSVersion = item.OSVersion;
 
-            existing.ClientName = item.ClientName;
-            existing.ClientVersion = item.ClientVersion;
+                existing.ClientName = item.ClientName;
+                existing.ClientVersion = item.ClientVersion;
 
-            existing.Title = item.Title;
-            existing.Description = item.Description;
+                existing.Title = item.Title;
+                existing.Description = item.Description;
 
-            existing.DateLastReported = item.DateLastReported;
+                existing.DateLastReported = item.DateLastReported;
 
-            existing.Tags = item.Tags;
+                existing.Tags = item.Tags;
 
-            await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+                await _configStore.Update(nameof(ManagedInstanceInfo), existing);
 
-            return new ActionResult("Updated", true);
+                return new ActionResult("Updated", true);
+            }
+            else
+            {
+                return new ActionResult("Item Not found. Cannot update.", false);
+            }
         }
 
         public async Task<ManagedInstanceInfo> GetHubManagedInstance(string id)
