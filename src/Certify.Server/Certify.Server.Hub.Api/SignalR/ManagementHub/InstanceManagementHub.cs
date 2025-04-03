@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using Certify.Client;
 using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -20,6 +21,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private ILogger<InstanceManagementHub> _logger;
         private IHubContext<UserInterfaceStatusHub> _uiStatusHub;
         private ICertifyManager? _certifyManager;
+        private ICertifyInternalApiClient? _backendClient;
         private IConfiguration _config;
         private readonly string _localInstanceId = default!;
         private bool _hasLocalInstance => _certifyManager != null;
@@ -29,13 +31,25 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// </summary>
         /// <param name="stateProvider"></param>
         /// <param name="logger"></param>
-        public InstanceManagementHub(IInstanceManagementStateProvider stateProvider, ILogger<InstanceManagementHub> logger, IHubContext<UserInterfaceStatusHub> uiStatusHub, IConfiguration config, ICertifyManager? certifyManager = null)
+        /// <param name="uiStatusHub"></param>
+        /// <param name="config"></param>
+        /// <param name="backendClient"></param>
+        /// <param name="certifyManager"></param>
+        public InstanceManagementHub(
+            IInstanceManagementStateProvider stateProvider,
+            ILogger<InstanceManagementHub> logger,
+            IHubContext<UserInterfaceStatusHub> uiStatusHub,
+            IConfiguration config,
+            ICertifyInternalApiClient backendClient,
+            ICertifyManager? certifyManager = null
+            )
         {
             _stateProvider = stateProvider;
             _logger = logger;
             _uiStatusHub = uiStatusHub;
             _config = config;
             _certifyManager = certifyManager;
+            _backendClient = backendClient;
 
             // If we have a local certify manager, register it as a special local instance
             // this is so we can talk to it directly without going via SignalR
@@ -278,6 +292,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instanceInfo != null)
             {
                 instanceInfo.DateLastReported = DateTimeOffset.UtcNow;
+                instanceInfo.Id = instanceInfo.InstanceId; // TODO: double check instanceId from provided auth
 
                 // update our cached instance info
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
@@ -285,6 +300,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
 
                 // TODO: update our stored instance info for this instance
+                await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
 
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
@@ -298,7 +314,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     await IssueInstanceCommand(instanceInfo.InstanceId, request);
                 }
 
-                // if we dont have a status summary, ask for that
+                // if we don't have a status summary, ask for that
                 if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
                 {
                     var request = new InstanceCommandRequest
