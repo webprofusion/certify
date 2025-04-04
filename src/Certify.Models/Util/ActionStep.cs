@@ -31,5 +31,14 @@ namespace Certify.Models
             Description = description;
             Category = category;
         }
+
+        public ActionStep(string key, string category, string title, string description, bool hasError)
+        {
+            Key = key;
+            Title = title;
+            Description = description;
+            Category = category;
+            HasError = hasError;
+        }
     }
 }

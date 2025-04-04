@@ -26,6 +26,14 @@ builder.AddServiceDefaults();
 var assembly = typeof(Certify.Server.Hub.Api.Startup).Assembly;
 var part = new AssemblyPart(assembly);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder =>
+    {
+        builder.AllowAnyOrigin().AllowAnyMethod();
+    });
+});
+
 builder.Services
     .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
     .AddMemoryCache()
@@ -242,7 +250,6 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
         mgmtHubState.UpdateCachedManagedInstanceItem(item.InstanceId, item);
     }
 };
-
 
 // start the server and watch for shutdown signals
 
