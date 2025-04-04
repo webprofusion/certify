@@ -97,7 +97,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);
         public Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Update(item);
         public Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances(AuthContext authContext) => _managedInstanceController(authContext).List();
-
+        public Task<ActionResult> RemoveHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Remove(id);
         public Task<HubInfo> GetHubInfo(AuthContext authContext) => _systemController(authContext).GetHubInfo();
 
         public Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext? authContext = null) => throw new NotImplementedException();
@@ -162,6 +162,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
+
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

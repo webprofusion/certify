@@ -38,7 +38,7 @@ namespace Certify.Service.Controllers
         [Route("update")]
         public async Task<Certify.Models.Config.ActionResult> Update(ManagedInstanceInfo item)
         {
-            return await _certifyManager.UpdateHubManagedInstance(item);
+            return await _certifyManager.UpdateHubManagedInstance(item.Id, item);
         }
 
         [HttpGet]
@@ -49,6 +49,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpDelete]
+        [Route("delete/{id}")]
         public async Task<Certify.Models.Config.ActionResult> Remove(string id)
         {
             return await _certifyManager.RemoveHubManagedInstance(id);

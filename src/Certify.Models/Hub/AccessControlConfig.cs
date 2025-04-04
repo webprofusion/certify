@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
+using Certify.Management;
 
 namespace Certify.Models.Hub
 {
@@ -121,6 +122,7 @@ namespace Certify.Models.Hub
 
         public const string ManagementHubInstancesList = "managementhub_instances_list_action";
         public const string ManagementHubInstanceJoin = "managementhub_instance_join_action";
+        public const string ManagementHubInstanceDelete = "managementhub_instance_delete_action";
 
     }
 
@@ -208,6 +210,7 @@ namespace Certify.Models.Hub
 
                 new(StandardResourceActions.ManagementHubInstancesList, "List managed instances", ResourceTypes.ManagedInstance),
                 new(StandardResourceActions.ManagementHubInstanceJoin, "Join management hub as a managed instance", ResourceTypes.ManagedInstance),
+                new(StandardResourceActions.ManagementHubInstanceDelete, "Delete managed instance from the hub", ResourceTypes.ManagedInstance),
             };
         }
 
@@ -323,7 +326,8 @@ namespace Certify.Models.Hub
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     IsResourceSpecific = true,
                     ResourceActions = new List<string> {
-                        StandardResourceActions.ManagementHubInstancesList
+                        StandardResourceActions.ManagementHubInstancesList,
+                        StandardResourceActions.ManagementHubInstanceDelete
                     }
                 },
                 new() {
@@ -390,7 +394,7 @@ namespace Certify.Models.Hub
             }
         }
 
-        public static async Task ConfigureStandardUsersAndRoles(IAccessControl access)
+        public static async Task ConfigureStandardUsersAndRoles(IAccessControl access, ICredentialsManager creds)
         {
             // setup roles with policies
             await UpdateStandardAccessConfig(access);
@@ -493,6 +497,27 @@ namespace Certify.Models.Hub
                 };
 
                 await access.AddAssignedAccessToken(adminSpId, assignedApiAccessToken);
+            }
+
+            // if we don't have a stored credential as a client secret for the managed instance to join it's own hub, create one
+            // direct instances don't really need this, but remote backends do so they can join back to their own hub.
+            var existingJoiningKey = await creds.GetUnlockedCredential("_ManagementHubJoiningKey");
+            if (existingJoiningKey == null)
+            {
+                var assignedTokens = await access.GetAssignedAccessTokens(contextUserId: adminSpId);
+                var token = assignedTokens.First(t => t.Title == "Managed Instance Hub Joining Key")?.AccessTokens?.First();
+
+                if (token != null)
+                {
+                    var clientSecret = new ClientSecret { ClientId = token.ClientId, Secret = token.Secret };
+                    await creds.Update(new Config.StoredCredential
+                    {
+                        StorageKey = "_ManagementHubJoiningKey",
+                        ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
+                        Title = "Management Hub Joining Key",
+                        Secret = System.Text.Json.JsonSerializer.Serialize(clientSecret)
+                    });
+                }
             }
         }
     }
