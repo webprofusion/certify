@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -17,6 +17,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         string? GetInstanceIdForConnection(string connectionId);
         List<ManagedInstanceInfo> GetConnectedInstances();
         void AddAwaitedCommandRequest(InstanceCommandRequest command);
+
+        /// <summary>
+        /// Remove an awaited command so we don't keep waiting on the result
+        /// </summary>
+        /// <param name="commandId"></param>
         void RemoveAwaitedCommandRequest(Guid commandId);
         InstanceCommandRequest? GetAwaitedCommandRequest(Guid commandId);
         void AddAwaitedCommandResult(InstanceCommandResult result);
@@ -228,8 +233,10 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
             else
             {
-                _logger.LogDebug("[ConsumeAwaitedCommandResult] Got command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
+                _logger.LogDebug("[ConsumeAwaitedCommandResult] Received and consumed command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
             }
+
+            RemoveAwaitedCommandRequest(cmd.CommandId);
 
             return cmdResult;
         }
@@ -244,7 +251,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (request != null)
             {
-                _logger.LogDebug("[RemoveAwaitedCommandRequest] Removed command request {commandId} {cmdType}..", request.CommandId, request.CommandType);
+                _logger.LogDebug("[RemoveAwaitedCommandRequest] Removed awaited command request {commandId} {cmdType}..", request.CommandId, request.CommandType);
             }
             else
             {

@@ -94,6 +94,11 @@ namespace Certify.Models.Hub
         /// Command associated value
         /// </summary>
         public string? Value { get; set; } = string.Empty;
+
+        /// <summary>
+        /// If true we are directly returning this result to a caller
+        /// </summary>
+        public bool IsResultAwaited { get; set; }
     }
 
     /// <summary>
