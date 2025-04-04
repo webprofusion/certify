@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
@@ -16,9 +16,14 @@ namespace Certify.Management
             return new ActionResult<ManagedInstanceInfo>("Added", true, item);
         }
 
-        public async Task<ActionResult> UpdateHubManagedInstance(ManagedInstanceInfo item)
+        public async Task<ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item)
         {
-            var existing = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), item.Id);
+            if (id != item.Id)
+            {
+                return new ActionResult("Item Id mismatch. Cannot update.", false);
+            }
+
+            var existing = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);
 
             if (existing != null)
             {
