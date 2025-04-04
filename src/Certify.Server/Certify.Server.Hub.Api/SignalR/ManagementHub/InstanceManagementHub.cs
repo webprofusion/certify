@@ -248,21 +248,29 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             // action this message from this instance
             _logger?.LogDebug("[ProcessInstanceCommandResult] Received instance command result {instanceId} {cmdType}", instanceId, cmd.CommandType);
 
-            if (cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
+            if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
             {
+                // remove awaited command now it's been handled
+
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+
                 // got items from an instance
                 var val = System.Text.Json.JsonSerializer.Deserialize<ManagedInstanceItems>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 _stateProvider.UpdateInstanceItemInfo(instanceId, val!.Items);
             }
-            else if (cmd.CommandType == ManagementHubCommands.GetStatusSummary && result.Value != null)
+            else if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetStatusSummary && result.Value != null)
             {
+                // remove awaited command now it's been handled
+                _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
+
                 // got status summary
                 var val = System.Text.Json.JsonSerializer.Deserialize<StatusSummary>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
             }
-            else if (result.IsCommandResponse)
+            else
+            if (result.IsCommandResponse)
             {
                 _stateProvider.AddAwaitedCommandResult(result);
             }

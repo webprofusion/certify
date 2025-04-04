@@ -127,6 +127,8 @@ namespace Certify.Server.Hub.Api.Services
             InstanceCommandResult result;
             var cmd = new InstanceCommandRequest(commandType, args);
 
+            cmd.IsResultAwaited = true;
+
             result = await GetCommandResult(instanceId, cmd);
 
             if (result?.Value != null)
