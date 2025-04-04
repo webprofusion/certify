@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -35,6 +35,9 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         bool HasStatusSummaryForManagedInstance(string instanceId);
         ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
         void UpdateInstanceConnectionStatus(string instanceId, string status);
+
+        void AddOrUpdateSystemStatusItem(ActionStep status);
+        List<ActionStep> GetSystemStatusItems();
     }
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
@@ -49,6 +52,9 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         private ConcurrentDictionary<string, ManagedInstanceItems> _managedInstanceItems = [];
         private ConcurrentDictionary<string, StatusSummary> _managedInstanceStatusSummary = [];
+
+        private List<ActionStep> _systemStatusItems = [];
+
         private ILogger<InstanceManagementStateProvider> _logger;
         private string _mgmtHubInstanceId = string.Empty;
 
@@ -339,6 +345,31 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 info.Value.ConnectionStatus = status;
                 UpdateInstanceConnectionInfo(info.Key, info.Value);
             }
+        }
+
+        /// <summary>
+        /// Adds a new system status item or updates an existing one in the collection.
+        /// </summary>
+        /// <param name="status">Represents the action step to be added or updated in the system status items.</param>
+        public void AddOrUpdateSystemStatusItem(ActionStep status)
+        {
+            var existing = _systemStatusItems.FirstOrDefault(k => k.Key == status.Key);
+
+            if (existing != null)
+            {
+                _systemStatusItems.Remove(existing);
+            }
+
+            _systemStatusItems.Add(status);
+        }
+
+        /// <summary>
+        /// Retrieves a list of action steps representing the current system status.
+        /// </summary>
+        /// <returns>Returns a List of ActionStep objects.</returns>
+        public List<ActionStep> GetSystemStatusItems()
+        {
+            return _systemStatusItems;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Certify.Client;
+using Certify.Models;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -19,6 +20,8 @@ namespace Certify.Server.Hub.Api
     public class Startup
 
     {
+        private List<ActionStep> _systemStatusItems = new List<ActionStep>();
+
         /// <summary>
         /// Startup
         /// </summary>
@@ -48,6 +51,8 @@ namespace Certify.Server.Hub.Api
         /// <param name="services"></param>
         public List<Models.Config.ActionResult> ConfigureServicesWithResults(IServiceCollection services)
         {
+            _systemStatusItems.Add(new ActionStep("hub.api.mode", "hub.api", "Hub API with Connected Primary Instance Mode", "Hub API will connected to a local or remote instance via the instance API and SignalR.", true));
+
             var results = new List<Models.Config.ActionResult>();
 
             services
@@ -142,6 +147,15 @@ namespace Certify.Server.Hub.Api
             var configManager = new ServiceConfigManager();
             var serviceConfig = configManager.GetServiceConfig();
 
+            if (serviceConfig.ConfigStatus == Shared.ConfigStatus.DefaultFailed)
+            {
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.readserviceconfig", "hub.api", "Service Config Inaccessible", "Service Config Not Accessible", true));
+            }
+            else
+            {
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.readserviceconfig", "hub.api", "Service Config Accessible", "Service Config Accessible", false));
+            }
+
             // Optionally load service host/port from environment variables. ENV_CERTIFY_SERVICE_ is kubernetes and CERTIFY_SERVICE_HOST is docker-compose
             var serviceHostEnv = Environment.GetEnvironmentVariable("ENV_CERTIFY_SERVICE_HOST") ?? Environment.GetEnvironmentVariable("CERTIFY_SERVICE_HOST");
             var servicePortEnv = Environment.GetEnvironmentVariable("ENV_CERTIFY_SERVICE_PORT") ?? Environment.GetEnvironmentVariable("CERTIFY_SERVICE_PORT");
@@ -149,11 +163,13 @@ namespace Certify.Server.Hub.Api
             if (!string.IsNullOrEmpty(serviceHostEnv))
             {
                 serviceConfig.Host = serviceHostEnv;
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.servicehostenv", "hub.api", "Service Host Set By Env", $"Primary Instance Service host has been set by environment variable to {serviceHostEnv}", false));
             }
 
             if (!string.IsNullOrEmpty(servicePortEnv) && int.TryParse(servicePortEnv, out var tryServicePort))
             {
                 serviceConfig.Port = tryServicePort;
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.serviceportenv", "hub.api", "Service Port Set By Env", $"Primary Instance Service port has been set by environment variable to {serviceHostEnv}", false));
             }
 
             var backendServiceConnectionConfig = new Shared.ServerConnection(serviceConfig);
@@ -199,6 +215,11 @@ namespace Certify.Server.Hub.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.development", "hub.api", "Hub API is in production mode", $"Production", false));
+            }
+            else
+            {
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.production", "hub.api", "Hub API is in development mode", "Development", false));
             }
 
             app.UseHttpsRedirection();
@@ -222,7 +243,7 @@ namespace Certify.Server.Hub.Api
                 endpoints.MapHub<InstanceManagementHub>("/api/internal/managementhub");
             });
 
-#if DEBUG
+#if DEBUG          
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
@@ -234,6 +255,8 @@ namespace Certify.Server.Hub.Api
                 c.DocumentTitle = "Certify Management Hub API";
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Management Hub API");
             });
+
+            _systemStatusItems.Add(new ActionStep("hub.api.startup.swagger", "hub.api", "Swagger UI enabled", $"Hub API Swagger docs available at /docs", false));
 #endif
         }
 
@@ -249,7 +272,11 @@ namespace Certify.Server.Hub.Api
 
             if (internalServiceClient == null)
             {
-                app.Logger.LogError($"Unable to resolve internal service client. Cannot connect status stream.");
+                var errMsg = "Unable to resolve internal service client. Cannot connect status stream.";
+                app.Logger.LogError(errMsg);
+
+                _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Internal API unavailable", errMsg, hasError: true));
+
                 return;
             }
             else
@@ -265,6 +292,9 @@ namespace Certify.Server.Hub.Api
                         {
                             await internalServiceClient.ConnectStatusStreamAsync();
                             connected = true;
+
+                            _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Service Status Stream Connected", "Hub API has connected to the backend service instance status stream.", false));
+
                         }
                     }
                     catch
@@ -273,13 +303,33 @@ namespace Certify.Server.Hub.Api
 
                         if (attempts == 0)
                         {
-                            app.Logger.LogError($"Unable to connect to service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.");
+                            var errMsg = $"Unable to connect to service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.";
+                            app.Logger.LogError(errMsg);
+
+                            _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Internal Service Could Not Connect", errMsg, false));
                         }
                         else
                         {
+                            app.Logger.LogError($"Waiting for service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.");
                             Task.Delay(2000).Wait(); // wait for service to start
                         }
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reports the startup status of a web application by updating system status items.
+        /// </summary>
+        /// <param name="app">The web application instance from which services are retrieved to manage system status.</param>
+        public void ReportStartupStatus(WebApplication app)
+        {
+            var stateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
+            if (stateProvider != null)
+            {
+                foreach (var item in _systemStatusItems)
+                {
+                    stateProvider.AddOrUpdateSystemStatusItem(item);
                 }
             }
         }

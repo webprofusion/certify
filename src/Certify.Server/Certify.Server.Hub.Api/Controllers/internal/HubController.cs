@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
@@ -160,6 +161,20 @@ namespace Certify.Server.Hub.Api.Controllers
             // see also SystemController.CheckJoining which has similar/same info
             var hubInfo = await _client.GetHubInfo();
             return new OkObjectResult(hubInfo);
+        }
+
+        /// <summary>
+        /// Retrieves the current system status items 
+        /// </summary>
+        /// <returns>Returns an OK response containing a list of ActionStep objects.</returns>
+        [HttpGet]
+        [Route("status")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
+
+        public async Task<IActionResult> GetSystemStatusItems()
+        {
+            var status = _mgmtStateProvider.GetSystemStatusItems();
+            return new OkObjectResult(status);
         }
     }
 }
