@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -58,13 +58,13 @@ namespace Certify.Management
                 if (CoreAppSettings.Current.IsManagementHubService)
                 {
                     var accessControl = await GetCurrentAccessControl();
-                    await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl);
+                    await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
                 }
             }
 
             if (_isMgtmHubBackend)
             {
-                // we are the hub backend instance directly connected, if we are not already registered, register now
+                // we are the hub backend instance directly connected, if we are not already a registered instance for ourself, register now
 
                 var hubInstance = string.IsNullOrEmpty(_serverConfig.HubAssignedInstanceId) ? null : await GetHubManagedInstance(_serverConfig.HubAssignedInstanceId);
 
@@ -90,7 +90,7 @@ namespace Certify.Management
                     hubInstance.ClientName = updatedInstance.ClientName;
                     hubInstance.ClientVersion = updatedInstance.ClientVersion;
 
-                    await UpdateHubManagedInstance(hubInstance);
+                    await UpdateHubManagedInstance(hubInstance.Id, hubInstance);
                 }
             }
         }
