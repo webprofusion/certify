@@ -168,12 +168,23 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <returns>Returns an OK response containing a list of ActionStep objects.</returns>
         [HttpGet]
-        [Route("status")]
+        [Route("status/{instanceId?}")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
-
-        public async Task<IActionResult> GetSystemStatusItems()
+        public async Task<IActionResult> GetSystemStatusItems(string? instanceId = null)
         {
+
             var status = _mgmtStateProvider.GetSystemStatusItems();
+
+            if (!string.IsNullOrWhiteSpace(instanceId))
+            {
+                var instanceStatus = await _mgmtAPI.GetInstanceStatusItems(instanceId, CurrentAuthContext);
+
+                if (instanceStatus?.Count > 0)
+                {
+                    status.AddRange(instanceStatus);
+                }
+            }
+
             return new OkObjectResult(status);
         }
     }

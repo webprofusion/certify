@@ -7,6 +7,7 @@ using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
+using Certify.Shared;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.Services
@@ -605,6 +606,59 @@ namespace Certify.Server.Hub.Api.Services
                     };
 
             return await PerformInstanceCommandTaskWithResult<Models.Config.Migration.ImportExportPackage>(instanceId, args, ManagementHubCommands.PerformExport);
+        }
+
+        /// <summary>
+        /// Retrieves System Status items from the target instance.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>A collection of <see cref="Models.AccountDetails"/> objects, or null if none found.</returns>
+        public async Task<ICollection<Models.ActionStep>?> GetInstanceStatusItems(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                     new("instanceId", instanceId)
+                 };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<Models.ActionStep>>(instanceId, args, ManagementHubCommands.GetSystemStatusItems);
+        }
+
+        public async Task<ServiceConfig?> GetServiceConfig(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ServiceConfig>(instanceId, args, ManagementHubCommands.GetServiceConfig);
+        }
+
+        public async Task<Preferences?> GetServiceCoreSettings(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+               new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<Preferences>(instanceId, args, ManagementHubCommands.GetServiceCoreSettings);
+        }
+
+        public async Task<ActionResult?> UpdateServiceCoreSettings(string instanceId, Preferences prefs, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                     new("instanceId", instanceId) ,
+                     new("prefs", JsonSerializer.Serialize(prefs))
+                 };
+
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateServiceCoreSettings);
+        }
+
+        public async Task<ActionResult?> UpdateServiceConfig(string instanceId, ServiceConfig config, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+               new("instanceId", instanceId) ,
+               new("config", JsonSerializer.Serialize(config))
+           };
+
+            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateServiceConfig);
         }
     }
 }

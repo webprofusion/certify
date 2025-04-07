@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Certify.Models;
 using Certify.Models.Hub;
 using SourceGenerator;
 
@@ -515,6 +516,36 @@ namespace Certify.SourceGenerators
                         ReturnType = "ICollection<ActionStep>",
                         Params = new Dictionary<string, string> {  { "instanceId", "string" }, { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
                     },
+                    new() {
+                        OperationName = "GetInstanceStatusItems",
+                        OperationMethod = HttpGet,
+                        Comment = "Get instance status items",
+                        UseManagementAPI = true,
+                        PublicAPIController = "System",
+                        PublicAPIRoute = "{instanceId}/system/status",
+                        ReturnType = "ICollection<ActionStep>",
+                        Params = new Dictionary<string, string> {  { "instanceId", "string" } }
+                    },
+                    new() {
+                        OperationName = "GetServiceConfig",
+                        OperationMethod = HttpGet,
+                        Comment = "Get service config for a managed instance",
+                        UseManagementAPI = true,
+                        PublicAPIController = "System",
+                        PublicAPIRoute = "{instanceId}/system/serviceconfig",
+                        ReturnType = "Certify.Shared.ServiceConfig",
+                        Params = new Dictionary<string, string> {  { "instanceId", "string" } }
+                    },
+                    new() {
+                        OperationName = "GetServiceCoreSettings",
+                        OperationMethod = HttpGet,
+                        Comment = "Get core settings for a managed instance",
+                        UseManagementAPI = true,
+                        PublicAPIController = "System",
+                        PublicAPIRoute = "{instanceId}/system/coresettings",
+                        ReturnType = nameof(Preferences),
+                        Params = new Dictionary<string, string> {  { "instanceId", "string" } }
+                 },
                };
         }
     }

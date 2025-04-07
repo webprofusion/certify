@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Certify.Core.Management.Access;
+using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Providers;
@@ -12,6 +15,89 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private object _dataStoreLocker = new object();
+
+
+        private async Task InitDataStore()
+        {
+            var enableExtendedDataStores = true;
+
+            try
+            {
+                if (enableExtendedDataStores)
+                {
+
+                    var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+                    var dataStoreInfo = await GetDataStore(defaultStoreId);
+
+                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
+                    {
+                        // default sqlite storage
+                        _itemManager = new SQLiteManagedItemStore("", _serviceLog);
+                        _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+
+                        // config store is a generic store for settings etc
+                        _configStore = new SQLiteConfigurationStore("", _serviceLog);
+                        _accessControl = new AccessControl(_serviceLog, _configStore);
+                    }
+                    else
+                    {
+                        // select data store based on current default selection
+                        var managedItemStoreOK = await SelectManagedItemStore(defaultStoreId);
+                        if (!managedItemStoreOK)
+                        {
+                            var msg = $"FATAL: Managed Item Store {defaultStoreId} could not connect or load. Service will not start.";
+                            _serviceLog.Error(msg);
+                            throw new Exception(msg);
+                        }
+
+                        var credentialStoreOK = await SelectCredentialsStore(defaultStoreId);
+
+                        if (!credentialStoreOK)
+                        {
+                            var msg = $"FATAL: Credential Store {defaultStoreId} could not connect or load. Service will not start.";
+                            _serviceLog.Error(msg);
+                            throw new Exception(msg);
+                        }
+
+                        _serviceLog.Information($"Certify Manager is connected to data store {dataStoreInfo.Id} '{dataStoreInfo.Title}' [{dataStoreInfo.TypeId}]");
+                    }
+                }
+                else
+                {
+                    _itemManager = new SQLiteManagedItemStore("", _serviceLog);
+                    _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
+
+                    _configStore = new SQLiteConfigurationStore("", _serviceLog);
+                    _accessControl = new AccessControl(_serviceLog, _configStore);
+                }
+
+                // attempt to create and delete a test item
+                try
+                {
+                    var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
+
+                    await _itemManager.Update(item);
+
+                    await _itemManager.Delete(item);
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
+                    throw;
+                }
+
+                if (!_itemManager.IsInitialised().Result)
+                {
+                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                }
+            }
+            catch (Exception exp)
+            {
+                var msg = $"Failed to open or upgrade the managed items data store. :: {exp}";
+                _serviceLog?.Error(msg);
+                throw new Exception(msg);
+            }
+        }
 
         private async Task<IManagedItemStore> GetManagedItemStoreProvider(DataStoreConnection dataStore)
         {

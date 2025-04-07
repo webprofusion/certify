@@ -162,8 +162,6 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
-
-
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }

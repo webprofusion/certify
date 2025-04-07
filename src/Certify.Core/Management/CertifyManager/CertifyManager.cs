@@ -7,9 +7,9 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
-using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -25,24 +25,19 @@ namespace Certify.Management
         private IManagedItemStore _itemManager = null;
 
         /// <summary>
-		/// Server targets for this service (e.g. local IIS, nginx etc)
-        /// </summary>
-		private List<ITargetWebServer> _serverProviders = new List<ITargetWebServer>();
-
-        /// <summary>
-        /// Provider for general challenge responses
-        /// </summary>
-        private ChallengeResponseService _challengeResponseService = null;
-
-        /// <summary>
         /// Service to load and use available plugins (deployment tasks etc)
         /// </summary>
-        private PluginManager _pluginManager { get; set; }
+        private PluginManager _pluginManager = null;
 
         /// <summary>
         /// Stored Credentials service
         /// </summary>
-        private ICredentialsManager _credentialsManager { get; set; }
+        private ICredentialsManager _credentialsManager = null;
+
+        /// <summary>
+        /// Provider for access control, role based feature access etc
+        /// </summary>
+        private IAccessControl _accessControl;
 
         /// <summary>
         /// Application Insights logging
@@ -53,6 +48,18 @@ namespace Certify.Management
         /// Service (text file) logging
         /// </summary>
         private ILog _serviceLog { get; set; }
+
+        /// <summary>
+		/// Server targets for this service (e.g. local IIS, nginx etc)
+        /// </summary>
+		private List<ITargetWebServer> _serverProviders = [];
+
+        /// <summary>
+        /// Provider for general challenge responses
+        /// </summary>
+        private ChallengeResponseService _challengeResponseService = null;
+
+        private List<ActionStep> _systemStatusItems = [];
 
         /// <summary>
         /// Current service log level setting
@@ -110,13 +117,48 @@ namespace Certify.Management
         {
             // load setting here so that we know our instance ID etc early on. Other longer tasks are deferred until Init is called.
             SettingsManager.LoadAppSettings();
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_APPSETTINGS,
+                title: "Core Service Settings",
+                description: $"Loaded core service settings."
+            );
         }
+
+        private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
 
         public async Task Init()
         {
             _useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_PLATFORM,
+                title: "Core Service Platform",
+                description: $"Core service platform is {RuntimeInformation.OSDescription}"
+            );
+
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+            if (_serverConfig.ConfigStatus == Shared.ConfigStatus.DefaultFailed)
+            {
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
+                    title: "Core Service Config",
+                    description: $"Could not load service config for core service.", hasError: true
+                );
+            }
+            else
+            {
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
+                    title: "Core Service Config",
+                    description: $"Loaded service config"
+                );
+            }
 
             InitLogging(_serverConfig);
 
@@ -155,6 +197,26 @@ namespace Certify.Management
                 }
             }
 
+            if (_pluginManager.PluginLoadResults?.Count > 0)
+            {
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
+                    title: "Core Service Load Plugins",
+                    description: $"One or more service plugins failed to load. Some functionality may be unavailable.",
+                    hasError: true
+                );
+            }
+            else
+            {
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
+                    title: "Core Service Load Plugins",
+                    description: $"Plugins loaded with no errors."
+                );
+            }
+
             // add default IIS target server provider
             var iisServerProvider = new Servers.ServerProviderIIS();
             iisServerProvider.Init(_serviceLog);
@@ -163,11 +225,26 @@ namespace Certify.Management
             try
             {
                 await InitDataStore();
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
+                    title: "Core Service Datastore Init",
+                    description: $"Data store initialized OK."
+                );
             }
             catch (Exception exp)
             {
                 var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
                 _serviceLog.Error(exp, msg);
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
+                    title: "Core Service Datastore Init",
+                    description: $"Data store failed to initialize. All functionality will be impaired or unavailable."
+                );
+
                 throw (new Exception(msg));
             }
 
@@ -282,90 +359,6 @@ namespace Certify.Management
             }
 
             await PerformManagedCertificateMigrations();
-
-            // PerformCAMaintenance();
-        }
-
-        private async Task InitDataStore()
-        {
-            var enableExtendedDataStores = true;
-
-            try
-            {
-                if (enableExtendedDataStores)
-                {
-
-                    var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
-                    var dataStoreInfo = await GetDataStore(defaultStoreId);
-
-                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
-                    {
-                        // default sqlite storage
-                        _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                        _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
-
-                        // config store is a generic store for settings etc
-                        _configStore = new SQLiteConfigurationStore("", _serviceLog);
-                        _accessControl = new AccessControl(_serviceLog, _configStore);
-                    }
-                    else
-                    {
-                        // select data store based on current default selection
-                        var managedItemStoreOK = await SelectManagedItemStore(defaultStoreId);
-                        if (!managedItemStoreOK)
-                        {
-                            var msg = $"FATAL: Managed Item Store {defaultStoreId} could not connect or load. Service will not start.";
-                            _serviceLog.Error(msg);
-                            throw new Exception(msg);
-                        }
-
-                        var credentialStoreOK = await SelectCredentialsStore(defaultStoreId);
-
-                        if (!credentialStoreOK)
-                        {
-                            var msg = $"FATAL: Credential Store {defaultStoreId} could not connect or load. Service will not start.";
-                            _serviceLog.Error(msg);
-                            throw new Exception(msg);
-                        }
-
-                        _serviceLog.Information($"Certify Manager is connected to data store {dataStoreInfo.Id} '{dataStoreInfo.Title}' [{dataStoreInfo.TypeId}]");
-                    }
-                }
-                else
-                {
-                    _itemManager = new SQLiteManagedItemStore("", _serviceLog);
-                    _credentialsManager = new SQLiteCredentialStore("", _serviceLog);
-
-                    _configStore = new SQLiteConfigurationStore("", _serviceLog);
-                    _accessControl = new AccessControl(_serviceLog, _configStore);
-                }
-
-                // attempt to create and delete a test item
-                try
-                {
-                    var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
-
-                    await _itemManager.Update(item);
-
-                    await _itemManager.Delete(item);
-                }
-                catch (Exception ex)
-                {
-                    _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
-                    throw;
-                }
-
-                if (!_itemManager.IsInitialised().Result)
-                {
-                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
-                }
-            }
-            catch (Exception exp)
-            {
-                var msg = $"Failed to open or upgrade the managed items data store. :: {exp}";
-                _serviceLog?.Error(msg);
-                throw new Exception(msg);
-            }
         }
 
         /// <summary>
@@ -511,12 +504,12 @@ namespace Certify.Management
                 }
                 catch (Exception exp)
                 {
-                    return new string[] { $"Failed to read log: {exp}" };
+                    return [$"Failed to read log: {exp}"];
                 }
             }
             else
             {
-                return new string[] { "" };
+                return [""];
             }
         }
 
@@ -537,7 +530,6 @@ namespace Certify.Management
             return Task.FromResult(true);
         }
 
-        private IAccessControl _accessControl;
         public Task<IAccessControl> GetCurrentAccessControl()
         {
             return Task.FromResult(_accessControl);
