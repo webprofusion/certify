@@ -51,6 +51,12 @@ namespace Certify.Models.Hub
         public const string PerformImport = "PerformImport";
         public const string PerformExport = "PerformExport";
 
+        public const string GetSystemStatusItems = "GetSystemStatusItems";
+        public const string GetServiceConfig = "GetServiceConfig";
+        public const string GetServiceCoreSettings = "GetServiceCoreSettings";
+        public const string UpdateServiceConfig = "UpdateServiceConfig";
+        public const string UpdateServiceCoreSettings = "UpdateServiceCoreSettings";
+
         public const string Reconnect = "Reconnect";
 
         /// <summary>

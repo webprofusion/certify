@@ -165,6 +165,12 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns></returns>
         public string? GetInstanceIdForConnection(string connectionId)
         {
+            if (connectionId == _mgmtHubInstanceId)
+            {
+                // directly connected instance
+                return _mgmtHubInstanceId;
+            }
+
             _instanceConnections.TryGetValue(connectionId, out var managedInstanceInfo);
 
             if (managedInstanceInfo != null)
@@ -376,7 +382,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns>Returns a List of ActionStep objects.</returns>
         public List<ActionStep> GetSystemStatusItems()
         {
-            return _systemStatusItems;
+            return _systemStatusItems.ToList();
         }
     }
 }

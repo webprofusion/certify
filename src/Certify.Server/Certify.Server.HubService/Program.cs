@@ -2,6 +2,7 @@
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -17,9 +18,19 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
 
+List<ActionStep> _systemStatusItems = [];
+void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+AddSystemStatusItem(
+    SystemStatusCategories.HUB_API,
+    SystemStatusKeys.HUB_API_MODE,
+    title: "Hub API with integrated Primary Instance",
+    description: "Hub API using directly integrated primary service."
+);
 
 // Add services to the container
 
@@ -148,6 +159,27 @@ builder.Services.AddHostedService<ManagementWorker>();
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+
+    AddSystemStatusItem(
+        SystemStatusCategories.HUB_API,
+        SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
+        title: "Development Mode",
+        description: $"Hub API is in Development mode."
+    );
+}
+else
+{
+    AddSystemStatusItem(
+        SystemStatusCategories.HUB_API,
+        SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
+        title: "Production Mode",
+        description: $"Hub API is in Production mode."
+    );
+}
+
 app.MapDefaultEndpoints();
 
 app.UseHttpsRedirection();
@@ -203,6 +235,13 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Management Hub API");
 });
 
+AddSystemStatusItem(
+    SystemStatusCategories.HUB_API,
+    SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+    title: "API Docs UI enabled",
+    description: $"Hub API Swagger docs available at /docs"
+);
+
 // configure initialization of UI status hub, backend management hub etc
 
 var statusHubContext = app.Services.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
@@ -256,4 +295,17 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
 app.Start();
 
 System.Diagnostics.Debug.WriteLine($"Server started {string.Join(";", app.Urls)}");
+
+AddSystemStatusItem(
+    SystemStatusCategories.HUB_API,
+    SystemStatusKeys.HUB_API_STARTUP_URL,
+    title: "API Urls Allocated",
+    description: $"Hub API available at {string.Join(";", app.Urls)}"
+);
+
+foreach (var statusItem in _systemStatusItems)
+{
+    hubStateProvider.AddOrUpdateSystemStatusItem(statusItem);
+}
+
 app.WaitForShutdown();
