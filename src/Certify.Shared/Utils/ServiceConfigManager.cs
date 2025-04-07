@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Certify.Models;
 using Certify.Providers;
@@ -63,7 +63,7 @@ namespace Certify.SharedUtils
             return serviceConfig;
         }
 
-        public static void StoreUpdatedAppServiceConfig(ServiceConfig config)
+        public static void StoreUpdatedAppServiceConfig(ServiceConfig config, bool throwOnError = false)
         {
             if (config == null)
             {
@@ -79,7 +79,13 @@ namespace Certify.SharedUtils
             {
                 File.WriteAllText(serviceConfigFile, JsonConvert.SerializeObject(config, Formatting.Indented));
             }
-            catch { }
+            catch
+            {
+                if (throwOnError)
+                {
+                    throw;
+                }
+            }
         }
 
         public ServiceConfig GetServiceConfig()

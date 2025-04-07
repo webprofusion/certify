@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Certify.Client;
 using Certify.Models;
+using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -51,7 +52,12 @@ namespace Certify.Server.Hub.Api
         /// <param name="services"></param>
         public List<Models.Config.ActionResult> ConfigureServicesWithResults(IServiceCollection services)
         {
-            _systemStatusItems.Add(new ActionStep("hub.api.mode", "hub.api", "Hub API with Connected Primary Instance Mode", "Hub API will connected to a local or remote instance via the instance API and SignalR.", true));
+            AddSystemStatusItem(
+                SystemStatusCategories.HUB_API,
+                SystemStatusKeys.HUB_API_MODE,
+                title: "Hub API with Connected Primary Instance",
+                description: "Hub API will connect to a local or remote instance via the instance API and SignalR."
+            );
 
             var results = new List<Models.Config.ActionResult>();
 
@@ -149,11 +155,22 @@ namespace Certify.Server.Hub.Api
 
             if (serviceConfig.ConfigStatus == Shared.ConfigStatus.DefaultFailed)
             {
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.readserviceconfig", "hub.api", "Service Config Inaccessible", "Service Config Not Accessible", true));
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_READSVCCONFIG,
+                    title: "Service Config Access",
+                    description: "Service Config Not Accessible",
+                    hasError: true
+                );
             }
             else
             {
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.readserviceconfig", "hub.api", "Service Config Accessible", "Service Config Accessible", false));
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_READSVCCONFIG,
+                    title: "Service Config Accessible",
+                    description: "Service config loaded OK."
+                );
             }
 
             // Optionally load service host/port from environment variables. ENV_CERTIFY_SERVICE_ is kubernetes and CERTIFY_SERVICE_HOST is docker-compose
@@ -163,13 +180,25 @@ namespace Certify.Server.Hub.Api
             if (!string.IsNullOrEmpty(serviceHostEnv))
             {
                 serviceConfig.Host = serviceHostEnv;
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.servicehostenv", "hub.api", "Service Host Set By Env", $"Primary Instance Service host has been set by environment variable to {serviceHostEnv}", false));
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_SVCHOSTENV,
+                    title: "Service Host Set By Env",
+                    description: $"Primary Instance Service host has been set by environment variable to {serviceHostEnv}"
+                );
             }
 
             if (!string.IsNullOrEmpty(servicePortEnv) && int.TryParse(servicePortEnv, out var tryServicePort))
             {
                 serviceConfig.Port = tryServicePort;
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.serviceportenv", "hub.api", "Service Port Set By Env", $"Primary Instance Service port has been set by environment variable to {serviceHostEnv}", false));
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_SVCPORTENV,
+                    title: "Service Host Set By Env",
+                    description: $"Primary Instance Service host has been set by environment variable to {serviceHostEnv}"
+                );
             }
 
             var backendServiceConnectionConfig = new Shared.ServerConnection(serviceConfig);
@@ -196,6 +225,8 @@ namespace Certify.Server.Hub.Api
             return results;
         }
 
+        private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+
         /// <summary>
         /// Configure the http request pipeline
         /// </summary>
@@ -215,11 +246,22 @@ namespace Certify.Server.Hub.Api
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.development", "hub.api", "Hub API is in production mode", $"Production", false));
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
+                    title: "Development Mode",
+                    description: $"Hub API is in Development mode."
+                );
             }
             else
             {
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.production", "hub.api", "Hub API is in development mode", "Development", false));
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
+                    title: "Production Mode",
+                    description: $"Hub API is in Production mode."
+                );
             }
 
             app.UseHttpsRedirection();
@@ -256,7 +298,19 @@ namespace Certify.Server.Hub.Api
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Management Hub API");
             });
 
-            _systemStatusItems.Add(new ActionStep("hub.api.startup.swagger", "hub.api", "Swagger UI enabled", $"Hub API Swagger docs available at /docs", false));
+            AddSystemStatusItem(
+                SystemStatusCategories.HUB_API,
+                SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+                title: "API Docs UI enabled",
+                description: $"Hub API Swagger docs available at /docs"
+            );
+#else
+            AddSystemStatusItem(
+                SystemStatusCategories.HUB_API,
+                SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+                title: "API Docs UI not enabled",
+                description: $"Hub API Swagger docs not enabled in release mode."
+            );
 #endif
         }
 
@@ -275,7 +329,13 @@ namespace Certify.Server.Hub.Api
                 var errMsg = "Unable to resolve internal service client. Cannot connect status stream.";
                 app.Logger.LogError(errMsg);
 
-                _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Internal API unavailable", errMsg, hasError: true));
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_SVC_STATUS_STREAM,
+                    title: "Primary Service Status Stream",
+                    description: errMsg,
+                    hasError: true
+                );
 
                 return;
             }
@@ -284,6 +344,7 @@ namespace Certify.Server.Hub.Api
 
                 var attempts = 3;
                 var connected = false;
+
                 while (attempts > 0 && !connected)
                 {
                     try
@@ -291,10 +352,15 @@ namespace Certify.Server.Hub.Api
                         if (internalServiceClient != null)
                         {
                             await internalServiceClient.ConnectStatusStreamAsync();
+
                             connected = true;
 
-                            _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Service Status Stream Connected", "Hub API has connected to the backend service instance status stream.", false));
-
+                            AddSystemStatusItem(
+                                SystemStatusCategories.HUB_API,
+                                SystemStatusKeys.HUB_API_STARTUP_SVC_STATUS_STREAM,
+                                title: "Primary Service Status Stream",
+                                description: "Hub API has connected to the backend service instance status stream."
+                            );
                         }
                     }
                     catch
@@ -304,13 +370,20 @@ namespace Certify.Server.Hub.Api
                         if (attempts == 0)
                         {
                             var errMsg = $"Unable to connect to service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.";
+
                             app.Logger.LogError(errMsg);
 
-                            _systemStatusItems.Add(new ActionStep("hub.api.startup.backend.stream", "hub.api", "Internal Service Could Not Connect", errMsg, false));
+                            AddSystemStatusItem(
+                                SystemStatusCategories.HUB_API,
+                                SystemStatusKeys.HUB_API_STARTUP_SVC_STATUS_STREAM,
+                                title: "Primary Service Status Stream",
+                                description: errMsg,
+                                hasError: true
+                            );
                         }
                         else
                         {
-                            app.Logger.LogError($"Waiting for service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.");
+                            app.Logger.LogWarning($"Waiting for service SignalR stream at {internalServiceClient?.GetStatusHubUri()}.");
                             Task.Delay(2000).Wait(); // wait for service to start
                         }
                     }

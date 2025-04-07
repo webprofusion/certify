@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 using Certify.Providers.ACME.Anvil;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -692,11 +693,26 @@ namespace Certify.Management
                 {
                     _certificateAuthorities.TryAdd(ca.Id, ca);
                 }
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_CA_CUSTOM_LOAD,
+                    title: "Core Service Load Custom CAs",
+                    description: $"Loaded custom Certificate Authority config"
+                );
             }
             catch (Exception exp)
             {
                 // failed to load custom CAs
                 _serviceLog?.Error(exp.Message);
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_CA_CUSTOM_LOAD,
+                    title: "Core Service Load Custom CAs",
+                    description: $"Failed to load one or more custom CA configurations",
+                    hasError: true
+                );
             }
         }
     }
