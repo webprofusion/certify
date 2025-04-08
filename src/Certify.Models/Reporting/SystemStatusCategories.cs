@@ -23,10 +23,10 @@
         public const string SERVICE_CORE_APPSETTINGS = "service.core.appsettings";
         public const string SERVICE_CORE_SVCCONFIG = "service.core.svcconfig";
         public const string SERVICE_CORE_LOADPLUGINS = "service.core.loadplugins";
-
         public const string SERVICE_CORE_DATASTORE_INIT = "service.core.datastore.init";
-
         public const string SERVICE_CORE_CA_CUSTOM_LOAD = "service.core.ca.custom.load";
+        public const string SERVICE_CORE_HUB_JOINING_KEY = "service.core.hub.joining.key";
+        public const string SERVICE_CORE_HUB_JOINING_AUTH = "service.core.hub.joining.auth";
 
     }
 }

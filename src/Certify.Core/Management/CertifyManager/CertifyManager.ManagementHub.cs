@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -244,21 +244,47 @@ namespace Certify.Management
                         {
                             if (_mgmtHubJoiningSecret == null)
                             {
-                                // check if we already have a management hub joining key as a stored credential
-                                var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+                                // check if we have an environment variable for client id and client secret
+                                var clientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID");
+                                var clientSecret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET");
+                                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+                                {
+                                    _mgmtHubJoiningSecret = new ClientSecret
+                                    {
+                                        ClientId = clientId,
+                                        Secret = clientSecret
+                                    };
 
-                                if (secret != null)
-                                {
-                                    _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
+                                    AddSystemStatusItem(
+                                        SystemStatusCategories.SERVICE_CORE,
+                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
+                                        "Management Hub Joining Key",
+                                        "Using management hub joining key from environment variables"
+                                        );
                                 }
-                                else
+
+                                // if not set by env, check if we already have a management hub joining key as a stored credential
+                                if (_mgmtHubJoiningSecret == null)
                                 {
-                                    _serviceLog.Error($"No hub joining secret stored, cannot join hub at {mgmtHubUri}");
-                                    return;
+                                    var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+
+                                    if (secret != null)
+                                    {
+                                        _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
+                                    }
                                 }
 
                                 if (_mgmtHubJoiningSecret == null)
                                 {
+
+                                    AddSystemStatusItem(
+                                        SystemStatusCategories.SERVICE_CORE,
+                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
+                                        "Management Hub Joining Key",
+                                        "Management hub joining key not set, instance cannot join hub.",
+                                        hasWarning: true
+                                        );
+
                                     _serviceLog.Error($"Hub joining secret invalid or not found.");
                                     return;
                                 }
@@ -270,16 +296,39 @@ namespace Certify.Management
                             {
                                 if (_serverConfig.HubAssignedInstanceId != check.Result.HubAssignedInstanceId)
                                 {
+                                    AddSystemStatusItem(
+                                        SystemStatusCategories.SERVICE_CORE,
+                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
+                                        "Management Hub Joining Auth",
+                                        "Management hub joining auth successful but hub assigned instance ID did not match. Current settings may be for a different hub.",
+                                        hasError: true
+                                    );
+
                                     _serviceLog.Error($"Failed to match hub assigned instance ID current id. Hub has changed or instance is duplicated.");
                                     return;
                                 }
                                 else
                                 {
                                     _mgmtHubJoiningToken = check.Result.JoiningToken;
+
+                                    AddSystemStatusItem(
+                                        SystemStatusCategories.SERVICE_CORE,
+                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
+                                        "Management Hub Joining Auth",
+                                        "Management hub joining auth successful."
+                                    );
                                 }
                             }
                             else
                             {
+                                AddSystemStatusItem(
+                                    SystemStatusCategories.SERVICE_CORE,
+                                    SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
+                                    "Management Hub Joining Auth",
+                                    "Management hub joining auth failed, instance cannot join hub. Joining key may be invalid or for a different hub.",
+                                    hasError: true
+                                );
+
                                 _serviceLog.Error($"Failed to acquire new hub joining token using current joining key: {check.Message}");
                                 return;
                             }
