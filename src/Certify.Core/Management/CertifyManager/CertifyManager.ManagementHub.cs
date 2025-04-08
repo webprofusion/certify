@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -9,6 +9,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
+using Certify.Models.Reporting;
 using Certify.Shared;
 using Certify.Shared.Core.Utils;
 using Microsoft.IdentityModel.JsonWebTokens;
@@ -41,21 +42,46 @@ namespace Certify.Management
         {
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            var check = await CheckManagementHubCredentials(url, clientSecret, registerInstance: true);
+            var registerInstance = true;
+            ActionResult<HubJoiningInfo> joiningCredentialsCheck = null;
 
-            if (check.IsSuccess)
+            if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
             {
-                _mgmtHubJoiningToken = check.Result.JoiningToken;
+                // when have already joined a hub, first check if we are rejoining the same hub by just verifying the credentials
+                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: false);
 
-                var hubEndpoint = check.Result.HubEndpoint;
+                if (joiningCredentialsCheck.IsSuccess)
+                {
+                    // already registered, just joining again
+                    registerInstance = false;
+                }
+                else
+                {
+                    // if we are not rejoining the same hub (or our credentials failed), we need to register a new instance
+                    registerInstance = true;
+                    _serverConfig.HubAssignedInstanceId = null;
+                }
+            }
+
+            // if we are not rejoining the same hub, we need to register a new instance
+            if (joiningCredentialsCheck == null || joiningCredentialsCheck?.IsSuccess != true)
+            {
+                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: registerInstance);
+            }
+
+            if (joiningCredentialsCheck.IsSuccess)
+            {
+                _mgmtHubJoiningToken = joiningCredentialsCheck.Result.JoiningToken;
+
+                var hubEndpoint = joiningCredentialsCheck.Result.HubEndpoint;
 
                 _serverConfig.ManagementServerHubAPI = url;
                 _serverConfig.ManagementServerHubEndpoint = hubEndpoint;
 
                 // store our hub managed instance id if it has changed/been created
-                if (_serverConfig.HubAssignedInstanceId != check.Result.HubAssignedInstanceId)
+                if (_serverConfig.HubAssignedInstanceId != joiningCredentialsCheck.Result.HubAssignedInstanceId)
                 {
-                    _serverConfig.HubAssignedInstanceId = check.Result.HubAssignedInstanceId;
+                    _serverConfig.HubAssignedInstanceId = joiningCredentialsCheck.Result.HubAssignedInstanceId;
                 }
 
                 SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
@@ -86,7 +112,7 @@ namespace Certify.Management
             }
             else
             {
-                return check;
+                return joiningCredentialsCheck;
             }
         }
 
@@ -644,6 +670,97 @@ namespace Certify.Management
                 var exportRequest = JsonSerializer.Deserialize<ExportRequest>(requestArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
                 val = await PerformExport(exportRequest);
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetSystemStatusItems)
+            {
+                val = _systemStatusItems;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetServiceConfig)
+            {
+                val = _serverConfig;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetServiceCoreSettings)
+            {
+                val = SettingsManager.ToPreferences();
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateServiceCoreSettings)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var prefUpdate = args.FirstOrDefault(a => a.Key == "prefs");
+                var update = JsonSerializer.Deserialize<Preferences>(prefUpdate.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                var prefs = SettingsManager.ToPreferences();
+
+                if (update != null)
+                {
+                    // update supported settings
+                    prefs.CertificateCleanupMode = update.CertificateCleanupMode;
+                    prefs.DefaultACMERetryInterval = update.DefaultACMERetryInterval;
+                    prefs.DefaultCertificateAuthority = update.DefaultCertificateAuthority;
+                    prefs.DefaultCertificateStore = update.DefaultCertificateStore;
+                    prefs.DefaultKeyType = update.DefaultKeyType;
+                    prefs.DisableARIChecks = update.DisableARIChecks;
+
+                    prefs.EnableAppTelematics = update.EnableAppTelematics;
+                    prefs.EnableAutomaticCAFailover = update.EnableAutomaticCAFailover;
+                    prefs.EnableExternalCertManagers = update.EnableExternalCertManagers;
+                    prefs.EnableStatusReporting = update.EnableStatusReporting;
+                    prefs.EnableValidationProxyAPI = update.EnableValidationProxyAPI;
+                    prefs.EnableHttpChallengeServer = update.EnableHttpChallengeServer;
+
+                    prefs.NtpServer = update.NtpServer;
+                    prefs.RenewalIntervalDays = update.RenewalIntervalDays;
+                    prefs.RenewalIntervalMode = update.RenewalIntervalMode;
+                    prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
+
+                    SettingsManager.FromPreferences(prefs);
+
+                    try
+                    {
+                        SettingsManager.SaveAppSettings();
+                        val = new ActionResult("Service core settings updated", true);
+                    }
+                    catch (Exception ex)
+                    {
+                        _serviceLog.Error(ex, "Error saving preferences");
+                        val = new ActionResult("Service core settings could not be updated.", false);
+                    }
+                }
+                else
+                {
+                    val = new ActionResult("Service core settings could not be updated. Invalid data.", false);
+                }
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateServiceConfig)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var configArg = args.FirstOrDefault(a => a.Key == "config");
+                var configVal = JsonSerializer.Deserialize<ServiceConfig>(configArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                if (configVal != null)
+                {
+                    _serverConfig.LogLevel = configVal.LogLevel;
+                    _serverConfig.ManagementServerHubAPI = configVal.ManagementServerHubAPI;
+                    _serverConfig.ManagementServerHubEndpoint = configVal.ManagementServerHubEndpoint;
+                    _serverConfig.UseHTTPS = configVal.UseHTTPS;
+                    _serverConfig.Host = configVal.Host;
+                    _serverConfig.Port = configVal.Port;
+                    _serverConfig.HttpChallengeServerPort = configVal.HttpChallengeServerPort;
+
+                    try
+                    {
+                        SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig, throwOnError: true);
+                        val = new ActionResult("Service config updated", true);
+                    }
+                    catch (Exception ex)
+                    {
+                        _serviceLog.Error(ex, "Error updating service config");
+                        val = new ActionResult("Service config could not be updated.", false);
+                    }
+                }
+                else
+                {
+                    val = new ActionResult("Service config could not be updated. Invalid data.", false);
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {
