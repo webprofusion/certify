@@ -109,7 +109,7 @@
         public bool EnableExternalCertManagers { get; set; }
 
         /// <summary>
-        /// Id of the data store conenction configuration to use. 0 is the default scheme using local SQLite
+        /// Id of the data store connection configuration to use. 0 is the default scheme using local SQLite
         /// </summary>
         public string ConfigDataStoreConnectionId { get; set; } = "0";
 
