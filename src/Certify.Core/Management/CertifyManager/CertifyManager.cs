@@ -127,7 +127,12 @@ namespace Certify.Management
             );
         }
 
-        private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+        private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false)
+        {
+            _systemStatusItems.RemoveAll(s => s.Key == systemStatusKey);
+
+            _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+        }
 
         public async Task Init()
         {
