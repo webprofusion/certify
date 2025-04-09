@@ -126,7 +126,6 @@ namespace Certify.Management
         /// <returns>Returns an action result indicating the success of the connection attempt and any relevant hub information.</returns>
         public async Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false)
         {
-            var hubAssignedInstanceId = _serverConfig.HubAssignedInstanceId;
 
             using (var httpClient = new System.Net.Http.HttpClient())
             {
@@ -134,9 +133,9 @@ namespace Certify.Management
                 request.Headers.Add("X-Client-ID", clientSecret.ClientId);
                 request.Headers.Add("X-Client-Secret", clientSecret.Secret);
 
-                if (!string.IsNullOrEmpty(hubAssignedInstanceId))
+                if (!string.IsNullOrEmpty(_serverConfig.HubAssignedInstanceId))
                 {
-                    request.Headers.Add("X-Certify-HubAssignedId", hubAssignedInstanceId);
+                    request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
                 }
 
                 try
@@ -318,6 +317,7 @@ namespace Certify.Management
 
                             // acquire new token
                             var check = await CheckManagementHubCredentials(api, _mgmtHubJoiningSecret);
+
                             if (check.IsSuccess)
                             {
                                 if (_serverConfig.HubAssignedInstanceId != check.Result.HubAssignedInstanceId)
@@ -351,7 +351,7 @@ namespace Certify.Management
                                     SystemStatusCategories.SERVICE_CORE,
                                     SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
                                     "Management Hub Joining Auth",
-                                    "Management hub joining auth failed, instance cannot join hub. Joining key may be invalid or for a different hub.",
+                                    "Management hub joining auth failed, instance cannot join hub. Joining key (or current Hub Assigned ID) may be invalid or for a different hub.",
                                     hasError: true
                                 );
 

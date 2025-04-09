@@ -26,7 +26,7 @@ namespace Certify.Management
 
             if (
                 Environment.GetEnvironmentVariable("CERTIFY_ENABLE_MANAGEMENT_HUB")?.Equals("true", StringComparison.InvariantCultureIgnoreCase) == true
-                || CoreAppSettings.Current.IsManagementHubService
+                || _serverConfig.IsManagementHub
                 || _isDirectMgmtHubBackend
                 )
             {
@@ -47,15 +47,10 @@ namespace Certify.Management
                 // update the system version
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
 
-                if (_isMgtmHubBackend)
-                {
-                    CoreAppSettings.Current.IsManagementHubService = true;
-                }
-
                 SettingsManager.SaveAppSettings();
 
                 // if we are a management hub backend, register with the hub if not already registered
-                if (CoreAppSettings.Current.IsManagementHubService)
+                if (_isMgtmHubBackend)
                 {
                     var accessControl = await GetCurrentAccessControl();
                     await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
