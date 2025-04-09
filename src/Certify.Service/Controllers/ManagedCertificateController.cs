@@ -96,7 +96,32 @@ namespace Certify.Service.Controllers
                      .CreateLogger())
             {
                 var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
+
                 var results = await _certifyManager.TestChallenge(theLog, managedCertificate, isPreviewMode: true, progress: progressIndicator);
+
+                return results;
+            }
+        }
+
+        [HttpPost, Route("challengecleanup")]
+        public async Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate managedCertificate)
+        {
+            DebugLog();
+
+            var progressState = new RequestProgressState(RequestState.Running, "Performing Challenge Cleanup..", managedCertificate);
+
+            var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
+
+            // perform challenge response test, log to string list and return in result
+            var logList = new List<string>();
+            using (var log = new LoggerConfiguration()
+
+                     .WriteTo.Sink(new ProgressLogSink(progressIndicator, managedCertificate, _certifyManager))
+                     .CreateLogger())
+            {
+                var theLog = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(log).CreateLogger<ManagedCertificatesController>());
+
+                var results = await _certifyManager.PerformChallengeCleanup(theLog, managedCertificate, progress: progressIndicator);
 
                 return results;
             }
