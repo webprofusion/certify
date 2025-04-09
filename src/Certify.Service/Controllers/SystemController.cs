@@ -6,6 +6,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
+using Certify.Models.Hub;
 using Certify.Shared;
 
 namespace Certify.Service.Controllers
@@ -36,15 +37,6 @@ namespace Certify.Service.Controllers
             DebugLog();
 
             return await new Management.Util().CheckForUpdates();
-        }
-
-        [HttpGet, Route("maintenance")]
-        public async Task<string> PerformMaintenanceTasks()
-        {
-            DebugLog();
-
-            await _certifyManager.PerformCertificateCleanup();
-            return "OK";
         }
 
         [HttpGet, Route("diagnostics")]
@@ -105,5 +97,17 @@ namespace Certify.Service.Controllers
 
         [HttpPost, Route("datastores/delete")]
         public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
+
+        [HttpPost, Route("hub/join")]
+        public async Task<Models.Config.ActionResult> JoinManagementHub(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+
+        [HttpPost, Route("hub/checkcreds")]
+        public async Task<Models.Config.ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.CheckManagementHubCredentials(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });
+
+        [HttpGet, Route("hub/status")]
+        public async Task<Models.Config.ActionResult> CheckManagementHubConnectionStatus() => await _certifyManager.CheckManagementHubConnectionStatus();
+
+        [HttpGet, Route("hub/info")]
+        public async Task<HubInfo> GetHubInfo() => await _certifyManager.GetHubInfo();
     }
 }
