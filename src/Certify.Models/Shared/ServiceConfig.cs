@@ -37,6 +37,7 @@ namespace Certify.Shared
         public string ManagementServerHubAPI { get; set; } = string.Empty;
         public string ManagementServerHubEndpoint { get; set; } = string.Empty;
         public string HubAssignedInstanceId { get; set; } = string.Empty;
+        public bool IsManagementHub { get; set; }
     }
 
     public enum ConfigStatus
