@@ -50,6 +50,10 @@ namespace Certify.UI.Controls.Settings
         private async void Join_Click(object sender, System.Windows.RoutedEventArgs e)
         {
             var result = await EditModel.MainViewModel.JoinManagementHub(EditModel.ManagementHubAPIUrl, EditModel.ClientID, EditModel.ClientSecret);
+
+            EditModel.IsConnected = result.IsSuccess;
+            EditModel.StatusMessage = result.Message;
+
             if (result.IsSuccess)
             {
                 MessageBox.Show("Successfully joined Management Hub.");
