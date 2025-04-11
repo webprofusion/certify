@@ -8,6 +8,7 @@ using Certify.Models.Hub;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Plugins;
+using Certify.SharedUtils;
 using Newtonsoft.Json;
 
 /// <summary>
@@ -31,9 +32,9 @@ namespace Certify.Providers.DNS.CertifyManaged
                     HelpUrl = "https://docs.certifytheweb.com/",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=true, IsCredential=false, IsPassword=false, Value="https://localhost:44361/", Description="Base URL for a Certify Management Hub API" },
-                        new ProviderParameter{ Key="authkey",Name="Auth Key", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Auth Key" },
-                        new ProviderParameter{ Key="authsecret",Name="Auth Secret", IsRequired=true, IsCredential=true, IsPassword=true,  Description="API Auth Secret" }
+                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Value="https://localhost:44361/", Description="(leave blank to use current management hub API)" },
+                        new ProviderParameter{ Key="authkey",Name="Client ID", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Auth Key" },
+                        new ProviderParameter{ Key="authsecret",Name="Client Secret", IsRequired=true, IsCredential=true, IsPassword=true,  Description="API Auth Secret" }
                     },
                     IsTestModeSupported = true,
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -227,8 +228,26 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
             else
             {
-                _log.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
-                return false;
+                var svcConfig = ServiceConfigManager.GetAppServiceConfig();
+                var mgmtHubAPI = svcConfig?.ManagementServerHubAPI;
+
+                if (mgmtHubAPI != null)
+                {
+                    // if we have a management hub API URL, use that
+                    _apiBaseUri = new System.Uri(mgmtHubAPI);
+
+                    if (!_apiBaseUri.ToString().EndsWith("/"))
+                    {
+                        _apiBaseUri = new Uri($"{_apiBaseUri}/");
+                    }
+
+                    _client.BaseAddress = _apiBaseUri;
+                }
+                else
+                {
+                    _log.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
+                    return false;
+                }
             }
 
             return await Task.FromResult(true);
