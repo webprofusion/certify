@@ -72,31 +72,40 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             // validate jwt passed by joining instance
             var isAuthenticated = false;
+            var hubAssignedId = String.Empty;
 
             try
             {
-                var accessToken = Context.GetHttpContext().Request.Headers[key: "Authorization"];
-
-                var joiningJwt = accessToken.ToString().Replace("Bearer ", "");
-                var jwtService = new Hub.Api.Services.JwtService(_config);
-                var claimsIdentity = await jwtService.ClaimsIdentityFromTokenAsync(joiningJwt, true);
-                var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
-                isAuthenticated = true;
-
+                var accessToken = Context.GetHttpContext()?.Request.Headers.Authorization;
+                if (accessToken.HasValue)
+                {
+                    var joiningJwt = accessToken.ToString().Replace("Bearer ", "");
+                    var jwtService = new Hub.Api.Services.JwtService(_config);
+                    var claimsIdentity = await jwtService.ClaimsIdentityFromTokenAsync(joiningJwt, true);
+                    var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
+                    hubAssignedId = claimsIdentity.FindFirst("hub-assigned-id")?.Value;
+                    isAuthenticated = true;
+                }
+                else
+                {
+                    _logger?.LogWarning("InstanceManagementHub: No JWT token provided by instance. Connection attempt ignored.");
+                    return;
+                }
             }
             catch (Exception)
             {
                 // could not validate jwt
-
+                _logger?.LogWarning("InstanceManagementHub: Failed to read auth token. Connection attempt ignored.");
                 return;
             }
 
             // begin tracking connection 
             _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo
             {
-                InstanceId = string.Empty,
+                Id = hubAssignedId ?? String.Empty,
+                InstanceId = hubAssignedId ?? String.Empty,
                 ConnectionStatus = ConnectionStatus.Connected,
-                DateLastReported = DateTimeOffset.Now,
+                DateLastReported = DateTimeOffset.UtcNow,
                 IsAuthenticated = isAuthenticated
             }
             );
@@ -299,8 +308,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (instanceInfo != null)
             {
-                instanceInfo.DateLastReported = DateTimeOffset.UtcNow;
-                instanceInfo.Id = instanceInfo.InstanceId; // TODO: double check instanceId from provided auth
+                instanceInfo.DateLastReported = DateTimeOffset.Now;
 
                 // update our cached instance info
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
