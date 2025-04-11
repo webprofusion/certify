@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models.Config;
@@ -39,6 +39,11 @@ namespace Certify.Management
                 existing.DateLastReported = item.DateLastReported;
 
                 existing.Tags = item.Tags;
+
+                if (existing.DateRegistered == DateTimeOffset.MinValue)
+                {
+                    existing.DateRegistered = DateTimeOffset.UtcNow;
+                }
 
                 await _configStore.Update(nameof(ManagedInstanceInfo), existing);
 
