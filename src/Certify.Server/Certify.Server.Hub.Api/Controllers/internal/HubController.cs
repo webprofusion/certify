@@ -128,10 +128,17 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     i.DateLastReported = connected.DateLastReported;
                     i.ConnectionStatus = connected.ConnectionStatus;
+
+                    i.IsAuthenticated = true;
+
+                    // copy db values to in memory connect instance representation
+                    connected.DateRegistered = i.DateRegistered;
+                    connected.Tags = i.Tags;
+
                 }
             }
 
-            return new OkObjectResult(managedInstances);
+            return new OkObjectResult(managedInstances.Where(c => c.IsAuthenticated));
         }
 
         /// <summary>
