@@ -131,10 +131,10 @@ namespace Certify.Server.Hub.Api.Controllers
                 // no assigned id provided, assign new one 
                 var instanceInfo = new ManagedInstanceInfo
                 {
-                    DateRegistered = DateTime.UtcNow,
-                    DateLastReported = DateTime.UtcNow,
+                    DateRegistered = DateTimeOffset.UtcNow,
+                    DateLastReported = DateTimeOffset.UtcNow,
                     ConnectionStatus = ConnectionStatus.Disconnected,
-                    IsAuthenticated = false,
+                    IsAuthenticated = false
                 };
                 var r = await _client.AddHubManagedInstance(instanceInfo, CurrentAuthContext);
                 hubAssignedInstanceId = r.Result!.InstanceId;
@@ -169,7 +169,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     new Claim("hub-assigned-id", Guid.NewGuid().ToString())
                 };
 
-                joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{clientId}");
+                joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{clientId}", additionalClaims: additionalClaims);
                 joiningInfo.HubAssignedInstanceId = hubAssignedInstanceId!;
 
                 return new OkObjectResult(joiningInfo);
