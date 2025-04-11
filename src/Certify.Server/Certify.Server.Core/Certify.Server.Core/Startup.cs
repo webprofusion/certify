@@ -240,11 +240,27 @@ namespace Certify.Server.Core
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") != "none" &&
-                       Configuration["Service:AuthMode"] != "none";
+                if (
+                    Environment.GetEnvironmentVariable("CERTIFY_SERVICE_AUTH_MODE") == "none"
+                    || Configuration["Service:AuthMode"] == "none"
+                    )
+                {
+                    // env or config set to "none", use Service Auth Policy instead
+                    return false;
+                }
+                else
+                {
+                    // use Windows auth by default
+                    return true;
+                }
+            }
+            else
+            {
+                // not windows, use service auth policy
+                return false;
             }
 
-            return false;
+
         }
     }
 }
