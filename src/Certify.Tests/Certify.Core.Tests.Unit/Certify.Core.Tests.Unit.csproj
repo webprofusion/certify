@@ -75,7 +75,6 @@
         <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
         <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
         <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
-        <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
         <ProjectReference Include="..\..\Certify.SourceGenerators\Certify.SourceGenerators.csproj" />
     </ItemGroup>
