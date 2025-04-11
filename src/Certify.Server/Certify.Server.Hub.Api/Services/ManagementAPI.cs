@@ -28,6 +28,7 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="mgmtStateProvider">The instance management state provider.</param>
         /// <param name="mgmtHubContext">The management hub context for SignalR or Direct communication.</param>
+        /// <param name="log"></param>
         public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, ILogger<ManagementAPI> log)
         {
             _mgmtStateProvider = mgmtStateProvider;
@@ -41,6 +42,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="mgmtStateProvider">The instance management state provider.</param>
         /// <param name="mgmtHubContext">The management hub context for SignalR communication.</param>
         /// <param name="certifyManager">The in-process Certify manager instance.</param>
+        /// <param name="log"></param>
         public ManagementAPI(IInstanceManagementStateProvider mgmtStateProvider, IHubContext<InstanceManagementHub, IInstanceManagementHub> mgmtHubContext, Certify.Management.ICertifyManager certifyManager, ILogger<ManagementAPI> log)
         {
             _mgmtStateProvider = mgmtStateProvider;
@@ -125,12 +127,12 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>The deserialized result as type <typeparamref name="T"/> if available; otherwise, default.</returns>
         private async Task<T?> PerformInstanceCommandTaskWithResult<T>(string instanceId, KeyValuePair<string, string>[] args, string commandType)
         {
-            InstanceCommandResult result;
-            var cmd = new InstanceCommandRequest(commandType, args);
+            var cmd = new InstanceCommandRequest(commandType, args)
+            {
+                IsResultAwaited = true
+            };
 
-            cmd.IsResultAwaited = true;
-
-            result = await GetCommandResult(instanceId, cmd);
+            var result = await GetCommandResult(instanceId, cmd);
 
             if (result?.Value != null)
             {
@@ -623,6 +625,12 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ICollection<Models.ActionStep>>(instanceId, args, ManagementHubCommands.GetSystemStatusItems);
         }
 
+        /// <summary>
+        /// Retrieves the service configuration for the specified instance.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>A <see cref="ServiceConfig"/> object containing the service configuration, or null if not found.</returns>
         public async Task<ServiceConfig?> GetServiceConfig(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
@@ -632,6 +640,12 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ServiceConfig>(instanceId, args, ManagementHubCommands.GetServiceConfig);
         }
 
+        /// <summary>
+        /// Retrieves service core settings for a specified instance asynchronously.
+        /// </summary>
+        /// <param name="instanceId">Identifies the specific instance for which the settings are being retrieved.</param>
+        /// <param name="currentAuthContext">Provides the authentication context necessary for accessing the service settings.</param>
+        /// <returns>Returns the preferences associated with the service core settings or null if not found.</returns>
         public async Task<Preferences?> GetServiceCoreSettings(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
@@ -641,6 +655,13 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<Preferences>(instanceId, args, ManagementHubCommands.GetServiceCoreSettings);
         }
 
+        /// <summary>
+        /// Updates the core settings of a service instance based on provided preferences and authentication context.
+        /// </summary>
+        /// <param name="instanceId">Identifies the specific service instance to be updated.</param>
+        /// <param name="prefs">Contains the new preferences to apply to the service instance.</param>
+        /// <param name="currentAuthContext">Holds the current authentication context for authorization during the update.</param>
+        /// <returns>Returns the result of the update operation, which may indicate success or failure.</returns>
         public async Task<ActionResult?> UpdateServiceCoreSettings(string instanceId, Preferences prefs, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
@@ -651,6 +672,13 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateServiceCoreSettings);
         }
 
+        /// <summary>
+        /// Updates the configuration of a specified service instance asynchronously.
+        /// </summary>
+        /// <param name="instanceId">Identifies the specific service instance to be updated.</param>
+        /// <param name="config">Contains the new configuration settings for the service instance.</param>
+        /// <param name="currentAuthContext">Represents the current authentication context for authorization checks.</param>
+        /// <returns>Returns the result of the update operation, which may indicate success or failure.</returns>
         public async Task<ActionResult?> UpdateServiceConfig(string instanceId, ServiceConfig config, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
