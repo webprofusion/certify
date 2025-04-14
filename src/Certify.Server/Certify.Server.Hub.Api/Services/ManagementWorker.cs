@@ -1,5 +1,4 @@
-﻿using Certify.Models.Hub;
-using Certify.Server.Hub.Api.SignalR.ManagementHub;
+﻿using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.Services
@@ -16,7 +15,7 @@ namespace Certify.Server.Hub.Api.Services
 
         private ManagementAPI _mgmtAPI;
 
-        private int _updateFrequency = 10;
+        private int _updateFrequency = 30;
         private string _serviceName = "[Management Worker]";
 
         /// <summary>
@@ -45,24 +44,6 @@ namespace Certify.Server.Hub.Api.Services
             _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(_updateFrequency));
 
             return Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Dispatch a command to a connected instance
-        /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="cmd"></param>
-        private void DispatchCommand(string instanceId, InstanceCommandRequest cmd)
-        {
-            var connectionId = _stateProvider.GetConnectionIdForInstance(instanceId);
-            if (connectionId == null)
-            {
-                _logger.LogWarning("{svc} Could not dispatch command to instance {instanceId}. Connection ID not yet known", _serviceName, instanceId);
-            }
-            else
-            {
-                _hubContext.Clients.Client(connectionId).SendAsync(ManagementHubMessages.SendCommandRequest, cmd);
-            }
         }
 
         /// <summary>
