@@ -109,6 +109,11 @@ namespace Certify.Providers.DNS.CertifyManaged
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
+            if (string.IsNullOrWhiteSpace(_apiBaseUri?.ToString()))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed Challenge API URL not specified and default Management Hub URI not set. Cannot perform managed challenge." };
+            }
+
             var apiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/request");
             var req = new HttpRequestMessage(HttpMethod.Post, apiUri);
 
@@ -153,6 +158,11 @@ namespace Certify.Providers.DNS.CertifyManaged
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
         {
+            if (string.IsNullOrWhiteSpace(_apiBaseUri?.ToString()))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed Challenge API URL not specified and default Management Hub URI not set. Cannot perform managed challenge." };
+            }
+
             var apiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/cleanup");
             var req = new HttpRequestMessage(HttpMethod.Post, apiUri);
 
