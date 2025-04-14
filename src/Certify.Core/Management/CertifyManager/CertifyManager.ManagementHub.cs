@@ -129,11 +129,12 @@ namespace Certify.Management
 
             using (var httpClient = new System.Net.Http.HttpClient())
             {
-                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}");
+                var endpoint = $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}";
+                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpoint);
                 request.Headers.Add("X-Client-ID", clientSecret.ClientId);
                 request.Headers.Add("X-Client-Secret", clientSecret.Secret);
 
-                if (!string.IsNullOrEmpty(_serverConfig.HubAssignedInstanceId))
+                if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
                 {
                     request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
                 }
@@ -152,7 +153,7 @@ namespace Certify.Management
                     {
                         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                         {
-                            return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check credentials.", isSuccess: false);
+                            return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}. {response}", isSuccess: false);
                         }
                         else
                         {
@@ -162,7 +163,7 @@ namespace Certify.Management
                 }
                 catch (Exception exp)
                 {
-                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp.Message}", isSuccess: false);
+                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp}", isSuccess: false);
                 }
             }
         }
