@@ -138,7 +138,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
             }
 
-            return new OkObjectResult(managedInstances.Where(c => c.IsAuthenticated));
+            return new OkObjectResult(managedInstances.Where(c => c.IsAuthenticated).OrderBy(o => o.Title));
         }
 
         /// <summary>
