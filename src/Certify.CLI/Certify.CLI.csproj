@@ -1,11 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net9.0;</TargetFrameworks>
+        <TargetFrameworks>net462;net9.0;</TargetFrameworks>
         <Configurations>Debug;Release;</Configurations>
         <AssemblyName>Certify</AssemblyName>
         <OutputType>Exe</OutputType>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>latest</LangVersion>
+
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
         <PublishSingleFile>true</PublishSingleFile>
         <PublishTrimmed>true</PublishTrimmed>
         <SelfContained>true</SelfContained>
@@ -32,8 +35,7 @@
 
     </PropertyGroup>
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+
         <ProjectGuid>{DA0CCD9F-8CBD-4471-93E0-53BCFB6CA25E}</ProjectGuid>
         <OutputType>Exe</OutputType>
         <RootNamespace>Certify.CLI</RootNamespace>
@@ -42,10 +44,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <StartupObject>Certify.CLI.Program</StartupObject>
     </PropertyGroup>
-    <PropertyGroup>
-        <LangVersion>default</LangVersion>
-        <ApplicationIcon>icon_cli.ico</ApplicationIcon>
-    </PropertyGroup>
+
     <ItemGroup>
         <Content Include="icon_cli.ico" />
     </ItemGroup>
