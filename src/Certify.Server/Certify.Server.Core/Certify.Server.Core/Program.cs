@@ -5,8 +5,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddWindowsService()
                 .AddHostedService<WindowsBackgroundService>();
 
-builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true)
-                     .AddJsonFile("appsettings-core.Development.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true);
+
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings-core.Development.json", optional: true, reloadOnChange: true);
+}
 
 builder.AddServiceDefaults();
 
