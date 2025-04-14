@@ -293,6 +293,18 @@ namespace Certify.Management
             _initTimer.Elapsed += async (s, e) =>
             {
                 _initTimer.Stop();
+
+                if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_AUTOJOIN") == "true")
+                {
+                    await JoinManagementHub(
+                        Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"),
+                        new Models.Hub.ClientSecret
+                        {
+                            ClientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID"),
+                            Secret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET")
+                        });
+                }
+
                 await EnsureMgmtHubConnection();
             };
             _initTimer.Start();
