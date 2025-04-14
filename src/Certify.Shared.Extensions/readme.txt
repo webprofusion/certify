@@ -1,2 +1,4 @@
 ﻿- Package references from other .net standard components, referenced as .net framework 4.6.2. 
 - Package referenced in core plugins should also be reference here so that their dependencies are bundled.
+- RDAP rdap_dns_jons.dat is a minified and base64 encoded version of https://data.iana.org/rdap/dns.json
+- Public Sufffix list from https://publicsuffix.org/list/public_suffix_list.dat
