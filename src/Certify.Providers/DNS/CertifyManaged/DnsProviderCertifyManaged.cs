@@ -241,7 +241,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                 var svcConfig = ServiceConfigManager.GetAppServiceConfig();
                 var mgmtHubAPI = svcConfig?.ManagementServerHubAPI;
 
-                if (mgmtHubAPI != null)
+                if (!string.IsNullOrWhiteSpace(mgmtHubAPI))
                 {
                     // if we have a management hub API URL, use that
                     _apiBaseUri = new System.Uri(mgmtHubAPI);
