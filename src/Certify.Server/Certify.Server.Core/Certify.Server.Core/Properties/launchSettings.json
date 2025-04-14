@@ -10,13 +10,15 @@
 
   "profiles": {
 
-    "Certify.Server.Core": {
+    "Certify.Server.Core (no service auth)": {
       "commandName": "Project",
       "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
-        //"CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
+        "CERTIFY_MANAGEMENT_HUB_CLIENT_ID": "managedinstance_sp_01",
+        "CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET": "b83af1ea-ef84-4095-84aa-49df81e9ded6",
+        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361",
         "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
         "CERTIFY_SERVICE_AUTH_MODE": "none",
         "CERTIFY_UPGRADE_SETTINGS": "true"
@@ -28,8 +30,6 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
-        // "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
-        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
         "CERTIFY_SERVICE_AUTH_MODE": "windows",
         "CERTIFY_UPGRADE_SETTINGS": "true"
       }
@@ -51,7 +51,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://0.0.0.0:9695",
-        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
+        "CERTIFY_SERVICE_AUTH_MODE": "none"
       },
       "publishAllPorts": true,
       "httpPort": 9695
@@ -64,7 +65,8 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://0.0.0.0:9695",
         "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
-        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub"
+        "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
+        "CERTIFY_SERVICE_AUTH_MODE": "none"
       }
     }
   }
