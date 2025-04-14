@@ -32,7 +32,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                     HelpUrl = "https://docs.certifytheweb.com/",
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Value="https://localhost:44361/", Description="(leave blank to use current management hub API)" },
+                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Description="(leave blank to use current management hub API)" },
                         new ProviderParameter{ Key="authkey",Name="Client ID", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Auth Key" },
                         new ProviderParameter{ Key="authsecret",Name="Client Secret", IsRequired=true, IsCredential=true, IsPassword=true,  Description="API Auth Secret" }
                     },
@@ -59,7 +59,7 @@ namespace Certify.Providers.DNS.CertifyManaged
             _client = new HttpClient(handler);
 
 #else
-   _client = new HttpClient();
+            _client = new HttpClient();
 
 #endif
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyManaged");
