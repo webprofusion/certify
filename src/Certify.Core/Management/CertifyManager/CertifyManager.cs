@@ -296,6 +296,9 @@ namespace Certify.Management
 
                 if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_AUTOJOIN") == "true")
                 {
+                    _serverConfig.ManagementServerHubAPI = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
+                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+
                     await JoinManagementHub(
                         Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"),
                         new Models.Hub.ClientSecret
