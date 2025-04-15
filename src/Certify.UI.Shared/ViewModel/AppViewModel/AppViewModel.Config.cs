@@ -200,11 +200,11 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="credentialKey"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteCredential(string credentialKey)
+        public async Task<ActionResult> DeleteCredential(string credentialKey)
         {
             if (credentialKey == null)
             {
-                return false;
+                return new ActionResult("Cannot delete. Credential key not specified", isSuccess: false);
             }
 
             var result = await _certifyClient.DeleteCredential(credentialKey);

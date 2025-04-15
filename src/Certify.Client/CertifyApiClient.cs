@@ -695,10 +695,10 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<StoredCredential>(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<bool> DeleteCredential(string credentialKey, AuthContext authContext = null)
+        public async Task<ActionResult> DeleteCredential(string credentialKey, AuthContext authContext = null)
         {
             var result = await DeleteAsync($"credentials/{credentialKey}", authContext);
-            return JsonConvert.DeserializeObject<bool>(await result.Content.ReadAsStringAsync());
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
         public async Task<ActionResult> TestCredentials(string credentialKey, AuthContext authContext = null)

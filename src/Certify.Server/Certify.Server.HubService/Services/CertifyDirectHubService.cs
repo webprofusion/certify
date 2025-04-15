@@ -109,7 +109,7 @@ namespace Certify.Server.HubService.Services
 
         public Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> DeleteCertificateAuthority(string id, AuthContext? authContext = null) => throw new NotImplementedException();
-        public Task<bool> DeleteCredential(string credentialKey, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<ActionResult> DeleteCredential(string credentialKey, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<bool> DeleteManagedCertificate(string managedItemId, AuthContext? authContext = null) => throw new NotImplementedException();
 
         public Task<List<AccountDetails>> GetAccounts(AuthContext? authContext = null) => throw new NotImplementedException();

@@ -85,9 +85,9 @@ namespace Certify.UI.Controls.Settings
                 {
                     //confirm item not used then delete
                     var deleted = await EditModel.MainViewModel.DeleteCredential(EditModel.SelectedStoredCredential?.StorageKey);
-                    if (!deleted)
+                    if (!deleted.IsSuccess)
                     {
-                        MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed site.");
+                        MessageBox.Show("This stored credential could not be removed. It may still be in use by a managed item.");
                     }
                 }
 

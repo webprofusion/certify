@@ -52,7 +52,7 @@ namespace Certify.Client
         #region Credentials
         Task<List<StoredCredential>> GetCredentials(AuthContext authContext = null);
         Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext authContext = null);
-        Task<bool> DeleteCredential(string credentialKey, AuthContext authContext = null);
+        Task<ActionResult> DeleteCredential(string credentialKey, AuthContext authContext = null);
         Task<ActionResult> TestCredentials(string credentialKey, AuthContext authContext = null);
         #endregion Credentials
 
