@@ -30,7 +30,6 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="client"></param>
         /// <param name="mgmtStateProvider"></param>
         /// <param name="mgmtAPI"></param>
-        /// <param name="mgmtHubContext"></param>
         public HubController(ILogger<CertificateController> logger, ICertifyInternalApiClient client, IInstanceManagementStateProvider mgmtStateProvider, ManagementAPI mgmtAPI)
         {
             _logger = logger;
