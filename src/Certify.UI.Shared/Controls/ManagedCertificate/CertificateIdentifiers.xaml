@@ -351,6 +351,14 @@
             </TabItem>
 
             <TabItem
+    MinWidth="100"
+    Controls:HeaderedControlHelper.HeaderFontSize="12"
+    Header="Authorization"
+    IsSelected="False">
+                <managedcertificate:IdentifierAuthorization />
+            </TabItem>
+
+            <TabItem
                 MinWidth="100"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
