@@ -264,20 +264,6 @@
                 </TabItem>
 
                 <TabItem
-                    x:Name="TabAuthorization"
-                    MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
-                    AutomationProperties.Name="Authorization">
-                    <TabItem.HeaderTemplate>
-                        <DataTemplate>
-                            <managedcertificate:TabHeader HeaderText="Authorization" IconName="Lock" />
-                        </DataTemplate>
-                    </TabItem.HeaderTemplate>
-
-                    <managedcertificate:IdentifierAuthorization Margin="0,8,0,0" />
-                </TabItem>
-
-                <TabItem
                     x:Name="TabDeployment"
                     MinWidth="100"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
