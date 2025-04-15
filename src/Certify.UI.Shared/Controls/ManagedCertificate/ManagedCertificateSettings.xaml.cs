@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -70,7 +70,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     TabDeployment.Visibility = Visibility.Collapsed;
                     TabDomains.Visibility = Visibility.Collapsed;
-                    TabAuthorization.Visibility = Visibility.Collapsed;
                     TabTasks.Visibility = Visibility.Collapsed;
                     TabPreview.Visibility = Visibility.Collapsed;
 
@@ -79,7 +78,6 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
                     TabDeployment.Visibility = Visibility.Visible;
                     TabDomains.Visibility = Visibility.Visible;
-                    TabAuthorization.Visibility = Visibility.Visible;
                     TabTasks.Visibility = Visibility.Visible;
                     TabPreview.Visibility = Visibility.Visible;
                 }
