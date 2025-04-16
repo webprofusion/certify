@@ -223,13 +223,27 @@ namespace Certify.Server.Hub.Api.Controllers
         /// Get summary counts of all managed certs
         /// </summary>
         /// <returns></returns>
-        [HttpPost]
+        [HttpGet]
         [Route("summary")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetManagedCertificateSummary()
         {
             var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
+            return new OkObjectResult(summary);
+        }
+
+        /// <summary>
+        /// Retrieves the summary of a managed certificate for a specific instance using the provided instance ID.
+        /// </summary>
+        /// <returns>Returns an IActionResult containing the summary of the managed certificate.</returns>
+        [HttpGet]
+        [Route("{instanceId}/summary")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
+        public async Task<IActionResult> GetInstanceManagedCertificateSummary(string instanceId)
+        {
+            var summary = await _mgmtAPI.GetManagedCertificateSummary(instanceId, CurrentAuthContext);
             return new OkObjectResult(summary);
         }
 
