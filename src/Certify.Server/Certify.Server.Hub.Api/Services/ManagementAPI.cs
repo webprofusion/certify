@@ -279,6 +279,19 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Gets a summary of the statuses of all managed certificates.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>A <see cref="StatusSummary"/> summarizing certificate statuses.</returns>
+        public async Task<StatusSummary?> GetManagedCertificateSummary(string instanceId, AuthContext? currentAuthContext)
+        {
+            var summary = _mgmtStateProvider.GetManagedInstanceStatusSummary(instanceId);
+
+            return await Task.FromResult(summary);
+        }
+
+        /// <summary>
         /// Retrieves the certificate authorities from the target instance.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>

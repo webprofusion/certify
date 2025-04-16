@@ -39,6 +39,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
         bool HasStatusSummaryForManagedInstance(string instanceId);
         ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
+        StatusSummary? GetManagedInstanceStatusSummary(string instanceId);
         void UpdateInstanceConnectionStatus(string instanceId, string status);
 
         void AddOrUpdateSystemStatusItem(ActionStep status);
@@ -293,6 +294,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         public ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries()
         {
             return _managedInstanceStatusSummary;
+        }
+
+        /// <summary>
+        /// Retrieves the status summary of a managed instance based on its identifier.
+        /// </summary>
+        /// <param name="instanceId">The identifier used to locate the specific managed instance's status summary.</param>
+        /// <returns>Returns the status summary associated with the specified managed instance, or null if not found.</returns>
+        public StatusSummary? GetManagedInstanceStatusSummary(string instanceId)
+        {
+            return _managedInstanceStatusSummary.FirstOrDefault(s => s.Key == instanceId).Value;
         }
 
         /// <summary>
