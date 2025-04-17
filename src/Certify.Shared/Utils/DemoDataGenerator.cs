@@ -8,12 +8,12 @@ namespace Certify.Shared.Core.Utils
 {
     public class DemoDataGenerator
     {
-        public static List<ManagedCertificate> GenerateDemoItems()
+        public static List<ManagedCertificate> GenerateDemoItems(int min = 500, int max = 500)
         {
             var rnd = new Random();
 
             var items = new List<ManagedCertificate>();
-            var numItems = new Random().Next(10, 500);
+            var numItems = rnd.Next(min, max);
             for (var i = 0; i < numItems; i++)
             {
 
@@ -42,7 +42,7 @@ namespace Certify.Shared.Core.Utils
                     if (demoState == 1)
                     {
                         // not yet requested
-                        item.Comments = "This is an example item note yet attempted.";
+                        item.Comments = "[DemoData-1]";
                     }
                     else if (demoState == 2)
                     {
@@ -52,7 +52,7 @@ namespace Certify.Shared.Core.Utils
                         item.DateLastRenewalAttempt = certStart;
                         item.DateExpiry = certStart.AddDays(certLifetime);
                         item.CertificateFriendlyName = $"{item.GetCertificateIdentifiers().First().Value} [CertifyDemo] - {item.DateStart} to {item.DateExpiry}";
-                        item.Comments = "This is an example item showing failure.";
+                        item.Comments = "[DemoData-2] This is an example item showing failure.";
                         item.LastAttemptedCA = item.CertificateCurrentCA;
                         item.LastRenewalStatus = RequestState.Error;
                         item.RenewalFailureCount = new Random().Next(1, 3);
@@ -67,7 +67,7 @@ namespace Certify.Shared.Core.Utils
                         item.DateLastRenewalAttempt = certStart;
                         item.DateExpiry = certStart.AddDays(certLifetime);
                         item.CertificateFriendlyName = $"{item.GetCertificateIdentifiers().First().Value} [CertifyDemo] - {item.DateStart} to {item.DateExpiry}";
-                        item.Comments = "This is an example item showing success";
+                        item.Comments = "[DemoData-3] This is an example item showing success";
                         item.LastAttemptedCA = item.CertificateCurrentCA;
                         item.LastRenewalStatus = RequestState.Success;
                     }
@@ -88,31 +88,204 @@ namespace Certify.Shared.Core.Utils
         {
             // generate test item names using verb,animal
             var subjects = new string[] {
-                "Lion",
-                "Tiger",
-                "Leopard",
-                "Cheetah",
-                "Elephant",
-                "Giraffe",
-                "Rhinoceros",
-                "Gorilla"
-            };
+                    "Lion",
+                    "Tiger",
+                    "Leopard",
+                    "Cheetah",
+                    "Elephant",
+                    "Giraffe",
+                    "Rhinoceros",
+                    "Gorilla",
+                    "Chimpanzee",
+                    "Quenda",
+                    "Koala",
+                    "Panda",
+                    "Kangaroo",
+                    "Wallaby",
+                    "Platypus",
+                    "Wombat",
+                    "Dingo",
+                    "Emu",
+                    "Cassowary",
+                    "Cockatoo",
+                    "Echidna",
+                    "TasmanianDevil",
+                    "Bilby",
+                    "Bandicoot",
+                    "Numbat",
+                    "SugarGlider",
+                    "Possum",
+                    "Lyrebird",
+                    "Brolga",
+                    "Magpie",
+                    "Kookaburra",
+                    "FrillNeckLizard",
+                    "Goanna",
+                    "ThornyDevil",
+                    "BlueTongueSkink",
+                    "SaltwaterCrocodile",
+                    "FreshwaterCrocodile",
+                    "Dugong",
+                    "SeaTurtle",
+                    "WhaleShark",
+                    "GreatWhiteShark",
+                    "HammerheadShark",
+                    "MantaRay",
+                    "Stingray",
+                    "Clownfish",
+                    "Seahorse",
+                    "Octopus",
+                    "Squid",
+                    "Jellyfish",
+                    "Starfish",
+                    "Coral",
+                    "Dolphin",
+                    "Orca",
+                    "HumpbackWhale",
+                    "BlueWhale",
+                    "Penguin",
+                    "Albatross",
+                    "Seal",
+                    "SeaLion",
+                    "Walrus",
+                    "PolarBear",
+                    "ArcticFox",
+                    "SnowLeopard",
+                    "Moose",
+                    "Caribou",
+                    "Bison",
+                    "Beaver",
+                    "Otter",
+                    "Lynx",
+                    "Bobcat",
+                    "Cougar",
+                    "Jaguar",
+                    "Ocelot",
+                    "Sloth",
+                    "Armadillo",
+                    "Anteater",
+                    "Capybara",
+                    "Tapir",
+                    "Peccary",
+                    "HowlerMonkey",
+                    "SpiderMonkey",
+                    "Tamarin",
+                    "Marmoset",
+                    "Macaw",
+                    "Toucan",
+                    "HarpyEagle",
+                    "Anaconda",
+                    "BoaConstrictor",
+                    "Caiman",
+                    "Piranha",
+                    "ElectricEel",
+                    "Axolotl",
+                    "Salamander",
+                    "Newt",
+                    "Frog",
+                    "Toad"
+                };
+
             var adjectives = new string[] {
                 "active",
                 "adaptable",
                 "alert",
-                "clever" ,
-                "comfortable" ,
+                "clever",
+                "comfortable",
                 "conscientious",
                 "considerate",
-                "courageous" ,
+                "courageous",
                 "decisive",
-                "determined" ,
-                "diligent" ,
+                "determined",
+                "diligent",
                 "energetic",
                 "entertaining",
-                "enthusiastic" ,
-                "fabulous"
+                "enthusiastic",
+                "fabulous",
+                "friendly",
+                "generous",
+                "gentle",
+                "graceful",
+                "hardworking",
+                "helpful",
+                "honest",
+                "imaginative",
+                "independent",
+                "intelligent",
+                "kind",
+                "lively",
+                "loyal",
+                "modest",
+                "optimistic",
+                "organized",
+                "patient",
+                "persistent",
+                "polite",
+                "practical",
+                "punctual",
+                "reliable",
+                "resourceful",
+                "respectful",
+                "responsible",
+                "sincere",
+                "skillful",
+                "sociable",
+                "supportive",
+                "thoughtful",
+                "trustworthy",
+                "understanding",
+                "versatile",
+                "vibrant",
+                "witty",
+                "zealous",
+                "adventurous",
+                "ambitious",
+                "artistic",
+                "athletic",
+                "attentive",
+                "bold",
+                "brave",
+                "calm",
+                "charismatic",
+                "cheerful",
+                "compassionate",
+                "confident",
+                "creative",
+                "curious",
+                "dedicated",
+                "dependable",
+                "dynamic",
+                "eager",
+                "efficient",
+                "empathetic",
+                "enthusiastic",
+                "flexible",
+                "forgiving",
+                "funny",
+                "generous",
+                "grateful",
+                "humble",
+                "inspiring",
+                "inventive",
+                "joyful",
+                "motivated",
+                "observant",
+                "outgoing",
+                "passionate",
+                "perceptive",
+                "playful",
+                "proactive",
+                "resilient",
+                "selfless",
+                "sensible",
+                "spontaneous",
+                "strategic",
+                "tactful",
+                "tenacious",
+                "thoughtful",
+                "tolerant",
+                "visionary",
+                "wise"
             };
 
             return $"{adjectives[rnd.Next(0, adjectives.Length - 1)]}-{subjects[rnd.Next(0, subjects.Length - 1)]}".ToLower();

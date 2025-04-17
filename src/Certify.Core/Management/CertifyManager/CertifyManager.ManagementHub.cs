@@ -805,12 +805,17 @@ namespace Certify.Management
             _serviceLog.Warning("Reconnecting to Management Hub.");
         }
 
-        private void GenerateDemoItems()
+        private async Task GenerateDemoItems(int? numItems)
         {
-            var items = DemoDataGenerator.GenerateDemoItems();
-            foreach (var item in items)
+            var currentItems = await GetManagedCertificateSummary(new ManagedCertificateFilter { });
+            if (currentItems.Total == 0)
             {
-                _ = UpdateManagedCertificate(item);
+                var items = DemoDataGenerator.GenerateDemoItems(numItems ?? 100, numItems ?? 500);
+                foreach (var item in items)
+                {
+
+                    _ = UpdateManagedCertificate(item);
+                }
             }
         }
     }

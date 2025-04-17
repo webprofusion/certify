@@ -88,6 +88,12 @@ namespace Certify.Management
                     await UpdateHubManagedInstance(hubInstance.Id, hubInstance);
                 }
             }
+
+            if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
+            {
+                var maxItems = Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS_MAX") ?? "500";
+                await GenerateDemoItems(int.Parse(maxItems));
+            }
         }
 
         /// <summary>
