@@ -58,7 +58,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
 
-            result.TotalResults = managedItems.Values.SelectMany(s => s.Items).Count();
+
 
             var list = new List<ManagedCertificateSummary>();
 
@@ -97,7 +97,16 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
             }
 
-            result.Results = list.OrderBy(l => l.Title);
+            result.TotalResults = list.Count;
+
+            var skip = 0;
+
+            if (page != null && page > 0)
+            {
+                skip = ((int)page - 1) * (pageSize ?? 100);
+            }
+
+            result.Results = list.OrderBy(l => l.Title).Skip(skip).Take(pageSize ?? 100);
 
             return new OkObjectResult(result);
         }
