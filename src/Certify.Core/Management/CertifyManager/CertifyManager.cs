@@ -276,13 +276,6 @@ namespace Certify.Management
             await UpgradeSettings();
 
             _serviceLog?.Information("Certify Manager Started");
-
-#if DEBUG
-            if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
-            {
-                GenerateDemoItems();
-            }
-#endif
         }
 
         /// <summary>
