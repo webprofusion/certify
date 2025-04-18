@@ -12,6 +12,18 @@ if (builder.Environment.IsDevelopment())
     builder.Configuration.AddJsonFile("appsettings-core.Development.json", optional: true, reloadOnChange: true);
 }
 
+var serviceConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+if (serviceConfig.Host != null && serviceConfig.Port != 0)
+{
+    builder.WebHost.UseUrls($"http://{serviceConfig.Host}:{serviceConfig.Port}");
+}
+else
+{
+    // set default host and port
+    builder.WebHost.UseUrls("http://localhost:9696");
+}
+
 builder.AddServiceDefaults();
 
 var startup = new Startup(builder.Configuration);
