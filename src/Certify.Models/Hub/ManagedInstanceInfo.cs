@@ -29,9 +29,9 @@ namespace Certify.Models.Hub
         public const string Disconnected = "disconnected";
         public const string Away = "away";
     }
-    public class ManagedInstanceItems
+    public record ManagedInstanceItems
     {
         public string InstanceId { get; set; } = string.Empty;
-        public List<ManagedCertificate> Items { get; set; } = new List<ManagedCertificate>();
+        public List<ManagedCertificate> Items { get; set; } = [];
     }
 }

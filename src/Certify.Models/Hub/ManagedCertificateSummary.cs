@@ -6,7 +6,7 @@ namespace Certify.Models.Hub
     /// <summary>
     /// Summary information for a managed certificate
     /// </summary>
-    public class ManagedCertificateSummary
+    public record ManagedCertificateSummary
     {
         public string? InstanceId { get; set; } = string.Empty;
         public string? InstanceTitle { get; set; } = string.Empty;
@@ -64,7 +64,7 @@ namespace Certify.Models.Hub
         public bool HasCertificate { get; set; }
     }
 
-    public class ManagedCertificateSummaryResult
+    public record ManagedCertificateSummaryResult
     {
         public IEnumerable<ManagedCertificateSummary> Results { get; set; } = new List<ManagedCertificateSummary>();
         public long TotalResults { get; set; }
