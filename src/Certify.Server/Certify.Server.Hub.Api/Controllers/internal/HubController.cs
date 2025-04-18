@@ -58,8 +58,6 @@ namespace Certify.Server.Hub.Api.Controllers
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
 
-
-
             var list = new List<ManagedCertificateSummary>();
 
             foreach (var remote in managedItems.Values)
@@ -103,7 +101,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (page != null && page > 0)
             {
-                skip = ((int)page - 1) * (pageSize ?? 100);
+                skip = (int)page * (pageSize ?? 100);
             }
 
             result.Results = list.OrderBy(l => l.Title).Skip(skip).Take(pageSize ?? 100);
