@@ -259,8 +259,6 @@ namespace Certify.Server.Core
                 // not windows, use service auth policy
                 return false;
             }
-
-
         }
     }
 }
