@@ -249,13 +249,6 @@ namespace Certify.Models
         /// </summary>
         public bool DeploymentBindingReplacePrevious { get; set; }
 
-        /*
-        /// <summary>
-        /// Host or server where this item is based, usually localhost if managing the local server
-        /// </summary>
-        public string? DeploymentTargetHost { get; set; }
-        */
-
         /// <summary>
         /// Service type to deploy to on target host (e.g. IIS, nginx, Apache)
         /// </summary>
