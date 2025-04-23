@@ -148,14 +148,12 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    if (SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL && SelectedItem.ChallengeProvider != StandardAuthTypes.STANDARD_AUTH_LOCAL_AS_USER)
-                    {
-                        return DeploymentProvider.SupportsRemoteTarget && (DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH) || DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.WindowsNetwork));
-                    }
-                    else
-                    {
-                        return false;
-                    }
+                    var enableRemoteTarget =
+                        SelectedItem.ChallengeProvider == StandardAuthTypes.STANDARD_AUTH_SSH
+                        && DeploymentProvider.SupportsRemoteTarget
+                        && DeploymentProvider.SupportedContexts.HasFlag(DeploymentContextType.SSH);
+
+                    return enableRemoteTarget;
                 }
             }
         }
