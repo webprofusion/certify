@@ -72,7 +72,7 @@ namespace Certify.UI.ViewModel
             var serilogLog = new Serilog.LoggerConfiguration()
             .Enrich.FromLogContext()
             .MinimumLevel.Verbose()
-                .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                .WriteTo.File(Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "ui.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                 .CreateLogger();
 
             Log = new Loggy(new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<AppViewModel>());

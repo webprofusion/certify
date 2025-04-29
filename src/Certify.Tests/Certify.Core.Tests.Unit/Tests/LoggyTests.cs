@@ -16,7 +16,7 @@ namespace Certify.Core.Tests.Unit
         [TestInitialize]
         public void TestInitialize()
         {
-            testsDataPath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), "Tests");
+            testsDataPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "Tests");
             logFilePath = Path.Combine(testsDataPath, "test.log");
 
             if (!Directory.Exists(testsDataPath))
@@ -71,7 +71,7 @@ namespace Certify.Core.Tests.Unit
 
             // Trigger an exception error and log it using Loggy.Error()
             var logMessage = "New Loggy Exception Error";
-            var badFilePath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), "Tests", "test1.log");
+            var badFilePath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "Tests", "test1.log");
 
             var exceptionError = $"System.IO.FileNotFoundException: Could not find file '{badFilePath}'.";
             try

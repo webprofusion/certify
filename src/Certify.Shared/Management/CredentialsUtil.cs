@@ -123,7 +123,7 @@ namespace Certify.Management
 
         private static IDataProtector GetDataProtector()
         {
-            var keyDirectory = EnvironmentUtil.CreateAppDataPath("credentials");
+            var keyDirectory = EnvironmentUtil.EnsuredAppDataPath("credentials");
             var dataProtectionProvider = DataProtectionProvider.Create(new DirectoryInfo(keyDirectory));
             return dataProtectionProvider.CreateProtector("StoredCredentials");
         }

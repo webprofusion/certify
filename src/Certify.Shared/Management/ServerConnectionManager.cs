@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,7 +12,7 @@ namespace Certify.Shared.Core.Management
     {
         private static string GetConfigPath()
         {
-            var appDataPath = EnvironmentUtil.CreateAppDataPath();
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
             var connectionConfigFile = Path.Combine(appDataPath, "servers.json");
             return connectionConfigFile;
         }
