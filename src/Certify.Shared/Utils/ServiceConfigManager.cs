@@ -20,7 +20,7 @@ namespace Certify.SharedUtils
                 ConfigStatus = ConfigStatus.DefaultFailed
             };
 
-            var appDataPath = EnvironmentUtil.CreateAppDataPath();
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
             var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
             serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");
@@ -70,7 +70,7 @@ namespace Certify.SharedUtils
                 return;
             }
 
-            var appDataPath = EnvironmentUtil.CreateAppDataPath();
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
             var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
             serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");

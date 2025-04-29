@@ -393,7 +393,7 @@ namespace Certify.Management
                .Enrich.FromLogContext()
                .MinimumLevel.ControlledBy(ManagedCertificateLog.LogLevelSwitchFromLogLevel(_loggingLevelSwitch))
                .WriteTo.Console()
-               .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
+               .WriteTo.File(Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "session.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10), rollOnFileSizeLimit: true, fileSizeLimitBytes: 5 * 1024 * 1024)
                .CreateLogger();
 
             var msLogger = new Serilog.Extensions.Logging.SerilogLoggerFactory(serilogLog).CreateLogger<CertifyManager>();
@@ -502,7 +502,7 @@ namespace Certify.Management
 
             if (type == "session")
             {
-                logPath = Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "session.log");
+                logPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "session.log");
             }
 
             if (logPath != null && System.IO.File.Exists(logPath))

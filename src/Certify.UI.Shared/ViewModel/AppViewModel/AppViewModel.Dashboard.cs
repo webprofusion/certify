@@ -46,7 +46,7 @@ namespace Certify.UI.ViewModel
         {
             var licensingManager = PluginManager?.LicensingManager;
 
-            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.CreateAppDataPath()))
+            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))
             {
                 return false;
             }
@@ -60,7 +60,7 @@ namespace Certify.UI.ViewModel
         {
             var licensingManager = PluginManager?.LicensingManager;
 
-            var installDate = licensingManager?.GetInstallDate(EnvironmentUtil.CreateAppDataPath());
+            var installDate = licensingManager?.GetInstallDate(EnvironmentUtil.EnsuredAppDataPath());
 
             if (installDate == null)
             {

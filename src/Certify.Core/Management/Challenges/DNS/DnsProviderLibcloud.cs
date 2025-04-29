@@ -18,7 +18,7 @@ namespace Certify.Core.Management.Challenges
         public LibcloudDNSProvider(Dictionary<string, string> credentials)
         {
             _credentials = credentials;
-            _pythonPath = EnvironmentUtil.CreateAppDataPath("python-embedded") + "\\python.exe";
+            _pythonPath = EnvironmentUtil.EnsuredAppDataPath("python-embedded") + "\\python.exe";
         }
 
         public int PropagationDelaySeconds => 60;

@@ -72,7 +72,7 @@ namespace Certify.Management
             else
             {
                 var userAgent = Util.GetUserAgent();
-                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
+                var settingBaseFolder = EnvironmentUtil.EnsuredAppDataPath();
                 var providerPath = Path.Combine(settingBaseFolder, "certes_" + storageKey);
 
                 var newProvider = new AnvilACMEProvider(new AnvilACMEProviderSettings
@@ -540,7 +540,7 @@ namespace Certify.Management
 
                 // create provider pointing to legacy storage
                 var apiEndpoint = _certificateAuthorities[StandardCertAuthorities.LETS_ENCRYPT].ProductionAPIEndpoint;
-                var settingBaseFolder = EnvironmentUtil.CreateAppDataPath();
+                var settingBaseFolder = EnvironmentUtil.EnsuredAppDataPath();
                 var providerPath = System.IO.Path.Combine(settingBaseFolder, "certes");
                 var provider = new AnvilACMEProvider(new AnvilACMEProviderSettings
                 {
