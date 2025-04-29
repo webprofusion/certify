@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using Certify.Models;
 using Org.BouncyCastle.Crypto.EC;
@@ -102,6 +100,17 @@ namespace Certify.UI.Windows
                 }
             }
 
+            // use password fields (account key and eab key) if set
+            if (!string.IsNullOrWhiteSpace(EabKey.Password))
+            {
+                Item.EabKey = EabKey.Password;
+            }
+
+            if (!string.IsNullOrWhiteSpace(AccountKey.Password))
+            {
+                Item.ImportedAccountKey = AccountKey.Password;
+            }
+
             // if EAB is required and not importing an existing account, show CA specific instructions or general prompt for EAB
             if (ca.RequiresExternalAccountBinding && (string.IsNullOrEmpty(Item.ImportedAccountKey) || string.IsNullOrEmpty(Item.ImportedAccountURI)))
             {
@@ -191,7 +200,7 @@ namespace Certify.UI.Windows
 
             Item.ImportedAccountKey = pem;
 
-            BindingOperations.GetBindingExpressionBase((TextBox)AccountKey, TextBox.TextProperty).UpdateTarget();
+            AccountKey.Password = pem;
         }
     }
 }
