@@ -10,6 +10,7 @@
     Title="Server Connections"
     Width="384"
     Height="500"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Closing="MetroWindow_Closing"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

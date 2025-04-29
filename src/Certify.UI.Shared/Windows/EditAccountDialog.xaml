@@ -10,6 +10,7 @@
     Title="{x:Static res:SR.Account_Edit_SectionTitle}"
     Width="590"
     Height="480"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

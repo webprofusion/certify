@@ -10,6 +10,7 @@
     Title="Edit Deployment Task"
     Width="500"
     Height="460"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="CanResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
