@@ -17,6 +17,7 @@
     MinHeight="400"
     d:DataContext="{d:DesignInstance Type=local:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Closing="MetroWindow_Closing"
     Loaded="Window_Loaded"
     TitleCharacterCasing="Normal"
