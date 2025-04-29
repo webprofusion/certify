@@ -264,6 +264,9 @@ namespace Certify.Management
                         mgmtHubUri = $"{api}/{endpoint}";
                     }
 
+                    // if hub url has resolved to "/", remove trailing slash and continue with empty string
+                    mgmtHubUri = mgmtHubUri?.TrimEnd('/');
+
                     if (!string.IsNullOrWhiteSpace(mgmtHubUri))
                     {
                         if (string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
@@ -311,7 +314,7 @@ namespace Certify.Management
                                         hasWarning: true
                                         );
 
-                                    _serviceLog.Error($"Hub joining secret invalid or not found.");
+                                    _serviceLog.Error($"Hub joining secret invalid or not found while attempting to join {mgmtHubUri}");
                                     return;
                                 }
                             }
