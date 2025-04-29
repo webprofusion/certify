@@ -111,7 +111,7 @@ namespace Certify.Models
             {
                 CreateAndApplyRestrictedACL(path);
 
-                if (subDirectory != null)
+                if (!string.IsNullOrEmpty(subDirectory))
                 {
                     parts.Add(subDirectory);
                     path = Path.Combine(parts.ToArray());
@@ -121,6 +121,11 @@ namespace Certify.Models
                         Directory.CreateDirectory(path);
                     }
                 }
+            }
+            else if (!string.IsNullOrEmpty(subDirectory))
+            {
+                parts.Add(subDirectory);
+                path = Path.Combine(parts.ToArray());
             }
 
             return path;
