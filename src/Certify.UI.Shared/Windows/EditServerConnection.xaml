@@ -11,6 +11,7 @@
     Title="Edit Server Connection"
     Width="540"
     Height="320"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

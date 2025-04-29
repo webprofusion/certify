@@ -11,6 +11,7 @@
     Title="Edit Certificate Authority"
     Width="580"
     Height="430"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="CanResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
