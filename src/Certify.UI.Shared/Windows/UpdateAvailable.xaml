@@ -14,6 +14,7 @@
     Height="423"
     MinWidth="300"
     MinHeight="300"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     IsVisibleChanged="UserControl_IsVisibleChanged"
     ShowMaxRestoreButton="False"
     ShowMinButton="False"

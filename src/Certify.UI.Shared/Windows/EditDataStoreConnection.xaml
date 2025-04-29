@@ -9,6 +9,7 @@
     Title="Edit Data Store Connection"
     Width="522"
     Height="276"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"

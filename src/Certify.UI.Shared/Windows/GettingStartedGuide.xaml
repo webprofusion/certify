@@ -13,6 +13,7 @@
     Height="600"
     MinWidth="300"
     MinHeight="300"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"

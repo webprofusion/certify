@@ -10,6 +10,7 @@
     Title="{x:Static res:SR.GettingStarted_AddToDashboard}"
     Width="430"
     Height="288"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="NoResize"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"

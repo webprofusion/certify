@@ -9,6 +9,7 @@
     Title="Import or Export Settings"
     Width="800"
     Height="740"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
     WindowTransitionsEnabled="False"

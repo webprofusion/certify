@@ -11,6 +11,7 @@
     Title="Data Store Connections"
     Width="450"
     Height="390"
+    Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Closing="MetroWindow_Closing"
     TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
