@@ -172,13 +172,12 @@
                                 Margin="0,0,8,0"
                                 VerticalAlignment="Top"
                                 Content="Key (HMAC)" />
-                            <TextBox
+                            <PasswordBox
+                                x:Name="EabKey"
                                 Width="300"
                                 Height="23"
                                 HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                Text="{Binding Item.EabKey}"
-                                TextWrapping="NoWrap" />
+                                VerticalAlignment="Top" />
                         </StackPanel>
                         <StackPanel
                             Margin="0,0,0,4"
@@ -228,15 +227,12 @@
                                 Margin="0,0,8,0"
                                 VerticalAlignment="Top"
                                 Content="Account Key" />
-                            <TextBox
+                            <PasswordBox
                                 x:Name="AccountKey"
                                 Width="300"
                                 Height="48"
                                 HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                AcceptsReturn="True"
-                                Text="{Binding Item.ImportedAccountKey}"
-                                TextWrapping="Wrap" />
+                                VerticalAlignment="Top" />
 
 
                         </StackPanel>
