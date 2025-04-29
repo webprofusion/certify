@@ -30,7 +30,7 @@ namespace Certify.Models
     {
         private static ConcurrentDictionary<string, Microsoft.Extensions.Logging.ILogger> _managedItemLoggers { get; set; }
 
-        public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
+        public static string GetLogPath(string managedItemId) => Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "log_" + managedItemId.Replace(':', '_') + ".txt");
 
         public static ILog GetLogger(string managedItemId, LogLevel logLevelSwitch)
         {

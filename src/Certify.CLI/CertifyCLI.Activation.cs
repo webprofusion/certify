@@ -13,7 +13,7 @@ namespace Certify.CLI
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                if (licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.CreateAppDataPath()))
+                if (licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath()))
                 {
                     return true;
                 }
@@ -52,7 +52,7 @@ namespace Certify.CLI
             var licensingManager = _pluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                var settingsPath = EnvironmentUtil.CreateAppDataPath();
+                var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 
                 var activated = await licensingManager.IsInstallActive(ProductTypeID, settingsPath);
                 if (!activated)
@@ -127,7 +127,7 @@ namespace Certify.CLI
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var deactivated = await licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.CreateAppDataPath(), email, instance);
+                var deactivated = await licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), email, instance);
 
                 return deactivated;
             }

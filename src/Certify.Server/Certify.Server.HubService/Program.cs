@@ -62,7 +62,7 @@ builder.Services
      })
     .AddSignalR(opt => opt.MaximumReceiveMessageSize = null).AddMessagePackProtocol();
 
-var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
+var appDataPath = EnvironmentUtil.EnsuredAppDataPath("keys");
 
 builder.Services
     .AddDataProtection(a =>

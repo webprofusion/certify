@@ -241,7 +241,7 @@ namespace Certify.UI.Windows
             var licensingManager = _appViewModel.PluginManager.LicensingManager;
             if (licensingManager != null)
             {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.CreateAppDataPath()))
+                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))
                 {
                     _appViewModel.IsRegisteredVersion = true;
                 }

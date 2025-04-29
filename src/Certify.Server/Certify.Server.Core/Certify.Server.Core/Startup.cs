@@ -101,7 +101,7 @@ namespace Certify.Server.Core
 
         private void ConfigureDataProtection(IServiceCollection services)
         {
-            var appDataPath = EnvironmentUtil.CreateAppDataPath("keys");
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath("keys");
             services.AddDataProtection(a => a.ApplicationDiscriminator = "certify")
                     .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
         }

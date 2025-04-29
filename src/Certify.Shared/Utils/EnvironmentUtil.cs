@@ -85,7 +85,7 @@ namespace Certify.Models
         /// </summary>
         /// <param name="subDirectory">optional subfolder to include</param>
         /// <returns>full app data with with optional subdirectory</returns>
-        public static string CreateAppDataPath(string subDirectory = null, bool skipCreation = false)
+        public static string EnsuredAppDataPath(string subDirectory = null, bool skipCreation = false)
         {
             // use the environment variable CERTIFY_APPDATA_PATH if set, otherwise use the common app data folder
             var parts = new List<string>()

@@ -68,7 +68,7 @@ namespace Certify.Management
             var serilogLogger = new LoggerConfiguration()
                         .Enrich.FromLogContext()
                         .MinimumLevel.Information()
-                        .WriteTo.File(Path.Combine(EnvironmentUtil.CreateAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
+                        .WriteTo.File(Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "plugins.log"), shared: true, flushToDiskInterval: new TimeSpan(0, 0, 10))
                         .WriteTo.Console()
                         .CreateLogger();
 
@@ -104,7 +104,7 @@ namespace Certify.Management
             }
             else
             {
-                return EnvironmentUtil.CreateAppDataPath("plugins");
+                return EnvironmentUtil.EnsuredAppDataPath("plugins");
             }
         }
 

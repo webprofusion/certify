@@ -255,7 +255,7 @@ namespace Certify.Management
         {
             var dataStores = new List<DataStoreConnection>();
 
-            var appDataPath = EnvironmentUtil.CreateAppDataPath();
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
             var path = Path.Combine(appDataPath, "datastores.json");
 
             if (System.IO.File.Exists(path))
@@ -420,7 +420,7 @@ namespace Certify.Management
             }
 
             //save
-            var appDataPath = EnvironmentUtil.CreateAppDataPath();
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
             var path = Path.Combine(appDataPath, "datastores.json");
 
             lock (_dataStoreLocker)
@@ -457,7 +457,7 @@ namespace Certify.Management
                 dataStores.Remove(existing);
 
                 //save
-                var appDataPath = EnvironmentUtil.CreateAppDataPath();
+                var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
                 var path = Path.Combine(appDataPath, "datastores.json");
 
                 lock (_dataStoreLocker)
