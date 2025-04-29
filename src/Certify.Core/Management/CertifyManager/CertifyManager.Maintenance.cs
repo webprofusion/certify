@@ -680,14 +680,14 @@ namespace Certify.Management
                     {
 
                         // cleanup old pfx files in asset store(s), if any
-                        var assetPath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), "certes", "assets");
+                        var assetPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "certes", "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx" };
                             DeleteOldCertificateFiles(assetPath, ext);
                         }
 
-                        assetPath = Path.Combine(EnvironmentUtil.CreateAppDataPath(), "assets");
+                        assetPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), "assets");
                         if (Directory.Exists(assetPath))
                         {
                             var ext = new List<string> { ".pfx", ".key", ".crt", ".pem" };
