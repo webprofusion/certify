@@ -314,7 +314,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 {
                     var zones = await _route53Client.ListHostedZonesAsync(new ListHostedZonesRequest { Marker = pageMarker });
 
-                    hasMorePages = zones.IsTruncated;
+                    hasMorePages = zones.IsTruncated ?? false;
                     pageMarker = zones.NextMarker;
 
                     foreach (var z in zones.HostedZones)
