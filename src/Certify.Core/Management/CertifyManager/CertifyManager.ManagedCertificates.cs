@@ -799,6 +799,19 @@ namespace Certify.Management
 
                 var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, isWindows ? "certify.exe" : "certify");
 
+                if (!File.Exists(cliPath) && AppContext.BaseDirectory.IndexOf("service", StringComparison.InvariantCultureIgnoreCase) > -1)
+                {
+                    // if running as a deployed service in a subdirectory, adjust the path to the executable
+                    cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, "..", isWindows ? "certify.exe" : "certify");
+                }
+
+                if (!File.Exists(cliPath))
+                {
+                    _serviceLog?.Error($"Http Challenge Server process not found at {cliPath}");
+                    _httpChallengeProcess = null;
+                    return false;
+                }
+
                 _httpChallengeProcessInfo = new ProcessStartInfo(cliPath, $"httpchallenge keys={_httpChallengeControlKey},{_httpChallengeCheckKey}")
                 {
                     RedirectStandardInput = true,
