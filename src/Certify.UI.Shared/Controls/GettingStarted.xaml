@@ -24,11 +24,18 @@
 
             <StackPanel DockPanel.Dock="Top">
                 <TextBlock
-                    Margin="0,0,0,8"
+                    Margin="0,0,0,0"
                     FontFamily="Segoe UI"
                     FontSize="30"
                     Foreground="{DynamicResource MahApps.Brushes.Gray1}"
                     TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
+                <TextBlock
+                    Margin="0,0,0,8"
+                    FontFamily="Segoe UI"
+                    FontSize="16"
+                    Foreground="{DynamicResource MahApps.Brushes.Gray1}"
+                    Text="Certify Certificate Manager"
+                    TextWrapping="Wrap" />
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
                     <Run>Easily automate your certificates from ACME enabled Certificate Authorities including Let's Encrypt, Google Trust Services, BuyPass Go, SSL.com and ZeroSSL.</Run>
                     <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
