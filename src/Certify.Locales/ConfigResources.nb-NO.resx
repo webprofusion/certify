@@ -118,13 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify Sertifikatbehandler</value>
-  </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value>Certify Sertifikatbehandler</value>
-  </data>
-  <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>Du har siste versjon</value>
+    <value />
   </data>
   <data name="Credits" xml:space="preserve">
     <value>Programvaren er gitt "som det er" uten garantier av noe slag, enten uttrykkelig eller underforstått, inkludert, uten begrensning, noen underforståtte garantier for tilstand, uavbrutt bruk, salgbarhet, egnethet for et bestemt formål eller ikke-brudd. 
@@ -135,6 +129,12 @@ Denne programvaren bruker følgende Open Source-programvare (eller betydelige de
 - ACMESharp av Eugene Bekker (https://github.com/ebekker/ACMESharp) Lisensiert under MPL V 2.0 
 - Noen ikoner fra Font Awesome av Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/ openssl-net / openssl-net)</value>
+  </data>
+  <data name="LongAppName" xml:space="preserve">
+    <value />
+  </data>
+  <data name="UpdateCheckLatestVersion" xml:space="preserve">
+    <value>Du har siste versjon</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Advarsel: Denne programvaren er en beta-versjon for testing og tilbakemeldingsformål. Du bør forvente feil. Ikke stol på denne programvaren i produksjon.</value>
