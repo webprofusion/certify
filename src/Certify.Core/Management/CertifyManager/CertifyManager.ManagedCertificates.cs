@@ -795,7 +795,7 @@ namespace Certify.Management
             {
                 _tc?.TrackEvent("ChallengeResponse_HttpChallengeServer_Start");
 
-                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
                 var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, isWindows ? "certify.exe" : "certify");
 
