@@ -10,7 +10,7 @@
     xmlns:local="clr-namespace:Certify.UI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
-    Title="Certify Certificate Manager"
+    Title="{x:Static res:ConfigResources.AppName}"
     Width="1085"
     Height="656"
     MinWidth="680"

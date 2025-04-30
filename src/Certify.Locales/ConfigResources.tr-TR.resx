@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify Sertifika Yöneticisi</value>
+    <value />
   </data>
   <data name="Credits" xml:space="preserve">
     <value>Yazılım, kesintisiz kullanım, satılabilirlik, belirli bir amaca uygunluk veya ihlal etmeme gibi zımni garantiler dahil, bunlarla sınırlı olmamak üzere açık veya zımni hiçbir garanti olmaksızın "olduğu gibi" sağlanır.
@@ -131,32 +131,32 @@ Bu yazılım, aşağıdaki Açık Kaynak yazılımlarını (veya önemli bölüm
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
-    <value>Certify Sertifika Yöneticisi</value>
+    <value />
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>En son sürümü kullanıyorsunuz.</value>
   </data>
   <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value></value>
+    <value />
     <comment>Do not translate</comment>
   </data>
   <data name="AppWebsiteURL" xml:space="preserve">
-    <value></value>
+    <value />
     <comment>Do not translate</comment>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>Uyarı: Bu yazılım, test etme ve geri bildirim amaçlı bir yayın öncesi sürümüdür. Hatalar gerçekleşebilir. Önemli web siteleri için bu yazılıma güvenmeyin.</value>
   </data>
   <data name="AIInstrumentationKey" xml:space="preserve">
-    <value></value>
+    <value />
     <comment>Do not translate</comment>
   </data>
   <data name="LocalServiceBaseURI" xml:space="preserve">
-    <value></value>
+    <value />
     <comment>Do not translate - Used to communication to local service</comment>
   </data>
   <data name="LocalServiceBaseURIDebug" xml:space="preserve">
-    <value></value>
+    <value />
     <comment>Do not translate - Used to communication to local service (debug)</comment>
   </data>
 </root>
