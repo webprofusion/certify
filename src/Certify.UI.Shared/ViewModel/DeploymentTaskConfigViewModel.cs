@@ -193,7 +193,7 @@ namespace Certify.UI.ViewModel
                 if (resetDefaults)
                 {
                     SelectedItem.TaskName = "";
-                    SelectedItem.TaskTrigger = TaskTriggerType.ANY_STATUS;
+                    SelectedItem.TaskTrigger = EditAsPostRequestTask ? TaskTriggerType.ON_SUCCESS : TaskTriggerType.ANY_STATUS;
                 }
 
                 RefreshParameters();
