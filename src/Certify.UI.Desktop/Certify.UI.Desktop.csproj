@@ -3,13 +3,14 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net9.0-windows</TargetFramework>
         <UseWPF>true</UseWPF>
-        <UseWindowsForms>true</UseWindowsForms>
+        <UseWindowsForms>False</UseWindowsForms>
         <ApplicationIcon>icon.ico</ApplicationIcon>
         <StartupObject>Certify.UI.App</StartupObject>
         <Platforms>AnyCPU</Platforms>
         <XamlDebuggingInformation>True</XamlDebuggingInformation>
         <NoWarn>NU1701</NoWarn>
         <LangVersion>latest</LangVersion>
+
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\Certify.UI.Shared\Certify.UI.Shared.csproj" />
