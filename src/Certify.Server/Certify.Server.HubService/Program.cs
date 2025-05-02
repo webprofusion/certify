@@ -1,8 +1,10 @@
 ﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Reporting;
+using Certify.Server.Core;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -21,7 +23,28 @@ using Serilog;
 List<ActionStep> _systemStatusItems = [];
 void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
 
+var assembly = typeof(Certify.Server.Hub.Api.Startup).Assembly;
+
+// set working directory so that when we are started as a service we can find our config
+var cwd = Path.GetDirectoryName(assembly.Location);
+if (cwd != null)
+{
+    System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
+    Directory.SetCurrentDirectory(cwd);
+}
+else
+{
+    System.Diagnostics.Debug.WriteLine($"Could not determine working directory");
+}
+
 var builder = WebApplication.CreateBuilder(args);
+
+// if windows, run as service, otherwise run as console app
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+{
+    builder.Services.AddWindowsService()
+                    .AddHostedService<WindowsBackgroundService>();
+}
 
 builder.AddServiceDefaults();
 
@@ -34,7 +57,6 @@ AddSystemStatusItem(
 
 // Add services to the container
 
-var assembly = typeof(Certify.Server.Hub.Api.Startup).Assembly;
 var part = new AssemblyPart(assembly);
 
 builder.Services.AddCors(options =>
@@ -219,27 +241,27 @@ app.MapHub<InstanceManagementHub>("/api/internal/managementhub");
 
 app.MapDefaultControllerRoute().WithStaticAssets();
 
-// publish scalar api docs endpoint in dev, e.g. https://localhost:44361/scalar/
-app.MapOpenApi();
-app.MapScalarApiReference();
+// publish scalar api docs endpoint in dev, e.g. https://localhost:44361/api/docs
 
 // Enable middleware to serve generated Swagger as a JSON endpoint.
 app.UseSwagger();
 
-// Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-// specifying the Swagger JSON endpoint.
-app.UseSwaggerUI(c =>
+// Enable middleware to serve API docs
+app.MapScalarApiReference("/api/docs/", options =>
 {
-    c.RoutePrefix = "docs";
-    c.DocumentTitle = "Certify Management Hub API";
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Management Hub API");
+    options
+                    .WithTitle("Certify Management Hub API")
+                    .WithTheme(ScalarTheme.Solarized)
+                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+                    .WithOpenApiRoutePattern("/swagger/v1/swagger.json");
+
 });
 
 AddSystemStatusItem(
     SystemStatusCategories.HUB_API,
     SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
     title: "API Docs UI enabled",
-    description: $"Hub API Swagger docs available at /docs"
+    description: $"Hub API docs available at /api/docs"
 );
 
 // configure initialization of UI status hub, backend management hub etc
