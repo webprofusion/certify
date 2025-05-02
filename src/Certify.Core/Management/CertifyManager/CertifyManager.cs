@@ -202,7 +202,7 @@ namespace Certify.Management
                 }
             }
 
-            if (_pluginManager.PluginLoadResults?.Count > 0)
+            if (_pluginManager.PluginLoadResults?.Any(r => !r.IsSuccess) == true)
             {
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
@@ -211,6 +211,11 @@ namespace Certify.Management
                     description: $"One or more service plugins failed to load. Some functionality may be unavailable.",
                     hasError: true
                 );
+
+                foreach (var r in _pluginManager.PluginLoadResults.Where(r => !r.IsSuccess))
+                {
+                    _serviceLog.Error($"Plugin load error: {r.PluginName} - {r.Message}");
+                }
             }
             else
             {
