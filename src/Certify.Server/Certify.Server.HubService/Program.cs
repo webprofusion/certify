@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 List<ActionStep> _systemStatusItems = [];
 void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
@@ -113,6 +114,16 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.UseAllOfToExtendReferenceSchemas();
+
+    c.DocInclusionPredicate((docName, apiDesc) =>
+    {
+        if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo))
+        {
+            return false;
+        }
+
+        return methodInfo.DeclaringType.Namespace.StartsWith("Certify.Server.Hub.Api.Controllers");
+    });
 
     // use the actual method names as the generated operation id
     c.CustomOperationIds(e =>
