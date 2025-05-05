@@ -59,7 +59,6 @@ if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
 #endif
 
 // load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
-var hubConfigFailed = false;
 builder.Configuration.AddJsonFile(p =>
         {
             p.Path = hubSettings;
@@ -68,7 +67,6 @@ builder.Configuration.AddJsonFile(p =>
             p.OnLoadException = e =>
             {
                 e.Ignore = true;
-                hubConfigFailed = true;
 
                 AddSystemStatusItem(
                     SystemStatusCategories.HUB_API,
