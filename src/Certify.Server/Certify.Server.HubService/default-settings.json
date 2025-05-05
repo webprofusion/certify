@@ -11,7 +11,8 @@
             "SvcHttpEndpoint": {
                 "Url": "http://0.0.0.0:8080"
             }
-            // exmaple HTTP config. Before using, acquire a certificate for desired host e.g. certifyhub.intranet.yourdomain.com
+
+            // example HTTP config. Before using, acquire a certificate for desired host e.g. certifyhub.intranet.yourdomain.com
             // Then add a Deployment Task (Export Certificate) to export pfx to where it's required e.g. C:\ProgramData\certify\internal-certs\hub.pfx , then run the task to export the initial certificate.
             // the choice of port and filename etc is arbitrary, as long as the process can access the file.
             // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-9.0
