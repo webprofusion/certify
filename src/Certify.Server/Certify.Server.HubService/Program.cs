@@ -42,7 +42,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // allow settings to be loaded from the app data path, that way settings are preserved between re-installs, copy a default config so service starts on localhost:8080
 var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
-var hubSettings = Path.Combine(settingsPath, "hub-service.json");
+var hubSettings = Path.Combine(settingsPath, "hubservice.json");
 var defaultHubSettings = Path.Combine(cwd, "default-settings.json");
 
 #if !DEBUG
