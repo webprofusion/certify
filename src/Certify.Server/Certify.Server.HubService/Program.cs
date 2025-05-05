@@ -30,6 +30,7 @@ var assembly = typeof(Certify.Server.Hub.Api.Startup).Assembly;
 var cwd = Path.GetDirectoryName(assembly.Location);
 if (cwd != null)
 {
+
     System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
     Directory.SetCurrentDirectory(cwd);
 }
@@ -57,7 +58,27 @@ if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
 }
 #endif
 
-builder.Configuration.AddJsonFile(hubSettings, optional: true, reloadOnChange: true);
+// load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
+var hubConfigFailed = false;
+builder.Configuration.AddJsonFile(p =>
+        {
+            p.Path = hubSettings;
+            p.Optional = true;
+            p.ReloadOnChange = true;
+            p.OnLoadException = e =>
+            {
+                e.Ignore = true;
+                hubConfigFailed = true;
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.HUB_API,
+                    SystemStatusKeys.HUB_API_STARTUP_CUSTOMCONFIG,
+                    title: "Hub API Service Custom Config",
+                    description: $"Error loading config file {hubSettings} - {e}",
+                    hasError: true
+                );
+            };
+        });
 
 // if windows, run as service, otherwise run as console app
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -289,7 +310,7 @@ app.MapScalarApiReference("/api/docs/", options =>
 
 AddSystemStatusItem(
     SystemStatusCategories.HUB_API,
-    SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+    SystemStatusKeys.HUB_API_STARTUP_APIDOCS,
     title: "API Docs UI enabled",
     description: $"Hub API docs available at /api/docs"
 );
@@ -346,7 +367,7 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
 
 app.Start();
 
-System.Diagnostics.Debug.WriteLine($"Server started {string.Join(";", app.Urls)}");
+app.Logger.LogInformation($"Server started {string.Join(";", app.Urls)}");
 
 AddSystemStatusItem(
     SystemStatusCategories.HUB_API,
@@ -358,6 +379,19 @@ AddSystemStatusItem(
 foreach (var statusItem in _systemStatusItems)
 {
     hubStateProvider.AddOrUpdateSystemStatusItem(statusItem);
+
+    if (statusItem.HasError)
+    {
+        app.Logger.LogError($"{statusItem.Key} - {statusItem.Title} - {statusItem.Description}");
+    }
+    else if (statusItem.HasWarning)
+    {
+        app.Logger.LogWarning($"{statusItem.Key} - {statusItem.Title} - {statusItem.Description}");
+    }
+    else
+    {
+        app.Logger.LogInformation($"{statusItem.Key} - {statusItem.Title} - {statusItem.Description}");
+    }
 }
 
 app.WaitForShutdown();
