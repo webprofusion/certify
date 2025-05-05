@@ -16,7 +16,8 @@
         public const string HUB_API_STARTUP_SVCPORTENV = "hub.api.startup.serviceportenv";
         public const string HUB_API_STARTUP_ENVIRONMENT = "hub.api.startup.environment";
         public const string HUB_API_STARTUP_URL = "hub.api.startup.url";
-        public const string HUB_API_STARTUP_SWAGGER = "hub.api.startup.swagger";
+        public const string HUB_API_STARTUP_CUSTOMCONFIG = "hub.api.startup.customconfig";
+        public const string HUB_API_STARTUP_APIDOCS = "hub.api.startup.apidocs";
         public const string HUB_API_STARTUP_SVC_STATUS_STREAM = "hub.api.startup.svc.stream";
 
         public const string SERVICE_CORE_PLATFORM = "service.core.platform";

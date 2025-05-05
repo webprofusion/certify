@@ -300,7 +300,7 @@ namespace Certify.Server.Hub.Api
 
             AddSystemStatusItem(
                 SystemStatusCategories.HUB_API,
-                SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+                SystemStatusKeys.HUB_API_STARTUP_APIDOCS,
                 title: "API Docs UI enabled",
                 description: $"Hub API Swagger docs available at /docs"
             );
