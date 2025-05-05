@@ -307,7 +307,7 @@ namespace Certify.Server.Hub.Api
 #else
             AddSystemStatusItem(
                 SystemStatusCategories.HUB_API,
-                SystemStatusKeys.HUB_API_STARTUP_SWAGGER,
+                SystemStatusKeys.HUB_API_STARTUP_APIDOCS,
                 title: "API Docs UI not enabled",
                 description: $"Hub API Swagger docs not enabled in release mode."
             );
