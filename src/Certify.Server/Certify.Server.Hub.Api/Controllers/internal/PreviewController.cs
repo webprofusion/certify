@@ -1,5 +1,6 @@
 ﻿using Certify.Models;
 using Certify.Server.Hub.Api.Services;
+using Markdig;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,53 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);
             return new OkObjectResult(previewSteps);
+        }
+
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK, "text/html")]
+        [Route("managedcertificate")]
+        public async Task<IActionResult> GetPreviewAsMarkdown([FromBody] ManagedCertificate item)
+        {
+            var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);
+
+            var markdown = Certify.UI.Blazor.Core.Models.Services.PreviewService.GetStepsAsMarkdown(previewSteps);
+
+            // output steps as html
+
+            var pipeline = new MarkdownPipelineBuilder()
+            .DisableHtml()
+            .UseAdvancedExtensions()
+            .Build();
+
+            var render = Markdown.ToHtml(markdown, pipeline);
+            return new ContentResult
+            {
+                Content = render,
+                ContentType = "text/html"
+            };
+        }
+
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK, "text/html")]
+        [Route("rendermarkdown")]
+        public async Task<IActionResult> RenderMarkdown([FromBody] string markdown)
+        {
+
+            // output steps as html
+
+            var pipeline = new MarkdownPipelineBuilder()
+            .DisableHtml()
+            .UseAdvancedExtensions()
+            .Build();
+
+            var render = Markdown.ToHtml(markdown, pipeline);
+            return new ContentResult
+            {
+                Content = render,
+                ContentType = "text/html"
+            };
         }
     }
 }

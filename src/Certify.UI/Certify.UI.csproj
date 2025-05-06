@@ -143,9 +143,6 @@
     <PackageReference Include="MahApps.Metro">
       <Version>3.0.0-rc0516</Version>
     </PackageReference>
-    <PackageReference Include="Markdig.Wpf">
-      <Version>0.5.0.1</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights">
       <Version>2.23.0</Version>
     </PackageReference>
