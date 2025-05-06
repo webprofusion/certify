@@ -54,8 +54,7 @@
         "Certify.Models.Providers",
         "Certify.Models.Hub",
         "Certify.Models.Config.Migration",
-        "Certify.Shared",
-        "FileResult=Microsoft.AspNetCore.Mvc.FileResult"
+        "Certify.Shared"
       ],
       "additionalContractNamespaceUsages": [],
       "generateOptionalParameters": false,
