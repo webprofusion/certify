@@ -54,7 +54,8 @@
         "Certify.Models.Providers",
         "Certify.Models.Hub",
         "Certify.Models.Config.Migration",
-        "Certify.Shared"
+        "Certify.Shared",
+        "FileResult=Microsoft.AspNetCore.Mvc.FileResult"
       ],
       "additionalContractNamespaceUsages": [],
       "generateOptionalParameters": false,
@@ -84,6 +85,7 @@
       "dictionaryBaseType": "System.Collections.Generic.Dictionary",
       "classStyle": "Poco",
       "jsonLibrary": "NewtonsoftJson",
+      "jsonPolymorphicSerializationStyle": "NJsonSchema",
       "generateDefaultValues": true,
       "generateDataAnnotations": true,
       "excludedTypeNames": [
