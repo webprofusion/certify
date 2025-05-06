@@ -57,24 +57,24 @@ if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
 #endif
 
 // load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
-builder.Configuration.AddJsonFile(p =>
-        {
-            p.Path = hubSettings;
-            p.Optional = true;
-            p.ReloadOnChange = true;
-            p.OnLoadException = e =>
-            {
-                e.Ignore = true;
-
-                AddSystemStatusItem(
-                    SystemStatusCategories.HUB_API,
-                    SystemStatusKeys.HUB_API_STARTUP_CUSTOMCONFIG,
-                    title: "Hub API Service Custom Config",
-                    description: $"Error loading config file {hubSettings} - {e}",
-                    hasError: true
-                );
-            };
-        });
+if (hubSettings != null && File.Exists(hubSettings))
+{
+    try
+    {
+        builder.Configuration.AddJsonFile(hubSettings, optional: true, reloadOnChange: true);
+    }
+    catch (Exception ex)
+    {
+        // ignore errors loading config, we will log them later
+        AddSystemStatusItem(
+            SystemStatusCategories.HUB_API,
+            SystemStatusKeys.HUB_API_STARTUP_CUSTOMCONFIG,
+            title: "Hub API Service Custom Config",
+            description: $"Error loading config file {hubSettings} - {ex}",
+            hasError: true
+        );
+    }
+}
 
 // if windows, run as service, otherwise run as console app
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
