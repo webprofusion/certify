@@ -19,18 +19,16 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using Serilog;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 List<ActionStep> _systemStatusItems = [];
 void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
 
-var assembly = typeof(Certify.Server.Hub.Api.Startup).Assembly;
+var hubServiceAssembly = typeof(Certify.Server.HubService.Services.CertifyDirectHubService).Assembly;
 
 // set working directory so that when we are started as a service we can find our config
-var cwd = Path.GetDirectoryName(assembly.Location);
+var cwd = Path.GetDirectoryName(hubServiceAssembly.Location);
 if (cwd != null)
 {
-
     System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
     Directory.SetCurrentDirectory(cwd);
 }
@@ -94,10 +92,6 @@ AddSystemStatusItem(
     description: "Hub API using directly integrated primary service."
 );
 
-// Add services to the container
-
-var part = new AssemblyPart(assembly);
-
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
@@ -112,7 +106,15 @@ builder.Services
     .AddTokenAuthentication(builder.Configuration)
     .AddAuthorization()
     .AddControllers()
-        .ConfigureApplicationPartManager(apm => apm.ApplicationParts.Add(part));
+    .ConfigureApplicationPartManager((apm) =>
+    {
+        // remove service core assembly part, as controllers from this assembly are not needed in the hub API
+        var serviceCore = (apm.ApplicationParts.FirstOrDefault(p => p.Name == "Certify.Server.Core") as AssemblyPart);
+        if (serviceCore != null)
+        {
+            apm.ApplicationParts.Remove(serviceCore);
+        }
+    });
 
 builder.Services
     .AddRouting(r => r.LowercaseUrls = true)
@@ -153,15 +155,15 @@ builder.Services.AddSwaggerGen(c =>
 
     c.UseAllOfToExtendReferenceSchemas();
 
-    c.DocInclusionPredicate((docName, apiDesc) =>
-    {
-        if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo))
-        {
-            return false;
-        }
+    /* c.DocInclusionPredicate((docName, apiDesc) =>
+     {
+         if (!apiDesc.TryGetMethodInfo(out MethodInfo methodInfo))
+         {
+             return false;
+         }
 
-        return methodInfo.DeclaringType.Namespace.StartsWith("Certify.Server.Hub.Api.Controllers");
-    });
+         return methodInfo.DeclaringType.Namespace.StartsWith("Certify.Server.Hub.Api.Controllers");
+     });*/
 
     // use the actual method names as the generated operation id
     c.CustomOperationIds(e =>
