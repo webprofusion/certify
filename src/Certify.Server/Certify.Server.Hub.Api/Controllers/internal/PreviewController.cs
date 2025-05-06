@@ -46,9 +46,9 @@ namespace Certify.Server.Hub.Api.Controllers
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK, "text/html")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/plain")]
         [Route("managedcertificate")]
-        public async Task<IActionResult> GetPreviewAsMarkdown([FromBody] ManagedCertificate item)
+        public async Task<string> GetPreviewAsMarkdown([FromBody] ManagedCertificate item)
         {
             var previewSteps = await _mgmtAPI.GetPreviewActions(item.InstanceId, item, CurrentAuthContext);
 
@@ -61,19 +61,14 @@ namespace Certify.Server.Hub.Api.Controllers
             .UseAdvancedExtensions()
             .Build();
 
-            var render = Markdown.ToHtml(markdown, pipeline);
-            return new ContentResult
-            {
-                Content = render,
-                ContentType = "text/html"
-            };
+            return Markdown.ToHtml(markdown, pipeline);
         }
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK, "text/html")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/html")]
         [Route("rendermarkdown")]
-        public async Task<IActionResult> RenderMarkdown([FromBody] string markdown)
+        public async Task<string> RenderMarkdown([FromBody] string markdown)
         {
 
             // output steps as html
@@ -83,12 +78,7 @@ namespace Certify.Server.Hub.Api.Controllers
             .UseAdvancedExtensions()
             .Build();
 
-            var render = Markdown.ToHtml(markdown, pipeline);
-            return new ContentResult
-            {
-                Content = render,
-                ContentType = "text/html"
-            };
+            return Markdown.ToHtml(markdown, pipeline);
         }
     }
 }
