@@ -54,7 +54,8 @@
         "Certify.Models.Providers",
         "Certify.Models.Hub",
         "Certify.Models.Config.Migration",
-        "Certify.Shared"
+        "Certify.Shared",
+        "ProblemDetails=Certify.Models.Util.ProblemDetails"
       ],
       "additionalContractNamespaceUsages": [],
       "generateOptionalParameters": false,

@@ -51,7 +51,8 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Response contains access token and refresh token for API operations.</returns>
         [HttpPost]
         [Route("login")]
-        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(AuthRequest login)
         {
 
@@ -79,7 +80,7 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
-                return Unauthorized();
+                return Unauthorized(new ProblemDetails { Status = StatusCodes.Status401Unauthorized, Title = "Invalid username or password" });
             }
         }
 
@@ -91,7 +92,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [HttpPost]
         [Route("refresh")]
-        [ProducesResponseType(typeof(AuthResponse), 200)]
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Refresh(string refreshToken)
         {
             var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]!).Parameter;
