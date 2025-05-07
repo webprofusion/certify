@@ -267,6 +267,7 @@ var provider = new FileExtensionContentTypeProvider();
 // Add new mappings
 provider.Mappings[".dat"] = "application/octet-stream";
 provider.Mappings[".dll"] = "application/octet-stream";
+provider.Mappings[".br"] = "application/x-br";
 provider.Mappings[".image"] = "image/png";
 
 app.UseStaticFiles(new StaticFileOptions
