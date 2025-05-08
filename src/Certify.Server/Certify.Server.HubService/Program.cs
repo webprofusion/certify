@@ -316,6 +316,19 @@ AddSystemStatusItem(
     description: $"Hub API docs available at /api/docs"
 );
 
+// if request is for /ui/ then we are following a route intended for the Blazor UI, so rewrite the request to / to serve index.html
+// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-9.0
+app.Use((context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/ui"))
+    {
+        // Rewrite the request path to serve index.html
+        context.Request.Path = "/";
+    }
+
+    return next(context);
+});
+
 // configure initialization of UI status hub, backend management hub etc
 
 var statusHubContext = app.Services.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
