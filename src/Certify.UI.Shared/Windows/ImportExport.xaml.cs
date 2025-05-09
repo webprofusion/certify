@@ -6,6 +6,7 @@ using System.Windows;
 using Certify.Models;
 using Certify.Models.Config.Migration;
 using Certify.UI.Shared;
+using Markdig;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 
@@ -146,7 +147,7 @@ namespace Certify.UI.Windows
             var intro = $"Importing from source: {package.SourceName}, exported {package.ExportDate.ToLongDateString()}, app version {package.SystemVersion?.ToString().AsNullWhenBlank() ?? "(unknown)"}";
             var markdown = GetStepsAsMarkdown(steps, title, intro);
 
-            var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
+            var result = Markdown.ToHtml(markdown, _markdownPipeline);
             result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                     "<style>" + _css + "</style></head><body>" + result + "</body></html>";
 
