@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using Certify.Models;
+using Markdig;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -80,7 +81,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 var markdown = GetStepsAsMarkdown(Steps);
 
-                var result = Markdig.Markdown.ToHtml(markdown, _markdownPipeline);
+                var result = Markdown.ToHtml(markdown, _markdownPipeline);
                 result = "<html><head><meta http-equiv='Content-Type' content='text/html;charset=UTF-8'><meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />" +
                         "<style>" + _css + "</style></head><body>" + result + "</body></html>";
 
