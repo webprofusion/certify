@@ -54,50 +54,53 @@ namespace Certify.UI.Controls
 
         private void SetFilter()
         {
-            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
+            Dispatcher.Invoke(() =>
             {
-                var filter = txtFilter.Text.Trim();
-                var matchItem = item as Models.ManagedCertificate;
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
+                {
+                    var filter = txtFilter.Text.Trim();
+                    var matchItem = item as Models.ManagedCertificate;
 
-                return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                    return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
 
-                        // match on a specific status filter
-                        (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
-                        (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
-                        (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
-                        (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
-                        (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
-                        (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
-                        // match on selected or primary domain options with domain containing keyword
-                        (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
-                        // match on requestconfig primary or san containing keyword
-                        (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
-                        (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
-                        // match on comments containing keyword
-                        (matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-                        // match on name containing keyword
-                        matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-                        // match on ID
-                        matchItem.Id == f
-                    );
-            };
+                            // match on a specific status filter
+                            (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
+                            (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
+                            (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
+                            (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
+                            (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
+                            (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
+                            // match on selected or primary domain options with domain containing keyword
+                            (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+                            // match on requestconfig primary or san containing keyword
+                            (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+                            (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
+                            // match on comments containing keyword
+                            (matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+                            // match on name containing keyword
+                            matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+                            // match on ID
+                            matchItem.Id == f
+                        );
+                };
 
-            //sort by name ascending
-            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
+                //sort by name ascending
+                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
 
-            if (_sortOrder == "NameAsc")
-            {
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                   new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
-               );
-            }
+                if (_sortOrder == "NameAsc")
+                {
+                    CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
+                       new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+                   );
+                }
 
-            if (_sortOrder == "ExpiryDateAsc")
-            {
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                   new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
-               );
-            }
+                if (_sortOrder == "ExpiryDateAsc")
+                {
+                    CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
+                       new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
+                   );
+                }
+            });
         }
 
         private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
