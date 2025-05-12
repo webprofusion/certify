@@ -40,6 +40,7 @@
             <NoWarn>NU1701</NoWarn>
         </PackageReference>
         <PackageReference Include="MahApps.Metro" Version="3.0.0-rc0516" />
+        <PackageReference Include="Markdig" Version="0.41.1" />
         <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.4" />
         <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
