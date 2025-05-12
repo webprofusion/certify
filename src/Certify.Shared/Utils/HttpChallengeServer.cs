@@ -420,7 +420,7 @@ namespace Certify.Core.Management.Challenges
                             }
 
                             _httpListener?.Abort();
-                            _httpListener?.Close();
+                            _httpListener?.Close(); // this internally calls Dispose.
 
                         }
                         catch (Exception ex)
