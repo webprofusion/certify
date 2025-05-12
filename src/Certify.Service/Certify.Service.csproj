@@ -23,7 +23,7 @@
     </ItemGroup>
     <ItemGroup>
         <!--azure references includes to avoid version conflicts when loading plugins-->
-        <PackageReference Include="Azure.Core" Version="1.46.0" />
+        <PackageReference Include="Azure.Core" Version="1.46.1" />
         <PackageReference Include="Azure.ResourceManager.Dns" Version="1.2.0-beta.2" />
         <PackageReference Include="LightInject" Version="7.0.1" />
         <PackageReference Include="LightInject.WebApi" Version="2.0.0" />
