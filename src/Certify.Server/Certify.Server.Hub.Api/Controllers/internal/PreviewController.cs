@@ -80,5 +80,31 @@ namespace Certify.Server.Hub.Api.Controllers
 
             return Markdown.ToHtml(markdown, pipeline);
         }
+
+        [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(typeof(List<CertIdentifierItem>), StatusCodes.Status200OK)]
+        [Route("csr/identifiers")]
+        public async Task<IActionResult> IdentifiersFromCSR([FromBody] string csr)
+        {
+
+            if (csr.Contains("CERTIFICATE REQUEST"))
+            {
+
+                var domains = Certify.Shared.Core.Utils.PKI.CSRUtils.DecodeCsrSubjects(csr);
+                var certIdentifiers = new List<CertIdentifierItem>();
+
+                foreach (var item in domains)
+                {
+                    certIdentifiers.Add(new CertIdentifierItem(CertIdentifierType.Dns, item));
+                }
+
+                return new OkObjectResult(certIdentifiers);
+            }
+            else
+            {
+                return BadRequest("Invalid CSR");
+            }
+        }
     }
 }
