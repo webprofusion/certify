@@ -808,6 +808,15 @@ namespace Certify.Locales {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  The certificate authority may present multiple versions of your certificate signed with different root (issuer) certificates and you can specify a preference for this certificate. If the exact chain is not available then the default chain will be used..
+        /// </summary>
+        public static string ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions {
+            get {
+                return ResourceManager.GetString("ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Certificate Authority.
         /// </summary>
         public static string ManagedCertificateSettings_CertificateAuthority_Title {

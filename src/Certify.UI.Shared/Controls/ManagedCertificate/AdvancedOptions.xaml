@@ -81,9 +81,11 @@
                             Text="{Binding CertificateAuthorityDescription}" />
 
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Preferred Chain</TextBlock>
-                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                            The certificate authority may present multiple versions of your certificate signed with different root (issuer) certificates and you can specify a preference for this certificate. If the exact chain is not available then the default chain will be used.
-                        </TextBlock>
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            Text="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions}" />
+
                         <TextBox
                             Width="200"
                             HorizontalAlignment="left"
