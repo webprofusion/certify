@@ -716,4 +716,7 @@
   <data name="Settings_Export_Intro" xml:space="preserve">
     <value>You can create an export file to bundle all of the related settings and file for this instance together. Note: sensitive content is encrypted but you should not share this file with untrusted sources or use unsecured storage.</value>
   </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions" xml:space="preserve">
+    <value> The certificate authority may present multiple versions of your certificate signed with different root (issuer) certificates and you can specify a preference for this certificate. If the exact chain is not available then the default chain will be used.</value>
+  </data>
 </root>
