@@ -1190,7 +1190,7 @@ namespace Certify.Management
         private async Task<string> GetPfxPassword(ManagedCertificate managedCertificate)
         {
             var pfxPwd = "";
-            var pwdCredentialId = managedCertificate.CertificatePasswordCredentialId ?? CoreAppSettings.Current.DefaultKeyCredentials ?? null;
+            var pwdCredentialId = managedCertificate.CertificatePasswordCredentialId?.AsNullWhenBlank() ?? CoreAppSettings.Current.DefaultKeyCredentials?.AsNullWhenBlank() ?? null;
 
             // if pwd specified for pfx (a default or specific to this managed cert), fetch from credentials store
             if (!string.IsNullOrEmpty(pwdCredentialId))

@@ -109,7 +109,7 @@ namespace Certify.Core.Management
                 foreach (var c in managedCerts)
                 {
                     // gather credentials used by cert 
-                    if (c.CertificatePasswordCredentialId != null)
+                    if (c.CertificatePasswordCredentialId?.AsNullWhenBlank() != null)
                     {
                         if (!usedCredentials.Any(u => u.StorageKey == c.CertificatePasswordCredentialId))
                         {
@@ -512,7 +512,7 @@ namespace Certify.Core.Management
                 catch (Exception)
                 {
                     // maybe we need a password
-                    var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename && m.CertificatePasswordCredentialId != null);
+                    var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename && m.CertificatePasswordCredentialId?.AsNullWhenBlank() != null);
                     if (managedCert != null)
                     {
                         //get stored cred
