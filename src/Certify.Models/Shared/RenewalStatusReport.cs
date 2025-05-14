@@ -8,6 +8,7 @@ namespace Certify.Models.Shared
         public string? MachineName { get; set; }
         public ManagedCertificate? ManagedSite { get; set; }
         public string? PrimaryContactEmail { get; set; }
+        public string? AppName { get; set; }
         public string? AppVersion { get; set; }
         public DateTime? DateReported { get; set; }
     }

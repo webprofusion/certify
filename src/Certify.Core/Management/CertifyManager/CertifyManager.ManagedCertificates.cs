@@ -272,6 +272,7 @@ namespace Certify.Management
                 MachineName = Environment.MachineName,
                 PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
                 ManagedSite = reportedCert,
+                AppName = _isMgtmHubBackend ? "Certify Management Hub" : "Certify Certificate Manager",
                 AppVersion = Util.GetAppVersion().ToString()
             };
 
