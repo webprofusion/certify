@@ -655,7 +655,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to   Deployment of your certificate can be automatic or you can perform your own deployment tasks (see the Tasks tab)..
+        ///   Looks up a localized string similar to Deployment of your certificate can be automatic (if targeting IIS) or you can perform your own deployment tasks (see the Tasks tab)..
         /// </summary>
         public static string ManagedCertificates_Deployment_Intro {
             get {
