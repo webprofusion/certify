@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net462;net9.0;</TargetFrameworks>
         <Configurations>Debug;Release</Configurations>
@@ -79,7 +79,7 @@
         <ProjectReference Include="..\..\Certify.SourceGenerators\Certify.SourceGenerators.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.0" />
         <PackageReference Include="coverlet.msbuild" Version="6.0.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
