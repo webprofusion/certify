@@ -6,7 +6,7 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1" />
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.0" />
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="9.0.5" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.5" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.5" />
