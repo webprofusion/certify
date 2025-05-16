@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -218,8 +218,6 @@ namespace Certify.Management
                           $"{newLine}**This challenge type will be selected for all identifiers.**");
                         }
                     }
-
-                    challengeInfo.AppendLine($"{newLine}---{newLine}");
                 }
 
                 steps.Add(new ActionStep
@@ -281,51 +279,59 @@ namespace Certify.Management
                 {
                     // deploying to single or multiple Site
 
-                    if (item.RequestConfig.DeploymentBindingMatchHostname)
+                    if (serverProvider == null)
                     {
-                        deploymentDescription.AppendLine(
-                            "* Deploy to hostname bindings matching certificate domains.");
-                    }
-
-                    if (item.RequestConfig.DeploymentBindingBlankHostname)
-                    {
-                        deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
-                    }
-
-                    if (item.RequestConfig.DeploymentBindingReplacePrevious)
-                    {
-                        deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
-                    }
-
-                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
-                    {
-                        deploymentDescription.AppendLine("* Add or Update https bindings as required");
-                    }
-
-                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
-                    {
-                        deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
-                    }
-
-                    if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
-                    {
-                        if (!string.IsNullOrEmpty(item.ServerSiteId))
-                        {
-                            try
-                            {
-                                var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
-                                deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
-                                                         $"`{siteInfo.Name}`" + newLine);
-                            }
-                            catch (Exception exp)
-                            {
-                                deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
-                            }
-                        }
+                        deploymentDescription.AppendLine($"* Target instance has no supported targets for auto-deployment (e.g. IIS). Deployment Tasks may still apply.");
                     }
                     else
                     {
-                        deploymentDescription.AppendLine($"## Deploying to all matching sites:");
+
+                        if (item.RequestConfig.DeploymentBindingMatchHostname)
+                        {
+                            deploymentDescription.AppendLine(
+                                "* Deploy to hostname bindings matching certificate domains.");
+                        }
+
+                        if (item.RequestConfig.DeploymentBindingBlankHostname)
+                        {
+                            deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
+                        }
+
+                        if (item.RequestConfig.DeploymentBindingReplacePrevious)
+                        {
+                            deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
+                        }
+
+                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
+                        {
+                            deploymentDescription.AppendLine("* Add or Update https bindings as required");
+                        }
+
+                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
+                        {
+                            deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
+                        }
+
+                        if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                        {
+                            if (!string.IsNullOrEmpty(item.ServerSiteId))
+                            {
+                                try
+                                {
+                                    var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
+                                    deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
+                                                             $"`{siteInfo.Name}`" + newLine);
+                                }
+                                catch (Exception exp)
+                                {
+                                    deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            deploymentDescription.AppendLine($"## Deploying to all matching sites:");
+                        }
                     }
 
                     // add deployment sub-steps (if any)
@@ -366,7 +372,7 @@ namespace Certify.Management
                 }
                 else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
                 {
-                    deploymentDescription.AppendLine("* The certificate will be saved to local disk only.");
+                    deploymentDescription.AppendLine("* The certificate will be saved to local storage.");
                 }
 
                 deploymentStep.Description = deploymentDescription.ToString();
