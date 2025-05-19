@@ -63,6 +63,12 @@ namespace Certify.Models.Shared.Validation
 
                     foreach (var option in domainOptions)
                     {
+                        if (managedCertificate.DomainOptions.Any(d => d.IsPrimaryDomain) && option.IsPrimaryDomain)
+                        {
+                            // clear automatic primary subject selection if we already have one
+                            option.IsPrimaryDomain = false;
+                        }
+
                         managedCertificate.DomainOptions.Add(option);
                     }
 
