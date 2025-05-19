@@ -449,6 +449,21 @@ namespace Certify.SourceGenerators
                     }
                 },
                 new()
+                 {
+                     OperationName = "GetTargetIPAddresses",
+                     OperationMethod = HttpGet,
+                     Comment = "Get list of IP addresses available on the target for service binding (IIS, nginx etc)",
+                     UseManagementAPI = true,
+                     ManagementHubCommandType = Models.Hub.ManagementHubCommands.GetTargetIPAddresses,
+                     PublicAPIController = "Target",
+                     PublicAPIRoute = "{instanceId}/ipaddresses",
+                     ReturnType = "ICollection<IPAddressOption>",
+                     Params = new Dictionary<string, string>
+                     {
+                         { "instanceId", "string" }
+                     }
+                 },
+                new()
                 {
                     OperationName = "GetTargetServiceTypes",
                     OperationMethod = HttpGet,

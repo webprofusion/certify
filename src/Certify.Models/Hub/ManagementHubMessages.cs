@@ -47,6 +47,7 @@ namespace Certify.Models.Hub
         public const string GetTargetServiceTypes = "GetTargetServiceTypes";
         public const string GetTargetServiceItems = "GetTargetServiceItems";
         public const string GetTargetServiceItemIdentifiers = "GetTargetServiceItemIdentifiers";
+        public const string GetTargetIPAddresses = "GetTargetIPAddresses";
 
         public const string PerformImport = "PerformImport";
         public const string PerformExport = "PerformExport";
