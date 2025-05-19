@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net.NetworkInformation;
 using Certify.Models;
 
@@ -70,13 +70,12 @@ namespace Certify.Utils
                     }
                 }
             }
-            catch (Exception)
+            catch
             {
-                ;
                 ; // could not retrieve networking information
             }
 
-            return list;
+            return list.OrderBy(ip => ip.IPAddress).ToList();
         }
     }
 }
