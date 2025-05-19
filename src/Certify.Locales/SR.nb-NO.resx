@@ -557,6 +557,9 @@
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
     <value>Den nåværende appversjonen krever en viktig oppdatering for å sikre fortsatt drift. Vennligst oppdater umiddelbart. Vil du lukke appen nå?</value>
   </data>
+  <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
+    <value>Merk: disse innstillingene gjelder kun for nye https-bindinger, eksisterende bindinger oppdateres kun med det nye sertifikatet. Bruk av en fast IP for flere sertifikater kan føre til en bindingkonflikt, bruk med forsiktighet.</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="Update_ReadyToApply" type="System.Resources.ResXNullRef, System.Windows.Forms">
     <value />
