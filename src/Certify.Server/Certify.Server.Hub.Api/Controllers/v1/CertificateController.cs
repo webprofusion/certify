@@ -1,4 +1,6 @@
-﻿using System.Net;
+using System.Net;
+using System.Text;
+using System.Text.Unicode;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -150,12 +152,12 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Download text log for the given managed certificate
+        /// Download log entries for the given managed certificate
         /// </summary>
         /// <param name="instanceId"></param>
         /// <param name="managedCertId"></param>
         /// <param name="maxLines"></param>
-        /// <returns>Log file in text format</returns>
+        /// <returns>Log file as LogItem list</returns>
         [HttpGet]
         [Route("{managedCertId}/log")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
@@ -168,9 +170,29 @@ namespace Certify.Server.Hub.Api.Controllers
                 maxLines = 1000;
             }
 
-            LogItem[] log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, maxLines, CurrentAuthContext);
+            var log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, maxLines, CurrentAuthContext);
 
             return new OkObjectResult(new LogResult { Items = log });
+        }
+
+        /// <summary>
+        /// Download text log for the given managed certificate
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="managedCertId"></param>
+        /// <returns>Log file in text format</returns>
+        [HttpGet]
+        [Route("{managedCertId}/log/download")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        public async Task<IActionResult> DownloadLogText(string instanceId, string managedCertId)
+        {
+            var log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, -1, CurrentAuthContext);
+
+            var content = string.Join("\r\n", log.Reverse().Select(l => $"{l.EventDate}\t[{l.LogLevel}]\t{l.Message}"));
+
+            return new FileContentResult(Encoding.UTF8.GetBytes(content), "text/plain") { FileDownloadName = $"{managedCertId}.log" };
         }
 
         /// <summary>
