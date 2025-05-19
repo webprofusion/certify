@@ -571,7 +571,7 @@
     <value>当前的应用程序版本需要进行必要的更新，以确保持续运行。请立即更新。现在关闭应用程序吗?</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>注意：这些设置仅能影响到新的HTTPS绑定，已有的绑定只会鞥心证书。Windows平台在一个固定IP上使用多个证书可能会导致绑定冲突，请谨慎使用。</value>
+    <value>注意：这些设置仅适用于新的 https 绑定，现有绑定仅会使用新证书进行更新。使用固定 IP 地址绑定多个证书可能会导致绑定冲突，请谨慎使用。</value>
   </data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
     <value>重新应用证书</value>
