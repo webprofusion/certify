@@ -9,6 +9,23 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        private async Task<ICollection<IPAddressOption>> GetTargetIPAddresses()
+        {
+            try
+            {
+                var ipAddressOptions = Certify.Utils.Networking.GetIPAddresses();
+
+                ipAddressOptions.Insert(0, new IPAddressOption { Description = "* (All Unassigned)", IPAddress = "*", IsIPv6 = false }); //add wildcard option
+
+                return ipAddressOptions;
+            }
+            catch (Exception)
+            {
+                //return empty list
+                return [];
+            }
+        }
+
         private async Task<ICollection<string>> GetTargetServiceTypes()
         {
             var list = new List<string>();

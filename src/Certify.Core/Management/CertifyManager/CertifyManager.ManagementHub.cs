@@ -636,6 +636,10 @@ namespace Certify.Management
 
                 val = await PerformDeploymentTask(null, managedCertificateIdArg.Value, taskIdArg.Value, isPreviewOnly: false, skipDeferredTasks: false, forceTaskExecution: false);
             }
+            else if (arg.CommandType == ManagementHubCommands.GetTargetIPAddresses)
+            {
+                val = await GetTargetIPAddresses();
+            }
             else if (arg.CommandType == ManagementHubCommands.GetTargetServiceTypes)
             {
                 val = await GetTargetServiceTypes();
