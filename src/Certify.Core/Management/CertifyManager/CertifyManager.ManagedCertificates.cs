@@ -652,24 +652,27 @@ namespace Certify.Management
                         stream.Close();
 
                         var log = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Reverse()
-                            .Take(limit)
-                            .ToArray();
+                            .Reverse();
 
-                        results = LogParser.Parse(log);
+                        if (limit > -1)
+                        {
+                            log = log.Take(limit);
+                        }
+
+                        results = LogParser.Parse(log.ToArray());
                     }
 
                     return results;
                 }
                 catch (Exception exp)
                 {
-                    return new LogItem[]
-                    {
+                    return
+                    [
                         new LogItem
                         {
                             LogLevel = "ERR", EventDate = DateTime.Now, Message = $"Failed to read log: {exp}"
                         }
-                    };
+                    ];
                 }
             }
             else
