@@ -94,6 +94,16 @@ namespace Certify.Models
                 Models.SharedConstants.APPDATASUBFOLDER
             };
 
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                // macos incorrectly returns the common app data path as /usr/share but that's not writeable even by root, has to be usr/local/share
+                parts = new List<string>()
+                {
+                    "/usr/local/share",
+                    Models.SharedConstants.APPDATASUBFOLDER
+                };
+            }
+
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CERTIFY_APPDATA_PATH")))
             {
                 parts = new List<string> { Environment.GetEnvironmentVariable("CERTIFY_APPDATA_PATH") };
