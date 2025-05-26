@@ -1,9 +1,19 @@
-﻿using Certify.Server.Core;
+﻿using System.Runtime.InteropServices;
+using Certify.Server.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddWindowsService()
-                .AddHostedService<WindowsBackgroundService>();
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+{
+    builder.Services.AddSystemd()
+                .AddHostedService<StubBackgroundService>();
+}
+
+if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+{
+    builder.Services.AddWindowsService()
+                    .AddHostedService<StubBackgroundService>();
+}
 
 builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true);
 
