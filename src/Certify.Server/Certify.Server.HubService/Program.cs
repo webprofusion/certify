@@ -80,7 +80,7 @@ if (hubSettings != null && File.Exists(hubSettings))
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     builder.Services.AddWindowsService()
-                    .AddHostedService<WindowsBackgroundService>();
+                    .AddHostedService<StubBackgroundService>();
 }
 
 builder.AddServiceDefaults();
