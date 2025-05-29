@@ -12,6 +12,7 @@
         <AnalysisLevel>latest-recommended</AnalysisLevel>
         <Product>Certify The Web - Certify Certificate Manager</Product>
         <PackageReadmeFile>readme.md</PackageReadmeFile>
+        <IsTrimmable Condition="'$(TargetFramework)' == 'net9.0'">true</IsTrimmable>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
         <NoWarn>1701;1702;CA1864</NoWarn>
