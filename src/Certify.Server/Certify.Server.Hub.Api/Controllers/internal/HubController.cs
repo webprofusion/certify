@@ -51,7 +51,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [Route("items")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, Models.ManagedCertificateHealth? health = null, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, int? page = null, int? pageSize = null)
         {
             var result = new ManagedCertificateSummaryResult();
 
@@ -60,6 +60,16 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var list = new List<ManagedCertificateSummary>();
 
+            ManagedCertificateHealth? healthFilter = null;
+
+            if (!string.IsNullOrEmpty(health))
+            {
+                if (Enum.TryParse(health, true, out ManagedCertificateHealth healthValue))
+                {
+                    healthFilter = healthValue;
+                }
+            }
+
             foreach (var remote in managedItems.Values)
             {
                 if (string.IsNullOrEmpty(instanceId) || (instanceId == remote.InstanceId))
@@ -67,7 +77,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     list.AddRange(
                         remote.Items
                         .Where(i => string.IsNullOrWhiteSpace(keyword) || (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) == true))
-                        .Where(i => health == null || (health != null && i.Health == health))
+                        .Where(i => healthFilter == null || (healthFilter != null && i.Health == healthFilter))
                         .Select(i =>
                         {
                             var instance = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId);
