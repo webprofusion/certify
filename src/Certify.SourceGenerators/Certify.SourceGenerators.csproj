@@ -6,6 +6,7 @@
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <LangVersion>latest</LangVersion>
         <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+        <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,6 +21,12 @@
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0" PrivateAssets="all" />
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+        <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" PrivateAssets="all" />
     </ItemGroup>
+
+    <Target Name="GetDependencyTargetPaths">
+        <ItemGroup>
+            <TargetPathWithTargetPlatformMoniker Include="$(ProjectDir)/../Certify.Models/$(OutputPath)/*.dll" IncludeRuntimeDependency="false" />
+        </ItemGroup>
+    </Target>
 </Project>
