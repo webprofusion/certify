@@ -118,7 +118,8 @@ namespace Certify.Server.HubService.Services
         public Task<List<CertificateAuthority>> GetCertificateAuthorities(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ChallengeProviderDefinition>> GetChallengeAPIList(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<StoredCredential>> GetCredentials(AuthContext? authContext = null) => throw new NotImplementedException();
-        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext? authContext = null) => new ServiceControllers.ManagedCertificatesController(_certifyManager).GetCurrentChallenges(type, key);
+
         public Task<List<DataStoreConnection>> GetDataStoreConnections(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ProviderDefinition>> GetDataStoreProviders(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config, AuthContext? authContext = null) => throw new NotImplementedException();
