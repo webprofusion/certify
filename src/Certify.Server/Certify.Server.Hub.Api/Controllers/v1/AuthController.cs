@@ -80,7 +80,13 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
-                return Unauthorized(new ProblemDetails { Status = StatusCodes.Status401Unauthorized, Title = "Invalid username or password" });
+                //return Unauthorized("Invalid username or password");
+                return Problem(
+       type: "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+       title: "Login Failed",
+       detail: "Invalid username or password",
+       statusCode: StatusCodes.Status401Unauthorized);
+
             }
         }
 
