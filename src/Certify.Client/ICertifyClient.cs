@@ -41,7 +41,7 @@ namespace Certify.Client
         Task<Version> GetServerVersion(StandardServerTypes serverType, AuthContext authContext = null);
         Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null);
         Task<List<ActionStep>> RunConfigurationDiagnostics(StandardServerTypes serverType, string serverSiteId, AuthContext authContext = null);
-        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type, string key, AuthContext authContext = null);
+        Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallenges(string type = "http-01", string key = null, AuthContext authContext = null);
         #endregion Server
 
         #region Preferences

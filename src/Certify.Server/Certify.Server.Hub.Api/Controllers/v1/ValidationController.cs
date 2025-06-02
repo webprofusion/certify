@@ -38,7 +38,30 @@ namespace Certify.Server.Hub.Api.Controllers
         [Route("{type}/{key?}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.SimpleAuthorizationChallengeItem>))]
-        public async Task<IActionResult> GetValidationChallenges(string type, string key)
+        public async Task<IActionResult> GetValidationChallenges(string? type = "http-01", string? key = null)
+        {
+            if (type == null)
+            {
+                type = "http-01";
+            }
+
+            var list = await _client.GetCurrentChallenges(type, key);
+            return new OkObjectResult(list);
+        }
+
+        /// <summary>
+        /// get current challenge info for a given type/key
+        /// legacy route for backwards compatibility used by http challenge server to check for current expected responses
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("/api/managedcertificates/currentchallenges/")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.SimpleAuthorizationChallengeItem>))]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public async Task<IActionResult> GetValidationChallengesAnon(string? type = "http-01", string? key = null)
         {
             if (type == null)
             {
