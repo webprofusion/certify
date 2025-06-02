@@ -398,7 +398,7 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate)
+        public async Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
         {
             if (passwordUpdate.SecurityPrincipleId != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
@@ -410,7 +410,7 @@ namespace Certify.Core.Management.Access
 
             var principle = await GetSecurityPrinciple(contextUserId, passwordUpdate.SecurityPrincipleId, includePassword: true);
 
-            if (IsPasswordValid(passwordUpdate.Password, principle.Password))
+            if (!requirePasswordConfirmation || (requirePasswordConfirmation && IsPasswordValid(passwordUpdate.Password, principle.Password)))
             {
                 try
                 {
@@ -419,10 +419,10 @@ namespace Certify.Core.Management.Access
                     await _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), updateSp);
                     updated = true;
                 }
-                catch
+                catch (Exception exp)
                 {
-                    await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principleId}], but was not successful", contextUserId, principle?.Id);
-                    return false;
+                    await AuditError("User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principleId}], but was not successful : {exp}", contextUserId, principle?.Id, exp);
+                    updated = false;
                 }
             }
             else
@@ -453,7 +453,8 @@ namespace Certify.Core.Management.Access
             var components = currentHash.Split('.');
 
             // hash provided password with same salt to compare result
-            return currentHash == HashPassword(password, components[1]);
+            var hashedPassword = HashPassword(password, components[1]);
+            return currentHash == hashedPassword;
         }
 
         /// <summary>

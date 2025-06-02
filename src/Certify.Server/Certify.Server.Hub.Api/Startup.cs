@@ -72,6 +72,8 @@ namespace Certify.Server.Hub.Api
                 });
 
             services.AddRouting(r => r.LowercaseUrls = true);
+            services.AddProblemDetails();
+
 
             services
                 .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
@@ -285,7 +287,14 @@ namespace Certify.Server.Hub.Api
                 endpoints.MapHub<InstanceManagementHub>("/api/internal/managementhub");
             });
 
-#if DEBUG          
+
+            // Converts unhandled exceptions into Problem Details responses
+            app.UseExceptionHandler();
+
+            // Returns the Problem Details response for (empty) non-successful responses
+            app.UseStatusCodePages();
+
+#if DEBUG
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
 
