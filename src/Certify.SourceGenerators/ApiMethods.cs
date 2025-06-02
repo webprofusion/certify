@@ -7,6 +7,33 @@ using SourceGenerator;
 
 namespace Certify.SourceGenerators
 {
+    // ApiMethods is a static class that provides a central registry of API endpoint definitions.
+    //
+    // Purpose:
+    //   - Used by source generators to automatically create API endpoints, map calls between public and internal APIs, and generate API clients.
+    //
+    // Key Features:
+    //   - Defines HTTP method constants (HttpGet, HttpPost, HttpDelete) for standardized usage.
+    //   - Provides GetFormattedTypeName(Type type) to return a formatted string for .NET types, including generics.
+    //   - The GetApiDefinitions() method returns a list of GeneratedAPI objects, each describing an API operation:
+    //       * OperationName: Name of the API operation.
+    //       * OperationMethod: HTTP method (GET, POST, DELETE).
+    //       * Comment: Description of the operation.
+    //       * PublicAPIController/PublicAPIRoute: Controller and route for the public API.
+    //       * ServiceAPIRoute: Route for the internal service API.
+    //       * ReturnType: The return type of the operation.
+    //       * Params: Dictionary of parameter names and types.
+    //       * RequiredPermissions: List of permissions required to access the endpoint.
+    //       * Other flags like UseManagementAPI for special routing.
+    //
+    // Usage:
+    //   - This list is consumed by source generators to:
+    //       * Generate controller methods for the public API.
+    //       * Map public API calls to internal service methods.
+    //       * Generate client code for consuming the API.
+    //
+    // Summary:
+    //   ApiMethods enables automated code generation for API endpoints, permissions, and client libraries in the Certify system, reducing manual coding and ensuring consistency across the API surface.
     public class ApiMethods
     {
         public static string HttpGet = "HttpGet";
@@ -34,7 +61,7 @@ namespace Certify.SourceGenerators
             // - map the call from the public API to the background service API in the service API Client (interface and implementation)
             // - to then generate the public API clients, run nswag when the public API is running.
 
-            var actionResultName = "Certify.Models.Config.ActionResult";
+            var actionResultTypeName = "Certify.Models.Config.ActionResult";
 
             return new List<GeneratedAPI>
             {
@@ -48,7 +75,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "securityprinciple/allowedaction",
                     ServiceAPIRoute = "access/securityprinciple/allowedaction",
                     ReturnType = "bool",
-                    Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } }
+                    Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
                 },
                 new()
                 {
@@ -59,7 +87,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "securityprinciple/{id}/assignedroles",
                     ServiceAPIRoute = "access/securityprinciple/{id}/assignedroles",
                     ReturnType = $"ICollection<{nameof(AssignedRole)}>",
-                    Params = new Dictionary<string, string> { { "id", "string" } }
+                    Params = new Dictionary<string, string> { { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
                 },
                 new()
                 {
@@ -70,7 +99,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "securityprinciple/{id}/rolestatus",
                     ServiceAPIRoute = "access/securityprinciple/{id}/rolestatus",
                     ReturnType = nameof(RoleStatus),
-                    Params = new Dictionary<string, string> { { "id", "string" } }
+                    Params = new Dictionary<string, string> { { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
                 },
                 new()
                 {
@@ -80,7 +110,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "roles",
                     ServiceAPIRoute = "access/roles",
-                    ReturnType = $"ICollection<{nameof(Role)}>"
+                    ReturnType = $"ICollection<{nameof(Role)}>",
+                    RequiredPermissions = [new(ResourceTypes.Role, StandardResourceActions.RoleList)]
                 },
                 new()
                 {
@@ -90,7 +121,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "assignedtoken",
                     ServiceAPIRoute = "access/assignedtoken/list",
-                    ReturnType = $"ICollection<{nameof(AssignedAccessToken)}>"
+                    ReturnType = $"ICollection<{nameof(AssignedAccessToken)}>",
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenList)]
                 },
                 new()
                 {
@@ -100,8 +132,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "assignedtoken",
                     ServiceAPIRoute = "access/assignedtoken",
-                    ReturnType = actionResultName,
-                    Params = new Dictionary<string, string> { { "token", "Certify.Models.Hub.AssignedAccessToken" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "token", "Certify.Models.Hub.AssignedAccessToken" } },
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenAdd)]
                 },
                 new()
                 {
@@ -111,8 +144,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "assignedtoken",
                     ServiceAPIRoute = "access/assignedtoken/{id}",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "id", "string" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenDelete)]
                 },
                 new()
                 {
@@ -123,7 +157,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "securityprinciples",
                     ServiceAPIRoute = "access/securityprinciples",
-                    ReturnType = "ICollection<SecurityPrinciple>"
+                    ReturnType = "ICollection<SecurityPrinciple>",
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleList)]
                 },
                 new()
                 {
@@ -134,7 +169,8 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "validate",
                     ServiceAPIRoute = "access/validate",
                     ReturnType = "Certify.Models.Hub.SecurityPrincipleCheckResponse",
-                    Params = new Dictionary<string, string> { { "passwordCheck", "Certify.Models.Hub.SecurityPrinciplePasswordCheck" } }
+                    Params = new Dictionary<string, string> { { "passwordCheck", GetFormattedTypeName(typeof(Certify.Models.Hub.SecurityPrinciplePasswordCheck)) } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrinciplePasswordValidate)]
                 },
                 new()
                 {
@@ -145,8 +181,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "updatepassword",
                     ServiceAPIRoute = "access/updatepassword",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "passwordUpdate", "Certify.Models.Hub.SecurityPrinciplePasswordUpdate" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "passwordUpdate", "Certify.Models.Hub.SecurityPrinciplePasswordUpdate" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrinciplePasswordUpdate)]
                 },
                 new()
                 {
@@ -157,8 +194,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "securityprinciple",
                     ServiceAPIRoute = "access/securityprinciple",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "principle", "Certify.Models.Hub.SecurityPrinciple" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "principle", "Certify.Models.Hub.SecurityPrinciple" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleAdd)]
                 },
                 new()
                 {
@@ -169,11 +207,12 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "securityprinciple/update",
                     ServiceAPIRoute = "access/securityprinciple/update",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "principle", "Certify.Models.Hub.SecurityPrinciple" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleUpdate)]
                 },
                 new()
                 {
@@ -183,11 +222,12 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "securityprinciple/roles/update",
                     ServiceAPIRoute = "access/securityprinciple/roles/update",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "update", "Certify.Models.Hub.SecurityPrincipleAssignedRoleUpdate" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleUpdateAssignedRoles)]
                 },
                 new()
                 {
@@ -197,8 +237,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Access",
                     PublicAPIRoute = "securityprinciple",
                     ServiceAPIRoute = "access/securityprinciple/{id}",
-                    ReturnType = actionResultName,
-                    Params = new Dictionary<string, string> { { "id", "string" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleDelete)]
                 },
                 new()
                 {
@@ -207,7 +248,8 @@ namespace Certify.SourceGenerators
                     Comment = "Add new managed instance to the hub",
                     ServiceAPIRoute = "managedinstance",
                     ReturnType = $"Models.Config.ActionResult<{nameof(Models.Hub.ManagedInstanceInfo)}>",
-                    Params = new Dictionary<string, string> { { "item", nameof(Models.Hub.ManagedInstanceInfo) } }
+                    Params = new Dictionary<string, string> { { "item", nameof(Models.Hub.ManagedInstanceInfo) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceAdd)]
                 },
                 new()
                 {
@@ -215,8 +257,9 @@ namespace Certify.SourceGenerators
                     OperationMethod = HttpPost,
                     Comment = "Update existing managed instance in the hub",
                     ServiceAPIRoute = "managedinstance/update",
-                    ReturnType = actionResultName,
-                    Params = new Dictionary<string, string> { { "item", nameof(Models.Hub.ManagedInstanceInfo) } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "item", nameof(Models.Hub.ManagedInstanceInfo) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
                 },
                 new()
                 {
@@ -226,9 +269,9 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "Hub",
                     PublicAPIRoute = "instances/{id}",
                     ServiceAPIRoute = "managedinstance/delete/{id}",
-                    ReturnType = actionResultName,
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "id", "string" } },
-                    RequiredPermissions = [new("managedinstance", "managementhub_instance_delete_action")]
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceDelete)]
                 },
                 new()
                 {
@@ -237,7 +280,8 @@ namespace Certify.SourceGenerators
                     Comment = "Get managed instance info",
                     ServiceAPIRoute = "managedinstance/{id}",
                     ReturnType = nameof(Models.Hub.ManagedInstanceInfo),
-                    Params = new Dictionary<string, string> { { "id", "string" } }
+                    Params = new Dictionary<string, string> { { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
                 },
                 new()
                 {
@@ -246,7 +290,8 @@ namespace Certify.SourceGenerators
                     Comment = "Get managed instances",
                     ServiceAPIRoute = "managedinstance/list",
                     ReturnType = $"ICollection<{nameof(Models.Hub.ManagedInstanceInfo)}>",
-                    Params = new Dictionary<string, string> { }
+                    Params = new Dictionary<string, string> { },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
                 },
                 new()
                 {
@@ -257,7 +302,7 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "list",
                     ServiceAPIRoute = "managedchallenge",
                     ReturnType = "ICollection<ManagedChallenge>",
-                    RequiredPermissions = [new("managedchallenge", "managedchallenge_list_action")]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeList)]
                 },
                 new()
                 {
@@ -267,12 +312,12 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "ManagedChallenge",
                     PublicAPIRoute = "update",
                     ServiceAPIRoute = "managedchallenge",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "update", "Certify.Models.Hub.ManagedChallenge" }
                     },
-                    RequiredPermissions = [new("managedchallenge", "managedchallenge_update_action")]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeUpdate)]
                 },
                 new()
                 {
@@ -282,12 +327,12 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "ManagedChallenge",
                     PublicAPIRoute = "remove",
                     ServiceAPIRoute = "managedchallenge/{id}",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "id", "string" }
                     },
-                    RequiredPermissions = [new("managedchallenge", "managedchallenge_delete_action")]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeDelete)]
                 },
                 new()
                 {
@@ -296,12 +341,12 @@ namespace Certify.SourceGenerators
                     Comment = "Perform a managed challenge (DNS challenge delegation etc)",
                     PublicAPIController = null, // skip public controller implementation
                     ServiceAPIRoute = "managedchallenge/request",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
                     },
-                    RequiredPermissions = [new("managedchallenge", "managedchallenge_request_action")]
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeRequest)]
                 },
                 new()
                 {
@@ -310,29 +355,32 @@ namespace Certify.SourceGenerators
                     Comment = "Perform cleanup for a previously managed challenge (DNS challenge delegation etc)",
                     PublicAPIController = null, // skip public controller implementation
                     ServiceAPIRoute = "managedchallenge/cleanup",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
-                        { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
-                    }
+                        { "request", GetFormattedTypeName(typeof(Certify.Models.Hub.ManagedChallengeRequest)) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup)]
                 },
                 new()
                 {
                     OperationName = "PerformExport",
                     OperationMethod = HttpPost,
-                    Comment = "Perform an export of all settings",
+                    Comment = "Perform an export of all settings for an instance",
                     ServiceAPIRoute = "system/migration/export",
-                    ReturnType = "Models.Config.Migration.ImportExportPackage",
-                    Params = new Dictionary<string, string> { { "exportRequest", "Certify.Models.Config.Migration.ExportRequest" } }
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.Migration.ImportExportPackage)),
+                    Params = new Dictionary<string, string> { { "exportRequest", GetFormattedTypeName(typeof(Certify.Models.Config.Migration.ExportRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceExport)]
                 },
                 new()
                 {
                     OperationName = "PerformImport",
                     OperationMethod = HttpPost,
-                    Comment = "Perform an import of all settings",
+                    Comment = "Perform an import of all settings for an instance",
                     ServiceAPIRoute = "system/migration/import",
                     ReturnType = "ICollection<ActionStep>",
-                    Params = new Dictionary<string, string> { { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
+                    Params = new Dictionary<string, string> { { "importRequest", GetFormattedTypeName(typeof(Certify.Models.Config.Migration.ImportRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceImport)]
                 },
                 /* per instance API, via management hub */
                 new()
@@ -344,7 +392,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/accounts/",
                     ReturnType = "ICollection<Models.AccountDetails>",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.AcmeAccount, StandardResourceActions.AcmeAccountList)]
                 },
                 new()
                 {
@@ -354,8 +403,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/account/",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "registration", "Certify.Models.ContactRegistration" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "registration", "Certify.Models.ContactRegistration" } },
+                    RequiredPermissions = [new(ResourceTypes.AcmeAccount, StandardResourceActions.AcmeAccountAdd)]
                 },
                 new()
                 {
@@ -366,7 +416,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/authority",
                     ReturnType = "ICollection<Models.CertificateAuthority>",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.CertificateAuthority, StandardResourceActions.CertificateAuthorityList)]
                 },
                 new()
                 {
@@ -376,8 +427,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/authority",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "ca", "Certify.Models.CertificateAuthority" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "ca", "Certify.Models.CertificateAuthority" } },
+                    RequiredPermissions = [new(ResourceTypes.CertificateAuthority, StandardResourceActions.CertificateAuthorityUpdate)]
                 },
                 new()
                 {
@@ -387,8 +439,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/authority/{id}",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "id", "string" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "id", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.CertificateAuthority, StandardResourceActions.CertificateAuthorityDelete)]
                 },
                 new()
                 {
@@ -398,8 +451,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/accounts/{storageKey}/{deactivate}",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" }, { "deactivate", "bool" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" }, { "deactivate", "bool" } },
+                    RequiredPermissions = [new(ResourceTypes.AcmeAccount, StandardResourceActions.AcmeAccountDelete)]
                 },
                 new()
                 {
@@ -410,7 +464,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "StoredCredential",
                     PublicAPIRoute = "{instanceId}",
                     ReturnType = "ICollection<Models.Config.StoredCredential>",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialList)]
                 },
                 new()
                 {
@@ -419,9 +474,10 @@ namespace Certify.SourceGenerators
                     Comment = "Add/Update Stored Credential",
                     PublicAPIController = "StoredCredential",
                     PublicAPIRoute = "{instanceId}",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     UseManagementAPI = true,
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } },
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialUpdate)]
                 },
                 new()
                 {
@@ -431,8 +487,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "StoredCredential",
                     PublicAPIRoute = "{instanceId}/{storageKey}",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialDelete)]
                 },
                 new()
                 {
@@ -446,7 +503,8 @@ namespace Certify.SourceGenerators
                     Params = new Dictionary<string, string>
                     {
                         { "instanceId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskListProviders)]
                 },
                 new()
                  {
@@ -461,7 +519,8 @@ namespace Certify.SourceGenerators
                      Params = new Dictionary<string, string>
                      {
                          { "instanceId", "string" }
-                     }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.Target, StandardResourceActions.TargetIPAddressesList)]
                  },
                 new()
                 {
@@ -476,7 +535,8 @@ namespace Certify.SourceGenerators
                     Params = new Dictionary<string, string>
                     {
                         { "instanceId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.Target, StandardResourceActions.TargetTypesList)]
                 },
                 new()
                 {
@@ -492,7 +552,8 @@ namespace Certify.SourceGenerators
                     {
                         { "instanceId", "string" },
                         { "serviceType", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.Target, StandardResourceActions.TargetServiceItemsList)]
                 },
                 new()
                 {
@@ -509,7 +570,8 @@ namespace Certify.SourceGenerators
                         { "instanceId", "string" },
                         { "serviceType", "string" },
                         { "itemId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.Target, StandardResourceActions.TargetServiceItemIdentifiersList)]
                 },
                 new()
                 {
@@ -523,7 +585,8 @@ namespace Certify.SourceGenerators
                     Params = new Dictionary<string, string>
                     {
                         { "instanceId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ChallengeProvider, StandardResourceActions.ChallengeProviderList)]
                 },
                 new()
                 {
@@ -539,7 +602,8 @@ namespace Certify.SourceGenerators
                         { "instanceId", "string" },
                         { "providerTypeId", "string" },
                         { "credentialId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ChallengeProvider, StandardResourceActions.ChallengeProviderDnsZonesList)]
                 },
                 new()
                 {
@@ -555,7 +619,8 @@ namespace Certify.SourceGenerators
                         { "instanceId", "string" },
                         { "managedCertificateId", "string" },
                         { "taskId", "string" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskExecute)]
                 },
                 new()
                 {
@@ -565,8 +630,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "Certificate",
                     PublicAPIRoute = "{instanceId}/settings/{managedCertId}",
-                    ReturnType = "Models.Config.ActionResult",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } }
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "managedCertId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemDelete)]
                 },
                 new()
                 {
@@ -576,8 +642,9 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/migration/export",
-                    ReturnType = "Models.Config.Migration.ImportExportPackage",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "exportRequest", "Certify.Models.Config.Migration.ExportRequest" } }
+                    ReturnType =  GetFormattedTypeName(typeof(Models.Config.Migration.ImportExportPackage)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "exportRequest",  GetFormattedTypeName(typeof(Certify.Models.Config.Migration.ExportRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceExport)]
                 },
                 new()
                 {
@@ -588,7 +655,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/migration/import",
                     ReturnType = "ICollection<ActionStep>",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "importRequest", "Certify.Models.Config.Migration.ImportRequest" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "importRequest",  GetFormattedTypeName(typeof(Certify.Models.Config.Migration.ImportRequest)) } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceImport)]
                 },
                 new()
                 {
@@ -599,7 +667,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/status",
                     ReturnType = "ICollection<ActionStep>",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemStatusList)]
                 },
                 new()
                 {
@@ -610,7 +679,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/serviceconfig",
                     ReturnType = "Certify.Shared.ServiceConfig",
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigList)]
                 },
                 new()
                 {
@@ -621,7 +691,8 @@ namespace Certify.SourceGenerators
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/coresettings",
                     ReturnType = nameof(Preferences),
-                    Params = new Dictionary<string, string> { { "instanceId", "string" } }
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsList)]
                 },
                 new()
                 {
@@ -631,12 +702,13 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "System",
                     PublicAPIRoute = "{instanceId}/system/serviceconfig",
-                    ReturnType = "Models.Config.ActionResult",
+                    ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
                         { "instanceId", "string" },
                         { "config", "Certify.Shared.ServiceConfig" }
-                    }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
                 },
                  new()
                  {
@@ -646,12 +718,13 @@ namespace Certify.SourceGenerators
                      UseManagementAPI = true,
                      PublicAPIController = "System",
                      PublicAPIRoute = "{instanceId}/system/coresettings",
-                     ReturnType = "Models.Config.ActionResult",
+                     ReturnType = actionResultTypeName,
                      Params = new Dictionary<string, string>
                      {
                          { "instanceId", "string" },
                          { "prefs", "Certify.Models.Preferences" }
-                     }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsUpdate)]
                  }
             };
         }
