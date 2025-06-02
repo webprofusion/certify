@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.6" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.4.13" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.4.17" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
 
         <!-- included to prevent conflict with older versions in plugins-->

@@ -201,6 +201,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test max CN length")]
+        [Ignore("This test is ignored because we have currently removed validation on CN length")]
         public void TestMaxCNLength()
         {
             var item = new ManagedCertificate
