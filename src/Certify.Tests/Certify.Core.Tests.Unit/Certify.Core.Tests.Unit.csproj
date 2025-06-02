@@ -72,10 +72,10 @@
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
         <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
-        <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
 
         <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+        <ProjectReference Include="..\..\Certify.SourceGenerators\Certify.SourceGenerators.csproj" />
 
     </ItemGroup>
     <ItemGroup>
@@ -96,12 +96,12 @@
         <PackageReference Include="MSTest.TestAdapter" Version="3.9.2" />
         <PackageReference Include="MSTest.TestFramework" Version="3.9.2" />
         <PackageReference Include="Npgsql" Version="8.0.7" />
-        <PackageReference Include="Polly" Version="8.6.0" />
+        <PackageReference Include="Polly" Version="8.6.1" />
         <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="9.0.6" />
         <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.6" />
         <PackageReference Include="System.Text.Json" Version="9.0.6" />
-        <PackageReference Include="Testcontainers" Version="4.5.0" />
+        <PackageReference Include="Testcontainers" Version="4.6.0" />
     </ItemGroup>
 
     <ItemGroup>

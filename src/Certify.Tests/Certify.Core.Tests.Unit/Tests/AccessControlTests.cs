@@ -820,5 +820,58 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (revoked)");
 
         }
+
+        [TestMethod]
+        public void TestAllStandardResourceActionsAreAllowedByAtLeastOneRole()
+        {
+            var actions = Policies.GetStandardResourceActions();
+            var policies = Policies.GetStandardPolicies();
+            var roles = Policies.GetStandardRoles();
+
+            var policyIdToRoles = roles
+                .SelectMany(role => role.Policies.Select(policyId => new { role, policyId }))
+                .GroupBy(x => x.policyId, x => x.role)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var actionToAllowedRoles = new Dictionary<string, List<Role>>();
+
+            foreach (var action in actions)
+            {
+                var allowedRoles = new List<Role>();
+                foreach (var policy in policies)
+                {
+                    if (policy.ResourceActions.Contains(action.Id))
+                    {
+                        if (policyIdToRoles.TryGetValue(policy.Id, out var rolesForPolicy))
+                        {
+                            allowedRoles.AddRange(rolesForPolicy);
+                        }
+                    }
+                }
+
+                actionToAllowedRoles[action.Id] = allowedRoles.Distinct().ToList();
+            }
+
+            var actionsWithoutRoles = actionToAllowedRoles.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
+
+            Assert.IsTrue(actionsWithoutRoles.Count == 0, $"The following {actionsWithoutRoles.Count} actions are not allowed by any role: {string.Join(", \r\n", actionsWithoutRoles)}");
+
+            // Additional assertion: Administrator role is allowed to perform each action
+            var adminRole = roles.FirstOrDefault(r => r.Id == StandardRoles.Administrator.Id);
+            Assert.IsNotNull(adminRole, "Administrator role must exist in standard roles.");
+
+            var actionsNotAllowedByAdmin = actionToAllowedRoles
+                .Where(kvp => !kvp.Value.Any(r => r.Id == adminRole.Id))
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            // Remove actions that are not applicable to the administrator role
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.StoredCredentialDownload);
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagementHubInstanceJoin);
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeRequest);
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeCleanup);
+
+            Assert.IsTrue(actionsNotAllowedByAdmin.Count == 0, $"Administrator role is not allowed to perform the following actions: {string.Join(", \r\n", actionsNotAllowedByAdmin)}");
+        }
     }
 }

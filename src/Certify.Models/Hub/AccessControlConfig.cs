@@ -9,6 +9,12 @@ namespace Certify.Models.Hub
 {
     public class StandardRoles
     {
+        internal static Role BackupOperator { get; } = new Role("backup_operator_role", "Backup Operator", "Can perform import and export operations",
+            policies: new List<string> {
+                StandardPolicies.ManagedInstanceSystemExport,
+                StandardPolicies.ManagedInstanceSystemImport
+            });
+
         public static Role Administrator { get; } = new Role("sysadmin_role", "Administrator", "Certify Server Administrator",
             policies: new List<string> {
                      StandardPolicies.ManagementHubAdmin,
@@ -18,9 +24,12 @@ namespace Certify.Models.Hub
                      StandardPolicies.StoredCredentialAdmin,
                      StandardPolicies.ManagedChallengeAdmin,
                      StandardPolicies.AccessAdmin,
+                     StandardPolicies.AccessTokenAdmin,
                      StandardPolicies.CertificateConsumer,
-                     StandardPolicies.AccessAdmin,
-                     StandardPolicies.ManagedChallengeAdmin
+                     StandardPolicies.ManagedChallengeAdmin,
+                     StandardPolicies.ManagedInstanceSystemExport,
+                     StandardPolicies.ManagedInstanceSystemImport,
+                     StandardPolicies.SystemUser
                     });
 
         public static Role CertificateManager { get; } = new Role("cert_manager_role", "Certificate Manager", "Can manage and administer all certificates",
@@ -66,6 +75,8 @@ namespace Certify.Models.Hub
     {
         public static string System { get; } = "system";
         public static string SecurityPrinciple { get; } = "securityprinciple";
+        public static string Role { get; } = "role";
+        public static string AccessToken { get; } = "accesstoken";
         public static string Domain { get; } = "domain";
         public static string ManagedItem { get; } = "manageditem";
         public static string Certificate { get; } = "certificate";
@@ -74,6 +85,9 @@ namespace Certify.Models.Hub
         public static string AcmeAccount { get; } = "acmeaccount";
         public static string ManagedChallenge { get; } = "managedchallenge";
         public static string ManagedInstance { get; } = "managedinstance";
+        public static string Target { get; } = "target";
+        public static string ChallengeProvider { get; } = "challengeprovider";
+        public static string DeploymentTask { get; } = "deploymenttask";
     }
 
     public static class StandardResourceActions
@@ -112,23 +126,59 @@ namespace Certify.Models.Hub
         public const string SecurityPrincipleList = "securityprinciple_list_action";
         public const string SecurityPrincipleAdd = "securityprinciple_add_action";
         public const string SecurityPrincipleUpdate = "securityprinciple_update_action";
+        public const string SecurityPrincipleUpdateAssignedRoles = "securityprinciple_update_assignedroles_action";
         public const string SecurityPrincipleDelete = "securityprinciple_delete_action";
         public const string SecurityPrinciplePasswordUpdate = "securityprinciple_password_update_action";
+        public const string SecurityPrinciplePasswordValidate = "securityprinciple_password_validate_action";
+        public const string SecurityPrincipleCheckAccess = "securityprinciple_access_check_action";
+
+        public const string RoleList = "role_list_action";
 
         public const string ManagedChallengeList = "managedchallenge_list_action";
         public const string ManagedChallengeUpdate = "managedchallenge_update_action";
         public const string ManagedChallengeDelete = "managedchallenge_update_action";
         public const string ManagedChallengeRequest = "managedchallenge_request_action";
+        public const string ManagedChallengeCleanup = "managedchallenge_cleanup_action";
 
         public const string ManagementHubInstancesList = "managementhub_instances_list_action";
         public const string ManagementHubInstanceJoin = "managementhub_instance_join_action";
         public const string ManagementHubInstanceDelete = "managementhub_instance_delete_action";
+        public const string ManagementHubInstanceAdd = "managementhub_instance_add_action";
+        public const string ManagementHubInstanceUpdate = "managementhub_instance_update_action";
+
+        public const string ManagementHubInstanceExport = "managementhub_instance_export_action";
+        public const string ManagementHubInstanceImport = "managementhub_instance_import_action";
+
+        public const string AccessTokenList = "accesstoken_list_action";
+        public const string AccessTokenAdd = "accesstoken_add_action";
+        public const string AccessTokenUpdate = "accesstoken_update_action";
+        public const string AccessTokenDelete = "accesstoken_delete_action";
+
+        public const string SystemGeneralAction = "system_general_action";
+
+        public const string SystemStatusList = "system_status_list_action";
+        public const string SystemServiceConfigList = "system_serviceconfig_list_action";
+        public const string SystemCoreSettingsList = "system_coresettings_list_action";
+        public const string SystemServiceConfigUpdate = "system_serviceconfig_update_action";
+        public const string SystemCoreSettingsUpdate = "system_coresettings_update_action";
+
+        public const string TargetIPAddressesList = "target_ipaddresses_list_action";
+        public const string TargetTypesList = "target_types_list_action";
+        public const string TargetServiceItemsList = "target_serviceitems_list_action";
+        public const string TargetServiceItemIdentifiersList = "target_serviceitemidentifiers_list_action";
+
+        public const string ChallengeProviderList = "challengeprovider_list_action";
+        public const string ChallengeProviderDnsZonesList = "challengeprovider_dnszones_list_action";
+
+        public const string DeploymentTaskExecute = "deploymenttask_execute_action";
+        public const string DeploymentTaskListProviders = "deploymenttask_list_providers_action";
 
     }
 
     public class StandardPolicies
     {
         public const string AccessAdmin = "access_admin_policy";
+        public const string AccessTokenAdmin = "accesstoken_admin_policy";
         public const string ManagedItemAdmin = "manageditem_admin_policy";
         public const string CertificateConsumer = "certificate_consumer_policy";
         public const string CertificateAuthorityAdmin = "ca_admin_policy";
@@ -140,6 +190,10 @@ namespace Certify.Models.Hub
         public const string ManagementHubAdmin = "managementhub_admin_policy";
         public const string ManagementHubReader = "managementhub_reader_policy";
         public const string ManagedInstance = "managementhub_managedinstance_policy";
+        public const string ManagedInstanceSystemImport = "system_import_policy";
+        public const string ManagedInstanceSystemExport = "system_export_policy";
+        public const string SystemUser = "system_user_policy";
+
     }
 
     public static class Policies
@@ -153,7 +207,8 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
                 StandardRoles.ManagedChallengeConsumer,
-                StandardRoles.ManagedInstance
+                StandardRoles.ManagedInstance,
+                StandardRoles.BackupOperator
             };
         }
 
@@ -183,8 +238,18 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.SecurityPrincipleList, "List Security Principles", ResourceTypes.SecurityPrinciple),
                 new(StandardResourceActions.SecurityPrincipleAdd, "Add New Security Principle", ResourceTypes.SecurityPrinciple),
                 new(StandardResourceActions.SecurityPrincipleUpdate,"Update Security Principles", ResourceTypes.SecurityPrinciple),
+                new(StandardResourceActions.SecurityPrincipleUpdateAssignedRoles,"Update Security Principle Assigned Roles", ResourceTypes.SecurityPrinciple),
                 new(StandardResourceActions.SecurityPrinciplePasswordUpdate, "Update Security Principle Passwords", ResourceTypes.SecurityPrinciple),
                 new(StandardResourceActions.SecurityPrincipleDelete, "Delete Security Principle", ResourceTypes.SecurityPrinciple),
+                new(StandardResourceActions.SecurityPrincipleCheckAccess, "Check Security Principle Access", ResourceTypes.SecurityPrinciple),
+                new(StandardResourceActions.SecurityPrinciplePasswordValidate, "Validate Security Principle Passwords", ResourceTypes.SecurityPrinciple),
+
+                new(StandardResourceActions.AccessTokenAdd, "Add Access Token", ResourceTypes.AccessToken),
+                new(StandardResourceActions.AccessTokenDelete, "Delete Access Token", ResourceTypes.AccessToken),
+                new(StandardResourceActions.AccessTokenList, "List Access Tokens", ResourceTypes.AccessToken),
+                new(StandardResourceActions.AccessTokenUpdate, "Update Access Token", ResourceTypes.AccessToken),
+
+                new(StandardResourceActions.RoleList, "List Roles", ResourceTypes.Role),
 
                 new(StandardResourceActions.ManagedItemRequest, "Request New Managed Items", ResourceTypes.ManagedItem),
 
@@ -207,10 +272,34 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedChallengeUpdate, "Update managed challenge", ResourceTypes.ManagedChallenge),
                 new(StandardResourceActions.ManagedChallengeDelete, "Delete managed challenge", ResourceTypes.ManagedChallenge),
                 new(StandardResourceActions.ManagedChallengeRequest, "Request to perform a managed challenge response", ResourceTypes.ManagedChallenge),
+                new(StandardResourceActions.ManagedChallengeCleanup, "Cleanup managed challenges", ResourceTypes.ManagedChallenge),
 
                 new(StandardResourceActions.ManagementHubInstancesList, "List managed instances", ResourceTypes.ManagedInstance),
                 new(StandardResourceActions.ManagementHubInstanceJoin, "Join management hub as a managed instance", ResourceTypes.ManagedInstance),
                 new(StandardResourceActions.ManagementHubInstanceDelete, "Delete managed instance from the hub", ResourceTypes.ManagedInstance),
+                new(StandardResourceActions.ManagementHubInstanceAdd, "Add managed instance details to the hub", ResourceTypes.ManagedInstance),
+                new(StandardResourceActions.ManagementHubInstanceUpdate, "Update managed instance detail in the hub", ResourceTypes.ManagedInstance),
+
+                new(StandardResourceActions.ManagementHubInstanceExport, "Export system configuration", ResourceTypes.ManagedInstance),
+                new(StandardResourceActions.ManagementHubInstanceImport, "Import system configuration", ResourceTypes.ManagedInstance),
+
+                new(StandardResourceActions.SystemStatusList, "List system status", ResourceTypes.System),
+                new(StandardResourceActions.SystemServiceConfigList, "List system service configuration", ResourceTypes.System),
+                new(StandardResourceActions.SystemCoreSettingsList, "List system core settings", ResourceTypes.System),
+                new(StandardResourceActions.SystemServiceConfigUpdate, "Update system service configuration", ResourceTypes.System),
+                new(StandardResourceActions.SystemCoreSettingsUpdate, "Update system core settings", ResourceTypes.System),
+
+                new(StandardResourceActions.TargetIPAddressesList, "List target IP addresses", ResourceTypes.Target),
+                new(StandardResourceActions.TargetTypesList, "List target types", ResourceTypes.Target),
+                new(StandardResourceActions.TargetServiceItemsList, "List target service items", ResourceTypes.Target),
+                new(StandardResourceActions.TargetServiceItemIdentifiersList, "List target service item identifiers", ResourceTypes.Target),
+
+                new(StandardResourceActions.ChallengeProviderList, "List challenge providers", ResourceTypes.ChallengeProvider),
+                new(StandardResourceActions.ChallengeProviderDnsZonesList, "List challenge provider DNS zones", ResourceTypes.ChallengeProvider),
+
+                new(StandardResourceActions.DeploymentTaskExecute, "Execute deployment task", ResourceTypes.DeploymentTask),
+                new(StandardResourceActions.DeploymentTaskListProviders, "List deployment task providers", ResourceTypes.DeploymentTask)
+
             };
         }
 
@@ -232,7 +321,15 @@ namespace Certify.Models.Hub
                         StandardResourceActions.ManagedItemTaskAdd,
                         StandardResourceActions.ManagedItemTaskUpdate,
                         StandardResourceActions.ManagedItemTaskDelete,
-                        StandardResourceActions.ManagedItemLogView
+                        StandardResourceActions.ManagedItemLogView,
+                        StandardResourceActions.TargetIPAddressesList,
+                        StandardResourceActions.TargetServiceItemIdentifiersList,
+                        StandardResourceActions.TargetServiceItemsList,
+                        StandardResourceActions.TargetTypesList,
+                        StandardResourceActions.ChallengeProviderList,
+                        StandardResourceActions.ChallengeProviderDnsZonesList,
+                        StandardResourceActions.DeploymentTaskExecute,
+                        StandardResourceActions.DeploymentTaskListProviders
                     }
                 },
                 new() {
@@ -244,9 +341,22 @@ namespace Certify.Models.Hub
                         StandardResourceActions.SecurityPrincipleAdd,
                         StandardResourceActions.SecurityPrincipleUpdate,
                         StandardResourceActions.SecurityPrincipleDelete,
-                        StandardResourceActions.SecurityPrinciplePasswordUpdate
+                        StandardResourceActions.SecurityPrinciplePasswordUpdate,
+                        StandardResourceActions.SecurityPrincipleUpdateAssignedRoles
+
                     }
                 },
+                new() {
+                     Id = StandardPolicies.AccessTokenAdmin,
+                     Title = "Access Token Administration",
+                     SecurityPermissionType = SecurityPermissionType.ALLOW,
+                     ResourceActions = new List<string> {
+                         StandardResourceActions.AccessTokenList,
+                         StandardResourceActions.AccessTokenAdd,
+                         StandardResourceActions.AccessTokenDelete,
+                         StandardResourceActions.AccessTokenUpdate,
+                     }
+                 },
                 new() {
                     Id = StandardPolicies.CertificateConsumer,
                     Title = "Consume Certificates",
@@ -316,7 +426,8 @@ namespace Certify.Models.Hub
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     IsResourceSpecific = true,
                     ResourceActions = new List<string> {
-                        StandardResourceActions.ManagedChallengeRequest
+                        StandardResourceActions.ManagedChallengeRequest,
+                        StandardResourceActions.ManagedChallengeCleanup
                     }
                 },
                 new() {
@@ -327,7 +438,15 @@ namespace Certify.Models.Hub
                     IsResourceSpecific = true,
                     ResourceActions = new List<string> {
                         StandardResourceActions.ManagementHubInstancesList,
-                        StandardResourceActions.ManagementHubInstanceDelete
+                        StandardResourceActions.ManagementHubInstanceAdd,
+                        StandardResourceActions.ManagementHubInstanceUpdate,
+                        StandardResourceActions.ManagementHubInstanceDelete,
+                        StandardResourceActions.SystemStatusList,
+                        StandardResourceActions.SystemCoreSettingsList,
+                        StandardResourceActions.SystemCoreSettingsUpdate,
+                        StandardResourceActions.SystemServiceConfigList,
+                        StandardResourceActions.SystemServiceConfigUpdate,
+
                     }
                 },
                 new() {
@@ -341,15 +460,47 @@ namespace Certify.Models.Hub
                     }
                 },
                 new() {
-                    Id = StandardPolicies.ManagedInstance,
-                    Title = "Management Hub Managed Instance",
-                    Description = "Join management hub and alow to be managed by hub.",
-                    SecurityPermissionType = SecurityPermissionType.ALLOW,
-                    IsResourceSpecific = true,
-                    ResourceActions = new List<string> {
-                        StandardResourceActions.ManagementHubInstanceJoin
-                    }
-                }
+                     Id = StandardPolicies.ManagedInstance,
+                     Title = "Management Hub Managed Instance",
+                     Description = "Join management hub and allow to be managed by hub.",
+                     SecurityPermissionType = SecurityPermissionType.ALLOW,
+                     IsResourceSpecific = true,
+                     ResourceActions = new List<string> {
+                         StandardResourceActions.ManagementHubInstanceJoin
+                     }
+                 },
+                  new() {
+                 Id = StandardPolicies.ManagedInstanceSystemImport,
+                 Title = "Instance Configuration Import",
+                 Description = "Import system configuration and apply to a target instance",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 IsResourceSpecific = true,
+                 ResourceActions = new List<string> {
+                     StandardResourceActions.ManagementHubInstanceImport
+                 }
+             },
+              new() {
+                 Id = StandardPolicies.ManagedInstanceSystemExport,
+                 Title = "Instance Configuration Export",
+                 Description = "Export system configuration for a target instance",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 IsResourceSpecific = true,
+                 ResourceActions = new List<string> {
+                     StandardResourceActions.ManagementHubInstanceExport
+                 }
+              },
+                new() {
+                 Id = StandardPolicies.SystemUser,
+                 Title = "System User",
+                 Description = "Perform general system use actions",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 IsResourceSpecific = true,
+                 ResourceActions = new List<string> {
+                     StandardResourceActions.SecurityPrincipleCheckAccess,
+                     StandardResourceActions.SecurityPrinciplePasswordValidate,
+                     StandardResourceActions.RoleList,
+                 }
+              }
             };
         }
     }
