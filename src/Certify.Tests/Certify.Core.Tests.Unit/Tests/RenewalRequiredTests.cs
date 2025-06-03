@@ -243,7 +243,6 @@ namespace Certify.Core.Tests.Unit
         [DataRow(true, 0.5f, 1, 75, 60, RenewalIntervalModes.PercentageLifetime, false, "1 day cert renewing at 75% lifetime, not due for renewal")]
         [DataRow(true, 0.76f, 1, 75, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 75% lifetime, due for renewal")]
         [DataRow(true, 180, 365, 90, 90, RenewalIntervalModes.PercentageLifetime, false, "365 day cert renewing at 90% lifetime, not due for renewal")]
-        [DataRow(true, 180, 365, 90, 90, RenewalIntervalModes.PercentageLifetime, false, "365 day cert renewing at 90% lifetime, not due for renewal")]
         public void TestAutoRenewalWithPercentageCertLifetime(
             bool previouslyRenewed, float daysElapsed, float lifetimeDays, float customRenewalPercentage, int renewalInterval, string customIntervalMode,
             bool renewalExpected, string testDescription)
