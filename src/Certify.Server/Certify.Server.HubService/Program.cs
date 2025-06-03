@@ -255,7 +255,7 @@ else
 
 app.MapDefaultEndpoints();
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseResponseCompression();
 
