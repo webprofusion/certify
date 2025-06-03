@@ -800,7 +800,7 @@ namespace Certify.Management
 
                 var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, isWindows ? "certify.exe" : "certify");
+                var cliPath = System.IO.Path.Combine(AppContext.BaseDirectory, isWindows ? "Certify.exe" : "certify");
 
                 if (!File.Exists(cliPath) && AppContext.BaseDirectory.IndexOf("service", StringComparison.InvariantCultureIgnoreCase) > -1)
                 {
@@ -834,10 +834,12 @@ namespace Certify.Management
                     _httpChallengeProcess.Start();
                     await Task.Delay(1000);
                 }
-                catch (Exception)
+                catch (Exception exp)
                 {
                     // failed to start process
                     _httpChallengeProcess = null;
+
+                    _serviceLog?.Error($"Http Challenge Server process failed to start {cliPath} {exp}");
                     return false;
                 }
 
@@ -847,7 +849,19 @@ namespace Certify.Management
                     _httpChallengeServerClient.DefaultRequestHeaders.Add("User-Agent", Util.GetUserAgent() + " CertifyManager");
                 }
 
-                return await IsHttpChallengeProcessStarted(true);
+                var started = await IsHttpChallengeProcessStarted(true);
+
+                if (!started)
+                {
+                    _serviceLog?.Error("Http Challenge Server process failed to start or respond within timeout period.");
+
+                    return false;
+                }
+                else
+                {
+                    _serviceLog?.Information("Http Challenge Server process started successfully.");
+                    return true;
+                }
             }
             else
             {
