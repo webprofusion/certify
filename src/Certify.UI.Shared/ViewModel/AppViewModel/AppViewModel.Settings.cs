@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config.Migration;
@@ -132,7 +133,24 @@ namespace Certify.UI.ViewModel
             await _prefLock.WaitAsync(500);
             try
             {
+                // set datastoreid and feature flags to pass model validation
+                if (Preferences.ConfigDataStoreConnectionId == null)
+                {
+                    Preferences.ConfigDataStoreConnectionId = "0";
+                }
+
+                if (Preferences.FeatureFlags == null)
+                {
+
+                    Preferences.FeatureFlags = [];
+                }
+
                 await _certifyClient.SetPreferences(Preferences);
+            }
+            catch (ServiceCommsException ex)
+            {
+                MessageBox.Show($"Unable to save preferences. {ex?.Message}.", "Save Preferences Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
             }
             catch
             {

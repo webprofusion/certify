@@ -165,6 +165,11 @@
                                     Margin="0,4,0,0"
                                     Content="Enable Modern PFX Alg (OpenSSL 3.0+ compatibility etc)"
                                     IsChecked="{Binding Prefs.UseModernPFXAlgs}" />
+                                <CheckBox
+                                    x:Name="DisableARIChecks"
+                                    Margin="0,4,0,0"
+                                    Content="Disable ACME ARI (don't use renewal dates suggested by CA)"
+                                    IsChecked="{Binding Prefs.DisableARIChecks}" />
 
                             </StackPanel>
 
