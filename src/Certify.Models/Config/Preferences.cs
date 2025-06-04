@@ -111,7 +111,7 @@
         /// <summary>
         /// Id of the data store connection configuration to use. 0 is the default scheme using local SQLite
         /// </summary>
-        public string ConfigDataStoreConnectionId { get; set; } = "0";
+        public string? ConfigDataStoreConnectionId { get; set; } = "(default)";
 
         /// <summary>
         /// If set, defines the default key type used for private keys
