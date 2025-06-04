@@ -20,7 +20,18 @@ namespace Certify.SharedUtils
                 ConfigStatus = ConfigStatus.DefaultFailed
             };
 
-            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
+            var appDataPath = string.Empty;
+            try
+            {
+                appDataPath = EnvironmentUtil.EnsuredAppDataPath();
+            }
+            catch (Exception exp)
+            {
+                System.Console.WriteLine($"ServiceConfigManager: Failed to get AppData path. {exp.Message}");
+                serviceConfig.ServiceFaultMsg = $"Failed to get AppData path. {exp.Message}";
+                return serviceConfig;
+            }
+
             var serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.json");
 #if DEBUG
             serviceConfigFile = Path.Combine(appDataPath, "serviceconfig.debug.json");
@@ -34,13 +45,24 @@ namespace Certify.SharedUtils
                     {
                         serviceConfig = JsonConvert.DeserializeObject<ServiceConfig>(config);
                     }
+                    else
+                    {
+                        System.Console.WriteLine($"ServiceConfigManager: Empty service config found at {serviceConfigFile}");
+                    }
 
                     serviceConfig.ConfigStatus = ConfigStatus.NotModified;
                 }
                 else
                 {
                     serviceConfig.ConfigStatus = ConfigStatus.New;
+                    System.Console.WriteLine($"ServiceConfigManager: No service config found at {serviceConfigFile}");
                 }
+            }
+            catch (UnauthorizedAccessException uaExp)
+            {
+                serviceConfig.ConfigStatus = ConfigStatus.DefaultFailed;
+                serviceConfig.ServiceFaultMsg = $"Access denied to service configuration file at {serviceConfigFile}. {uaExp.Message}";
+                System.Console.WriteLine($"ServiceConfigManager: {serviceConfig.ServiceFaultMsg}");
             }
             catch (Exception exp)
             {
@@ -49,11 +71,16 @@ namespace Certify.SharedUtils
                     serviceConfig.ConfigStatus = ConfigStatus.DefaultFailed;
                     serviceConfig.ServiceFaultMsg = $"There was a problem loading the service configuration from {serviceConfigFile} {exp.Message}";
                 }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ServiceConfigManager: Fault loading service config found at {exp}");
+                }
             }
 
             // if something went wrong, default to standard config
             if (serviceConfig == null)
             {
+                System.Console.WriteLine($"ServiceConfigManager: Falling back to default service config.");
                 serviceConfig = new ServiceConfig()
                 {
                     ConfigStatus = ConfigStatus.DefaultFailed
