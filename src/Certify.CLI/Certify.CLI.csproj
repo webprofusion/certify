@@ -52,6 +52,9 @@
         <ProjectReference Include="..\Certify.Client\Certify.Client.csproj" />
         <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
         <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
+
+        <TrimmerRootAssembly Include="Certify.Models" />
+        <TrimmerRootAssembly Include="Certify.Client" />
     </ItemGroup>
 
     <ItemGroup>
