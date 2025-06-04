@@ -71,10 +71,11 @@ namespace Certify.Client
         internal string _accessToken { get; set; } = "";
         internal string _refreshToken { get; set; } = "";
 
-        public CertifyApiClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null)
+        public CertifyApiClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection connectionConfig = null)
         {
             _configProvider = configProvider;
-            _connectionConfig = config ?? GetDefaultServerConnection();
+
+            _connectionConfig = connectionConfig ?? new ServerConnection(configProvider.GetServiceConfig());
 
             _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _baseUri;
 
@@ -129,6 +130,7 @@ namespace Certify.Client
         public ServerConnection GetDefaultServerConnection()
         {
             var serviceCfg = _configProvider.GetServiceConfig();
+
             return new ServerConnection(serviceCfg);
         }
 

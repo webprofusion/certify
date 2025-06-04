@@ -146,7 +146,7 @@ namespace Certify.Core.Management.Challenges
 
                     Log($"Http Challenge Server Started: {uriPrefix}", true);
                     Log($"Control Key: {_controlKey}: Check Key: {_checkKey}");
-                    Log($"Using Internal API: {_baseUri}");
+                    Log($"Using Internal API: {_baseUri} {serverConfig.ConfigStatus}");
 
                     _ = Task.Run(ServerTask);
 
