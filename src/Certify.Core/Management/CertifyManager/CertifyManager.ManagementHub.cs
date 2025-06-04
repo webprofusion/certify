@@ -295,11 +295,18 @@ namespace Certify.Management
                                 // if not set by env, check if we already have a management hub joining key as a stored credential
                                 if (_mgmtHubJoiningSecret == null)
                                 {
-                                    var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
-
-                                    if (secret != null)
+                                    try
                                     {
-                                        _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
+                                        var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+
+                                        if (secret != null)
+                                        {
+                                            _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _serviceLog.Error(ex, "Error retrieving management hub joining key from credentials store.");
                                     }
                                 }
 
