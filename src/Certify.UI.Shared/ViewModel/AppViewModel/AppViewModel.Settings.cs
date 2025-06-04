@@ -136,7 +136,7 @@ namespace Certify.UI.ViewModel
                 // set datastoreid and feature flags to pass model validation
                 if (Preferences.ConfigDataStoreConnectionId == null)
                 {
-                    Preferences.ConfigDataStoreConnectionId = "0";
+                    Preferences.ConfigDataStoreConnectionId = "(default)";
                 }
 
                 if (Preferences.FeatureFlags == null)

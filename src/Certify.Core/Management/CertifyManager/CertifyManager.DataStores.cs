@@ -16,7 +16,6 @@ namespace Certify.Management
     {
         private object _dataStoreLocker = new object();
 
-
         private async Task InitDataStore()
         {
             var enableExtendedDataStores = true;
@@ -29,7 +28,7 @@ namespace Certify.Management
                     var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
                     var dataStoreInfo = await GetDataStore(defaultStoreId);
 
-                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)")
+                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)" || defaultStoreId == "0")
                     {
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
