@@ -270,7 +270,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
         public async Task<ActionResult> Test()
         {
-            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "Test completed, but no zones returned." });
+            return await Task.FromResult(new ActionResult { IsSuccess = true, Message = "There is no supported test for this provide type." });
         }
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)

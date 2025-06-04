@@ -190,7 +190,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Akamai",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -209,7 +209,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Akamai",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -228,7 +228,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=All-Inkl",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -247,7 +247,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Aliyun",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -268,7 +268,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=AutoDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
                  new ChallengeProviderDefinition
@@ -286,7 +286,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Bunny",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -306,7 +306,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ClouDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -325,7 +325,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Combell",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -344,7 +344,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Constellix",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -363,7 +363,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DMEasy",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -382,7 +382,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSPod",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -402,7 +402,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSPod",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -420,7 +420,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSimple",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -438,7 +438,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DOcean",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -457,7 +457,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DeSEC",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -475,7 +475,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DomainOffensive",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -494,7 +494,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Domeneshop",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -512,7 +512,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Dreamhost",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -531,7 +531,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Dynu",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -551,7 +551,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=EasyDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -569,7 +569,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GCloud",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
                new ChallengeProviderDefinition
@@ -588,7 +588,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoogleDomains;Credential=GDomCredential,RootDomain,AccessToken;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -607,7 +607,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Gandi",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -625,7 +625,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Hetzner",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -643,7 +643,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostingDe",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -663,7 +663,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HurricaneElectric;Credential=HECredential,HEUsername,HEPassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -683,7 +683,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=IBMSoftLayer;Credential=IBMCredential,IBMUser,IBMKey;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -707,7 +707,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ISPConfig;Credential=ISPConfigCredential,ISPConfigUsername,ISPConfigPassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -730,7 +730,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infoblox;Credential=IBCred,IBUsername,IBPassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
               new ChallengeProviderDefinition
@@ -748,7 +748,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Infomaniak;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -767,7 +767,7 @@ namespace Certify.Core.Management.Challenges.DNS
                  ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                  Config = "Provider=Certify.Providers.DNS.PoshACME;Script=INWX",
                  HandlerType = ChallengeHandlerType.POWERSHELL,
-                 IsTestModeSupported = true,
+                 IsTestModeSupported = false,
                  IsExperimental = true
              },
               new ChallengeProviderDefinition
@@ -786,7 +786,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=IONOS;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
              new ChallengeProviderDefinition
@@ -804,7 +804,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LeaseWeb",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -822,7 +822,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Linode",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -841,7 +841,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Loopia",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -861,7 +861,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LuaDns;Credential=LuaCredential,LuaUsername,LuaPassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -881,7 +881,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=NameCom",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -899,7 +899,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=NS1",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -918,7 +918,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Namecheap",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -937,7 +937,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=PointDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -956,7 +956,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Porkbun",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -975,7 +975,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=PowerDNS",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -994,7 +994,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Rackspace",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1018,7 +1018,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=RFC2136",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1036,7 +1036,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Selectel",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1055,7 +1055,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=SimplyCom",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1074,7 +1074,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=TencentDNS;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1094,7 +1094,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=TotalUptime;Credential=TotalUptimeCredential,TotalUptimeUsername,TotalUptimePassword;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1112,7 +1112,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=UKFast",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1130,7 +1130,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Yandex",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1148,7 +1148,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Zonomi",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1168,7 +1168,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=ZoneEdit;Credential=ZEDynCredential,Domain,DomainToken;", // construct ZEDynCredential from Domain and DomainToken
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1187,7 +1187,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Zonomi", // this uses the same plugin as Zonomi because they share the same API
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
             new ChallengeProviderDefinition
@@ -1224,7 +1224,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Zilore",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = true,
+                IsTestModeSupported = false,
                 IsExperimental = true
             },
         };

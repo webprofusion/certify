@@ -566,8 +566,17 @@ namespace Certify.Management
                         {
                             return new ActionResult { IsSuccess = false, Message = "Could not create DNS provider API. Invalid or unrecognised." };
                         }
-
-                        return await dnsProvider.Test();
+                        else
+                        {
+                            if (dnsProvider.IsTestModeSupported == false)
+                            {
+                                return new ActionResult { IsSuccess = false, Message = "This DNS provider does not support credential testing." };
+                            }
+                            else
+                            {
+                                return await dnsProvider.Test();
+                            }
+                        }
                     }
                     catch (Exception exp)
                     {
