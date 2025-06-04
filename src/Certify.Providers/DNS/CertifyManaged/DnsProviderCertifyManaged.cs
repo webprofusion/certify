@@ -36,7 +36,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                         new ProviderParameter{ Key="authkey",Name="Client ID", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Auth Key" },
                         new ProviderParameter{ Key="authsecret",Name="Client Secret", IsRequired=true, IsCredential=true, IsPassword=true,  Description="API Auth Secret" }
                     },
-                    IsTestModeSupported = true,
+                    IsTestModeSupported = false,
                     ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                     Config = "Provider=Certify.Providers.DNS.CertifyManaged",
                     HandlerType = ChallengeHandlerType.INTERNAL
