@@ -1,10 +1,10 @@
 ﻿namespace Certify.Server.Core
 {
-    public class StubBackgroundService : BackgroundService
+    public class AgentBackgroundService : BackgroundService
     {
-        public StubBackgroundService(ILoggerFactory loggerFactory)
+        public AgentBackgroundService(ILoggerFactory loggerFactory)
         {
-            Logger = loggerFactory.CreateLogger<StubBackgroundService>();
+            Logger = loggerFactory.CreateLogger<AgentBackgroundService>();
         }
 
         public ILogger Logger { get; }

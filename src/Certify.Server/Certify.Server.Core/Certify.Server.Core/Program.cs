@@ -6,13 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
     builder.Services.AddSystemd()
-                .AddHostedService<StubBackgroundService>();
+                .AddHostedService<AgentBackgroundService>();
 }
-
-if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
     builder.Services.AddWindowsService()
-                    .AddHostedService<StubBackgroundService>();
+                    .AddHostedService<AgentBackgroundService>();
 }
 
 builder.Configuration.AddJsonFile("appsettings-core.json", optional: true, reloadOnChange: true);
