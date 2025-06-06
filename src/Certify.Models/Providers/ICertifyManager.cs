@@ -18,7 +18,7 @@ namespace Certify.Management
 {
     public interface ICertifyManager
     {
-        Task Init();
+        Task Init(bool enablePlugins = true);
         void SetStatusReporting(IStatusReporting statusReporting);
         Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
         Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
