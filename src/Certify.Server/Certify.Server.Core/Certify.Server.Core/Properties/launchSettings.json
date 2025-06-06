@@ -1,18 +1,7 @@
 {
-  "$schema": "http://json.schemastore.org/launchsettings.json",
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://127.0.0.2:9695"
-    }
-  },
-
   "profiles": {
-
     "Certify.Server.Core (no service auth)": {
       "commandName": "Project",
-      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
@@ -26,7 +15,6 @@
     },
     "Certify.Server.Core (windows auth)": {
       "commandName": "Project",
-      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
@@ -36,13 +24,12 @@
     },
     "IIS Express": {
       "commandName": "IISExpress",
-      "launchBrowser": false,
       "launchUrl": "http://127.0.0.2:9695/docs",
-      "iisExpress": {
-        "applicationUrl": "http://127.0.0.2:9695"
-      },
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "iisExpress": {
+        "applicationUrl": "http://127.0.0.2:9695"
       }
     },
     "Docker": {
@@ -59,7 +46,6 @@
     },
     "WSL": {
       "commandName": "WSL2",
-      "launchBrowser": false,
       "launchUrl": "http://localhost:9695/docs",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
@@ -68,6 +54,15 @@
         "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361/api/internal/managementhub",
         "CERTIFY_SERVICE_AUTH_MODE": "none"
       }
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://127.0.0.2:9695",
+      "sslPort": 0
     }
   }
 }
