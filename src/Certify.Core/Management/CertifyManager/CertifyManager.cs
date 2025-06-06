@@ -134,7 +134,7 @@ namespace Certify.Management
             _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
         }
 
-        public async Task Init()
+        public async Task Init(bool enablePlugins = true)
         {
             _useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
@@ -175,7 +175,17 @@ namespace Certify.Management
                 EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
             };
 
-            _pluginManager.LoadPlugins(new List<string> {
+            if (!enablePlugins)
+            {
+                // load plugins for core service functionality
+                _pluginManager.LoadPlugins(new List<string> {
+                    PluginManager.PLUGINS_LICENSING,
+                    PluginManager.PLUGINS_DASHBOARD
+                });
+            }
+            else
+            {
+                _pluginManager.LoadPlugins(new List<string> {
                 PluginManager.PLUGINS_LICENSING,
                 PluginManager.PLUGINS_DASHBOARD,
                 PluginManager.PLUGINS_DEPLOYMENT_TASKS,
@@ -183,7 +193,8 @@ namespace Certify.Management
                 PluginManager.PLUGINS_DNS_PROVIDERS,
                 PluginManager.PLUGINS_SERVER_PROVIDERS,
                 PluginManager.PLUGINS_DATASTORE_PROVIDERS
-            });
+                });
+            }
 
             // setup supported target server types for default deployment
             if (_pluginManager.ServerProviders != null)
