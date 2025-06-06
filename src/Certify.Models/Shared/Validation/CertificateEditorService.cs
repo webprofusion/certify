@@ -310,18 +310,6 @@ namespace Certify.Models.Shared.Validation
                             ValidationErrorCodes.PRIMARY_IDENTIFIER_REQUIRED.ToString()
                         );
                     }
-                    else
-                    {
-                        // CN/Primary Subject has a limit of 64 characters
-                        if (GetPrimarySubjectDomain(item)?.Domain?.Length > 64 == true)
-                        {
-                            return new ValidationResult(
-                                         false,
-                                         $"Certificate CN (primary subject/domain) cannot exceed 64 characters.",
-                                         ValidationErrorCodes.CN_LIMIT.ToString()
-                                      );
-                        }
-                    }
 
                     if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
                     {
@@ -435,7 +423,7 @@ namespace Certify.Models.Shared.Validation
                 {
                     return new ValidationResult(
                                    false,
-                                   $"One or more challenge configurations required",
+                                   $"One or more authorization challenge response configurations are required, see Certificate > Authorization",
                                    ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString()
                                 );
                 }
@@ -451,7 +439,7 @@ namespace Certify.Models.Shared.Validation
                             {
                                 return new ValidationResult(
                                    false,
-                                   $"Challenge configuration parameter required: {p.Name}",
+                                   $"Authorization challenge response configuration parameter required: {p.Name}",
                                    ValidationErrorCodes.REQUIRED_CHALLENGE_CONFIG_PARAM.ToString()
                                 );
                             }
