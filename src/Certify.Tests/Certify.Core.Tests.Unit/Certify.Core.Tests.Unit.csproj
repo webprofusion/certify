@@ -101,7 +101,7 @@
         <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.5" />
         <PackageReference Include="System.Text.Json" Version="9.0.5" />
-        <PackageReference Include="Testcontainers" Version="4.4.0" />
+        <PackageReference Include="Testcontainers" Version="4.5.0" />
     </ItemGroup>
 
     <ItemGroup>
