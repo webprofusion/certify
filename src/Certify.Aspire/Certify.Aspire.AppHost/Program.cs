@@ -4,7 +4,7 @@ var useIndependentServices = false;
 
 if (Environment.GetEnvironmentVariable("ASPIRE_USE_INDEPENDENT_SERVICES") != null)
 {
-    useIndependentServices = Environment.GetEnvironmentVariable("ASPIRE_USE_INDEPENDENT_SERVICES").ToLower() == "true";
+    useIndependentServices = Environment.GetEnvironmentVariable("ASPIRE_USE_INDEPENDENT_SERVICES")?.ToLower() == "true";
 }
 
 if (useIndependentServices)

@@ -17,7 +17,6 @@
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://0.0.0.0:44361",
-      "CERTIFY_MANAGEMENT_HUB": "https://localhost:7187/api/internal/managementhub",
       "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
     },
     "Container (.NET SDK)": {
