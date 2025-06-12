@@ -169,7 +169,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority..
+        ///   Looks up a localized string similar to The email address provided may be used to notify you of upcoming certificate renewals if required..
         /// </summary>
         public static string Account_Edit_Intro2 {
             get {
