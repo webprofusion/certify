@@ -169,7 +169,7 @@
     <value>To request certificates you need to register with each of the Certificate Authorities that you want to use.</value>
   </data>
   <data name="Account_Edit_Intro2" xml:space="preserve">
-    <value>The email address provided may be used to notify you of upcoming certificate renewals if required. Invalid email addresses will be rejected by the Certificate Authority.</value>
+    <value>The email address provided may be used to notify you of upcoming certificate renewals if required.</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>Send Feedback</value>
