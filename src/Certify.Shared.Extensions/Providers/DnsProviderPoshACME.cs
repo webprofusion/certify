@@ -888,9 +888,9 @@ namespace Certify.Core.Management.Challenges.DNS
             {
                 Id = "DNS01.API.PoshACME.NameSilo",
                 Title = "NameSilo DNS API (using Posh-ACME)",
-                Description = "Validates via NameSilo DNS API using API key.",
+                Description = "Validates via NameSilo DNS API using API key. Note that NameSilo requires a large (15min) propagation delay.",
                 HelpUrl = "https://poshac.me/docs/latest/Plugins/NameSilo/",
-                PropagationDelaySeconds = DefaultPropagationDelay,
+                PropagationDelaySeconds = 900,
                 ProviderParameters = new List<ProviderParameter>
                 {
                     new ProviderParameter { Key = "NameSiloApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
