@@ -207,6 +207,7 @@ namespace Certify.Server.Hub.Api
 
             backendServiceConnectionConfig.Authentication = "jwt";
             backendServiceConnectionConfig.ServerMode = "v2";
+            //backendServiceConnectionConfig.Mode = "namedpipe";
 
             System.Diagnostics.Debug.WriteLine($"Public API: connecting to background service {serviceConfig.Host}:{serviceConfig.Port}");
 
