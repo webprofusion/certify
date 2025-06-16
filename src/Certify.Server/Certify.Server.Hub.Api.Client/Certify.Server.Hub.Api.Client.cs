@@ -82,9 +82,6 @@ namespace Certify.Server.Hub.Api
         partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
         partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
 
-        /// <summary>
-        /// Check a given security principle has permissions to perform a specific action for a specific resource action [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<bool> CheckSecurityPrincipleHasAccessAsync(AccessCheck body)
@@ -93,9 +90,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Check a given security principle has permissions to perform a specific action for a specific resource action [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<bool> CheckSecurityPrincipleHasAccessAsync(AccessCheck body, System.Threading.CancellationToken cancellationToken)
@@ -170,9 +164,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of Assigned Roles for a given security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedRole>> GetSecurityPrincipleAssignedRolesAsync(string id)
@@ -181,9 +172,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of Assigned Roles for a given security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedRole>> GetSecurityPrincipleAssignedRolesAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -259,9 +247,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of Assigned Roles etc for a given security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<RoleStatus> GetSecurityPrincipleRoleStatusAsync(string id)
@@ -270,9 +255,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of Assigned Roles etc for a given security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<RoleStatus> GetSecurityPrincipleRoleStatusAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -348,9 +330,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of available security Roles [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Role>> GetAccessRolesAsync()
@@ -359,9 +338,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of available security Roles [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Role>> GetAccessRolesAsync(System.Threading.CancellationToken cancellationToken)
@@ -432,9 +408,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of API assigned access tokens [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync()
@@ -443,9 +416,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of API assigned access tokens [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync(System.Threading.CancellationToken cancellationToken)
@@ -516,9 +486,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add new assigned access token [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body)
@@ -527,9 +494,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add new assigned access token [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body, System.Threading.CancellationToken cancellationToken)
@@ -604,9 +568,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove assigned access token [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveAssignedAccessTokenAsync(string id)
@@ -615,9 +576,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove assigned access token [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveAssignedAccessTokenAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -694,9 +652,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of available security principles [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SecurityPrinciple>> GetSecurityPrinciplesAsync()
@@ -705,9 +660,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of available security principles [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SecurityPrinciple>> GetSecurityPrinciplesAsync(System.Threading.CancellationToken cancellationToken)
@@ -778,9 +730,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Check password valid for security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<SecurityPrincipleCheckResponse> ValidateSecurityPrinciplePasswordAsync(SecurityPrinciplePasswordCheck body)
@@ -789,9 +738,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Check password valid for security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<SecurityPrincipleCheckResponse> ValidateSecurityPrinciplePasswordAsync(SecurityPrinciplePasswordCheck body, System.Threading.CancellationToken cancellationToken)
@@ -866,9 +812,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Update password for security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrinciplePasswordAsync(SecurityPrinciplePasswordUpdate body)
@@ -877,9 +820,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Update password for security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrinciplePasswordAsync(SecurityPrinciplePasswordUpdate body, System.Threading.CancellationToken cancellationToken)
@@ -954,9 +894,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add new security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddSecurityPrincipleAsync(SecurityPrinciple body)
@@ -965,9 +902,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add new security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddSecurityPrincipleAsync(SecurityPrinciple body, System.Threading.CancellationToken cancellationToken)
@@ -1042,9 +976,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveSecurityPrincipleAsync(string id)
@@ -1053,9 +984,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveSecurityPrincipleAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -1132,9 +1060,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Update existing security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipleAsync(SecurityPrinciple body)
@@ -1143,9 +1068,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Update existing security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipleAsync(SecurityPrinciple body, System.Threading.CancellationToken cancellationToken)
@@ -1220,9 +1142,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Update assigned roles for a security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipleAssignedRolesAsync(SecurityPrincipleAssignedRoleUpdate body)
@@ -1231,9 +1150,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Update assigned roles for a security principle [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipleAssignedRolesAsync(SecurityPrincipleAssignedRoleUpdate body, System.Threading.CancellationToken cancellationToken)
@@ -1308,9 +1224,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Operations to check current auth status for the given presented authentication tokens
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task CheckAuthStatusAsync()
@@ -1319,9 +1232,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Operations to check current auth status for the given presented authentication tokens
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task CheckAuthStatusAsync(System.Threading.CancellationToken cancellationToken)
@@ -1386,10 +1296,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Perform login using username and password
-        /// </summary>
-        /// <param name="body">Login credentials</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<AuthResponse> LoginAsync(AuthRequest body)
@@ -1398,10 +1304,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Perform login using username and password
-        /// </summary>
-        /// <param name="body">Login credentials</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<AuthResponse> LoginAsync(AuthRequest body, System.Threading.CancellationToken cancellationToken)
@@ -1486,9 +1388,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Refresh users current auth token
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<AuthResponse> RefreshAsync(string refreshToken)
@@ -1497,9 +1396,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Refresh users current auth token
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<AuthResponse> RefreshAsync(string refreshToken, System.Threading.CancellationToken cancellationToken)
@@ -1577,12 +1473,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers).
-        /// </summary>
-        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
-        /// <param name="managedCertId">Id of managed cert to fetch</param>
-        /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format)
@@ -1591,12 +1481,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Download the latest certificate for the given managed certificate. For auth provide either a valid JWT via Authorization header or use an API token (using X-ClientID and X-Client-Secret HTTP headers).
-        /// </summary>
-        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
-        /// <param name="managedCertId">Id of managed cert to fetch</param>
-        /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<FileResponse> DownloadAsync(string instanceId, string managedCertId, string format, System.Threading.CancellationToken cancellationToken)
@@ -1679,9 +1563,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Download log entries for the given managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines)
@@ -1690,9 +1571,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Download log entries for the given managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<LogResult> DownloadLogAsync(string instanceId, string managedCertId, int? maxLines, System.Threading.CancellationToken cancellationToken)
@@ -1778,9 +1656,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Download text log for the given managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<FileResponse> DownloadLogTextAsync(string instanceId, string managedCertId)
@@ -1789,9 +1664,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Download text log for the given managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<FileResponse> DownloadLogTextAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
@@ -1871,9 +1743,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get all managed certificates matching criteria
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetManagedCertificatesAsync(string keyword, int? page, int? pageSize)
@@ -1882,9 +1751,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get all managed certificates matching criteria
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetManagedCertificatesAsync(string keyword, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
@@ -1969,9 +1835,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get summary counts of all managed certs
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync()
@@ -1980,9 +1843,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get summary counts of all managed certs
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<StatusSummary> GetManagedCertificateSummaryAsync(System.Threading.CancellationToken cancellationToken)
@@ -2053,9 +1913,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Retrieves the summary of a managed certificate for a specific instance using the provided instance ID.
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<StatusSummary> GetInstanceManagedCertificateSummaryAsync(string instanceId)
@@ -2064,9 +1921,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Retrieves the summary of a managed certificate for a specific instance using the provided instance ID.
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<StatusSummary> GetInstanceManagedCertificateSummaryAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -2142,11 +1996,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Gets the full settings for a specific managed certificate
-        /// </summary>
-        /// <param name="instanceId">target instance</param>
-        /// <param name="managedCertId">managed item</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string instanceId, string managedCertId)
@@ -2155,11 +2004,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Gets the full settings for a specific managed certificate
-        /// </summary>
-        /// <param name="instanceId">target instance</param>
-        /// <param name="managedCertId">managed item</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedCertificate> GetManagedCertificateDetailsAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
@@ -2239,9 +2083,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove Managed Certificate [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
@@ -2250,9 +2091,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove Managed Certificate [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
@@ -2332,9 +2170,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add/update the full settings for a specific managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(string instanceId, ManagedCertificate body)
@@ -2343,9 +2178,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add/update the full settings for a specific managed certificate
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedCertificate> UpdateManagedCertificateDetailsAsync(string instanceId, ManagedCertificate body, System.Threading.CancellationToken cancellationToken)
@@ -2425,9 +2257,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Begin the managed certificate request/renewal process for the given managed certificate id (on demand)
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task BeginOrderAsync(string instanceId, string id)
@@ -2436,9 +2265,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Begin the managed certificate request/renewal process for the given managed certificate id (on demand)
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task BeginOrderAsync(string instanceId, string id, System.Threading.CancellationToken cancellationToken)
@@ -2514,9 +2340,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Begin the managed certificate request/renewal process a set of managed certificates
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedCertificate> PerformRenewalAsync(string instanceId, RenewalSettings body)
@@ -2525,9 +2348,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Begin the managed certificate request/renewal process a set of managed certificates
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedCertificate> PerformRenewalAsync(string instanceId, RenewalSettings body, System.Threading.CancellationToken cancellationToken)
@@ -2608,9 +2428,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Perform default tests for the given configuration
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StatusMessage>> PerformConfigurationTestAsync(string instanceId, ManagedCertificate body)
@@ -2619,9 +2436,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Perform default tests for the given configuration
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StatusMessage>> PerformConfigurationTestAsync(string instanceId, ManagedCertificate body, System.Threading.CancellationToken cancellationToken)
@@ -2702,9 +2516,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get All Acme Accounts [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId)
@@ -2713,9 +2524,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get All Acme Accounts [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -2791,9 +2599,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add New Acme Account [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body)
@@ -2802,9 +2607,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add New Acme Account [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body, System.Threading.CancellationToken cancellationToken)
@@ -2884,9 +2686,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of defined Certificate Authorities [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateAuthority>> GetCertificateAuthoritiesAsync(string instanceId)
@@ -2895,9 +2694,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of defined Certificate Authorities [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateAuthority>> GetCertificateAuthoritiesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -2973,9 +2769,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add/Update Certificate Authority [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateCertificateAuthorityAsync(string instanceId, CertificateAuthority body)
@@ -2984,9 +2777,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add/Update Certificate Authority [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateCertificateAuthorityAsync(string instanceId, CertificateAuthority body, System.Threading.CancellationToken cancellationToken)
@@ -3066,9 +2856,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove Certificate Authority [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveCertificateAuthorityAsync(string instanceId, string id)
@@ -3077,9 +2864,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove Certificate Authority [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveCertificateAuthorityAsync(string instanceId, string id, System.Threading.CancellationToken cancellationToken)
@@ -3159,9 +2943,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove ACME Account [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveAcmeAccountAsync(string instanceId, string storageKey, bool deactivate)
@@ -3170,9 +2951,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove ACME Account [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveAcmeAccountAsync(string instanceId, string storageKey, bool deactivate, System.Threading.CancellationToken cancellationToken)
@@ -3257,9 +3035,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get Dns Challenge Providers [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ChallengeProviderDefinition>> GetChallengeProvidersAsync(string instanceId)
@@ -3268,9 +3043,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get Dns Challenge Providers [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ChallengeProviderDefinition>> GetChallengeProvidersAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -3345,9 +3117,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get List of Zones with the current DNS provider and credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId)
@@ -3356,9 +3125,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get List of Zones with the current DNS provider and credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DnsZone>> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId, System.Threading.CancellationToken cancellationToken)
@@ -3443,9 +3209,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get Deployment Task Providers [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DeploymentProviderDefinition>> GetDeploymentProvidersAsync(string instanceId)
@@ -3454,9 +3217,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get Deployment Task Providers [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DeploymentProviderDefinition>> GetDeploymentProvidersAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -3531,9 +3291,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Execute Deployment Task [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> ExecuteDeploymentTaskAsync(string instanceId, string managedCertificateId, string taskId)
@@ -3542,9 +3299,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Execute Deployment Task [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> ExecuteDeploymentTaskAsync(string instanceId, string managedCertificateId, string taskId, System.Threading.CancellationToken cancellationToken)
@@ -3629,9 +3383,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get all managed certificates matching criteria
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, int? page, int? pageSize)
@@ -3640,9 +3391,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get all managed certificates matching criteria
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedCertificateSummaryResult> GetHubManagedItemsAsync(string instanceId, string keyword, string health, int? page, int? pageSize, System.Threading.CancellationToken cancellationToken)
@@ -3735,9 +3483,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get all hub managed instances
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedInstanceInfo>> GetHubManagedInstancesAsync()
@@ -3746,9 +3491,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get all hub managed instances
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedInstanceInfo>> GetHubManagedInstancesAsync(System.Threading.CancellationToken cancellationToken)
@@ -3819,9 +3561,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Flush all hub managed instances
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task FlushHubManagedInstancesAsync()
@@ -3830,9 +3569,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Flush all hub managed instances
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task FlushHubManagedInstancesAsync(System.Threading.CancellationToken cancellationToken)
@@ -3897,9 +3633,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get info about the hub instance
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<HubInfo> GetHubInfoAsync()
@@ -3908,9 +3641,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get info about the hub instance
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<HubInfo> GetHubInfoAsync(System.Threading.CancellationToken cancellationToken)
@@ -3981,9 +3711,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Retrieves the current system status items
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetSystemStatusItemsAsync(string instanceId)
@@ -3992,9 +3719,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Retrieves the current system status items
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetSystemStatusItemsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -4069,9 +3793,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove existing managed instance in the hub [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id)
@@ -4080,9 +3801,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove existing managed instance in the hub [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -4157,9 +3875,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Request a challenge response
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> PerformManagedChallengeAsync(ManagedChallengeRequest body)
@@ -4168,9 +3883,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Request a challenge response
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> PerformManagedChallengeAsync(ManagedChallengeRequest body, System.Threading.CancellationToken cancellationToken)
@@ -4245,9 +3957,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Perform optional cleanup of a previously requested challenge response
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> CleanupManagedChallengeAsync(ManagedChallengeRequest body)
@@ -4256,9 +3965,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Perform optional cleanup of a previously requested challenge response
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> CleanupManagedChallengeAsync(ManagedChallengeRequest body, System.Threading.CancellationToken cancellationToken)
@@ -4333,9 +4039,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of available managed challenges (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedChallenge>> GetManagedChallengesAsync()
@@ -4344,9 +4047,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of available managed challenges (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedChallenge>> GetManagedChallengesAsync(System.Threading.CancellationToken cancellationToken)
@@ -4417,9 +4117,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add/update a managed challenge (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateManagedChallengeAsync(ManagedChallenge body)
@@ -4428,9 +4125,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add/update a managed challenge (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateManagedChallengeAsync(ManagedChallenge body, System.Threading.CancellationToken cancellationToken)
@@ -4505,9 +4199,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Delete a managed challenge (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedChallengeAsync(string id)
@@ -4516,9 +4207,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Delete a managed challenge (DNS challenge delegation etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedChallengeAsync(string id, System.Threading.CancellationToken cancellationToken)
@@ -4595,9 +4283,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get preview of steps for certificate order and deployment
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetPreviewAsync(ManagedCertificate body)
@@ -4606,9 +4291,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get preview of steps for certificate order and deployment
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetPreviewAsync(ManagedCertificate body, System.Threading.CancellationToken cancellationToken)
@@ -4926,9 +4608,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get List of Stored Credentials [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StoredCredential>> GetStoredCredentialsAsync(string instanceId)
@@ -4937,9 +4616,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get List of Stored Credentials [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StoredCredential>> GetStoredCredentialsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -5014,9 +4690,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Add/Update Stored Credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateStoredCredentialAsync(string instanceId, StoredCredential body)
@@ -5025,9 +4698,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Add/Update Stored Credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateStoredCredentialAsync(string instanceId, StoredCredential body, System.Threading.CancellationToken cancellationToken)
@@ -5106,9 +4776,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Remove Stored Credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveStoredCredentialAsync(string instanceId, string storageKey)
@@ -5117,9 +4784,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Remove Stored Credential [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveStoredCredentialAsync(string instanceId, string storageKey, System.Threading.CancellationToken cancellationToken)
@@ -5199,9 +4863,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get the server software version
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<VersionInfo> GetSystemVersionAsync()
@@ -5210,9 +4871,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get the server software version
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<VersionInfo> GetSystemVersionAsync(System.Threading.CancellationToken cancellationToken)
@@ -5283,9 +4941,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Check API is configured, responding and can connect to background service
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<HubHealth> GetHealthAsync()
@@ -5294,9 +4949,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Check API is configured, responding and can connect to background service
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<HubHealth> GetHealthAsync(System.Threading.CancellationToken cancellationToken)
@@ -5367,9 +5019,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Attempt to register as a new instance with the management hub
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<HubJoiningInfo> RegisterAsync()
@@ -5378,9 +5027,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Attempt to register as a new instance with the management hub
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<HubJoiningInfo> RegisterAsync(System.Threading.CancellationToken cancellationToken)
@@ -5451,9 +5097,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Checks if a client can join a hub based on provided credentials and parameters.
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register)
@@ -5462,9 +5105,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Checks if a client can join a hub based on provided credentials and parameters.
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register, System.Threading.CancellationToken cancellationToken)
@@ -5541,9 +5181,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Perform an export of all settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body)
@@ -5552,9 +5189,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Perform an export of all settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body, System.Threading.CancellationToken cancellationToken)
@@ -5634,9 +5268,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Perform an import of all settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body)
@@ -5645,9 +5276,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Perform an import of all settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body, System.Threading.CancellationToken cancellationToken)
@@ -5727,9 +5355,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get instance status items [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetInstanceStatusItemsAsync(string instanceId)
@@ -5738,9 +5363,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get instance status items [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetInstanceStatusItemsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -5816,9 +5438,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get service config for a managed instance [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ServiceConfig> GetServiceConfigAsync(string instanceId)
@@ -5827,9 +5446,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get service config for a managed instance [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ServiceConfig> GetServiceConfigAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -5905,9 +5521,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Update instance service config [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateServiceConfigAsync(string instanceId, ServiceConfig body)
@@ -5916,9 +5529,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Update instance service config [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateServiceConfigAsync(string instanceId, ServiceConfig body, System.Threading.CancellationToken cancellationToken)
@@ -5998,9 +5608,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get core settings for a managed instance [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Preferences> GetServiceCoreSettingsAsync(string instanceId)
@@ -6009,9 +5616,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get core settings for a managed instance [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<Preferences> GetServiceCoreSettingsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -6087,9 +5691,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Update instance service core settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateServiceCoreSettingsAsync(string instanceId, Preferences body)
@@ -6098,9 +5699,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Update instance service core settings [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateServiceCoreSettingsAsync(string instanceId, Preferences body, System.Threading.CancellationToken cancellationToken)
@@ -6180,9 +5778,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get list of IP addresses available on the target for service binding (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<IPAddressOption>> GetTargetIPAddressesAsync(string instanceId)
@@ -6191,9 +5786,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get list of IP addresses available on the target for service binding (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<IPAddressOption>> GetTargetIPAddressesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -6269,9 +5861,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get Service Types present on instance (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetTargetServiceTypesAsync(string instanceId)
@@ -6280,9 +5869,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get Service Types present on instance (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetTargetServiceTypesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
@@ -6358,9 +5944,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get Service items (sites) present on instance (IIS, nginx etc). [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SiteInfo>> GetTargetServiceItemsAsync(string instanceId, string serviceType)
@@ -6369,9 +5952,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get Service items (sites) present on instance (IIS, nginx etc). [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SiteInfo>> GetTargetServiceItemsAsync(string instanceId, string serviceType, System.Threading.CancellationToken cancellationToken)
@@ -6452,9 +6032,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// Get Service item identifiers (domains on a website etc) present on instance (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DomainOption>> GetTargetServiceItemIdentifiersAsync(string instanceId, string serviceType, string itemId)
@@ -6463,9 +6040,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// Get Service item identifiers (domains on a website etc) present on instance (IIS, nginx etc) [Generated]
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DomainOption>> GetTargetServiceItemIdentifiersAsync(string instanceId, string serviceType, string itemId, System.Threading.CancellationToken cancellationToken)
@@ -6551,9 +6125,6 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <summary>
-        /// get current challenge info for a given type/key
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SimpleAuthorizationChallengeItem>> GetValidationChallengesAsync(string type, string key)
@@ -6562,9 +6133,6 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>
-        /// get current challenge info for a given type/key
-        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SimpleAuthorizationChallengeItem>> GetValidationChallengesAsync(string type, string key, System.Threading.CancellationToken cancellationToken)
