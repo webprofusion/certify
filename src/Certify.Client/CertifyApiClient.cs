@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipes;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -76,8 +77,23 @@ namespace Certify.Client
             _configProvider = configProvider;
 
             _connectionConfig = connectionConfig ?? new ServerConnection(configProvider.GetServiceConfig());
+            if (_connectionConfig.Mode == "namedpipe")
+            {
+                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}{_baseUri}";
+            }
+            else
+            {
+                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}{_baseUri}";
+            }
 
-            _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _baseUri;
+            if (_connectionConfig.Mode == "namedpipe")
+            {
+                _baseUri = $"http://localhost";
+            }
+            else
+            {
+                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}{_baseUri}";
+            }
 
             CreateHttpClient();
 
@@ -107,6 +123,37 @@ namespace Certify.Client
 
                 _client = new HttpClient(new HttpRetryMessageHandler(_httpClientHandler));
             }
+#if NET8_0_OR_GREATER
+            else if (_connectionConfig.Mode == "namedpipe")
+            {
+                // https://andrewlock.net/using-named-pipes-with-aspnetcore-and-httpclient/
+
+                var httpHandler = new System.Net.Http.SocketsHttpHandler
+                {
+                    // Called to open a new connection
+                    ConnectCallback = async (ctx, ct) =>
+                    {
+                        // Configure the named pipe stream
+                        var pipeClientStream = new NamedPipeClientStream(
+                            serverName: ".", // this machine
+                            pipeName: "certify-server",
+                            PipeDirection.InOut, // duplex stream 
+                            PipeOptions.Asynchronous); // async
+
+                        // Connect to the server!
+                        await pipeClientStream.ConnectAsync(ct);
+
+                        return pipeClientStream;
+                    }
+                };
+
+                // Create an HttpClient using the named pipe handler
+                _client = new HttpClient(httpHandler)
+                {
+                    BaseAddress = new Uri("http://localhost")
+                };
+            }
+#endif
             else
             {
                 //alternative auth (jwt)
@@ -149,11 +196,18 @@ namespace Certify.Client
             }
         }
 
+        private Uri FormatEndpointURI(string endpoint)
+        {
+            return new Uri($"{_baseUri.TrimEnd('/')}/{endpoint}");
+        }
+
         private async Task<string> FetchAsync(string endpoint, AuthContext authContext)
         {
             try
             {
-                using (var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_baseUri + endpoint)))
+                var endpointURI = FormatEndpointURI(endpoint);
+
+                using (var request = new HttpRequestMessage(HttpMethod.Get, endpointURI))
                 {
                     SetAuthContextForRequest(request, authContext);
 
@@ -166,7 +220,7 @@ namespace Certify.Client
                     else
                     {
                         var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-                        throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error} ");
+                        throw new ServiceCommsException($"Internal Service Error: {endpointURI}: {error} ");
                     }
                 }
             }
