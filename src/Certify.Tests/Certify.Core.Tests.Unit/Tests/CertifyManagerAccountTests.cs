@@ -57,7 +57,7 @@ namespace Certify.Core.Tests.Unit
 
             await AddCustomCa();
             await AddNewCustomCaAccount();
-            await CheckForExistingLeAccount();
+            await CheckForExistingAcmeAccount();
         }
 
         [TestCleanup]
@@ -146,7 +146,7 @@ namespace Certify.Core.Tests.Unit
                 }
             }
 
-            // Run bootstrap command
+            // Run bootstrap command: requires step-cli to be installed on the host machine and in the system path
             var args = $"ca bootstrap -f --ca-url https://{_caDomain}:{_caPort} --fingerprint {stepCaFingerprint}";
             RunCommand("step", args, "Bootstrap Step CA Script", 1000 * 30);
         }
@@ -377,17 +377,15 @@ namespace Certify.Core.Tests.Unit
             }
         }
 
-        private async Task CheckForExistingLeAccount()
+        private async Task CheckForExistingAcmeAccount()
         {
-            if ((await _certifyManager.GetAccountRegistrations()).Find(a => a.CertificateAuthorityId == "letsencrypt.org") == null)
+            if ((await _certifyManager.GetAccountRegistrations()).Find(a => a.CertificateAuthorityId == _customCa.Id) == null)
             {
                 var contactRegistration = new ContactRegistration
                 {
                     AgreedToTermsAndConditions = true,
-                    CertificateAuthorityId = "letsencrypt.org",
+                    CertificateAuthorityId = _customCa.Id,
                     EmailAddress = "admin." + Guid.NewGuid().ToString().Substring(0, 6) + "@test.com",
-                    ImportedAccountKey = "",
-                    ImportedAccountURI = "",
                     IsStaging = true
                 };
 
@@ -464,7 +462,7 @@ namespace Certify.Core.Tests.Unit
         [TestMethod, Description("Test for using CertifyManager.GetAccountDetails() when it is a resume order")]
         public async Task TestCertifyManagerGetAccountDetailsIsResumeOrder()
         {
-            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true, CertificateAuthorityId = "letsencrypt.org", LastAttemptedCA = "zerossl.com" });
+            var dummyManagedCert = (new ManagedCertificate { UseStagingMode = true, CertificateAuthorityId = _customCa.Id, LastAttemptedCA = "zerossl.com" });
             var caAccount = await _certifyManager.GetAccountDetails(dummyManagedCert, true, false, true);
             Assert.IsNotNull(caAccount, "Expected result of CertifyManager.GetAccountDetails() to not be null");
         }
@@ -879,10 +877,8 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = "",
-                ImportedAccountURI = "",
                 IsStaging = true
             };
 
@@ -914,10 +910,8 @@ namespace Certify.Core.Tests.Unit
             var contactRegistration = new ContactRegistration
             {
                 AgreedToTermsAndConditions = true,
-                CertificateAuthorityId = "letsencrypt.org",
+                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
                 EmailAddress = contactRegEmail,
-                ImportedAccountKey = "",
-                ImportedAccountURI = "",
                 IsStaging = true
             };
 
@@ -1107,11 +1101,13 @@ namespace Certify.Core.Tests.Unit
         public async Task TestCertifyManagerUpdateCertificateAuthorityDefaultCa()
         {
             var certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
-            var defaultCa = certificateAuthorities.First();
+
+            // find a built in CA we will try to update
+            var defaultCa = certificateAuthorities.First(ca => ca.IsCustom == false);
             var newCustomCa = new CertificateAuthority
             {
                 Id = defaultCa.Id,
-                Title = "Test Custom CA",
+                Title = "Test CA Update",
                 IsCustom = true,
                 IsEnabled = true,
                 AllowInternalHostnames = false,
