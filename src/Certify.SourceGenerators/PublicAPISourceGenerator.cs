@@ -146,10 +146,14 @@ namespace SourceGenerator
                 foreach (var perm in config.RequiredPermissions)
                 {
                     fragment += $@"
-                        if (!await IsAuthorized(_client, ""{perm.ResourceType}"" , ""{perm.Action}""))
-                        {{
-                            return Unauthorized();
-                        }}
+
+                            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!,  ""{perm.ResourceType}"" ,""{perm.Action}""));
+
+                            if (!accessCheck.IsSuccess)
+                            {{
+                                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+                            }}
+                      
                     ";
                 }
 

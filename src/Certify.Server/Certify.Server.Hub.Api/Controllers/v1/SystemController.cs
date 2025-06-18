@@ -105,14 +105,15 @@ namespace Certify.Server.Hub.Api.Controllers
 
             // auth based on client id and client secret
             // check token and access control before allowing download
-            var clientId = Request.Headers["X-Client-ID"];
-            var secret = Request.Headers["X-Client-Secret"];
-            var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"];
 
-            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
+
+            if (!accessCheck.IsSuccess)
             {
-                return Problem(detail: "X-Client-ID or X-Client-Secret HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
+
+            var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"];
 
             // if hub assigned instance id is provided we will either check the supplied hub assigned instance id or create a new one
 
@@ -144,40 +145,32 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: "X-Certify-HubAssignedId HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret }, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
+            var joiningInfo = new HubJoiningInfo();
 
-            if (accessPermittedResult.IsSuccess)
+            var versionInfo = await _client.GetAppVersion();
+
+            joiningInfo.Version = new Models.Hub.VersionInfo
             {
-                var joiningInfo = new HubJoiningInfo();
+                Version = versionInfo,
+                Product = "Certify Management Hub",
+            };
 
-                var versionInfo = await _client.GetAppVersion();
+            joiningInfo.HubEndpoint = "api/internal/managementhub";
+            joiningInfo.Message = "Joining OK";
 
-                joiningInfo.Version = new Models.Hub.VersionInfo
-                {
-                    Version = versionInfo,
-                    Product = "Certify Management Hub",
-                };
+            var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
+            var jwtService = new Hub.Api.Services.JwtService(_config);
 
-                joiningInfo.HubEndpoint = "api/internal/managementhub";
-                joiningInfo.Message = "Joining OK";
-
-                var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
-                var jwtService = new Hub.Api.Services.JwtService(_config);
-
-                var additionalClaims = new List<Claim>
+            var additionalClaims = new List<Claim>
                 {
                     new Claim("hub-assigned-id", Guid.NewGuid().ToString())
                 };
 
-                joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{clientId}", additionalClaims: additionalClaims);
-                joiningInfo.HubAssignedInstanceId = hubAssignedInstanceId!;
+            joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{Request.Headers["X-Client-ID"]}", additionalClaims: additionalClaims);
+            joiningInfo.HubAssignedInstanceId = hubAssignedInstanceId!;
 
-                return new OkObjectResult(joiningInfo);
-            }
-            else
-            {
-                return Problem(detail: accessPermittedResult.Message, statusCode: (int)HttpStatusCode.Unauthorized);
-            }
+            return new OkObjectResult(joiningInfo);
+
         }
     }
 }
