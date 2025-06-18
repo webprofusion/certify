@@ -42,6 +42,12 @@ namespace Certify.Server.Hub.Api.Controllers
                 return false;
             }
 
+            /// if check does not specify security principle use the current user
+            if (check.SecurityPrincipleId == null)
+            {
+                check.SecurityPrincipleId = CurrentAuthContext.UserId;
+            }
+
             return await internalApiClient.CheckSecurityPrincipleHasAccess(check, CurrentAuthContext);
         }
 
@@ -55,6 +61,47 @@ namespace Certify.Server.Hub.Api.Controllers
         internal async Task<Models.Config.ActionResult> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
         {
             return await internalApiClient.CheckApiTokenHasAccess(token, check, CurrentAuthContext);
+        }
+
+        internal async Task<Models.Config.ActionResult> CheckRequestAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
+        {
+            // check for authorization bearer token first
+
+            var currenAuthContextCheckOK = await IsAuthorized(internalApiClient, check);
+
+            if (currenAuthContextCheckOK)
+            {
+                return new Models.Config.ActionResult("Authorized by bearer token", true);
+            }
+
+            // check for access token in request headers
+            var accessToken = GetAccessTokenFromRequest();
+
+            if (accessToken == null)
+            {
+                return new Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
+            }
+
+            return await IsAccessTokenAuthorized(internalApiClient, accessToken, check);
+        }
+
+        internal AccessToken? GetAccessTokenFromRequest()
+        {
+            var clientId = Request.Headers["X-Client-ID"];
+            var secret = Request.Headers["X-Client-Secret"];
+
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+            {
+                return null;
+            }
+            else
+            {
+                return new AccessToken
+                {
+                    ClientId = clientId,
+                    Secret = secret
+                };
+            }
         }
         /// <summary>
         /// Get the corresponding auth context to pass to the backend service
