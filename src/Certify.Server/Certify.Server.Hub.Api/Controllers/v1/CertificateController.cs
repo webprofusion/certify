@@ -1,6 +1,5 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
-using System.Text.Unicode;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -53,48 +52,11 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
         {
-            var accessPermitted = false;
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
 
-            if (CurrentAuthContext != null)
+            if (!accessCheck.IsSuccess)
             {
-                // auth based on JWT identity
-                var authCheckOK = await IsAuthorized(_client, new AccessCheck(CurrentAuthContext.UserId, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
-                if (!authCheckOK)
-                {
-                    return Problem(detail: "Identity not authorized for this action", statusCode: (int)HttpStatusCode.Unauthorized);
-                }
-                else
-                {
-                    accessPermitted = true;
-                }
-            }
-            else
-            {
-                // auth based on client id and client secret
-                // check token and access control before allowing download
-                var clientId = Request.Headers["X-Client-ID"];
-                var secret = Request.Headers["X-Client-Secret"];
-
-                if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
-                {
-                    return Problem(detail: "X-Client-ID or X-Client-Secret HTTP header missing in request", statusCode: (int)HttpStatusCode.Unauthorized);
-                }
-
-                var accessPermittedResult = await IsAccessTokenAuthorized(_client, new AccessToken { ClientId = clientId, Secret = secret }, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
-
-                if (accessPermittedResult.IsSuccess)
-                {
-                    accessPermitted = true;
-                }
-                else
-                {
-                    return Problem(detail: accessPermittedResult.Message, statusCode: (int)HttpStatusCode.Unauthorized);
-                }
-            }
-
-            if (!accessPermitted)
-            {
-                return Unauthorized();
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
             // default to PFX output
@@ -143,7 +105,15 @@ namespace Certify.Server.Hub.Api.Controllers
                     Response.Headers.Append("ETag", managedCert.CertificateThumbprintHash.ToLowerInvariant());
                 }
 
-                return new FileContentResult(exportResult.Result, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
+                if (format == "pfx")
+                {
+                    return new FileContentResult(exportResult.Result, "application/x-pkcs12") { FileDownloadName = "certificate.pfx" };
+                }
+                else
+                {
+                    // for PEM formats, return as text/plain
+                    return new FileContentResult(exportResult.Result, "text/plain") { FileDownloadName = $"{format}.pem" };
+                }
             }
             else
             {
