@@ -63,6 +63,13 @@ namespace Certify.Server.HubService.Services
             return controller;
         }
 
+        private ServiceControllers.TagController _tagController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.TagController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
 
         public Task<ActionResult> AddSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).AddSecurityPrinciple(principle);
@@ -163,6 +170,10 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
+
+        public Task<ActionResult> AddHubItemTag(ItemTag tag, AuthContext authContext) => _tagController(authContext).AddTag(tag);
+        public Task<ICollection<ItemTag>> GetHubItemTags(AuthContext authContext) => _tagController(authContext).GetTags();
+
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
 }
