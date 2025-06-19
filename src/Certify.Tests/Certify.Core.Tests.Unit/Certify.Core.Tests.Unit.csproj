@@ -21,7 +21,8 @@
         <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
         <ProjectGuid>{C0534CD8-10E9-438D-B9A1-A8C09A6BB964}</ProjectGuid>
         <NoWarn>1701;1702;NU1701</NoWarn>
-
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>
@@ -90,6 +91,7 @@
         </PackageReference>
         <PackageReference Include="MedallionShell" Version="1.6.2" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.14.2" />
         <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
