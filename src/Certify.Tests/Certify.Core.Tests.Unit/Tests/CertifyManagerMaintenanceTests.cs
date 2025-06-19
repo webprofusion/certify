@@ -81,7 +81,7 @@ namespace Certify.Core.Tests.Unit
             {
                 Assert.IsTrue(itemsViaARI.ContainsKey("test-cert"), "Certificate ID should be added to itemsViaARI");
 
-                if (nextRenewal.DateNextRenewalAttempt < DateTimeOffset.UtcNow)
+                if (nextRenewal.DateNextRenewalAttempt < DateTimeOffset.UtcNow.AddHours(1))
                 {
                     Assert.IsTrue(itemsWhichRequireRenewal.Contains("test-cert"), "Certificate ID should be added to itemsWhichRequireRenewal");
                 }
