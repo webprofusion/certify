@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Models.Shared;
 
 namespace Certify.Management
@@ -439,7 +440,7 @@ namespace Certify.Management
 #if NET9_0_OR_GREATER
             var x509Cert2 = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(item.CertificatePath, await GetPfxPassword(item));
 #else
-            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+                                            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
 #endif
             var ariCertId = item.ARICertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(x509Cert2);
             return ariCertId;
