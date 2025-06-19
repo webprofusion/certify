@@ -28,7 +28,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="managedItem"></param>
         /// <returns></returns>
-        public async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
+        public virtual async Task<IACMEClientProvider> GetACMEProvider(ManagedCertificate managedItem, AccountDetails caAccount)
         {
             // determine account to use for the given managed cert
 
@@ -106,7 +106,7 @@ namespace Certify.Management
         /// <param name="allowCache">if true, allow use of cached account list</param>
         /// <param name="allowFailover">if true, select a fallback CA account if item has recently failed renewal, if false use same account as last renewal/attempt</param>
         /// <returns>Account Details or null if there is no matching account</returns>
-        public async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false, bool isResumedOrder = false)
+        public virtual async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false, bool isResumedOrder = false)
         {
             if (OverrideAccountDetails != null)
             {
