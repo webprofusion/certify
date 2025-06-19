@@ -725,7 +725,30 @@ namespace Certify.SourceGenerators
                          { "prefs", "Certify.Models.Preferences" }
                      },
                      RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsUpdate)]
-                 }
+                 },
+                 new()
+                    {
+                        OperationName = "GetHubItemTags",
+                        OperationMethod = HttpGet,
+                        Comment = "Get hub item tags",
+                        PublicAPIController = "Hub",
+                        PublicAPIRoute = "tags/list",
+                        ServiceAPIRoute = "tags/list",
+                        ReturnType = "ICollection<ItemTag>",
+                        RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                    },
+                   new()
+                  {
+                      OperationName = "AddHubItemTag",
+                      OperationMethod = HttpPost,
+                      Comment = "Add hub item tag",
+                      PublicAPIController = "Hub",
+                      PublicAPIRoute = "tags/add",
+                      ServiceAPIRoute = "tags/add",
+                      ReturnType = actionResultTypeName,
+                      Params = new Dictionary<string, string> { { "tag", GetFormattedTypeName(typeof(ItemTag)) } },
+                      RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagAdd)]
+                  },
             };
         }
     }
