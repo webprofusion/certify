@@ -5,10 +5,10 @@
     /// </summary>
     public class ItemTag : ConfigurationStoreItem
     {
-        public ItemTag(string itemId, string itemType, string tag, string? value)
+        public ItemTag(string taggedItemId, string taggedItemType, string tag, string? value)
         {
-            TaggedItemId = itemId;
-            TaggedItemType = itemType;
+            TaggedItemId = taggedItemId;
+            TaggedItemType = taggedItemType;
             Tag = tag;
             Value = value;
         }
