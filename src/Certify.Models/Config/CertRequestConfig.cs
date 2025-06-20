@@ -266,7 +266,7 @@ namespace Certify.Models
         public string? CustomCSR { get; set; }
 
         /// <summary>
-        /// If set, this is one or more custom JWT tokens used for TkAuth-01 : https://datatracker.ietf.org/doc/draft-ietf-acme-authority-token-tnauthlist/13/
+        /// If set, this is one or more custom JWT tokens used for TkAuth-01 : https://www.rfc-editor.org/rfc/rfc9448
         /// </summary>
         public ObservableCollection<TkAuthToken>? AuthorityTokens { get; set; }
 

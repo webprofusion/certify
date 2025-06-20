@@ -87,7 +87,7 @@ namespace Certify.Core.Tests.Unit
         {
             // https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients
 
-            // https://www.ietf.org/archive/id/draft-ietf-acme-ari-03.html#name-appendix-a-example-certific
+            // https://www.rfc-editor.org/rfc/rfc9773.html#name-appendix-a-example-certific
 
             var testCertPem = @"-----BEGIN CERTIFICATE-----
 MIIBQzCB66ADAgECAgUAh2VDITAKBggqhkjOPQQDAjAVMRMwEQYDVQQDEwpFeGFt
