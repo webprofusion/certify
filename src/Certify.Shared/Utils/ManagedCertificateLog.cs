@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
 using Certify.Models.Providers;
@@ -125,7 +125,10 @@ namespace Certify.Models
                 {
                     try
                     {
-                        l?.Dispose();
+                        if (l is IDisposable disposableLogger)
+                        {
+                            disposableLogger?.Dispose();
+                        }
                     }
                     catch (Exception ex)
                     {

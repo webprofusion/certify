@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -273,7 +273,7 @@ namespace Certify.Management
                 PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
                 ManagedSite = reportedCert,
                 AppName = _isMgtmHubBackend ? "Certify Management Hub" : "Certify Certificate Manager",
-                AppVersion = Util.GetAppVersion().ToString()
+                AppVersion = Util.GetAppVersion().ToString(),
                 IsRemoved = removeReport
             };
 
