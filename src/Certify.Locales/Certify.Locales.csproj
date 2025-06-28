@@ -18,57 +18,70 @@
         </Compile>
     </ItemGroup>
     <ItemGroup>
+        <!-- ConfigResources -->
         <EmbeddedResource Update="ConfigResources.es-ES.resx">
-            <DependentUpon>ConfigResources.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
-            <DependentUpon>ConfigResources.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="ConfigResources.nb-NO.resx">
             <DependentUpon>ConfigResources.resx</DependentUpon>
         </EmbeddedResource>
         <EmbeddedResource Update="ConfigResources.ja-JP.resx">
             <DependentUpon>ConfigResources.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.nb-NO.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
         <EmbeddedResource Update="ConfigResources.tr-TR.resx">
             <DependentUpon>ConfigResources.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.zh-Hans.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ConfigResources.zh-Hant.resx">
+            <DependentUpon>ConfigResources.resx</DependentUpon>
+        </EmbeddedResource>
+        <!-- CoreSR -->
         <EmbeddedResource Update="CoreSR.es-ES.resx">
-            <DependentUpon>CoreSR.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="CoreSR.nb-NO.resx">
-            <DependentUpon>CoreSR.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="CoreSR.zh-Hans.resx">
             <DependentUpon>CoreSR.resx</DependentUpon>
         </EmbeddedResource>
         <EmbeddedResource Update="CoreSR.ja-JP.resx">
             <DependentUpon>CoreSR.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.nb-NO.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
         <EmbeddedResource Update="CoreSR.tr-TR.resx">
             <DependentUpon>CoreSR.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.zh-Hans.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="CoreSR.zh-Hant.resx">
+            <DependentUpon>CoreSR.resx</DependentUpon>
+        </EmbeddedResource>
+        <!-- Properties\Resources -->
         <EmbeddedResource Update="Properties\Resources.resx">
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Resources.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <EmbeddedResource Update="SR.es-ES.resx">
-            <DependentUpon>SR.resx</DependentUpon>
-        </EmbeddedResource>
-        <EmbeddedResource Update="SR.nb-NO.resx">
-            <DependentUpon>SR.resx</DependentUpon>
-        </EmbeddedResource>
+        <!-- SR -->
         <EmbeddedResource Update="SR.resx">
             <Generator>PublicResXFileCodeGenerator</Generator>
             <LastGenOutput>SR.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <EmbeddedResource Update="SR.zh-Hans.resx">
+        <EmbeddedResource Update="SR.es-ES.resx">
             <DependentUpon>SR.resx</DependentUpon>
         </EmbeddedResource>
         <EmbeddedResource Update="SR.ja-JP.resx">
             <DependentUpon>SR.resx</DependentUpon>
         </EmbeddedResource>
+        <EmbeddedResource Update="SR.nb-NO.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
         <EmbeddedResource Update="SR.tr-TR.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.zh-Hans.resx">
+            <DependentUpon>SR.resx</DependentUpon>
+        </EmbeddedResource>
+        <EmbeddedResource Update="SR.zh-Hant.resx">
             <DependentUpon>SR.resx</DependentUpon>
         </EmbeddedResource>
     </ItemGroup>
