@@ -121,23 +121,37 @@
     <value />
   </data>
   <data name="Credits" xml:space="preserve">
-    <value>此软件提供为“AS-IS”并不提供任何形式的保证，无论明示或暗示，包括但不限于任何默认条件下，不间断的使用、适销性，针对特定用途的适用性或非侵权。
+    <value>本软件按“原样”提供，不附带任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性、无侵权性、持续可用性等的任何默示保证。
 
-使用LetsEncrypt.org的加密服务来获得免费的SSL/TSL证书收到LetsEncrypt.org的服务条款约束。此软件不隶属于或受赞助于LetsEncrypt.org。
+使用LetsEncrypt.org免费SSL/TLS证书服务需遵守LetsEncrypt.org的服务条款。本软件与LetsEncrypt.org无任何关联，也未获得其官方认可。
 
-此软件使用下列开源软件（或明显的移植于）：
-
-- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) Licensed under the MPL V 2.0
-- Some icons from Font Awesome by Dave Gandy - http://fontawesome.io 
+本软件使用了以下开源软件（或其重要部分）：
+- ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp)，遵循 MPL V 2.0 许可协议
+- 部分图标来自 Font Awesome，作者 Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
   <data name="LongAppName" xml:space="preserve">
     <value />
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>您正在使用最新版本。</value>
+    <value>当前已是最新版本</value>
+  </data>
+  <data name="AppUpdateCheckURI" xml:space="preserve">
+    <value />
+  </data>
+  <data name="AppWebsiteURL" xml:space="preserve">
+    <value />
   </data>
   <data name="BetaWarning" xml:space="preserve">
-    <value>警告：这是一个预发布版本，仅供测试或反馈，可能会遇到问题，不要在重要的生产站点上使用此版本。</value>
+    <value>注意：本软件为测试预览版，仅用于测试和收集反馈，可能存在问题，请勿在重要的生产环境中使用。</value>
+  </data>
+  <data name="AIInstrumentationKey" xml:space="preserve">
+    <value />
+  </data>
+  <data name="LocalServiceBaseURI" xml:space="preserve">
+    <value />
+  </data>
+  <data name="LocalServiceBaseURIDebug" xml:space="preserve">
+    <value />
   </data>
 </root>
