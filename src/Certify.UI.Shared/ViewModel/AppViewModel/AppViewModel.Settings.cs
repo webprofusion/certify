@@ -58,11 +58,12 @@ namespace Certify.UI.ViewModel
         public Dictionary<string, string> UICultures { get; } = new Dictionary<string, string>
         {
             {"en-US","English" },
-            {"ja-JP","Japanese/日本語"},
             {"es-ES","Spanish/Español"},
+            {"ja-JP","Japanese/日本語"},
             {"nb-NO","Norwegian/Bokmål"},
-            {"zh-Hans","Chinese (Simplified)"},
             {"tr-TR","Turkish/Türkçe"},
+            {"zh-Hans","Chinese (Simplified)/中文 (简体)"},
+            {"zh-Hant","Chinese (Traditional)/中文 (繁體)"}
         };
 
         /// <summary>
