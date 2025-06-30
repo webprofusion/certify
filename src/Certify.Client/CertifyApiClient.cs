@@ -64,7 +64,8 @@ namespace Certify.Client
     public partial class CertifyApiClient : ICertifyInternalApiClient
     {
         private HttpClient _client;
-        private readonly string _baseUri = "/api/";
+        private readonly string _baseUri = "";
+        private readonly string _apiRoutePrefix = "/api/";
         internal Shared.ServerConnection _connectionConfig;
         internal Providers.IServiceConfigProvider _configProvider;
 
@@ -77,22 +78,14 @@ namespace Certify.Client
             _configProvider = configProvider;
 
             _connectionConfig = connectionConfig ?? new ServerConnection(configProvider.GetServiceConfig());
-            if (_connectionConfig.Mode == "namedpipe")
-            {
-                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}{_baseUri}";
-            }
-            else
-            {
-                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}{_baseUri}";
-            }
 
             if (_connectionConfig.Mode == "namedpipe")
             {
-                _baseUri = $"http://localhost";
+                _baseUri = $"http://localhost/{_apiRoutePrefix}";
             }
             else
             {
-                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}{_baseUri}";
+                _baseUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}{_apiRoutePrefix}";
             }
 
             CreateHttpClient();
