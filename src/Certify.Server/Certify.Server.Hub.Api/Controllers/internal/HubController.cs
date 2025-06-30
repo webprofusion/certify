@@ -89,7 +89,7 @@ namespace Certify.Server.Hub.Api.Controllers
                                 Id = i.Id ?? "",
                                 Title = $"{i.Name}" ?? "",
                                 OS = instance?.OS,
-                                ClientDetails = instance?.ClientName,
+                                ClientDetails = i.SourceId != null ? i.SourceName : instance?.ClientName,
                                 PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
                                 Identifiers = i.GetCertificateIdentifiers(),
                                 DateRenewed = i.DateRenewed,
@@ -97,7 +97,8 @@ namespace Certify.Server.Hub.Api.Controllers
                                 Comments = i.Comments ?? "",
                                 Status = i.Health.ToString(),
                                 DateRetrieved = i.DateRetrieved,
-                                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
+                                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
+                                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
                             };
                         }
                         )

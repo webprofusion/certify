@@ -12,6 +12,7 @@
 
         public int NoCertificate { get; set; }
 
+        public int ExternallyManaged { get; set; }
         public int TotalDomains { get; set; }
     }
 }

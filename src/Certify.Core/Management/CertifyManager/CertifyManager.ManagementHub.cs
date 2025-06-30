@@ -463,7 +463,7 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.GetManagedItems)
             {
                 // Get all managed items
-                var items = await GetManagedCertificates(new ManagedCertificateFilter { });
+                var items = await GetManagedCertificates(new ManagedCertificateFilter { IncludeExternal = CoreAppSettings.Current.EnableExternalCertManagers });
                 val = new ManagedInstanceItems { InstanceId = _serverConfig.HubAssignedInstanceId, Items = items };
             }
             else if (arg.CommandType == ManagementHubCommands.GetStatusSummary)
