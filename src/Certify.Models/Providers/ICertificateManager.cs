@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Microsoft.Extensions.Logging;
 
 #nullable disable
 
@@ -11,6 +12,9 @@ namespace Certify.Providers.CertificateManagers
 {
     public interface ICertificateManager
     {
+
+        void Init(ILogger logger, string settingsPath = "", string logPath = "");
+
         Task<bool> IsPresent();
 
         Task<ManagedCertificate> GetManagedCertificate(string id);

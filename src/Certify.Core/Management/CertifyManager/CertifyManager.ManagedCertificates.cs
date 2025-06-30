@@ -25,14 +25,23 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> GetManagedCertificate(string id)
         {
-            var item = await _itemManager.GetById(id);
-            if (item != null)
+            if (id.StartsWith("ext-"))
             {
-                item.InstanceId = _serverConfig.HubAssignedInstanceId;
-                item.DateRetrieved = DateTime.UtcNow;
+                // look for item via external managed certificate provider
+                return _externallyManagedCertificatesCache
+                    .FirstOrDefault(i => i.Id == id);
             }
+            else
+            {
+                var item = await _itemManager.GetById(id);
+                if (item != null)
+                {
+                    item.InstanceId = _serverConfig.HubAssignedInstanceId;
+                    item.DateRetrieved = DateTime.UtcNow;
+                }
 
-            return item;
+                return item;
+            }
         }
 
         /// <summary>
@@ -58,37 +67,52 @@ namespace Certify.Management
             return list;
         }
 
+        List<ManagedCertificate> _externallyManagedCertificatesCache = [];
+        private DateTimeOffset _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
+
         private async Task<List<ManagedCertificate>> GetExternallyManagedCertificates(ManagedCertificateFilter filter)
         {
-            var externalList = new List<ManagedCertificate>();
+            if (_externallyManagedCacheUpdated > DateTimeOffset.UtcNow.AddMinutes(-10))
+            {
+                // return cached results
+                return _externallyManagedCertificatesCache;
+            }
+
             if (_pluginManager?.CertificateManagerProviders?.Any() == true)
             {
-                // TODO: cache providers/results
+                List<ManagedCertificate> list = [];
 
                 // check if we have any external sources of managed certificates
                 foreach (var p in _pluginManager.CertificateManagerProviders)
                 {
                     if (p != null)
                     {
-                        var pluginType = p.GetType();
-                        var providers = p.GetProviders(pluginType);
-
-                        foreach (var cp in providers)
+                        try
                         {
-                            if (cp?.IsEnabled == true)
-                            {
-                                try
-                                {
-                                    var certManager = p.GetProvider(pluginType, cp.Id);
-                                    var certs = await certManager.GetManagedCertificates(filter);
+                            var pluginType = p.GetType();
+                            var providers = p.GetProviders(pluginType);
 
-                                    externalList.AddRange(certs);
-                                }
-                                catch (Exception ex)
+                            foreach (var cp in providers)
+                            {
+                                if (cp?.IsEnabled == true)
                                 {
-                                    _serviceLog?.Error($"Failed to query certificate manager plugin {cp.Title} {ex}");
+                                    try
+                                    {
+                                        var certManager = p.GetProvider(pluginType, cp.Id);
+                                        var certs = await certManager.GetManagedCertificates(filter);
+
+                                        list.AddRange(certs);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _serviceLog?.Error($"Failed to query certificate manager plugin {cp.Title} {ex}");
+                                    }
                                 }
                             }
+                        }
+                        catch (Exception ex)
+                        {
+                            _serviceLog?.Error($"Failed to query certificate manager providers {ex}");
                         }
                     }
                     else
@@ -96,9 +120,17 @@ namespace Certify.Management
                         _serviceLog?.Error($"Failed to create one or more certificate manager plugins");
                     }
                 }
+
+                lock (_externallyManagedCertificatesCache)
+                {
+                    // reset cache
+                    _externallyManagedCertificatesCache = list;
+                }
             }
 
-            return externalList;
+            _externallyManagedCacheUpdated = DateTimeOffset.UtcNow;
+
+            return _externallyManagedCertificatesCache;
         }
 
         /// <summary>
@@ -151,6 +183,17 @@ namespace Certify.Management
             summary.Warning = ms.Count(c => c.Health == ManagedCertificateHealth.Warning);
             summary.AwaitingUser = ms.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
             summary.NoCertificate = ms.Count(c => c.DateStart == null);
+
+            if (_externallyManagedCertificatesCache.Any())
+            {
+                summary.ExternallyManaged = _externallyManagedCertificatesCache.Count;
+                summary.Total += _externallyManagedCertificatesCache.Count;
+                summary.Healthy += _externallyManagedCertificatesCache.Count(c => c.Health == ManagedCertificateHealth.OK);
+                summary.Error += _externallyManagedCertificatesCache.Count(c => c.Health == ManagedCertificateHealth.Error);
+                summary.Warning += _externallyManagedCertificatesCache.Count(c => c.Health == ManagedCertificateHealth.Warning);
+                summary.AwaitingUser += _externallyManagedCertificatesCache.Count(c => c.Health == ManagedCertificateHealth.AwaitingUser);
+                summary.NoCertificate += _externallyManagedCertificatesCache.Count(c => c.DateStart == null);
+            }
 
             // count items with invalid config (e.g. multiple primary domains)
             summary.InvalidConfig = ms.Count(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);

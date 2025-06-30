@@ -62,6 +62,11 @@ namespace Certify.Models.Hub
         /// If true, there is a certificate available (latest successful certificate order)
         /// </summary>
         public bool HasCertificate { get; set; }
+
+        /// <summary>
+        /// If true, is managed by an external certificate manager (e.g. Certbot, Posh-ACME, etc.)
+        /// </summary>
+        public bool IsExternallyManaged { get; set; }
     }
 
     public record ManagedCertificateSummaryResult

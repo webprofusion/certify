@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text;
 using Certify.Client;
+using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Services;
@@ -197,7 +198,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 DateExpiry = i.DateExpiry,
                 Comments = i.Comments ?? "",
                 Status = i.Health.ToString(),
-                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath)
+                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
+                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
             }).OrderBy(a => a.Title);
 
             var result = new ManagedCertificateSummaryResult
