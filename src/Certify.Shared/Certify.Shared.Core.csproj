@@ -8,6 +8,7 @@
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.1" />
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="9.0.6" />
+        <PackageReference Include="Microsoft.Bcl.Cryptography" Version="9.0.6" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
