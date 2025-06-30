@@ -639,4 +639,76 @@
   <data name="New_Contact_Tip2" xml:space="preserve">
     <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>ライセンスキー</value>
+  </data>
+  <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
+    <value>証明書のクリーンアップを有効にする</value>
+  </data>
+  <data name="Settings_EnableStatusReporting" xml:space="preserve">
+    <value>ダッシュボードへのステータスレポートを有効にする</value>
+  </data>
+  <data name="PreferredCertificateAuthority" xml:space="preserve">
+    <value>優先認証局</value>
+  </data>
+  <data name="MainWindow_KeyExpired" xml:space="preserve">
+    <value>ライセンスキーの有効期限が切れているか、無効になっています。</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
+    <value>{0}日前に有効期限切れ</value>
+  </data>
+  <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
+    <value>既存のホスト名バインディングからドメインを選択するか、手動で追加できます。その後、上記の「証明書の要求」を選択するか、必要に応じてオプションを変更してください。カスタムCSRを指定するには「詳細設定」タブを参照してください。</value>
+  </data>
+  <data name="Credentials_Intro" xml:space="preserve">
+    <value>証明書の更新やデプロイ時にAPI等へ自動アクセスするためには保存済みの認証情報が必要です。これらの認証情報はWindowsのデータ保護APIで保護され、このマシンに保存されます。</value>
+  </data>
+  <data name="ManagedCertificates_Deployment_Intro" xml:space="preserve">
+    <value>証明書のデプロイは自動（IISの場合）または手動でタスクを実行できます（「タスク」タブ参照）。</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
+    <value>タスクは、証明書の更新前後に追加の操作やアクションを実行するためのオプション機能です。</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
+    <value>デプロイメントタスクは、標準のデプロイメント処理完了後（表示順）に実行されます（「デプロイメント」タブ参照）。タスクは証明書更新直後または手動・スケジュールタスクで実行できます。タスクの順序はドラッグで変更可能です。</value>
+  </data>
+  <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
+    <value>証明書要求開始前に任意の数のタスクを追加できます（オプション）。</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Title" xml:space="preserve">
+    <value>認証局</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
+    <value>認証局は信頼された証明書を発行できる組織です。利用したい各（ACME）認証局ごとに「設定」でアカウント登録が必要です。</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiresInNHours" xml:space="preserve">
+    <value>{0}時間後に有効期限切れ</value>
+  </data>
+  <data name="ExpiryDateConverter_CertificateExpiredNHoursAgo" xml:space="preserve">
+    <value>{0}時間前に有効期限切れ</value>
+  </data>
+  <data name="Settings_CA_Intro" xml:space="preserve">
+    <value>認証局は信頼された証明書を発行できる組織です。利用したい各（ACME）認証局ごとにアカウント登録が必要です。アカウントは本番（信頼済み証明書）またはステージング（テスト証明書）です。</value>
+  </data>
+  <data name="Settings_CA_Fallback" xml:space="preserve">
+    <value>複数の認証局に登録すると、自動フェイルオーバーが有効になり、優先認証局で証明書が発行できない場合は自動的に他の互換プロバイダーが利用されます。</value>
+  </data>
+  <data name="Account_Edit_SectionTitle" xml:space="preserve">
+    <value>ACMEアカウントの編集</value>
+  </data>
+  <data name="ManagedCertificate_CertificateAuthority_UseTestCertificates" xml:space="preserve">
+    <value>ステージングモード（テスト証明書）を使用</value>
+  </data>
+  <data name="EditCertificateAuthority_TitleHelp" xml:space="preserve">
+    <value>（認証局の表示名）</value>
+  </data>
+  <data name="EditCertificateAuthority_ProductionDirectoryHelp" xml:space="preserve">
+    <value>（本番ディレクトリエンドポイントのURL）</value>
+  </data>
+  <data name="Settings_Export_Intro" xml:space="preserve">
+    <value>このインスタンスのすべての関連設定とファイルをまとめてエクスポートファイルを作成できます。※機密情報は暗号化されますが、信頼できない相手や安全でない場所での共有は避けてください。</value>
+  </data>
+  <data name="ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions" xml:space="preserve">
+    <value>認証局は異なるルート（発行者）証明書で署名された複数バージョンの証明書を提示する場合があります。証明書ごとに優先チェーンを指定できます。該当チェーンがない場合はデフォルトチェーンが使用されます。</value>
+  </data>
 </root>
