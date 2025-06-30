@@ -193,12 +193,12 @@
     <value>ドメイン識別子の登録</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
-    <value>Let's Encrypt からの検証要求：{0}</value>
+    <value>からの検証要求：{0}</value>
   </data>
   <data name="CertifyManager_SiteStopped" xml:space="preserve">
     <value>サイトの停止（または存在しない）、ドメインの検証が実行できないため、更新はスキップされます。</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
-    <value>Let's Encrypt  サービスは、許可された時間内に有効な証明書を発行しませんでした。 {0}</value>
+    <value>ACME CA  サービスは、許可された時間内に有効な証明書を発行しませんでした。 {0}</value>
   </data>
 </root>
