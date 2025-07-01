@@ -13,7 +13,7 @@ namespace Certify.Providers.CertificateManagers
     public interface ICertificateManager
     {
 
-        void Init(ILogger logger, string settingsPath = "", string logPath = "");
+        void Init(ILogger logger, CertificateManagerPreference prefs);
 
         Task<bool> IsPresent();
 
