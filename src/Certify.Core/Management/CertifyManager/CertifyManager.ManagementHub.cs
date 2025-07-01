@@ -728,6 +728,8 @@ namespace Certify.Management
                     prefs.RenewalIntervalMode = update.RenewalIntervalMode;
                     prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
 
+                    prefs.CertificateManagers = update.CertificateManagers;
+
                     SettingsManager.FromPreferences(prefs);
 
                     try
@@ -740,6 +742,9 @@ namespace Certify.Management
                         _serviceLog.Error(ex, "Error saving preferences");
                         val = new ActionResult("Service core settings could not be updated.", false);
                     }
+
+                    // cert manager config may have changed, refresh required
+                    _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
                 }
                 else
                 {

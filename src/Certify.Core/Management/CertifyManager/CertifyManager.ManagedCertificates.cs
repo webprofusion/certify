@@ -82,6 +82,9 @@ namespace Certify.Management
             {
                 List<ManagedCertificate> list = [];
 
+                var prefs = SettingsManager.ToPreferences();
+                var providerAdded = false;
+
                 // check if we have any external sources of managed certificates
                 foreach (var p in _pluginManager.CertificateManagerProviders)
                 {
@@ -91,6 +94,7 @@ namespace Certify.Management
                         {
                             var pluginType = p.GetType();
                             var providers = p.GetProviders(pluginType);
+                            var loggerAdapter = new LogToILoggerAdapter(_serviceLog);
 
                             foreach (var cp in providers)
                             {
@@ -98,10 +102,34 @@ namespace Certify.Management
                                 {
                                     try
                                     {
-                                        var certManager = p.GetProvider(pluginType, cp.Id);
-                                        var certs = await certManager.GetManagedCertificates(filter);
+                                        var providerPrefs = prefs.CertificateManagers.FirstOrDefault(c => c.Id == cp.Id);
 
-                                        list.AddRange(certs);
+                                        if (providerPrefs?.IsEnabled == true || providerPrefs == null)
+                                        {
+                                            var certManager = p.GetProvider(pluginType, cp.Id);
+
+                                            // Initialize or use the certificate manager with the specified config and log paths
+
+                                            certManager.Init(loggerAdapter, providerPrefs);
+
+                                            var certs = await certManager.GetManagedCertificates(filter);
+
+                                            list.AddRange(certs);
+
+                                            if (providerPrefs == null)
+                                            {
+                                                //add a default provider prefs if not already present
+                                                prefs.CertificateManagers.Add(new CertificateManagerPreference
+                                                {
+                                                    Id = cp.Id,
+                                                    IsEnabled = true,
+                                                    ConfigPath = "",
+                                                    LogPath = ""
+                                                });
+
+                                                providerAdded = true;
+                                            }
+                                        }
                                     }
                                     catch (Exception ex)
                                     {
@@ -125,6 +153,19 @@ namespace Certify.Management
                 {
                     // reset cache
                     _externallyManagedCertificatesCache = list;
+                }
+
+                if (providerAdded)
+                {
+                    SettingsManager.FromPreferences(prefs);
+                    try
+                    {
+                        SettingsManager.SaveAppSettings();
+                    }
+                    catch (Exception ex)
+                    {
+                        _serviceLog.Error(ex, "Error saving preferences");
+                    }
                 }
             }
 
@@ -946,3 +987,4 @@ namespace Certify.Management
         }
     }
 }
+
