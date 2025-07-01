@@ -1,4 +1,7 @@
-﻿namespace Certify.Models
+﻿using System.Collections.Generic;
+using Certify.Models.Config;
+
+namespace Certify.Models
 {
     public enum CertificateCleanupMode
     {
@@ -134,6 +137,11 @@
         /// If true, ARI checks will not be performed during periodic maintenance
         /// </summary>
         public bool DisableARIChecks { get; set; }
+
+        /// <summary>
+        /// Preferences for external certificate managers (enable/disable, config/log paths)
+        /// </summary>
+        public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
     }
 
     public static class FeatureFlags

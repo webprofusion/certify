@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Certify.Models;
+using Certify.Models.Config;
 
 namespace Certify.Management
 {
@@ -35,6 +36,7 @@ namespace Certify.Management
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
             NtpServer = "pool.ntp.org";
+            CertificateManagers = new List<CertificateManagerPreference>();
         }
 
         public static CoreAppSettings Current
@@ -185,6 +187,8 @@ namespace Certify.Management
         /// If true, ARI checks will not be performed during periodic maintenance
         /// </summary>
         public bool DisableARIChecks { get; set; }
+
+        public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
     }
 
     public class SettingsManager
@@ -244,6 +248,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.EnableIssuerCache = prefs.EnableIssuerCache;
 
+            CoreAppSettings.Current.CertificateManagers = prefs.CertificateManagers;
+
             return true;
         }
 
@@ -280,7 +286,8 @@ namespace Certify.Management
                 DefaultKeyType = CoreAppSettings.Current.DefaultKeyType,
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
                 DisableARIChecks = CoreAppSettings.Current.DisableARIChecks,
-                DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval
+                DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval,
+                CertificateManagers = CoreAppSettings.Current.CertificateManagers
             };
 
             return prefs;
