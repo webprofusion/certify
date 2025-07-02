@@ -18,11 +18,11 @@ namespace Certify.Service.Controllers
             _dataProtectionProvider = dataProtectionProvider;
         }
 
-        [HttpPost, Route("securityprinciple")]
-        public async Task<Models.Config.ActionResult> AddSecurityPrinciple([FromBody] SecurityPrinciple principle)
+        [HttpPost, Route("securityprincipal")]
+        public async Task<Models.Config.ActionResult> AddSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.AddSecurityPrinciple(GetContextUserId(), principle);
+            var addResultOk = await accessControl.AddSecurityPrincipal(GetContextUserId(), principal);
 
             return new Models.Config.ActionResult
             {
@@ -31,11 +31,11 @@ namespace Certify.Service.Controllers
             };
         }
 
-        [HttpPost, Route("securityprinciple/update")]
-        public async Task<Models.Config.ActionResult> UpdateSecurityPrinciple([FromBody] SecurityPrinciple principle)
+        [HttpPost, Route("securityprincipal/update")]
+        public async Task<Models.Config.ActionResult> UpdateSecurityPrincipal([FromBody] SecurityPrincipal principal)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var addResultOk = await accessControl.UpdateSecurityPrinciple(GetContextUserId(), principle);
+            var addResultOk = await accessControl.UpdateSecurityPrincipal(GetContextUserId(), principal);
 
             return new Models.Config.ActionResult
             {
@@ -44,8 +44,8 @@ namespace Certify.Service.Controllers
             };
         }
 
-        [HttpPost, Route("securityprinciple/roles/update")]
-        public async Task<Models.Config.ActionResult> UpdateSecurityPrincipleAssignedRoles([FromBody] SecurityPrincipleAssignedRoleUpdate update)
+        [HttpPost, Route("securityprincipal/roles/update")]
+        public async Task<Models.Config.ActionResult> UpdateSecurityPrincipalAssignedRoles([FromBody] SecurityPrincipalAssignedRoleUpdate update)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
             var resultOk = await accessControl.UpdateAssignedRoles(GetContextUserId(), update);
@@ -57,25 +57,25 @@ namespace Certify.Service.Controllers
             };
         }
 
-        [HttpDelete, Route("securityprinciple/{id}")]
-        public async Task<Models.Config.ActionResult> DeleteSecurityPrinciple(string id)
+        [HttpDelete, Route("securityprincipal/{id}")]
+        public async Task<Models.Config.ActionResult> DeleteSecurityPrincipal(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var resultOk = await accessControl.DeleteSecurityPrinciple(GetContextUserId(), id);
+            var resultOk = await accessControl.DeleteSecurityPrincipal(GetContextUserId(), id);
 
             return new Models.Config.ActionResult
             {
                 IsSuccess = resultOk,
-                Message = resultOk ? "Deleted" : "Failed to delete security principle"
+                Message = resultOk ? "Deleted" : "Failed to delete security principal"
             };
         }
 
-        [HttpGet, Route("securityprinciples")]
-        public async Task<ICollection<SecurityPrinciple>> GetSecurityPrinciples()
+        [HttpGet, Route("securityprincipals")]
+        public async Task<ICollection<SecurityPrincipal>> GetSecurityPrincipals()
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            var results = await accessControl.GetSecurityPrinciples(GetContextUserId());
+            var results = await accessControl.GetSecurityPrincipals(GetContextUserId());
 
             foreach (var r in results)
             {
@@ -93,12 +93,12 @@ namespace Certify.Service.Controllers
             return await accessControl.GetRoles(GetContextUserId());
         }
 
-        [HttpPost, Route("securityprinciple/allowedaction/")]
-        public async Task<bool> CheckSecurityPrincipleHasAccess(AccessCheck check)
+        [HttpPost, Route("securityprincipal/allowedaction/")]
+        public async Task<bool> CheckSecurityPrincipalHasAccess(AccessCheck check)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.IsSecurityPrincipleAuthorised(GetContextUserId(), check);
+            return await accessControl.IsSecurityPrincipalAuthorised(GetContextUserId(), check);
         }
 
         [HttpPost, Route("apitoken/check/")]
@@ -151,8 +151,8 @@ namespace Certify.Service.Controllers
             };
         }
 
-        [HttpGet, Route("securityprinciple/{id}/assignedroles")]
-        public async Task<ICollection<AssignedRole>> GetSecurityPrincipleAssignedRoles(string id)
+        [HttpGet, Route("securityprincipal/{id}/assignedroles")]
+        public async Task<ICollection<AssignedRole>> GetSecurityPrincipalAssignedRoles(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
@@ -161,21 +161,21 @@ namespace Certify.Service.Controllers
             return results;
         }
 
-        [HttpGet, Route("securityprinciple/{id}/rolestatus")]
-        public async Task<RoleStatus> GetSecurityPrincipleRoleStatus(string id)
+        [HttpGet, Route("securityprincipal/{id}/rolestatus")]
+        public async Task<RoleStatus> GetSecurityPrincipalRoleStatus(string id)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            var result = await accessControl.GetSecurityPrincipleRoleStatus(GetContextUserId(), id);
+            var result = await accessControl.GetSecurityPrincipalRoleStatus(GetContextUserId(), id);
 
             return result;
         }
 
         [HttpPost, Route("updatepassword")]
-        public async Task<Models.Config.ActionResult> UpdatePassword([FromBody] SecurityPrinciplePasswordUpdate passwordUpdate)
+        public async Task<Models.Config.ActionResult> UpdatePassword([FromBody] SecurityPrincipalPasswordUpdate passwordUpdate)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var result = await accessControl.UpdateSecurityPrinciplePassword(GetContextUserId(), passwordUpdate);
+            var result = await accessControl.UpdateSecurityPrincipalPassword(GetContextUserId(), passwordUpdate);
 
             return new Models.Config.ActionResult
             {
@@ -185,10 +185,10 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("validate")]
-        public async Task<SecurityPrincipleCheckResponse> Validate([FromBody] SecurityPrinciplePasswordCheck passwordCheck)
+        public async Task<SecurityPrincipalCheckResponse> Validate([FromBody] SecurityPrincipalPasswordCheck passwordCheck)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var result = await accessControl.CheckSecurityPrinciplePassword(GetContextUserId(), passwordCheck);
+            var result = await accessControl.CheckSecurityPrincipalPassword(GetContextUserId(), passwordCheck);
 
             return result;
         }

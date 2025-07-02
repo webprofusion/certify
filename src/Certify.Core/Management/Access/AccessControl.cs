@@ -42,12 +42,12 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
-        /// Check if the system has been initialized with a security principle
+        /// Check if the system has been initialized with a security principal
         /// </summary>
         /// <returns></returns>
         public async Task<bool> IsInitialized()
         {
-            var list = await GetSecurityPrinciples("system");
+            var list = await GetSecurityPrincipals("system");
             if (list.Count != 0)
             {
                 return true;
@@ -63,9 +63,9 @@ namespace Certify.Core.Management.Access
             return await _store.GetItems<Role>(nameof(Role));
         }
 
-        public async Task<List<SecurityPrinciple>> GetSecurityPrinciples(string contextUserId, bool includePassword = false)
+        public async Task<List<SecurityPrincipal>> GetSecurityPrincipals(string contextUserId, bool includePassword = false)
         {
-            var results = await _store.GetItems<SecurityPrinciple>(nameof(SecurityPrinciple));
+            var results = await _store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
 
             if (!includePassword)
             {
@@ -76,84 +76,84 @@ namespace Certify.Core.Management.Access
             return results;
         }
 
-        public async Task<bool> AddSecurityPrinciple(string contextUserId, SecurityPrinciple principle, bool bypassIntegrityCheck = false)
+        public async Task<bool> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to use AddSecurityPrinciple [{principleId}] without being in required role.", contextUserId, principle?.Id);
+                await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
                 return false;
             }
 
-            var existing = await GetSecurityPrinciple(contextUserId, principle.Id);
+            var existing = await GetSecurityPrincipal(contextUserId, principal.Id);
             if (existing != null)
             {
-                await AuditWarning("User {contextUserId} attempted to use AddSecurityPrinciple [{principleId}] which already exists.", contextUserId, principle?.Id);
+                await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] which already exists.", contextUserId, principal?.Id);
                 return false;
             }
 
-            if (!string.IsNullOrWhiteSpace(principle.Password))
+            if (!string.IsNullOrWhiteSpace(principal.Password))
             {
-                principle.Password = HashPassword(principle.Password);
+                principal.Password = HashPassword(principal.Password);
             }
             else
             {
-                principle.Password = HashPassword(Guid.NewGuid().ToString());
+                principal.Password = HashPassword(Guid.NewGuid().ToString());
             }
 
-            principle.AvatarUrl = GetAvatarUrlForPrinciple(principle);
+            principal.AvatarUrl = GetAvatarUrlForPrincipal(principal);
 
-            await _store.Add<SecurityPrinciple>(nameof(SecurityPrinciple), principle);
+            await _store.Add<SecurityPrincipal>(nameof(SecurityPrincipal), principal);
 
-            await AuditInformation("User {contextUserId} added security principle [{principleId}] {username}", contextUserId, principle?.Id, principle?.Username);
+            await AuditInformation("User {contextUserId} added security principal [{principalId}] {username}", contextUserId, principal?.Id, principal?.Username);
             return true;
         }
 
-        public string GetAvatarUrlForPrinciple(SecurityPrinciple principle)
+        public string GetAvatarUrlForPrincipal(SecurityPrincipal principal)
         {
-            return string.IsNullOrWhiteSpace(principle.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principle.Email.Trim().ToLower())}";
+            return string.IsNullOrWhiteSpace(principal.Email) ? "https://gravatar.com/avatar/00000000000000000000000000000000" : $"https://gravatar.com/avatar/{GetSHA256Hash(principal.Email.Trim().ToLower())}";
         }
 
-        public async Task<bool> UpdateSecurityPrinciple(string contextUserId, SecurityPrinciple principle)
+        public async Task<bool> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal)
         {
 
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple [{principleId}] without being in required role.", contextUserId, principle?.Id);
+                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
                 return false;
             }
 
             try
             {
-                var updateSp = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), principle.Id);
-                updateSp.Email = principle.Email;
-                updateSp.Description = principle.Description;
-                updateSp.Title = principle.Title;
+                var updateSp = await _store.Get<SecurityPrincipal>(nameof(SecurityPrincipal), principal.Id);
+                updateSp.Email = principal.Email;
+                updateSp.Description = principal.Description;
+                updateSp.Title = principal.Title;
 
-                updateSp.AvatarUrl = GetAvatarUrlForPrinciple(principle);
+                updateSp.AvatarUrl = GetAvatarUrlForPrincipal(principal);
 
-                await _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), updateSp);
+                await _store.Update<SecurityPrincipal>(nameof(SecurityPrincipal), updateSp);
             }
             catch
             {
-                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrinciple [{principleId}], but was not successful", contextUserId, principle?.Id);
+                await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}], but was not successful", contextUserId, principal?.Id);
                 return false;
             }
 
-            await AuditInformation("User {contextUserId} updated security principle [{principleId}] {principleUsername}", contextUserId, principle?.Id, principle?.Username);
+            await AuditInformation("User {contextUserId} updated security principal [{principalId}] {principalUsername}", contextUserId, principal?.Id, principal?.Username);
             return true;
         }
 
         /// <summary>
-        /// delete a single security principle
+        /// delete a single security principal
         /// </summary>
         /// <param name="contextUserId"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public async Task<bool> DeleteSecurityPrinciple(string contextUserId, string id, bool allowSelfDelete = false)
+        public async Task<bool> DeleteSecurityPrincipal(string contextUserId, string id, bool allowSelfDelete = false)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to use DeleteSecurityPrinciple [{id}] without being in required role.", contextUserId, id);
+                await AuditWarning("User {contextUserId} attempted to use DeleteSecurityPrincipal [{id}] without being in required role.", contextUserId, id);
                 return false;
             }
 
@@ -163,7 +163,7 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
-            var existing = await GetSecurityPrinciple(contextUserId, id);
+            var existing = await GetSecurityPrincipal(contextUserId, id);
 
             if (existing.IsBuiltIn)
             {
@@ -174,11 +174,11 @@ namespace Certify.Core.Management.Access
                 }
             }
 
-            var deleted = await _store.Delete<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+            var deleted = await _store.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), id);
 
             if (deleted != true)
             {
-                await AuditWarning("User {contextUserId} attempted to delete security principle [{id}] {existingUsername}, but was not successful", contextUserId, id, existing?.Username);
+                await AuditWarning("User {contextUserId} attempted to delete security principal [{id}] {existingUsername}, but was not successful", contextUserId, id, existing?.Username);
                 return false;
             }
 
@@ -188,16 +188,16 @@ namespace Certify.Core.Management.Access
                 await _store.Delete<AssignedRole>(nameof(AssignedRole), a.Id);
             }
 
-            await AuditInformation("User {contextUserId} deleted security principle [{id}] {existingUsername}", contextUserId, id, existing?.Username);
+            await AuditInformation("User {contextUserId} deleted security principal [{id}] {existingUsername}", contextUserId, id, existing?.Username);
 
             return true;
         }
 
-        public async Task<SecurityPrinciple> GetSecurityPrinciple(string contextUserId, string id, bool includePassword = false)
+        public async Task<SecurityPrincipal> GetSecurityPrincipal(string contextUserId, string id, bool includePassword = false)
         {
             try
             {
-                var result = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), id);
+                var result = await _store.Get<SecurityPrincipal>(nameof(SecurityPrincipal), id);
 
                 if (!includePassword && result != null)
                 {
@@ -208,20 +208,20 @@ namespace Certify.Core.Management.Access
             }
             catch (Exception exp)
             {
-                await AuditError("User {contextUserId} attempted to retrieve security principle [{id}] but was not successful : {exp}", contextUserId, id, exp);
+                await AuditError("User {contextUserId} attempted to retrieve security principal [{id}] but was not successful : {exp}", contextUserId, id, exp);
 
                 return default;
             }
         }
 
-        public async Task<SecurityPrinciple> GetSecurityPrincipleByUsername(string contextUserId, string username, bool includePassword = false)
+        public async Task<SecurityPrincipal> GetSecurityPrincipalByUsername(string contextUserId, string username, bool includePassword = false)
         {
             if (string.IsNullOrWhiteSpace(username))
             {
                 return default;
             }
 
-            var list = await GetSecurityPrinciples(contextUserId, includePassword);
+            var list = await GetSecurityPrincipals(contextUserId, includePassword);
 
             var result = list?.SingleOrDefault(sp => sp.Username?.ToLowerInvariant() == username.ToLowerInvariant());
 
@@ -234,24 +234,24 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
-        /// Check if a security principle has access to the given resource action
+        /// Check if a security principal has access to the given resource action
         /// </summary>
-        /// <param name="contextUserId">Security principle performing access check</param>
-        /// <param name="principleId">Security principle to check access for</param>
+        /// <param name="contextUserId">Security principal performing access check</param>
+        /// <param name="principalId">Security principal to check access for</param>
         /// <param name="resourceType">resource type being accessed</param>
         /// <param name="actionId">resource action required</param>
         /// <param name="identifier">optional resource identifier, if access is limited by specific resource</param>
         /// <param name="scopedAssignedRoles">optional scoped assigned roles to limit access to (for scoped access token checks etc)</param>
         /// <returns></returns>
-        public async Task<bool> IsSecurityPrincipleAuthorised(string contextUserId, AccessCheck check)
+        public async Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check)
         {
-            // to determine is a principle has access to perform a particular action
-            // for each group the principle is part of
+            // to determine is a principal has access to perform a particular action
+            // for each group the principal is part of
 
             // TODO: cache results for performance based on last update of access control config, which will be largely static
 
             // get all assigned roles (all users)
-            // assigned roles are assigned to a security principle (user) and include a specified role plus any restrictions on resource types or identifiers
+            // assigned roles are assigned to a security principal (user) and include a specified role plus any restrictions on resource types or identifiers
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
             // get all defined roles
@@ -260,8 +260,8 @@ namespace Certify.Core.Management.Access
             // get all defined policies
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
 
-            // get the assigned roles for this specific security principle
-            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == check.SecurityPrincipleId);
+            // get the assigned roles for this specific security principal
+            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId);
 
             // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check
             if (check.ScopedAssignedRoles?.Any() == true)
@@ -269,19 +269,19 @@ namespace Certify.Core.Management.Access
                 spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
             }
 
-            // get all role definitions included in the principles assigned roles 
+            // get all role definitions included in the principals assigned roles 
             var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
 
             var spSpecificAssignedRoles = spAssignedRoles.Where(a => spAssignedRoleDefinitions.Any(r => r.Id == a.RoleId));
 
-            // get all resource policies included in the principles assigned roles
+            // get all resource policies included in the principals assigned roles
             var spAssignedPolicies = allPolicies.Where(r => spAssignedRoleDefinitions.Any(p => p.Policies.Contains(r.Id)));
 
             // check an assigned policy allows the required resource action
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(check.ResourceActionId)))
             {
 
-                // if any of the service principles assigned roles are restricted by resource type,
+                // if any of the service principals assigned roles are restricted by resource type,
                 // check for identifier matches (e.g. role assignment restricted on domains )
 
                 if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true))
@@ -326,7 +326,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
         {
-            // resolve security principle from access token
+            // resolve security principal from access token
 
             var assignedTokens = await _store.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
 
@@ -338,18 +338,18 @@ namespace Certify.Core.Management.Access
                 return new ActionResult("Access token unknown, expired or revoked.", false);
             }
 
-            // check related principle has access
+            // check related principal has access
 
             var scopedCheck = new AccessCheck
             {
-                SecurityPrincipleId = knownAssignedToken.SecurityPrincipleId,
+                SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
                 ResourceActionId = check.ResourceActionId,
                 Identifier = check.Identifier,
                 ResourceType = check.ResourceType,
                 ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles
             };
 
-            var isAuthorised = await IsSecurityPrincipleAuthorised(contextUserId, scopedCheck);
+            var isAuthorised = await IsSecurityPrincipalAuthorised(contextUserId, scopedCheck);
 
             if (isAuthorised)
             {
@@ -364,17 +364,17 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
-        /// Check security principle is in a given role at the system level
+        /// Check security principal is in a given role at the system level
         /// </summary>
         /// <param name="contextUserId"></param>
         /// <param name="id"></param>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public async Task<bool> IsPrincipleInRole(string contextUserId, string id, string roleId)
+        public async Task<bool> IsPrincipalInRole(string contextUserId, string id, string roleId)
         {
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
-            if (assignedRoles.Any(a => a.RoleId == roleId && a.SecurityPrincipleId == id))
+            if (assignedRoles.Any(a => a.RoleId == roleId && a.SecurityPrincipalId == id))
             {
                 return true;
             }
@@ -386,7 +386,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourcePolicy, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddResourcePolicy [{resourcePolicyId}] without being in required role.", contextUserId, resourcePolicy?.Id);
                 return false;
@@ -398,46 +398,46 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<bool> UpdateSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
+        public async Task<bool> UpdateSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
         {
-            if (passwordUpdate.SecurityPrincipleId != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipleId);
+                await AuditWarning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipalId);
                 return false;
             }
 
             var updated = false;
 
-            var principle = await GetSecurityPrinciple(contextUserId, passwordUpdate.SecurityPrincipleId, includePassword: true);
+            var principal = await GetSecurityPrincipal(contextUserId, passwordUpdate.SecurityPrincipalId, includePassword: true);
 
-            if (!requirePasswordConfirmation || (requirePasswordConfirmation && IsPasswordValid(passwordUpdate.Password, principle.Password)))
+            if (!requirePasswordConfirmation || (requirePasswordConfirmation && IsPasswordValid(passwordUpdate.Password, principal.Password)))
             {
                 try
                 {
-                    var updateSp = await _store.Get<SecurityPrinciple>(nameof(SecurityPrinciple), principle.Id);
+                    var updateSp = await _store.Get<SecurityPrincipal>(nameof(SecurityPrincipal), principal.Id);
                     updateSp.Password = HashPassword(passwordUpdate.NewPassword);
-                    await _store.Update<SecurityPrinciple>(nameof(SecurityPrinciple), updateSp);
+                    await _store.Update<SecurityPrincipal>(nameof(SecurityPrincipal), updateSp);
                     updated = true;
                 }
                 catch (Exception exp)
                 {
-                    await AuditError("User {contextUserId} attempted to use UpdateSecurityPrinciple password [{principleId}], but was not successful : {exp}", contextUserId, principle?.Id, exp);
+                    await AuditError("User {contextUserId} attempted to use UpdateSecurityPrincipal password [{principalId}], but was not successful : {exp}", contextUserId, principal?.Id, exp);
                     updated = false;
                 }
             }
             else
             {
-                await AuditInformation("Previous password did not match while updating security principle password", contextUserId, principle.Username, principle.Id);
+                await AuditInformation("Previous password did not match while updating security principal password", contextUserId, principal.Username, principal.Id);
             }
 
             if (updated)
             {
-                await AuditInformation("User {contextUserId} updated password for [{username} - {id}]", contextUserId, principle.Username, principle.Id);
+                await AuditInformation("User {contextUserId} updated password for [{username} - {id}]", contextUserId, principal.Username, principal.Id);
             }
             else
             {
 
-                await AuditWarning("User {contextUserId} failed to update password for [{username} - {id}]", contextUserId, principle.Username, principle.Id);
+                await AuditWarning("User {contextUserId} failed to update password for [{username} - {id}]", contextUserId, principal.Username, principal.Id);
             }
 
             return updated;
@@ -491,7 +491,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddRole(string contextUserId, Role r, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an role action without being in required role.", contextUserId);
                 return false;
@@ -503,7 +503,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddAssignedRole(string contextUserId, AssignedRole r, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an assigned role without being in required role.", contextUserId);
                 return false;
@@ -515,7 +515,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add a resource action without being in required role.", contextUserId);
                 return false;
@@ -527,7 +527,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id)
         {
-            if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (id != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read assigned role for [{id}] without being in required role.", contextUserId, id);
                 return null;
@@ -535,12 +535,12 @@ namespace Certify.Core.Management.Access
 
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
-            return assignedRoles.Where(r => r.SecurityPrincipleId == id).ToList();
+            return assignedRoles.Where(r => r.SecurityPrincipalId == id).ToList();
         }
 
-        public async Task<RoleStatus> GetSecurityPrincipleRoleStatus(string contextUserId, string id)
+        public async Task<RoleStatus> GetSecurityPrincipalRoleStatus(string contextUserId, string id)
         {
-            if (id != contextUserId && !await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (id != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to read role status role for [{id}] without being in required role.", contextUserId, id);
                 return null;
@@ -551,7 +551,7 @@ namespace Certify.Core.Management.Access
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
             var allActions = await _store.GetItems<ResourceAction>(nameof(ResourceAction));
 
-            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipleId == id);
+            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == id);
             var spRoles = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
             var spPolicies = allPolicies.Where(r => spRoles.Any(p => p.Policies.Contains(r.Id)));
             var spActions = allActions.Where(r => spPolicies.Any(p => p.ResourceActions.Contains(r.Id)));
@@ -567,16 +567,16 @@ namespace Certify.Core.Management.Access
             return roleStatus;
         }
 
-        public async Task<bool> UpdateAssignedRoles(string contextUserId, SecurityPrincipleAssignedRoleUpdate update)
+        public async Task<bool> UpdateAssignedRoles(string contextUserId, SecurityPrincipalAssignedRoleUpdate update)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
-                await AuditWarning("User {contextUserId} attempted to update assigned role for [{id}] without being in required role.", contextUserId, update.SecurityPrincipleId);
+                await AuditWarning("User {contextUserId} attempted to update assigned role for [{id}] without being in required role.", contextUserId, update.SecurityPrincipalId);
                 return false;
             }
 
             // remove items from assigned roles
-            var existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipleId);
+            var existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipalId);
             foreach (var deleted in update.RemovedAssignedRoles)
             {
                 var e = existing.FirstOrDefault(r => r.RoleId == deleted.RoleId);
@@ -587,7 +587,7 @@ namespace Certify.Core.Management.Access
             }
 
             // add items to assigned roles
-            existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipleId);
+            existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipalId);
             foreach (var added in update.AddedAssignedRoles)
             {
                 if (!existing.Exists(r => r.RoleId == added.RoleId))
@@ -599,36 +599,36 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
-        public async Task<SecurityPrincipleCheckResponse> CheckSecurityPrinciplePassword(string contextUserId, SecurityPrinciplePasswordCheck passwordCheck)
+        public async Task<SecurityPrincipalCheckResponse> CheckSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordCheck passwordCheck)
         {
-            var principle = string.IsNullOrWhiteSpace(passwordCheck.SecurityPrincipleId) ?
-                                await GetSecurityPrincipleByUsername(contextUserId, passwordCheck.Username, includePassword: true) :
-                                await GetSecurityPrinciple(contextUserId, passwordCheck.SecurityPrincipleId, includePassword: true);
+            var principal = string.IsNullOrWhiteSpace(passwordCheck.SecurityPrincipalId) ?
+                                await GetSecurityPrincipalByUsername(contextUserId, passwordCheck.Username, includePassword: true) :
+                                await GetSecurityPrincipal(contextUserId, passwordCheck.SecurityPrincipalId, includePassword: true);
 
-            if (principle != null && principle.PrincipleType == SecurityPrincipleType.User && IsPasswordValid(passwordCheck.Password, principle.Password))
+            if (principal != null && principal.PrincipalType == SecurityPrincipalType.User && IsPasswordValid(passwordCheck.Password, principal.Password))
             {
-                return new SecurityPrincipleCheckResponse { IsSuccess = true, SecurityPrinciple = principle };
+                return new SecurityPrincipalCheckResponse { IsSuccess = true, SecurityPrincipal = principal };
             }
             else
             {
-                if (principle == null)
+                if (principal == null)
                 {
-                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid security principle" };
+                    return new SecurityPrincipalCheckResponse { IsSuccess = false, Message = "Invalid security principal" };
                 }
-                else if (principle.PrincipleType != SecurityPrincipleType.User)
+                else if (principal.PrincipalType != SecurityPrincipalType.User)
                 {
-                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid security principle for password based login" };
+                    return new SecurityPrincipalCheckResponse { IsSuccess = false, Message = "Invalid security principal for password based login" };
                 }
                 else
                 {
-                    return new SecurityPrincipleCheckResponse { IsSuccess = false, Message = "Invalid password" };
+                    return new SecurityPrincipalCheckResponse { IsSuccess = false, Message = "Invalid password" };
                 }
             }
         }
 
         public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to list assigned access tokens without being in required role.", contextUserId);
                 return null;
@@ -639,7 +639,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken a)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an assigned access token without being in required role.", contextUserId);
                 return false;
@@ -652,7 +652,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> DeleteAssignedAccessToken(string contextUserId, string id)
         {
-            if (!await IsPrincipleInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to delete an assigned access token without being in required role.", contextUserId);
                 return false;

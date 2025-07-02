@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Certify.Models.Hub
 {
-    public enum SecurityPrincipleType
+    public enum SecurityPrincipalType
     {
         User = 1,
         Application = 2,
@@ -17,9 +17,9 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
-    /// A Security Principle is a user or service account which can be assigned roles and other permissions
+    /// A Security Principal is a user or service account which can be assigned roles and other permissions
     /// </summary>
-    public class SecurityPrinciple : ConfigurationStoreItem
+    public class SecurityPrincipal : ConfigurationStoreItem
     {
         public string? Username { get; set; }
         public string? Password { get; set; }
@@ -31,11 +31,11 @@ namespace Certify.Models.Hub
         public string? Provider { get; set; }
 
         /// <summary>
-        /// If principle is externally controlled, this is the identifier from the external system
+        /// If principal is externally controlled, this is the identifier from the external system
         /// </summary>
         public string? ExternalIdentifier { get; set; }
 
-        public SecurityPrincipleType PrincipleType { get; set; } = SecurityPrincipleType.User;
+        public SecurityPrincipalType PrincipalType { get; set; } = SecurityPrincipalType.User;
 
         public string? AuthKey { get; set; }
 
@@ -44,7 +44,7 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
-    /// A role is a collection of policies which can be assigned to a security principle via AssignedRole
+    /// A role is a collection of policies which can be assigned to a security principal via AssignedRole
     /// </summary>
     public class Role : ConfigurationStoreItem
     {
@@ -63,7 +63,7 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
-    /// A role assigned to a security principle, optionally specific to a set of resources
+    /// A role assigned to a security principal, optionally specific to a set of resources
     /// </summary>
     public class AssignedRole : ConfigurationStoreItem
     {
@@ -73,16 +73,16 @@ namespace Certify.Models.Hub
         public string RoleId { get; set; } = default!;
 
         /// <summary>
-        /// Specific security principle assigned to the role
+        /// Specific security principal assigned to the role
         /// </summary>
-        public string SecurityPrincipleId { get; set; } = default!;
+        public string SecurityPrincipalId { get; set; } = default!;
 
         public List<Resource>? IncludedResources { get; set; } = [];
     }
 
     public class AccessCheck
     {
-        public string? SecurityPrincipleId { get; set; } = default!;
+        public string? SecurityPrincipalId { get; set; } = default!;
         public string ResourceType { get; set; } = default!;
         public string ResourceActionId { get; set; } = default!;
         public string? Identifier { get; set; } = default!;
@@ -90,9 +90,9 @@ namespace Certify.Models.Hub
         public List<string> ScopedAssignedRoles { get; set; } = [];
 
         public AccessCheck() { }
-        public AccessCheck(string? securityPrincipleId, string resourceType, string resourceActionId, string? identifier = null)
+        public AccessCheck(string? securityPrincipalId, string resourceType, string resourceActionId, string? identifier = null)
         {
-            SecurityPrincipleId = securityPrincipleId;
+            SecurityPrincipalId = securityPrincipalId;
             ResourceType = resourceType;
             ResourceActionId = resourceActionId;
             Identifier = identifier;
@@ -121,7 +121,7 @@ namespace Certify.Models.Hub
     }
     public class AssignedAccessToken : ConfigurationStoreItem
     {
-        public string SecurityPrincipleId { get; set; } = default!;
+        public string SecurityPrincipalId { get; set; } = default!;
 
         /// <summary>
         /// Optional list of Assigned Roles this access token is scoped to. Note this is not the RoleID but the AssignedRoleID.
@@ -183,9 +183,9 @@ namespace Certify.Models.Hub
 
         public string? ResourceType { get; set; }
     }
-    public class SecurityPrincipleAssignedRoleUpdate
+    public class SecurityPrincipalAssignedRoleUpdate
     {
-        public string SecurityPrincipleId { get; set; } = string.Empty;
+        public string SecurityPrincipalId { get; set; } = string.Empty;
         public List<AssignedRole> AddedAssignedRoles { get; set; } = new List<AssignedRole>();
         public List<AssignedRole> RemovedAssignedRoles { get; set; } = new List<AssignedRole>();
     }

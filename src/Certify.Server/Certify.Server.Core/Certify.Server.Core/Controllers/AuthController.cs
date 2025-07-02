@@ -28,7 +28,7 @@ namespace Certify.Service.Controllers
             };
 
             var identity = new ClaimsIdentity(claims: claims, authenticationType: BearerTokenDefaults.AuthenticationScheme);
-            var servicePrinciple = new ClaimsPrincipal(identity: identity);
+            var servicePrincipal = new ClaimsPrincipal(identity: identity);
 
             // consume a service token request and return a long lived JWT token
             var response = new AccessTokenResponse

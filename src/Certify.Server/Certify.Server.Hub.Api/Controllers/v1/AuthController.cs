@@ -57,9 +57,9 @@ namespace Certify.Server.Hub.Api.Controllers
         {
 
             // check users login, if valid issue new JWT access token and refresh token based on their identity
-            var validation = await _client.ValidateSecurityPrinciplePassword(new SecurityPrinciplePasswordCheck() { Username = login.Username, Password = login.Password }, CurrentAuthContext);
+            var validation = await _client.ValidateSecurityPrincipalPassword(new SecurityPrincipalPasswordCheck() { Username = login.Username, Password = login.Password }, CurrentAuthContext);
 
-            if (validation.IsSuccess && validation.SecurityPrinciple != null)
+            if (validation.IsSuccess && validation.SecurityPrincipal != null)
             {
                 // TODO: get user details from API and return as part of response instead of returning as json
 
@@ -68,10 +68,10 @@ namespace Certify.Server.Hub.Api.Controllers
                 var authResponse = new AuthResponse
                 {
                     Detail = "OK",
-                    AccessToken = jwt.GenerateSecurityToken(validation.SecurityPrinciple.Id, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20")),
+                    AccessToken = jwt.GenerateSecurityToken(validation.SecurityPrincipal.Id, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20")),
                     RefreshToken = jwt.GenerateRefreshToken(),
-                    SecurityPrinciple = validation.SecurityPrinciple,
-                    RoleStatus = await _client.GetSecurityPrincipleRoleStatus(validation.SecurityPrinciple.Id, CurrentAuthContext)
+                    SecurityPrincipal = validation.SecurityPrincipal,
+                    RoleStatus = await _client.GetSecurityPrincipalRoleStatus(validation.SecurityPrincipal.Id, CurrentAuthContext)
                 };
 
                 // TODO: Refresh token should be stored or hashed for later use
@@ -128,7 +128,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 // DeleteRefreshToken(username, refreshToken);
                 // SaveRefreshToken(username, newRefreshToken);
 
-                var spList = await _client.GetSecurityPrinciples(CurrentAuthContext);
+                var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
                 var sp = spList.Single(s => s.Id == userId);
 
                 var authResponse = new AuthResponse
@@ -136,8 +136,8 @@ namespace Certify.Server.Hub.Api.Controllers
                     Detail = "OK",
                     AccessToken = newJwtToken,
                     RefreshToken = newRefreshToken,
-                    SecurityPrinciple = sp,
-                    RoleStatus = await _client.GetSecurityPrincipleRoleStatus(userId, CurrentAuthContext)
+                    SecurityPrincipal = sp,
+                    RoleStatus = await _client.GetSecurityPrincipalRoleStatus(userId, CurrentAuthContext)
                 };
 
                 return Ok(authResponse);
