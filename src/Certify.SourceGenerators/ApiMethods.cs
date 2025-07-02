@@ -68,39 +68,39 @@ namespace Certify.SourceGenerators
 
                 new()
                 {
-                    OperationName = "CheckSecurityPrincipleHasAccess",
+                    OperationName = "CheckSecurityPrincipalHasAccess",
                     OperationMethod = HttpPost,
-                    Comment = "Check a given security principle has permissions to perform a specific action for a specific resource action",
+                    Comment = "Check a given security principal has permissions to perform a specific action for a specific resource action",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple/allowedaction",
-                    ServiceAPIRoute = "access/securityprinciple/allowedaction",
+                    PublicAPIRoute = "securityprincipal/allowedaction",
+                    ServiceAPIRoute = "access/securityprincipal/allowedaction",
                     ReturnType = "bool",
                     Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
                 },
                 new()
                 {
-                    OperationName = "GetSecurityPrincipleAssignedRoles",
+                    OperationName = "GetSecurityPrincipalAssignedRoles",
                     OperationMethod = HttpGet,
-                    Comment = "Get list of Assigned Roles for a given security principle",
+                    Comment = "Get list of Assigned Roles for a given security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple/{id}/assignedroles",
-                    ServiceAPIRoute = "access/securityprinciple/{id}/assignedroles",
+                    PublicAPIRoute = "securityprincipal/{id}/assignedroles",
+                    ServiceAPIRoute = "access/securityprincipal/{id}/assignedroles",
                     ReturnType = $"ICollection<{nameof(AssignedRole)}>",
                     Params = new Dictionary<string, string> { { "id", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
                 },
                 new()
                 {
-                    OperationName = "GetSecurityPrincipleRoleStatus",
+                    OperationName = "GetSecurityPrincipalRoleStatus",
                     OperationMethod = HttpGet,
-                    Comment = "Get list of Assigned Roles etc for a given security principle",
+                    Comment = "Get list of Assigned Roles etc for a given security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple/{id}/rolestatus",
-                    ServiceAPIRoute = "access/securityprinciple/{id}/rolestatus",
+                    PublicAPIRoute = "securityprincipal/{id}/rolestatus",
+                    ServiceAPIRoute = "access/securityprincipal/{id}/rolestatus",
                     ReturnType = nameof(RoleStatus),
                     Params = new Dictionary<string, string> { { "id", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleCheckAccess)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
                 },
                 new()
                 {
@@ -151,95 +151,95 @@ namespace Certify.SourceGenerators
                 new()
                 {
 
-                    OperationName = "GetSecurityPrinciples",
+                    OperationName = "GetSecurityPrincipals",
                     OperationMethod = HttpGet,
-                    Comment = "Get list of available security principles",
+                    Comment = "Get list of available security principals",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciples",
-                    ServiceAPIRoute = "access/securityprinciples",
-                    ReturnType = "ICollection<SecurityPrinciple>",
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleList)]
+                    PublicAPIRoute = "securityprincipals",
+                    ServiceAPIRoute = "access/securityprincipals",
+                    ReturnType = "ICollection<SecurityPrincipal>",
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalList)]
                 },
                 new()
                 {
-                    OperationName = "ValidateSecurityPrinciplePassword",
+                    OperationName = "ValidateSecurityPrincipalPassword",
                     OperationMethod = HttpPost,
-                    Comment = "Check password valid for security principle",
+                    Comment = "Check password valid for security principal",
                     PublicAPIController = "Access",
                     PublicAPIRoute = "validate",
                     ServiceAPIRoute = "access/validate",
-                    ReturnType = "Certify.Models.Hub.SecurityPrincipleCheckResponse",
-                    Params = new Dictionary<string, string> { { "passwordCheck", GetFormattedTypeName(typeof(Certify.Models.Hub.SecurityPrinciplePasswordCheck)) } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrinciplePasswordValidate)]
+                    ReturnType = "Certify.Models.Hub.SecurityPrincipalCheckResponse",
+                    Params = new Dictionary<string, string> { { "passwordCheck", GetFormattedTypeName(typeof(Certify.Models.Hub.SecurityPrincipalPasswordCheck)) } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalPasswordValidate)]
                 },
                 new()
                 {
 
-                    OperationName = "UpdateSecurityPrinciplePassword",
+                    OperationName = "UpdateSecurityPrincipalPassword",
                     OperationMethod = HttpPost,
-                    Comment = "Update password for security principle",
+                    Comment = "Update password for security principal",
                     PublicAPIController = "Access",
                     PublicAPIRoute = "updatepassword",
                     ServiceAPIRoute = "access/updatepassword",
                     ReturnType = actionResultTypeName,
-                    Params = new Dictionary<string, string> { { "passwordUpdate", "Certify.Models.Hub.SecurityPrinciplePasswordUpdate" } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrinciplePasswordUpdate)]
+                    Params = new Dictionary<string, string> { { "passwordUpdate", "Certify.Models.Hub.SecurityPrincipalPasswordUpdate" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalPasswordUpdate)]
                 },
                 new()
                 {
 
-                    OperationName = "AddSecurityPrinciple",
+                    OperationName = "AddSecurityPrincipal",
                     OperationMethod = HttpPost,
-                    Comment = "Add new security principle",
+                    Comment = "Add new security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple",
-                    ServiceAPIRoute = "access/securityprinciple",
+                    PublicAPIRoute = "securityprincipal",
+                    ServiceAPIRoute = "access/securityprincipal",
                     ReturnType = actionResultTypeName,
-                    Params = new Dictionary<string, string> { { "principle", "Certify.Models.Hub.SecurityPrinciple" } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleAdd)]
+                    Params = new Dictionary<string, string> { { "principal", "Certify.Models.Hub.SecurityPrincipal" } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalAdd)]
                 },
                 new()
                 {
 
-                    OperationName = "UpdateSecurityPrinciple",
+                    OperationName = "UpdateSecurityPrincipal",
                     OperationMethod = HttpPost,
-                    Comment = "Update existing security principle",
+                    Comment = "Update existing security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple/update",
-                    ServiceAPIRoute = "access/securityprinciple/update",
+                    PublicAPIRoute = "securityprincipal/update",
+                    ServiceAPIRoute = "access/securityprincipal/update",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
-                        { "principle", "Certify.Models.Hub.SecurityPrinciple" }
+                        { "principal", "Certify.Models.Hub.SecurityPrincipal" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleUpdate)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalUpdate)]
                 },
                 new()
                 {
-                    OperationName = "UpdateSecurityPrincipleAssignedRoles",
+                    OperationName = "UpdateSecurityPrincipalAssignedRoles",
                     OperationMethod = HttpPost,
-                    Comment = "Update assigned roles for a security principle",
+                    Comment = "Update assigned roles for a security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple/roles/update",
-                    ServiceAPIRoute = "access/securityprinciple/roles/update",
+                    PublicAPIRoute = "securityprincipal/roles/update",
+                    ServiceAPIRoute = "access/securityprincipal/roles/update",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
-                        { "update", "Certify.Models.Hub.SecurityPrincipleAssignedRoleUpdate" }
+                        { "update", "Certify.Models.Hub.SecurityPrincipalAssignedRoleUpdate" }
                     },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleUpdateAssignedRoles)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalUpdateAssignedRoles)]
                 },
                 new()
                 {
-                    OperationName = "RemoveSecurityPrinciple",
+                    OperationName = "RemoveSecurityPrincipal",
                     OperationMethod = HttpDelete,
-                    Comment = "Remove security principle",
+                    Comment = "Remove security principal",
                     PublicAPIController = "Access",
-                    PublicAPIRoute = "securityprinciple",
-                    ServiceAPIRoute = "access/securityprinciple/{id}",
+                    PublicAPIRoute = "securityprincipal",
+                    ServiceAPIRoute = "access/securityprincipal/{id}",
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "id", "string" } },
-                    RequiredPermissions = [new(ResourceTypes.SecurityPrinciple, StandardResourceActions.SecurityPrincipleDelete)]
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalDelete)]
                 },
                 new()
                 {

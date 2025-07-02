@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -80,7 +80,7 @@ namespace Certify.Models.Hub
     public class ResourceTypes
     {
         public static string System { get; } = "system";
-        public static string SecurityPrinciple { get; } = "securityprinciple";
+        public static string SecurityPrincipal { get; } = "securityprincipal";
         public static string Role { get; } = "role";
         public static string AccessToken { get; } = "accesstoken";
         public static string Domain { get; } = "domain";
@@ -130,14 +130,14 @@ namespace Certify.Models.Hub
         public const string StoredCredentialList = "storedcredential_list_action";
         public const string StoredCredentialDownload = "storedcredential_consumer_action";
 
-        public const string SecurityPrincipleList = "securityprinciple_list_action";
-        public const string SecurityPrincipleAdd = "securityprinciple_add_action";
-        public const string SecurityPrincipleUpdate = "securityprinciple_update_action";
-        public const string SecurityPrincipleUpdateAssignedRoles = "securityprinciple_update_assignedroles_action";
-        public const string SecurityPrincipleDelete = "securityprinciple_delete_action";
-        public const string SecurityPrinciplePasswordUpdate = "securityprinciple_password_update_action";
-        public const string SecurityPrinciplePasswordValidate = "securityprinciple_password_validate_action";
-        public const string SecurityPrincipleCheckAccess = "securityprinciple_access_check_action";
+        public const string SecurityPrincipalList = "securityprincipal_list_action";
+        public const string SecurityPrincipalAdd = "securityprincipal_add_action";
+        public const string SecurityPrincipalUpdate = "securityprincipal_update_action";
+        public const string SecurityPrincipalUpdateAssignedRoles = "securityprincipal_update_assignedroles_action";
+        public const string SecurityPrincipalDelete = "securityprincipal_delete_action";
+        public const string SecurityPrincipalPasswordUpdate = "securityprincipal_password_update_action";
+        public const string SecurityPrincipalPasswordValidate = "securityprincipal_password_validate_action";
+        public const string SecurityPrincipalCheckAccess = "securityprincipal_access_check_action";
 
         public const string RoleList = "role_list_action";
 
@@ -249,14 +249,14 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.StoredCredentialList, "List Stored Credentials", ResourceTypes.StoredCredential),
                 new(StandardResourceActions.StoredCredentialDownload, "Fetch Decrypted Stored Credential", ResourceTypes.StoredCredential),
 
-                new(StandardResourceActions.SecurityPrincipleList, "List Security Principles", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrincipleAdd, "Add New Security Principle", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrincipleUpdate,"Update Security Principles", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrincipleUpdateAssignedRoles,"Update Security Principle Assigned Roles", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrinciplePasswordUpdate, "Update Security Principle Passwords", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrincipleDelete, "Delete Security Principle", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrincipleCheckAccess, "Check Security Principle Access", ResourceTypes.SecurityPrinciple),
-                new(StandardResourceActions.SecurityPrinciplePasswordValidate, "Validate Security Principle Passwords", ResourceTypes.SecurityPrinciple),
+                new(StandardResourceActions.SecurityPrincipalList, "List Security Principals", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalAdd, "Add New Security Principal", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalUpdate,"Update Security Principals", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalUpdateAssignedRoles,"Update Security Principal Assigned Roles", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalPasswordUpdate, "Update Security Principal Passwords", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalDelete, "Delete Security Principal", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalCheckAccess, "Check Security Principal Access", ResourceTypes.SecurityPrincipal),
+                new(StandardResourceActions.SecurityPrincipalPasswordValidate, "Validate Security Principal Passwords", ResourceTypes.SecurityPrincipal),
 
                 new(StandardResourceActions.AccessTokenAdd, "Add Access Token", ResourceTypes.AccessToken),
                 new(StandardResourceActions.AccessTokenDelete, "Delete Access Token", ResourceTypes.AccessToken),
@@ -356,12 +356,12 @@ namespace Certify.Models.Hub
                     Title = "Access Control Administration",
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     ResourceActions = [
-                        StandardResourceActions.SecurityPrincipleList,
-                        StandardResourceActions.SecurityPrincipleAdd,
-                        StandardResourceActions.SecurityPrincipleUpdate,
-                        StandardResourceActions.SecurityPrincipleDelete,
-                        StandardResourceActions.SecurityPrinciplePasswordUpdate,
-                        StandardResourceActions.SecurityPrincipleUpdateAssignedRoles
+                        StandardResourceActions.SecurityPrincipalList,
+                        StandardResourceActions.SecurityPrincipalAdd,
+                        StandardResourceActions.SecurityPrincipalUpdate,
+                        StandardResourceActions.SecurityPrincipalDelete,
+                        StandardResourceActions.SecurityPrincipalPasswordUpdate,
+                        StandardResourceActions.SecurityPrincipalUpdateAssignedRoles
 
                     ]
                 },
@@ -529,8 +529,8 @@ namespace Certify.Models.Hub
                  SecurityPermissionType = SecurityPermissionType.ALLOW,
                  IsResourceSpecific = true,
                  ResourceActions = [
-                     StandardResourceActions.SecurityPrincipleCheckAccess,
-                     StandardResourceActions.SecurityPrinciplePasswordValidate,
+                     StandardResourceActions.SecurityPrincipalCheckAccess,
+                     StandardResourceActions.SecurityPrincipalPasswordValidate,
                      StandardResourceActions.RoleList,
                  ]
               },
@@ -560,13 +560,13 @@ namespace Certify.Models.Hub
         {
             // setup roles with policies
 
-            var adminSvcPrinciple = "admin_01";
+            var adminSvcPrincipal = "admin_01";
 
             var actions = Policies.GetStandardResourceActions();
 
             foreach (var action in actions)
             {
-                await access.AddResourceAction(adminSvcPrinciple, action, bypassIntegrityCheck: true);
+                await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
             }
 
             // setup policies with actions
@@ -576,7 +576,7 @@ namespace Certify.Models.Hub
             // add policies to store
             foreach (var r in policies)
             {
-                _ = await access.AddResourcePolicy(adminSvcPrinciple, r, bypassIntegrityCheck: true);
+                _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
             }
 
             // setup roles with policies
@@ -585,7 +585,7 @@ namespace Certify.Models.Hub
             foreach (var r in roles)
             {
                 // add roles and policy assignments to store
-                await access.AddRole(adminSvcPrinciple, r, bypassIntegrityCheck: true);
+                await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
             }
         }
 
@@ -594,40 +594,40 @@ namespace Certify.Models.Hub
             // setup roles with policies
             await UpdateStandardAccessConfig(access);
 
-            // setup standard security principles
+            // setup standard security principals
 
             // admin user
             var adminSpId = "admin_01";
             var managedInstanceSpId = "managedinstance_sp_01";
 
-            var users = await access.GetSecurityPrinciples(adminSpId);
+            var users = await access.GetSecurityPrincipals(adminSpId);
 
             // add admin user if not already present
             if (!users.Any(u => u.Id == adminSpId))
             {
-                var adminSp = new SecurityPrinciple
+                var adminSp = new SecurityPrincipal
                 {
                     Id = adminSpId,
                     Description = "Primary default admin",
-                    PrincipleType = SecurityPrincipleType.User,
+                    PrincipalType = SecurityPrincipalType.User,
                     Username = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTUSERNAME") ?? "admin",
                     Password = Environment.GetEnvironmentVariable("CERTIFY_ADMIN_DEFAULTPWD") ?? "changeme!",
                     Provider = StandardIdentityProviders.INTERNAL,
                     IsBuiltIn = true
                 };
 
-                await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+                await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true);
             }
             // get assigned roles for admin and update any missing roles
             var assignedRolesForAdmin = await access.GetAssignedRoles(adminSpId, adminSpId);
 
-            // assign admin role to admin security principle
+            // assign admin role to admin security principal
             var toBeAssignedRoles = new List<AssignedRole> {
                      // administrator
                      new AssignedRole{
                          Id= Guid.NewGuid().ToString(),
                          RoleId=StandardRoles.Administrator.Id,
-                         SecurityPrincipleId=adminSpId
+                         SecurityPrincipalId=adminSpId
                      }
                 };
 
@@ -640,27 +640,27 @@ namespace Certify.Models.Hub
                 }
             }
 
-            // add managed instance service principle if not already present
+            // add managed instance service principal if not already present
             if (!users.Any(u => u.Id == managedInstanceSpId))
             {
-                var managedInstanceServicePrinciple = new SecurityPrinciple
+                var managedInstanceServicePrincipal = new SecurityPrincipal
                 {
                     Id = managedInstanceSpId,
-                    Title = "Managed Instances Service Principle",
-                    PrincipleType = SecurityPrincipleType.Application,
+                    Title = "Managed Instances Service Principal",
+                    PrincipalType = SecurityPrincipalType.Application,
                     Provider = StandardIdentityProviders.INTERNAL,
                     IsBuiltIn = true
                 };
 
-                await access.AddSecurityPrinciple(adminSpId, managedInstanceServicePrinciple, bypassIntegrityCheck: true);
+                await access.AddSecurityPrincipal(adminSpId, managedInstanceServicePrincipal, bypassIntegrityCheck: true);
 
-                // assign managed instance role to  security principle
+                // assign managed instance role to  security principal
                 var assignedRoles = new List<AssignedRole> {
 
                     new AssignedRole{
                         Id= Guid.NewGuid().ToString(),
                         RoleId=StandardRoles.ManagedInstance.Id,
-                        SecurityPrincipleId=managedInstanceSpId
+                        SecurityPrincipalId=managedInstanceSpId
                     }
                 };
 
@@ -674,7 +674,7 @@ namespace Certify.Models.Hub
                 var assignedApiAccessToken = new AssignedAccessToken
                 {
                     Id = Guid.NewGuid().ToString(),
-                    SecurityPrincipleId = managedInstanceSpId,
+                    SecurityPrincipalId = managedInstanceSpId,
                     Title = "Managed Instance Hub Joining Key",
                     AccessTokens = [
                         new AccessToken {

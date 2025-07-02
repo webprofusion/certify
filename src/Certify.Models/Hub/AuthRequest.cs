@@ -38,42 +38,42 @@
         /// </summary>
         public string RefreshToken { get; set; } = string.Empty;
 
-        public SecurityPrinciple? SecurityPrinciple { get; set; }
+        public SecurityPrincipal? SecurityPrincipal { get; set; }
 
         public RoleStatus? RoleStatus { get; set; }
     }
 
-    public class SecurityPrinciplePasswordCheck
+    public class SecurityPrincipalPasswordCheck
     {
-        public string SecurityPrincipleId { get; set; } = string.Empty;
+        public string SecurityPrincipalId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
-        public SecurityPrinciplePasswordCheck() { }
-        public SecurityPrinciplePasswordCheck(string securityPrincipleId, string password)
+        public SecurityPrincipalPasswordCheck() { }
+        public SecurityPrincipalPasswordCheck(string securityPrincipalId, string password)
         {
-            SecurityPrincipleId = securityPrincipleId;
+            SecurityPrincipalId = securityPrincipalId;
             Password = password;
         }
     }
 
-    public class SecurityPrincipleCheckResponse
+    public class SecurityPrincipalCheckResponse
     {
         public bool IsSuccess { get; set; }
         public string Message { get; set; } = string.Empty;
-        public SecurityPrinciple? SecurityPrinciple { get; set; }
+        public SecurityPrincipal? SecurityPrincipal { get; set; }
     }
 
-    public class SecurityPrinciplePasswordUpdate
+    public class SecurityPrincipalPasswordUpdate
     {
-        public string SecurityPrincipleId { get; set; } = string.Empty;
+        public string SecurityPrincipalId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string NewPassword { get; set; } = string.Empty;
 
-        public SecurityPrinciplePasswordUpdate() { }
-        public SecurityPrinciplePasswordUpdate(string securityPrincipleId, string password, string newPassword)
+        public SecurityPrincipalPasswordUpdate() { }
+        public SecurityPrincipalPasswordUpdate(string securityPrincipalId, string password, string newPassword)
         {
-            SecurityPrincipleId = securityPrincipleId;
+            SecurityPrincipalId = securityPrincipalId;
             Password = password;
             NewPassword = newPassword;
         }

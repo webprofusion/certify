@@ -72,26 +72,26 @@ namespace Certify.Server.HubService.Services
 
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
 
-        public Task<ActionResult> AddSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).AddSecurityPrinciple(principle);
+        public Task<ActionResult> AddSecurityPrincipal(SecurityPrincipal principal, AuthContext authContext) => _accessController(authContext).AddSecurityPrincipal(principal);
         /// <summary>
-        /// Checks if the security principle has access to the specified resource.
+        /// Checks if the security principal has access to the specified resource.
         /// </summary>
         /// <param name="check">The access check details.</param>
         /// <param name="authContext">The authentication context.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the security principle has access.</returns>
-        public Task<bool> CheckSecurityPrincipleHasAccess(AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckSecurityPrincipleHasAccess(check);
-        public Task<ICollection<AssignedRole>> GetSecurityPrincipleAssignedRoles(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipleAssignedRoles(id);
-        public Task<RoleStatus> GetSecurityPrincipleRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipleRoleStatus(id);
-        public Task<ICollection<SecurityPrinciple>> GetSecurityPrinciples(AuthContext authContext) => _accessController(authContext).GetSecurityPrinciples();
+        /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the security principal has access.</returns>
+        public Task<bool> CheckSecurityPrincipalHasAccess(AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckSecurityPrincipalHasAccess(check);
+        public Task<ICollection<AssignedRole>> GetSecurityPrincipalAssignedRoles(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalAssignedRoles(id);
+        public Task<RoleStatus> GetSecurityPrincipalRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalRoleStatus(id);
+        public Task<ICollection<SecurityPrincipal>> GetSecurityPrincipals(AuthContext authContext) => _accessController(authContext).GetSecurityPrincipals();
         public Task<ActionResult> AddAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).AddAssignedccessToken(token);
         public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);
         public Task<ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });
         public Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens(AuthContext authContext) => _accessController(authContext).GetAssignedAccessTokens();
-        public Task<ActionResult> RemoveSecurityPrinciple(string id, AuthContext authContext) => _accessController(authContext).DeleteSecurityPrinciple(id);
-        public Task<ActionResult> UpdateSecurityPrinciple(SecurityPrinciple principle, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrinciple(principle);
-        public Task<ActionResult> UpdateSecurityPrincipleAssignedRoles(SecurityPrincipleAssignedRoleUpdate update, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrincipleAssignedRoles(update);
-        public Task<ActionResult> UpdateSecurityPrinciplePassword(SecurityPrinciplePasswordUpdate passwordUpdate, AuthContext authContext) => _accessController(authContext).UpdatePassword(passwordUpdate);
-        public Task<SecurityPrincipleCheckResponse> ValidateSecurityPrinciplePassword(SecurityPrinciplePasswordCheck passwordCheck, AuthContext authContext) => _accessController(authContext).Validate(passwordCheck);
+        public Task<ActionResult> RemoveSecurityPrincipal(string id, AuthContext authContext) => _accessController(authContext).DeleteSecurityPrincipal(id);
+        public Task<ActionResult> UpdateSecurityPrincipal(SecurityPrincipal principal, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrincipal(principal);
+        public Task<ActionResult> UpdateSecurityPrincipalAssignedRoles(SecurityPrincipalAssignedRoleUpdate update, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrincipalAssignedRoles(update);
+        public Task<ActionResult> UpdateSecurityPrincipalPassword(SecurityPrincipalPasswordUpdate passwordUpdate, AuthContext authContext) => _accessController(authContext).UpdatePassword(passwordUpdate);
+        public Task<SecurityPrincipalCheckResponse> ValidateSecurityPrincipalPassword(SecurityPrincipalPasswordCheck passwordCheck, AuthContext authContext) => _accessController(authContext).Validate(passwordCheck);
         public Task<ICollection<Role>> GetAccessRoles(AuthContext authContext) => _accessController(authContext).GetRoles();
 
         public Task<ICollection<ManagedChallenge>> GetManagedChallenges(AuthContext authContext) => _managedChallengeController(authContext).Get();

@@ -804,10 +804,10 @@ namespace Certify.Client
             return _refreshToken;
         }
 
-        public async Task<List<SecurityPrinciple>> GetAccessSecurityPrinciples(AuthContext authContext)
+        public async Task<List<SecurityPrincipal>> GetAccessSecurityPrincipals(AuthContext authContext)
         {
-            var result = await FetchAsync("access/securityprinciples", authContext);
-            return JsonToObject<List<SecurityPrinciple>>(result);
+            var result = await FetchAsync("access/securityprincipals", authContext);
+            return JsonToObject<List<SecurityPrincipal>>(result);
         }
 
         public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null)
