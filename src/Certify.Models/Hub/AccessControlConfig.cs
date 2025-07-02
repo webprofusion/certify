@@ -29,6 +29,7 @@ namespace Certify.Models.Hub
                      StandardPolicies.ManagedChallengeAdmin,
                      StandardPolicies.ManagedInstanceSystemExport,
                      StandardPolicies.ManagedInstanceSystemImport,
+                     StandardPolicies.TagAdmin,
                      StandardPolicies.SystemUser
                     ]);
 
@@ -36,8 +37,14 @@ namespace Certify.Models.Hub
             policies: [
                 StandardPolicies.ManagementHubReader,
                 StandardPolicies.ManagedItemAdmin,
-                StandardPolicies.StoredCredentialAdmin
+                StandardPolicies.StoredCredentialAdmin,
+                StandardPolicies.SystemUser
                     ]);
+        public static Role HubViewer { get; } = new Role("hub_viewer_role", "Hub Viewer", "Can view all hub managed certificates and summary information",
+            policies: [
+                StandardPolicies.ManagementHubReader,
+                StandardPolicies.SystemUser
+            ]);
 
         public static Role CertificateConsumer { get; } = new Role("cert_consumer_role", "Certificate Consumer", "User of a given certificate", policies: [StandardPolicies.CertificateConsumer]);
 
@@ -214,6 +221,7 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
                 StandardRoles.ManagedChallengeConsumer,
+                StandardRoles.HubViewer,
                 StandardRoles.ManagedInstance,
                 StandardRoles.BackupOperator
             ];
@@ -468,7 +476,21 @@ namespace Certify.Models.Hub
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     IsResourceSpecific = true,
                     ResourceActions = [
-                        StandardResourceActions.ManagementHubInstancesList
+                        StandardResourceActions.ManagementHubInstancesList,
+                        StandardResourceActions.AcmeAccountList,
+                        StandardResourceActions.CertificateAuthorityList,
+                        StandardResourceActions.ChallengeProviderList,
+                        StandardResourceActions.DeploymentTaskListProviders,
+                        StandardResourceActions.ManagedChallengeList,
+                        StandardResourceActions.ManagedItemList,
+                        StandardResourceActions.StoredCredentialList,
+                        StandardResourceActions.RoleList,
+                        StandardResourceActions.TagList,
+                        StandardResourceActions.ManagementHubInstancesList,
+                        StandardResourceActions.TargetTypesList,
+                        StandardResourceActions.SystemStatusList,
+                        StandardResourceActions.SystemCoreSettingsList,
+                        StandardResourceActions.SystemServiceConfigList,
                     ]
                 },
                 new() {
