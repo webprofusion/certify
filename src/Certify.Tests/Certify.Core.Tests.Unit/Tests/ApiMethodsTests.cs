@@ -10,23 +10,23 @@ namespace Certify.Core.Tests.Unit
     public class ApiMethodsTests
     {
         [TestMethod]
-        public void EachApiMethod_HasRequiredPermissions_AndMockPrincipleCanAccess()
+        public void EachApiMethod_HasRequiredPermissions_AndMockPrincipalCanAccess()
         {
             var apiDefs = ApiMethods.GetApiDefinitions();
             foreach (var api in apiDefs)
             {
-                // For each endpoint, create a mock security principle with only the required permissions
+                // For each endpoint, create a mock security principal with only the required permissions
                 var requiredPerms = api.RequiredPermissions;
                 Assert.IsNotNull(requiredPerms, $"API {api.OperationName} should have RequiredPermissions");
                 Assert.IsTrue(requiredPerms.Count > 0, $"API {api.OperationName} should have at least one RequiredPermission");
 
-                // Simulate a principle with exactly these permissions
-                var mockPrinciple = new MockSecurityPrinciple(requiredPerms);
+                // Simulate a principal with exactly these permissions
+                var mockPrincipal = new MockSecurityPrincipal(requiredPerms);
 
                 // Simulate an authorization check for each required permission
                 foreach (var perm in requiredPerms)
                 {
-                    Assert.IsTrue(mockPrinciple.HasPermission(perm), $"Mock principle should have permission {perm.ResourceType}:{perm.Action} for {api.OperationName}");
+                    Assert.IsTrue(mockPrincipal.HasPermission(perm), $"Mock principal should have permission {perm.ResourceType}:{perm.Action} for {api.OperationName}");
                 }
             }
         }
@@ -40,7 +40,7 @@ namespace Certify.Core.Tests.Unit
             foreach (var api in apiDefs)
             {
 
-                // For each endpoint, create a mock security principle with only the required permissions
+                // For each endpoint, create a mock security principal with only the required permissions
                 var requiredPerms = api.RequiredPermissions;
 
                 // check standard actions have a matching resource type and action defined
@@ -54,10 +54,10 @@ namespace Certify.Core.Tests.Unit
     }
 
     // Simple mock for demonstration
-    public class MockSecurityPrinciple
+    public class MockSecurityPrincipal
     {
         private readonly List<PermissionSpec> _perms;
-        public MockSecurityPrinciple(List<PermissionSpec> perms)
+        public MockSecurityPrincipal(List<PermissionSpec> perms)
         {
             _perms = perms;
         }

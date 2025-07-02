@@ -60,30 +60,30 @@ namespace Certify.Core.Tests.DataStores
 
         [TestMethod]
         [DynamicData(nameof(TestDataStores))]
-        public async Task TestStoreSecurityPrinciple(string storeType)
+        public async Task TestStoreSecurityPrincipal(string storeType)
         {
             var store = GetStore(storeType ?? _storeType);
 
-            var sp = new SecurityPrinciple
+            var sp = new SecurityPrincipal
             {
                 Email = "test@test.com",
-                PrincipleType = SecurityPrincipleType.User,
+                PrincipalType = SecurityPrincipalType.User,
                 Username = "test",
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
             try
             {
-                await store.Add(nameof(SecurityPrinciple), sp);
+                await store.Add(nameof(SecurityPrincipal), sp);
 
-                var list = await store.GetItems<SecurityPrinciple>(nameof(SecurityPrinciple));
+                var list = await store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
 
-                Assert.IsTrue(list.Any(l => l.Id == sp.Id), "Security Principle retrieved");
+                Assert.IsTrue(list.Any(l => l.Id == sp.Id), "Security Principal retrieved");
             }
             finally
             {
                 // cleanup
-                await store.Delete<SecurityPrinciple>(nameof(SecurityPrinciple), sp.Id);
+                await store.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), sp.Id);
             }
         }
 
@@ -135,22 +135,22 @@ namespace Certify.Core.Tests.DataStores
 
             var access = new AccessControl(null, store);
 
-            var adminSp = new SecurityPrinciple
+            var adminSp = new SecurityPrincipal
             {
                 Id = "admin_01",
                 Email = "admin@test.com",
                 Description = "Primary test admin",
-                PrincipleType = SecurityPrincipleType.User,
+                PrincipalType = SecurityPrincipalType.User,
                 Username = "admin01",
                 Provider = StandardIdentityProviders.INTERNAL
             };
 
-            var consumerSp = new SecurityPrinciple
+            var consumerSp = new SecurityPrincipal
             {
                 Id = "dev_01",
                 Email = "dev_test01@test.com",
                 Description = "Consumer test",
-                PrincipleType = SecurityPrincipleType.User,
+                PrincipalType = SecurityPrincipalType.User,
                 Username = "dev01",
                 Password = "oldpassword",
                 Provider = StandardIdentityProviders.INTERNAL
@@ -158,32 +158,32 @@ namespace Certify.Core.Tests.DataStores
 
             try
             {
-                var list = await access.GetSecurityPrinciples(adminSp.Id);
+                var list = await access.GetSecurityPrincipals(adminSp.Id);
 
-                // add first admin security principle, bypass role check as there is no user to check yet
+                // add first admin security principal, bypass role check as there is no user to check yet
 
-                await access.AddSecurityPrinciple(adminSp.Id, adminSp, bypassIntegrityCheck: true);
+                await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true);
 
-                await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipleId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
+                await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipalId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
 
-                // add second security principle, bypass role check as this is just a data store test
-                var added = await access.AddSecurityPrinciple(adminSp.Id, consumerSp, bypassIntegrityCheck: true);
+                // add second security principal, bypass role check as this is just a data store test
+                var added = await access.AddSecurityPrincipal(adminSp.Id, consumerSp, bypassIntegrityCheck: true);
 
-                Assert.IsTrue(added, "Should be able to add a security principle");
+                Assert.IsTrue(added, "Should be able to add a security principal");
 
-                list = await access.GetSecurityPrinciples(adminSp.Id);
+                list = await access.GetSecurityPrincipals(adminSp.Id);
 
-                Assert.IsTrue(list.Any(), "Should have security principles in store");
+                Assert.IsTrue(list.Any(), "Should have security principals in store");
 
                 // get updated sp so that password is hashed for comparison check
-                consumerSp = await access.GetSecurityPrinciple(adminSp.Id, consumerSp.Id, includePassword: true);
+                consumerSp = await access.GetSecurityPrincipal(adminSp.Id, consumerSp.Id, includePassword: true);
 
                 Assert.IsTrue(access.IsPasswordValid("oldpassword", consumerSp.Password));
             }
             finally
             {
-                await access.DeleteSecurityPrinciple(adminSp.Id, consumerSp.Id);
-                await access.DeleteSecurityPrinciple(adminSp.Id, adminSp.Id, allowSelfDelete: true);
+                await access.DeleteSecurityPrincipal(adminSp.Id, consumerSp.Id);
+                await access.DeleteSecurityPrincipal(adminSp.Id, adminSp.Id, allowSelfDelete: true);
             }
         }
     }

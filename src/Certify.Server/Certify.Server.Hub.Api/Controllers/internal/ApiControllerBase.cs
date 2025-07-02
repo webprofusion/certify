@@ -42,13 +42,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 return false;
             }
 
-            /// if check does not specify security principle use the current user
-            if (check.SecurityPrincipleId == null)
+            /// if check does not specify security principal use the current user
+            if (check.SecurityPrincipalId == null)
             {
-                check.SecurityPrincipleId = CurrentAuthContext.UserId;
+                check.SecurityPrincipalId = CurrentAuthContext.UserId;
             }
 
-            return await internalApiClient.CheckSecurityPrincipleHasAccess(check, CurrentAuthContext);
+            return await internalApiClient.CheckSecurityPrincipalHasAccess(check, CurrentAuthContext);
         }
 
         /// <summary>
