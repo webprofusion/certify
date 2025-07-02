@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -26,7 +26,6 @@ namespace Certify.Models.Hub
                      StandardPolicies.AccessAdmin,
                      StandardPolicies.AccessTokenAdmin,
                      StandardPolicies.CertificateConsumer,
-                     StandardPolicies.ManagedChallengeAdmin,
                      StandardPolicies.ManagedInstanceSystemExport,
                      StandardPolicies.ManagedInstanceSystemImport,
                      StandardPolicies.TagAdmin,
