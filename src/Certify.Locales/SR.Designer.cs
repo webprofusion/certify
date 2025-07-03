@@ -484,7 +484,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Merge multiple domains/certificates per site into one  Managed Certificate.
+        ///   Looks up a localized string similar to Merge multiple domains/identifiers per site into one  Managed Certificate.
         /// </summary>
         public static string ImportDlg_Merge {
             get {
@@ -727,7 +727,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Add domains to certificate:.
+        ///   Looks up a localized string similar to Add identifiers (domains etc) to certificate:.
         /// </summary>
         public static string ManagedCertificateSettings_AddDomainsToCertificate {
             get {
@@ -935,7 +935,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Domain.
+        ///   Looks up a localized string similar to Identifier.
         /// </summary>
         public static string ManagedCertificateSettings_Domain {
             get {
@@ -944,7 +944,8 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The following selected domains will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work..
+        ///   Looks up a localized string similar to The following selected identifiers will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these identifiers via port 80 (if using HTTP challenges) 
+        ///for the certification process to work..
         /// </summary>
         public static string ManagedCertificateSettings_DomainIncluded {
             get {
@@ -953,7 +954,8 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab..
+        ///   Looks up a localized string similar to Select identifiers from existing hostname bindings on an website or add them
+        /// manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab..
         /// </summary>
         public static string ManagedCertificateSettings_DomainsIntro {
             get {
@@ -1206,7 +1208,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Domains and Subdomains to include:.
+        ///   Looks up a localized string similar to Identfiers to include:.
         /// </summary>
         public static string ManagedCertificateSettings_SelectDomain {
             get {
@@ -1728,7 +1730,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable Proxy API for Domain Config Checks.
+        ///   Looks up a localized string similar to Enable Proxy API for HTTP Config Checks.
         /// </summary>
         public static string Settings_EnableProxyApiForDomainConfig {
             get {
