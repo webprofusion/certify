@@ -196,7 +196,7 @@
     <value>You are upgrading from an older version of Certify. This will create new  Managed Certificates which you can then edit to adjust the renewal settings etc.</value>
   </data>
   <data name="ImportDlg_Merge" xml:space="preserve">
-    <value>Merge multiple domains/certificates per site into one  Managed Certificate</value>
+    <value>Merge multiple domains/identifiers per site into one  Managed Certificate</value>
   </data>
   <data name="ImportDlg_Skip" xml:space="preserve">
     <value>Skip Import</value>
@@ -310,7 +310,7 @@
     <value>Enable App Telemetry (feature usage reporting)</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>Enable Proxy API for Domain Config Checks</value>
+    <value>Enable Proxy API for HTTP Config Checks</value>
   </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>Ignore stopped IIS sites for new certificates and renewals</value>
@@ -352,10 +352,11 @@
     <value>Display Name:</value>
   </data>
   <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>The following selected domains will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these domains via port 80 (for HTTP challenges) or port 443 (for TLS-SNI challenges) for the certification process to work.</value>
+    <value>The following selected identifiers will be included as a single certificate request. The issuing Certificate Authority must be able to access all of these identifiers via port 80 (if using HTTP challenges) 
+for the certification process to work.</value>
   </data>
   <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
-    <value>Domains and Subdomains to include:</value>
+    <value>Identfiers to include:</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>Select All</value>
@@ -370,7 +371,7 @@
     <value>Include</value>
   </data>
   <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
-    <value>Domain</value>
+    <value>Identifier</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>Advanced</value>
@@ -642,7 +643,7 @@
     <value>New Managed Certificate</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
-    <value>Add domains to certificate:</value>
+    <value>Add identifiers (domains etc) to certificate:</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
     <value>e.g. test.com, www.test.com or *.test.com</value>
@@ -666,7 +667,8 @@
     <value>Expired {0} days ago</value>
   </data>
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
-    <value>Select domains from existing hostname bindings on an website or add the domains manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab.</value>
+    <value>Select identifiers from existing hostname bindings on an website or add them
+ manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab.</value>
   </data>
   <data name="Credentials_Intro" xml:space="preserve">
     <value>Stored credentials are required to make automated calls to APIs and other resources during certificate renewal and deployment. These credentials are protected using the Windows Data Protection APIs and stored on this machine.</value>
