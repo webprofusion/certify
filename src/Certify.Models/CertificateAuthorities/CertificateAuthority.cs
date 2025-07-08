@@ -95,17 +95,18 @@ namespace Certify.Models
     {
         public static readonly List<CertificateAuthority> CoreCertificateAuthorities = new List<CertificateAuthority>
         {
+            CertificateAuthorities.Definitions.Actalis.GetDefinition(),
             CertificateAuthorities.Definitions.BuyPass.GetDefinition(),
+            CertificateAuthorities.Definitions.GlobalSign.GetDefinition(),
+            CertificateAuthorities.Definitions.Google.GetDefinition(),
             CertificateAuthorities.Definitions.LetsEncrypt.GetDefinition(),
             CertificateAuthorities.Definitions.Martini.GetDefinition(),
-            CertificateAuthorities.Definitions.Google.GetDefinition(),
-            CertificateAuthorities.Definitions.GlobalSign.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoDV.GetDefinition(),
-            CertificateAuthorities.Definitions.SectigoOV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoEV.GetDefinition(),
-            CertificateAuthorities.Definitions.SSLDotcom.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoEnterprise.GetDefinition(),
-            CertificateAuthorities.Definitions.ZeroSSL.GetDefinition(),
+            CertificateAuthorities.Definitions.SectigoOV.GetDefinition(),
+            CertificateAuthorities.Definitions.SSLDotcom.GetDefinition(),
+            CertificateAuthorities.Definitions.ZeroSSL.GetDefinition()
         };
 
         public string? Id { get; set; }
