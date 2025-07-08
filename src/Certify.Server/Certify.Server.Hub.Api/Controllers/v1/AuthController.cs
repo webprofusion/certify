@@ -1,10 +1,9 @@
-﻿using System.Net.Http.Headers;
-using System.Security.Claims;
-using Certify.Client;
+﻿using Certify.Client;
 using Certify.Models.Hub;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Certify.Server.Hub.Api.Controllers
 {
@@ -19,17 +18,22 @@ namespace Certify.Server.Hub.Api.Controllers
         private readonly ICertifyInternalApiClient _client;
         private IConfiguration _config;
 
+        private readonly IMemoryCache _memoryCache;
+
         /// <summary>
         /// Controller for Auth operations
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
         /// <param name="config"></param>
-        public AuthController(ILogger<AuthController> logger, ICertifyInternalApiClient client, IConfiguration config)
+        /// <param name="memoryCache"></param>
+        public AuthController(ILogger<AuthController> logger, ICertifyInternalApiClient client, IConfiguration config, IMemoryCache memoryCache)
         {
             _logger = logger;
             _client = client;
             _config = config;
+
+            _memoryCache = memoryCache;
         }
 
         /// <summary>
@@ -42,6 +46,15 @@ namespace Certify.Server.Hub.Api.Controllers
         public async Task<IActionResult> CheckAuthStatus()
         {
             return await Task.FromResult(new OkResult());
+        }
+
+        private void CacheRefreshToken(string userId, string refreshToken)
+        {
+            var refreshTokenExpiryMinutes = int.Parse(_config["JwtSettings:refreshTokenExpirationInMinutes"] ?? "600");
+
+            var expiry = new TimeSpan(0, refreshTokenExpiryMinutes, 0);
+
+            _memoryCache.Set("RefreshToken_" + refreshToken, userId, expiry);
         }
 
         /// <summary>
@@ -65,13 +78,26 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 var jwt = new Hub.Api.Services.JwtService(_config);
 
+                var refreshToken = jwt.GenerateRefreshToken();
+
+                CacheRefreshToken(validation.SecurityPrincipal.Id, refreshToken);
+
+                var jwtExpiryMinutes = double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20");
+                var newJwt = jwt.GenerateSecurityToken(validation.SecurityPrincipal.Id, jwtExpiryMinutes);
+
+                var authContext = new AuthContext
+                {
+                    UserId = validation.SecurityPrincipal.Id,
+                    Token = newJwt
+                };
+
                 var authResponse = new AuthResponse
                 {
                     Detail = "OK",
-                    AccessToken = jwt.GenerateSecurityToken(validation.SecurityPrincipal.Id, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20")),
-                    RefreshToken = jwt.GenerateRefreshToken(),
+                    AccessToken = newJwt,
+                    RefreshToken = refreshToken,
                     SecurityPrincipal = validation.SecurityPrincipal,
-                    RoleStatus = await _client.GetSecurityPrincipalRoleStatus(validation.SecurityPrincipal.Id, CurrentAuthContext)
+                    RoleStatus = await _client.GetSecurityPrincipalRoleStatus(validation.SecurityPrincipal.Id, authContext)
                 };
 
                 // TODO: Refresh token should be stored or hashed for later use
@@ -91,56 +117,57 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Refresh users current auth token
+        /// Refresh users current auth token using refresh token
         /// </summary>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AllowAnonymous]
         [HttpPost]
         [Route("refresh")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Refresh(string refreshToken)
         {
-            var authToken = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]!).Parameter;
-
-            if (string.IsNullOrEmpty(authToken))
-            {
-                return Unauthorized();
-            }
-
             try
             {
                 // validate token and issue new one
-                var jwt = new Hub.Api.Services.JwtService(_config);
-
-                var claimsIdentity = await jwt.ClaimsIdentityFromTokenAsync(authToken, false);
-                var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
-
-                if (userId == null)
+                if (_memoryCache.TryGetValue("RefreshToken_" + refreshToken, out string? userId))
                 {
+                    // we have a valid refresh token, refresh and auth user
+
+                    var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
+                    var sp = spList.Single(s => s.Id == userId);
+
+                    var jwtExpiryMinutes = double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20");
+                    var jwt = new Hub.Api.Services.JwtService(_config);
+                    var newJwt = jwt.GenerateSecurityToken(sp.Id, jwtExpiryMinutes);
+
+                    // invalidate old refresh token and store new one
+                    var newRefreshToken = jwt.GenerateRefreshToken();
+
+                    CacheRefreshToken(sp.Id, newRefreshToken);
+
+                    var authContext = new AuthContext
+                    {
+                        UserId = sp.Id,
+                        Token = newJwt
+                    };
+
+                    var authResponse = new AuthResponse
+                    {
+                        Detail = "OK",
+                        AccessToken = newJwt,
+                        RefreshToken = newRefreshToken,
+                        SecurityPrincipal = sp,
+                        RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, authContext)
+                    };
+
+                    return Ok(authResponse);
+                }
+                else
+                {
+                    // no valid refresh token found
                     return Unauthorized();
                 }
-
-                var newJwtToken = jwt.GenerateSecurityToken(userId, double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20"));
-                var newRefreshToken = jwt.GenerateRefreshToken();
-
-                // invalidate old refresh token and store new one
-                // DeleteRefreshToken(username, refreshToken);
-                // SaveRefreshToken(username, newRefreshToken);
-
-                var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
-                var sp = spList.Single(s => s.Id == userId);
-
-                var authResponse = new AuthResponse
-                {
-                    Detail = "OK",
-                    AccessToken = newJwtToken,
-                    RefreshToken = newRefreshToken,
-                    SecurityPrincipal = sp,
-                    RoleStatus = await _client.GetSecurityPrincipalRoleStatus(userId, CurrentAuthContext)
-                };
-
-                return Ok(authResponse);
             }
             catch
             {

@@ -27,6 +27,7 @@ namespace Certify.Server.Hub.Api.Services
             _secret = config.GetSection("JwtSettings").GetSection("secret").Value ?? "";
             _issuer = config.GetSection("JwtSettings").GetSection("issuer").Value ?? "";
             _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value ?? "1";
+
         }
 
         /// <summary>
