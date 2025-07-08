@@ -160,7 +160,15 @@ namespace Certify.Server.Hub.Api.Services
                         new("managedCertId", managedCertId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.GetManagedItem);
+            var result = await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.GetManagedItem);
+
+            if (result != null)
+            {
+                // update local cache
+                _mgmtStateProvider.UpdateCachedManagedInstanceItem(instanceId, result);
+            }
+
+            return result;
         }
 
         /// <summary>
