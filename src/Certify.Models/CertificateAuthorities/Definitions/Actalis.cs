@@ -3,19 +3,19 @@ using Certify.Models;
 
 namespace Certify.CertificateAuthorities.Definitions
 {
-    internal sealed class GlobalSign
+    internal sealed class Actalis
     {
         public static CertificateAuthority GetDefinition()
         {
             return new CertificateAuthority
             {
-                Id = "acme.atlas.globalsign.com",
-                Title = "GlobalSign Atlas",
-                Description = "The commercial GlobalSign ACME service issues CA/Browser Forum-compliant publicly trusted TLS certificates, as well as non-public Intranet certificates.",
+                Id = "actalis.com",
+                Title = "Actalis",
+                Description = "The Actalis ACME service offers free and paid certificate services.",
                 APIType = CertAuthorityAPIType.ACME_V2.ToString(),
-                WebsiteUrl = "https://support.globalsign.com/atlas/acme/acme-overview",
-                PrivacyPolicyUrl = "https://www.globalsign.com/en/repository/GlobalSign-Privacy-Policy.pdf",
-                ProductionAPIEndpoint = "https://emea.acme.atlas.globalsign.com/directory",
+                WebsiteUrl = "https://www.actalis.com/",
+                PrivacyPolicyUrl = "https://www.actalis.it/acme/terms",
+                ProductionAPIEndpoint = "https://acme-api.actalis.com/acme/directory",
                 StagingAPIEndpoint = string.Empty,
                 IsEnabled = true,
                 IsCustom = false,
@@ -23,12 +23,11 @@ namespace Certify.CertificateAuthorities.Definitions
                 StandardExpiryDays = 90,
                 RequiresEmailAddress = true,
                 RequiresExternalAccountBinding = true,
-                SupportsCachedValidations = true,  // GlobalSign Atlas supports cached validations for 365 days
+                SupportsCachedValidations = true,
                 AllowInternalHostnames = true,
                 SupportedFeatures = new List<string>{
                         CertAuthoritySupportedRequests.DOMAIN_SINGLE.ToString(),
                         CertAuthoritySupportedRequests.DOMAIN_SINGLE_PLUS_WWW.ToString(),
-                        CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN.ToString()
                     },
                 SupportedKeyTypes = new List<string>{
                         StandardKeyTypes.RSA256,
@@ -38,7 +37,7 @@ namespace Certify.CertificateAuthorities.Definitions
                         StandardKeyTypes.ECDSA384,
                         StandardKeyTypes.ECDSA521
                     },
-                EabInstructions = "See https://support.globalsign.com/atlas/acme/acme-overview"
+                EabInstructions = "See https://guide.actalis.com/ssl/activation/acme"
             };
         }
     }
