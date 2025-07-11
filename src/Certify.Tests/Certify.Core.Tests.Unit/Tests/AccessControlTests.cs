@@ -866,7 +866,7 @@ namespace Certify.Core.Tests.Unit
                 .ToList();
 
             // Remove actions that are not applicable to the administrator role
-            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.StoredCredentialDownload);
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.StoredCredentialReadSecret);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagementHubInstanceJoin);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeRequest);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeCleanup);

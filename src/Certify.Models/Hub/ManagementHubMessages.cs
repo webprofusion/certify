@@ -37,6 +37,7 @@ namespace Certify.Models.Hub
         public const string GetStoredCredentials = "GetStoredCredentials";
         public const string UpdateStoredCredential = "UpdateStoredCredential";
         public const string RemoveStoredCredential = "RemoveStoredCredential";
+        public const string UnlockStoredCredential = "UnlockStoredCredential";
 
         public const string GetChallengeProviders = "GetChallengeProviders";
         public const string GetDnsZones = "GetDnsZones";

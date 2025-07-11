@@ -617,6 +617,31 @@ namespace Certify.Management
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
                 val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
             }
+            else if (arg.CommandType == ManagementHubCommands.UnlockStoredCredential)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
+                var key = itemArg.Value;
+                var cred = await _credentialsManager.GetCredential(key);
+                if (cred.AllowUnlock)
+                {
+                    var unlockedCredValue = await _credentialsManager.GetUnlockedCredential(key);
+                    if (unlockedCredValue != null)
+                    {
+
+                        cred.Secret = unlockedCredValue;
+                        val = new StoredCredentialUnlockResult { IsSuccess = true, Result = cred };
+                    }
+                    else
+                    {
+                        val = null;
+                    }
+                }
+                else
+                {
+                    val = new StoredCredentialUnlockResult { IsSuccess = false, Message = "This credential does not allow unlocking" };
+                }
+            }
             else if (arg.CommandType == ManagementHubCommands.GetChallengeProviders)
             {
                 val = await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();

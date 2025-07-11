@@ -25,7 +25,7 @@ namespace Certify.CLI
             var cred = new StoredCredential
             {
                 StorageKey = storageKey,
-                DateCreated = DateTime.UtcNow,
+                DateCreated = DateTimeOffset.UtcNow,
                 ProviderType = credentialType,
                 Secret = secretValue,
                 Title = title
