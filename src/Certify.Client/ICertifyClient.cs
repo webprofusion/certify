@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -71,7 +72,7 @@ namespace Certify.Client
         Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive, AuthContext authContext = null);
         Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site, AuthContext authContext = null);
         Task<List<StatusMessage>> PerformChallengeCleanup(ManagedCertificate site, AuthContext authContext = null);
-        Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null);
+        Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null);
         Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null);
         Task<List<ChallengeProviderDefinition>> GetChallengeAPIList(AuthContext authContext = null);
         Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList(AuthContext authContext = null);

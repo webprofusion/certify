@@ -10,6 +10,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Microsoft.Extensions.Logging;
@@ -307,7 +308,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpGet, Route("dnszones/{providerTypeId}/{credentialId}")]
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
+        public async Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId) => await _certifyManager.GetDnsProviderZones(providerTypeId, credentialId);
 
         [HttpGet, Route("maintenance/{id?}")]
         public async Task<List<Models.Config.ActionResult>> PerformCertMaintenanceTasks(string id = null)

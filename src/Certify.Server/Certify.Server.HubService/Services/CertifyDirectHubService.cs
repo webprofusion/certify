@@ -131,7 +131,7 @@ namespace Certify.Server.HubService.Services
         public Task<List<ProviderDefinition>> GetDataStoreProviders(AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<DeploymentProviderDefinition>> GetDeploymentProviderList(AuthContext? authContext = null) => throw new NotImplementedException();
-        public Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
+
         public Task<LogItem[]> GetItemLog(string id, int limit, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificate> GetManagedCertificate(string managedItemId, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ManagedCertificate>> GetManagedCertificates(ManagedCertificateFilter filter, AuthContext? authContext = null) => throw new NotImplementedException();
@@ -173,6 +173,7 @@ namespace Certify.Server.HubService.Services
 
         public Task<ActionResult> AddHubItemTag(ItemTag tag, AuthContext authContext) => _tagController(authContext).AddTag(tag);
         public Task<ICollection<ItemTag>> GetHubItemTags(AuthContext authContext) => _tagController(authContext).GetTags();
+        public Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

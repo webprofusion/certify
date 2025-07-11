@@ -17,7 +17,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Cached list of known certificate authorities
         /// </summary>
-        public ObservableCollection<CertificateAuthority> CertificateAuthorities = new ObservableCollection<CertificateAuthority>();
+        public ObservableCollection<CertificateAuthority> CertificateAuthorities = [];
 
         /// <summary>
         /// Refresh cached list of Certificate Authorities
@@ -235,7 +235,7 @@ namespace Certify.UI.ViewModel
 
             if (StoredCredentials == null)
             {
-                StoredCredentials = new ObservableCollection<StoredCredential>();
+                StoredCredentials = [];
                 System.Windows.Data.BindingOperations.EnableCollectionSynchronization(StoredCredentials, _storedCredentialsLock);
             }
 
@@ -271,12 +271,12 @@ namespace Certify.UI.ViewModel
         /// <param name="challengeProvider"></param>
         /// <param name="challengeCredentialKey"></param>
         /// <returns></returns>
-        public async Task<List<DnsZone>> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey) => await _certifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
+        public async Task<DnsZoneQueryResult> GetDnsProviderZones(string challengeProvider, string challengeCredentialKey) => await _certifyClient.GetDnsProviderZones(challengeProvider, challengeCredentialKey);
 
         /// <summary>
         /// Cached list of Deployment Task types
         /// </summary>
-        public ObservableCollection<DeploymentProviderDefinition> DeploymentTaskProviders { get; set; } = new ObservableCollection<DeploymentProviderDefinition> { };
+        public ObservableCollection<DeploymentProviderDefinition> DeploymentTaskProviders { get; set; } = [];
 
         /// <summary>
         /// Refresh cached list of deployment task types via service
@@ -354,7 +354,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// Get the current configured data store conenctions to choose from
+        /// Get the current configured data store connections to choose from
         /// </summary>
         /// <returns></returns>
         internal async Task<List<DataStoreConnection>> GetDataStoreConnections()

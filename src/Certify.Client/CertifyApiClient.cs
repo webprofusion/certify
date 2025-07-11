@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -574,10 +575,10 @@ namespace Certify.Client
             var response = await PostAsync($"managedcertificates/challengecleanup", site, authContext);
             return JsonConvert.DeserializeObject<List<StatusMessage>>(await response.Content.ReadAsStringAsync());
         }
-        public async Task<List<Models.Providers.DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null)
+        public async Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext authContext = null)
         {
             var json = await FetchAsync($"managedcertificates/dnszones/{providerTypeId}/{credentialId}", authContext);
-            return JsonConvert.DeserializeObject<List<Models.Providers.DnsZone>>(json);
+            return JsonConvert.DeserializeObject<DnsZoneQueryResult>(json);
         }
 
         public async Task<List<ActionStep>> PreviewActions(ManagedCertificate site, AuthContext authContext = null)

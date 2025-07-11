@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Models;
@@ -608,7 +608,7 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "ChallengeProvider",
                     PublicAPIRoute = "{instanceId}/dnszones/{providerTypeId}/{credentialId}",
-                    ReturnType = "ICollection<Certify.Models.Providers.DnsZone>",
+                    ReturnType = "Certify.Models.Providers.DnsZoneQueryResult",
                     Params = new Dictionary<string, string>
                     {
                         { "instanceId", "string" },

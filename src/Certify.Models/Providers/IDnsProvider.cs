@@ -6,6 +6,16 @@ using Certify.Models.Config;
 
 namespace Certify.Models.Providers
 {
+    public class DnsZoneQueryResult : ActionResult<ICollection<DnsZone>>
+    {
+        public DnsZoneQueryResult()
+        {
+        }
+        public DnsZoneQueryResult(string msg, bool isSuccess, ICollection<DnsZone> result = null)
+            : base(msg, isSuccess, result)
+        {
+        }
+    }
     public class DnsZone
     {
         public string ZoneId { get; set; }
