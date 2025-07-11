@@ -36,10 +36,22 @@ namespace Certify.Server.Hub.Api.Controllers
         [Route("request")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Certify.Models.Config.ActionResult))]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
         public async Task<IActionResult> PerformManagedChallenge(ManagedChallengeRequest request)
         {
             var result = await _client.PerformManagedChallenge(request, null);
-            return new OkObjectResult(result);
+
+            if (result.IsSuccess)
+            {
+                return new OkObjectResult(result);
+            }
+            else
+            {
+                return Problem(
+                    detail: result.Message,
+                    statusCode: StatusCodes.Status502BadGateway
+                );
+            }
         }
 
         /// <summary>
