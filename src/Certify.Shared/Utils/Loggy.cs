@@ -63,6 +63,28 @@ namespace Certify.Models
             }
         }
 
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter) => throw new NotImplementedException();
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+
+            var message = formatter(state, exception);
+
+            switch (logLevel)
+            {
+                case LogLevel.Critical:
+                case LogLevel.Error:
+                    _log.Error(exception, message);
+                    break;
+                case LogLevel.Warning:
+                    _log.Warning(message);
+                    break;
+                case LogLevel.Information:
+                    _log.Information(message);
+                    break;
+                case LogLevel.Debug:
+                case LogLevel.Trace:
+                    _log.Debug(message);
+                    break;
+            }
+        }
     }
 }
