@@ -128,7 +128,7 @@ namespace Certify.Models.Hub
         public const string StoredCredentialUpdate = "storedcredential_update_action";
         public const string StoredCredentialDelete = "storedcredential_delete_action";
         public const string StoredCredentialList = "storedcredential_list_action";
-        public const string StoredCredentialDownload = "storedcredential_consumer_action";
+        public const string StoredCredentialReadSecret = "storedcredential_consumer_action";
 
         public const string SecurityPrincipalList = "securityprincipal_list_action";
         public const string SecurityPrincipalAdd = "securityprincipal_add_action";
@@ -247,7 +247,7 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.StoredCredentialUpdate, "Update Stored Credential", ResourceTypes.StoredCredential),
                 new(StandardResourceActions.StoredCredentialDelete, "Delete Stored Credential", ResourceTypes.StoredCredential),
                 new(StandardResourceActions.StoredCredentialList, "List Stored Credentials", ResourceTypes.StoredCredential),
-                new(StandardResourceActions.StoredCredentialDownload, "Fetch Decrypted Stored Credential", ResourceTypes.StoredCredential),
+                new(StandardResourceActions.StoredCredentialReadSecret, "Fetch Decrypted Stored Credential", ResourceTypes.StoredCredential),
 
                 new(StandardResourceActions.SecurityPrincipalList, "List Security Principals", ResourceTypes.SecurityPrincipal),
                 new(StandardResourceActions.SecurityPrincipalAdd, "Add New Security Principal", ResourceTypes.SecurityPrincipal),
@@ -425,7 +425,7 @@ namespace Certify.Models.Hub
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     IsResourceSpecific = true,
                     ResourceActions = [
-                        StandardResourceActions.StoredCredentialDownload
+                        StandardResourceActions.StoredCredentialReadSecret
                     ]
                 },
                 new() {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Models;
@@ -490,6 +490,18 @@ namespace Certify.SourceGenerators
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
                     RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialDelete)]
+                },
+                new()
+                {
+                    OperationName = "UnlockStoredCredential",
+                    OperationMethod = HttpPost,
+                    Comment = "Unlock Stored Credential",
+                    UseManagementAPI = true,
+                    PublicAPIController = "StoredCredential",
+                    PublicAPIRoute = "{instanceId}/{storageKey}/unlock",
+                    ReturnType = GetFormattedTypeName(typeof(Models.Config.StoredCredentialUnlockResult)),
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "storageKey", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialReadSecret)]
                 },
                 new()
                 {

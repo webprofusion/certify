@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
@@ -524,6 +524,25 @@ namespace Certify.Server.Hub.Api.Services
                     };
 
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveStoredCredential);
+        }
+
+        /// <summary>
+        /// Unlocks (decrypts and fetches) a stored credential from the target instance.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="storageKey">The storage key of the credential to unlock.</param>
+        /// <param name="authContext">The authentication context.</param>
+        /// <returns>An <see cref="StoredCredentialUnlockResult"/> decrypted stored credential result.</returns>
+        public async Task<StoredCredentialUnlockResult?> UnlockStoredCredential(string instanceId, string storageKey, AuthContext authContext)
+        {
+            // return populated stored credential via management hub
+
+            var args = new KeyValuePair<string, string>[] {
+                        new("instanceId", instanceId) ,
+                        new("storageKey",storageKey)
+                    };
+
+            return await PerformInstanceCommandTaskWithResult<StoredCredentialUnlockResult?>(instanceId, args, ManagementHubCommands.UnlockStoredCredential);
         }
 
         /// <summary>
