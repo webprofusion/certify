@@ -281,6 +281,11 @@ namespace Certify.Providers.DNS.Cloudflare
 
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
+            if (string.IsNullOrEmpty(request.ZoneId))
+            {
+                return new ActionResult("Zone ID not specified. Cannot create record", false);
+            }
+
             try
             {
                 // check existing before creating new
