@@ -1556,9 +1556,13 @@ namespace Certify.Providers.ACME.Anvil
 
                         var csrInfo = new CsrInfo
                         {
-                            CommonName = includeCommonName ? (commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain) : null,
                             RequireOcspMustStaple = config.RequireOcspMustStaple
                         };
+
+                        if (config.IncludeCN == true)
+                        {
+                            csrInfo.CommonName = includeCommonName ? (commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain) : null;
+                        }
 
                         order = await orderContext.Finalize(csrInfo, csrKey);
                     }
