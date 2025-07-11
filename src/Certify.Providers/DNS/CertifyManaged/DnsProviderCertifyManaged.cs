@@ -7,6 +7,7 @@ using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Models.Util;
 using Certify.Plugins;
 using Certify.SharedUtils;
 using Newtonsoft.Json;
@@ -147,7 +148,36 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
                 else
                 {
-                    return new ActionResult { IsSuccess = false, Message = $"Update failed [{result.StatusCode}] : check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
+                    var responseJson = await result.Content.ReadAsStringAsync();
+
+                    // Try to parse as ActionResult first (if API returns structured error)
+                    try
+                    {
+                        var errorResult = JsonConvert.DeserializeObject<ProblemDetails>(responseJson);
+                        if (errorResult != null && !string.IsNullOrWhiteSpace(errorResult.Detail))
+                        {
+                            return new ActionResult
+                            {
+                                IsSuccess = false,
+                                Message = $"Update failed [{result.StatusCode}]: {errorResult.Detail}"
+                            };
+                        }
+                    }
+                    catch
+                    {
+                        // If JSON parsing fails, fall back to raw response
+                    }
+
+                    // Fallback to including raw response content
+                    var errorMessage = string.IsNullOrWhiteSpace(responseJson)
+                        ? "No additional error details available"
+                        : responseJson;
+
+                    return new ActionResult
+                    {
+                        IsSuccess = false,
+                        Message = $"Update failed [{result.StatusCode}]: {errorMessage}. Check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge."
+                    };
                 }
             }
             catch (Exception exp)
