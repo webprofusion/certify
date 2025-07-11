@@ -701,7 +701,7 @@ namespace Certify.Management
             }
         }
 
-        public async Task<List<DnsZone>> GetDnsProviderZones(string providerTypeId, string credentialId)
+        public async Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId)
         {
             var dnsHelper = new Core.Management.Challenges.DnsChallengeHelper(_credentialsManager);
 
@@ -709,13 +709,31 @@ namespace Certify.Management
 
             if (result.Provider != null)
             {
-                var list = await result.Provider.GetZones();
-
-                return list?.OrderBy(x => x.Name).ToList();
+                try
+                {
+                    var list = await result.Provider.GetZones();
+                    return new DnsZoneQueryResult
+                    {
+                        IsSuccess = true,
+                        Result = list?.OrderBy(x => x.Name).ToList() ?? []
+                    };
+                }
+                catch (Exception exp)
+                {
+                    return new DnsZoneQueryResult
+                    {
+                        IsSuccess = false,
+                        Message = $"Failed to Get DNS Zones using provider {result.Provider.ProviderTitle} : {exp.Message}"
+                    };
+                }
             }
             else
             {
-                return new List<DnsZone>();
+                return new DnsZoneQueryResult
+                {
+                    IsSuccess = false,
+                    Message = $"Failed to create provider while fetching DNS Zones using {result.Provider?.ProviderTitle ?? providerTypeId}"
+                };
             }
         }
 

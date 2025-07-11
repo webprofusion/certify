@@ -178,22 +178,12 @@ namespace Certify.Core.Management.Challenges
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
+                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp}");
             }
 
             if (dnsAPIProvider == null)
             {
                 return new DnsChallengeHelperResult("DNS Challenge API Provider not set or not recognised. Select an API to proceed.");
-            }
-
-            if (isTestMode && !dnsAPIProvider.IsTestModeSupported)
-            {
-                return new DnsChallengeHelperResult
-                {
-                    Result = new ActionResult { IsSuccess = true, Message = dnsAPIProvider.ProviderTitle + " does not perform any tests." },
-                    PropagationSeconds = 0,
-                    IsAwaitingUser = false
-                };
             }
 
             string zoneId = null;

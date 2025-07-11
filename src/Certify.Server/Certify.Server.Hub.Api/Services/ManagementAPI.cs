@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
@@ -464,7 +464,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="credentialId">The credential identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>A collection of <see cref="Models.Providers.DnsZone"/> objects, or null if none found.</returns>
-        public async Task<ICollection<Models.Providers.DnsZone>?> GetDnsZones(string instanceId, string providerTypeId, string credentialId, AuthContext? currentAuthContext)
+        public async Task<DnsZoneQueryResult?> GetDnsZones(string instanceId, string providerTypeId, string credentialId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId),
@@ -472,7 +472,7 @@ namespace Certify.Server.Hub.Api.Services
                         new("credentialId", credentialId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<DnsZone>>(instanceId, args, ManagementHubCommands.GetDnsZones);
+            return await PerformInstanceCommandTaskWithResult<DnsZoneQueryResult>(instanceId, args, ManagementHubCommands.GetDnsZones);
         }
 
         /// <summary>

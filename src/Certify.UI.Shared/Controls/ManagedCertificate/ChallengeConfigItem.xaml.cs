@@ -172,12 +172,22 @@ namespace Certify.UI.Controls.ManagedCertificate
                 });
 
                 // fetch dns zone list from api 
-                var zones = await AppViewModel.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
+                var zonesResult = await AppViewModel.GetDnsProviderZones(EditModel.SelectedItem.ChallengeProvider, EditModel.SelectedItem.ChallengeCredentialKey);
 
-                // populate dropdown, default to no selection
-                zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
-                EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
-                DnsZoneList.SelectedValue = "";
+                if (zonesResult.IsSuccess)
+                {
+                    var zones = zonesResult.Result.ToList();
+
+                    // populate dropdown, default to no selection
+                    zones.Insert(0, new Models.Providers.DnsZone { ZoneId = "", Name = "(Select Zone)" });
+                    EditModel.DnsZones = new ObservableCollection<Models.Providers.DnsZone>(zones);
+                    DnsZoneList.SelectedValue = "";
+                }
+                else
+                {
+                    // if we can't get zones, show error
+                    MessageBox.Show($"Unable to fetch DNS Zones for this provider. Check credentials are correctly set: {zonesResult.Message}");
+                }
             }
             catch (Exception)
             {
