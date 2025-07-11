@@ -179,6 +179,11 @@ namespace Certify.Models
         public bool EnableFailureNotifications { get; set; } = true;
 
         /// <summary>
+        /// If true , indicates CN should be set in the CSR
+        /// </summary>
+        public bool? IncludeCN { get; set; } = default!;
+
+        /// <summary>
         /// In the case of ACME, the primary challenge type this request will use (eg. http-01) 
         /// </summary>
         [Obsolete("ChallengeType is now determined in Challenges collection. This value is preserved for upgrade of legacy settings.")]
