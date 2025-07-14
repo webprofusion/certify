@@ -1,12 +1,7 @@
 name: build and test .NET Core 9.0 Linux
 
 on:
-  push:
-  pull_request:
-    branches: [ release, development ]
-    paths:
-    - '**.cs'
-    - '**.csproj'
+  workflow_dispatch:
 
 env:
   DOTNET_VERSION: '9.0.x' # The .NET SDK version to use
