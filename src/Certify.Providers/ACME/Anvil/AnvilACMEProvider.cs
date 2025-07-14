@@ -225,7 +225,11 @@ namespace Certify.Providers.ACME.Anvil
 
             if (!string.IsNullOrEmpty(_settings.AccountUri))
             {
-                _acme.SetAccountUri(new Uri(_settings.AccountUri));
+                // account uri may be invalid even on an otherwise valid account
+                if (Uri.TryCreate(_settings.AccountUri, UriKind.Absolute, out var accountUri))
+                {
+                    _acme.SetAccountUri(accountUri);
+                }
             }
 
             if (_currentOrders == null)
