@@ -545,6 +545,37 @@ namespace Certify.Management
             return ToUrlSafeBase64String(bytes);
         }
 
+        public static byte[] FromUrlSafeBase64String(string urlSafeBase64)
+        {
+            if (string.IsNullOrEmpty(urlSafeBase64))
+            {
+                return [];
+            }
+
+            // Replace URL-safe characters back to standard base64 characters
+            var base64 = urlSafeBase64.Replace('-', '+').Replace('_', '/');
+
+            // Add padding if necessary
+            switch (base64.Length % 4)
+            {
+                case 2:
+                    base64 += "==";
+                    break;
+                case 3:
+                    base64 += "=";
+                    break;
+            }
+
+            try
+            {
+                return Convert.FromBase64String(base64);
+            }
+            catch (FormatException)
+            {
+                throw new ArgumentException("Invalid URL-safe base64 string", nameof(urlSafeBase64));
+            }
+        }
+
         public static async Task<DateTimeOffset?> CheckTimeServer(string ntpServer = "pool.ntp.org")
         {
             // https://stackoverflow.com/questions/1193955/how-to-query-an-ntp-server-using-c

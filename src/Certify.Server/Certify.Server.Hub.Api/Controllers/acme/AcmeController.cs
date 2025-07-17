@@ -1,7 +1,9 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Certify.Models;
+using Certify.Server.Hub.Api.Models.Acme;
+using Certify.Server.Hub.Api.Services;
+using Certify.Shared.Core.Utils.PKI;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -13,7 +15,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     [Route("acme")]
-    public class AcmeController : ControllerBase
+    public class AcmeController : ApiControllerBase
     {
         private readonly ILogger<AcmeController> _logger;
         private static readonly ConcurrentDictionary<string, AcmeAccount> _accounts = new();
@@ -21,13 +23,28 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private static readonly ConcurrentDictionary<string, AcmeOrder> _orders = new();
         private static readonly ConcurrentDictionary<string, AcmeAuthorization> _authorizations = new();
         private static readonly ConcurrentDictionary<string, string> _nonces = new();
-
+        private ManagementAPI _mgmtAPI;
         public AcmeController(ILogger<AcmeController> logger)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="mgmtAPI"></param>
+        public AcmeController(ILogger<AcmeController> logger, ManagementAPI mgmtAPI)
         {
             _logger = logger;
+            _mgmtAPI = mgmtAPI;
 
             LoadSavedState();
         }
+
+        private string GenerateAccountId() => Guid.NewGuid().ToString("N");
+        private string GenerateOrderId() => Guid.NewGuid().ToString("N");
+        private string GenerateAuthorizationId() => Guid.NewGuid().ToString("N");
+        private string GenerateChallengeId() => Guid.NewGuid().ToString("N");
+        private string GenerateCertificateId() => Guid.NewGuid().ToString("N");
+        private string GenerateToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
         /// <summary>
         /// ACME Directory endpoint - RFC 8555 Section 7.1.1
@@ -47,9 +64,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 KeyChange = $"{baseUrl}/key-change",
                 Meta = new DirectoryMeta
                 {
-                    TermsOfService = "https://example.com/terms",
-                    Website = "https://example.com",
-                    CaaIdentities = new[] { "example.com" },
                     ExternalAccountRequired = true
                 }
             };
@@ -130,69 +144,13 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return Created(accountKid, account);
         }
 
-        private void StoreCurrentState()
-        {
-            var settingsPath = Models.EnvironmentUtil.EnsuredAppDataPath("acme-server");
-
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "accounts.json"), System.Text.Json.JsonSerializer.Serialize(_accounts));
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "account-keys.json"), System.Text.Json.JsonSerializer.Serialize(_accountKeys));
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "orders.json"), System.Text.Json.JsonSerializer.Serialize(_orders));
-        }
-
-        private void LoadSavedState()
-        {
-            var settingsPath = Models.EnvironmentUtil.EnsuredAppDataPath("acme-server");
-
-            if (_accounts.Count == 0)
-            {
-                var accountsPath = Path.Join(settingsPath, "accounts.json");
-                if (System.IO.File.Exists(accountsPath))
-                {
-                    var accounts = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeAccount>>(System.IO.File.ReadAllText(accountsPath));
-                    _accounts.Clear();
-                    foreach (var a in accounts)
-                    {
-                        _accounts.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-
-            if (_accountKeys.Count == 0)
-            {
-                var accountKeyPath = Path.Join(settingsPath, "account-keys.json");
-                if (System.IO.File.Exists(accountKeyPath))
-                {
-                    var accountKeys = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, JsonWebKey>>(System.IO.File.ReadAllText(accountKeyPath));
-                    _accountKeys.Clear();
-                    foreach (var a in accountKeys)
-                    {
-                        _accountKeys.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-
-            if (_orders.Count == 0)
-            {
-                var ordersPath = Path.Join(settingsPath, "orders.json");
-                if (System.IO.File.Exists(ordersPath))
-                {
-                    var orders = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeOrder>>(System.IO.File.ReadAllText(ordersPath));
-                    _orders.Clear();
-                    foreach (var a in orders)
-                    {
-                        _orders.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// New order endpoint - RFC 8555 Section 7.4
         /// </summary>
         /// <param name="payload">JWS payload containing order creation request</param>
         /// <returns>Order object</returns>
         [HttpPost("new-order")]
-        public IActionResult NewOrder([FromBody] JwsPayload payload)
+        public async Task<IActionResult> NewOrder([FromBody] JwsPayload payload)
         {
 
             // Decode the JWS payload
@@ -247,6 +205,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var order = new AcmeOrder
             {
+                Id = orderId,
                 Status = OrderStatus.Pending,
                 Expires = DateTime.UtcNow.AddDays(30),
                 Identifiers = request.Identifiers,
@@ -255,6 +214,39 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 Authorizations = authorizationIds,
                 Finalize = $"{Request.Scheme}://{Request.Host}/acme/order/{orderId}/finalize"
             };
+
+            // create temp order in hub using a managed challenge
+            var managedCert = new ManagedCertificate
+            {
+                Name = $"Hub ACME Order {orderId}",
+                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
+                UseStagingMode = true,
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = request.Identifiers.FirstOrDefault()?.Value ?? "",
+                    SubjectAlternativeNames = request.Identifiers.Select(i => i.Value).ToArray(),
+                    DeploymentSiteOption = DeploymentOption.NoDeployment
+                }
+            };
+
+            managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>
+            {
+                new CertRequestChallengeConfig
+                {
+                    ChallengeProvider = "managed" , ChallengeType = "dns-01",
+                }
+            };
+
+            var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
+            if (tempCert == null)
+            {
+                _logger.LogError("Failed to create temporary managed certificate for order {OrderId}", orderId);
+                return StatusCode(500, new AcmeError { Type = "urn:ietf:params:acme:error:serverInternal", Detail = "Failed to create temporary managed certificate" });
+            }
+
+            _ = _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, tempCert.Id, CurrentAuthContext);
+
+            order.ManagedCertificateId = tempCert.Id;
 
             _orders[orderId] = order;
 
@@ -273,7 +265,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="payload">JWS payload containing finalization request with CSR</param>
         /// <returns>Updated order object</returns>
         [HttpPost("order/{orderId}/finalize")]
-        public IActionResult FinalizeOrder(string orderId, [FromBody] JwsPayload payload)
+        public async Task<IActionResult> FinalizeOrder(string orderId, [FromBody] JwsPayload payload)
         {
             if (!_orders.TryGetValue(orderId, out var order))
             {
@@ -297,18 +289,17 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
             }
 
-            // Simulate certificate issuance
-            // order.Status = OrderStatus.Processing;
+            // check status of temp managed certificate
+            // 
+            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
 
-            // In a real implementation, you would process the CSR here
-            // For this stub, we'll simulate issuing a certificate
-            /*Task.Run(async () =>
-            {
-                await Task.Delay(2000); // Simulate processing time
-                order.Status = OrderStatus.Valid;
-                var certId = GenerateCertificateId();
-                order.Certificate = $"{Request.Scheme}://{Request.Host}/acme/cert/{certId}";
-            });*/
+            // apply CSR from client finalize call as a formatted customcsr
+            managedCert.RequestConfig.CustomCSR = $"-----BEGIN CERTIFICATE REQUEST-----\n{Convert.ToBase64String(Certify.Management.Util.FromUrlSafeBase64String(request.Csr), Base64FormattingOptions.InsertLineBreaks)}\n-----END CERTIFICATE REQUEST-----";
+
+            await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
+
+            // resume/finalize cert order
+            await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
 
             order.Status = OrderStatus.Valid;
             var certId = GenerateCertificateId();
@@ -327,7 +318,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="certId">Certificate identifier</param>
         /// <returns>Certificate in PEM format</returns>
         [HttpPost("cert/{certId}")]
-        public IActionResult DownloadCertificate(string certId, [FromBody] JwsPayload payload)
+        public async Task<IActionResult> DownloadCertificate(string certId, [FromBody] JwsPayload payload)
         {
 
             try
@@ -337,52 +328,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for certificate request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
             }
 
-            // In a real implementation, you would retrieve the actual certificate
-            // For this stub, we'll return a mock certificate
-            var mockCertificate = @"-----BEGIN CERTIFICATE-----
-MIIGFDCCBPygAwIBAgISLMbVaSKYCxXTlj5le0Vxj/c3MA0GCSqGSIb3DQEBCwUA
-MFoxCzAJBgNVBAYTAlVTMSAwHgYDVQQKExcoU1RBR0lORykgTGV0J3MgRW5jcnlw
-dDEpMCcGA1UEAxMgKFNUQUdJTkcpIFdhbm5hYmUgV2F0ZXJjcmVzcyBSMTEwHhcN
-MjUwNzA5MDcyNzI2WhcNMjUxMDA3MDcyNzI1WjAAMIICIjANBgkqhkiG9w0BAQEF
-AAOCAg8AMIICCgKCAgEAzyGeCodGdU1mNP6/rzDbYdYnxlcI9todQXQYUggD40Xq
-Vbv3u0Z1pz83qZ8yBDDwb33nf+8C+/Oq8UmvFv0o0ozVkOJnSpzWF+mjOBlCxzNS
-Y+VgMG4NNrxdYqIr1E8mHyhadT0CPzcIga/jbfxvuEEhztYRnubSySsicnSk6oHb
-Iza2uLSxcNYavkGsiYF6EulaDS3pRMAvEdCvJiILaLUxwHAOoF9f4YD7yRykdwwG
-fNjbG/u3jEdgwE6APMX6Wtf0hxu1UCqfE17Orulkn/GatuWbVX9pSk7U8n2CtMJ4
-ZsUZo9qHYjRIbzSRZb3huPNi/lB3GCYgwrU7aYpWgmDBO7FcshBsdyMYhJie2C1i
-I43IHCEf3+sAluVIvPIo/uG3e2uMxS1y2JKbqK4Uyghey9h0UlGBkj2saB5C+46e
-YYtFqRPPsIEJKINHPsNXGLGGmjWxQVcQiRKr0gCboiFdOIYqrKh/sVeia+pmj8Bn
-+ZO/RjaOQ/vKO/9qwAPgKDUt0htWWQy/HJaExH01xuhhVfk68aRSZ9gP99NIAkgE
-6wLN200nm1if6fTiAoJFx+ufSsDXw3891bURt4mwpALMnA5Ux+kYNav5Fx+IcR7P
-o20g9ocFj1kusTz7Ek+iDeNh+u2lZZNDFHaHtZAROo1VM/mYL3FMYfjJs4/onssC
-AwEAAaOCAiwwggIoMA4GA1UdDwEB/wQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcD
-ATAMBgNVHRMBAf8EAjAAMB8GA1UdIwQYMBaAFBPL1/aunfxpQmTWXHwjzIX5R8e2
-MDcGCCsGAQUFBwEBBCswKTAnBggrBgEFBQcwAoYbaHR0cDovL3N0Zy1yMTEuaS5s
-ZW5jci5vcmcvMEAGA1UdEQEB/wQ2MDSCFnRlc3QucHJvamVjdGJpZHMuY28udWuC
-Gnd3dy50ZXN0LnByb2plY3RiaWRzLmNvLnVrMBMGA1UdIAQMMAowCAYGZ4EMAQIB
-MDIGA1UdHwQrMCkwJ6AloCOGIWh0dHA6Ly9zdGctcjExLmMubGVuY3Iub3JnLzU2
-LmNybDCCAQwGCisGAQQB1nkCBAIEgf0EgfoA+AB1AN2ZNPyl5ySAyVZofYE0mQhJ
-skn3tWnYx7yrP1zB825kAAABl+5KnS8AAAQDAEYwRAIgIyu24r12zx258c6Xdvih
-rddE7DSY0VYaCEqlmrs7pJkCIH0wPWmDb8IS3qTdCovsfPtH9vecOwvj9iLG25xC
-i0m/AH8AwF0gVDhcss+yF5INLw3Hg1JhR7GqT++Xynjh8LuE/O0AAAGX7kqlAwAI
-AAAFAEP89CwEAwBIMEYCIQDv37DXcAibsbR3dG+ejpbcoPj92rWLyQruY99iWVHi
-GQIhAIK/iowQfYZNM7g116Gy/oEKYH6T6AN6bGObIoNZp4MtMA0GCSqGSIb3DQEB
-CwUAA4IBAQBEJMvk34H7sfuMmpXvt+2tWA6h4KOXZIakwyCAvmSpTEwtaovadszu
-jkTgYU1yezGEjjexS68dUfy2NEYGhrTq5oZg803TPFgHUN+0YpZsncOuk/cJxA1k
-CVwfODjUX2gauMQYe24ARVNLMPvEpcyvkqUu1kN5Fn3kFeWEvpL4c17BMi3AyoSe
-aatcIuSF0pEyowHfajxIO/NqGMbCay0wLZvd57JByOAH50aZbm6PEidGlcqmQZZD
-RGF9UFNelIwRD/EZT/+G+xLn6oJpO5KeqwZet7xGUjRGLQE5iBn6nx/VXsv2EZsP
-sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
------END CERTIFICATE-----
-";
+            var certUri = $"{Request.Scheme}://{Request.Host}/acme/cert/{certId}";
+            var order = _orders.FirstOrDefault(o => o.Value.Certificate == certUri).Value;
+            if (order == null)
+            {
+                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid or unknown certId" });
+            }
+
+            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", CurrentAuthContext);
+
+            var certPEM = CertUtils.CertDerToPem(result.Result);
+
+            // delete order and temp managed cert
+            await _mgmtAPI.RemoveManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+            _orders.Remove(order.Id, out _);
 
             Response.Headers.Add("Replay-Nonce", GenerateNonce());
 
             // Return the certificate as plain text with proper content type
-            return Content(mockCertificate, "application/pem-certificate-chain");
+            return Content(certPEM, "application/pem-certificate-chain");
         }
 
         /// <summary>
@@ -391,7 +359,7 @@ sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
         /// <param name="orderId">Order identifier</param>
         /// <returns>Order object</returns>
         [HttpPost("order/{orderId}")]
-        public IActionResult GetOrder(string orderId, [FromBody] JwsPayload payload)
+        public async Task<IActionResult> GetOrder(string orderId, [FromBody] JwsPayload payload)
         {
             try
             {
@@ -408,7 +376,24 @@ sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
                 return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:orderNotFound", Detail = "Order not found" });
             }
 
-            order.Status = OrderStatus.Ready; // Simulate order being ready for this example
+            // check status of temp managed certificate
+            // 
+            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+
+            if (managedCert.LastRenewalStatus == null || managedCert.LastRenewalStatus == RequestState.Running)
+            {
+                order.Status = OrderStatus.Processing; // Simulate order being processed
+            }
+            else if (managedCert.LastRenewalStatus == RequestState.Paused)
+            {
+
+                order.Status = OrderStatus.Ready; // Simulate order being ready for this example
+
+            }
+            else
+            {
+                order.Status = managedCert.LastRenewalStatus == RequestState.Error ? OrderStatus.Invalid : OrderStatus.Valid;
+            }
 
             Response.Headers.Add("Replay-Nonce", GenerateNonce());
             return Ok(order);
@@ -502,13 +487,6 @@ sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
             // For this stub, we'll just check that it's not null
             return eab != null && !string.IsNullOrEmpty(eab.Protected);
         }
-
-        private string GenerateAccountId() => Guid.NewGuid().ToString("N");
-        private string GenerateOrderId() => Guid.NewGuid().ToString("N");
-        private string GenerateAuthorizationId() => Guid.NewGuid().ToString("N");
-        private string GenerateChallengeId() => Guid.NewGuid().ToString("N");
-        private string GenerateCertificateId() => Guid.NewGuid().ToString("N");
-        private string GenerateToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
         /// <summary>
         /// Decodes and validates a JWS payload according to RFC 7515
@@ -768,6 +746,65 @@ sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
             // For this stub, we'll simulate verification
             return true;
         }
+
+        private void StoreCurrentState()
+        {
+            var settingsPath = EnvironmentUtil.EnsuredAppDataPath("acme-server");
+
+            System.IO.File.WriteAllText(Path.Join(settingsPath, "accounts.json"), System.Text.Json.JsonSerializer.Serialize(_accounts));
+            System.IO.File.WriteAllText(Path.Join(settingsPath, "account-keys.json"), System.Text.Json.JsonSerializer.Serialize(_accountKeys));
+            System.IO.File.WriteAllText(Path.Join(settingsPath, "orders.json"), System.Text.Json.JsonSerializer.Serialize(_orders));
+        }
+
+        private void LoadSavedState()
+        {
+            var settingsPath = EnvironmentUtil.EnsuredAppDataPath("acme-server");
+
+            if (_accounts.Count == 0)
+            {
+                var accountsPath = Path.Join(settingsPath, "accounts.json");
+                if (System.IO.File.Exists(accountsPath))
+                {
+                    var json = System.IO.File.ReadAllText(accountsPath);
+                    var accounts = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeAccount>>(json);
+                    _accounts.Clear();
+                    foreach (var a in accounts)
+                    {
+                        _accounts.TryAdd(a.Key, a.Value);
+                    }
+                }
+            }
+
+            if (_accountKeys.Count == 0)
+            {
+                var accountKeyPath = Path.Join(settingsPath, "account-keys.json");
+                if (System.IO.File.Exists(accountKeyPath))
+                {
+                    var json = System.IO.File.ReadAllText(accountKeyPath);
+                    var accountKeys = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, JsonWebKey>>(json);
+                    _accountKeys.Clear();
+                    foreach (var a in accountKeys)
+                    {
+                        _accountKeys.TryAdd(a.Key, a.Value);
+                    }
+                }
+            }
+
+            if (_orders.Count == 0)
+            {
+                var ordersPath = Path.Join(settingsPath, "orders.json");
+                if (System.IO.File.Exists(ordersPath))
+                {
+                    var json = System.IO.File.ReadAllText(ordersPath);
+                    var orders = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeOrder>>(json);
+                    _orders.Clear();
+                    foreach (var a in orders)
+                    {
+                        _orders.TryAdd(a.Key, a.Value);
+                    }
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -811,266 +848,5 @@ sQeiudUQtw0tzemFEKfvLT8zIX+pHcfa
 
             return Convert.FromBase64String(s); // Standard base64 decoder
         }
-    }
-
-    // ACME Data Models
-    public class AcmeDirectory
-    {
-        [JsonPropertyName("newNonce")]
-        public string NewNonce { get; set; }
-
-        [JsonPropertyName("newAccount")]
-        public string NewAccount { get; set; }
-
-        [JsonPropertyName("newOrder")]
-        public string NewOrder { get; set; }
-
-        [JsonPropertyName("revokeCert")]
-        public string RevokeCert { get; set; }
-
-        [JsonPropertyName("keyChange")]
-        public string KeyChange { get; set; }
-
-        [JsonPropertyName("meta")]
-        public DirectoryMeta Meta { get; set; }
-    }
-
-    public class DirectoryMeta
-    {
-        [JsonPropertyName("termsOfService")]
-        public string TermsOfService { get; set; }
-
-        [JsonPropertyName("website")]
-        public string Website { get; set; }
-
-        [JsonPropertyName("caaIdentities")]
-        public string[] CaaIdentities { get; set; }
-
-        [JsonPropertyName("externalAccountRequired")]
-        public bool ExternalAccountRequired { get; set; }
-    }
-
-    public class JwsPayload
-    {
-
-        [JsonProperty("protected")]
-        public string Protected { get; set; }
-
-        [JsonProperty("payload")]
-        public string Payload { get; set; }
-
-        [JsonProperty("signature")]
-        public string Signature { get; set; }
-    }
-
-    public class NewAccountRequest
-    {
-        [JsonPropertyName("contact")]
-        public string[] Contact { get; set; }
-
-        [JsonPropertyName("termsOfServiceAgreed")]
-        public bool TermsOfServiceAgreed { get; set; }
-
-        [JsonPropertyName("externalAccountBinding")]
-        public ExternalAccountBinding ExternalAccountBinding { get; set; }
-    }
-
-    public class ExternalAccountBinding
-    {
-        [JsonPropertyName("protected")]
-        public string Protected { get; set; }
-
-        [JsonPropertyName("payload")]
-        public string Payload { get; set; }
-
-        [JsonPropertyName("signature")]
-        public string Signature { get; set; }
-    }
-
-    public class AcmeAccount
-    {
-        [JsonPropertyName("status")]
-        public AccountStatus Status { get; set; }
-
-        [JsonPropertyName("contact")]
-        public string[] Contact { get; set; }
-
-        [JsonPropertyName("termsOfServiceAgreed")]
-        public bool TermsOfServiceAgreed { get; set; }
-
-        [JsonPropertyName("orders")]
-        public string Orders { get; set; }
-    }
-
-    public class NewOrderRequest
-    {
-        [JsonPropertyName("identifiers")]
-        public AcmeIdentifier[] Identifiers { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTime? NotBefore { get; set; }
-
-        [JsonPropertyName("notAfter")]
-        public DateTime? NotAfter { get; set; }
-    }
-
-    public class AcmeOrder
-    {
-        [JsonPropertyName("status")]
-        public OrderStatus Status { get; set; }
-
-        [JsonPropertyName("expires")]
-        public DateTime Expires { get; set; }
-
-        [JsonPropertyName("identifiers")]
-        public AcmeIdentifier[] Identifiers { get; set; }
-
-        [JsonPropertyName("notBefore")]
-        public DateTime? NotBefore { get; set; }
-
-        [JsonPropertyName("notAfter")]
-        public DateTime? NotAfter { get; set; }
-
-        [JsonPropertyName("authorizations")]
-        public List<string> Authorizations { get; set; }
-
-        [JsonPropertyName("finalize")]
-        public string Finalize { get; set; }
-
-        [JsonPropertyName("certificate")]
-        public string Certificate { get; set; }
-    }
-
-    public class AcmeIdentifier
-    {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        [JsonPropertyName("value")]
-        public string Value { get; set; }
-    }
-
-    public class AcmeAuthorization
-    {
-        [JsonPropertyName("identifier")]
-        public AcmeIdentifier Identifier { get; set; }
-
-        [JsonPropertyName("status")]
-        public AuthorizationStatus Status { get; set; }
-
-        [JsonPropertyName("expires")]
-        public DateTime Expires { get; set; }
-
-        [JsonPropertyName("challenges")]
-        public List<AcmeChallenge> Challenges { get; set; }
-    }
-
-    public class AcmeChallenge
-    {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        [JsonPropertyName("status")]
-        public ChallengeStatus Status { get; set; }
-
-        [JsonPropertyName("url")]
-        public string Url { get; set; }
-
-        [JsonPropertyName("token")]
-        public string Token { get; set; }
-    }
-
-    public class FinalizeOrderRequest
-    {
-        [JsonPropertyName("csr")]
-        public string Csr { get; set; }
-    }
-
-    public class AcmeError
-    {
-        [JsonPropertyName("type")]
-        public string Type { get; set; }
-
-        [JsonPropertyName("detail")]
-        public string Detail { get; set; }
-    }
-
-    // Status enums
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum AccountStatus
-    {
-        Valid,
-        Deactivated,
-        Revoked
-    }
-
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum OrderStatus
-    {
-        Pending,
-        Ready,
-        Processing,
-        Valid,
-        Invalid
-    }
-
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum AuthorizationStatus
-    {
-        Pending,
-        Valid,
-        Invalid,
-        Deactivated,
-        Expired,
-        Revoked
-    }
-
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum ChallengeStatus
-    {
-        Pending,
-        Processing,
-        Valid,
-        Invalid
-    }
-
-    // Additional data models for JWS validation
-    public class JwsProtectedHeader
-    {
-        [JsonProperty("alg")]
-        public string Alg { get; set; }
-
-        [JsonProperty("jwk")]
-        public JsonWebKey Jwk { get; set; }
-
-        [JsonProperty("kid")]
-        public string Kid { get; set; }
-
-        [JsonProperty("url")]
-        public string Url { get; set; }
-
-        [JsonProperty("nonce")]
-        public string Nonce { get; set; }
-    }
-
-    public class JsonWebKey
-    {
-        [JsonProperty("kty")]
-        public string Kty { get; set; }
-
-        [JsonProperty("n")]
-        public string N { get; set; }
-
-        [JsonProperty("e")]
-        public string E { get; set; }
-
-        [JsonProperty("crv")]
-        public string Crv { get; set; }
-
-        [JsonProperty("x")]
-        public string X { get; set; }
-
-        [JsonProperty("y")]
-        public string Y { get; set; }
     }
 }

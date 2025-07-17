@@ -927,6 +927,19 @@ namespace Certify.Management
 
             if (!validationFailed)
             {
+                if (managedCertificate.RequestConfig.Challenges.Any(c => c.ChallengeProvider == "managed") && string.IsNullOrEmpty(managedCertificate.RequestConfig.CustomCSR))
+                {
+                    // pause order here so CME proxy can fianlize using custom csr
+                    managedCertificate.LastRenewalStatus = RequestState.Paused;
+                    ReportProgress(progress, new RequestProgressState(RequestState.Paused, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
+
+                    return new CertificateRequestResult(managedCertificate)
+                    {
+                        IsSuccess = true,
+                        Message = "Certificate request paused, waiting for custom CSR to be provided using finalize."
+                    };
+                }
+
                 // all identifiers validated, request the certificate
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
@@ -1301,51 +1314,70 @@ namespace Certify.Management
 
                         var serverProvider = GetTargetServerProvider(managedCertificate);
 
-                        authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, serverProvider, managedCertificate, authorization, _credentialsManager);
-
-                        // if we had automated checks configured and they failed more than twice in a
-                        // row, fail and report error here
-                        if (
-                            managedCertificate.RenewalFailureCount > 2
-                            &&
-                            (
-                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP &&
-                                 config.PerformExtensionlessConfigChecks &&
-                                 !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
-                                (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
-                                 config.PerformTlsSniBindingConfigChecks &&
-                                 !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
-                             )
-                        )
+                        if (challengeConfig.ChallengeProvider == "managed")
                         {
-                            //if we failed the config checks, report any errors
-                            var msg = string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedCertificate.ItemType);
-
-                            if (authorization?.AttemptedChallenge?.ChallengeResultMsg != null)
+                            // attempt to complete challenge using internal managed challenge provider
+                            var request = new Models.Hub.ManagedChallengeRequest
                             {
-                                msg += ":: " + authorization.AttemptedChallenge.ChallengeResultMsg;
-                            }
+                                ChallengeType = challengeConfig.ChallengeType,
+                                Identifier = authorization.Identifier.Value,
+                                ResponseKey = rc?.Key,
+                                ResponseValue = rc?.Value
+                            };
 
-                            log?.Error(msg);
-                            result.Message = msg;
-
-                            switch (challengeConfig.ChallengeType)
-                            {
-                                case SupportedChallengeTypes.CHALLENGE_TYPE_HTTP:
-                                    result.Message =
-                                        string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier);
-                                    break;
-
-                                case SupportedChallengeTypes.CHALLENGE_TYPE_SNI:
-                                    result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
-                                    break;
-                            }
-
-                            ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
-
-                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                            await PerformManagedChallengeRequest(request);
 
                             return;
+                        }
+                        else
+                        {
+
+                            authorization = await _challengeResponseService.PrepareAutomatedChallengeResponse(log, serverProvider, managedCertificate, authorization, _credentialsManager);
+
+                            // if we had automated checks configured and they failed more than twice in a
+                            // row, fail and report error here
+                            if (
+                                managedCertificate.RenewalFailureCount > 2
+                                &&
+                                (
+                                    (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP &&
+                                     config.PerformExtensionlessConfigChecks &&
+                                     !authorization.AttemptedChallenge?.ConfigCheckedOK == true) ||
+                                    (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_SNI &&
+                                     config.PerformTlsSniBindingConfigChecks &&
+                                     !authorization.AttemptedChallenge?.ConfigCheckedOK == true)
+                                 )
+                            )
+                            {
+                                //if we failed the config checks, report any errors
+                                var msg = string.Format(CoreSR.CertifyManager_FailedPrerequisiteCheck, managedCertificate.ItemType);
+
+                                if (authorization?.AttemptedChallenge?.ChallengeResultMsg != null)
+                                {
+                                    msg += ":: " + authorization.AttemptedChallenge.ChallengeResultMsg;
+                                }
+
+                                log?.Error(msg);
+                                result.Message = msg;
+
+                                switch (challengeConfig.ChallengeType)
+                                {
+                                    case SupportedChallengeTypes.CHALLENGE_TYPE_HTTP:
+                                        result.Message =
+                                            string.Format(CoreSR.CertifyManager_AutomateConfigurationCheckFailed_HTTP, identifier);
+                                        break;
+
+                                    case SupportedChallengeTypes.CHALLENGE_TYPE_SNI:
+                                        result.Message = Certify.Locales.CoreSR.CertifyManager_AutomateConfigurationCheckFailed_SNI;
+                                        break;
+                                }
+
+                                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
+
+                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+
+                                return;
+                            }
                         }
                     }
                     else
