@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +38,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpGet]
         [Route("{type}/{key?}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.SimpleAuthorizationChallengeItem>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SimpleAuthorizationChallengeItem>))]
         public async Task<IActionResult> GetValidationChallenges(string? type = "http-01", string? key = null)
         {
             if (type == null)
@@ -59,7 +60,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpGet]
         [Route("/api/managedcertificates/currentchallenges/")]
         [AllowAnonymous]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.SimpleAuthorizationChallengeItem>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SimpleAuthorizationChallengeItem>))]
         [ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> GetValidationChallengesAnon(string? type = "http-01", string? key = null)
         {

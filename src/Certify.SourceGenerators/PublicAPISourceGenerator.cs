@@ -87,6 +87,7 @@ namespace SourceGenerator
             using Certify.Models;
             using Certify.Models.Providers;
             using Certify.Models.Hub;
+            using Certify.Models.Config;
 
             namespace Certify.UI.Client.Core
             {{
@@ -106,6 +107,7 @@ namespace SourceGenerator
             var publicApiSrc = $@"
 
             using Certify.Client;
+            using Certify.Models.Config;
             using Certify.Server.Hub.Api.Controllers;
             using Microsoft.AspNetCore.Authentication.JwtBearer;
             using Microsoft.AspNetCore.Authorization;

@@ -46,7 +46,7 @@ namespace Certify.Server.Hub.Api.Controllers
         public async Task<IActionResult> GetSystemVersion()
         {
             var versionInfo = await _client.GetAppVersion();
-            var result = new Models.Hub.VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
+            var result = new VersionInfo { Version = versionInfo, Product = "Certify Management Hub" };
             return new OkObjectResult(result);
         }
 
@@ -149,7 +149,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var versionInfo = await _client.GetAppVersion();
 
-            joiningInfo.Version = new Models.Hub.VersionInfo
+            joiningInfo.Version = new VersionInfo
             {
                 Version = versionInfo,
                 Product = "Certify Management Hub",

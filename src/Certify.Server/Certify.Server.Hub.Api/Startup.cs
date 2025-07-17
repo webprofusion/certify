@@ -50,7 +50,7 @@ namespace Certify.Server.Hub.Api
         /// Configure services for use by the API
         /// </summary>
         /// <param name="services"></param>
-        public List<Models.Config.ActionResult> ConfigureServicesWithResults(IServiceCollection services)
+        public List<Certify.Models.Config.ActionResult> ConfigureServicesWithResults(IServiceCollection services)
         {
             AddSystemStatusItem(
                 SystemStatusCategories.HUB_API,
@@ -59,7 +59,7 @@ namespace Certify.Server.Hub.Api
                 description: "Hub API will connect to a local or remote instance via the instance API and SignalR."
             );
 
-            var results = new List<Models.Config.ActionResult>();
+            var results = new List<Certify.Models.Config.ActionResult>();
 
             services
                 .AddMemoryCache()
@@ -287,7 +287,6 @@ namespace Certify.Server.Hub.Api
                 endpoints.MapHub<InstanceManagementHub>("/api/internal/managementhub");
             });
 
-
             // Converts unhandled exceptions into Problem Details responses
             app.UseExceptionHandler();
 
@@ -418,7 +417,7 @@ namespace Certify.Server.Hub.Api
 
         private UserInterfaceStatusHubReporting _statusReporting = default!;
 
-        private void InternalServiceClient_OnManagedCertificateUpdated(Models.ManagedCertificate obj)
+        private void InternalServiceClient_OnManagedCertificateUpdated(ManagedCertificate obj)
         {
             System.Diagnostics.Debug.WriteLine("Public API: got ManagedCertUpdate msg to forward:" + obj.ToString());
 
@@ -426,7 +425,7 @@ namespace Certify.Server.Hub.Api
             _statusReporting.ReportManagedCertificateUpdated(obj);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
-        private void InternalServiceClient_OnRequestProgressStateUpdated(Models.RequestProgressState obj)
+        private void InternalServiceClient_OnRequestProgressStateUpdated(RequestProgressState obj)
         {
             System.Diagnostics.Debug.WriteLine("Public API: got Progress Message to forward:" + obj.ToString());
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

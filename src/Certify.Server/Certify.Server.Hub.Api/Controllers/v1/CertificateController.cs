@@ -180,7 +180,7 @@ namespace Certify.Server.Hub.Api.Controllers
         public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
         {
             var managedCertResult = await _client.GetManagedCertificateSearchResult(
-                new Models.ManagedCertificateFilter
+                new ManagedCertificateFilter
                 {
                     Keyword = keyword,
                     PageIndex = page,
@@ -250,7 +250,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpGet]
         [Route("{instanceId}/settings/{managedCertId}")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
             var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
@@ -267,8 +267,8 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpPost]
         [Route("{instanceId}/settings/update")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, Models.ManagedCertificate managedCertificate)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
+        public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, ManagedCertificate managedCertificate)
         {
             var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
 
@@ -308,8 +308,8 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpPost]
         [Route("renew")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Models.ManagedCertificate))]
-        public async Task<IActionResult> PerformRenewal(string instanceId, Models.RenewalSettings settings)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
+        public async Task<IActionResult> PerformRenewal(string instanceId, RenewalSettings settings)
         {
             // TODO: send to instance
             var results = await _client.BeginAutoRenewal(settings, CurrentAuthContext);
@@ -332,8 +332,8 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpPost]
         [Route("test")]
         [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<Models.StatusMessage>))]
-        public async Task<IActionResult> PerformConfigurationTest(string instanceId, Models.ManagedCertificate item)
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<StatusMessage>))]
+        public async Task<IActionResult> PerformConfigurationTest(string instanceId, ManagedCertificate item)
         {
 
             var results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);

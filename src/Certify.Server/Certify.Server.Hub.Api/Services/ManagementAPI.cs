@@ -305,13 +305,13 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>A collection of <see cref="Models.CertificateAuthority"/> objects, or null if none found.</returns>
-        public async Task<ICollection<Models.CertificateAuthority>?> GetCertificateAuthorities(string instanceId, AuthContext? currentAuthContext)
+        public async Task<ICollection<CertificateAuthority>?> GetCertificateAuthorities(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<Models.CertificateAuthority>>(instanceId, args, ManagementHubCommands.GetCertificateAuthorities);
+            return await PerformInstanceCommandTaskWithResult<ICollection<CertificateAuthority>>(instanceId, args, ManagementHubCommands.GetCertificateAuthorities);
         }
 
         /// <summary>
@@ -354,13 +354,13 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>A collection of <see cref="Models.AccountDetails"/> objects, or null if none found.</returns>
-        public async Task<ICollection<Models.AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
+        public async Task<ICollection<AccountDetails>?> GetAcmeAccounts(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<Models.AccountDetails>>(instanceId, args, ManagementHubCommands.GetAcmeAccounts);
+            return await PerformInstanceCommandTaskWithResult<ICollection<AccountDetails>>(instanceId, args, ManagementHubCommands.GetAcmeAccounts);
         }
 
         /// <summary>
@@ -481,7 +481,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>A collection of <see cref="Models.Config.StoredCredential"/> objects, or null if none found.</returns>
-        public async Task<ICollection<Models.Config.StoredCredential>?> GetStoredCredentials(string instanceId, AuthContext? currentAuthContext)
+        public async Task<ICollection<StoredCredential>?> GetStoredCredentials(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId)
@@ -640,14 +640,14 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="exportRequest">The export request details.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>An <see cref="ImportExportPackage"/> containing the exported configuration.</returns>
-        internal async Task<Models.Config.Migration.ImportExportPackage?> PerformInstanceExport(string instanceId, ExportRequest exportRequest, AuthContext? currentAuthContext)
+        internal async Task<ImportExportPackage?> PerformInstanceExport(string instanceId, ExportRequest exportRequest, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId) ,
                         new("exportRequest", JsonSerializer.Serialize(exportRequest))
                     };
 
-            return await PerformInstanceCommandTaskWithResult<Models.Config.Migration.ImportExportPackage>(instanceId, args, ManagementHubCommands.PerformExport);
+            return await PerformInstanceCommandTaskWithResult<ImportExportPackage>(instanceId, args, ManagementHubCommands.PerformExport);
         }
 
         /// <summary>
@@ -656,13 +656,13 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="currentAuthContext">The current authentication context.</param>
         /// <returns>A collection of <see cref="Models.AccountDetails"/> objects, or null if none found.</returns>
-        public async Task<ICollection<Models.ActionStep>?> GetInstanceStatusItems(string instanceId, AuthContext? currentAuthContext)
+        public async Task<ICollection<ActionStep>?> GetInstanceStatusItems(string instanceId, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {
                      new("instanceId", instanceId)
                  };
 
-            return await PerformInstanceCommandTaskWithResult<ICollection<Models.ActionStep>>(instanceId, args, ManagementHubCommands.GetSystemStatusItems);
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.GetSystemStatusItems);
         }
 
         /// <summary>

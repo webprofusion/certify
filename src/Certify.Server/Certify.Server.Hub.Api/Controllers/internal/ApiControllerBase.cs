@@ -58,12 +58,12 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="token"></param>
         /// <param name="check"></param>
         /// <returns></returns>
-        internal async Task<Models.Config.ActionResult> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
+        internal async Task<Certify.Models.Config.ActionResult> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
         {
             return await internalApiClient.CheckApiTokenHasAccess(token, check, CurrentAuthContext);
         }
 
-        internal async Task<Models.Config.ActionResult> CheckRequestAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
+        internal async Task<Certify.Models.Config.ActionResult> CheckRequestAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
         {
             // check for authorization bearer token first
 
@@ -71,7 +71,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (currenAuthContextCheckOK)
             {
-                return new Models.Config.ActionResult("Authorized by bearer token", true);
+                return new Certify.Models.Config.ActionResult("Authorized by bearer token", true);
             }
 
             // check for access token in request headers
@@ -79,7 +79,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (accessToken == null)
             {
-                return new Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
+                return new Certify.Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
             }
 
             return await IsAccessTokenAuthorized(internalApiClient, accessToken, check);
