@@ -391,7 +391,7 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/accounts/",
-                    ReturnType = "ICollection<Models.AccountDetails>",
+                    ReturnType = "ICollection<Certify.Models.AccountDetails>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
                     RequiredPermissions = [new(ResourceTypes.AcmeAccount, StandardResourceActions.AcmeAccountList)]
                 },
@@ -415,7 +415,7 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "CertificateAuthority",
                     PublicAPIRoute = "{instanceId}/authority",
-                    ReturnType = "ICollection<Models.CertificateAuthority>",
+                    ReturnType = "ICollection<Certify.Models.CertificateAuthority>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
                     RequiredPermissions = [new(ResourceTypes.CertificateAuthority, StandardResourceActions.CertificateAuthorityList)]
                 },
@@ -463,7 +463,7 @@ namespace Certify.SourceGenerators
                     UseManagementAPI = true,
                     PublicAPIController = "StoredCredential",
                     PublicAPIRoute = "{instanceId}",
-                    ReturnType = "ICollection<Models.Config.StoredCredential>",
+                    ReturnType = "ICollection<Certify.Models.Config.StoredCredential>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
                     RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialList)]
                 },
@@ -476,7 +476,7 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "{instanceId}",
                     ReturnType = actionResultTypeName,
                     UseManagementAPI = true,
-                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", "Models.Config.StoredCredential" } },
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "item", GetFormattedTypeName(typeof(Certify.Models.Config.StoredCredential)) } },
                     RequiredPermissions = [new(ResourceTypes.StoredCredential, StandardResourceActions.StoredCredentialUpdate)]
                 },
                 new()

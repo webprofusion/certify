@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Certify.Client;
 using Certify.Management;
+using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Shared;
@@ -288,11 +289,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 // item was not requested, queue for processing
                 if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<Models.RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
