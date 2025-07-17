@@ -25,6 +25,16 @@ namespace Certify.Shared.Core.Utils.PKI
 
     public static class CertUtils
     {
+        public static string CertDerToPem(byte[] der)
+        {
+            using var writer = new StringWriter();
+            var certParser = new X509CertificateParser();
+            using var pemWriter = new PemWriter(writer);
+            pemWriter.WriteObject(certParser.ReadCertificate(der));
+            writer.Flush();
+            return writer.ToString();
+        }
+
         /// <summary>
         /// Get PEM encoded cert bytes (intermediates only or full chain) from PFX bytes
         /// </summary>

@@ -181,6 +181,8 @@ namespace Certify.Management
                     log.Information($"DNS: {dnsResult.Result.Message}");
                 }
 
+                await Task.Delay(dnsResult.PropagationSeconds * 1000);
+
                 var cleanupQueue = new List<Action> { };
 
                 // configure cleanup actions for use after challenge completes
