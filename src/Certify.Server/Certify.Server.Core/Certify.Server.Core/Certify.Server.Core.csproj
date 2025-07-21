@@ -12,7 +12,7 @@
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.7" />
         <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.7" />
-        <PackageReference Include="Polly" Version="8.6.1" />
+        <PackageReference Include="Polly" Version="8.6.2" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.7" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="9.0.7" />
