@@ -52,6 +52,7 @@ namespace Certify.Models.Hub
         public static Role ManagedChallengeConsumer { get; } = new Role("managedchallenge_consumer_role", "Managed Challenge Consumer", "Can perform specific managed challenges", policies: [StandardPolicies.ManagedChallengeConsumer]);
 
         public static Role ManagedInstance { get; } = new Role("managedinstance_role", "Hub Managed Instance", "Can join the hub and be managed via the hub.", policies: [StandardPolicies.ManagedInstance]);
+        public static Role ManagedAcmeConsumer { get; } = new Role("managedacme_consumer_role", "Managed ACME Consumer", "Can use managed ACME services via the hub.", policies: [StandardPolicies.ManagedAcmeConsumer]);
     }
 
     public class StandardIdentityProviders
@@ -90,6 +91,7 @@ namespace Certify.Models.Hub
         public static string CertificateAuthority { get; } = "ca";
         public static string AcmeAccount { get; } = "acmeaccount";
         public static string ManagedChallenge { get; } = "managedchallenge";
+        public static string ManagedAcme { get; } = "managedacme";
         public static string ManagedInstance { get; } = "managedinstance";
         public static string Target { get; } = "target";
         public static string ChallengeProvider { get; } = "challengeprovider";
@@ -185,6 +187,8 @@ namespace Certify.Models.Hub
         public const string TagUpdate = "managementhub_tag_update_action";
         public const string TagList = "managementhub_tag_list_action";
 
+        public const string ManagedAcmePerformOrder = "managedacme_order_action";
+
     }
 
     public class StandardPolicies
@@ -204,6 +208,7 @@ namespace Certify.Models.Hub
         public const string ManagedInstance = "managementhub_managedinstance_policy";
         public const string ManagedInstanceSystemImport = "system_import_policy";
         public const string ManagedInstanceSystemExport = "system_export_policy";
+        public const string ManagedAcmeConsumer = "managedacme_consumer_policy";
         public const string SystemUser = "system_user_policy";
         public const string TagAdmin = "tag_admin_policy";
 
@@ -220,6 +225,7 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
                 StandardRoles.ManagedChallengeConsumer,
+                StandardRoles.ManagedAcmeConsumer,
                 StandardRoles.HubViewer,
                 StandardRoles.ManagedInstance,
                 StandardRoles.BackupOperator
@@ -317,7 +323,9 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.TagList, "List item tags", ResourceTypes.Tag),
                 new(StandardResourceActions.TagAdd, "Add item tags", ResourceTypes.Tag),
                 new(StandardResourceActions.TagUpdate, "Update item tags", ResourceTypes.Tag),
-                new(StandardResourceActions.TagDelete, "Delete item tags", ResourceTypes.Tag)
+                new(StandardResourceActions.TagDelete, "Delete item tags", ResourceTypes.Tag),
+
+                new(StandardResourceActions.ManagedAcmePerformOrder, "Perform managed acme order", ResourceTypes.ManagedAcme)
 
             ];
         }
@@ -545,6 +553,14 @@ namespace Certify.Models.Hub
                       StandardResourceActions.TagDelete
                   ]
               },
+              new() {
+                 Id = StandardPolicies.ManagedAcmeConsumer,
+                 Title = "Managed Acme Consumer",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 ResourceActions = [
+                     StandardResourceActions.ManagedAcmePerformOrder
+                 ]
+             },
             ];
         }
     }

@@ -24,5 +24,28 @@ namespace Certify.Server.Hub.Api.Controllers
             _logger = logger;
             _client = client;
         }
+
+        /// <summary>
+        /// Retrieves the given value as a Base64url encoded SHA256 Hash
+        /// </summary>
+        /// <returns>Returns an OK response containing a list of ActionStep objects.</returns>
+        [HttpPost]
+        [Route("sha256hash")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
+        public async Task<IActionResult> GetSHA256HashBase64([FromBody] string value)
+        {
+
+            if (string.IsNullOrEmpty(value))
+            {
+                return BadRequest("Value cannot be null or empty.");
+            }
+
+            using var sha256 = System.Security.Cryptography.SHA256.Create();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+            var hashBytes = sha256.ComputeHash(bytes);
+            var result = Management.Util.ToUrlSafeBase64String(hashBytes);
+
+            return new OkObjectResult(new { value = result });
+        }
     }
 }
