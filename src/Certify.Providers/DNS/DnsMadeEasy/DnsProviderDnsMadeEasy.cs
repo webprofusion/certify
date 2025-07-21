@@ -44,6 +44,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
         private static readonly HttpClient _httpClient;
         private string _apiKey;
         private string _apiSecret;
+        private bool _useSandbox = false;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -71,7 +72,8 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                         new ProviderParameter{Key="apikey", Name="API Key", IsRequired=true },
                         new ProviderParameter{Key="apisecret", Name="API Secret", IsRequired=true },
                         new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
-                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
+                        new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false },
+                        new ProviderParameter { Key = "usesandbox", Name = "Use Sandbox API", IsRequired = false, Description = "Optionally test against sandbox API", Value="false", IsHidden=false, Type= OptionType.Boolean, IsCredential = false },
                     },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.DnsMadeEasy",
@@ -288,6 +290,13 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                 {
                     _customPropagationDelay = customPropDelay;
                 }
+            }
+
+            _useSandbox = parameters?.ContainsKey("usesandbox") == true && bool.TryParse(parameters["usesandbox"], out var useSandbox) && useSandbox;
+
+            if (_useSandbox)
+            {
+                _apiUrl = "https://api.sandbox.dnsmadeeasy.com/V2.0/";
             }
 
             return await Task.FromResult(true);

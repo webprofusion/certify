@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -359,6 +359,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "DMEKey", Name = "API Key", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "DMESecret", Name = "API Secret", IsRequired = true, IsCredential = true, ExtendedConfig=_paramIsSecureStringConfig },
+                    new ProviderParameter { Key = "DMEUseSandbox", Name = "Use Sandbox API", IsRequired = false, Description = "Optionally test against sandbox API", Value="false", IsHidden=false, Type= OptionType.Boolean, IsCredential = false },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
