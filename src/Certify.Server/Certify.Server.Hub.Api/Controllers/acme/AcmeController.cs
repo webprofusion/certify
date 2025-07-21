@@ -17,6 +17,25 @@ namespace Certify.Server.Hub.Api.Controllers.acme
     [Route("acme")]
     public class AcmeController : ApiControllerBase
     {
+        // Extract magic numbers and strings to constants
+        private const int DEFAULT_EXPIRY_DAYS = 30;
+        private const int NONCE_BYTES = 16;
+        private const int TOKEN_BYTES = 32;
+        private const string ACME_SERVER_PATH = "acme-server";
+        private const string PEM_FULLCHAIN_FORMAT = "pem_fullchain";
+
+        // Extract ACME error types to constants
+        private static class AcmeErrorTypes
+        {
+            public const string Malformed = "urn:ietf:params:acme:error:malformed";
+            public const string BadNonce = "urn:ietf:params:acme:error:badNonce";
+            public const string ExternalAccountRequired = "urn:ietf:params:acme:error:externalAccountRequired";
+            public const string OrderNotFound = "urn:ietf:params:acme:error:orderNotFound";
+            public const string OrderNotReady = "urn:ietf:params:acme:error:orderNotReady";
+            public const string AuthorizationNotFound = "urn:ietf:params:acme:error:authorizationNotFound";
+            public const string ServerInternal = "urn:ietf:params:acme:error:serverInternal";
+        }
+
         private readonly ILogger<AcmeController> _logger;
         private static readonly ConcurrentDictionary<string, AcmeAccount> _accounts = new();
         private static readonly ConcurrentDictionary<string, JsonWebKey> _accountKeys = new();
@@ -28,26 +47,20 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private string _hubInstanceId = default!;
 
         /// <summary>
-        /// 
+        /// Initializes a new instance of the AcmeController
         /// </summary>
-        /// <param name="logger"></param>
-        /// <param name="mgmtAPI"></param>
+        /// <param name="logger">Logger for recording ACME operations</param>
+        /// <param name="mgmtAPI">Management API for certificate operations</param>
+        /// <param name="stateProvider">Provider for instance management state</param>
         public AcmeController(ILogger<AcmeController> logger, ManagementAPI mgmtAPI, IInstanceManagementStateProvider stateProvider)
         {
-            _logger = logger;
-            _mgmtAPI = mgmtAPI;
-            _stateProvider = stateProvider;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mgmtAPI = mgmtAPI ?? throw new ArgumentNullException(nameof(mgmtAPI));
+            _stateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
 
             _hubInstanceId = _stateProvider.GetManagementHubInstanceId();
             LoadSavedState();
         }
-
-        private string GenerateAccountId() => Guid.NewGuid().ToString("N");
-        private string GenerateOrderId() => Guid.NewGuid().ToString("N");
-        private string GenerateAuthorizationId() => Guid.NewGuid().ToString("N");
-        private string GenerateChallengeId() => Guid.NewGuid().ToString("N");
-        private string GenerateCertificateId() => Guid.NewGuid().ToString("N");
-        private string GenerateToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
 
         /// <summary>
         /// ACME Directory endpoint - RFC 8555 Section 7.1.1
@@ -59,7 +72,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         {
             ValidateKeyIfSupplied(key);
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
+            var baseUrl = BuildBaseUrl(key);
 
             var directory = new AcmeDirectory
             {
@@ -83,18 +96,21 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         }
 
         /// <summary>
-        /// New nonce endpoint - RFC 8555 Section 7.2
+        /// Issue new anti-replay nonce - RFC 8555 Section 6.5.1
         /// </summary>
-        /// <returns>Fresh nonce in Replay-Nonce header</returns>
+        /// <param name="key"></param>
+        /// <returns></returns>
         [HttpHead("new-nonce")]
         [HttpGet("new-nonce")]
         [HttpHead("{key?}/new-nonce")]
         [HttpGet("{key?}/new-nonce")]
+
         public IActionResult NewNonce(string key = default!)
         {
-            var nonce = GenerateNonce();
-            Response.Headers.Add("Replay-Nonce", nonce);
-            Response.Headers.Add("Cache-Control", "no-store");
+            AddReplayNonceHeader();
+
+            Response.Headers.Append("Cache-Control", "no-store");
+
             return Ok();
         }
 
@@ -102,6 +118,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// New account endpoint with EAB support - RFC 8555 Section 7.3
         /// </summary>
         /// <param name="payload">JWS payload containing account creation request</param>
+        /// <param name="key"></param>
         /// <returns>Account object</returns>
         [HttpPost("{key?}/new-account")]
         [HttpPost("new-account")]
@@ -114,16 +131,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             JsonWebKey newAccountKey;
             try
             {
-                request = DecodeJwsPayload<NewAccountRequest>(payload);
-
-                var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
-                var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
-                newAccountKey = (JsonConvert.DeserializeObject<JwsProtectedHeader>(protectedJson)).Jwk;
+                (request, newAccountKey) = DecodeJwsWithAccountKey<NewAccountRequest>(payload);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for new account request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
             // Validate External Account Binding if required
@@ -131,31 +144,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             {
                 if (!ValidateExternalAccountBinding(request.ExternalAccountBinding))
                 {
-                    return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:externalAccountRequired", Detail = "Invalid external account binding" });
+                    return CreateAcmeError(AcmeErrorTypes.ExternalAccountRequired, "Invalid external account binding");
                 }
             }
 
             var accountId = GenerateAccountId();
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
+            var baseUrl = BuildBaseUrl(key);
             var account = new AcmeAccount
             {
                 Status = AccountStatus.Valid,
                 Contact = request.Contact,
                 TermsOfServiceAgreed = request.TermsOfServiceAgreed,
                 Orders = $"{baseUrl}/account/{accountId}/orders",
-
             };
 
-            var accountKid = $"{baseUrl}/account/{accountId}";
+            var accountKid = BuildAccountUrl(baseUrl, accountId);
 
             _accounts[accountKid] = account;
-
             _accountKeys[accountKid] = newAccountKey;
 
             StoreCurrentState();
 
-            Response.Headers.Add("Location", $"{baseUrl}/account/{accountId}");
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
+            AddLocationHeader(BuildAccountUrl(baseUrl, accountId));
 
             return Created(accountKid, account);
         }
@@ -164,12 +175,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// New order endpoint - RFC 8555 Section 7.4
         /// </summary>
         /// <param name="payload">JWS payload containing order creation request</param>
+        /// <param name="key"></param>
         /// <returns>Order object</returns>
         [HttpPost("new-order")]
         [HttpPost("{key?}/new-order")]
         public async Task<IActionResult> NewOrder([FromBody] JwsPayload payload, string key = default!)
         {
-
             ValidateKeyIfSupplied(key);
 
             // Decode the JWS payload
@@ -181,54 +192,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for new order request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = $"Invalid JWS payload: {ex.Message}" });
+                return CreateAcmeError(AcmeErrorTypes.Malformed, $"Invalid JWS payload: {ex.Message}");
             }
 
             var orderId = GenerateOrderId();
             var authorizationIds = new List<string>();
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
+            var baseUrl = BuildBaseUrl(key);
 
             // Create authorizations for each identifier
-
-            // TODO: if caller has permission to request a managed challenge, mark auth as valid
-
             foreach (var identifier in request.Identifiers)
             {
                 var authId = GenerateAuthorizationId();
-                var authorization = new AcmeAuthorization
-                {
-                    Identifier = identifier,
-                    Status = AuthorizationStatus.Valid, //presets auth to valid so the client doesn't attempt them
-                    Expires = DateTime.UtcNow.AddDays(30),
-                    Challenges = new List<AcmeChallenge>
-                    {
-                        new AcmeChallenge
-                        {
-                            Type = "http-01",
-                            Status = ChallengeStatus.Valid,
-                            Token = GenerateToken(),
-                            Url = $"{baseUrl}/challenge/{GenerateChallengeId()}"
-                        },
-                        new AcmeChallenge
-                        {
-                            Type = "dns-01",
-                            Status = ChallengeStatus.Valid,
-                            Token = GenerateToken(),
-                            Url = $"{baseUrl}/challenge/{GenerateChallengeId()}"
-                        }
-                    }
-                };
+                var authorization = CreateAuthorization(identifier, baseUrl);
 
                 _authorizations[authId] = authorization;
-                authorizationIds.Add($"{baseUrl}/authz/{authId}");
+                authorizationIds.Add(BuildAuthorizationUrl(baseUrl, authId));
             }
 
             var order = new AcmeOrder
             {
                 Id = orderId,
                 Status = OrderStatus.Pending,
-                Expires = DateTime.UtcNow.AddDays(30),
+                Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
                 Identifiers = request.Identifiers,
                 NotBefore = request.NotBefore,
                 NotAfter = request.NotAfter,
@@ -237,32 +223,13 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             };
 
             // create temp order in hub using a managed challenge
-            var managedCert = new ManagedCertificate
-            {
-                Name = $"Hub ACME Order {orderId}",
-                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
-                UseStagingMode = true,
-                RequestConfig = new CertRequestConfig
-                {
-                    PrimaryDomain = request.Identifiers.FirstOrDefault()?.Value ?? "",
-                    SubjectAlternativeNames = request.Identifiers.Select(i => i.Value).ToArray(),
-                    DeploymentSiteOption = DeploymentOption.NoDeployment
-                }
-            };
-
-            managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>
-            {
-                new CertRequestChallengeConfig
-                {
-                    ChallengeProvider = "managed" , ChallengeType = "dns-01",
-                }
-            };
+            var managedCert = CreateManagedCertificate(orderId, request);
 
             var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
             if (tempCert == null)
             {
                 _logger.LogError("Failed to create temporary managed certificate for order {OrderId}", orderId);
-                return StatusCode(500, new AcmeError { Type = "urn:ietf:params:acme:error:serverInternal", Detail = "Failed to create temporary managed certificate" });
+                return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to create temporary managed certificate");
             }
 
             _ = _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, tempCert.Id, CurrentAuthContext);
@@ -273,10 +240,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             StoreCurrentState();
 
-            Response.Headers.Add("Location", $"{baseUrl}/order/{orderId}");
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
+            AddLocationHeader(BuildOrderUrl(baseUrl, orderId));
 
-            return Created($"{baseUrl}/order/{orderId}", order);
+            return Created(BuildOrderUrl(baseUrl, orderId), order);
         }
 
         /// <summary>
@@ -284,6 +251,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="orderId">Order identifier</param>
         /// <param name="payload">JWS payload containing finalization request with CSR</param>
+        /// <param name="key"></param>
         /// <returns>Updated order object</returns>
         [HttpPost("order/{orderId}/finalize")]
         [HttpPost("{key?}/order/{orderId}/finalize")]
@@ -293,12 +261,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             if (!_orders.TryGetValue(orderId, out var order))
             {
-                return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:orderNotFound", Detail = "Order not found" });
+                return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
             if (order.Status != OrderStatus.Ready)
             {
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:orderNotReady", Detail = "Order not ready for finalization" });
+                return CreateAcmeError(AcmeErrorTypes.OrderNotReady, "Order not ready for finalization");
             }
 
             // Decode the JWS payload
@@ -310,15 +278,19 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
             // check status of temp managed certificate
-            // 
             var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
 
+            if (managedCert == null)
+            {
+                return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Managed certificate not found for order");
+            }
+
             // apply CSR from client finalize call as a formatted customcsr
-            managedCert.RequestConfig.CustomCSR = $"-----BEGIN CERTIFICATE REQUEST-----\n{Convert.ToBase64String(Certify.Management.Util.FromUrlSafeBase64String(request.Csr), Base64FormattingOptions.InsertLineBreaks)}\n-----END CERTIFICATE REQUEST-----";
+            managedCert.RequestConfig.CustomCSR = FormatCsrPem(request.Csr);
 
             await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
 
@@ -328,10 +300,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             order.Status = OrderStatus.Valid;
             var certId = GenerateCertificateId();
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
-            order.Certificate = $"{baseUrl}/cert/{certId}";
+            var baseUrl = BuildBaseUrl(key);
+            order.Certificate = BuildCertificateUrl(baseUrl, certId);
 
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
 
             StoreCurrentState();
 
@@ -342,6 +314,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// Download certificate endpoint - RFC 8555 Section 7.4.2
         /// </summary>
         /// <param name="certId">Certificate identifier</param>
+        /// <param name="payload"></param>
+        /// <param name="key"></param>
         /// <returns>Certificate in PEM format</returns>
         [HttpPost("cert/{certId}")]
         [HttpPost("{key?}/cert/{certId}")]
@@ -351,25 +325,30 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                _ = DecodeJwsPayload<object>(payload);
+                _ = DecodeJwsForPostAsGet<object>(payload, "certificate request");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for certificate request");
-                return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            var baseUrl = $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
-
-            var certUri = $"{baseUrl}/cert/{certId}";
+            var baseUrl = BuildBaseUrl(key);
+            var certUri = BuildCertificateUrl(baseUrl, certId);
             var order = _orders.FirstOrDefault(o => o.Value.Certificate == certUri).Value;
             if (order == null)
             {
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid or unknown certId" });
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid or unknown certId");
             }
 
             var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", CurrentAuthContext);
+            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, PEM_FULLCHAIN_FORMAT, CurrentAuthContext);
+
+            if (result?.Result == null)
+            {
+                _logger.LogError("Failed to export certificate for order {OrderId}", order.Id);
+                return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to export certificate");
+            }
 
             var certPEM = System.Text.Encoding.UTF8.GetString(result.Result);
 
@@ -377,7 +356,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             await _mgmtAPI.RemoveManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
             _orders.Remove(order.Id, out _);
 
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
 
             // Return the certificate as plain text with proper content type
             return Content(certPEM, "application/pem-certificate-chain");
@@ -387,6 +366,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// Post-As-Get order status endpoint - RFC 8555 Section 7.4
         /// </summary>
         /// <param name="orderId">Order identifier</param>
+        /// <param name="payload"></param>
+        /// <param name="key"></param>
         /// <returns>Order object</returns>
         [HttpPost("order/{orderId}")]
         [HttpPost("{key?}/order/{orderId}")]
@@ -396,39 +377,25 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                _ = DecodeJwsPayload<object>(payload);
+                _ = DecodeJwsForPostAsGet<object>(payload, "order status request");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                _logger.LogError(ex, "Failed to decode JWS payload for order status request");
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
             if (!_orders.TryGetValue(orderId, out var order))
             {
-                return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:orderNotFound", Detail = "Order not found" });
+                return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
             // check status of temp managed certificate
-            // 
             var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
 
-            if (managedCert.LastRenewalStatus == null || managedCert.LastRenewalStatus == RequestState.Running)
-            {
-                order.Status = OrderStatus.Processing; // Simulate order being processed
-            }
-            else if (managedCert.LastRenewalStatus == RequestState.Paused)
-            {
+            order.Status = MapManagedCertificateStatus(managedCert.LastRenewalStatus);
 
-                order.Status = OrderStatus.Ready; // Simulate order being ready for this example
-
-            }
-            else
-            {
-                order.Status = managedCert.LastRenewalStatus == RequestState.Error ? OrderStatus.Invalid : OrderStatus.Valid;
-            }
-
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
             return Ok(order);
         }
 
@@ -436,6 +403,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// Post-As-Get authorization endpoint - RFC 8555 Section 7.5
         /// </summary>
         /// <param name="authId">Authorization identifier</param>
+        /// <param name="payload"></param>
+        /// <param name="key"></param>
         /// <returns>Authorization object</returns>
         [HttpPost("authz/{authId}")]
         [HttpPost("{key?}/authz/{authId}")]
@@ -445,41 +414,167 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                _ = DecodeJwsPayload<object>(payload);
+                _ = DecodeJwsForPostAsGet<object>(payload, "authorization request");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
-                return BadRequest(new AcmeError { Type = "urn:ietf:params:acme:error:malformed", Detail = "Invalid JWS payload" });
+                _logger.LogError(ex, "Failed to decode JWS payload for authorization request");
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
             if (!_authorizations.TryGetValue(authId, out var authorization))
             {
-                return NotFound(new AcmeError { Type = "urn:ietf:params:acme:error:authorizationNotFound", Detail = "Authorization not found" });
+                return CreateAcmeError(AcmeErrorTypes.AuthorizationNotFound, "Authorization not found");
             }
 
-            Response.Headers.Add("Replay-Nonce", GenerateNonce());
+            AddReplayNonceHeader();
             return Ok(authorization);
         }
 
+        private static string GenerateAccountId() => Guid.NewGuid().ToString("N");
+        private static string GenerateOrderId() => Guid.NewGuid().ToString("N");
+        private static string GenerateAuthorizationId() => Guid.NewGuid().ToString("N");
+        private static string GenerateChallengeId() => Guid.NewGuid().ToString("N");
+        private static string GenerateCertificateId() => Guid.NewGuid().ToString("N");
+        private static string GenerateToken() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(TOKEN_BYTES));
+        private string BuildBaseUrl(string? key = null) => $"{Request.Scheme}://{Request.Host}/acme{(key != null ? $"/{key}" : "")}";
+        private static string BuildAccountUrl(string baseUrl, string accountId) => $"{baseUrl}/account/{accountId}";
+        private static string BuildChallengeUrl(string baseUrl, string challengeId) => $"{baseUrl}/challenge/{challengeId}";
+        private static string BuildAuthorizationUrl(string baseUrl, string authId) => $"{baseUrl}/authz/{authId}";
+        private static string BuildOrderUrl(string baseUrl, string orderId) => $"{baseUrl}/order/{orderId}";
+        private static string BuildCertificateUrl(string baseUrl, string certId) => $"{baseUrl}/cert/{certId}";
+
+        private (T request, JsonWebKey? accountKey) DecodeJwsWithAccountKey<T>(JwsPayload payload)
+        {
+            var request = DecodeJwsPayload<T>(payload);
+
+            var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
+            var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
+            var protectedHeader = JsonConvert.DeserializeObject<JwsProtectedHeader>(protectedJson);
+
+            return (request, protectedHeader?.Jwk);
+        }
+
+        private T DecodeJwsForPostAsGet<T>(JwsPayload payload, string errorContext)
+        {
+            try
+            {
+                return DecodeJwsPayload<T>(payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to decode JWS payload for {Context}", errorContext);
+                throw new ArgumentException("Invalid JWS payload");
+            }
+        }
+
+        private List<AcmeChallenge> CreateStandardChallenges(string baseUrl)
+        {
+            return
+            [
+                new()
+                {
+                    Type = "http-01",
+                    Status = ChallengeStatus.Valid,
+                    Token = GenerateToken(),
+                    Url = BuildChallengeUrl(baseUrl, GenerateChallengeId())
+                },
+                new()
+                {
+                    Type = "dns-01",
+                    Status = ChallengeStatus.Valid,
+                    Token = GenerateToken(),
+                    Url = BuildChallengeUrl(baseUrl, GenerateChallengeId())
+                }
+            ];
+        }
+
+        private AcmeAuthorization CreateAuthorization(AcmeIdentifier identifier, string baseUrl)
+        {
+            return new()
+            {
+                Identifier = identifier,
+                Status = AuthorizationStatus.Valid, //presets auth to valid so the client doesn't attempt them
+                Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
+                Challenges = CreateStandardChallenges(baseUrl)
+            };
+        }
+
+        private static OrderStatus MapManagedCertificateStatus(RequestState? renewalStatus)
+        {
+            return renewalStatus switch
+            {
+                null or RequestState.Running => OrderStatus.Processing,
+                RequestState.Paused => OrderStatus.Ready,
+                RequestState.Error => OrderStatus.Invalid,
+                _ => OrderStatus.Valid
+            };
+        }
+
+        private IActionResult CreateAcmeError(string errorType, string detail)
+        {
+            var error = new AcmeError { Type = errorType, Detail = detail };
+
+            return errorType switch
+            {
+                AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound => NotFound(error),
+                AcmeErrorTypes.ServerInternal => StatusCode(500, error),
+                _ => BadRequest(error)
+            };
+        }
+
+        private ManagedCertificate CreateManagedCertificate(string orderId, NewOrderRequest request)
+        {
+            var managedCert = new ManagedCertificate
+            {
+                Name = $"Hub ACME Order {orderId}",
+                CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
+                UseStagingMode = true,
+                RequestConfig = new()
+                {
+                    PrimaryDomain = request.Identifiers.FirstOrDefault()?.Value ?? "",
+                    SubjectAlternativeNames = request.Identifiers.Select(i => i.Value).ToArray(),
+                    DeploymentSiteOption = DeploymentOption.NoDeployment
+                }
+            };
+
+            managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>
+            {
+                new() {
+                    ChallengeProvider = "managed" , ChallengeType = "dns-01",
+                }
+            };
+
+            return managedCert;
+        }
+
+        private string FormatCsrPem(string csr)
+        {
+            return $"-----BEGIN CERTIFICATE REQUEST-----\n{Convert.ToBase64String(Certify.Management.Util.FromUrlSafeBase64String(csr), Base64FormattingOptions.InsertLineBreaks)}\n-----END CERTIFICATE REQUEST-----";
+        }
+
+        private void AddReplayNonceHeader()
+        {
+            Response.Headers.Append("Replay-Nonce", GenerateNonce());
+        }
+
+        private void AddLocationHeader(string location)
+        {
+            Response.Headers.Append("Location", location);
+        }
         private string GenerateNonce()
         {
-            var nonce = Convert.ToBase64String(RandomNumberGenerator.GetBytes(16));
+            var nonce = JwsConvert.ToBase64String(RandomNumberGenerator.GetBytes(NONCE_BYTES));
             _nonces[nonce] = DateTime.UtcNow.ToString();
             return nonce;
         }
 
-        private bool IsValidNonce(string nonce)
+        private static bool IsValidNonce(string nonce)
         {
             return !string.IsNullOrEmpty(nonce) && _nonces.ContainsKey(nonce);
         }
 
-        private string GetNonceFromHeaders()
-        {
-            return Request.Headers["Replay-Nonce"].FirstOrDefault();
-        }
-
-        private bool ValidateExternalAccountBinding(ExternalAccountBinding eab)
+        private static bool ValidateExternalAccountBinding(ExternalAccountBinding eab)
         {
             // In a real implementation, validate the EAB signature
             // For this stub, we'll just check that it's not null
@@ -627,7 +722,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// Validates a JSON Web Key according to RFC 7517
         /// </summary>
         /// <param name="jwk">JWK to validate</param>
-        private void ValidateJwk(JsonWebKey jwk)
+        private static void ValidateJwk(JsonWebKey jwk)
         {
             if (string.IsNullOrEmpty(jwk.Kty))
             {
@@ -695,7 +790,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="header">Protected header</param>
         /// <returns>Public key for verification</returns>
-        private JsonWebKey? GetPublicKey(JwsProtectedHeader header)
+        private static JsonWebKey? GetPublicKey(JwsProtectedHeader header)
         {
             if (header.Jwk != null)
             {
@@ -734,104 +829,98 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
         private void StoreCurrentState()
         {
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath("acme-server");
-
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "accounts.json"), System.Text.Json.JsonSerializer.Serialize(_accounts));
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "account-keys.json"), System.Text.Json.JsonSerializer.Serialize(_accountKeys));
-            System.IO.File.WriteAllText(Path.Join(settingsPath, "orders.json"), System.Text.Json.JsonSerializer.Serialize(_orders));
+            SaveStateToFile("accounts.json", _accounts);
+            SaveStateToFile("account-keys.json", _accountKeys);
+            SaveStateToFile("orders.json", _orders);
         }
 
         private void LoadSavedState()
         {
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath("acme-server");
-
-            if (_accounts.Count == 0)
-            {
-                var accountsPath = Path.Join(settingsPath, "accounts.json");
-                if (System.IO.File.Exists(accountsPath))
-                {
-                    var json = System.IO.File.ReadAllText(accountsPath);
-                    var accounts = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeAccount>>(json);
-                    _accounts.Clear();
-                    foreach (var a in accounts)
-                    {
-                        _accounts.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-
-            if (_accountKeys.Count == 0)
-            {
-                var accountKeyPath = Path.Join(settingsPath, "account-keys.json");
-                if (System.IO.File.Exists(accountKeyPath))
-                {
-                    var json = System.IO.File.ReadAllText(accountKeyPath);
-                    var accountKeys = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, JsonWebKey>>(json);
-                    _accountKeys.Clear();
-                    foreach (var a in accountKeys)
-                    {
-                        _accountKeys.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-
-            if (_orders.Count == 0)
-            {
-                var ordersPath = Path.Join(settingsPath, "orders.json");
-                if (System.IO.File.Exists(ordersPath))
-                {
-                    var json = System.IO.File.ReadAllText(ordersPath);
-                    var orders = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, AcmeOrder>>(json);
-                    _orders.Clear();
-                    foreach (var a in orders)
-                    {
-                        _orders.TryAdd(a.Key, a.Value);
-                    }
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Base64 URL encoding/decoding utility for JWS (JSON Web Signature)
-    /// </summary>
-    public static class JwsConvert
-    {
-        /// <summary>
-        /// Encodes the data to the base64url string without padding.
-        /// </summary>
-        /// <param name="data">The data to encode.</param>
-        /// <returns>The encoded data.</returns>
-        public static string ToBase64String(byte[] data)
-        {
-            var s = Convert.ToBase64String(data); // Regular base64 encoder
-            s = s.Split('=')[0]; // Remove any trailing '='s
-            s = s.Replace('+', '-'); // 62nd char of encoding
-            s = s.Replace('/', '_'); // 63rd char of encoding
-            return s;
+            LoadStateFromFile("accounts.json", _accounts);
+            LoadStateFromFile("account-keys.json", _accountKeys);
+            LoadStateFromFile("orders.json", _orders);
         }
 
-        /// <summary>
-        /// Decodes the base64url string without padding.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <returns>The decoded data.</returns>
-        /// <exception cref="System.ArgumentException">If <paramref name="data"/> is illegal base64 URL string.</exception>
-        public static byte[] FromBase64String(string data)
+        private void SaveStateToFile<T>(string fileName, ConcurrentDictionary<string, T> data)
         {
-            var s = data;
-            s = s.Replace('-', '+'); // 62nd char of encoding
-            s = s.Replace('_', '/'); // 63rd char of encoding
-            switch (s.Length % 4) // Pad with trailing '='s
+            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(ACME_SERVER_PATH);
+            var filePath = Path.Join(settingsPath, fileName);
+            var json = System.Text.Json.JsonSerializer.Serialize(data);
+            System.IO.File.WriteAllText(filePath, json);
+        }
+
+        private void LoadStateFromFile<T>(string fileName, ConcurrentDictionary<string, T> targetDictionary)
+        {
+            if (targetDictionary.Count > 0)
             {
-                case 0: break; // No pad chars in this case
-                case 2: s += "=="; break; // Two pad chars
-                case 3: s += "="; break; // One pad char
-                default:
-                    throw new ArgumentException("Invalid base64url string");
+                return;
             }
 
-            return Convert.FromBase64String(s); // Standard base64 decoder
+            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(ACME_SERVER_PATH);
+            var filePath = Path.Join(settingsPath, fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return;
+            }
+
+            var json = System.IO.File.ReadAllText(filePath);
+            var data = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, T>>(json);
+
+            if (data == null)
+            {
+                return;
+            }
+
+            targetDictionary.Clear();
+            foreach (var item in data)
+            {
+                targetDictionary.TryAdd(item.Key, item.Value);
+            }
         }
     }
 }
+
+/// <summary>
+/// Base64 URL encoding/decoding utility for JWS (JSON Web Signature)
+/// </summary>
+public static class JwsConvert
+{
+    /// <summary>
+    /// Encodes the data to the base64url string without padding.
+    /// </summary>
+    /// <param name="data">The data to encode.</param>
+    /// <returns>The encoded data.</returns>
+    public static string ToBase64String(byte[] data)
+    {
+        var s = Convert.ToBase64String(data); // Regular base64 encoder
+        s = s.Split('=')[0]; // Remove any trailing '='s
+        s = s.Replace('+', '-'); // 62nd char of encoding
+        s = s.Replace('/', '_'); // 63rd char of encoding
+        return s;
+    }
+
+    /// <summary>
+    /// Decodes the base64url string without padding.
+    /// </summary>
+    /// <param name="data">The data.</param>
+    /// <returns>The decoded data.</returns>
+    /// <exception cref="System.ArgumentException">If <paramref name="data"/> is illegal base64 URL string.</exception>
+    public static byte[] FromBase64String(string data)
+    {
+        var s = data;
+        s = s.Replace('-', '+'); // 62nd char of encoding
+        s = s.Replace('_', '/'); // 63rd char of encoding
+        switch (s.Length % 4) // Pad with trailing '='s
+        {
+            case 0: break; // No pad chars in this case
+            case 2: s += "=="; break; // Two pad chars
+            case 3: s += "="; break; // One pad char
+            default:
+                throw new ArgumentException("Invalid base64url string");
+        }
+
+        return Convert.FromBase64String(s); // Standard base64 decoder
+    }
+}
+
