@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Datastore.SQLite;
+using Certify.Models;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Providers;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.DataStores
@@ -15,6 +18,7 @@ namespace Certify.Core.Tests.DataStores
     {
         private string _storeType = "sqlite";
         private const string TEST_PATH = "Tests";
+        private ILog _log = new Loggy(LoggerFactory.Create(builder => builder.AddDebug()).CreateLogger<AccessControlDataStoreTests>());
 
         public static IEnumerable<object[]> TestDataStores
         {
@@ -42,14 +46,14 @@ namespace Certify.Core.Tests.DataStores
             {
                 store = new SQLiteConfigurationStore(storageSubfolder: TEST_PATH);
             }
-            /* else if (storeType == "postgres")
-             {
-                 return new PostgresCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
-             }
-             else if (storeType == "sqlserver")
-             {
-                 return new SQLServerCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
-             }*/
+            /*  else if (storeType == "postgres")
+              {
+                  return new PostgresCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+              }
+              else if (storeType == "sqlserver")
+              {
+                  return new SQLServerCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
+              }*/
             else
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
@@ -117,7 +121,8 @@ namespace Certify.Core.Tests.DataStores
         public void TestStorePasswordHashing()
         {
             var store = GetStore(_storeType);
-            var access = new AccessControl(null, store);
+
+            var access = new AccessControl(_log, store);
 
             var firstHash = access.HashPassword("secret");
 
@@ -133,7 +138,7 @@ namespace Certify.Core.Tests.DataStores
 
             var store = GetStore(storeType ?? _storeType);
 
-            var access = new AccessControl(null, store);
+            var access = new AccessControl(_log, store);
 
             var adminSp = new SecurityPrincipal
             {
@@ -164,10 +169,10 @@ namespace Certify.Core.Tests.DataStores
 
                 await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true);
 
-                await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipalId = adminSp.Id, RoleId = StandardRoles.Administrator.Id });
+                await access.AddAssignedRole(adminSp.Id, new AssignedRole { Id = new Guid().ToString(), SecurityPrincipalId = adminSp.Id, RoleId = StandardRoles.Administrator.Id }, bypassIntegrityCheck: true);
 
-                // add second security principal, bypass role check as this is just a data store test
-                var added = await access.AddSecurityPrincipal(adminSp.Id, consumerSp, bypassIntegrityCheck: true);
+                // add second security principal, allow role check as admin user should now exist with required role
+                var added = await access.AddSecurityPrincipal(adminSp.Id, consumerSp);
 
                 Assert.IsTrue(added, "Should be able to add a security principal");
 
