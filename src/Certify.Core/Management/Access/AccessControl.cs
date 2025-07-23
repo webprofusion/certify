@@ -628,7 +628,10 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            // if not system user, must be in administrator role to list assigned access tokens
+            // this "system" users is a special case because our ACME endpoints do not use the standard security principal model and have no associated user in most cases
+
+            if (contextUserId != "system" && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to list assigned access tokens without being in required role.", contextUserId);
                 return null;

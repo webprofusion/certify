@@ -2,7 +2,7 @@
 
 namespace Certify.Server.Hub.Api.Models.Acme
 {
-    public class NewAccountRequest
+    public class AccountRequest
     {
         [JsonPropertyName("contact")]
         public string[] Contact { get; set; }
@@ -11,6 +11,9 @@ namespace Certify.Server.Hub.Api.Models.Acme
         public bool TermsOfServiceAgreed { get; set; }
 
         [JsonPropertyName("externalAccountBinding")]
-        public ExternalAccountBinding ExternalAccountBinding { get; set; }
+        public JwsPayload ExternalAccountBinding { get; set; }
+
+        [JsonPropertyName("status")]
+        public string Status { get; set; }
     }
 }
