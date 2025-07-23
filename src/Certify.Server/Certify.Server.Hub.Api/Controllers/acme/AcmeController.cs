@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using Certify.Client;
 using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
@@ -42,7 +44,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private static readonly ConcurrentDictionary<string, AcmeOrder> _orders = new();
         private static readonly ConcurrentDictionary<string, AcmeAuthorization> _authorizations = new();
         private static readonly ConcurrentDictionary<string, string> _nonces = new();
+        private static readonly ConcurrentDictionary<string, string> _consumedEabKeys = new();
         private ManagementAPI _mgmtAPI;
+
+        private readonly ICertifyInternalApiClient _client;
+
         private IInstanceManagementStateProvider _stateProvider;
         private string _hubInstanceId = default!;
 
@@ -52,10 +58,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="logger">Logger for recording ACME operations</param>
         /// <param name="mgmtAPI">Management API for certificate operations</param>
         /// <param name="stateProvider">Provider for instance management state</param>
-        public AcmeController(ILogger<AcmeController> logger, ManagementAPI mgmtAPI, IInstanceManagementStateProvider stateProvider)
+        public AcmeController(ILogger<AcmeController> logger, ManagementAPI mgmtAPI, IInstanceManagementStateProvider stateProvider, ICertifyInternalApiClient certifyInternalApi)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mgmtAPI = mgmtAPI ?? throw new ArgumentNullException(nameof(mgmtAPI));
+            _client = certifyInternalApi ?? throw new ArgumentNullException(nameof(certifyInternalApi));
             _stateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
 
             _hubInstanceId = _stateProvider.GetManagementHubInstanceId();
@@ -122,16 +129,17 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <returns>Account object</returns>
         [HttpPost("{key?}/new-account")]
         [HttpPost("new-account")]
-        public IActionResult NewAccount([FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> NewAccount([FromBody] JwsPayload payload, string key = default!)
         {
             ValidateKeyIfSupplied(key);
 
             // Decode the JWS payload
-            NewAccountRequest request;
+            AccountRequest request;
             JsonWebKey newAccountKey;
+
             try
             {
-                (request, newAccountKey) = DecodeJwsWithAccountKey<NewAccountRequest>(payload);
+                (request, newAccountKey) = DecodeJwsWithAccountKey<AccountRequest>(payload);
             }
             catch (Exception ex)
             {
@@ -140,18 +148,26 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             }
 
             // Validate External Account Binding if required
-            if (request.ExternalAccountBinding != null)
+            string validatedEabKeyInternalId = null;
+            if (string.IsNullOrEmpty(key))
             {
-                if (!ValidateExternalAccountBinding(request.ExternalAccountBinding))
+                validatedEabKeyInternalId = await ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey);
+                if (string.IsNullOrEmpty(validatedEabKeyInternalId))
                 {
                     return CreateAcmeError(AcmeErrorTypes.ExternalAccountRequired, "Invalid external account binding");
                 }
+            }
+            else
+            {
+                // Validate access key instead
+                return CreateAcmeError(AcmeErrorTypes.ExternalAccountRequired, "Invalid external account binding (key supplied but not supported)");
             }
 
             var accountId = GenerateAccountId();
             var baseUrl = BuildBaseUrl(key);
             var account = new AcmeAccount
             {
+                internalId = validatedEabKeyInternalId,
                 Status = AccountStatus.Valid,
                 Contact = request.Contact,
                 TermsOfServiceAgreed = request.TermsOfServiceAgreed,
@@ -169,6 +185,62 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             AddLocationHeader(BuildAccountUrl(baseUrl, accountId));
 
             return Created(accountKid, account);
+        }
+
+        /// <summary>
+        /// Fetch account or deactivate
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <param name="key"></param>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+       // [HttpPost("{key}/account/{accountId}")]
+        [HttpPost("account/{accountId}")]
+        public async Task<IActionResult> Account([FromBody] JwsPayload payload, string accountId)
+        {
+            //ValidateKeyIfSupplied(key);
+
+            // Decode the JWS payload
+            AccountRequest request;
+            JsonWebKey newAccountKey;
+
+            try
+            {
+                (request, newAccountKey) = DecodeJwsWithAccountKey<AccountRequest>(payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to decode JWS payload for new account request");
+                return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
+            }
+
+            if (request.Status == "deactivated")
+            {
+                var matchedAccountKid = GetAccountKidFromJwsPayload(payload);
+
+                if (!_accounts.TryRemove(matchedAccountKid, out var deactivationAccount))
+                {
+                    return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Account not found");
+                }
+
+                StoreCurrentState();
+
+                // deactivated account
+                return Ok(deactivationAccount);
+            }
+            else
+            {
+                var matchedAccountKid = GetAccountKidFromJwsPayload(payload);
+
+                if (_accounts.TryGetValue(matchedAccountKid, out var acc))
+                {
+                    return Ok(acc);
+                }
+                else
+                {
+                    return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Account not found");
+                }
+            }
         }
 
         /// <summary>
@@ -223,7 +295,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             };
 
             // create temp order in hub using a managed challenge
-            var managedCert = CreateManagedCertificate(orderId, request);
+            var managedCert = PrepareManagedCertificate(orderId, request);
 
             var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
             if (tempCert == null)
@@ -523,7 +595,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             };
         }
 
-        private ManagedCertificate CreateManagedCertificate(string orderId, NewOrderRequest request)
+        private static ManagedCertificate PrepareManagedCertificate(string orderId, NewOrderRequest request)
         {
             var managedCert = new ManagedCertificate
             {
@@ -538,17 +610,18 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 }
             };
 
-            managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>
-            {
+            managedCert.RequestConfig.Challenges =
+            [
                 new() {
-                    ChallengeProvider = "managed" , ChallengeType = "dns-01",
+                    ChallengeProvider = "managed" ,
+                    ChallengeType = "dns-01",
                 }
-            };
+            ];
 
             return managedCert;
         }
 
-        private string FormatCsrPem(string csr)
+        private static string FormatCsrPem(string csr)
         {
             return $"-----BEGIN CERTIFICATE REQUEST-----\n{Convert.ToBase64String(Certify.Management.Util.FromUrlSafeBase64String(csr), Base64FormattingOptions.InsertLineBreaks)}\n-----END CERTIFICATE REQUEST-----";
         }
@@ -574,11 +647,23 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return !string.IsNullOrEmpty(nonce) && _nonces.ContainsKey(nonce);
         }
 
-        private static bool ValidateExternalAccountBinding(ExternalAccountBinding eab)
+        private static string GetAccountKidFromJwsPayload(JwsPayload payload)
         {
-            // In a real implementation, validate the EAB signature
-            // For this stub, we'll just check that it's not null
-            return eab != null && !string.IsNullOrEmpty(eab.Protected);
+            if (payload == null || string.IsNullOrEmpty(payload.Protected))
+            {
+                throw new ArgumentException("JWS payload or protected header is null or empty");
+            }
+
+            var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
+            var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
+            var protectedHeader = JsonConvert.DeserializeObject<JwsProtectedHeader>(protectedJson);
+
+            if (protectedHeader == null)
+            {
+                throw new ArgumentException("Invalid JWS protected header format");
+            }
+
+            return protectedHeader?.Kid ?? throw new ArgumentException("JWS protected header 'kid' is missing");
         }
 
         /// <summary>
@@ -719,6 +804,227 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         }
 
         /// <summary>
+        /// Validates External Account Binding according to RFC 8555 Section 7.3.4
+        /// </summary>
+        /// <param name="eab">External Account Binding JWS</param>
+        /// <param name="accountPublicKey">The public key from the account creation request</param>
+        /// <returns>internal id of matching access token</returns>
+        private async Task<string?> ValidateExternalAccountBinding(JwsPayload eab, JsonWebKey accountPublicKey)
+        {
+            if (eab == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // 1. Decode and validate the EAB protected header
+                var protectedBytes = JwsConvert.FromBase64String(eab.Protected);
+                var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
+                var eabHeader = JsonConvert.DeserializeObject<JwsProtectedHeader>(protectedJson);
+
+                if (eabHeader == null)
+                {
+                    _logger.LogError("Invalid EAB protected header format");
+                    return null;
+                }
+
+                if (string.IsNullOrEmpty(eabHeader.Alg))
+                {
+                    eabHeader.Alg = "HS256"; // Default to HS256 if not specified
+                }
+
+                // 2. Validate EAB header requirements
+                if (!ValidateEabHeader(eabHeader))
+                {
+                    _logger.LogError("Failed to validate EAB header");
+                    return null;
+                }
+
+                if (_consumedEabKeys.ContainsKey(eabHeader.Kid))
+                {
+                    _logger.LogError("EAB Key {keyId} has already been used to register an ACME account and cannot be re-used", eabHeader.Kid);
+                    return null;
+                }
+
+                // 3. Retrieve the EAB secret key using the Key ID
+                var eabMappedAccessToken = await GetEabMappedAccessToken(eabHeader.Kid);
+                if (eabMappedAccessToken == null)
+                {
+                    _logger.LogError("EAB Key ID not found or invalid: {KeyId}", eabHeader.Kid);
+                    return null;
+                }
+
+                // 4. Verify the EAB payload contains the account public key
+                if (!ValidateEabPayload(eab.Payload, accountPublicKey))
+                {
+                    _logger.LogError("EAB payload does not match account public key");
+                    return null;
+                }
+
+                // 5. Verify the EAB signature using HMAC
+                // we used the key id to retrieve the secret key, now we convert it to a base64 encoded sha256 hash for our comparison
+
+                using var sha256 = System.Security.Cryptography.SHA256.Create();
+                var bytes = System.Text.Encoding.UTF8.GetBytes(eabMappedAccessToken.Secret);
+                var hashBytes = sha256.ComputeHash(bytes);
+                var hashedEabKey = Management.Util.ToUrlSafeBase64String(hashBytes);
+
+                if (!VerifyEabSignature(eab, hashedEabKey, eabHeader.Alg))
+                {
+                    _logger.LogError("EAB signature verification failed");
+                    return null;
+                }
+
+                // 6. Mark the EAB key as used (prevent replay)
+                MarkEabKeyAsUsed(eabHeader.Kid);
+
+                _logger.LogInformation("EAB validation successful for Key ID: {KeyId}", eabHeader.Kid);
+                return eabMappedAccessToken.Id;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating External Account Binding");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Validates EAB protected header according to RFC 8555
+        /// </summary>
+        private bool ValidateEabHeader(JwsProtectedHeader header)
+        {
+            // Algorithm must be HMAC-based, default is HS256
+            if (string.IsNullOrEmpty(header.Alg) && !header.Alg.StartsWith("HS"))
+            {
+                _logger.LogError("EAB algorithm must be HMAC-based, got: {Algorithm}", header.Alg);
+                return false;
+            }
+
+            // Key ID is required
+            if (string.IsNullOrEmpty(header.Kid))
+            {
+                _logger.LogError("EAB Key ID (kid) is required");
+                return false;
+            }
+
+            // URL must match the newAccount endpoint
+            var expectedUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
+            if (!string.Equals(header.Url, expectedUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError("EAB URL mismatch. Expected: {Expected}, Got: {Actual}",
+                    expectedUrl, header.Url);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates that EAB payload contains the account public key
+        /// </summary>
+        private bool ValidateEabPayload(string eabPayload, JsonWebKey accountPublicKey)
+        {
+            try
+            {
+                var payloadBytes = JwsConvert.FromBase64String(eabPayload);
+                var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
+                var eabAccountKey = JsonConvert.DeserializeObject<JsonWebKey>(payloadJson);
+
+                // Compare the keys (simplified - in practice, normalize and compare all relevant fields)
+                return eabAccountKey?.Kty == accountPublicKey?.Kty &&
+                       eabAccountKey?.N == accountPublicKey?.N &&
+                       eabAccountKey?.E == accountPublicKey?.E;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to validate EAB payload");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Verify EAB signature using HMAC
+        /// </summary>
+        private bool VerifyEabSignature(JwsPayload eab, string secretKey, string algorithm)
+        {
+            try
+            {
+                // Create signing input: base64url(protected) + "." + base64url(payload)
+                var signingInput = $"{eab.Protected}.{eab.Payload}";
+                var signingInputBytes = System.Text.Encoding.UTF8.GetBytes(signingInput);
+
+                // Decode the signature
+                var signatureBytes = JwsConvert.FromBase64String(eab.Signature);
+
+                // Compute HMAC based on algorithm
+                HMAC hmac = algorithm switch
+                {
+                    "HS256" => new HMACSHA256(JwsConvert.FromBase64String(secretKey)),
+                    "HS384" => new HMACSHA384(JwsConvert.FromBase64String(secretKey)),
+                    "HS512" => new HMACSHA512(JwsConvert.FromBase64String(secretKey)),
+                    _ => throw new ArgumentException($"Unsupported HMAC algorithm: {algorithm}")
+                };
+
+                using (hmac)
+                {
+                    var computedSignature = hmac.ComputeHash(signingInputBytes);
+
+                    // Constant-time comparison to prevent timing attacks
+                    var matchingKey = CryptographicOperations.FixedTimeEquals(signatureBytes, computedSignature);
+
+                    if (matchingKey)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        _logger.LogError("Supplied EAB key hash did not match expected value");
+
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying EAB signature");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Retrieve EAB secret key for the given Key ID
+        /// </summary>
+        private async Task<AccessToken?> GetEabMappedAccessToken(string keyId)
+        {
+            var authContext = new AuthContext
+            {
+                UserId = "system"
+            };
+
+            var tokens = await _client.GetAssignedAccessTokens(authContext);
+            var token = tokens.Single(t => t.AccessTokens.Any(a => a.Id == keyId)).AccessTokens.FirstOrDefault(a => a.Id == keyId);
+
+            if (token == null)
+            {
+                _logger.LogError("EAB Key ID not found: {KeyId}", keyId);
+                return null;
+            }
+
+            return token;
+        }
+
+        /// <summary>
+        /// Mark EAB key as used to prevent replay attacks
+        /// </summary>
+        private void MarkEabKeyAsUsed(string keyId)
+        {
+            // Store used EAB keys with timestamp
+            // Implement appropriate cleanup/expiry logic
+            _consumedEabKeys[keyId] = DateTime.UtcNow.ToString();
+        }
+
+        /// <summary>
         /// Validates a JSON Web Key according to RFC 7517
         /// </summary>
         /// <param name="jwk">JWK to validate</param>
@@ -827,21 +1133,23 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return true;
         }
 
-        private void StoreCurrentState()
+        private static void StoreCurrentState()
         {
             SaveStateToFile("accounts.json", _accounts);
             SaveStateToFile("account-keys.json", _accountKeys);
             SaveStateToFile("orders.json", _orders);
+            SaveStateToFile("consumed-eab-keys.json", _consumedEabKeys);
         }
 
-        private void LoadSavedState()
+        private static void LoadSavedState()
         {
             LoadStateFromFile("accounts.json", _accounts);
             LoadStateFromFile("account-keys.json", _accountKeys);
             LoadStateFromFile("orders.json", _orders);
+            LoadStateFromFile("consumed-eab-keys.json", _consumedEabKeys);
         }
 
-        private void SaveStateToFile<T>(string fileName, ConcurrentDictionary<string, T> data)
+        private static void SaveStateToFile<T>(string fileName, ConcurrentDictionary<string, T> data)
         {
             var settingsPath = EnvironmentUtil.EnsuredAppDataPath(ACME_SERVER_PATH);
             var filePath = Path.Join(settingsPath, fileName);
@@ -849,7 +1157,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             System.IO.File.WriteAllText(filePath, json);
         }
 
-        private void LoadStateFromFile<T>(string fileName, ConcurrentDictionary<string, T> targetDictionary)
+        private static void LoadStateFromFile<T>(string fileName, ConcurrentDictionary<string, T> targetDictionary)
         {
             if (targetDictionary.Count > 0)
             {
@@ -880,47 +1188,3 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         }
     }
 }
-
-/// <summary>
-/// Base64 URL encoding/decoding utility for JWS (JSON Web Signature)
-/// </summary>
-public static class JwsConvert
-{
-    /// <summary>
-    /// Encodes the data to the base64url string without padding.
-    /// </summary>
-    /// <param name="data">The data to encode.</param>
-    /// <returns>The encoded data.</returns>
-    public static string ToBase64String(byte[] data)
-    {
-        var s = Convert.ToBase64String(data); // Regular base64 encoder
-        s = s.Split('=')[0]; // Remove any trailing '='s
-        s = s.Replace('+', '-'); // 62nd char of encoding
-        s = s.Replace('/', '_'); // 63rd char of encoding
-        return s;
-    }
-
-    /// <summary>
-    /// Decodes the base64url string without padding.
-    /// </summary>
-    /// <param name="data">The data.</param>
-    /// <returns>The decoded data.</returns>
-    /// <exception cref="System.ArgumentException">If <paramref name="data"/> is illegal base64 URL string.</exception>
-    public static byte[] FromBase64String(string data)
-    {
-        var s = data;
-        s = s.Replace('-', '+'); // 62nd char of encoding
-        s = s.Replace('_', '/'); // 63rd char of encoding
-        switch (s.Length % 4) // Pad with trailing '='s
-        {
-            case 0: break; // No pad chars in this case
-            case 2: s += "=="; break; // Two pad chars
-            case 3: s += "="; break; // One pad char
-            default:
-                throw new ArgumentException("Invalid base64url string");
-        }
-
-        return Convert.FromBase64String(s); // Standard base64 decoder
-    }
-}
-

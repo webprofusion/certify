@@ -4,6 +4,9 @@ namespace Certify.Server.Hub.Api.Models.Acme
 {
     public class AcmeAccount
     {
+        [JsonPropertyName("internalId")]
+        public string internalId { get; set; }
+
         [JsonPropertyName("status")]
         public AccountStatus Status { get; set; }
 
