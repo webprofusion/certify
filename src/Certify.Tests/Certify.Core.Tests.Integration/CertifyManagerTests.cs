@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -153,7 +154,7 @@ namespace Certify.Core.Tests
         public async Task TestCertifyManagerPerformRenewalTasks()
         {
             // Get results from CertifyManager.PerformRenewalTasks()
-            var renewalPerformed = await _certifyManager.PerformRenewalTasks();
+            var renewalPerformed = await _certifyManager.PerformRenewalTasks(CancellationToken.None);
 
             // Validate return from CertifyManager.PerformRenewalTasks()
             Assert.IsTrue(renewalPerformed, "Expected response from CertifyManager.PerformRenewalTasks() to be true");

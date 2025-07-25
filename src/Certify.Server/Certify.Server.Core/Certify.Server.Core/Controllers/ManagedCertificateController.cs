@@ -176,12 +176,12 @@ namespace Certify.Service.Controllers
 
             if (settings.AwaitResults)
             {
-                return await _certifyManager.PerformRenewAll(settings);
+                return await _certifyManager.PerformRenewAll(settings, CancellationToken.None);
             }
             else
             {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                _certifyManager.PerformRenewAll(settings);
+                _certifyManager.PerformRenewAll(settings, CancellationToken.None);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 return await Task.FromResult(new List<CertificateRequestResult>());
             }

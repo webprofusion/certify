@@ -870,6 +870,7 @@ namespace Certify.Core.Tests.Unit
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagementHubInstanceJoin);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeRequest);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeCleanup);
+            actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedAcmePerformOrder);
 
             Assert.IsTrue(actionsNotAllowedByAdmin.Count == 0, $"Administrator role is not allowed to perform the following actions: {string.Join(", \r\n", actionsNotAllowedByAdmin)}");
         }

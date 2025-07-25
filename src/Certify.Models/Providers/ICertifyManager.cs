@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,9 +52,7 @@ namespace Certify.Management
         Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false);
         Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null, bool resumePaused = false, bool skipRequest = false, bool failOnSkip = false, bool skipTasks = false, bool isInteractive = false, string? reason = null);
         Task<List<DomainOption>> GetDomainOptionsFromSite(StandardServerTypes serverType, string siteId);
-
-        Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken, ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null);
-
+        Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken);
         Task<bool> PerformRenewalTasks(CancellationToken cancellationToken);
 
         Task<bool> PerformDailyMaintenanceTasks();

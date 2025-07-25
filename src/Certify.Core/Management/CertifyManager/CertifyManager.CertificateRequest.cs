@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,13 +26,13 @@ namespace Certify.Management
         private bool _isRenewAllInProgress { get; set; }
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
-        static async Task<T> DelayedTimeoutExceptionTask<T>(TimeSpan delay)
+        private static async Task<T> DelayedTimeoutExceptionTask<T>(TimeSpan delay)
         {
             await Task.Delay(delay);
             throw new TimeoutException();
         }
 
-        static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
+        private static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
         {
             // https://devblogs.microsoft.com/oldnewthing/20220505-00/?p=106585
             return await await Task.WhenAny(task, DelayedTimeoutExceptionTask<T>(timeout));
@@ -108,12 +108,12 @@ namespace Certify.Management
         /// <param name="autoRenewalOnly">  </param>
         /// <param name="progressTrackers">  </param>
         /// <returns>  </returns>
-        public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken, ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null)
+        public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken)
         {
             if (_isRenewAllInProgress)
             {
                 _serviceLog?.Information("Renew All operation is already is progress, skipping..");
-                return await Task.FromResult(new List<CertificateRequestResult>());
+                return [];
             }
 
             _isRenewAllInProgress = true;
@@ -137,16 +137,16 @@ namespace Certify.Management
                     try
                     {
                         var renewalTask = RenewalManager.PerformRenewAll(
-                                            _serviceLog,
-                                            _itemManager,
-                                            settings,
-                                            prefs,
-                                            BeginTrackingProgress,
-                                            ReportProgress, IsManagedCertificateRunning,
-                                            (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
-                                                PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason),
-                                            cancellationToken,
-                                            progressTrackers);
+                                                _serviceLog,
+                                                _itemManager,
+                                                settings,
+                                                prefs,
+                                                ReportProgress, IsManagedCertificateRunning,
+                                                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
+                                                {
+                                                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
+                                                },
+                                                renewalCancellationSource.Token);
 
                         return await TaskWithTimeoutAndException(renewalTask, TimeSpan.FromHours(3));
                     }
@@ -156,7 +156,7 @@ namespace Certify.Management
 
                         _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
 
-                        return new List<CertificateRequestResult>();
+                        return [];
                     }
                     catch (Exception exp)
                     {
@@ -166,7 +166,7 @@ namespace Certify.Management
 
                         _serviceLog?.Error(exp, "PerformRenewalTasks: Error performing periodic renewal tasks: {exp}", exp);
 
-                        return new List<CertificateRequestResult>();
+                        return [];
                     }
                 }
             }
