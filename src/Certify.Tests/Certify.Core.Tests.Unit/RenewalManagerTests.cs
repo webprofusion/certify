@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -36,6 +35,7 @@ namespace Certify.Core.Tests.Unit
             {
                 _items.Clear();
             }
+
             return Task.CompletedTask;
         }
 
@@ -48,6 +48,7 @@ namespace Certify.Core.Tests.Unit
                     _items[item.Id] = CloneItem(item);
                 }
             }
+
             return Task.CompletedTask;
         }
 
@@ -57,6 +58,7 @@ namespace Certify.Core.Tests.Unit
             {
                 _items.Remove(site.Id);
             }
+
             return Task.CompletedTask;
         }
 
@@ -70,6 +72,7 @@ namespace Certify.Core.Tests.Unit
                     _items.Remove(item.Id);
                 }
             }
+
             return Task.CompletedTask;
         }
 
@@ -167,6 +170,36 @@ namespace Certify.Core.Tests.Unit
                 }
             };
         }
+
+        public Task<long> CountAll(ManagedCertificateFilter filter)
+        {
+            lock (_lock)
+            {
+                var query = _items.Values.AsQueryable();
+                // Apply basic filters
+                if (!string.IsNullOrEmpty(filter.Id))
+                {
+                    query = query.Where(i => i.Id == filter.Id);
+                }
+
+                if (!string.IsNullOrEmpty(filter.Name))
+                {
+                    query = query.Where(i => i.Name.Equals(filter.Name, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (!string.IsNullOrEmpty(filter.Keyword))
+                {
+                    query = query.Where(i => i.Name.IndexOf(filter.Keyword, StringComparison.OrdinalIgnoreCase) >= 0);
+                }
+
+                if (filter.IncludeOnlyNextAutoRenew)
+                {
+                    query = query.Where(i => i.IncludeInAutoRenew);
+                }
+
+                return Task.FromResult((long)query.Count());
+            }
+        }
     }
 
     /// <summary>
@@ -262,7 +295,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -289,7 +321,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -316,7 +347,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -348,7 +378,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -387,7 +416,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 targetSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -428,7 +456,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 limitedPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -456,7 +483,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 _defaultSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,
@@ -481,18 +507,18 @@ namespace Certify.Core.Tests.Unit
             await _itemStore.Update(cert2);
             await _itemStore.Update(cert3);
 
+            // Test All mode
+            var allSettings = new RenewalSettings { Mode = RenewalMode.All };
+            var allResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, allSettings, _defaultPrefs, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
+
+            Assert.AreEqual(2, allResults.Count, "All mode should process all certificates");
+
             // Test RenewalsWithErrors mode
             var errorsSettings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors };
-            var errorsResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, errorsSettings, _defaultPrefs, BeginTrackingProgress, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
+            var errorsResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, errorsSettings, _defaultPrefs, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
 
             Assert.AreEqual(1, errorsResults.Count, "RenewalsWithErrors mode should only process certificates with errors");
             Assert.AreEqual("cert2", errorsResults[0].ManagedItem.Id, "Should process the certificate with errors");
-
-            // Test All mode
-            var allSettings = new RenewalSettings { Mode = RenewalMode.All };
-            var allResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, allSettings, _defaultPrefs, BeginTrackingProgress, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
-
-            Assert.AreEqual(2, allResults.Count, "All mode should process all certificates");
         }
 
         #region Helper Methods
@@ -522,7 +548,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Mock implementation - simulate successful certificate request
             var result = new CertificateRequestResult(managedCertificate, true, $"Mock renewal successful: {renewalReason}");
-            
+
             // Simulate progress reporting
             progress?.Report(new RequestProgressState(RequestState.Running, "Mock certificate request in progress", managedCertificate));
             progress?.Report(new RequestProgressState(RequestState.Success, "Mock certificate request completed", managedCertificate));
@@ -572,7 +598,6 @@ namespace Certify.Core.Tests.Unit
                 _itemStore,
                 newItemsSettings,
                 _defaultPrefs,
-                BeginTrackingProgress,
                 ReportProgress,
                 IsManagedCertificateRunning,
                 PerformCertificateRequest,

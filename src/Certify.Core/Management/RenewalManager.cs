@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Providers;
@@ -18,18 +19,11 @@ namespace Certify.Management
 
         private const int DEFAULT_CERTIFICATE_REQUEST_TASKS = 50;
 
-        public static async Task<List<CertificateRequestResult>> PerformRenewAll(
-            ILog _serviceLog,
-            IManagedItemStore _itemManager,
-            RenewalSettings settings,
-            RenewalPrefs prefs,
-            Action<RequestProgressState> BeginTrackingProgress,
-            Action<IProgress<RequestProgressState>, RequestProgressState, bool> ReportProgress,
-            Func<string, Task<bool>> IsManagedCertificateRunning,
-            Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> PerformCertificateRequest,
-            CancellationToken cancellationToken,
-            ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null
-            )
+        private static Progress<RequestProgressState> SetupProgressTracker(
+            ManagedCertificate item, string renewalReason,
+            ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers,
+            Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress
+        )
         {
 
             // track progress
@@ -51,7 +45,8 @@ namespace Certify.Management
                 Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress,
                 Func<string, Task<bool>> isManagedCertificateRunning,
                 Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> performCertificateRequest,
-                ConcurrentDictionary<string, Progress<RequestProgressState>> progressTrackers = null
+                CancellationToken cancellationToken
+
                 )
         {
 
@@ -63,23 +58,16 @@ namespace Certify.Management
 
             var renewalTasks = new List<Task<CertificateRequestResult>>();
 
-            if (progressTrackers == null)
-            {
-                progressTrackers = new ConcurrentDictionary<string, Progress<RequestProgressState>>();
-            }
+            var progressTrackers = new ConcurrentDictionary<string, Progress<RequestProgressState>>();
 
             List<ManagedCertificate> managedCertificateBatch;
 
             if (settings.TargetManagedCertificates?.Any() == true)
             {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _serviceLog?.Information("Renewal operation cancelled by user or batch timeout.");
-                    return new List<CertificateRequestResult>();
-                }
+                // prepare renewal batch using just the selected set of target items
+                var targetCerts = new List<ManagedCertificate>();
 
-                // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks
-                if (managedCertificate.LastRenewalStatus != RequestState.Paused)
+                foreach (var id in settings.TargetManagedCertificates)
                 {
                     var item = await itemManager.GetById(id);
                     if (item != null)
@@ -141,29 +129,44 @@ namespace Certify.Management
                                       .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-1));
                     }*/
 
-                        // limit the number of renewal tasks to attempt in this pass either to custom setting or max allowed
-                        if (
-                            (maxRenewalTasks == 0 && numRenewalTasks < DEFAULT_CERTIFICATE_REQUEST_TASKS)
-                            ||
-                            (maxRenewalTasks > 0 && numRenewalTasks < maxRenewalTasks && numRenewalTasks < MAX_CERTIFICATE_REQUEST_TASKS)
-                            )
-                        {
-                            var t =
-                               new Task<CertificateRequestResult>(
-                                () => PerformCertificateRequest(managedCertificate, tracker, settings.IsPreviewMode, renewalReason).Result,
-                                cancellationToken: cancellationToken,
-                                TaskCreationOptions.LongRunning
-                           );
+                var totalRenewalCandidates = await itemManager.CountAll(filter);
 
-                            renewalTasks.Add(t);
+                var renewalIntervalDays = prefs.RenewalIntervalDays;
+                var renewalIntervalMode = prefs.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
 
-                            ReportProgress((IProgress<RequestProgressState>)progressTrackers[managedCertificate.Id], new RequestProgressState(RequestState.Queued, $"Queued for renewal: {renewalDueCheck.Reason}", managedCertificate), false);
-                        }
-                        else
+                filter.PageSize = MAX_CERTIFICATE_REQUEST_TASKS;
+                filter.PageIndex = 0;
+
+                var batch = new List<ManagedCertificate>();
+                var resultsRemaining = totalRenewalCandidates;
+
+                // identify items we will attempt and begin tracking progress
+                while (batch.Count < maxRenewalTasks && resultsRemaining > 0)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        serviceLog?.Information("Renewal operation cancelled by user or batch timeout.");
+                        return [];
+                    }
+
+                    var results = await itemManager.Find(filter);
+                    resultsRemaining = results.Count;
+
+                    foreach (var item in results)
+                    {
+                        resultsRemaining--;
+
+                        if (batch.Count < maxRenewalTasks)
                         {
                             // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks
                             if (item.LastRenewalStatus != RequestState.Paused)
                             {
+
+                                if (settings.Mode == RenewalMode.RenewalsWithErrors && item.LastRenewalStatus != RequestState.Error)
+                                {
+                                    // if we are only renewing items with errors, skip this one
+                                    continue;
+                                }
                                 // check if item is due for renewal based on current settings
 
                                 var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
@@ -199,7 +202,8 @@ namespace Certify.Management
                                     renewalTasks.Add(
                                         new Task<CertificateRequestResult>(
                                                 () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
-                                                TaskCreationOptions.LongRunning
+                                                    cancellationToken: cancellationToken,
+                                                    TaskCreationOptions.LongRunning
                                                 )
                                         );
                                 }
@@ -222,7 +226,7 @@ namespace Certify.Management
             {
                 //nothing to do
 
-                return new List<CertificateRequestResult>();
+                return [];
             }
             else
             {
@@ -241,6 +245,12 @@ namespace Certify.Management
                 // perform all renewal tasks one after the other
                 foreach (var t in renewalTasks)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        serviceLog?.Information("Renewal operation cancelled by user or batch timeout.");
+                        return results;
+                    }
+
                     t.RunSynchronously();
                     results.Add(await t);
                 }

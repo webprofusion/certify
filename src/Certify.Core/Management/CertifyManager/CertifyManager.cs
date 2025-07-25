@@ -321,10 +321,6 @@ namespace Certify.Management
             };
             _initTimer.Start();
 
-            _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every n seconds
-            _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
-            _heartbeatTimer.Start();
-
             // n second job timer (reporting etc)
             _heartbeatTimer = new System.Timers.Timer(30 * 1000); // every n seconds
             _heartbeatTimer.Elapsed += _heartbeatTimer_Elapsed;
