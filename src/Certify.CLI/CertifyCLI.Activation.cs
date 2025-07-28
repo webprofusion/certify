@@ -136,5 +136,29 @@ namespace Certify.CLI
                 return false;
             }
         }
+
+        internal async Task JoinHub(string[] args)
+        {
+            if (args.Length < 5)
+            {
+                Console.WriteLine("Not enough arguments");
+                return;
+            }
+
+            var url = args[2];
+            var clientid = args[3];
+            var secret = args[4];
+
+            var result = await _certifyClient.JoinManagementHub(new Models.Hub.HubJoiningClientSecret { ClientId = clientid, Secret = secret, Url = url });
+
+            if (result.IsSuccess)
+            {
+                Console.WriteLine("Joined Hub OK");
+            }
+            else
+            {
+                Console.WriteLine(result.Message);
+            }
+        }
     }
 }
