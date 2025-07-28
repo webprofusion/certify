@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -122,12 +122,7 @@ namespace Certify.Management
                         managedCertificateBatch = managedCertificateBatch.Where(s => s.DateRenewed == null)
                                       .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-48));
                     }
-                    else if (settings.Mode == RenewalMode.RenewalsWithErrors)
-                    {
-                        // items with current errors in order of oldest renewal attempt first
-                        managedCertificateBatch = managedCertificateBatch.Where(s => s.LastRenewalStatus == RequestState.Error)
-                                      .OrderBy(s => s.DateLastRenewalAttempt ?? DateTimeOffset.UtcNow.AddHours(-1));
-                    }*/
+                   */
 
                 var totalRenewalCandidates = await itemManager.CountAll(filter);
 
