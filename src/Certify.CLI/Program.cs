@@ -164,6 +164,11 @@ namespace Certify.CLI
                     await p.Deactivate(args);
                 }
 
+                if (command == "hub" && args.Contains("join"))
+                {
+                    await p.JoinHub(args);
+                }
+
                 if (command == "acmeaccount" && args.Contains("add"))
                 {
                     await p.AddACMEAccount(args);
