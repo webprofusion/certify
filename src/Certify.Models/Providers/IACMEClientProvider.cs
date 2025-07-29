@@ -30,7 +30,7 @@ namespace Certify.Models.Providers
 
         Task<PendingAuthorization> CheckValidationCompleted(ILog log, string challengeType, PendingAuthorization pendingAuthorization);
 
-        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs, bool includeCommonName);
+        Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs);
 
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
 
