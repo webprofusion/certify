@@ -347,5 +347,30 @@ namespace Certify.Server.Hub.Api.Controllers
                 return new BadRequestResult();
             }
         }
+
+        /// <summary>
+        /// Reset status of a managed item to allow it to be re-processed.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        /// <param name="id">managed item id</param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("reset")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
+        public async Task<IActionResult> ResetStatus(string instanceId, string id)
+        {
+
+            var results = await _mgmtAPI.ResetManagedItemStatus(instanceId, id, CurrentAuthContext);
+
+            if (results != null)
+            {
+                return new OkObjectResult(results);
+            }
+            else
+            {
+                return new BadRequestResult();
+            }
+        }
     }
 }

@@ -472,6 +472,25 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        internal async Task<ManagedCertificate> ResetManagedCertificateStatus(string id)
+        {
+            var result = await _certifyClient.ResetManagedCertificateStatus(id);
+            if (result != null)
+            {
+                // refresh managed cert in UI
+                var updatedManagedCertificate = await _certifyClient.GetManagedCertificate(id);
+                updatedManagedCertificate.IsChanged = false;
+                // add/update site in our local cache
+                await UpdatedCachedManagedCertificate(updatedManagedCertificate);
+
+                return updatedManagedCertificate;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         /// <summary>
         /// Perform revoke for given managed certificate
         /// </summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -80,6 +80,7 @@ namespace Certify.Client
         Task<List<ActionStep>> PerformDeployment(string managedCertificateId, string taskId, bool isPreviewOnly, bool forceTaskExecute, AuthContext authContext = null);
         Task<List<ActionResult>> ValidateDeploymentTask(DeploymentTaskValidationInfo info, AuthContext authContext = null);
         Task<LogItem[]> GetItemLog(string id, int limit, AuthContext authContext = null);
+        Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null);
         #endregion Managed Certificates
 
         #region Accounts

@@ -174,6 +174,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> AddHubItemTag(ItemTag tag, AuthContext authContext) => _tagController(authContext).AddTag(tag);
         public Task<ICollection<ItemTag>> GetHubItemTags(AuthContext authContext) => _tagController(authContext).GetTags();
         public Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

@@ -45,6 +45,7 @@ namespace Certify.Management
         Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority certificateAuthority);
         Task<List<CertificateAuthority>> GetCertificateAuthorities();
         Task<StatusMessage> RevokeCertificate(ILog log, ManagedCertificate managedCertificate);
+        Task<ManagedCertificate> ResetManagedItemStatus(string id, bool updateStatusReports = false);
         Task<CertificateRequestResult> PerformDummyCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null);
         Task<ActionResult> RemoveCertificateAuthority(string id);
         Task<List<SiteInfo>> GetPrimaryWebSites(StandardServerTypes serverType, bool ignoreStoppedSites, string? itemId = null);

@@ -414,7 +414,7 @@
                                 Margin="0,4,0,0"
                                 HorizontalAlignment="Left"
                                 Click="ResetFailureInfo_Click">
-                                Reset Failure Status
+                                Reset Item Status
                             </Button>
                             <Button
                                 x:Name="ChallengeCleanup"

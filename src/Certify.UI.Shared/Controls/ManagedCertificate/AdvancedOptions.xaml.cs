@@ -235,20 +235,20 @@ namespace Certify.UI.Controls.ManagedCertificate
             ItemViewModel.RaisePropertyChangedEvent(null);
         }
 
-        private void ResetFailureInfo_Click(object sender, RoutedEventArgs e)
+        private async void ResetFailureInfo_Click(object sender, RoutedEventArgs e)
         {
             // clear all items which affect renewal status decisions
-            ItemViewModel.SelectedItem.RenewalFailureCount = 0;
-            ItemViewModel.SelectedItem.RenewalFailureMessage = null;
-            ItemViewModel.SelectedItem.LastAttemptedCA = null;
-            ItemViewModel.SelectedItem.CurrentOrderUri = null;
-            ItemViewModel.SelectedItem.ARICertificateId = null;
-            ItemViewModel.SelectedItem.DateNextScheduledRenewalAttempt = null;
-            ItemViewModel.SelectedItem.DateLastOcspCheck = null;
-            ItemViewModel.SelectedItem.DateLastRenewalInfoCheck = null;
-            ItemViewModel.SelectedItem.DateLastRenewalAttempt = null;
-            ItemViewModel.SelectedItem.LastRenewalStatus = Models.RequestState.Success;
+            var result = await AppViewModel.Current.ResetManagedCertificateStatus(ItemViewModel.SelectedItem.Id);
 
+            if (result != null)
+            {
+                ItemViewModel.SelectedItem = result;
+                AppViewModel.Current.ShowNotification("Managed Certificate Status Reset");
+            }
+            else
+            {
+                AppViewModel.Current.ShowNotification("Managed Certificate Status Reset Failed", Shared.NotificationType.Error);
+            }
         }
 
         private async void ChallengeCleanup_Click(object sender, RoutedEventArgs e)
