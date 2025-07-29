@@ -501,11 +501,7 @@ namespace Certify.Management
                 var managedCertArg = args.FirstOrDefault(a => a.Key == "managedCert");
                 var managedCert = JsonSerializer.Deserialize<ManagedCertificate>(managedCertArg.Value, JsonOptions.DefaultJsonSerializerOptions);
 
-                var item = await UpdateManagedCertificate(managedCert);
-
-                val = item;
-
-                ReportManagedItemUpdateToMgmtHub(item);
+                val = await UpdateManagedCertificate(managedCert);
             }
             else if (arg.CommandType == ManagementHubCommands.RemoveManagedItem)
             {
@@ -513,14 +509,7 @@ namespace Certify.Management
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
 
-                var actionResult = await DeleteManagedCertificate(managedCertIdArg.Value);
-
-                val = actionResult;
-
-                if (actionResult.IsSuccess)
-                {
-                    ReportManagedItemDeleteToMgmtHub(managedCertIdArg.Value);
-                }
+                val = await DeleteManagedCertificate(managedCertIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.TestManagedItemConfiguration)
             {
@@ -532,7 +521,14 @@ namespace Certify.Management
                 var log = ManagedCertificateLog.GetLogger(managedCert.Id, _loggingLevelSwitch);
 
                 val = await TestChallenge(log, managedCert, isPreviewMode: true);
+            }
+            else if (arg.CommandType == ManagementHubCommands.ResetManagedItemStatus)
+            {
+                // test challenge response config for a single managed item 
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
 
+                val = await ResetManagedItemStatus(managedCertIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.PerformManagedItemRequest)
             {

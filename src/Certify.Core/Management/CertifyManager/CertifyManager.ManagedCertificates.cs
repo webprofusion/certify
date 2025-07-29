@@ -263,6 +263,8 @@ namespace Certify.Management
 
             _statusReporting?.ReportManagedCertificateUpdated(managedCert);
 
+            ReportManagedItemUpdateToMgmtHub(managedCert);
+
             return managedCert;
         }
 
@@ -435,11 +437,52 @@ namespace Certify.Management
                         await ReportManagedCertificateStatus(item, removeReport: true);
                     }
 
+                    ReportManagedItemDeleteToMgmtHub(id);
+
                     return new ActionResult { IsSuccess = true, Message = "Deleted" };
                 }
             }
 
             return new ActionResult { IsSuccess = false, Message = "Delete failed." };
+        }
+
+        /// <summary>
+        /// Reset failure and other current status for a managed certificate item
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns>Updated managed item. Null if not found</returns>
+        public async Task<ManagedCertificate> ResetManagedItemStatus(string id, bool updateStatusReports = false)
+        {
+            if (!string.IsNullOrEmpty(id))
+            {
+                var item = await _itemManager.GetById(id);
+
+                if (item != null)
+                {
+                    item.RenewalFailureCount = 0;
+                    item.RenewalFailureMessage = null;
+                    item.LastAttemptedCA = null;
+                    item.CurrentOrderUri = null;
+                    item.ARICertificateId = null;
+                    item.DateNextScheduledRenewalAttempt = null;
+                    item.DateLastOcspCheck = null;
+                    item.DateLastRenewalInfoCheck = null;
+                    item.DateLastRenewalAttempt = null;
+                    item.LastRenewalStatus = Models.RequestState.Success;
+                    await _itemManager.Update(item);
+
+                    if (updateStatusReports && (item.RequestConfig?.EnableFailureNotifications == true && CoreAppSettings.Current.EnableStatusReporting))
+                    {
+                        await ReportManagedCertificateStatus(item);
+                    }
+
+                    ReportManagedItemUpdateToMgmtHub(item);
+
+                    return item;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

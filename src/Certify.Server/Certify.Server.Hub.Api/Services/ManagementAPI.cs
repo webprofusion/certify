@@ -616,6 +616,16 @@ namespace Certify.Server.Hub.Api.Services
             await SendCommandWithNoResult(instanceId, cmd);
         }
 
+        internal async Task<ManagedCertificate?> ResetManagedItemStatus(string instanceId, string managedCertId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                 new("instanceId", instanceId) ,
+                 new("managedCertId",managedCertId)
+             };
+
+            return await PerformInstanceCommandTaskWithResult<ManagedCertificate?>(instanceId, args, ManagementHubCommands.ResetManagedItemStatus);
+        }
+
         /// <summary>
         /// Performs an import operation on the target instance.
         /// </summary>
