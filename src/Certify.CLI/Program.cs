@@ -18,14 +18,22 @@ namespace Certify.CLI
             {
                 p.ShowHelp();
                 p.ShowACMEInfo();
+
+                return 0;
             }
             else
             {
                 var command = "";
 
-                if (args.Any())
+                if (args.Length != 0)
                 {
                     command = args[0].ToLower().Trim();
+
+                    if (command.StartsWith("--"))
+                    {
+                        // remove leading '--' if present
+                        command = command.Substring(2);
+                    }
                 }
 
                 if (command == "storeserverconfig")
@@ -40,9 +48,9 @@ namespace Certify.CLI
                     return await StartHttpChallengeServer(args);
                 }
 
-                p.ShowVersion();
+                var serviceAvailable = await p.IsServiceAvailable();
 
-                if (!p.IsServiceAvailable().Result)
+                if (!serviceAvailable)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                     System.Console.WriteLine("Certify Certificate Manager service not started.");
@@ -99,7 +107,7 @@ namespace Certify.CLI
                 if (command == "list")
                 {
                     // list managed sites and status
-                    p.ListManagedCertificates(args);
+                    await p.ListManagedCertificates(args);
                 }
 
                 if (command == "diag")

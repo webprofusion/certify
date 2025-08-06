@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -132,28 +132,9 @@ namespace Certify.CLI
             }
         }
 
-        internal void ListManagedCertificates(string[] args)
+        internal async Task ListManagedCertificates(string[] args)
         {
-            var managedCertificates = _certifyClient.GetManagedCertificates(new ManagedCertificateFilter()).Result;
-
-            /*
-             * 
-            // find managed certs where primary domain is selected twice
-            //var results = managedCertificates.Where(c => (c.DomainOptions.Any(d => d.Domain.Contains(keyword) && (d.IsPrimaryDomain || d.IsSelected))) || c.RequestConfig.SubjectAlternativeNames.Any(s=>s.Contains(keyword))).ToList();
-
-            var tooManyPrimary = managedCertificates.Where(c => c.DomainOptions.Count(d => d.IsPrimaryDomain) > 1);
-
-            System.Diagnostics.Debug.WriteLine(tooManyPrimary.Count());
-
-            foreach(var item in tooManyPrimary.OrderBy(i=>i.Id))
-            {
-                System.Diagnostics.Debug.WriteLine($"{item.Id}; {item.DomainOptions.FirstOrDefault(d => d.IsPrimaryDomain && d.IsSelected)?.Domain}; {item.DomainOptions.FirstOrDefault(d=>d.IsPrimaryDomain && !d.IsSelected)?.Domain};");
-            }
-
-            var unmatchedConfig = managedCertificates.Where(c => c.RequestConfig!=null && c.DomainOptions!=null  && c.RequestConfig.PrimaryDomain!= (c.DomainOptions.FirstOrDefault(d =>d.IsPrimaryDomain && d.IsSelected)?.Domain??""));
-
-            System.Diagnostics.Debug.WriteLine(unmatchedConfig.Count());
-            */
+            var managedCertificates = await _certifyClient.GetManagedCertificates(new ManagedCertificateFilter());
 
             // check for path argument and if present output json file
             var jsonArgIndex = Array.IndexOf(args, "--json");
