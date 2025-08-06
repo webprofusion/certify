@@ -6,7 +6,7 @@
         <OutputType>Exe</OutputType>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>latest</LangVersion>
-
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
     </PropertyGroup>
     <PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
         <PublishSingleFile>true</PublishSingleFile>
@@ -55,10 +55,15 @@
 
         <TrimmerRootAssembly Include="Certify.Models" />
         <TrimmerRootAssembly Include="Certify.Client" />
+        <TrimmerRootAssembly Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>
         <None Include="App.config" />
         <None Include="app.manifest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     </ItemGroup>
 </Project>
