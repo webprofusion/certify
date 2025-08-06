@@ -126,8 +126,12 @@
                             <TextBlock Style="{StaticResource Instructions}">By default a CSR (Certificate Signing Request) will be generated with a new Private Key every time the certificate is requested or renewed.</TextBlock>
                             <CheckBox
                                 Margin="8,8,0,8"
-                                Content="Require OCSP Must-Staple extension"
+                                Content="Require OCSP Must-Staple extension (deprecated)"
                                 IsChecked="{Binding SelectedItem.RequestConfig.RequireOcspMustStaple}" />
+                            <CheckBox
+                                Margin="8,8,0,8"
+                                Content="Include CN in generated CSR (deprecated)"
+                                IsChecked="{Binding SelectedItem.RequestConfig.IncludeCN}" />
 
                             <TextBlock Style="{StaticResource Instructions}">You can optionally use a custom CSR:</TextBlock>
                             <Button
