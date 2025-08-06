@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Management;
@@ -11,7 +10,7 @@ namespace Certify.CLI
     {
         private TelemetryManager _tc = null;
         private ICertifyClient _certifyClient = null;
-        private Preferences _prefs = new Preferences();
+        private Preferences _prefs = new();
         private PluginManager _pluginManager { get; set; }
 
         public CertifyCLI()
@@ -43,7 +42,7 @@ namespace Certify.CLI
             {
                 _pluginManager = new Management.PluginManager();
 
-                _pluginManager.LoadPlugins(new List<string> { PluginManager.PLUGINS_LICENSING });
+                _pluginManager.LoadPlugins([PluginManager.PLUGINS_LICENSING]);
             }
         }
 
@@ -76,13 +75,23 @@ namespace Certify.CLI
             }
         }
 
-        internal void ShowVersion()
+        internal async Task ShowVersion(bool versionOnly = false)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            System.Console.WriteLine("Certify Certificate Manager - CLI Certify.Core v" + GetAppVersion().Result.Replace("\"", ""));
-            Console.ForegroundColor = ConsoleColor.White;
-            System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
-            System.Console.WriteLine("");
+            var version = await GetAppVersion();
+
+            if (versionOnly)
+            {
+                System.Console.WriteLine(version.Replace("\"", ""));
+                return;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                System.Console.WriteLine("Certify Certificate Manager - CLI Certify.Core v" + version.Replace("\"", ""));
+                Console.ForegroundColor = ConsoleColor.White;
+                System.Console.WriteLine("For more information see " + GetAppWebsiteURL());
+                System.Console.WriteLine("");
+            }
         }
 
         internal void ShowACMEInfo()
@@ -112,7 +121,6 @@ namespace Certify.CLI
             System.Console.WriteLine("certify backup import preview <full filename> <encryption secret> : import a backup file using the given secret password for encryption. 'preview' is optional and is used to test a backup without importing anything.");
             System.Console.WriteLine("\n\n");
             System.Console.WriteLine("For help, see the docs at https://docs.certifytheweb.com");
-
         }
     }
 }

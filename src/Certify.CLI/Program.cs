@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -52,7 +52,11 @@ namespace Certify.CLI
 
                 await p.LoadPreferences();
 
-                p.ShowACMEInfo();
+                if (command == "version")
+                {
+                    await p.ShowVersion(versionOnly: true);
+                    return 0;
+                }
 
                 if (command == "renew")
                 {
