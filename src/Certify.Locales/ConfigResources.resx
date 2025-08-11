@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AppName" xml:space="preserve">
-    <value>Certify Certificate Manager (alpha)</value>
+    <value>Certify Certificate Manager</value>
     <comment>Do not translate</comment>
   </data>
   <data name="Credits" xml:space="preserve">

@@ -8,7 +8,6 @@ namespace Certify.Core.Tests.Unit
     public class RdapTests
     {
         [TestMethod, Description("Test domain TLD check")]
-        [DataTestMethod]
         [DataRow("example.com", "com")]
         [DataRow("www.example.com", "com")]
         [DataRow("www.example.co.uk", "uk")]
@@ -25,7 +24,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test domain normalisation")]
-        [DataTestMethod]
         [DataRow("example.com", "example.com")]
         [DataRow("www.example.com", "example.com")]
         [DataRow("www.example.co.uk", "example.co.uk")]

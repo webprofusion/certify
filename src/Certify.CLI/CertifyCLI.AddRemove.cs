@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -52,7 +51,7 @@ namespace Certify.CLI
                         return;
                     }
 
-                    // optional load a single managed certificate tempalte from json
+                    // optional load a single managed certificate template from json
                     ManagedCertificate templateCert = null;
 
                     var jsonArgIndex = Array.IndexOf(args, "--template");
@@ -92,12 +91,11 @@ namespace Certify.CLI
                             ItemType = ManagedCertificateType.SSL_ACME
                         };
 
-                        managedCert.RequestConfig.Challenges = new System.Collections.ObjectModel.ObservableCollection<CertRequestChallengeConfig>(
-                                        new List<CertRequestChallengeConfig> {
+                        managedCert.RequestConfig.Challenges = [
                                         new CertRequestChallengeConfig {
                                             ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_HTTP
                                         }
-                                    });
+                                    ];
 
                         managedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
                     }
