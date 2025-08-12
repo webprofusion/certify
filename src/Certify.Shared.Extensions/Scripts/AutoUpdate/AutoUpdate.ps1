@@ -14,7 +14,7 @@ New-EventLog –LogName "Application" –Source $eventLogAppName -ErrorAction Si
 
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-$installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object DisplayName -Match "^Certify The Web.*"
+$installedVersion = Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object { $_.DisplayName -match "^(Certify The Web|Certify Certificate Manager).*" }
 $installedVersionString = $installedVersion.DisplayVersion
 
 $apiUrl = "https://api.certifytheweb.com/v1/update?context=autoupdate&version=" + $installedVersionString
