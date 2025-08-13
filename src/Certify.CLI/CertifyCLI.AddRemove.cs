@@ -43,8 +43,6 @@ namespace Certify.CLI
 
                 if (managedCertId == "new")
                 {
-                    InitPlugins();
-
                     if (!IsRegistered())
                     {
                         Console.WriteLine("CLI automation is only available in the licensed version of this application.");

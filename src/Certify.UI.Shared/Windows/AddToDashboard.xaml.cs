@@ -41,7 +41,7 @@ namespace Certify.UI.Windows
             ValidateKey.IsEnabled = false;
             Mouse.OverrideCursor = Cursors.Wait;
 
-            var dashboardClient = ViewModel.AppViewModel.Current.PluginManager?.DashboardClient;
+            var dashboardClient = ViewModel.AppViewModel.Current.DashboardClient;
 
             if (dashboardClient != null)
             {

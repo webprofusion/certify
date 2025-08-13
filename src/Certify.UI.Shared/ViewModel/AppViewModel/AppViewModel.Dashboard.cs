@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Plugins;
+using Certify.Providers.Internal;
 using PropertyChanged;
 
 namespace Certify.UI.ViewModel
 {
     public partial class AppViewModel : BindableBase
     {
+        private readonly ILicensingManager _licensingManager = new LicensingManager();
+        private IDashboardClient _dashboardClient = new Providers.Internal.DashboardClient();
         /// <summary>
         /// If true, an app update is currently available
         /// </summary>
@@ -16,6 +20,9 @@ namespace Certify.UI.ViewModel
         /// If an update is available this will contain more info about the new update 
         /// </summary>
         public UpdateCheck UpdateCheckResult { get; set; }
+
+        public IDashboardClient DashboardClient { get => _dashboardClient; }
+        public ILicensingManager LicensingManager { get => _licensingManager; }
 
         /// <summary>
         /// Perform an app update check via service
@@ -44,9 +51,8 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> CheckLicenseIsActive()
         {
-            var licensingManager = PluginManager?.LicensingManager;
 
-            if (licensingManager != null && !await licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))
+            if (_licensingManager != null && !await _licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))
             {
                 return false;
             }
@@ -58,7 +64,7 @@ namespace Certify.UI.ViewModel
 
         public bool IsInstallBeforeDate(DateTime target)
         {
-            var licensingManager = PluginManager?.LicensingManager;
+            var licensingManager = _licensingManager;
 
             var installDate = licensingManager?.GetInstallDate(EnvironmentUtil.EnsuredAppDataPath());
 

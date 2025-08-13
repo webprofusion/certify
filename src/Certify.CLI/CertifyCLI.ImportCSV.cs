@@ -12,8 +12,6 @@ namespace Certify.CLI
     {
         public async Task ImportCSV(string[] args)
         {
-            InitPlugins();
-
             if (!IsRegistered())
             {
                 Console.WriteLine("Import is only available in the licensed version of this application.");

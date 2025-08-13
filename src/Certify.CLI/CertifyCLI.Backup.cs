@@ -11,8 +11,6 @@ namespace Certify.CLI
     {
         public async Task PerformBackupExport(string[] args)
         {
-            InitPlugins();
-
             var filename = args[args.Length - 2];
             var secret = args[args.Length - 1];
 
@@ -42,8 +40,6 @@ namespace Certify.CLI
 
         public async Task PerformBackupImport(string[] args)
         {
-            InitPlugins();
-
             var filename = args[args.Length - 2];
             var secret = args[args.Length - 1];
 

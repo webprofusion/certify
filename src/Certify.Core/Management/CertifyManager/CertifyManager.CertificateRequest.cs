@@ -621,12 +621,12 @@ namespace Certify.Management
                     // if manual DNS and notification enabled, inform user (one or more)
                     if (CoreAppSettings.Current.EnableStatusReporting)
                     {
-                        if (_pluginManager.DashboardClient != null)
+                        if (_dashboardClient != null)
                         {
                             // fire notification via API if user not interactive
                             if (!isInteractive)
                             {
-                                await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                                await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
                                 {
                                     InstanceId = managedCertificate.InstanceId,
                                     ManagedItemId = managedCertificate.Id,

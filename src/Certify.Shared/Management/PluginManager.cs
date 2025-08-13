@@ -27,16 +27,12 @@ namespace Certify.Management
     }
     public class PluginManager
     {
-        public const string PLUGINS_LICENSING = "Licensing";
-        public const string PLUGINS_DASHBOARD = "DashboardClient";
         public const string PLUGINS_DEPLOYMENT_TASKS = "DeploymentTasks";
         public const string PLUGINS_CERTIFICATE_MANAGERS = "CertificateManagers";
         public const string PLUGINS_DNS_PROVIDERS = "DnsProviders";
         public const string PLUGINS_SERVER_PROVIDERS = "ServerProviders";
         public const string PLUGINS_DATASTORE_PROVIDERS = "DataStores";
 
-        public ILicensingManager LicensingManager { get; set; }
-        public IDashboardClient DashboardClient { get; set; }
         public List<IDeploymentTaskProviderPlugin> DeploymentTaskProviders { get; set; }
         public List<ICertificateManagerProviderPlugin> CertificateManagerProviders { get; set; }
         public List<IServerProviderPlugin> ServerProviders { get; set; }
@@ -177,16 +173,6 @@ namespace Certify.Management
         public void LoadPlugins(List<string> includeSet, bool usePluginSubfolder = true)
         {
             var s = Stopwatch.StartNew();
-
-            if (includeSet.Contains(PLUGINS_LICENSING))
-            {
-                LicensingManager = LoadPlugin<ILicensingManager>("Plugin.Licensing.dll");
-            }
-
-            if (includeSet.Contains(PLUGINS_DASHBOARD))
-            {
-                DashboardClient = LoadPlugin<IDashboardClient>("Plugin.DashboardClient.dll");
-            }
 
             if (includeSet.Contains(PLUGINS_DEPLOYMENT_TASKS))
             {

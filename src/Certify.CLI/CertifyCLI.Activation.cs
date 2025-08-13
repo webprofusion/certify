@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Certify.Models;
 
@@ -47,17 +47,15 @@ namespace Certify.CLI
 
         private async Task<Models.Shared.LicenseKeyInstallResult> Activate(string email, string key)
         {
-            InitPlugins();
 
-            var licensingManager = _pluginManager.LicensingManager;
-            if (licensingManager != null)
+            if (_licensingManager != null)
             {
                 var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 
-                var activated = await licensingManager.IsInstallActive(ProductTypeID, settingsPath);
+                var activated = await _licensingManager.IsInstallActive(ProductTypeID, settingsPath);
                 if (!activated)
                 {
-                    var validationResult = await licensingManager.Validate(ProductTypeID, email, key);
+                    var validationResult = await _licensingManager.Validate(ProductTypeID, email, key);
                     if (validationResult.IsValid)
                     {
                         var instance = new Models.Shared.RegisteredInstance
@@ -67,11 +65,11 @@ namespace Certify.CLI
                         };
 
                         // activate install
-                        var result = await licensingManager.RegisterInstall(ProductTypeID, email, key, instance);
+                        var result = await _licensingManager.RegisterInstall(ProductTypeID, email, key, instance);
 
                         if (result.IsSuccess)
                         {
-                            licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath);
+                            _licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath);
                         }
 
                         return result;
@@ -116,10 +114,7 @@ namespace Certify.CLI
 
         private async Task<bool> Deactivate(string email)
         {
-            InitPlugins();
-
-            var licensingManager = _pluginManager.LicensingManager;
-            if (licensingManager != null)
+            if (_licensingManager != null)
             {
                 var instance = new Models.Shared.RegisteredInstance
                 {
@@ -127,7 +122,7 @@ namespace Certify.CLI
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var deactivated = await licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), email, instance);
+                var deactivated = await _licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), email, instance);
 
                 return deactivated;
             }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Models;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Providers;
@@ -75,12 +76,12 @@ namespace Certify.Management
         /// <summary>
         /// Set of ACME clients, one per ACME account
         /// </summary>
-        private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new ConcurrentDictionary<string, IACMEClientProvider>();
+        private ConcurrentDictionary<string, IACMEClientProvider> _acmeClientProviders = new();
 
         /// <summary>
         /// Cache of current known challenges and responses, used for dynamic challenge responses
         /// </summary>
-        private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
+        private ConcurrentDictionary<string, SimpleAuthorizationChallengeItem> _currentChallenges = new();
 
         /// <summary>
         /// Service for reporting status/progress results back to client(s)
@@ -90,12 +91,20 @@ namespace Certify.Management
         /// <summary>
         /// Set of (cached) known ACME Certificate Authorities
         /// </summary>
-        private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new ConcurrentDictionary<string, CertificateAuthority>();
+        private ConcurrentDictionary<string, CertificateAuthority> _certificateAuthorities = new();
 
         /// <summary>
         /// If true, we are running on Windows and can use windows specific features (cert store, IIS etc)
         /// </summary>
         private bool _useWindowsNativeFeatures = true;
+
+        /// <summary>
+        /// cached check result for license info
+        /// </summary>
+        private Registration.Core.Models.Shared.LicenseCheckResult? _cachedLicenseCheck = null;
+
+        private ILicensingManager _licensingManager = new Providers.Internal.LicensingManager();
+        private IDashboardClient _dashboardClient = new Providers.Internal.DashboardClient();
 
         /// <summary>
         ///  Config info/preferences such as log level, challenge service config, powershell execution policy etc
@@ -177,24 +186,14 @@ namespace Certify.Management
                 EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
             };
 
-            if (!enablePlugins)
-            {
-                // load plugins for core service functionality
-                _pluginManager.LoadPlugins(new List<string> {
-                    PluginManager.PLUGINS_LICENSING,
-                    PluginManager.PLUGINS_DASHBOARD
-                });
-            }
-            else
+            if (enablePlugins)
             {
                 _pluginManager.LoadPlugins(new List<string> {
-                PluginManager.PLUGINS_LICENSING,
-                PluginManager.PLUGINS_DASHBOARD,
-                PluginManager.PLUGINS_DEPLOYMENT_TASKS,
-                PluginManager.PLUGINS_CERTIFICATE_MANAGERS,
-                PluginManager.PLUGINS_DNS_PROVIDERS,
-                PluginManager.PLUGINS_SERVER_PROVIDERS,
-                PluginManager.PLUGINS_DATASTORE_PROVIDERS
+                    PluginManager.PLUGINS_DEPLOYMENT_TASKS,
+                    PluginManager.PLUGINS_CERTIFICATE_MANAGERS,
+                    PluginManager.PLUGINS_DNS_PROVIDERS,
+                    PluginManager.PLUGINS_SERVER_PROVIDERS,
+                    PluginManager.PLUGINS_DATASTORE_PROVIDERS
                 });
             }
 

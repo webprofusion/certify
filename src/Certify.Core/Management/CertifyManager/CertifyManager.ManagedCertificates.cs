@@ -375,11 +375,11 @@ namespace Certify.Management
 
         private async Task SendStatusReport(RenewalStatusReport report)
         {
-            if (CoreAppSettings.Current.EnableStatusReporting && _pluginManager?.DashboardClient != null)
+            if (CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
             {
                 try
                 {
-                    await _pluginManager.DashboardClient.ReportRenewalStatusAsync(report);
+                    await _dashboardClient.ReportRenewalStatusAsync(report);
                 }
                 catch (Exception)
                 {

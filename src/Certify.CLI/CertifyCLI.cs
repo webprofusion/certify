@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Plugins;
+using Certify.Providers.Internal;
 
 namespace Certify.CLI
 {
@@ -11,7 +13,7 @@ namespace Certify.CLI
         private TelemetryManager _tc = null;
         private ICertifyClient _certifyClient = null;
         private Preferences _prefs = new();
-        private PluginManager _pluginManager { get; set; }
+        private ILicensingManager _licensingManager = new LicensingManager();
 
         public CertifyCLI()
         {
@@ -34,16 +36,6 @@ namespace Certify.CLI
             }
 
             return isAvailable;
-        }
-
-        private void InitPlugins()
-        {
-            if (_pluginManager == null)
-            {
-                _pluginManager = new Management.PluginManager();
-
-                _pluginManager.LoadPlugins([PluginManager.PLUGINS_LICENSING]);
-            }
         }
 
         public async Task LoadPreferences() => _prefs = await _certifyClient.GetPreferences();

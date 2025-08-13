@@ -67,10 +67,10 @@ namespace Certify.UI.Windows
                 IsException = IsException
             };
 
-            if (MainViewModel.PluginManager.DashboardClient != null)
+            if (MainViewModel.DashboardClient != null)
             {
                 Mouse.OverrideCursor = Cursors.Wait;
-                var submittedOK = await MainViewModel.PluginManager.DashboardClient.SubmitFeedbackAsync(feedbackReport, Certify.Management.Util.GetDotNetVersion());
+                var submittedOK = await MainViewModel.DashboardClient.SubmitFeedbackAsync(feedbackReport, Certify.Management.Util.GetDotNetVersion());
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 

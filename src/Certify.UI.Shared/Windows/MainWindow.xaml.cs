@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -229,16 +228,7 @@ namespace Certify.UI.Windows
             Mouse.OverrideCursor = Cursors.AppStarting;
             _appViewModel.IsLoading = true;
 
-            // setup plugins
-
-            _appViewModel.PluginManager = new Management.PluginManager();
-
-            _appViewModel.PluginManager.LoadPlugins(new List<string>
-            {
-                PluginManager.PLUGINS_LICENSING, PluginManager.PLUGINS_DASHBOARD
-            });
-
-            var licensingManager = _appViewModel.PluginManager.LicensingManager;
+            var licensingManager = _appViewModel.LicensingManager;
             if (licensingManager != null)
             {
                 if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))

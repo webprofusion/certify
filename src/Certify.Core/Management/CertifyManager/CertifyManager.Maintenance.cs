@@ -618,12 +618,12 @@ namespace Certify.Management
                         _serviceLog.Warning("Diagnostic Check Failed: " + d.Message);
 
                         // report diagnostic failures (if enabled)
-                        if (reportingEmail != null && CoreAppSettings.Current.EnableStatusReporting && _pluginManager.DashboardClient != null)
+                        if (reportingEmail != null && CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
                         {
 
                             try
                             {
-                                await _pluginManager.DashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
+                                await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
                                 {
                                     InstanceId = null,
                                     ManagedItemId = null,

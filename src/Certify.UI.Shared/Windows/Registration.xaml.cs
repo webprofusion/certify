@@ -51,7 +51,7 @@ namespace Certify.UI.Windows
             ValidateKey.IsEnabled = false;
             Mouse.OverrideCursor = Cursors.Wait;
 
-            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+            var licensingManager = ViewModel.AppViewModel.Current.LicensingManager;
 
             if (licensingManager != null)
             {
@@ -140,7 +140,7 @@ namespace Certify.UI.Windows
 
             Mouse.OverrideCursor = Cursors.Wait;
 
-            var licensingManager = ViewModel.AppViewModel.Current.PluginManager?.LicensingManager;
+            var licensingManager = ViewModel.AppViewModel.Current.LicensingManager;
 
             if (licensingManager != null)
             {

@@ -7,7 +7,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Certify.Client;
-using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -136,11 +135,6 @@ namespace Certify.UI.ViewModel
         /// internal client for the current background service connection
         /// </summary>
         internal ICertifyClient _certifyClient;
-
-        /// <summary>
-        /// Provider for current set of plugins
-        /// </summary>
-        public PluginManager PluginManager { get; set; }
 
         public string CurrentError { get; set; }
         public bool IsError { get; set; }
