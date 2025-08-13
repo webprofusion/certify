@@ -101,6 +101,7 @@ namespace Certify.Models
             CertificateAuthorities.Definitions.Google.GetDefinition(),
             CertificateAuthorities.Definitions.LetsEncrypt.GetDefinition(),
             CertificateAuthorities.Definitions.Martini.GetDefinition(),
+            CertificateAuthorities.Definitions.PKIaaS.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoDV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoEV.GetDefinition(),
             CertificateAuthorities.Definitions.SectigoEnterprise.GetDefinition(),
