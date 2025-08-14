@@ -1,4 +1,6 @@
-using System;
+﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Certify.Models;
 
@@ -8,30 +10,120 @@ namespace Certify.CLI
     {
         private static int ProductTypeID = 1;
 
+        public partial class LicenseCheckResult
+        {
+            public bool IsLicensed { get; set; }
+            public bool IsValid { get; set; }
+            public string Status { get; set; } = string.Empty;
+
+        }
+
+        [JsonSerializable(typeof(LicenseCheckResult))]
+
+        public partial class LicenseCheckContext : JsonSerializerContext
+        {
+        }
+
+        JsonSerializerOptions _licenseCheckSerializationOptions = new()
+        {
+            TypeInfoResolver = LicenseCheckContext.Default,
+            WriteIndented = true
+        };
+
         private bool IsRegistered()
         {
-            var licensingManager = _pluginManager.LicensingManager;
-            if (licensingManager != null)
+            if (_licensingManager?.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath()) == true)
             {
-                if (licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath()))
-                {
-                    return true;
-                }
+                return true;
             }
+            else
+            {
+                return false;
+            }
+        }
 
-            return false;
+        internal async Task<bool> LicenseCheck(string[] args)
+        {
+            var licenseCheckResult = new LicenseCheckResult
+            {
+                IsLicensed = false,
+                IsValid = false,
+                Status = "unlicensed"
+            };
+
+            if (_licensingManager != null)
+            {
+                var instance = new Models.Shared.RegisteredInstance
+                {
+                    InstanceId = _prefs.InstanceId,
+                    AppVersion = Management.Util.GetAppVersion().ToString()
+                };
+
+                var registered = _licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath());
+
+                if (registered)
+                {
+                    licenseCheckResult.IsLicensed = true;
+                    var isActive = await _licensingManager.IsInstallActive(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath());
+                    if (isActive)
+                    {
+                        licenseCheckResult.IsValid = true;
+                        licenseCheckResult.Status = "active";
+                    }
+                    else
+                    {
+                        licenseCheckResult.IsValid = false;
+                        licenseCheckResult.Status = "invalid";
+                    }
+                }
+
+                var output = System.Text.Json.JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
+
+                Console.WriteLine(output);
+
+                return licenseCheckResult.IsLicensed && licenseCheckResult.IsValid;
+            }
+            else
+            {
+                var output = System.Text.Json.JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
+                Console.WriteLine(output);
+                return false;
+            }
         }
 
         internal async Task Activate(string[] args)
         {
-            if (args.Length < 3)
-            {
-                Console.WriteLine("Not enough arguments");
-                return;
-            }
+            var email = string.Empty;
+            var key = string.Empty;
 
-            var email = args[1];
-            var key = args[2];
+            if (args[0].ToLower() == "license")
+            {
+                if (args.Length < 4)
+                {
+                    Console.WriteLine("Not enough arguments");
+                    return;
+                }
+                else
+                {
+                    // allow syntax as "certify license activate <email> <key>"
+                    email = args[2];
+                    key = args[3];
+                }
+            }
+            else
+            {
+                if (args.Length < 3)
+                {
+                    Console.WriteLine("Not enough arguments");
+                    return;
+                }
+                else
+                {
+                    // allow syntax as "certify activate <email> <key>"
+                    email = args[1];
+                    key = args[2];
+                }
+            }
 
             var result = await Activate(email, key);
 
@@ -92,13 +184,35 @@ namespace Certify.CLI
 
         internal async Task Deactivate(string[] args)
         {
-            if (args.Length < 2)
-            {
-                Console.WriteLine("Not enough arguments");
-                return;
-            }
 
-            var email = args[1];
+            var email = string.Empty;
+
+            if (args[0].ToLower() == "license")
+            {
+                if (args.Length < 3)
+                {
+                    Console.WriteLine("Not enough arguments");
+                    return;
+                }
+                else
+                {
+                    // allow syntax as "certify license deactivate <email> <key>"
+                    email = args[2];
+                }
+            }
+            else
+            {
+                if (args.Length < 2)
+                {
+                    Console.WriteLine("Not enough arguments");
+                    return;
+                }
+                else
+                {
+                    // allow syntax as "certify deactivate <email> <key>"
+                    email = args[1];
+                }
+            }
 
             var deactivated = await Deactivate(email);
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -166,12 +166,26 @@ namespace Certify.CLI
                     await p.RemoveIdentifiers(args);
                 }
 
-                if (command == "activate")
+                if (command == "license" && args.Contains("check"))
+                {
+                    var licenseOK = await p.LicenseCheck(args);
+
+                    if (!licenseOK)
+                    {
+                        return -1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+
+                if (command == "activate" || command == "license" && args.Contains("activate"))
                 {
                     await p.Activate(args);
                 }
 
-                if (command == "deactivate")
+                if (command == "deactivate" || command == "license" && args.Contains("deactivate"))
                 {
                     await p.Deactivate(args);
                 }
