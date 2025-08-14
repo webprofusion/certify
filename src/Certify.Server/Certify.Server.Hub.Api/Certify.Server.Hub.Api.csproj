@@ -19,8 +19,8 @@
 
     <ItemGroup>
         <PackageReference Include="Markdig" Version="0.41.3" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
     </ItemGroup>

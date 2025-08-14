@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net462;</TargetFrameworks>
         <Configurations>Debug;Release;</Configurations>
@@ -52,6 +52,7 @@
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\Postgres\Plugin.Datastore.Postgres.csproj" />
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
+        <ProjectReference Include="..\..\Certify.CLI\Certify.CLI.csproj" />
         <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
         <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
         <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Plugin.DNS.AWSRoute53.csproj" />
@@ -62,13 +63,14 @@
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
     <ItemGroup>
+        <PackageReference Include="MedallionShell" Version="1.6.2" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
         <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
         <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
         <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="MSTest.TestAdapter" Version="3.10.0" />
-        <PackageReference Include="MSTest.TestFramework" Version="3.10.0" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.10.2" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.10.2" />
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
         <PackageReference Include="Npgsql" Version="8.0.7" />
         <PackageReference Include="Polly" Version="8.6.2" />
