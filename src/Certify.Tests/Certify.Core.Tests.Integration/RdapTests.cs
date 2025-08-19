@@ -9,7 +9,6 @@ namespace Certify.Core.Tests
     public class RdapTests
     {
         [TestMethod, Description("Test Rdap Query")]
-        [DataTestMethod]
         [DataRow("example.com", "OK", null)]
         [DataRow("www.example.com", "OK", null)]
         [DataRow("www.example.co.uk", "Error", null)]
