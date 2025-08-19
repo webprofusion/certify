@@ -12,13 +12,13 @@ namespace Certify.Service.Tests.Integration
         [TestInitialize]
         public async Task InitTests()
         {
-            _client = new Certify.Client.CertifyServiceClient(new ServiceConfigManager());
+            _client = new Certify.Client.CertifyServiceClient(new ServiceConfigManager(), new Shared.ServerConnection { Host = "127.0.0.2", Port = 9000 });
 
             // create API server instance
             if (_svc == null)
             {
                 _svc = new Certify.Service.OwinService();
-                _svc.Start(96969);
+                _svc.Start(9000);
 
                 await Task.Delay(2000);
 
