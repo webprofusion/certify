@@ -16,7 +16,7 @@ Windows ACME Certificate Manager, powered by [Let's Encrypt](https://letsencrypt
 ## Features include:
 - See more details: https://certifytheweb.com/home/features
 - Easy certificate requests & automated SSL bindings (IIS)
-- Fetch certificates from ACME Certificate Authorities including **Let's Encrypt, BuyPass Go, ZeroSSL and Martini Security (STIR/SHAKEN)** or use private ACME CA servers including DigiCert, smallstep, Keyon true-Xtender etc.
+- Fetch certificates from ACME Certificate Authorities including **Let's Encrypt, Google Trust Services, ZeroSSL and Martini Security (STIR/SHAKEN)** or use private ACME CA servers including DigiCert, smallstep, Keyon true-Xtender etc.
 - Preview mode to see which actions the app will perform (including which bindings will be added/updated)
 - Automatic renewals and certificate maintenance using a background service, with configurable renewal frequency.
 - Manage certificates for:

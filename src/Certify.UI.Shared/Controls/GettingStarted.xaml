@@ -37,7 +37,7 @@
                     Text="Certify Certificate Manager"
                     TextWrapping="Wrap" />
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
-                    <Run>Easily automate your certificates from ACME enabled Certificate Authorities including Let's Encrypt, Google Trust Services, BuyPass Go, SSL.com and ZeroSSL.</Run>
+                    <Run>Easily automate your certificates from ACME enabled Certificate Authorities including Let's Encrypt, Google Trust Services and more, including custom or internal CAs.</Run>
                     <Run>For more information, documentation, community discussions and support options, see https://certifytheweb.com</Run>
                     <LineBreak />  <LineBreak />
                     <Run>Looking to manage and monitor many certificates over many servers? Check out our new product Certify Management Hub - details at https://docs.certifytheweb.com</Run>
