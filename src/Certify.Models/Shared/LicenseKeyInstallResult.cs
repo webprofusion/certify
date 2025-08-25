@@ -5,5 +5,6 @@
         public bool IsSuccess { get; set; }
         public string? Message { get; set; } = string.Empty;
         public string? UsageToken { get; set; } = string.Empty;
+        public string? ManagedLicenceId { get; set; } = string.Empty;
     }
 }
