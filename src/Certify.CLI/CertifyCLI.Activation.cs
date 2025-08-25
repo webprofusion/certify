@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Certify.Models;
+using Registration.Core.Models.Shared;
 
 namespace Certify.CLI
 {
@@ -48,7 +49,7 @@ namespace Certify.CLI
             {
                 IsLicensed = false,
                 IsValid = false,
-                Status = "unlicensed"
+                Status = LicenseCheckStatusCode.Unlicensed
             };
 
             if (_licensingManager != null)
@@ -68,16 +69,16 @@ namespace Certify.CLI
                     if (isActive)
                     {
                         licenseCheckResult.IsValid = true;
-                        licenseCheckResult.Status = "active";
+                        licenseCheckResult.Status = LicenseCheckStatusCode.Licensed;
                     }
                     else
                     {
                         licenseCheckResult.IsValid = false;
-                        licenseCheckResult.Status = "invalid";
+                        licenseCheckResult.Status = LicenseCheckStatusCode.Invalid;
                     }
                 }
 
-                var output = System.Text.Json.JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
+                var output = JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
 
                 Console.WriteLine(output);
 
@@ -85,7 +86,7 @@ namespace Certify.CLI
             }
             else
             {
-                var output = System.Text.Json.JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
+                var output = JsonSerializer.Serialize(licenseCheckResult, options: _licenseCheckSerializationOptions);
                 Console.WriteLine(output);
                 return false;
             }
