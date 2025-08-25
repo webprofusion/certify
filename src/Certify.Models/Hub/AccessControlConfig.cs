@@ -29,6 +29,7 @@ namespace Certify.Models.Hub
                      StandardPolicies.ManagedInstanceSystemExport,
                      StandardPolicies.ManagedInstanceSystemImport,
                      StandardPolicies.TagAdmin,
+                     StandardPolicies.ManagedLicenseAdmin,
                      StandardPolicies.SystemUser
                     ]);
 
@@ -93,6 +94,7 @@ namespace Certify.Models.Hub
         public static string ManagedChallenge { get; } = "managedchallenge";
         public static string ManagedAcme { get; } = "managedacme";
         public static string ManagedInstance { get; } = "managedinstance";
+        public static string ManagedLicense { get; } = "managedlicense";
         public static string Target { get; } = "target";
         public static string ChallengeProvider { get; } = "challengeprovider";
         public static string DeploymentTask { get; } = "deploymenttask";
@@ -187,6 +189,14 @@ namespace Certify.Models.Hub
         public const string TagUpdate = "managementhub_tag_update_action";
         public const string TagList = "managementhub_tag_list_action";
 
+        public const string ManagedLicenseList = "managedlicense_list_action";
+        public const string ManagedLicenseAdd = "managedlicense_add_action";
+        public const string ManagedLicenseUpdate = "managedlicense_update_action";
+        public const string ManagedLicenseDelete = "managedlicense_delete_action";
+        public const string ManagedLicenseActivate = "managedlicense_activate_action";
+        public const string ManagedLicenseDeactivate = "managedlicense_deactivate_action";
+        public const string ManagedLicenseStatus = "managedlicense_status_action";
+
         public const string ManagedAcmePerformOrder = "managedacme_order_action";
 
     }
@@ -208,6 +218,7 @@ namespace Certify.Models.Hub
         public const string ManagedInstance = "managementhub_managedinstance_policy";
         public const string ManagedInstanceSystemImport = "system_import_policy";
         public const string ManagedInstanceSystemExport = "system_export_policy";
+        public const string ManagedLicenseAdmin = "managedlicense_admin_policy";
         public const string ManagedAcmeConsumer = "managedacme_consumer_policy";
         public const string SystemUser = "system_user_policy";
         public const string TagAdmin = "tag_admin_policy";
@@ -324,6 +335,14 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.TagAdd, "Add item tags", ResourceTypes.Tag),
                 new(StandardResourceActions.TagUpdate, "Update item tags", ResourceTypes.Tag),
                 new(StandardResourceActions.TagDelete, "Delete item tags", ResourceTypes.Tag),
+
+                new(StandardResourceActions.ManagedLicenseList, "List managed licenses", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseAdd, "Add managed license", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseUpdate, "Update managed license", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseDelete, "Delete managed license", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseActivate, "Apply managed license to an instance", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseDeactivate, "Remove managed license from an instance", ResourceTypes.ManagedLicense),
+                new(StandardResourceActions.ManagedLicenseStatus, "Get status for a managed license", ResourceTypes.ManagedLicense),
 
                 new(StandardResourceActions.ManagedAcmePerformOrder, "Perform managed acme order", ResourceTypes.ManagedAcme)
 
@@ -561,6 +580,20 @@ namespace Certify.Models.Hub
                      StandardResourceActions.ManagedAcmePerformOrder
                  ]
              },
+                new() {
+       Id = StandardPolicies.ManagedLicenseAdmin,
+       Title = "Managed License Administration",
+       SecurityPermissionType = SecurityPermissionType.ALLOW,
+       ResourceActions = [
+           StandardResourceActions.ManagedLicenseList,
+           StandardResourceActions.ManagedLicenseAdd,
+           StandardResourceActions.ManagedLicenseUpdate,
+           StandardResourceActions.ManagedLicenseDelete,
+           StandardResourceActions.ManagedLicenseActivate,
+           StandardResourceActions.ManagedLicenseDeactivate,
+           StandardResourceActions.ManagedLicenseStatus
+       ]
+   },
             ];
         }
     }
