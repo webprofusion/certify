@@ -60,6 +60,9 @@ namespace Certify.Models.Hub
         public const string UpdateServiceConfig = "UpdateServiceConfig";
         public const string UpdateServiceCoreSettings = "UpdateServiceCoreSettings";
 
+        public const string ApplyLicense = "ActivateManagedLicense";
+        public const string DeactivateLicense = "DeactivateManagedLicense";
+
         public const string Reconnect = "Reconnect";
 
         /// <summary>
