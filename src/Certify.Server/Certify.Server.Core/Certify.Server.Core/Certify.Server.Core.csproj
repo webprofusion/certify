@@ -22,7 +22,7 @@
         <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.8" />
 
         <!-- only include swashbuckle in debug build -->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="9.0.4" />
         <PackageReference Include="System.Text.Encodings.Web" Version="9.0.8" />
 
     </ItemGroup>
