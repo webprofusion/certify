@@ -304,7 +304,13 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to create temporary managed certificate");
             }
 
-            _ = _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, tempCert.Id, CurrentAuthContext);
+            _ = Task.Run(async () =>
+            {
+                await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, tempCert.Id, CurrentAuthContext);
+
+                order.Status = OrderStatus.Valid;
+                _orders[orderId] = order;
+            });
 
             order.ManagedCertificateId = tempCert.Id;
 
@@ -336,13 +342,15 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
-            if (order.Status != OrderStatus.Ready)
+            if (order.Status == OrderStatus.Invalid)
             {
-                return CreateAcmeError(AcmeErrorTypes.OrderNotReady, "Order not ready for finalization");
+                // order is still processing, 
+                return CreateAcmeError(AcmeErrorTypes.OrderNotReady, "Order has failed. Cannot complete finalization");
             }
 
             // Decode the JWS payload
             FinalizeOrderRequest request;
+
             try
             {
                 request = DecodeJwsPayload<FinalizeOrderRequest>(payload);
@@ -353,31 +361,45 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            // check status of temp managed certificate
-            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-
-            if (managedCert == null)
+            var finalizeTask = Task.Run(async () =>
             {
-                return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Managed certificate not found for order");
+                // check status of temp managed certificate
+                var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+
+                if (managedCert != null)
+                {
+                    //return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Managed certificate not found for order");
+
+                    // apply CSR from client finalize call as a formatted customcsr
+                    managedCert.RequestConfig.CustomCSR = FormatCsrPem(request.Csr);
+
+                    await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
+
+                    // resume/finalize cert order
+                    await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+
+                    order.Status = OrderStatus.Valid;
+                    var certId = GenerateCertificateId();
+
+                    var baseUrl = BuildBaseUrl(key);
+                    order.Certificate = BuildCertificateUrl(baseUrl, certId);
+                    _orders[orderId] = order;
+                    AddReplayNonceHeader();
+
+                    StoreCurrentState();
+                }
+            });
+
+            // finalize may have been called while the order is still at Processing, in which case we need to return the order status but continue completing the order
+            if (order.Status == OrderStatus.Pending || order.Status == OrderStatus.Processing)
+            {
+                order.Status = OrderStatus.Processing;
+                return Ok(order);
             }
-
-            // apply CSR from client finalize call as a formatted customcsr
-            managedCert.RequestConfig.CustomCSR = FormatCsrPem(request.Csr);
-
-            await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
-
-            // resume/finalize cert order
-            await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-
-            order.Status = OrderStatus.Valid;
-            var certId = GenerateCertificateId();
-
-            var baseUrl = BuildBaseUrl(key);
-            order.Certificate = BuildCertificateUrl(baseUrl, certId);
-
-            AddReplayNonceHeader();
-
-            StoreCurrentState();
+            else
+            {
+                await finalizeTask;
+            }
 
             return Ok(order);
         }
@@ -577,7 +599,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return renewalStatus switch
             {
                 null or RequestState.Running => OrderStatus.Processing,
-                RequestState.Paused => OrderStatus.Ready,
+                RequestState.Paused => OrderStatus.Processing,
                 RequestState.Error => OrderStatus.Invalid,
                 _ => OrderStatus.Valid
             };
