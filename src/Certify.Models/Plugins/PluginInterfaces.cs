@@ -21,6 +21,7 @@ namespace Certify.Models.Plugins
         bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath);
 
         bool IsInstallRegistered(int productTypeId, string settingsPath);
+        LicenseCheckResult GetCurrentLicense(int productTypeId, string settingsPath);
 
         Task<bool> IsInstallActive(int productTypeId, string settingsPath);
 

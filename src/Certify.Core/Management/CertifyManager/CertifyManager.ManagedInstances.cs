@@ -40,6 +40,8 @@ namespace Certify.Management
 
                 existing.Tags = item.Tags;
 
+                existing.License = item.License;
+
                 if (existing.DateRegistered == DateTimeOffset.MinValue)
                 {
                     existing.DateRegistered = DateTimeOffset.UtcNow;

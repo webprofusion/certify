@@ -271,15 +271,11 @@ namespace Certify.Providers.Internal
 
         public LicensingManager()
         {
-#if DEBUG
-            _enableLog = true;
-#else
-      if (Environment.GetEnvironmentVariable("CERTIFY_ENABLE_LICENSING_LOG") == "true")
-            {
-                _enableLog = true;
-            }
-#endif
+        }
 
+        public void EnableLogging()
+        {
+            _enableLog = true;
         }
 
         public void Log(string message)
@@ -353,7 +349,7 @@ namespace Certify.Providers.Internal
                     else
                     {
                         Log($"submission failed: {response}");
-                        return new LicenseCheckResult { IsValid = false, StatusCode = "OFFLINE", ValidationMessage = "There was a problem validating this key. Please ensure you have the latest app version and try again later." };
+                        return new LicenseCheckResult { IsValid = false, StatusCode = LicenseCheckStatusCode.Unknown, ValidationMessage = "There was a problem validating this key. Please ensure you have the latest app version and try again later." };
                     }
                 }
                 catch (Exception ex)
@@ -366,6 +362,8 @@ namespace Certify.Providers.Internal
 
         public static void SetSupportedTLSVersions(bool enableLog)
         {
+
+#if !NET9_0_OR_GREATER
             try
             {
                 ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | (SecurityProtocolType)1228;
@@ -385,14 +383,16 @@ namespace Certify.Providers.Internal
             {
                 new LicensingManager().Log("ServicePointManager.SecurityProtocol : Tls 1.2 is the highest supported protocol");
             }
+#endif
+
         }
 
         public async Task<LicenseKeyInstallResult> RegisterInstall(int productTypeId, string email, string key, RegisteredInstance instance)
         {
             Log("Registering Install based on key:" + key);
 
-            instance.MachineName = Environment.MachineName;
-            instance.OS = Environment.OSVersion.ToString();
+            instance.MachineName = instance.MachineName ?? Environment.MachineName;
+            instance.OS = instance.OS ?? Environment.OSVersion.ToString();
 
             using (var client = new HttpClient())
             {
@@ -630,11 +630,11 @@ namespace Certify.Providers.Internal
             var result = GetLicenseKeyInstallResult(productTypeId, settingsPath);
             if (result?.IsSuccess == true)
             {
-                return new LicenseCheckResult { IsValid = false, StatusCode = "ACTIVE" };
+                return new LicenseCheckResult { IsValid = false, StatusCode = LicenseCheckStatusCode.Licensed, ManagedLicenseId = result.ManagedLicenceId };
             }
             else
             {
-                return new LicenseCheckResult { IsValid = false, StatusCode = "UNLICENSED" };
+                return new LicenseCheckResult { IsValid = false, StatusCode = LicenseCheckStatusCode.Unlicensed };
             }
         }
     }

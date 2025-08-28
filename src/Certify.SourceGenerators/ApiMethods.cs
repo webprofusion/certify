@@ -364,6 +364,108 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                     OperationName = "GetManagedLicenses",
+                     OperationMethod = HttpGet,
+                     Comment = "Get list of managed product license keys for instance license management",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "list",
+                     ServiceAPIRoute = "managedlicense",
+                     ReturnType = "ICollection<ManagedLicense>",
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseList)]
+                 },
+                new()
+                 {
+                     OperationName = "AddManagedLicense",
+                     OperationMethod = HttpPost,
+                     Comment = "Add a managed license",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "add",
+                     ServiceAPIRoute = "managedlicense",
+                     ReturnType = actionResultTypeName,
+                     Params = new Dictionary<string, string>
+                     {
+                         { "item", "Certify.Models.Hub.ManagedLicense" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseUpdate)]
+                 },
+                 new()
+                 {
+                     OperationName = "UpdateManagedLicense",
+                     OperationMethod = HttpPost,
+                     Comment = "Update a managed license",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "update",
+                     ServiceAPIRoute = "managedlicense",
+                     ReturnType = actionResultTypeName,
+                     Params = new Dictionary<string, string>
+                     {
+                         { "item", "Certify.Models.Hub.ManagedLicense" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseUpdate)]
+                 },
+                 new()
+                 {
+                     OperationName = "RemoveManagedLicense",
+                     OperationMethod = HttpDelete,
+                     Comment = "Delete a managed license",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "remove",
+                     ServiceAPIRoute = "managedlicense/{id}",
+                     ReturnType = actionResultTypeName,
+                     Params = new Dictionary<string, string>
+                     {
+                         { "id", "string" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseDelete)]
+                 },
+                  new()
+                 {
+                     OperationName = "ActivateManagedLicense",
+                     OperationMethod = HttpPost,
+                     Comment = "Activate a managed license for an instance",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "activate/{licenseId}/{instanceId}",
+                     UseManagementAPI = true,
+                     ReturnType = actionResultTypeName,
+                     Params = new Dictionary<string, string>
+                     {
+                         { "instanceId", "string" },
+                         { "licenseId", "string" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseActivate)]
+                 },
+                    new()
+                 {
+                     OperationName = "DeactivateManagedLicense",
+                     OperationMethod = HttpPost,
+                     Comment = "Deactivate a managed license for an instance",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "deactivate",
+                     UseManagementAPI = true,
+                     ReturnType = actionResultTypeName,
+                     Params = new Dictionary<string, string>
+                     {
+                         { "instanceId", "string" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseDeactivate)]
+                 },
+                     new()
+                 {
+                     OperationName = "GetManagedLicenseStatus",
+                     OperationMethod = HttpPost,
+                     Comment = "Get status for a managed license",
+                     PublicAPIController = "ManagedLicense",
+                     PublicAPIRoute = "status",
+                     UseManagementAPI = true,
+                     ReturnType = GetFormattedTypeName(typeof(Registration.Core.Models.Shared.LicenseCheckResult)),
+                     Params = new Dictionary<string, string>
+                     {
+                         { "id", "string" }
+                     },
+                     RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseStatus)]
+                 },
+                new()
+                {
                     OperationName = "PerformExport",
                     OperationMethod = HttpPost,
                     Comment = "Perform an export of all settings for an instance",
@@ -383,6 +485,18 @@ namespace Certify.SourceGenerators
                     RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceImport)]
                 },
                 /* per instance API, via management hub */
+                new()
+                 {
+                     OperationName = "GetManagedInstanceInfo",
+                     OperationMethod = HttpGet,
+                     Comment = "Get current info for the instance",
+                     PublicAPIController = "System",
+                     PublicAPIRoute = "instance/{instanceId}",
+                     UseManagementAPI = true,
+                     ReturnType = nameof(ManagedInstanceInfo),
+                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                     RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
+                 },
                 new()
                 {
                     OperationName = "GetAcmeAccounts",

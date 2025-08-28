@@ -6,9 +6,12 @@ using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Models.Shared;
+using Certify.Providers.Internal;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Shared;
 using Microsoft.AspNetCore.SignalR;
+using Registration.Core.Models.Shared;
 
 namespace Certify.Server.Hub.Api.Services
 {
@@ -737,6 +740,97 @@ namespace Certify.Server.Hub.Api.Services
            };
 
             return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.UpdateServiceConfig);
+        }
+
+        public async Task<ManagedInstanceInfo?> GetManagedInstanceInfo(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+             new("instanceId", instanceId)
+         };
+
+            var update = await PerformInstanceCommandTaskWithResult<ManagedInstanceInfo>(instanceId, args, ManagementHubCommands.GetInstanceInfo);
+
+            return update;
+        }
+
+        public async Task<ActionResult?> ActivateManagedLicense(string instanceId, string licenseId, AuthContext? currentAuthContext)
+        {
+            var licenses = await _certifyManager.GetManagedLicenses();
+
+            var instances = _mgmtStateProvider.GetConnectedInstances();
+
+            var license = licenses.FirstOrDefault(l => l.Id == licenseId);
+
+            if (license == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = "License not found."
+                };
+            }
+
+            var instance = instances.FirstOrDefault(i => i.InstanceId == instanceId);
+
+            var licensing = new LicensingManager();
+
+            var instanceInfo = new RegisteredInstance
+            {
+                InstanceId = instanceId,
+                AppVersion = instance.ClientVersion,
+                MachineName = instance.Title,
+                OS = instance.OS
+            };
+
+            var activationResult = await licensing.RegisterInstall(1, license.Email, license.ProductKey, instanceInfo);
+
+            if (activationResult.IsSuccess)
+            {
+                activationResult.ManagedLicenceId = license.Id;
+
+                // install activated, now apply to instance
+                var args = new KeyValuePair<string, string>[] {
+                    new("activation", JsonSerializer.Serialize(activationResult))
+                };
+
+                var result = await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.ApplyLicense);
+
+                return result;
+            }
+            else
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = activationResult.Message ?? "Activation Failed"
+                };
+            }
+        }
+
+        public async Task<ActionResult?> DeactivateManagedLicense(string instanceId, AuthContext? currentAuthContext)
+        {
+
+            var result = await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, null, ManagementHubCommands.DeactivateLicense);
+
+            return result;
+        }
+
+        public async Task<LicenseCheckResult?> GetManagedLicenseStatus(string licenseId, AuthContext? currentAuthContext)
+        {
+            var licenses = await _certifyManager.GetManagedLicenses();
+
+            var license = licenses.FirstOrDefault(l => l.Id == licenseId);
+
+            if (license == null)
+            {
+                return null;
+            }
+
+            var licensing = new LicensingManager();
+
+            var status = await licensing.Validate(1, license.Email, license.ProductKey);
+
+            return status;
         }
     }
 }

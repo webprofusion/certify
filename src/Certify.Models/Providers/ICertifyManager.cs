@@ -109,6 +109,11 @@ namespace Certify.Management
         Task<ICollection<ItemTag>> GetAllHubItemTags();
         Task<ICollection<ItemTag>> GetHubItemTags(string itemId, string itemTypeId);
 
+        Task<ICollection<ManagedLicense>> GetManagedLicenses();
+        Task<ActionResult> AddManagedLicense(ManagedLicense item);
+        Task<ActionResult> UpdateManagedLicense(ManagedLicense item);
+        Task<ActionResult> RemoveManagedLicenses(string id);
+
         Task<HubInfo> GetHubInfo();
     }
 }

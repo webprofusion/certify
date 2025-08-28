@@ -4,6 +4,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Providers;
 using Certify.Shared;
 using Microsoft.AspNetCore.SignalR;
 
@@ -221,25 +222,20 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 //_stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
 
-                if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
+
+                // for all other command results we need to resolve which instance id we are communicating with
+
+                result.InstanceId = instanceId;
+
+                if (!string.IsNullOrWhiteSpace(instanceId))
                 {
-                    await ProcessInstanceInfoResult(result);
+                    await ProcessInstanceCommandResult(result, cmd, instanceId);
                 }
                 else
                 {
-                    // for all other command results we need to resolve which instance id we are communicating with
-
-                    result.InstanceId = instanceId;
-
-                    if (!string.IsNullOrWhiteSpace(instanceId))
-                    {
-                        await ProcessInstanceCommandResult(result, cmd, instanceId);
-                    }
-                    else
-                    {
-                        _logger?.LogError("Received instance command result for an unknown instance {result}", result.CommandType);
-                    }
+                    _logger?.LogError("Received instance command result for an unknown instance {result}", result.CommandType);
                 }
+
             }
             else
             {
@@ -257,6 +253,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         {
             // action this message from this instance
             _logger?.LogDebug("[ProcessInstanceCommandResult] Received instance command result {instanceId} {cmdType}", instanceId, cmd.CommandType);
+
 
             if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
             {
@@ -279,26 +276,29 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 _stateProvider.UpdateInstanceStatusSummary(instanceId, val!);
             }
-            else
-            if (result.IsCommandResponse)
+            else if (result.IsCommandResponse)
             {
                 _stateProvider.AddAwaitedCommandResult(result);
+            }
+            else if (result.CommandType == ManagementHubCommands.GetInstanceInfo)
+            {
+                await ProcessInstanceInfoResult(result);
             }
             else
             {
                 // item was not requested, queue for processing
                 if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
                     // deleted :TODO
-                    await _uiStatusHub.Clients.All.SendAsync(Providers.StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
+                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
                 }
             }
         }

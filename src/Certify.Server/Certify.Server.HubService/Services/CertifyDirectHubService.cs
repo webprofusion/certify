@@ -70,6 +70,13 @@ namespace Certify.Server.HubService.Services
             return controller;
         }
 
+        private ServiceControllers.ManagedLicenseController _licenseController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.ManagedLicenseController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
 
         public Task<ActionResult> AddSecurityPrincipal(SecurityPrincipal principal, AuthContext authContext) => _accessController(authContext).AddSecurityPrincipal(principal);
@@ -175,6 +182,11 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<ItemTag>> GetHubItemTags(AuthContext authContext) => _tagController(authContext).GetTags();
         public Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
+
+        public Task<ActionResult> RemoveManagedLicense(string id, AuthContext authContext) => _licenseController(authContext).RemoveManagedLicense(id);
+        public Task<ICollection<ManagedLicense>> GetManagedLicenses(AuthContext authContext) => _licenseController(authContext).GetManagedLicenses();
+        public Task<ActionResult> AddManagedLicense(ManagedLicense item, AuthContext authContext) => _licenseController(authContext).AddManagedLicense(item);
+        public Task<ActionResult> UpdateManagedLicense(ManagedLicense item, AuthContext authContext) => _licenseController(authContext).UpdateManagedLicense(item);
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

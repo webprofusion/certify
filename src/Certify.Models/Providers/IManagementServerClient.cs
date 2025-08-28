@@ -19,5 +19,7 @@ namespace Certify.Client
         bool IsConnected();
         void SendInstanceInfo(Guid commandId, bool isCommandResponse = true);
         void SendNotificationToManagementHub(string msgCommandType, object updateMsg);
+
+        void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo);
     }
 }
