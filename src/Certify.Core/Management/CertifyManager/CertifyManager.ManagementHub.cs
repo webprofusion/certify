@@ -10,9 +10,11 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Models.Shared;
 using Certify.Shared;
 using Certify.Shared.Core.Utils;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Registration.Core.Models.Shared;
 
 namespace Certify.Management
 {
@@ -186,6 +188,9 @@ namespace Certify.Management
                 var hubInfo = new HubInfo();
 
                 hubInfo.InstanceId = _serverConfig.HubAssignedInstanceId;
+
+                var instanceInfo = GetManagedInstanceInfo();
+                hubInfo.IsLicensed = instanceInfo.License?.StatusCode == LicenseCheckStatusCode.Licensed;
 
                 var versionInfo = Util.GetAppVersion().ToString();
 
@@ -388,6 +393,7 @@ namespace Certify.Management
 
         private void SendHeartbeatToManagementHub()
         {
+            _managementServerClient.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
             _managementServerClient.SendInstanceInfo(Guid.NewGuid(), isCommandResponse: false);
         }
 
@@ -401,7 +407,8 @@ namespace Certify.Management
                 OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
                 OSVersion = EnvironmentUtil.GetFriendlyOSName(),
                 ClientVersion = Util.GetAppVersion().ToString(),
-                ClientName = ConfigResources.AppName
+                ClientName = _isMgtmHubBackend ? "Certify Management Hub" : ConfigResources.AppName,
+                License = _cachedLicenseCheck
             };
         }
 
@@ -453,7 +460,13 @@ namespace Certify.Management
         {
             object val = null;
 
-            if (arg.CommandType == ManagementHubCommands.GetManagedItem)
+            if (arg.CommandType == ManagementHubCommands.GetInstanceInfo)
+            {
+                var update = GetManagedInstanceInfo();
+                _managementServerClient.UpdateCachedInstanceInfo(update);
+                val = update;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetManagedItem)
             {
                 // Get a single managed item by id
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
@@ -802,6 +815,51 @@ namespace Certify.Management
                 {
                     val = new ActionResult("Service config could not be updated. Invalid data.", false);
                 }
+            }
+            else if (arg.CommandType == ManagementHubCommands.ApplyLicense)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var activationArg = args.FirstOrDefault(a => a.Key == "activation");
+                var activation = JsonSerializer.Deserialize<LicenseKeyInstallResult>(activationArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                if (activation != null)
+                {
+                    var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
+                    _licensingManager.FinaliseInstall(1, activation, settingsPath);
+
+                    await RefreshCachedLicenseCheck();
+
+                    // send updated instance info to hub
+                    SendHeartbeatToManagementHub();
+
+                    val = new ActionResult("Activated.", true);
+                }
+                else
+                {
+                    val = new ActionResult("Activation failed.", false);
+                }
+            }
+            else if (arg.CommandType == ManagementHubCommands.DeactivateLicense)
+            {
+                var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
+
+                var i = new Models.Shared.RegisteredInstance
+                {
+                    InstanceId = CoreAppSettings.Current.InstanceId,
+                    AppVersion = Management.Util.GetAppVersion().ToString()
+                };
+
+                var deactivated = await _licensingManager.DeactivateInstall(1, settingsPath, null, i);
+
+                if (deactivated)
+                {
+                    await RefreshCachedLicenseCheck();
+                }
+
+                // send updated instance info to hub
+                SendHeartbeatToManagementHub();
+
+                val = new ActionResult { IsSuccess = deactivated, Message = deactivated ? "Deactivated." : "Deactivation failed." };
+
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {

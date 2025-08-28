@@ -4,6 +4,8 @@
     {
         public string InstanceId { get; set; } = default!;
         public VersionInfo Version { get; set; } = default!;
+
+        public bool IsLicensed { get; set; }
     }
 
     public class HubJoiningInfo

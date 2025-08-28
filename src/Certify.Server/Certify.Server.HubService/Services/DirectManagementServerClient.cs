@@ -97,9 +97,19 @@ namespace Certify.Server.HubService.Services
             _managementHub.ReceiveCommandResult(result);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="joiningToken"></param>
         public void SetJoiningToken(string joiningToken)
         {
             _joiningToken = joiningToken;
+        }
+
+        public void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo)
+        {
+
+            _instanceInfo = instanceInfo;
         }
     }
 }

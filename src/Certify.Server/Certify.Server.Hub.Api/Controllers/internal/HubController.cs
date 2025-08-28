@@ -145,7 +145,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     i.DateLastReported = connected.DateLastReported;
                     i.ConnectionStatus = connected.ConnectionStatus;
-
+                    i.License = connected.License;
                     i.IsAuthenticated = true;
 
                     // copy db values to in memory connect instance representation

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -130,6 +130,9 @@ namespace Certify.Management
                 // PerformCAMaintenance();
 
                 ApplyLatestAutoUpdateScript();
+
+                // update current license check
+                await RefreshCachedLicenseCheck();
 
             }
             catch (Exception exp)
@@ -440,7 +443,7 @@ namespace Certify.Management
 #if NET9_0_OR_GREATER
             var x509Cert2 = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(item.CertificatePath, await GetPfxPassword(item));
 #else
-                                            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
+            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
 #endif
             var ariCertId = item.ARICertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(x509Cert2);
             return ariCertId;

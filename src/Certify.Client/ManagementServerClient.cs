@@ -112,27 +112,21 @@ namespace Certify.Client
         {
             Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
 
-            if (cmd.CommandType == ManagementHubCommands.GetInstanceInfo)
-            {
-                SendInstanceInfo(cmd.CommandId, isCommandResponse: true);
-            }
-            else
-            {
-                var task = OnGetCommandResult?.Invoke(cmd);
-                if (task != null)
-                {
-                    if (cmd.CommandType != ManagementHubCommands.Reconnect)
-                    {
-                        task.Result.IsCommandResponse = true;
-                        task.Result.CommandType = cmd.CommandType;
-                        task.Result.CommandId = cmd.CommandId;
+            var task = OnGetCommandResult?.Invoke(cmd);
 
-                        _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
-                    }
-                    else
-                    {
-                        task.Wait();
-                    }
+            if (task != null)
+            {
+                if (cmd.CommandType != ManagementHubCommands.Reconnect)
+                {
+                    task.Result.IsCommandResponse = true;
+                    task.Result.CommandType = cmd.CommandType;
+                    task.Result.CommandId = cmd.CommandId;
+
+                    _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
+                }
+                else
+                {
+                    task.Wait();
                 }
             }
         }
@@ -174,6 +168,11 @@ namespace Certify.Client
 
             result.ObjectValue = updateMsg;
             _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+        }
+
+        public void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo)
+        {
+            _instanceInfo = instanceInfo;
         }
     }
 }

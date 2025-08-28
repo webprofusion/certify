@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +14,7 @@ using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Providers;
 using Microsoft.Extensions.Logging;
+using Registration.Core.Models.Shared;
 using Serilog;
 
 namespace Certify.Management
@@ -288,9 +289,33 @@ namespace Certify.Management
 
             await UpgradeSettings();
 
+            await RefreshCachedLicenseCheck();
+
             _serviceLog?.Information("Certify Manager Started");
         }
 
+        private async Task RefreshCachedLicenseCheck()
+        {
+            try
+            {
+                if (_licensingManager != null)
+                {
+                    _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(1, EnvironmentUtil.EnsuredAppDataPath());
+                    if (_cachedLicenseCheck.IsValid)
+                    {
+                        if (await _licensingManager?.IsInstallActive(1, EnvironmentUtil.EnsuredAppDataPath()) == false)
+                        {
+                            _cachedLicenseCheck.StatusCode = LicenseCheckStatusCode.Invalid;
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Failed to refresh cached license check: {exp}");
+                _cachedLicenseCheck = null;
+            }
+        }
         /// <summary>
         /// Setup the continuous job tasks for renewals and maintenance
         /// </summary>
