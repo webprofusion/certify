@@ -30,6 +30,20 @@ if (cwd != null)
 {
     System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
     Directory.SetCurrentDirectory(cwd);
+
+#if !DEBUG
+    var defaultHubSettings = Path.Combine(cwd, "default-settings.json");
+
+    if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
+    {
+        // copy default config if it doesn't exist
+        File.Copy(
+            defaultHubSettings,
+            hubSettings,
+            false
+        );
+    }
+#endif
 }
 else
 {
@@ -41,19 +55,6 @@ var builder = WebApplication.CreateBuilder(args);
 // allow settings to be loaded from the app data path, that way settings are preserved between re-installs, copy a default config so service starts on localhost:8080
 var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 var hubSettings = Path.Combine(settingsPath, "hubservice.json");
-var defaultHubSettings = Path.Combine(cwd, "default-settings.json");
-
-#if !DEBUG
-if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
-{
-    // copy default config if it doesn't exist
-    File.Copy(
-        defaultHubSettings,
-        hubSettings,
-        false
-    );
-}
-#endif
 
 // load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
 if (hubSettings != null && File.Exists(hubSettings))
