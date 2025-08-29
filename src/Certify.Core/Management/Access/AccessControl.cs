@@ -349,7 +349,7 @@ namespace Certify.Core.Management.Access
                 ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles
             };
 
-            var isAuthorised = await IsSecurityPrincipalAuthorised(contextUserId, scopedCheck);
+            var isAuthorised = await IsSecurityPrincipalAuthorised(scopedCheck.SecurityPrincipalId, scopedCheck);
 
             if (isAuthorised)
             {

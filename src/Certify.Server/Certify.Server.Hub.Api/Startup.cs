@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Reporting;
@@ -71,17 +71,14 @@ namespace Certify.Server.Hub.Api
                     o.JsonSerializerOptions.WriteIndented = true;
                 });
 
-            services.AddRouting(r => r.LowercaseUrls = true);
-            services.AddProblemDetails();
-
-            services
-                .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
-                .AddMessagePackProtocol();
+            services.AddRouting(r => r.LowercaseUrls = true)
+                    .AddProblemDetails()
+                    .AddSignalR(opt => opt.MaximumReceiveMessageSize = null)
+                    .AddMessagePackProtocol();
 
             services.AddResponseCompression(opts =>
             {
-                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-                    new[] { "application/octet-stream", "application/json" });
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/octet-stream", "application/json"]);
             });
 
             services.AddOpenApi(); // required in net9 to resolve warning "Unable to find service type 'Microsoft.Extensions.ApiDescriptions.IDocumentProvider' in dependency injection container."

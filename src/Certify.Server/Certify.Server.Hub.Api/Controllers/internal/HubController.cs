@@ -1,10 +1,9 @@
 ﻿using Certify.Client;
 using Certify.Models;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers
@@ -49,7 +48,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("items")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
         public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, int? page = null, int? pageSize = null)
         {
@@ -126,13 +125,15 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("instances")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedInstanceInfo>))]
         public async Task<IActionResult> GetHubManagedInstances()
         {
-            if (!await IsAuthorized(_client, new AccessCheck(CurrentAuthContext?.UserId, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)))
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+
+            if (!accessCheck.IsSuccess)
             {
-                return Unauthorized();
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
             }
 
             var managedInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
@@ -164,7 +165,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("flush")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> FlushHubManagedInstances()
         {
@@ -193,6 +194,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Returns an OK response containing a list of ActionStep objects.</returns>
         [HttpGet]
         [Route("status/{instanceId?}")]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
         public async Task<IActionResult> GetSystemStatusItems(string? instanceId = null)
         {

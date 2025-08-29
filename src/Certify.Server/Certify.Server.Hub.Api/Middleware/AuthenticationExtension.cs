@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -43,6 +43,9 @@ namespace Certify.Server.Hub.Api.Middleware
                     ValidateIssuerSigningKey = true,
                     ValidateLifetime = true
                 };
+            })
+            .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationDefaults.AuthenticationScheme, o =>
+            {
             });
 
             return services;

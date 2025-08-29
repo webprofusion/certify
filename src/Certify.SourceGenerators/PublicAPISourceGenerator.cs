@@ -109,6 +109,7 @@ namespace SourceGenerator
             using Certify.Client;
             using Certify.Models.Config;
             using Certify.Server.Hub.Api.Controllers;
+            using Certify.Server.Hub.Api.Middleware;
             using Microsoft.AspNetCore.Authentication.JwtBearer;
             using Microsoft.AspNetCore.Authorization;
             using System.Collections.Generic;
@@ -128,7 +129,7 @@ namespace SourceGenerator
                     /// </summary>
                     /// <returns></returns>
                     [{config.OperationMethod}]
-                    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+                    [AuthorizedApi]
                     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof({config.ReturnType}))]
                     [Route(""""""{config.PublicAPIRoute}"""""")]
                     public async Task<IActionResult> {config.OperationName}({apiParamDeclWithoutAuthContext})

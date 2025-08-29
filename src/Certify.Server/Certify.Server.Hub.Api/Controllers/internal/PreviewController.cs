@@ -1,4 +1,5 @@
 ﻿using Certify.Models;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Markdig;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -36,7 +37,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="item"></param>
         /// <returns></returns>
         [HttpPost]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
         public async Task<IActionResult> GetPreview([FromBody] ManagedCertificate item)
         {
@@ -45,7 +46,7 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/plain")]
         [Route("managedcertificate")]
         public async Task<string> GetPreviewAsMarkdown([FromBody] ManagedCertificate item)
@@ -65,7 +66,7 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/html")]
         [Route("rendermarkdown")]
         public async Task<string> RenderMarkdown([FromBody] string markdown)
@@ -82,7 +83,7 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         [HttpPost]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(typeof(List<CertIdentifierItem>), StatusCodes.Status200OK)]
         [Route("csr/identifiers")]
         public async Task<IActionResult> IdentifiersFromCSR([FromBody] string csr)
