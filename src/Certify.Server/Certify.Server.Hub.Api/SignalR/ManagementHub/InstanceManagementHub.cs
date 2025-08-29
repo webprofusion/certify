@@ -220,8 +220,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (cmd != null)
             {
-                //_stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
-
 
                 // for all other command results we need to resolve which instance id we are communicating with
 
@@ -235,7 +233,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 {
                     _logger?.LogError("Received instance command result for an unknown instance {result}", result.CommandType);
                 }
-
             }
             else
             {
@@ -253,7 +250,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         {
             // action this message from this instance
             _logger?.LogDebug("[ProcessInstanceCommandResult] Received instance command result {instanceId} {cmdType}", instanceId, cmd.CommandType);
-
 
             if (!cmd.IsResultAwaited && cmd.CommandType == ManagementHubCommands.GetManagedItems && result.Value != null)
             {

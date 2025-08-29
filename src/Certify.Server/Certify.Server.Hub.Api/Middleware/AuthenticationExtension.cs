@@ -46,6 +46,7 @@ namespace Certify.Server.Hub.Api.Middleware
             })
             .AddScheme<ApiKeyAuthenticationOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationDefaults.AuthenticationScheme, o =>
             {
+                // adds the option to authenticate using API token
             });
 
             return services;

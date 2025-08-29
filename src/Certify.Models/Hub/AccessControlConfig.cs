@@ -81,24 +81,24 @@ namespace Certify.Models.Hub
 
     public class ResourceTypes
     {
-        public static string System { get; } = "system";
-        public static string SecurityPrincipal { get; } = "securityprincipal";
-        public static string Role { get; } = "role";
-        public static string AccessToken { get; } = "accesstoken";
-        public static string Domain { get; } = "domain";
-        public static string ManagedItem { get; } = "manageditem";
-        public static string Certificate { get; } = "certificate";
-        public static string StoredCredential { get; } = "storedcredential";
-        public static string CertificateAuthority { get; } = "ca";
-        public static string AcmeAccount { get; } = "acmeaccount";
-        public static string ManagedChallenge { get; } = "managedchallenge";
-        public static string ManagedAcme { get; } = "managedacme";
-        public static string ManagedInstance { get; } = "managedinstance";
-        public static string ManagedLicense { get; } = "managedlicense";
-        public static string Target { get; } = "target";
-        public static string ChallengeProvider { get; } = "challengeprovider";
-        public static string DeploymentTask { get; } = "deploymenttask";
-        public static string Tag { get; } = "tag";
+        public const string System = "system";
+        public const string SecurityPrincipal  = "securityprincipal";
+        public const string Role  = "role";
+        public const string AccessToken  = "accesstoken";
+        public const string Domain  = "domain";
+        public const string ManagedItem  = "manageditem";
+        public const string Certificate  = "certificate";
+        public const string StoredCredential  = "storedcredential";
+        public const string CertificateAuthority  = "ca";
+        public const string AcmeAccount  = "acmeaccount";
+        public const string ManagedChallenge  = "managedchallenge";
+        public const string ManagedAcme  = "managedacme";
+        public const string ManagedInstance  = "managedinstance";
+        public const string ManagedLicense  = "managedlicense";
+        public const string Target  = "target";
+        public const string ChallengeProvider  = "challengeprovider";
+        public const string DeploymentTask  = "deploymenttask";
+        public const string Tag  = "tag";
     }
 
     public static class StandardResourceActions
