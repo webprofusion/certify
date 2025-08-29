@@ -24,8 +24,13 @@ void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, st
 
 var hubServiceAssembly = typeof(Certify.Server.HubService.Services.CertifyDirectHubService).Assembly;
 
+// allow settings to be loaded from the app data path, that way settings are preserved between re-installs, copy a default config so service starts on localhost:8080
+var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
+var hubSettings = Path.Combine(settingsPath, "hubservice.json");
+
 // set working directory so that when we are started as a service we can find our config
 var cwd = Path.GetDirectoryName(hubServiceAssembly.Location);
+
 if (cwd != null)
 {
     System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
@@ -51,10 +56,6 @@ else
 }
 
 var builder = WebApplication.CreateBuilder(args);
-
-// allow settings to be loaded from the app data path, that way settings are preserved between re-installs, copy a default config so service starts on localhost:8080
-var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
-var hubSettings = Path.Combine(settingsPath, "hubservice.json");
 
 // load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
 if (hubSettings != null && File.Exists(hubSettings))
