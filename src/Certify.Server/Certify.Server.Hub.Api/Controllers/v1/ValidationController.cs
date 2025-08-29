@@ -1,6 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Certify.Server.Hub.Api.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,7 +37,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{type}/{key?}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SimpleAuthorizationChallengeItem>))]
         public async Task<IActionResult> GetValidationChallenges(string? type = "http-01", string? key = null)
         {

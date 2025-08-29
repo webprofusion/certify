@@ -1,6 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Certify.Server.Hub.Api.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -40,7 +40,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// Operations to check current auth status for the given presented authentication tokens
         /// </summary>
         /// <returns></returns>
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [HttpGet]
         [Route("status")]
         public async Task<IActionResult> CheckAuthStatus()
@@ -108,10 +108,10 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 //return Unauthorized("Invalid username or password");
                 return Problem(
-       type: "https://tools.ietf.org/html/rfc7231#section-6.5.1",
-       title: "Login Failed",
-       detail: "Invalid username or password",
-       statusCode: StatusCodes.Status401Unauthorized);
+                   type: "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                   title: "Login Failed",
+                   detail: "Invalid username or password",
+                   statusCode: StatusCodes.Status401Unauthorized);
 
             }
         }

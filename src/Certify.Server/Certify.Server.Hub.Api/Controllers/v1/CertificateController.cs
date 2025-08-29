@@ -4,8 +4,8 @@ using Certify.Client;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -131,7 +131,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Log file as LogItem list</returns>
         [HttpGet]
         [Route("{managedCertId}/log")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
         public async Task<IActionResult> DownloadLog(string instanceId, string managedCertId, int maxLines = 1000)
         {
@@ -154,7 +154,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Log file in text format</returns>
         [HttpGet]
         [Route("{managedCertId}/log/download")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> DownloadLogText(string instanceId, string managedCertId)
@@ -174,7 +174,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="pageSize"></param>
         /// <returns></returns>
         [HttpGet]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
         [Route("search")]
         public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
@@ -219,7 +219,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("summary")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetManagedCertificateSummary()
         {
@@ -233,7 +233,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Returns an IActionResult containing the summary of the managed certificate.</returns>
         [HttpGet]
         [Route("{instanceId}/summary")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetInstanceManagedCertificateSummary(string instanceId)
         {
@@ -249,7 +249,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{instanceId}/settings/{managedCertId}")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
@@ -266,7 +266,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("{instanceId}/settings/update")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, ManagedCertificate managedCertificate)
         {
@@ -290,7 +290,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("order")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> BeginOrder(string instanceId, string id)
         {
@@ -307,7 +307,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("renew")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> PerformRenewal(string instanceId, RenewalSettings settings)
         {
@@ -331,7 +331,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("test")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<StatusMessage>))]
         public async Task<IActionResult> PerformConfigurationTest(string instanceId, ManagedCertificate item)
         {
@@ -356,7 +356,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("reset")]
-        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> ResetStatus(string instanceId, string id)
         {

@@ -12,22 +12,6 @@ namespace Certify.Server.Hub.Api.Controllers
     /// </summary>
     public partial class ApiControllerBase : ControllerBase
     {
-        /// <summary>
-        /// Check resource action access for the current user
-        /// </summary>
-        /// <param name="internalApiClient"></param>
-        /// <param name="resourceType"></param>
-        /// <param name="resourceAction"></param>
-        /// <returns></returns>
-        internal async Task<bool> IsAuthorized(ICertifyInternalApiClient internalApiClient, string resourceType, string resourceAction)
-        {
-            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
-            {
-                return false;
-            }
-
-            return await IsAuthorized(internalApiClient, new AccessCheck(CurrentAuthContext?.UserId, resourceType, resourceAction));
-        }
 
         /// <summary>
         /// Check resource action access for the current user
@@ -112,6 +96,7 @@ namespace Certify.Server.Hub.Api.Controllers
             get
             {
                 var authHeader = Request.Headers["Authorization"];
+
                 if (string.IsNullOrWhiteSpace(authHeader))
                 {
                     return null;
