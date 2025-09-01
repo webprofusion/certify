@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -180,10 +180,12 @@ namespace Certify.Shared.Utils
 
                 var aia = AuthorityInformationAccess.GetInstance(asn1);
                 var desc = aia.GetAccessDescriptions();
-                var ocspUrl = desc.First(a => a.AccessMethod.Id == "1.3.6.1.5.5.7.48.1").AccessLocation;
+                var ocspUrl = desc.FirstOrDefault(a => a.AccessMethod.Id == "1.3.6.1.5.5.7.48.1")?.AccessLocation;
 
-                ocspUrls.Add(ocspUrl.Name.ToString());
-
+                if (ocspUrl != null)
+                {
+                    ocspUrls.Add(ocspUrl.Name.ToString());
+                }
             }
             catch (Exception e)
             {
