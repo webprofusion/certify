@@ -94,14 +94,9 @@ namespace Certify.Server.Hub.Api.Middleware
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             //check if api key is present on request headers
-            if (!Request.Headers.ContainsKey("X-Client-ID"))
+            if (!Request.Headers.ContainsKey("X-Client-ID") || !Request.Headers.ContainsKey("X-Client-Secret"))
             {
-                return AuthenticateResult.Fail("Missing X-Client-ID");
-            }
-
-            if (!Request.Headers.ContainsKey("X-Client-Secret"))
-            {
-                return AuthenticateResult.Fail("Missing X-Client-Secret");
+                return AuthenticateResult.NoResult();
             }
 
             var endpoint = Context.GetEndpoint();
