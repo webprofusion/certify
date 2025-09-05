@@ -2,9 +2,9 @@
 {
     public class CertificateManagerPreference
     {
-        public string Id { get; set; }
-        public bool IsEnabled { get; set; }
-        public string ConfigPath { get; set; }
-        public string LogPath { get; set; }
+        public string Id { get; set; } = default!;
+        public bool IsEnabled { get; set; } = default!;
+        public string ConfigPath { get; set; } = default!;
+        public string LogPath { get; set; } = default!;
     }
 }

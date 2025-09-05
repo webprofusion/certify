@@ -267,7 +267,7 @@ namespace Certify.Providers.Internal
 
     public class LicensingManager : ILicensingManager
     {
-        private bool _enableLog = false;
+        private bool _enableLog;
 
         public LicensingManager()
         {
@@ -360,6 +360,7 @@ namespace Certify.Providers.Internal
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5364:Do Not Use Deprecated Security Protocols", Justification = "<Pending>")]
         public static void SetSupportedTLSVersions(bool enableLog)
         {
 
