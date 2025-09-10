@@ -181,7 +181,7 @@ namespace Certify.Models
         /// <summary>
         /// If true , indicates CN should be set in the CSR
         /// </summary>
-        public bool? IncludeCN { get; set; } = default!;
+        public bool IncludeCN { get; set; }
 
         /// <summary>
         /// In the case of ACME, the primary challenge type this request will use (eg. http-01) 
