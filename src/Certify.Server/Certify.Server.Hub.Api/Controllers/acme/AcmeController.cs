@@ -1,8 +1,8 @@
-﻿using System.Collections.Concurrent;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Hub;
+using Certify.Providers;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
@@ -17,13 +17,12 @@ namespace Certify.Server.Hub.Api.Controllers.acme
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     [Route("acme")]
-    public class AcmeController : ApiControllerBase
+    public partial class AcmeController : ApiControllerBase
     {
         // Extract magic numbers and strings to constants
         private const int DEFAULT_EXPIRY_DAYS = 30;
         private const int NONCE_BYTES = 16;
         private const int TOKEN_BYTES = 32;
-        private const string ACME_SERVER_PATH = "acme-server";
         private const string PEM_FULLCHAIN_FORMAT = "pem_fullchain";
 
         // Extract ACME error types to constants
@@ -39,18 +38,14 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         }
 
         private readonly ILogger<AcmeController> _logger;
-        private static readonly ConcurrentDictionary<string, AcmeAccount> _accounts = new();
-        private static readonly ConcurrentDictionary<string, JsonWebKey> _accountKeys = new();
-        private static readonly ConcurrentDictionary<string, AcmeOrder> _orders = new();
-        private static readonly ConcurrentDictionary<string, AcmeAuthorization> _authorizations = new();
-        private static readonly ConcurrentDictionary<string, string> _nonces = new();
-        private static readonly ConcurrentDictionary<string, string> _consumedEabKeys = new();
         private ManagementAPI _mgmtAPI;
-
         private readonly ICertifyInternalApiClient _client;
-
         private IInstanceManagementStateProvider _stateProvider;
+        private IConfigurationStore _configStore;
+        private readonly AcmeBackgroundTaskService _backgroundTaskService;
         private string _hubInstanceId = default!;
+
+        private AcmeServerConfig _config = default!;
 
         /// <summary>
         /// Initializes a new instance of the AcmeController
@@ -58,15 +53,24 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="logger">Logger for recording ACME operations</param>
         /// <param name="mgmtAPI">Management API for certificate operations</param>
         /// <param name="stateProvider">Provider for instance management state</param>
-        public AcmeController(ILogger<AcmeController> logger, ManagementAPI mgmtAPI, IInstanceManagementStateProvider stateProvider, ICertifyInternalApiClient certifyInternalApi)
+        /// <param name="backgroundTaskService">Background task service for long-running operations</param>
+        public AcmeController(
+            ILogger<AcmeController> logger,
+            ManagementAPI mgmtAPI,
+            IInstanceManagementStateProvider stateProvider,
+            ICertifyInternalApiClient certifyInternalApi,
+            AcmeServerConfig config,
+            AcmeBackgroundTaskService backgroundTaskService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mgmtAPI = mgmtAPI ?? throw new ArgumentNullException(nameof(mgmtAPI));
             _client = certifyInternalApi ?? throw new ArgumentNullException(nameof(certifyInternalApi));
             _stateProvider = stateProvider ?? throw new ArgumentNullException(nameof(stateProvider));
+            _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
 
             _hubInstanceId = _stateProvider.GetManagementHubInstanceId();
-            LoadSavedState();
+
+            _config = config ?? throw new ArgumentNullException(nameof(config));
         }
 
         /// <summary>
@@ -99,6 +103,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
         private bool ValidateKeyIfSupplied(string key)
         {
+            // TODO: Implement key validation logic if needed
             return true;
         }
 
@@ -139,7 +144,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                (request, newAccountKey) = DecodeJwsWithAccountKey<AccountRequest>(payload);
+                (request, newAccountKey) = await DecodeJwsWithAccountKey<AccountRequest>(payload);
             }
             catch (Exception ex)
             {
@@ -149,6 +154,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             // Validate External Account Binding if required
             string validatedEabKeyInternalId = null;
+
             if (string.IsNullOrEmpty(key))
             {
                 validatedEabKeyInternalId = await ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey);
@@ -176,10 +182,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var accountKid = BuildAccountUrl(baseUrl, accountId);
 
-            _accounts[accountKid] = account;
-            _accountKeys[accountKid] = newAccountKey;
-
-            StoreCurrentState();
+            // Store individual items persistently
+            await _config.StoreAcmeAccount(accountKid, account);
+            await _config.StoreAcmeAccountKey(accountKid, newAccountKey);
 
             AddReplayNonceHeader();
             AddLocationHeader(BuildAccountUrl(baseUrl, accountId));
@@ -194,7 +199,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="key"></param>
         /// <param name="accountId"></param>
         /// <returns></returns>
-       // [HttpPost("{key}/account/{accountId}")]
+        // [HttpPost("{key}/account/{accountId}")]
         [HttpPost("account/{accountId}")]
         public async Task<IActionResult> Account([FromBody] JwsPayload payload, string accountId)
         {
@@ -206,7 +211,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                (request, newAccountKey) = DecodeJwsWithAccountKey<AccountRequest>(payload);
+                (request, newAccountKey) = await DecodeJwsWithAccountKey<AccountRequest>(payload);
             }
             catch (Exception ex)
             {
@@ -218,12 +223,15 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             {
                 var matchedAccountKid = GetAccountKidFromJwsPayload(payload);
 
-                if (!_accounts.TryRemove(matchedAccountKid, out var deactivationAccount))
+                var deactivationAccount = await _config.GetAccount(matchedAccountKid);
+                if (deactivationAccount == null)
                 {
                     return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Account not found");
                 }
 
-                StoreCurrentState();
+                // Remove from persistent storage
+                await _config.RemoveAcmeAccount(matchedAccountKid);
+                await _config.RemoveAcmeAccountKey(matchedAccountKid);
 
                 // deactivated account
                 return Ok(deactivationAccount);
@@ -232,7 +240,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             {
                 var matchedAccountKid = GetAccountKidFromJwsPayload(payload);
 
-                if (_accounts.TryGetValue(matchedAccountKid, out var acc))
+                var acc = await _config.GetAccount(matchedAccountKid);
+
+                if (acc != null)
                 {
                     return Ok(acc);
                 }
@@ -259,13 +269,15 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             NewOrderRequest request;
             try
             {
-                request = DecodeJwsPayload<NewOrderRequest>(payload);
+                request = await DecodeJwsPayload<NewOrderRequest>(payload);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for new order request");
                 return CreateAcmeError(AcmeErrorTypes.Malformed, $"Invalid JWS payload: {ex.Message}");
             }
+
+            //TODO: pre-check we can honor the required identifiers with a managed challenge, otherwise reject order
 
             var orderId = GenerateOrderId();
             var authorizationIds = new List<string>();
@@ -276,16 +288,18 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             foreach (var identifier in request.Identifiers)
             {
                 var authId = GenerateAuthorizationId();
+
                 var authorization = CreateAuthorization(identifier, baseUrl);
 
-                _authorizations[authId] = authorization;
                 authorizationIds.Add(BuildAuthorizationUrl(baseUrl, authId));
+
+                await _config.StoreAcmeAuthorization(authId, authorization);
             }
 
             var order = new AcmeOrder
             {
                 Id = orderId,
-                Status = OrderStatus.Pending,
+                Status = OrderStatus.Ready,
                 Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
                 Identifiers = request.Identifiers,
                 NotBefore = request.NotBefore,
@@ -304,24 +318,30 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to create temporary managed certificate");
             }
 
-            _ = Task.Run(async () =>
-            {
-                await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, tempCert.Id, CurrentAuthContext);
-
-                order.Status = OrderStatus.Valid;
-                _orders[orderId] = order;
-            });
-
             order.ManagedCertificateId = tempCert.Id;
 
-            _orders[orderId] = order;
+            // Store order
+            await _config.StoreAcmeOrder(orderId, order);
 
-            StoreCurrentState();
+            // Enqueue background task for order processing
+            var taskEnqueued = await _backgroundTaskService.EnqueueOrderProcessingTask(
+                orderId,
+                tempCert.Id,
+                CurrentAuthContext,
+                _hubInstanceId);
+
+            if (!taskEnqueued)
+            {
+                _logger.LogError("Failed to enqueue background task for order {OrderId}", orderId);
+                return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to process order");
+            }
 
             AddReplayNonceHeader();
-            AddLocationHeader(BuildOrderUrl(baseUrl, orderId));
 
-            return Created(BuildOrderUrl(baseUrl, orderId), order);
+            var orderUrl = BuildOrderUrl(baseUrl, orderId);
+            AddLocationHeader(orderUrl);
+
+            return Created(orderUrl, order);
         }
 
         /// <summary>
@@ -337,23 +357,28 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         {
             ValidateKeyIfSupplied(key);
 
-            if (!_orders.TryGetValue(orderId, out var order))
+            var order = await _config.GetAcmeOrder(orderId);
+            if (order == null)
             {
                 return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
             if (order.Status == OrderStatus.Invalid)
             {
-                // order is still processing, 
                 return CreateAcmeError(AcmeErrorTypes.OrderNotReady, "Order has failed. Cannot complete finalization");
+            }
+
+            // Check if order is ready for finalization
+            if (order.Status != OrderStatus.ReadyForInternalFinalization && order.Status != OrderStatus.Ready)
+            {
+                return CreateAcmeError(AcmeErrorTypes.OrderNotReady, "Order is not ready for finalization");
             }
 
             // Decode the JWS payload
             FinalizeOrderRequest request;
-
             try
             {
-                request = DecodeJwsPayload<FinalizeOrderRequest>(payload);
+                request = await DecodeJwsPayload<FinalizeOrderRequest>(payload);
             }
             catch (Exception ex)
             {
@@ -361,45 +386,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            var finalizeTask = Task.Run(async () =>
+            // Check if finalization is already in progress
+            if (order.Status != OrderStatus.InternalFinalizationInProgress)
             {
-                // check status of temp managed certificate
-                var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
+                // Enqueue background task for order finalization
+                var taskEnqueued = await _backgroundTaskService.EnqueueOrderFinalizationTask(
+                    orderId,
+                    request.Csr,
+                    BuildBaseUrl(key),
+                    CurrentAuthContext,
+                    _hubInstanceId);
 
-                if (managedCert != null)
+                if (!taskEnqueued)
                 {
-                    //return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Managed certificate not found for order");
-
-                    // apply CSR from client finalize call as a formatted customcsr
-                    managedCert.RequestConfig.CustomCSR = FormatCsrPem(request.Csr);
-
-                    await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
-
-                    // resume/finalize cert order
-                    await _mgmtAPI.PerformManagedCertificateRequest(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-
-                    order.Status = OrderStatus.Valid;
-                    var certId = GenerateCertificateId();
-
-                    var baseUrl = BuildBaseUrl(key);
-                    order.Certificate = BuildCertificateUrl(baseUrl, certId);
-                    _orders[orderId] = order;
-                    AddReplayNonceHeader();
-
-                    StoreCurrentState();
+                    _logger.LogError("Failed to enqueue finalization task for order {OrderId}", orderId);
+                    return CreateAcmeError(AcmeErrorTypes.ServerInternal, "Failed to process finalization");
                 }
-            });
+            }
 
-            // finalize may have been called while the order is still at Processing, in which case we need to return the order status but continue completing the order
-            if (order.Status == OrderStatus.Pending || order.Status == OrderStatus.Processing)
-            {
-                order.Status = OrderStatus.Processing;
-                return Ok(order);
-            }
-            else
-            {
-                await finalizeTask;
-            }
+            // Update order status to processing
+            order.Status = OrderStatus.Processing;
+            await _config.StoreAcmeOrder(orderId, order);
+
+            AddReplayNonceHeader();
 
             return Ok(order);
         }
@@ -429,7 +438,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var baseUrl = BuildBaseUrl(key);
             var certUri = BuildCertificateUrl(baseUrl, certId);
-            var order = _orders.FirstOrDefault(o => o.Value.Certificate == certUri).Value;
+            var order = await _config.GetAcmeOrderByCertificateUri(certUri);
             if (order == null)
             {
                 return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid or unknown certId");
@@ -448,7 +457,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             // delete order and temp managed cert
             await _mgmtAPI.RemoveManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-            _orders.Remove(order.Id, out _);
+            await _config.RemoveAcmeOrder(order.Id);
 
             AddReplayNonceHeader();
 
@@ -479,17 +488,24 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            if (!_orders.TryGetValue(orderId, out var order))
+            var order = await _config.GetAcmeOrder(orderId);
+
+            if (order == null)
             {
                 return CreateAcmeError(AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
-            // check status of temp managed certificate
-            var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-
-            order.Status = MapManagedCertificateStatus(managedCert.LastRenewalStatus);
-
             AddReplayNonceHeader();
+
+            if (order.Status == OrderStatus.ReadyForInternalFinalization)
+            {
+                order.Status = OrderStatus.Processing;
+            }
+            else if (order.Status == OrderStatus.InternalFinalizationInProgress)
+            {
+                order.Status = OrderStatus.Processing;
+            }
+
             return Ok(order);
         }
 
@@ -502,7 +518,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <returns>Authorization object</returns>
         [HttpPost("authz/{authId}")]
         [HttpPost("{key?}/authz/{authId}")]
-        public IActionResult GetAuthorization(string authId, [FromBody] JwsPayload payload, string key = default!)
+        public async Task<IActionResult> GetAuthorization(string authId, [FromBody] JwsPayload payload, string key = default!)
         {
             ValidateKeyIfSupplied(key);
 
@@ -516,7 +532,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return CreateAcmeError(AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            if (!_authorizations.TryGetValue(authId, out var authorization))
+            var authorization = await _config.GetAcmeAuthorization(authId);
+            if (authorization == null)
             {
                 return CreateAcmeError(AcmeErrorTypes.AuthorizationNotFound, "Authorization not found");
             }
@@ -538,9 +555,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private static string BuildOrderUrl(string baseUrl, string orderId) => $"{baseUrl}/order/{orderId}";
         private static string BuildCertificateUrl(string baseUrl, string certId) => $"{baseUrl}/cert/{certId}";
 
-        private (T request, JsonWebKey? accountKey) DecodeJwsWithAccountKey<T>(JwsPayload payload)
+        private async Task<(T request, JsonWebKey? accountKey)> DecodeJwsWithAccountKey<T>(JwsPayload payload)
         {
-            var request = DecodeJwsPayload<T>(payload);
+            var request = await DecodeJwsPayload<T>(payload);
 
             var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
             var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
@@ -549,11 +566,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return (request, protectedHeader?.Jwk);
         }
 
-        private T DecodeJwsForPostAsGet<T>(JwsPayload payload, string errorContext)
+        private async Task<T> DecodeJwsForPostAsGet<T>(JwsPayload payload, string errorContext)
         {
             try
             {
-                return DecodeJwsPayload<T>(payload);
+                return await DecodeJwsPayload<T>(payload);
             }
             catch (Exception ex)
             {
@@ -591,17 +608,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 Status = AuthorizationStatus.Valid, //presets auth to valid so the client doesn't attempt them
                 Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
                 Challenges = CreateStandardChallenges(baseUrl)
-            };
-        }
-
-        private static OrderStatus MapManagedCertificateStatus(RequestState? renewalStatus)
-        {
-            return renewalStatus switch
-            {
-                null or RequestState.Running => OrderStatus.Processing,
-                RequestState.Paused => OrderStatus.Processing,
-                RequestState.Error => OrderStatus.Invalid,
-                _ => OrderStatus.Valid
             };
         }
 
@@ -648,25 +654,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             return $"-----BEGIN CERTIFICATE REQUEST-----\n{Convert.ToBase64String(Certify.Management.Util.FromUrlSafeBase64String(csr), Base64FormattingOptions.InsertLineBreaks)}\n-----END CERTIFICATE REQUEST-----";
         }
 
-        private void AddReplayNonceHeader()
+        private async void AddReplayNonceHeader()
         {
-            Response.Headers.Append("Replay-Nonce", GenerateNonce());
+            Response.Headers.Append("Replay-Nonce", await GenerateNonce());
         }
 
         private void AddLocationHeader(string location)
         {
             Response.Headers.Append("Location", location);
         }
-        private string GenerateNonce()
+
+        private async Task<string> GenerateNonce()
         {
             var nonce = JwsConvert.ToBase64String(RandomNumberGenerator.GetBytes(NONCE_BYTES));
-            _nonces[nonce] = DateTime.UtcNow.ToString();
+            var timestamp = DateTime.UtcNow.ToString();
+
+            await _config.StoreAcmeNonce(nonce, timestamp);
+
             return nonce;
         }
 
-        private static bool IsValidNonce(string nonce)
+        private async Task<bool> IsValidNonce(string nonce)
         {
-            return !string.IsNullOrEmpty(nonce) && _nonces.ContainsKey(nonce);
+            return !string.IsNullOrEmpty(nonce) && (await _config.GetAcmeNonce(nonce)) != null;
         }
 
         private static string GetAccountKidFromJwsPayload(JwsPayload payload)
@@ -695,7 +705,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="payload">JWS payload</param>
         /// <returns>Decoded request object</returns>
         /// <exception cref="ArgumentException">When JWS validation fails</exception>
-        private T DecodeJwsPayload<T>(JwsPayload payload)
+        private async Task<T> DecodeJwsPayload<T>(JwsPayload payload)
         {
             if (payload == null)
             {
@@ -726,10 +736,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 }
 
                 // Validate required fields in protected header
-                ValidateProtectedHeader(protectedHeader);
+                await ValidateProtectedHeader(protectedHeader);
 
                 // Verify the signature
-                if (!VerifyJwsSignature(payload, protectedHeader))
+                if (!await VerifyJwsSignature(payload, protectedHeader))
                 {
                     throw new ArgumentException("JWS signature verification failed. Ensure Account Key is valid and known to this CA");
                 }
@@ -766,7 +776,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// Validates the JWS protected header according to RFC 7515 and ACME requirements
         /// </summary>
         /// <param name="header">Protected header to validate</param>
-        private void ValidateProtectedHeader(JwsProtectedHeader header)
+        private async Task ValidateProtectedHeader(JwsProtectedHeader header)
         {
             // RFC 7515 Section 4.1.1 - Algorithm is required
             if (string.IsNullOrEmpty(header.Alg))
@@ -813,7 +823,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             }
 
             // Validate the nonce
-            if (!IsValidNonce(header.Nonce))
+            if (!await IsValidNonce(header.Nonce))
             {
                 throw new ArgumentException("Invalid or expired nonce in JWS header");
             }
@@ -863,7 +873,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                     return null;
                 }
 
-                if (_consumedEabKeys.ContainsKey(eabHeader.Kid))
+                if (await _config.IsEabKeyConsumed(eabHeader.Kid))
                 {
                     _logger.LogError("EAB Key {keyId} has already been used to register an ACME account and cannot be re-used", eabHeader.Kid);
                     return null;
@@ -1039,11 +1049,10 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <summary>
         /// Mark EAB key as used to prevent replay attacks
         /// </summary>
-        private void MarkEabKeyAsUsed(string keyId)
+        private async void MarkEabKeyAsUsed(string keyId)
         {
             // Store used EAB keys with timestamp
-            // Implement appropriate cleanup/expiry logic
-            _consumedEabKeys[keyId] = DateTime.UtcNow.ToString();
+            await _config.StoreAcmeConsumedEabKey(keyId, DateTime.UtcNow.ToString());
         }
 
         /// <summary>
@@ -1085,7 +1094,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// <param name="payload">JWS payload</param>
         /// <param name="header">Protected header</param>
         /// <returns>True if signature is valid</returns>
-        private bool VerifyJwsSignature(JwsPayload payload, JwsProtectedHeader header)
+        private async Task<bool> VerifyJwsSignature(JwsPayload payload, JwsProtectedHeader header)
         {
             try
             {
@@ -1097,7 +1106,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 var signatureBytes = JwsConvert.FromBase64String(payload.Signature);
 
                 // Get the public key from JWK or KID
-                var publicKey = GetPublicKey(header);
+                var publicKey = await GetPublicKey(header);
+
                 if (publicKey == null)
                 {
                     return false;
@@ -1118,7 +1128,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         /// <param name="header">Protected header</param>
         /// <returns>Public key for verification</returns>
-        private static JsonWebKey? GetPublicKey(JwsProtectedHeader header)
+        private async Task<JsonWebKey?> GetPublicKey(JwsProtectedHeader header)
         {
             if (header.Jwk != null)
             {
@@ -1126,10 +1136,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             }
             else if (!string.IsNullOrEmpty(header.Kid))
             {
-                if (_accountKeys.TryGetValue(header.Kid, out var jwk))
-                {
-                    return jwk;
-                }
+
+                var jwk = await _config.GetAccountKey(header.Kid);
+                return jwk;
             }
 
             return null;
@@ -1154,59 +1163,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             // For this stub, we'll simulate verification
             return true;
         }
-
-        private static void StoreCurrentState()
-        {
-            SaveStateToFile("accounts.json", _accounts);
-            SaveStateToFile("account-keys.json", _accountKeys);
-            SaveStateToFile("orders.json", _orders);
-            SaveStateToFile("consumed-eab-keys.json", _consumedEabKeys);
-        }
-
-        private static void LoadSavedState()
-        {
-            LoadStateFromFile("accounts.json", _accounts);
-            LoadStateFromFile("account-keys.json", _accountKeys);
-            LoadStateFromFile("orders.json", _orders);
-            LoadStateFromFile("consumed-eab-keys.json", _consumedEabKeys);
-        }
-
-        private static void SaveStateToFile<T>(string fileName, ConcurrentDictionary<string, T> data)
-        {
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(ACME_SERVER_PATH);
-            var filePath = Path.Join(settingsPath, fileName);
-            var json = System.Text.Json.JsonSerializer.Serialize(data);
-            System.IO.File.WriteAllText(filePath, json);
-        }
-
-        private static void LoadStateFromFile<T>(string fileName, ConcurrentDictionary<string, T> targetDictionary)
-        {
-            if (targetDictionary.Count > 0)
-            {
-                return;
-            }
-
-            var settingsPath = EnvironmentUtil.EnsuredAppDataPath(ACME_SERVER_PATH);
-            var filePath = Path.Join(settingsPath, fileName);
-
-            if (!System.IO.File.Exists(filePath))
-            {
-                return;
-            }
-
-            var json = System.IO.File.ReadAllText(filePath);
-            var data = System.Text.Json.JsonSerializer.Deserialize<ConcurrentDictionary<string, T>>(json);
-
-            if (data == null)
-            {
-                return;
-            }
-
-            targetDictionary.Clear();
-            foreach (var item in data)
-            {
-                targetDictionary.TryAdd(item.Key, item.Value);
-            }
-        }
     }
 }
+
