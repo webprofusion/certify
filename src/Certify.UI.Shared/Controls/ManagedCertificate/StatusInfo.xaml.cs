@@ -28,43 +28,46 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "SelectedItem")
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
-                if (ItemViewModel.SelectedItem != null)
+                if (e.PropertyName == "SelectedItem")
                 {
-                    if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+                    if (ItemViewModel.SelectedItem != null)
                     {
-                        RenewalSuccess.Visibility = Visibility.Visible;
-                        RenewalFailed.Visibility = Visibility.Collapsed;
-                        RenewalPaused.Visibility = Visibility.Collapsed;
-                    }
-                    else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
-                    {
-                        RenewalSuccess.Visibility = Visibility.Collapsed;
-                        RenewalFailed.Visibility = Visibility.Collapsed;
-                        RenewalPaused.Visibility = Visibility.Visible;
-                    }
-                    else if (
-                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
-                      ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
-                      )
-                    {
-                        RenewalSuccess.Visibility = Visibility.Collapsed;
-                        RenewalFailed.Visibility = Visibility.Visible;
-                        RenewalPaused.Visibility = Visibility.Collapsed;
-                    }
+                        if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+                        {
+                            RenewalSuccess.Visibility = Visibility.Visible;
+                            RenewalFailed.Visibility = Visibility.Collapsed;
+                            RenewalPaused.Visibility = Visibility.Collapsed;
+                        }
+                        else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
+                        {
+                            RenewalSuccess.Visibility = Visibility.Collapsed;
+                            RenewalFailed.Visibility = Visibility.Collapsed;
+                            RenewalPaused.Visibility = Visibility.Visible;
+                        }
+                        else if (
+                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
+                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
+                          )
+                        {
+                            RenewalSuccess.Visibility = Visibility.Collapsed;
+                            RenewalFailed.Visibility = Visibility.Visible;
+                            RenewalPaused.Visibility = Visibility.Collapsed;
+                        }
 
-                    if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
-                    {
-                        // hide log option if from external source
-                        OpenLogFile.Visibility = Visibility.Hidden;
-                    }
-                    else
-                    {
-                        OpenLogFile.Visibility = Visibility.Visible;
+                        if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
+                        {
+                            // hide log option if from external source
+                            OpenLogFile.Visibility = Visibility.Hidden;
+                        }
+                        else
+                        {
+                            OpenLogFile.Visibility = Visibility.Visible;
+                        }
                     }
                 }
-            }
+            });
         }
 
         private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
