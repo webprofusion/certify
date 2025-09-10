@@ -146,6 +146,9 @@ namespace Certify.Server.Hub.Api.Services
                     orderDetails.Status = OrderStatus.Invalid;
                     await configService.StoreAcmeOrder(task.OrderId, orderDetails);
                 }
+
+                // remove temp maneged cert for failed order
+                await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
             }
         }
 
@@ -194,14 +197,30 @@ namespace Certify.Server.Hub.Api.Services
                 // Resume/finalize cert order
                 await mgmtApi.PerformManagedCertificateRequest(task.HubInstanceId, updatedOrder.ManagedCertificateId, task.AuthContext);
 
-                // Update order status
-                var certId = Guid.NewGuid().ToString("N");
-                updatedOrder.Certificate = $"{task.BaseUrl}/cert/{certId}";
-                updatedOrder.Status = OrderStatus.Valid;
+                managedCert = await mgmtApi.GetManagedCertificate(task.HubInstanceId, updatedOrder.ManagedCertificateId, task.AuthContext);
 
-                await configService.StoreAcmeOrder(task.OrderId, updatedOrder);
+                if (managedCert.LastRenewalStatus == RequestState.Success)
+                {
+                    // Update order status
+                    var certId = Guid.NewGuid().ToString("N");
+                    updatedOrder.Certificate = $"{task.BaseUrl}/cert/{certId}";
+                    updatedOrder.Status = OrderStatus.Valid;
 
-                _logger.LogInformation("ACME order {OrderId} finalization completed successfully", task.OrderId);
+                    await configService.StoreAcmeOrder(task.OrderId, updatedOrder);
+
+                    _logger.LogInformation("ACME order {OrderId} finalization completed successfully", task.OrderId);
+                }
+                else
+                {
+                    // order failed
+                    updatedOrder.Status = OrderStatus.Invalid;
+                    await configService.StoreAcmeOrder(task.OrderId, updatedOrder);
+
+                    // remove temp maneged cert for failed order
+                    await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
+
+                    _logger.LogWarning("ACME order {OrderId} finalization failed.", task.OrderId);
+                }
             }
             catch (Exception ex)
             {
@@ -214,6 +233,9 @@ namespace Certify.Server.Hub.Api.Services
                     orderDetails.Status = OrderStatus.Invalid;
                     await configService.StoreAcmeOrder(task.OrderId, orderDetails);
                 }
+
+                // remove temp maneged cert for failed order
+                await mgmtApi.RemoveManagedCertificate(task.HubInstanceId, task.ManagedCertificateId, task.AuthContext);
             }
         }
 

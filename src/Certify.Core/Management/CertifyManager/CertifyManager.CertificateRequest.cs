@@ -1327,7 +1327,16 @@ namespace Certify.Management
                                 ResponseValue = rc?.Value
                             };
 
-                            await PerformManagedChallengeRequest(request);
+                            var challengeResponseResult = await PerformManagedChallengeRequest(request);
+                            if (!challengeResponseResult.IsSuccess)
+                            {
+                                result.IsSuccess = false;
+                                result.Message = $"Could not complete automated challenge response using managed challenge: {challengeResponseResult.Message}";
+
+                                ReportProgress(progress, new RequestProgressState(RequestState.Error, challengeResponseResult.Message, managedCertificate) { Result = result }, logThisEvent: true);
+
+                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                            }
 
                             return;
                         }
