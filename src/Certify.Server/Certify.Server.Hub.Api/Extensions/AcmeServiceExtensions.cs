@@ -24,5 +24,33 @@ namespace Certify.Server.Hub.Api.Extensions
 
             return services;
         }
+
+        /// <summary>
+        /// Adds all ACME helper services to the service collection
+        /// </summary>
+        /// <param name="services">The service collection</param>
+        /// <returns>The service collection for chaining</returns>
+        public static IServiceCollection AddAcmeHelperServices(this IServiceCollection services)
+        {
+            // Register helper services as scoped (per request)
+            services.AddScoped<AcmeJwsValidator>();
+            services.AddScoped<AcmeExternalAccountBindingValidator>();
+            services.AddScoped<AcmeHelper>();
+
+            return services;
+        }
+
+        /// <summary>
+        /// Adds all ACME services to the service collection
+        /// </summary>
+        /// <param name="services">The service collection</param>
+        /// <returns>The service collection for chaining</returns>
+        public static IServiceCollection AddAcmeServices(this IServiceCollection services)
+        {
+            services.AddAcmeBackgroundServices();
+            services.AddAcmeHelperServices();
+
+            return services;
+        }
     }
 }

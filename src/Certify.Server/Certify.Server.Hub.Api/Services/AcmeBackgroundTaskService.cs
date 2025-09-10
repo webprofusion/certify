@@ -62,9 +62,9 @@ namespace Certify.Server.Hub.Api.Services
                 Type = AcmeTaskType.FinalizeOrder,
                 OrderId = orderId,
                 Csr = csr,
+                BaseUrl = baseUrl,
                 AuthContext = authContext,
                 HubInstanceId = hubInstanceId,
-                BaseUrl = baseUrl,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -196,7 +196,6 @@ namespace Certify.Server.Hub.Api.Services
 
                 // Update order status
                 var certId = Guid.NewGuid().ToString("N");
-
                 updatedOrder.Certificate = $"{task.BaseUrl}/cert/{certId}";
                 updatedOrder.Status = OrderStatus.Valid;
 
@@ -240,9 +239,9 @@ namespace Certify.Server.Hub.Api.Services
         public string OrderId { get; set; } = string.Empty;
         public string ManagedCertificateId { get; set; } = string.Empty;
         public string Csr { get; set; } = string.Empty;
+        public string BaseUrl { get; set; } = string.Empty;
         public AuthContext AuthContext { get; set; } = default!;
         public string HubInstanceId { get; set; } = string.Empty;
-        public string BaseUrl { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
     }
 

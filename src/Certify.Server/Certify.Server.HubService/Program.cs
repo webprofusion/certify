@@ -245,7 +245,7 @@ await acmeStore.PerformMaintenance();
 
 var acmeServerState = new AcmeServerConfig(acmeStore, "acme-server");
 builder.Services.AddSingleton<AcmeServerConfig>(acmeServerState);
-builder.Services.AddAcmeBackgroundServices();
+builder.Services.AddAcmeServices();
 
 // setup public/hub api
 builder.Services.AddSingleton<Certify.Management.ICertifyManager, Certify.Management.CertifyManager>();
