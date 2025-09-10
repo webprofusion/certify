@@ -25,6 +25,7 @@
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
         <ProjectReference Include="..\..\..\..\certify\src\Certify.SourceGenerators\Certify.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\..\..\..\certify\src\Certify.Client\Certify.Client.csproj" />
         <ProjectReference Include="..\..\Certify.Aspire\Certify.Aspire.ServiceDefaults\Certify.Aspire.ServiceDefaults.csproj" />
