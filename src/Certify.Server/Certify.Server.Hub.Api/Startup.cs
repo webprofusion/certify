@@ -176,7 +176,7 @@ namespace Certify.Server.Hub.Api
             var acmeStore = new Certify.Datastore.SQLite.SQLiteConfigurationStore("acme-server", customDbFileName: "acme-config");
             var acmeServerState = new AcmeServerConfig(acmeStore, "acme-server");
             services.AddSingleton<AcmeServerConfig>(acmeServerState);
-            services.AddAcmeBackgroundServices();
+            services.AddAcmeServices();
 
             // Optionally load service host/port from environment variables. ENV_CERTIFY_SERVICE_ is kubernetes and CERTIFY_SERVICE_HOST is docker-compose
             var serviceHostEnv = Environment.GetEnvironmentVariable("ENV_CERTIFY_SERVICE_HOST") ?? Environment.GetEnvironmentVariable("CERTIFY_SERVICE_HOST");
