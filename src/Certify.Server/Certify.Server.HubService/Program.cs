@@ -4,6 +4,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Reporting;
 using Certify.Server.Core;
+using Certify.Server.Hub.Api.Extensions;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
@@ -237,6 +238,14 @@ builder.Services.AddSwaggerGen(c =>
         };
     });
 });
+
+// add an internal config store for hub api internal use (acme config etc)
+var acmeStore = new Certify.Datastore.SQLite.SQLiteConfigurationStore("acme-server", customDbFileName: "acme-config");
+await acmeStore.PerformMaintenance();
+
+var acmeServerState = new AcmeServerConfig(acmeStore, "acme-server");
+builder.Services.AddSingleton<AcmeServerConfig>(acmeServerState);
+builder.Services.AddAcmeBackgroundServices();
 
 // setup public/hub api
 builder.Services.AddSingleton<Certify.Management.ICertifyManager, Certify.Management.CertifyManager>();

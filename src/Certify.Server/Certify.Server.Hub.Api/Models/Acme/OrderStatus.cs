@@ -14,6 +14,11 @@ namespace Certify.Server.Hub.Api.Models.Acme
         [JsonStringEnumMemberName("valid")]
         Valid,
         [JsonStringEnumMemberName("invalid")]
-        Invalid
+        Invalid,
+
+        [JsonStringEnumMemberName("internal-finalization-ready")]
+        ReadyForInternalFinalization,
+        [JsonStringEnumMemberName("internal-finalization-inprogress")]
+        InternalFinalizationInProgress
     }
 }
