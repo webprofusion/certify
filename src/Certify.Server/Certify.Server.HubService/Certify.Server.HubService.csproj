@@ -24,6 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
         <ProjectReference Include="..\..\Certify.Aspire\Certify.Aspire.ServiceDefaults\Certify.Aspire.ServiceDefaults.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
         <ProjectReference Include="..\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj">
