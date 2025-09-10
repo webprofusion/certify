@@ -13,6 +13,7 @@ using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Providers;
+using Certify.Shared.Core.Utils;
 using Microsoft.Extensions.Logging;
 using Registration.Core.Models.Shared;
 using Serilog;
@@ -548,11 +549,7 @@ namespace Certify.Management
                     // TODO: use reverse stream reader for large files
 
                     // get last n rows in date order
-                    var log = System.IO.File.ReadAllLines(logPath)
-                        .Reverse()
-                        .Take(limit)
-                        .Reverse()
-                        .ToArray();
+                    var log = LogParsing.ReadLogTail(logPath, limit).ToArray();
 
                     return await Task.FromResult(log);
                 }

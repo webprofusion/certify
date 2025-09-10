@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Certify.Models.Hub;
 using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,7 +44,7 @@ namespace Certify.Core.Tests.Unit
                 "2023-06-14 13:01:11.139 +08:00 [INF] Performing Certificate Request: SporkDemo[zerossl][2390d803 - e036 - 4bf5 - 8fa5 - 590497392c35: 7]"
             };
 
-            var items = LogParser.Parse(testLog);
+            var items = LogParsing.ParseLogItems(testLog);
 
             Assert.AreEqual(2, items.Length);
 

@@ -12,6 +12,7 @@ using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 
 namespace Certify.Management
@@ -788,24 +789,8 @@ namespace Certify.Management
             {
                 try
                 {
-                    LogItem[] results = [];
-                    // TODO: use reverse stream reader for large files
-                    var stream = System.IO.File.Open(logPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite);
-                    using (var streamReader = new System.IO.StreamReader(stream))
-                    {
-                        var str = await streamReader.ReadToEndAsync();
-                        stream.Close();
-
-                        var log = str.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                            .Reverse();
-
-                        if (limit > -1)
-                        {
-                            log = log.Take(limit);
-                        }
-
-                        results = LogParser.Parse(log.ToArray());
-                    }
+                    var logTail = LogParsing.ReadLogTail(logPath, limit);
+                    var results = LogParsing.ParseLogItems(logTail);
 
                     return results;
                 }
