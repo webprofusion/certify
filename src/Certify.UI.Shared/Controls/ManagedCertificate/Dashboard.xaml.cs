@@ -35,10 +35,13 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "ManagedCertificates")
+            System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
-                RefreshSummary();
-            }
+                if (e.PropertyName == "ManagedCertificates")
+                {
+                    RefreshSummary();
+                }
+            });
         }
 
         public async Task RefreshSummary()
