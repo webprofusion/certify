@@ -487,6 +487,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 order.Status = OrderStatus.Processing;
             }
 
+            if (order.Status == OrderStatus.Processing)
+            {
+                AddRetryAfterHeader(5);
+            }
+
             return Ok(order);
         }
 
@@ -533,6 +538,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private void AddLocationHeader(string location)
         {
             Response.Headers.Append("Location", location);
+        }
+
+        private void AddRetryAfterHeader(int seconds = 5)
+        {
+            Response.Headers.Append("Retry-After", seconds.ToString());
         }
     }
 }
