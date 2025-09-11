@@ -43,13 +43,16 @@ namespace Certify.UI.Controls
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "ManagedCertificates" || (e.PropertyName == "SelectedItem" &&
-                    _appViewModel.ManagedCertificates != null))
+            Dispatcher.Invoke(() =>
             {
-                SetFilter(); // reset listeners when ManagedCertificates are reset
-                _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
-                _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
-            }
+                if (e.PropertyName == "ManagedCertificates" || (e.PropertyName == "SelectedItem" &&
+                    _appViewModel.ManagedCertificates != null))
+                {
+                    SetFilter(); // reset listeners when ManagedCertificates are reset
+                    _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
+                    _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
+                }
+            });
         }
 
         private void SetFilter()

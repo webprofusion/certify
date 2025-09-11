@@ -33,60 +33,61 @@ namespace Certify.UI.Controls.ManagedCertificate
                                   };
 
         private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "SelectedItem")
+        { // Marshal UI updates back to UI thread
+            await Dispatcher.InvokeAsync(async () =>
             {
-                ItemViewModel.IsNameEditMode = false;
-
-                //get list of sites from local server if we don't already have it
-                if (ItemViewModel.WebSiteList.Count == 0)
+                if (e.PropertyName == "SelectedItem")
                 {
-                    await ItemViewModel.RefreshWebsiteList();
-                }
+                    ItemViewModel.IsNameEditMode = false;
 
-                if (ItemViewModel.WebSiteList.Count > 0)
-                {
-                    WebsiteDropdown.ItemsSource = ItemViewModel.WebSiteList;
-                    WebsiteDropdown.IsEnabled = true;
-                }
-                else
-                {
-                    WebsiteDropdown.IsEnabled = false;
-                    WebsiteDropdown.IsEditable = true;
-                    WebsiteDropdown.IsReadOnly = true;
-
-                    WebsiteDropdown.Text = "(No IIS Sites Found)";
-                }
-
-                if (ItemViewModel.SelectedItem != null)
-                {
-                    // if website previously selected, preselect in dropdown
-                    if (ItemViewModel.SelectedItem.GroupId == null)
+                    if (ItemViewModel.WebSiteList.Count == 0)
                     {
-                        ItemViewModel.SelectedItem.GroupId = "";
+                        await ItemViewModel.RefreshWebsiteList();
                     }
 
-                    var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.Id == ItemViewModel.SelectedItem.GroupId);
-                    if (selectedWebsite != null)
+                    if (ItemViewModel.WebSiteList.Count > 0)
                     {
-                        ItemViewModel.SelectedWebSite = selectedWebsite;
+                        WebsiteDropdown.ItemsSource = ItemViewModel.WebSiteList;
+                        WebsiteDropdown.IsEnabled = true;
                     }
                     else
                     {
-                        ItemViewModel.SelectedWebSite = null;
+                        WebsiteDropdown.IsEnabled = false;
+                        WebsiteDropdown.IsEditable = true;
+                        WebsiteDropdown.IsReadOnly = true;
+                        WebsiteDropdown.Text = "(No IIS Sites Found)";
                     }
 
-                    if (ItemViewModel.SelectedItem.RequestConfig?.AuthorityTokens?.Any() == true)
+                    if (ItemViewModel.SelectedItem != null)
                     {
-                        // use AuthorityTokenList/Authority Token view instead of domains
-                        ItemViewModel.UseAuthorityTokenListView = true;
-                    }
-                    else
-                    {
-                        ItemViewModel.UseAuthorityTokenListView = false;
+                        // if website previously selected, preselect in dropdown
+                        if (ItemViewModel.SelectedItem.GroupId == null)
+                        {
+                            ItemViewModel.SelectedItem.GroupId = "";
+                        }
+
+                        var selectedWebsite = ItemViewModel.WebSiteList.FirstOrDefault(w => w.Id == ItemViewModel.SelectedItem.GroupId);
+                        if (selectedWebsite != null)
+                        {
+                            ItemViewModel.SelectedWebSite = selectedWebsite;
+                        }
+                        else
+                        {
+                            ItemViewModel.SelectedWebSite = null;
+                        }
+
+                        if (ItemViewModel.SelectedItem.RequestConfig?.AuthorityTokens?.Any() == true)
+                        {
+                            // use AuthorityTokenList/Authority Token view instead of domains
+                            ItemViewModel.UseAuthorityTokenListView = true;
+                        }
+                        else
+                        {
+                            ItemViewModel.UseAuthorityTokenListView = false;
+                        }
                     }
                 }
-            }
+            });
         }
 
         private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
