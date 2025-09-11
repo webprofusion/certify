@@ -28,7 +28,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            System.Windows.Application.Current.Dispatcher.Invoke(delegate
+            Dispatcher.Invoke(delegate
             {
                 if (e.PropertyName == "SelectedItem")
                 {
