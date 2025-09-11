@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.Hub
+﻿using System;
+
+namespace Certify.Models.Hub
 {
     /// <summary>
     /// Configuration for a managed challenge, such as a DNS challenge for a specific domain/zone
@@ -24,5 +26,8 @@
         public string ResponseValue { get; set; } = string.Empty;
         public string AuthKey { get; set; } = string.Empty;
         public string AuthSecret { get; set; } = string.Empty;
+
+        public DateTimeOffset? DateTimePerformed { get; set; }
+        public string? ManagedCertId { get; set; }
     }
 }

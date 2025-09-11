@@ -241,39 +241,6 @@ namespace Certify.Core.Management.Challenges
             {
                 return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}");
             }
-
-            //TODO: DNS query to check for new record
-            /*
-                if (result.IsSuccess)
-                {
-                    // do our own txt record query before proceeding with challenge completion
-
-                    int attempts = 3;
-                    bool recordCheckedOK = false;
-                    var networkUtil = new NetworkUtils(false);
-
-                    while (attempts > 0 && !recordCheckedOK)
-                    {
-                        recordCheckedOK = networkUtil.CheckDNSRecordTXT(domain, txtRecordName, txtRecordValue);
-                        attempts--;
-                        if (!recordCheckedOK)
-                        {
-                            await Task.Delay(1000); // hold on a sec
-                        }
-                    }
-
-                // wait for provider specific propogation delay
-
-                // FIXME: perform validation check in DNS nameservers await
-                // Task.Delay(dnsAPIProvider.PropagationDelaySeconds * 1000);
-
-                return result;
-            }
-            else
-            {
-                return result;
-            }
-          */
         }
 
         /// <summary>

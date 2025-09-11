@@ -523,6 +523,8 @@ namespace Certify.Management
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
 
                 val = await DeleteManagedCertificate(managedCertIdArg.Value);
+
+                _ = PerformManagedChallengeCleanup(managedCertIdArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.TestManagedItemConfiguration)
             {
