@@ -1,23 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net9.0</TargetFrameworks>
-    <Platforms>AnyCPU</Platforms>
-    <RootNamespace>Certify.Providers.Acme.Anvil</RootNamespace>
-    <AssemblyName>Certify.Providers.Acme.Anvil</AssemblyName>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net9.0;net10.0</TargetFrameworks>
+        <Platforms>AnyCPU</Platforms>
+        <RootNamespace>Certify.Providers.Acme.Anvil</RootNamespace>
+        <AssemblyName>Certify.Providers.Acme.Anvil</AssemblyName>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
-  </ItemGroup>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj" />
-    <ProjectReference Include="..\..\..\Certify.Locales\Certify.Locales.csproj" />
-    <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
-    <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj" />
+        <ProjectReference Include="..\..\..\Certify.Locales\Certify.Locales.csproj" />
+        <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
+        <ProjectReference Include="..\..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+    </ItemGroup>
 
 </Project>

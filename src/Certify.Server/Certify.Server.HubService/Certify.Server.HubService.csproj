@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFrameworks>net10.0;net9.0;</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
@@ -15,7 +15,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.7.2" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.8.1" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
 
         <!-- included to prevent conflict with older versions in plugins-->
