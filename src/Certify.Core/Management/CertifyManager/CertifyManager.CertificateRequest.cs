@@ -1324,7 +1324,8 @@ namespace Certify.Management
                                 ChallengeType = challengeConfig.ChallengeType,
                                 Identifier = authorization.Identifier.Value,
                                 ResponseKey = rc?.Key,
-                                ResponseValue = rc?.Value
+                                ResponseValue = rc?.Value,
+                                ManagedCertId = managedCertificate.Id
                             };
 
                             var challengeResponseResult = await PerformManagedChallengeRequest(request);

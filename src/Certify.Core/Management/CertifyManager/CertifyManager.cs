@@ -399,7 +399,12 @@ namespace Certify.Management
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+
+            // perform frequent tasks such as checking for due renewals
             await PerformRenewalTasks(CancellationToken.None);
+
+            // perform managhed challenge cleanup tasks (if any)
+            _ = PerformManagedChallengeCleanup();
         }
 
         private async Task PerformServiceUpgrades()

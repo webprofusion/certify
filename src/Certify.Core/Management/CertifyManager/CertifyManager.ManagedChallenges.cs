@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -101,7 +102,7 @@ namespace Certify.Management
 
                 foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
                 {
-                    if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, request.Identifier))
+                    if (ManagedCertificate.IsDomainOrWildcardMatch([wildcard], request.Identifier))
                     {
                         return configsPerDomain[wildcard];
                     }
@@ -129,6 +130,12 @@ namespace Certify.Management
                 return default;
             }
         }
+
+        /// <summary>
+        /// maintain a set of changed challenge requests that we need to ensure get cleaned up later
+        /// </summary>
+        private ConcurrentDictionary<string, ManagedChallengeRequest> _managedChallengesPendingCleanup = [];
+
         public async Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
         {
             var log = _serviceLog;
@@ -152,10 +159,9 @@ namespace Certify.Management
                     RequestConfig = new CertRequestConfig
                     {
                         Challenges = new ObservableCollection<CertRequestChallengeConfig>(
-                        new List<CertRequestChallengeConfig>
-                        {
+                        [
                            matchingChallenge.ChallengeConfig
-                        })
+                        ])
                     }
                 };
 
@@ -179,21 +185,51 @@ namespace Certify.Management
                 else
                 {
                     log.Information($"DNS: {dnsResult.Result.Message}");
+
                 }
 
+                // apply propagation delay
                 await Task.Delay(dnsResult.PropagationSeconds * 1000);
 
-                var cleanupQueue = new List<Action> { };
-
-                // configure cleanup actions for use after challenge completes
-                /* pendingAuth.Cleanup = async () =>
-                 {
-                     _ = await _dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
-                 };
-                */
+                request.DateTimePerformed = DateTimeOffset.UtcNow;
+                _managedChallengesPendingCleanup.TryAdd($"{request.ResponseKey}:{request.ResponseValue}", request);
 
                 return new ActionResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
+            }
+        }
 
+        public async Task PerformManagedChallengeCleanup(string managedCertId = null)
+        {
+            try
+            {
+                if (managedCertId != null)
+                {
+                    // Process items one by one to avoid race conditions
+                    foreach (var kvp in _managedChallengesPendingCleanup)
+                    {
+                        if (kvp.Value.ManagedCertId == managedCertId &&
+                            _managedChallengesPendingCleanup.TryRemove(kvp.Key, out var request))
+                        {
+                            await CleanupManagedChallengeRequest(request);
+                        }
+                    }
+                }
+                else
+                {
+                    var cutoff = DateTimeOffset.UtcNow.AddMinutes(-15);
+                    foreach (var kvp in _managedChallengesPendingCleanup)
+                    {
+                        if (kvp.Value.DateTimePerformed < cutoff &&
+                            _managedChallengesPendingCleanup.TryRemove(kvp.Key, out var request))
+                        {
+                            await CleanupManagedChallengeRequest(request);
+                        }
+                    }
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Managed Challenge Cleanup Error. Cleanup will resume later: {exp}");
             }
         }
 
@@ -245,7 +281,7 @@ namespace Certify.Management
                 }
                 else
                 {
-                    log.Information($"DNS: {dnsResult.Result.Message}");
+                    log.Information($"Managed Challenge Cleanup - DNS: {dnsResult.Result.Message}");
                 }
 
                 return new ActionResult { IsSuccess = true, Message = $"Challenge cleanup {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
