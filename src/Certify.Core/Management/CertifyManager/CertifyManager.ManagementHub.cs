@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -63,6 +64,11 @@ namespace Certify.Management
                     registerInstance = true;
                     _serverConfig.HubAssignedInstanceId = null;
                 }
+            }
+            else
+            {
+                _serviceLog.Information("Hub not yet joined, will attempt to join.");
+                registerInstance = true;
             }
 
             // if we are not rejoining the same hub, we need to register a new instance
@@ -128,10 +134,27 @@ namespace Certify.Management
         /// <returns>Returns an action result indicating the success of the connection attempt and any relevant hub information.</returns>
         public async Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false)
         {
-
-            using (var httpClient = new System.Net.Http.HttpClient())
+            var handler = new HttpClientHandler()
             {
-                var endpoint = $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}";
+                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) =>
+                {
+                    // Allow all certificates (including untrusted ones)
+                    return true;
+                }
+            };
+
+            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") != "true")
+            {
+                //     handler.ServerCertificateCustomValidationCallback = null;
+            }
+
+            var endpoint = $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}";
+
+            _serviceLog.Information("Checking credentials via Management Hub {url}", endpoint);
+
+            using (var httpClient = new System.Net.Http.HttpClient(handler))
+            {
+
                 var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpoint);
                 request.Headers.Add("X-Client-ID", clientSecret.ClientId);
                 request.Headers.Add("X-Client-Secret", clientSecret.Secret);
