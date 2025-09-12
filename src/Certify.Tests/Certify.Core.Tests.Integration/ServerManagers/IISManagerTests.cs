@@ -163,7 +163,7 @@ namespace Certify.Core.Tests
                         await iisManager.DeleteSite(testSiteName);
                     }
 
-                    await iisManager.CreateSite(testSiteName, "site_" + i + "_toomany.com", PrimaryWebRootPath, null, protocol: "http");
+                    await iisManager.CreateSite(testSiteName, "site_" + i + "_toomany.com", PrimaryWebRootPath, null, protocol: "http", port: 80);
                     var site = await iisManager.GetSiteBindingByDomain(domain);
                     for (var d = 0; d < 2; d++)
                     {
@@ -198,6 +198,7 @@ namespace Certify.Core.Tests
                             {
                                 SiteId = site.SiteId,
                                 Host = testDomain,
+                                Port = 80,
                                 PhysicalPath = PrimaryWebRootPath
                             }, addNew: true));
                         }
@@ -207,6 +208,7 @@ namespace Certify.Core.Tests
                             {
                                 SiteId = site.SiteId,
                                 Host = testDomain,
+                                Port = 80,
                                 PhysicalPath = PrimaryWebRootPath
                             }, addNew: true));
                         }
@@ -229,7 +231,7 @@ namespace Certify.Core.Tests
                     var domain = "site_" + i + "_toomany.com";
                     try
                     {
-                        await iisManager.DeleteSite(testSiteName);
+                        //  await iisManager.DeleteSite(testSiteName);
                     }
                     catch { }
                 }
