@@ -39,7 +39,7 @@
         <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9">
             <NoWarn>NU1701</NoWarn>
         </PackageReference>
-        <PackageReference Include="MahApps.Metro" Version="3.0.0-rc0516" />
+        <PackageReference Include="MahApps.Metro" Version="3.0.0-rc0525" />
         <PackageReference Include="Markdig" Version="0.42.0" />
         <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.8" />
