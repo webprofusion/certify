@@ -120,7 +120,9 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             if (TaskProviderList.SelectedValue != null)
             {
-                await RefreshEditModelOptions(true);
+                // Don't reset defaults if we're editing an existing task
+                var resetDefaults = string.IsNullOrEmpty(EditModel.SelectedItem.Id);
+                await RefreshEditModelOptions(resetDefaults);
             }
         }
 
