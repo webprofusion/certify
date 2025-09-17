@@ -38,7 +38,10 @@ namespace Certify.UI.Controls.ManagedCertificate
                         X509Certificate2UI.DisplayCertificate(cert);
                     }
                 }
-                catch { }
+                catch
+                {
+                    MessageBox.Show("Could not open certificate file, file may be in use or be password protected.");
+                }
             }
             else
             {
