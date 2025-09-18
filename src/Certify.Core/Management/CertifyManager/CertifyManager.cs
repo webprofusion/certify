@@ -301,10 +301,12 @@ namespace Certify.Management
             {
                 if (_licensingManager != null)
                 {
-                    _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(1, EnvironmentUtil.EnsuredAppDataPath());
+                    var productType = _isMgtmHubBackend ? 2 : 1; // 1 = ccm or agent, 2 = hub
+
+                    _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(productType, EnvironmentUtil.EnsuredAppDataPath());
                     if (_cachedLicenseCheck.IsValid)
                     {
-                        if (await _licensingManager?.IsInstallActive(1, EnvironmentUtil.EnsuredAppDataPath()) == false)
+                        if (await _licensingManager?.IsInstallActive(productType, EnvironmentUtil.EnsuredAppDataPath()) == false)
                         {
                             _cachedLicenseCheck.StatusCode = LicenseCheckStatusCode.Invalid;
                         }

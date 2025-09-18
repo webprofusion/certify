@@ -772,17 +772,36 @@ namespace Certify.Server.Hub.Api.Services
 
             var instance = instances.FirstOrDefault(i => i.InstanceId == instanceId);
 
+            if (instance == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    Message = "Instance not found."
+                };
+            }
+
             var licensing = new LicensingManager();
+
+            var isHub = (instance.InstanceId == _mgmtStateProvider.GetManagementHubInstanceId());
 
             var instanceInfo = new RegisteredInstance
             {
                 InstanceId = instanceId,
                 AppVersion = instance.ClientVersion,
+                AppName = instance.ClientName,
                 MachineName = instance.Title,
                 OS = instance.OS
             };
 
-            var activationResult = await licensing.RegisterInstall(1, license.Email, license.ProductKey, instanceInfo);
+            var productTypeId = 1; // CCM
+
+            if (isHub)
+            {
+                productTypeId = 2; // CMH
+            }
+
+            var activationResult = await licensing.RegisterInstall(productTypeId, license.Email, license.ProductKey, instanceInfo);
 
             if (activationResult.IsSuccess)
             {
