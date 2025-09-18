@@ -9,6 +9,7 @@ namespace Certify.Models.Shared
         public string? MachineName { get; set; }
         public string? OS { get; set; }
         public string? AppVersion { get; set; }
+        public string? AppName { get; set; }
         public int Websites { get; set; }
         public int ManagedCertificates { get; set; }
         public DateTime? DateRegistered { get; set; }
