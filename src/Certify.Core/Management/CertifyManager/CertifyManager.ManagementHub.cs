@@ -143,9 +143,9 @@ namespace Certify.Management
                 }
             };
 
-            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") != "true")
+            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
             {
-                //     handler.ServerCertificateCustomValidationCallback = null;
+                handler.ServerCertificateCustomValidationCallback = null;
             }
 
             var endpoint = $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}";
