@@ -28,19 +28,21 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (!string.IsNullOrEmpty(certPath) && System.IO.File.Exists(certPath))
             {
                 //open file, can fail if file is in use TODO: will fail if cert has a pwd
+                X509Certificate2 cert = null;
                 try
                 {
-
-                    var cert = CertificateManager.LoadCertificate(certPath);
-
-                    if (cert != null)
-                    {
-                        X509Certificate2UI.DisplayCertificate(cert);
-                    }
+                    cert = CertificateManager.LoadCertificate(certPath, pwd: ItemViewModel.PfxUnlockPassword ?? "");
                 }
                 catch
+                { }
+
+                if (cert != null)
                 {
-                    MessageBox.Show("Could not open certificate file, file may be in use or be password protected.");
+                    X509Certificate2UI.DisplayCertificate(cert);
+                }
+                else
+                {
+                    MessageBox.Show("Could not open certificate file, file may be in use or unlock password may be incorrect.");
                 }
             }
             else
@@ -260,6 +262,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             AppViewModel.Current.ShowNotification("Challenge Cleanup Completed");
 
+        }
+
+        private void PFXPassword_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            ItemViewModel.PfxUnlockPassword = PFXPassword.Password;
         }
     }
 }

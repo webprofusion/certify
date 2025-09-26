@@ -341,7 +341,7 @@
                                 Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
 
                         </StackPanel>
-                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
                             <Button
                                 x:Name="OpenCertificateFile"
                                 Width="220"
@@ -350,6 +350,13 @@
                                 Click="OpenCertificateFile_Click"
                                 Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
 
+                            <PasswordBox
+                                x:Name="PFXPassword"
+                                Width="220"
+                                Margin="0,4,0,8"
+                                HorizontalAlignment="Left"
+                                Controls:TextBoxHelper.Watermark="Pfx Unlock Password (if applicable)"
+                                PasswordChanged="PFXPassword_PasswordChanged" />
                         </StackPanel>
 
 
