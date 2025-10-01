@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <Sdk Name="Aspire.AppHost.Sdk" Version="9.2.0" />
+    <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.0" />
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFrameworks>net10.0;</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsAspireHost>true</IsAspireHost>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Aspire.Hosting.AppHost" Version="9.4.2" />
+        <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.0" />
 
     </ItemGroup>
 
