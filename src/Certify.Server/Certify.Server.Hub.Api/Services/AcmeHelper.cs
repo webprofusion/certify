@@ -1,7 +1,6 @@
 ﻿using System.Security.Cryptography;
 using Certify.Models;
 using Certify.Server.Hub.Api.Models.Acme;
-using Microsoft.AspNetCore.Http;
 
 namespace Certify.Server.Hub.Api.Services
 {
@@ -54,7 +53,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// Builds the base URL for ACME endpoints
         /// </summary>
-        public static string BuildBaseUrl(HttpRequest request, string? key = null) => 
+        public static string BuildBaseUrl(HttpRequest request, string? key = null) =>
             $"{request.Scheme}://{request.Host}/acme{(key != null ? $"/{key}" : "")}";
 
         /// <summary>
@@ -129,7 +128,6 @@ namespace Certify.Server.Hub.Api.Services
             {
                 Name = $"Hub ACME Order {orderId}",
                 CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
-                UseStagingMode = true,
                 RequestConfig = new()
                 {
                     PrimaryDomain = request.Identifiers.FirstOrDefault()?.Value ?? "",
