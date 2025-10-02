@@ -317,8 +317,18 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 if (instance.Items != null)
                 {
-                    instance.Items.RemoveAll(r => r.Id == managedCertificate.Id);
-                    instance.Items.Add(managedCertificate);
+                    // replace item in the list at the same position
+
+                    var original = instance.Items.FirstOrDefault(i => i.Id == managedCertificate.Id);
+                    if (original != null)
+                    {
+                        var idx = instance.Items.IndexOf(original);
+                        instance.Items[idx] = managedCertificate;
+                    }
+                    else
+                    {
+                        instance.Items.Add(managedCertificate);
+                    }
                 }
             }
         }
