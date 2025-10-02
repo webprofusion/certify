@@ -675,7 +675,7 @@
     <value>Görevler en son sertifikanızla çalışmanın, yenilemeden önce veya sonra diğer eylemleri tetiklemenin isteğe bağlı bir yoludur.</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>Dağıtım Görevleri, standart Dağıtım işlemi tamamlandıktan sonra (gösterilen sırayla) çalışır (Dağıtım sekmesine bakın). Görevler, sertifika güncellendikten hemen sonra çalıştırılabilir veya ertelenebilir (manuel olarak veya zamanlanmış bir görev aracılığıyla vb. çalıştırılmak üzere). Ayrıca görevleri yeniden sıralamak için sürükleyebilirsiniz:</value>
+    <value>Dağıtım Görevleri, standart Dağıtım işlemi tamamlandıktan sonra (gösterilen sırayla) çalışır (Dağıtım sekmesine bakın). Görevler, sertifika güncellendikten hemen sonra çalıştırılabilir veya ertelenebilir (manuel olarak veya zamanlanmış bir görev aracılığıyla vb. çalıştırılmak üzere).</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>İsteğe bağlı olarak, sertifika isteği başlamadan önce çalıştırmak üzere istediğiniz sayıda görev ekleyebilirsiniz:</value>
