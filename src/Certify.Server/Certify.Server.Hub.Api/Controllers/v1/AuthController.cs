@@ -1,9 +1,15 @@
-﻿using Certify.Client;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text.Json;
+using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Protocols;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Certify.Server.Hub.Api.Controllers
 {
@@ -74,8 +80,6 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (validation.IsSuccess && validation.SecurityPrincipal != null)
             {
-                // TODO: get user details from API and return as part of response instead of returning as json
-
                 var jwt = new Hub.Api.Services.JwtService(_config);
 
                 var refreshToken = jwt.GenerateRefreshToken();
@@ -93,14 +97,13 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 var authResponse = new AuthResponse
                 {
+                    IsSuccess = true,
                     Detail = "OK",
                     AccessToken = newJwt,
                     RefreshToken = refreshToken,
                     SecurityPrincipal = validation.SecurityPrincipal,
                     RoleStatus = await _client.GetSecurityPrincipalRoleStatus(validation.SecurityPrincipal.Id, authContext)
                 };
-
-                // TODO: Refresh token should be stored or hashed for later use
 
                 return Ok(authResponse);
             }
@@ -154,6 +157,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
                     var authResponse = new AuthResponse
                     {
+                        IsSuccess = true,
                         Detail = "OK",
                         AccessToken = newJwt,
                         RefreshToken = newRefreshToken,
@@ -173,6 +177,323 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 return Unauthorized();
             }
+        }
+
+        /// <summary>
+        /// Initiate OIDC login flow
+        /// </summary>
+        /// <param name="provider">OIDC provider identifier</param>
+        /// <param name="returnUrl">URL to return to after authentication</param>
+        /// <returns>Authorization URL for client redirect</returns>
+        [HttpGet]
+        [Route("oidc/login")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OidcLoginResponse))]
+        public async Task<IActionResult> BeginOidcLogin(string? provider = "default", string? returnUrl = null)
+        {
+            try
+            {
+                var oidcConfig = await GetOidcConfiguration(provider);
+                if (oidcConfig == null)
+                {
+                    return BadRequest($"OIDC provider '{provider}' not configured");
+                }
+
+                // Generate state and nonce for security
+                var state = GenerateSecureToken();
+                var nonce = GenerateSecureToken();
+
+                // Store state and nonce for validation (using session for simplicity)
+                _memoryCache.Set($"oidc_state_{state}", JsonSerializer.Serialize(new OidcState
+                {
+                    Provider = provider,
+                    Nonce = nonce,
+                    ReturnUrl = returnUrl,
+                    Timestamp = DateTimeOffset.UtcNow
+                }), TimeSpan.FromMinutes(2));
+
+                // Build authorization URL
+                var authUrl = BuildAuthorizationUrl(oidcConfig, state, nonce);
+
+                return Ok(new OidcLoginResponse { AuthUrl = authUrl, State = state });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error initiating OIDC login for provider {Provider}", provider);
+                return StatusCode(500, "Failed to initiate OIDC login");
+            }
+        }
+
+        /// <summary>
+        /// Handle OIDC callback and complete authentication
+        /// </summary>
+        /// <param name="code">Authorization code from OIDC provider</param>
+        /// <param name="state">State parameter for CSRF protection</param>
+        /// <param name="id_token">ID token (for implicit flow)</param>
+        /// <param name="error">Error from OIDC provider</param>
+        /// <param name="error_description">Error description</param>
+        /// <returns>Authentication result</returns>
+        [HttpPost]
+        [Route("oidc/login-callback")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
+        public async Task<IActionResult> CompleteOidcLogin([FromBody] OidcCallbackBody msg)
+        {
+            try
+            {
+                // Handle OIDC errors
+                if (!string.IsNullOrEmpty(msg.error))
+                {
+                    _logger.LogWarning("OIDC authentication error: {Error} - {Description}", msg.error, msg.error_description);
+                    return BadRequest(new AuthResponse
+                    {
+                        IsSuccess = false,
+                        Detail = msg.error_description
+                    });
+                }
+
+                // Validate state parameter
+                if (string.IsNullOrEmpty(msg.state))
+                {
+                    return BadRequest(new AuthResponse { IsSuccess = false, Detail = "missing_state" });
+                }
+
+                var stateJson = _memoryCache.Get($"oidc_state_{msg.state}") as string;
+
+                if (string.IsNullOrEmpty(stateJson))
+                {
+                    return BadRequest(new AuthResponse { IsSuccess = false, Detail = "invalid_state" });
+                }
+                else
+                {
+                    // cleanup used state
+                    _memoryCache.Remove($"oidc_state_{msg.state}");
+                }
+
+                var oidcState = JsonSerializer.Deserialize<OidcState>(stateJson);
+                if (oidcState == null || oidcState.Timestamp.AddMinutes(10) < DateTimeOffset.UtcNow)
+                {
+                    return BadRequest(new OidcCallbackResponse { Success = false, Error = "expired_state" });
+                }
+
+                var oidcConfig = await GetOidcConfiguration(oidcState.Provider);
+                if (oidcConfig == null)
+                {
+                    return BadRequest(new AuthResponse { IsSuccess = false, Detail = "invalid_provider" });
+                }
+
+                ClaimsPrincipal? userClaims = null;
+
+                // Handle different OIDC flows
+                if (!string.IsNullOrEmpty(msg.code))
+                {
+                    // Authorization Code flow
+                    userClaims = await HandleAuthorizationCodeFlow(oidcConfig, msg.code, oidcState.Nonce);
+                }
+                else if (!string.IsNullOrEmpty(msg.id_token))
+                {
+                    // Implicit flow
+                    userClaims = await HandleImplicitFlow(oidcConfig, msg.id_token, oidcState.Nonce);
+                }
+
+                if (userClaims == null)
+                {
+                    return BadRequest(new AuthResponse { IsSuccess = false, Detail = "authentication_failed" });
+                }
+
+                // Create or validate user in your system
+                var authResult = await ProcessUserAuthentication(userClaims, oidcState.Provider);
+
+                return Ok(authResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing OIDC login");
+                return StatusCode(500, new AuthResponse { IsSuccess = false, Detail = "internal_error" });
+            }
+        }
+
+        private async Task<OidcProviderConfig?> GetOidcConfiguration(string? provider)
+        {
+            var oidcProviders = await _client.GetOidcProviders(CurrentAuthContext);
+            return oidcProviders.FirstOrDefault(p => p.Id == provider);
+        }
+
+        private string BuildAuthorizationUrl(OidcProviderConfig config, string state, string nonce)
+        {
+            var queryParams = new Dictionary<string, string>
+            {
+                ["client_id"] = config.ClientId,
+                ["response_type"] = config.ResponseType ?? "code",
+                ["scope"] = config.Scope ?? "openid profile email",
+                ["redirect_uri"] = config.RedirectUri,
+                ["state"] = state,
+                ["nonce"] = nonce
+            };
+
+            if (!string.IsNullOrEmpty(config.ResponseMode))
+            {
+                // queryParams["response_mode"] = config.ResponseMode;
+            }
+
+            var queryString = string.Join("&", queryParams.Select(kvp =>
+                $"{Uri.EscapeDataString(kvp.Key)}={Uri.EscapeDataString(kvp.Value)}"));
+
+            var authEndpoint = config.AuthorizeEndpoint ?? $"{config.Authority.TrimEnd('/')}/oauth2/v2.0/authorize";
+            return $"{authEndpoint}?{queryString}";
+        }
+
+        private async Task<ClaimsPrincipal?> HandleAuthorizationCodeFlow(OidcProviderConfig config, string code, string nonce)
+        {
+            using var httpClient = new HttpClient();
+
+            // Exchange code for tokens
+            var tokenRequest = new Dictionary<string, string>
+            {
+                ["grant_type"] = "authorization_code",
+                ["client_id"] = config.ClientId,
+                ["client_secret"] = config.ClientSecret,
+                ["code"] = code,
+                ["redirect_uri"] = config.RedirectUri
+            };
+
+            var tokenEndpoint = config.TokenEndpoint ?? $"{config.Authority.TrimEnd('/')}/oauth2/v2.0/token";
+            var tokenResponse = await httpClient.PostAsync(
+                tokenEndpoint,
+                new FormUrlEncodedContent(tokenRequest));
+
+            if (!tokenResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError("Token exchange failed: {StatusCode}", tokenResponse.StatusCode);
+                return null;
+            }
+
+            var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+            var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenJson);
+
+            if (!tokenData.TryGetProperty("id_token", out var idTokenElement))
+            {
+                _logger.LogError("No id_token in token response");
+                return null;
+            }
+
+            return await ValidateIdToken(config, idTokenElement.GetString()!, nonce);
+        }
+
+        private async Task<ClaimsPrincipal?> HandleImplicitFlow(OidcProviderConfig config, string idToken, string nonce)
+        {
+            return await ValidateIdToken(config, idToken, nonce);
+        }
+
+        private async Task<ClaimsPrincipal?> ValidateIdToken(OidcProviderConfig config, string idToken, string nonce)
+        {
+            try
+            {
+                var discoveryEndpoint = config.DiscoveryEndpoint ?? $"{config.Authority.TrimEnd('/')}/.well-known/openid-configuration";
+                var configManager = new ConfigurationManager<OpenIdConnectConfiguration>(
+                    discoveryEndpoint,
+                    new OpenIdConnectConfigurationRetriever());
+
+                var oidcConfig = await configManager.GetConfigurationAsync();
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidIssuers = new[] { oidcConfig.Issuer },
+                    ValidateAudience = true,
+                    ValidAudience = config.ClientId,
+                    ValidateLifetime = true,
+                    IssuerSigningKeys = oidcConfig.SigningKeys,
+                    ClockSkew = TimeSpan.FromMinutes(5)
+                };
+
+                var principal = tokenHandler.ValidateToken(idToken, validationParameters, out _);
+
+                // Validate nonce
+                var tokenNonce = principal.FindFirst("nonce")?.Value;
+                if (tokenNonce != nonce)
+                {
+                    _logger.LogError("Nonce validation failed");
+                    return null;
+                }
+
+                return principal;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "ID token validation failed");
+                return null;
+            }
+        }
+
+        private async Task<AuthResponse> ProcessUserAuthentication(ClaimsPrincipal claims, string provider)
+        {
+            // Extract user information from claims
+            var email = claims.FindFirst(ClaimTypes.Email)?.Value ??
+                       claims.FindFirst("email")?.Value;
+            var name = claims.FindFirst(ClaimTypes.Name)?.Value ??
+                      claims.FindFirst("name")?.Value;
+            var subject = claims.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
+                         claims.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(subject))
+            {
+                throw new InvalidOperationException("No subject claim found in token");
+            }
+
+            // Create external identifier
+            var externalId = $"{provider}:{subject}";
+
+            // Check if user exists in your system by external identifier
+
+            var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
+            var sp = spList.SingleOrDefault(s => s.ExternalIdentifier == externalId && s.Provider == provider);
+
+            if (sp == null)
+            {
+                sp = new SecurityPrincipal
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Username = email ?? externalId,
+                    Email = email,
+                    Title = name ?? email ?? externalId,
+                    ExternalIdentifier = externalId,
+                    Provider = provider,
+                    IsBuiltIn = false,
+                    PrincipalType = SecurityPrincipalType.User,
+                    Password = Guid.NewGuid().ToString()
+                };
+
+                // If user does not exist, create a new user with no permissions
+                var added = await _client.AddSecurityPrincipal(sp, new AuthContext { UserId = "system" });
+
+                if (!added.IsSuccess)
+                {
+                    throw new InvalidOperationException("Failed to create user account");
+                }
+            }
+
+            var jwtExpiryMinutes = double.Parse(_config["JwtSettings:authTokenExpirationInMinutes"] ?? "20");
+
+            var jwt = new Hub.Api.Services.JwtService(_config);
+
+            var accessToken = jwt.GenerateSecurityToken(sp.Id, jwtExpiryMinutes);
+            var refreshToken = jwt.GenerateRefreshToken();
+            CacheRefreshToken(sp.Id, refreshToken);
+
+            return new AuthResponse
+            {
+                IsSuccess = true,
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                SecurityPrincipal = sp,
+                RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, CurrentAuthContext)
+            };
+        }
+
+        private static string GenerateSecureToken()
+        {
+            return Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32))
+                .Replace("+", "-").Replace("/", "_").Replace("=", "");
         }
     }
 }

@@ -164,6 +164,8 @@ namespace SourceGenerator
             }
             else
             {
+                publicApiSrc = publicApiSrc.Replace("[AuthorizedApi]", "");
+
                 publicApiSrc = publicApiSrc.Replace("[RequiredPermissions]", "");
             }
 

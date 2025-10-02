@@ -78,6 +78,12 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false)
         {
+            if (contextUserId == "system" && !string.IsNullOrEmpty(principal.ExternalIdentifier))
+            {
+                // special case for auto added users via OIDC
+                bypassIntegrityCheck = true;
+            }
+
             if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);

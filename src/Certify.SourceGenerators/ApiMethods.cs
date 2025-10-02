@@ -464,6 +464,63 @@ namespace Certify.SourceGenerators
                      },
                      RequiredPermissions = [new(ResourceTypes.ManagedLicense, StandardResourceActions.ManagedLicenseStatus)]
                  },
+                 new()
+                 {
+                      OperationName = "GetOidcProviders",
+                      OperationMethod = HttpGet,
+                      Comment = "Get list of oidc providers",
+                      PublicAPIController = "OidcProvider",
+                      PublicAPIRoute = "list",
+                      ServiceAPIRoute = "oidcprovider/list",
+                      ReturnType = $"ICollection<{nameof(OidcProviderConfig)}>",
+                      RequiredPermissions = [new(ResourceTypes.OidcProvider, StandardResourceActions.OidcProviderList)]
+                  },
+
+                 new()
+                  {
+                      OperationName = "AddOidcProvider",
+                      OperationMethod = HttpPost,
+                      Comment = "Add an Oidc Provider",
+                      PublicAPIController = "OidcProvider",
+                      PublicAPIRoute = "add",
+                      ServiceAPIRoute = "oidcprovider",
+                      ReturnType = actionResultTypeName,
+                      Params = new Dictionary<string, string>
+                      {
+                          { "item", nameof(OidcProviderConfig)}
+                      },
+                      RequiredPermissions = [new(ResourceTypes.OidcProvider, StandardResourceActions.OidcProviderAdd)]
+                  },
+                  new()
+                  {
+                      OperationName = "UpdateOidcProvider",
+                      OperationMethod = HttpPost,
+                      Comment = "Update a Oidc Provider",
+                      PublicAPIController = "OidcProvider",
+                      PublicAPIRoute = "update",
+                      ServiceAPIRoute = "oidcprovider/update/",
+                      ReturnType = actionResultTypeName,
+                      Params = new Dictionary<string, string>
+                      {
+                          { "item", nameof(OidcProviderConfig) }
+                      },
+                      RequiredPermissions = [new(ResourceTypes.OidcProvider, StandardResourceActions.OidcProviderUpdate)]
+                  },
+                  new()
+                  {
+                      OperationName = "RemoveOidcProvider",
+                      OperationMethod = HttpDelete,
+                      Comment = "Delete an Oidc Provider",
+                      PublicAPIController = "OidcProvider",
+                      PublicAPIRoute = "remove",
+                      ServiceAPIRoute = "oidcprovider/{id}",
+                      ReturnType = actionResultTypeName,
+                      Params = new Dictionary<string, string>
+                      {
+                          { "id", "string" }
+                      },
+                      RequiredPermissions = [new(ResourceTypes.OidcProvider, StandardResourceActions.OidcProviderDelete)]
+                  },
                 new()
                 {
                     OperationName = "PerformExport",

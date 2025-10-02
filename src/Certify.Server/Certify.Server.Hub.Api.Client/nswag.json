@@ -3,7 +3,7 @@
   "defaultVariables": null,
   "documentGenerator": {
     "fromDocument": {
-      "url": "https://localhost:44361/swagger/v1/swagger.json",
+      "url": "https://local.dev.certificatemanager.app:44361/swagger/v1/swagger.json",
       "output": null,
       "newLineBehavior": "Auto"
     }
@@ -47,8 +47,11 @@
       "queryNullValue": "",
       "className": "{controller}Client",
       "operationGenerationMode": "SingleClientFromOperationId",
+      "includedOperationIds": [],
+      "excludedOperationIds": [],
       "additionalNamespaceUsages": [
         "Certify.Models",
+        "Certify.Models.Shared",
         "Certify.Models.Reporting",
         "Certify.Models.Config",
         "Certify.Models.API",

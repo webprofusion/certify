@@ -114,6 +114,11 @@ namespace Certify.Management
         Task<ActionResult> UpdateManagedLicense(ManagedLicense item);
         Task<ActionResult> RemoveManagedLicenses(string id);
 
+        Task<ICollection<OidcProviderConfig>> GetOidcProviders(bool includeSecret = false);
+        Task<ActionResult> AddOidcProvider(OidcProviderConfig item);
+        Task<ActionResult> UpdateOidcProvider(OidcProviderConfig item);
+        Task<ActionResult> RemovOidcProvider(string id);
+
         Task<HubInfo> GetHubInfo();
     }
 }

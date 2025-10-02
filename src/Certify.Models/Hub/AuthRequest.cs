@@ -23,6 +23,7 @@
     /// </summary>
     public class AuthResponse
     {
+        public bool IsSuccess { get; set; }
         /// <summary>
         /// String providing summary message
         /// </summary>
