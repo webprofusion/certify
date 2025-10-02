@@ -77,6 +77,13 @@ namespace Certify.Server.HubService.Services
             return controller;
         }
 
+        private ServiceControllers.OidcProviderController __oidcProviderController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.OidcProviderController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
         public Task<Preferences> GetPreferences(AuthContext? authContext = null) => Task.FromResult(new ServiceControllers.PreferencesController(_certifyManager).GetPreferences());
 
         public Task<ActionResult> AddSecurityPrincipal(SecurityPrincipal principal, AuthContext authContext) => _accessController(authContext).AddSecurityPrincipal(principal);
@@ -187,6 +194,11 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<ManagedLicense>> GetManagedLicenses(AuthContext authContext) => _licenseController(authContext).GetManagedLicenses();
         public Task<ActionResult> AddManagedLicense(ManagedLicense item, AuthContext authContext) => _licenseController(authContext).AddManagedLicense(item);
         public Task<ActionResult> UpdateManagedLicense(ManagedLicense item, AuthContext authContext) => _licenseController(authContext).UpdateManagedLicense(item);
+
+        public Task<ActionResult> RemoveOidcProvider(string id, AuthContext authContext) => __oidcProviderController(authContext).RemovOidcProvider(id);
+        public Task<ICollection<OidcProviderConfig>> GetOidcProviders(AuthContext authContext) => __oidcProviderController(authContext).GetOidcProviders();
+        public Task<ActionResult> AddOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).AddOidcProvider(item);
+        public Task<ActionResult> UpdateOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).UpdateOidcProvider(item);
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

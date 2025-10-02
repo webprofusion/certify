@@ -24,6 +24,7 @@ namespace Certify.Models.Hub
                      StandardPolicies.StoredCredentialAdmin,
                      StandardPolicies.ManagedChallengeAdmin,
                      StandardPolicies.AccessAdmin,
+                     StandardPolicies.OidcAdmin,
                      StandardPolicies.AccessTokenAdmin,
                      StandardPolicies.CertificateConsumer,
                      StandardPolicies.ManagedInstanceSystemExport,
@@ -82,23 +83,24 @@ namespace Certify.Models.Hub
     public class ResourceTypes
     {
         public const string System = "system";
-        public const string SecurityPrincipal  = "securityprincipal";
-        public const string Role  = "role";
-        public const string AccessToken  = "accesstoken";
-        public const string Domain  = "domain";
-        public const string ManagedItem  = "manageditem";
-        public const string Certificate  = "certificate";
-        public const string StoredCredential  = "storedcredential";
-        public const string CertificateAuthority  = "ca";
-        public const string AcmeAccount  = "acmeaccount";
-        public const string ManagedChallenge  = "managedchallenge";
-        public const string ManagedAcme  = "managedacme";
-        public const string ManagedInstance  = "managedinstance";
-        public const string ManagedLicense  = "managedlicense";
-        public const string Target  = "target";
-        public const string ChallengeProvider  = "challengeprovider";
-        public const string DeploymentTask  = "deploymenttask";
-        public const string Tag  = "tag";
+        public const string SecurityPrincipal = "securityprincipal";
+        public const string Role = "role";
+        public const string AccessToken = "accesstoken";
+        public const string Domain = "domain";
+        public const string ManagedItem = "manageditem";
+        public const string Certificate = "certificate";
+        public const string StoredCredential = "storedcredential";
+        public const string CertificateAuthority = "ca";
+        public const string AcmeAccount = "acmeaccount";
+        public const string ManagedChallenge = "managedchallenge";
+        public const string ManagedAcme = "managedacme";
+        public const string ManagedInstance = "managedinstance";
+        public const string ManagedLicense = "managedlicense";
+        public const string OidcProvider = "oidcprovider";
+        public const string Target = "target";
+        public const string ChallengeProvider = "challengeprovider";
+        public const string DeploymentTask = "deploymenttask";
+        public const string Tag = "tag";
     }
 
     public static class StandardResourceActions
@@ -199,11 +201,17 @@ namespace Certify.Models.Hub
 
         public const string ManagedAcmePerformOrder = "managedacme_order_action";
 
+        public const string OidcProviderList = "oidcprovider_list_action";
+        public const string OidcProviderAdd = "oidcprovider_add_action";
+        public const string OidcProviderUpdate = "oidcprovider_update_action";
+        public const string OidcProviderDelete = "oidcprovider_delete_action";
+
     }
 
     public class StandardPolicies
     {
         public const string AccessAdmin = "access_admin_policy";
+        public const string OidcAdmin = "oidc_admin_policy";
         public const string AccessTokenAdmin = "accesstoken_admin_policy";
         public const string ManagedItemAdmin = "manageditem_admin_policy";
         public const string CertificateConsumer = "certificate_consumer_policy";
@@ -344,7 +352,12 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedLicenseDeactivate, "Remove managed license from an instance", ResourceTypes.ManagedLicense),
                 new(StandardResourceActions.ManagedLicenseStatus, "Get status for a managed license", ResourceTypes.ManagedLicense),
 
-                new(StandardResourceActions.ManagedAcmePerformOrder, "Perform managed acme order", ResourceTypes.ManagedAcme)
+                new(StandardResourceActions.ManagedAcmePerformOrder, "Perform managed acme order", ResourceTypes.ManagedAcme),
+
+                new(StandardResourceActions.OidcProviderList, "List Oidc Provider licenses", ResourceTypes.OidcProvider),
+                new(StandardResourceActions.OidcProviderAdd, "Add Oidc Provider", ResourceTypes.OidcProvider),
+                new(StandardResourceActions.OidcProviderUpdate, "Update Oidc Provider", ResourceTypes.OidcProvider),
+                new(StandardResourceActions.OidcProviderDelete, "Delete Oidc Provider", ResourceTypes.OidcProvider),
 
             ];
         }
@@ -392,6 +405,17 @@ namespace Certify.Models.Hub
 
                     ]
                 },
+                 new() {
+                     Id = StandardPolicies.OidcAdmin,
+                     Title = "Oidc Provider Administration",
+                     SecurityPermissionType = SecurityPermissionType.ALLOW,
+                     ResourceActions = [
+                         StandardResourceActions.OidcProviderList,
+                         StandardResourceActions.OidcProviderAdd,
+                         StandardResourceActions.OidcProviderUpdate,
+                         StandardResourceActions.OidcProviderDelete,
+                     ]
+                 },
                 new() {
                      Id = StandardPolicies.AccessTokenAdmin,
                      Title = "Access Token Administration",
