@@ -123,6 +123,9 @@
   <data name="RegistrationEmailAddress" xml:space="preserve">
     <value>﻿登録したメールアドレス</value>
   </data>
+  <data name="LicenseKey" xml:space="preserve">
+    <value>ライセンスキー</value>
+  </data>
   <data name="Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
@@ -633,15 +636,6 @@
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
     <value>Http チャレンジサーバーを有効にする</value>
   </data>
-  <data name="Yes_I_Agree" xml:space="preserve">
-    <value>はい、同意します</value>
-  </data>
-  <data name="New_Contact_Tip2" xml:space="preserve">
-    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
-  </data>
-  <data name="LicenseKey" xml:space="preserve">
-    <value>ライセンスキー</value>
-  </data>
   <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
     <value>証明書のクリーンアップを有効にする</value>
   </data>
@@ -670,7 +664,7 @@
     <value>タスクは、証明書の更新前後に追加の操作やアクションを実行するためのオプション機能です。</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>デプロイメントタスクは、標準のデプロイメント処理完了後（表示順）に実行されます（「デプロイメント」タブ参照）。タスクは証明書更新直後または手動・スケジュールタスクで実行できます。タスクの順序はドラッグで変更可能です。</value>
+    <value>デプロイメントタスクは、標準のデプロイメント処理完了後（表示順）に実行されます（「デプロイメント」タブ参照）。タスクは証明書更新直後または手動・スケジュールタスクで実行できます。</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>証明書要求開始前に任意の数のタスクを追加できます（オプション）。</value>
@@ -710,5 +704,11 @@
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions" xml:space="preserve">
     <value>認証局は異なるルート（発行者）証明書で署名された複数バージョンの証明書を提示する場合があります。証明書ごとに優先チェーンを指定できます。該当チェーンがない場合はデフォルトチェーンが使用されます。</value>
+  </data>
+  <data name="Yes_I_Agree" xml:space="preserve">
+    <value>はい、同意します</value>
+  </data>
+  <data name="New_Contact_Tip2" xml:space="preserve">
+    <value>提供された電子メールアドレスは、必要に応じて今後の証明書の更新を通知するために使用することができます。 無効な電子メールアドレスはLet's Encrypt によって拒否されます。</value>
   </data>
 </root>

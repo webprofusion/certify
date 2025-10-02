@@ -678,7 +678,7 @@
     <value>作業可選擇於憑證續期前後執行，亦可單獨使用最新憑證觸發其他動作</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>部署作業會在標準部署程序完成後（依畫面順序）執行，可設定在憑證更新完畢立即執行，或延後（手動或排程執行），亦可拖曳調整作業順序：</value>
+    <value>部署作業會在標準部署程序完成後（依畫面順序）執行，可設定在憑證更新完畢立即執行，或延後（手動或排程執行）</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>可選擇於申請憑證開始前加入任何作業：</value>

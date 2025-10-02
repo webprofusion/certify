@@ -680,7 +680,7 @@ for the certification process to work.</value>
     <value>Tasks are an optional way to work with your latest certificate or trigger other actions before or after renewal. </value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.). You can also drag tasks to re-order them:</value>
+    <value>Deployment Tasks run (in the order shown) after the standard Deployment process has completed (see the Deployment tab). Tasks can be run immediately after the certificate has updated or they can be deferred (to run manually or via a scheduled task etc.).</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>You can optionally add any number of tasks to run before the certificate request begins:</value>

@@ -678,7 +678,7 @@
     <value>任务可选，用于在证书更新前后对证书进行操作或触发其他动作</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>部署任务将在常规部署流程完成后（按显示顺序）依次运行，可选择在证书更新后立即执行或延迟至手动/计划任务执行。可拖拽调整任务顺序：</value>
+    <value>部署任务将在常规部署流程完成后（按显示顺序）依次运行，可选择在证书更新后立即执行或延迟至手动/计划任务执行。</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>可选添加任意数量的任务，在证书申请前执行：</value>
