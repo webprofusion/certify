@@ -49,17 +49,14 @@ namespace Certify.Management
                 CoreAppSettings.Current.CurrentServiceVersion = systemVersion;
 
                 SettingsManager.SaveAppSettings();
-
-                // if we are a management hub backend, register with the hub if not already registered
-                if (_isMgtmHubBackend)
-                {
-                    var accessControl = await GetCurrentAccessControl();
-                    await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
-                }
             }
 
             if (_isMgtmHubBackend)
             {
+                // if we are a management hub backend, upgrade users and roles if required
+                var accessControl = await GetCurrentAccessControl();
+                await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
+
                 // we are the hub backend instance directly connected, if we are not already a registered instance for ourself, register now
 
                 var hubInstance = string.IsNullOrEmpty(_serverConfig.HubAssignedInstanceId) ? null : await GetHubManagedInstance(_serverConfig.HubAssignedInstanceId);
