@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -893,7 +893,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = 900,
                 ProviderParameters = new List<ProviderParameter>
                 {
-                    new ProviderParameter { Key = "NameSiloApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new ProviderParameter { Key = "NameSiloKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
