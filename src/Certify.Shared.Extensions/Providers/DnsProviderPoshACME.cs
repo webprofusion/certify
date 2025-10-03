@@ -944,25 +944,6 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
-                Id = "DNS01.API.PoshACME.NameCheap",
-                Title = "Namecheap DNS API (using Posh-ACME)",
-                Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/latest/Plugins/Namecheap/",
-                PropagationDelaySeconds = DefaultPropagationDelay,
-                ProviderParameters = new List<ProviderParameter>
-                {
-                    new ProviderParameter { Key = "NCUsername", Name = "Username", IsRequired = true, IsCredential = true },
-                    new ProviderParameter { Key = "NCApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringConfig },
-                    _defaultPropagationDelayParam
-                },
-                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
-                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Namecheap",
-                HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = false,
-                IsExperimental = true
-            },
-            new ChallengeProviderDefinition
-            {
                 Id = "DNS01.API.PoshACME.PointDNS",
                 Title = "PointDNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
