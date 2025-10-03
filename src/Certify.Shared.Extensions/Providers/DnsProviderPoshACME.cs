@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -205,6 +205,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 {
                     new ProviderParameter { Key = "AKUseEdgeRC", Name = "Use EdgeRC file", IsRequired = true, Description = "Set to true", Value="true", IsHidden=true, Type= OptionType.Boolean, IsCredential = false },
                     new ProviderParameter { Key = "AKEdgeRCFile", Name = "EdgeRC File Path", IsRequired = true, Description = "Full path to .edgerc", IsCredential = false },
+                    new ProviderParameter { Key = "AKEdgeRCSection", Name = "EdgeRC Section", IsRequired = false, Description = "Section name in .edgerc file", Value="default", IsCredential = false },
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -263,7 +264,7 @@ namespace Certify.Core.Management.Challenges.DNS
                     new ProviderParameter { Key = "AutoDNSUser", Name = "Username", IsRequired = true, IsCredential = true },
                     new ProviderParameter { Key = "AutoDNSPasswordInsecure", Name = "Password", IsRequired = true, IsCredential = true, ExtendedConfig= _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","AutoDNSPassword") },
                     new ProviderParameter { Key = "AutoDNSContext", Name = "Context", IsRequired = true, IsCredential = false, Value="4" },
-                    new ProviderParameter { Key = "AutoDNSGateway", Name = "Gateway Host", IsRequired = true, IsCredential = true, Value="gateway.autodns.com" },
+                    new ProviderParameter { Key = "AutoDNSGateway", Name = "Gateway Host", IsRequired = true, IsCredential = true, Value="gateway.autodns.com" }, // didn't need to be a credential but keeping to avoid breaking changes
                     _defaultPropagationDelayParam
                 },
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
