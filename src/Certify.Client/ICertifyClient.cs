@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -55,6 +55,8 @@ namespace Certify.Client
         Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext authContext = null);
         Task<ActionResult> DeleteCredential(string credentialKey, AuthContext authContext = null);
         Task<ActionResult> TestCredentials(string credentialKey, AuthContext authContext = null);
+
+        Task<OidcProviderConfig> GetOidcProviderWithSecret(string id, AuthContext authContext = null);
         #endregion Credentials
 
         #region Managed Certificates

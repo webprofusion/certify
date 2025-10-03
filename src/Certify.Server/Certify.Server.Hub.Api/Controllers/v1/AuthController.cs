@@ -1,4 +1,4 @@
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using Certify.Client;
@@ -192,7 +192,7 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             try
             {
-                var oidcConfig = await GetOidcConfiguration(provider);
+                var oidcConfig = await GetOidcProviderWithSecret(provider);
                 if (oidcConfig == null)
                 {
                     return BadRequest($"OIDC provider '{provider}' not configured");
@@ -274,7 +274,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     return BadRequest(new OidcCallbackResponse { Success = false, Error = "expired_state" });
                 }
 
-                var oidcConfig = await GetOidcConfiguration(oidcState.Provider);
+                var oidcConfig = await GetOidcProviderWithSecret(oidcState.Provider);
                 if (oidcConfig == null)
                 {
                     return BadRequest(new AuthResponse { IsSuccess = false, Detail = "invalid_provider" });
@@ -311,10 +311,9 @@ namespace Certify.Server.Hub.Api.Controllers
             }
         }
 
-        private async Task<OidcProviderConfig?> GetOidcConfiguration(string? provider)
+        private async Task<OidcProviderConfig?> GetOidcProviderWithSecret(string? provider)
         {
-            var oidcProviders = await _client.GetOidcProviders(CurrentAuthContext);
-            return oidcProviders.FirstOrDefault(p => p.Id == provider);
+            return await _client.GetOidcProviderWithSecret(provider, CurrentAuthContext);
         }
 
         private string BuildAuthorizationUrl(OidcProviderConfig config, string state, string nonce)

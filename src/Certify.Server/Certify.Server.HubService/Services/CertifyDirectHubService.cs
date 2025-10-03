@@ -199,6 +199,7 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<OidcProviderConfig>> GetOidcProviders(AuthContext authContext) => __oidcProviderController(authContext).GetOidcProviders();
         public Task<ActionResult> AddOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).AddOidcProvider(item);
         public Task<ActionResult> UpdateOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).UpdateOidcProvider(item);
+        public Task<OidcProviderConfig> GetOidcProviderWithSecret(string id, AuthContext authContext) => __oidcProviderController(authContext).GetOidcProvidersWithSecret(id);
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
