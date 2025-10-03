@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -295,6 +295,19 @@ app.MapDefaultEndpoints();
 
 app.UseResponseCompression();
 
+// Rewrite /ui/* to / so SPA default file (index.html) is served
+// https://learn.microsoft.com/aspnet/core/fundamentals/middleware
+app.Use((context, next) =>
+{
+    if ((HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method))
+        && context.Request.Path.StartsWithSegments("/ui"))
+    {
+        context.Request.Path = "/";
+    }
+
+    return next(context);
+});
+
 // serve static files from wwwroot
 app.UseDefaultFiles();
 
@@ -351,19 +364,6 @@ AddSystemStatusItem(
     title: "API Docs UI enabled",
     description: $"Hub API docs available at /api/docs"
 );
-
-// if request is for /ui/ then we are following a route intended for the Blazor UI, so rewrite the request to / to serve index.html
-// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/?view=aspnetcore-9.0
-app.Use((context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/ui"))
-    {
-        // Rewrite the request path to serve index.html
-        context.Request.Path = "/";
-    }
-
-    return next(context);
-});
 
 // configure initialization of UI status hub, backend management hub etc
 
