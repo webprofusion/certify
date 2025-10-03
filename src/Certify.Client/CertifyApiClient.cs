@@ -829,6 +829,12 @@ namespace Certify.Client
             return JsonToObject<HubInfo>(result);
         }
 
+        public async Task<OidcProviderConfig> GetOidcProviderWithSecret(string id, AuthContext authContext = null)
+        {
+            var result = await FetchAsync($"oidcprovider/{id}/withsecret", authContext);
+            return JsonToObject<OidcProviderConfig>(result);
+        }
+
         #endregion
         private T JsonToObject<T>(string json)
         {

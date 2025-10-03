@@ -29,7 +29,14 @@ namespace Certify.Service.Controllers
         [HttpGet, Route("list")]
         public async Task<ICollection<OidcProviderConfig>> GetOidcProviders()
         {
-            return await _certifyManager.GetOidcProviders(includeSecret: true);
+            return await _certifyManager.GetOidcProviders(includeSecret: false);
+        }
+
+        [HttpGet, Route("{id}/withsecret")]
+        public async Task<OidcProviderConfig> GetOidcProvidersWithSecret(string id)
+        {
+            var results = await _certifyManager.GetOidcProviders(includeSecret: true);
+            return results.FirstOrDefault(p => p.Id == id);
         }
 
         [HttpPost, Route("add")]

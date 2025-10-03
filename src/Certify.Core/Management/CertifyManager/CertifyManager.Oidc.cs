@@ -29,6 +29,16 @@ namespace Certify.Management
         }
         public async Task<ActionResult> UpdateOidcProvider(OidcProviderConfig item)
         {
+            var existing = await _oidcStore.Get(item.Id);
+            if (existing != null && existing.GetItem() != null)
+            {
+                // use existing client secret if not specified in this update
+                if (string.IsNullOrEmpty(item.ClientSecret))
+                {
+                    item.ClientSecret = existing.GetItem().ClientSecret;
+                }
+            }
+
             await _oidcStore.Update(item.Id, item);
             return new ActionResult("Updated", true);
         }
