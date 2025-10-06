@@ -161,7 +161,7 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             var log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, -1, CurrentAuthContext);
 
-            var content = string.Join("\r\n", log.Select(l => $"{l.EventDate}\t[{l.LogLevel}]\t{l.Message}"));
+            var content = string.Join("\r\n", log.Select(l => $"{l.EventDate?.ToLocalTime().ToString("yyyy-MM-dd H:mm")}\t[{l.LogLevel}]\t{l.Message}"));
 
             return new FileContentResult(Encoding.UTF8.GetBytes(content), "text/plain") { FileDownloadName = $"{managedCertId}.log" };
         }
