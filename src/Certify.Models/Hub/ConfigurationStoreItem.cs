@@ -3,9 +3,17 @@
 namespace Certify.Models.Hub
 {
     /// <summary>
+    /// Interface for objects that can provide their own ID
+    /// </summary>
+    public interface IIdentifiable
+    {
+        public string Id { get; set; }
+    }
+
+    /// <summary>
     /// Common data store base type for access control, configuration and security
     /// </summary>
-    public class ConfigurationStoreItem
+    public class ConfigurationStoreItem : IIdentifiable
     {
         public ConfigurationStoreItem()
         {
