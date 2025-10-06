@@ -36,13 +36,13 @@
 
     <Import Project="..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props')" />
 
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0|AnyCPU'">
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
@@ -64,7 +64,7 @@
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="MedallionShell" Version="1.6.2" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
         <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
         <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0" />
         <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />

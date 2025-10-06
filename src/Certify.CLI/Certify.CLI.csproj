@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net462;net9.0;net10.0;</TargetFrameworks>
+        <TargetFrameworks>net462;net10.0;</TargetFrameworks>
         <Configurations>Debug;Release;</Configurations>
         <AssemblyName>Certify</AssemblyName>
         <OutputType>Exe</OutputType>
