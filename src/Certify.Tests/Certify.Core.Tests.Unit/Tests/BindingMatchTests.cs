@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -59,6 +59,7 @@ namespace Certify.Core.Tests.Unit
 
                 // Site 7:  cert will be used to match multiple ports with same hostname and one blank hostname
                 new BindingInfo{ SiteName="TestMultiPorts", Host="admin.example.com", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="7"},
+                new BindingInfo{ SiteName="TestMultiPorts", Host="admin.example.com123", IP="*", HasCertificate=true, Protocol="https", Port=443, SiteId="7"},
                 new BindingInfo{ SiteName="TestMultiPorts", Host="admin.example.com", IP="*", HasCertificate=true, Protocol="https", Port=8530, SiteId="7"},
                 new BindingInfo{ SiteName="TestMultiPorts", Host="", IP="*", HasCertificate=true, Protocol="https", Port=8531, SiteId="7"}
             };
