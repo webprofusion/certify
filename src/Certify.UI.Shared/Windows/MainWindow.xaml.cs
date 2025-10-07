@@ -273,6 +273,10 @@ namespace Certify.UI.Windows
                     _appViewModel.SystemDiagnosticWarning = svcDiag.First(d => d.IsSuccess == false).Message;
                 }
             }
+            else
+            {
+                _appViewModel.Log.Information("Service not available after connection init. Check service has started and review logs.");
+            }
 
             var diagnostics = await Management.Util.PerformAppDiagnostics(includeTempFileCheck: false, _appViewModel.Preferences.NtpServer);
             if (diagnostics.Any(d => d.IsSuccess == false))
