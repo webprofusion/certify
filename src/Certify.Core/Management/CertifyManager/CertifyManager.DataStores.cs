@@ -85,9 +85,12 @@ namespace Certify.Management
                     throw;
                 }
 
-                if (!_itemManager.IsInitialised().Result)
+                var isInitialised = await _itemManager.IsInitialised();
+                if (!isInitialised)
                 {
-                    _serviceLog?.Error($"Item Manager failed to initialise properly. Check service logs for more information.");
+                    var msg = $"FATAL: Managed Item Store is not initialised. Service will not start.";
+                    _serviceLog?.Error(msg);
+                    throw new Exception(msg);
                 }
             }
             catch (Exception exp)

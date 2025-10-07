@@ -22,6 +22,8 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task UpgradeSettings()
         {
+            _serviceLog?.Information("Performing settings and db upgrades.");
+
             var systemVersion = Util.GetAppVersion().ToString();
             var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
 
@@ -33,6 +35,8 @@ namespace Certify.Management
             {
                 // instance is running as a management hub backend (remote or direct)
                 _isMgtmHubBackend = true;
+
+                _serviceLog?.Information("Instance is a Management Hub.");
             }
 
             if (CoreAppSettings.Current.CurrentServiceVersion != systemVersion || Environment.GetEnvironmentVariable("CERTIFY_UPGRADE_SETTINGS") == "true")
@@ -53,6 +57,8 @@ namespace Certify.Management
 
             if (_isMgtmHubBackend)
             {
+                _serviceLog?.Information("Hub: checking system roles etc.");
+
                 // if we are a management hub backend, upgrade users and roles if required
                 var accessControl = await GetCurrentAccessControl();
                 await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
@@ -89,6 +95,7 @@ namespace Certify.Management
 
             if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
             {
+                _serviceLog?.Information("Demo: creating test items.");
                 var maxItems = Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS_MAX") ?? "500";
                 await GenerateDemoItems(int.Parse(maxItems));
             }

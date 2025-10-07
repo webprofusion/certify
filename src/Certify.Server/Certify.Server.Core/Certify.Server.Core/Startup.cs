@@ -22,35 +22,82 @@ namespace Certify.Server.Core
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+
+            Log("----------Service Startup---------");
         }
 
         public IConfiguration Configuration { get; }
 
+        public void Log(string msg)
+        {
+            Console.WriteLine(msg);
+
+            try
+            {
+                var logPath = EnvironmentUtil.EnsuredAppDataPath("logs");
+
+                System.IO.File.AppendAllText(System.IO.Path.Combine(logPath, "service_startup.log"), $"{DateTime.Now}: {msg}\r\n");
+            }
+            catch
+            {
+
+                Console.WriteLine("Startup: failed to log to file.");
+            }
+        }
+
         public async Task ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            Log("Added controllers");
 
             ConfigureSignalR(services);
+            Log("Added SignalR");
+
             ConfigureDataProtection(services);
+            Log("Added DataProtection");
+
             ConfigureResponseCompression(services);
+            Log("Added ResponseCompression");
+
             ConfigureCors(services);
+            Log("Added Cors");
+
             ConfigureAuthentication(services);
+            Log("Added Authentication");
+
             ConfigureAuthorization(services);
+            Log("Added Authorization");
+
 #if DEBUG
             ConfigureSwagger(services);
+            Log("Added Swagger");
 #endif
             ConfigureHttpsRedirection(services);
+            Log("Added HttpsRedirection");
+
             ConfigureClaimsTransformation(services);
+            Log("Added ClaimsTransformation");
+
             await ConfigureCertifyManager(services);
+            Log("Added CertifyManager");
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<Service.StatusHub>>()
-                                   ?? throw new Exception("Status Hub not registered");
+            Log("Beginning service host app configuration");
 
-            var certifyManager = app.ApplicationServices.GetRequiredService<ICertifyManager>() as CertifyManager
-                                 ?? throw new Exception("Certify Manager not registered");
+            var statusHubContext = app.ApplicationServices.GetRequiredService<IHubContext<Service.StatusHub>>();
+
+            if (statusHubContext == null)
+            {
+                Log("FATAL: Status Hub Not Registered as service dependency");
+            }
+
+            var certifyManager = app.ApplicationServices.GetRequiredService<ICertifyManager>() as CertifyManager;
+            if (certifyManager == null)
+            {
+                Log("FATAL: CertifyManager Not Registerd as service dependency");
+            }
 
             if (env.IsDevelopment())
             {
@@ -92,6 +139,9 @@ namespace Certify.Server.Core
                 });
 #endif
             });
+
+            Log("Configured endpoints");
+
         }
 
         private void ConfigureSignalR(IServiceCollection services)

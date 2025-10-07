@@ -50,7 +50,11 @@ app.MapDefaultEndpoints();
 
 startup.Configure(app, builder.Environment);
 
-app.Run();
+app.Start();
+
+startup.Log($"Core service started {string.Join(";", app.Urls)}");
+
+app.WaitForShutdown();
 
 /// <summary>
 /// Declare program as partial for reference in tests: https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-8.0

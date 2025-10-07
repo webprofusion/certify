@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -140,6 +140,8 @@ namespace Certify.Management
 
         private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false)
         {
+            _serviceLog?.Information($"Status: {title} - {description} ");
+
             _systemStatusItems.RemoveAll(s => s.Key == systemStatusKey);
 
             _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
@@ -179,7 +181,7 @@ namespace Certify.Management
 
             InitLogging(_serverConfig);
 
-            _serviceLog?.Information($"Certify Manager: {Util.GetAppVersion()}");
+            _serviceLog?.Information("Certify Manager Initialization.");
 
             Util.SetSupportedTLSVersions();
 
@@ -292,13 +294,15 @@ namespace Certify.Management
 
             await UpgradeSettings();
 
-            await RefreshCachedLicenseCheck();
+            _ = RefreshCachedLicenseCheck();
 
             _serviceLog?.Information("Certify Manager Started");
         }
 
         private async Task RefreshCachedLicenseCheck()
         {
+            _serviceLog?.Information("Refreshing cached license check.");
+
             try
             {
                 if (_licensingManager != null)
