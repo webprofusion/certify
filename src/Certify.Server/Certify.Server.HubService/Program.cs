@@ -1,4 +1,5 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -38,16 +39,20 @@ if (cwd != null)
     Directory.SetCurrentDirectory(cwd);
 
 #if !DEBUG
+
+    // copy the default settings if they don't exist yet, then generate a new JWT issuer secret
     var defaultHubSettings = Path.Combine(cwd, "default-settings.json");
 
     if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
     {
+        var content = File.ReadAllText(defaultHubSettings);
+
+        var secret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+
+        content = content.Replace("<replace jwt secret>", secret);
+
         // copy default config if it doesn't exist
-        File.Copy(
-            defaultHubSettings,
-            hubSettings,
-            false
-        );
+        File.WriteAllText(hubSettings, content);
     }
 #endif
 }

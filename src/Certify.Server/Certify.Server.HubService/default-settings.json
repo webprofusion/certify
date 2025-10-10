@@ -6,6 +6,12 @@
       "Microsoft.Hosting.Lifetime": "Information"
     }
   },
+  "JwtSettings": {
+    "secret": "<replace jwt secret>",
+    "refreshTokenExpirationInMinutes": 1440,
+    "authTokenExpirationInMinutes": 60,
+    "issuer": "Certify.Server.Hub.Api"
+  },
   "Kestrel": {
     "Endpoints": {
       "SvcHttpEndpoint": {
