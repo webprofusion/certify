@@ -20,7 +20,7 @@ namespace Certify.Service.Tests.Integration
             _client.SetConnectionAuthMode("token");
 
             // check should throw exception
-            await Assert.ThrowsExceptionAsync<ServiceCommsException>(async () =>
+            await Assert.ThrowsAsync<ServiceCommsException>(async () =>
             {
                 var noAuthResult = await _client.GetManagedCertificates(new Models.ManagedCertificateFilter { }, authContext);
                 Assert.IsNull(noAuthResult);

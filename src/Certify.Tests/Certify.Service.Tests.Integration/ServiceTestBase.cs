@@ -7,32 +7,19 @@ namespace Certify.Service.Tests.Integration
     public class ServiceTestBase
     {
         protected Client.CertifyServiceClient _client;
-        private OwinService _svc;
 
         [TestInitialize]
         public async Task InitTests()
         {
             _client = new Certify.Client.CertifyServiceClient(new ServiceConfigManager(), new Shared.ServerConnection { Host = "127.0.0.2", Port = 9000 });
 
-            // create API server instance
-            if (_svc == null)
-            {
-                _svc = new Certify.Service.OwinService();
-                _svc.Start(9000);
-
-                await Task.Delay(2000);
-
-                await _client.GetAppVersion();
-            }
+            // TODO: startup instance of API service
         }
 
         [TestCleanup]
         public void TestCleanup()
         {
-            if (_svc != null)
-            {
-                _svc.Stop();
-            }
+
         }
     }
 }

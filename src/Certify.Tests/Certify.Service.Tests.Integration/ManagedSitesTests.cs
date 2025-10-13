@@ -93,7 +93,7 @@ namespace Certify.Service.Tests.Integration
 
                 foreach (var site in list)
                 {
-                    await Assert.ThrowsExceptionAsync<Certify.Client.ServiceCommsException>(async () => await _client.UpdateManagedCertificate(site));
+                    await Assert.ThrowsAsync<Certify.Client.ServiceCommsException>(async () => await _client.UpdateManagedCertificate(site));
                 }
 
                 // get latest versions of each managed cert

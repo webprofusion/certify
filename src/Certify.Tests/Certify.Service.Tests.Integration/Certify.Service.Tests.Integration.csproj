@@ -55,6 +55,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Certify.Client\Certify.Client.csproj" />
         <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
     <ItemGroup>
