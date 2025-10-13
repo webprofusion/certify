@@ -69,7 +69,7 @@
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
         <PackageReference Include="Polly" Version="8.6.4" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
-        <PackageReference Include="Npgsql" Version="9.0.3" />
+        <PackageReference Include="Npgsql" Version="9.0.4" />
     </ItemGroup>
     <ItemGroup>
         <None Include="app.config" />
