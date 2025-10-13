@@ -63,7 +63,7 @@ namespace Certify.Core.Tests
                 Assert.IsNotNull(acmeClientProvider, "Expected response from CertifyManager.GetACMEProvider() to not be null");
                 Assert.AreEqual(expectedAcmeBaseUri, acmeClientProvider.GetAcmeBaseURI(), "Unexpected CA Base URI in returned value from acmeClientProvider.GetAcmeBaseURI()");
                 Assert.AreEqual("Anvil", acmeClientProvider.GetProviderName(), "Unexpected Provider name in returned value from acmeClientProvider.GetProviderName()");
-                await Assert.ThrowsExceptionAsync<NotImplementedException>(async () => await acmeClientProvider.GetAcmeAccountStatus(), "Expected acmeClientProvider.GetAcmeAccountStatus() to throw NotImplementedException");
+                await Assert.ThrowsAsync<NotImplementedException>(async () => await acmeClientProvider.GetAcmeAccountStatus(), "Expected acmeClientProvider.GetAcmeAccountStatus() to throw NotImplementedException");
                 Assert.IsNotNull(await acmeClientProvider.GetAcmeDirectory(), "Expected acmeClientProvider.GetAcmeDirectory() to return a non-null value");
             }
             finally
@@ -121,7 +121,7 @@ namespace Certify.Core.Tests
 
             var progressState = new RequestProgressState(RequestState.Running, "Starting..", dummyManagedCert);
             var progressIndicator = new Progress<RequestProgressState>(progressState.ProgressReport);
-            _certifyManager.SetStatusReporting(new StatusHubReporting());
+            _certifyManager.SetStatusReporting(new StatusHubReporting(null));
 
             // Set event handler for when Progress changes
             var progressChanged = false;

@@ -524,7 +524,7 @@ namespace Certify.Core.Tests.Unit
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath.Replace("Assets", "Asset"), pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsAsync<System.IO.FileNotFoundException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath.Replace("Assets", "Asset"), pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx file")]
@@ -564,7 +564,7 @@ namespace Certify.Core.Tests.Unit
             var mockTarget = new MockBindingDeploymentTarget();
             mockTarget.AllBindings = bindings;
 
-            await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, badCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await deployment.StoreAndDeploy(mockTarget, testManagedCert, badCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME));
         }
 
         [TestMethod, Description("Test if mixed ipv4+ipv6 bindings are handled when given a bad pfx password")]

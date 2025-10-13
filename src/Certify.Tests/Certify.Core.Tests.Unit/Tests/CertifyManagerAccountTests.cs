@@ -76,7 +76,7 @@ namespace Certify.Core.Tests.Unit
             _certifyManager?.Dispose();
         }
 
-        [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+        [ClassCleanup]
         public static async Task ClassCleanup()
         {
             if (!_isContainer)

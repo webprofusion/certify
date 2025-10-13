@@ -1,6 +1,6 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net462;</TargetFrameworks>
+        <TargetFrameworks>net10.0;</TargetFrameworks>
         <Configurations>Debug;Release;</Configurations>
         <RootNamespace>Certify.Core.Tests</RootNamespace>
         <AssemblyName>Certify.Core.Tests</AssemblyName>
@@ -39,13 +39,8 @@
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net462|AnyCPU'">
-        <NoWarn>1701;1702;NU1701</NoWarn>
-    </PropertyGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0|AnyCPU'">
-        <NoWarn>1701;1702;NU1701</NoWarn>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net462|AnyCPU'">
         <NoWarn>1701;1702;NU1701</NoWarn>
     </PropertyGroup>
     <ItemGroup>
@@ -58,7 +53,7 @@
         <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Plugin.DNS.AWSRoute53.csproj" />
         <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Plugin.DNS.Azure.csproj" />
         <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Plugin.DNS.Cloudflare.csproj" />
-        <ProjectReference Include="..\..\Certify.Service\Certify.Service.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
         <ProjectReference Include="..\..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
@@ -74,8 +69,7 @@
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
         <PackageReference Include="Polly" Version="8.6.4" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
-        <PackageReference Include="Npgsql" Version="8.0.7" Condition="'$(TargetFramework)' == 'net462'" />
-        <PackageReference Include="Npgsql" Version="9.0.3" Condition="'$(TargetFramework)' != 'net462'" />
+        <PackageReference Include="Npgsql" Version="9.0.3" />
     </ItemGroup>
     <ItemGroup>
         <None Include="app.config" />
