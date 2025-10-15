@@ -236,7 +236,9 @@ namespace Certify.CLI
                     // Identify last N order URLs in each log file
 
                     System.Console.WriteLine("Parsing log: " + logFile);
-                    var file = System.IO.File.ReadAllLines(logFile).Reverse();
+                    var file = System.IO.File.ReadAllLines(logFile);
+                    file.Reverse();
+
                     var orderCount = 5;
 
                     foreach (var line in file)
