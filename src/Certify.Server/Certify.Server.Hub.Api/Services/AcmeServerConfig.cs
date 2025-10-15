@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Providers;
 using Certify.Server.Hub.Api.Models.Acme;
@@ -125,6 +124,11 @@ namespace Certify.Server.Hub.Api.Services
             }
         }
 
+        /// <summary>
+        /// Stores a consumed External Account Binding (EAB) key with the specified key ID and value.
+        /// </summary>
+        /// <param name="keyId">The identifier of the EAB key.</param>
+        /// <param name="v">The value associated with the consumed EAB key.</param>
         public async Task StoreAcmeConsumedEabKey(string keyId, string v)
         {
             //_consumedEabKeys[keyId] = v;

@@ -71,6 +71,11 @@ namespace Certify.Server.Hub.Api.Services
             return _writer.TryWrite(task);
         }
 
+        /// <summary>
+        /// Executes the background service to process ACME order tasks from the queue.
+        /// </summary>
+        /// <param name="stoppingToken">A cancellation token that can be used to stop the background service.</param>
+        /// <returns>A task that represents the background execution operation.</returns>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("ACME Background Task Service is starting");
@@ -257,7 +262,13 @@ namespace Certify.Server.Hub.Api.Services
     /// </summary>
     public class AcmeOrderTask
     {
+        /// <summary>
+        /// Gets or sets the type of ACME task to be processed.
+        /// </summary>
         public AcmeTaskType Type { get; set; }
+        /// <summary>
+        /// Gets or sets the unique identifier for the ACME order.
+        /// </summary>
         public string OrderId { get; set; } = string.Empty;
         public string ManagedCertificateId { get; set; } = string.Empty;
         public string Csr { get; set; } = string.Empty;
@@ -267,6 +278,9 @@ namespace Certify.Server.Hub.Api.Services
         public DateTime CreatedAt { get; set; }
     }
 
+    /// <summary>
+    /// Specifies the type of ACME task to be processed by the background service.
+    /// </summary>
     public enum AcmeTaskType
     {
         ProcessOrder,

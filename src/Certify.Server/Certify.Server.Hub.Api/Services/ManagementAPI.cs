@@ -826,6 +826,12 @@ namespace Certify.Server.Hub.Api.Services
             }
         }
 
+        /// <summary>
+        /// Deactivates the managed license for the specified instance.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>An <see cref="ActionResult"/> indicating whether the deactivation succeeded.</returns>
         public async Task<ActionResult?> DeactivateManagedLicense(string instanceId, AuthContext? currentAuthContext)
         {
 

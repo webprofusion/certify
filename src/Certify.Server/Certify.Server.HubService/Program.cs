@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;

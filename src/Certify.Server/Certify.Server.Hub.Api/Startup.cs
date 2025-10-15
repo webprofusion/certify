@@ -89,64 +89,64 @@ namespace Certify.Server.Hub.Api
             // Register the Swagger generator, defining 1 or more Swagger documents
             // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio
             services.AddSwaggerGen(c =>
-            {
+             {
 
-                // docs UI will be available at /docs
+                 // docs UI will be available at /docs
 
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "Certify Management Hub API",
-                    Version = "v1",
-                    Description = "The Certify Management Hub API provides a certificate services API for use in UI, devops, CI/CD, middleware etc. See certifytheweb.com for more details. Routes marked /internal/ may change regularly and are not intended for general use."
-                });
+                 c.SwaggerDoc("v1", new OpenApiInfo
+                 {
+                     Title = "Certify Management Hub API",
+                     Version = "v1",
+                     Description = "The Certify Management Hub API provides a certificate services API for use in UI, devops, CI/CD, middleware etc. See certifytheweb.com for more details. Routes marked /internal/ may change regularly and are not intended for general use."
+                 });
 
-                c.UseAllOfToExtendReferenceSchemas();
+                 c.UseAllOfToExtendReferenceSchemas();
 
-                // use the actual method names as the generated operation id
-                c.CustomOperationIds(e =>
-                    $"{e.ActionDescriptor.RouteValues["action"]}"
-                );
+                 // use the actual method names as the generated operation id
+                 c.CustomOperationIds(e =>
+                     $"{e.ActionDescriptor.RouteValues["action"]}"
+                 );
 
-                // declare authorization method
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    Scheme = "bearer",
-                    BearerFormat = "JWT",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http
-                });
+                 // declare authorization method
+                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                 {
+                     Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                     Name = "Authorization",
+                     Scheme = "bearer",
+                     BearerFormat = "JWT",
+                     In = ParameterLocation.Header,
+                     Type = SecuritySchemeType.Http
+                 });
 
-                // set security requirement
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        }, new List<string>()
-                    }
-                });
+                 // set security requirement
+                 c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                 {
+                     {
+                         new OpenApiSecurityScheme
+                         {
+                             Reference = new OpenApiReference
+                             {
+                                 Type = ReferenceType.SecurityScheme,
+                                 Id = "Bearer"
+                             }
+                         }, new List<string>()
+                     }
+                 });
 
-                // Set the comments path for the Swagger JSON and UI.
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                c.IncludeXmlComments(xmlPath);
+                 // Set the comments path for the Swagger JSON and UI.
+                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                 c.IncludeXmlComments(xmlPath);
 
-                c.MapType<FileContentResult>(() =>
-                {
-                    return new Microsoft.OpenApi.Models.OpenApiSchema
-                    {
-                        Type = "string",
-                        Format = "binary",
-                    };
-                });
-            });
+                 c.MapType<FileContentResult>(() =>
+                 {
+                     return new Microsoft.OpenApi.Models.OpenApiSchema
+                     {
+                         Type = "string",
+                         Format = "binary",
+                     };
+                 });
+             });
 
             // connect to primary certify service 
             var configManager = new ServiceConfigManager();

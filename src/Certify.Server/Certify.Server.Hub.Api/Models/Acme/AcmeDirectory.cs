@@ -2,7 +2,9 @@
 
 namespace Certify.Server.Hub.Api.Models.Acme
 {
-    // ACME Data Models
+    /// <summary>
+    /// Represents the ACME directory endpoints and metadata as defined by the ACME protocol.
+    /// </summary>
     public class AcmeDirectory
     {
         [JsonPropertyName("newNonce")]
