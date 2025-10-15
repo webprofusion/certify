@@ -1414,7 +1414,7 @@ namespace Certify.Providers.ACME.Anvil
         /// <param name="log">  </param>
         /// <param name="config">  </param>
         /// <returns>  </returns>
-        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs)
+        public async Task<ProcessStepResult> CompleteCertificateRequest(ILog log, ManagedCertificate managedCertificate, string orderId, string pwd, string preferredChain, string defaultKeyType, bool useModernPFXBuildAlgs, bool caRequiresCN)
         {
             if (!_currentOrders.TryGetValue(orderId, out var orderContext))
             {
@@ -1563,8 +1563,13 @@ namespace Certify.Providers.ACME.Anvil
                             RequireOcspMustStaple = config.RequireOcspMustStaple
                         };
 
-                        if (config.IncludeCN == true)
+                        if (config.IncludeCN == true || caRequiresCN)
                         {
+                            if (caRequiresCN)
+                            {
+                                log?.Warning($"The CA requires a Common Name to be included in the CSR, so it will be automatically included. This is deprecated by the CA/B Forum and should only be used if absolutely necessary.");
+                            }
+
                             csrInfo.CommonName = commonNameIsDns ? _idnMapping.GetAscii(config.PrimaryDomain) : config.PrimaryDomain;
                         }
 

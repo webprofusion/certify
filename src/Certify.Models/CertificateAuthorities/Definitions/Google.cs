@@ -22,6 +22,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 IsEnabled = true,
                 IsCustom = false,
                 SANLimit = 100,
+                RequiresCN = true, // Google currently requires a CN to be specified in the finalize CSR
                 StandardExpiryDays = 90,
                 RequiresEmailAddress = true,
                 RequiresExternalAccountBinding = true,

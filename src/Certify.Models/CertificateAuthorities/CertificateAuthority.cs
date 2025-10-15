@@ -132,6 +132,7 @@ namespace Certify.Models
         public bool RequiresExternalAccountBinding { get; set; }
         public bool AllowUntrustedTls { get; set; }
         public bool AllowInternalHostnames { get; set; }
+        public bool RequiresCN { get; set; }
         public bool SupportsCachedValidations { get; set; } = true;
         public string EabInstructions { get; set; } = string.Empty;
         public List<string> SupportedKeyTypes { get; set; } = [];
