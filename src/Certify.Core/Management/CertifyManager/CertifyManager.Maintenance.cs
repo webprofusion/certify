@@ -384,6 +384,11 @@ namespace Certify.Management
             var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2(File.ReadAllBytes(item.CertificatePath), await GetPfxPassword(item));
 #endif
             var ariCertId = item.ARICertificateId ?? Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(x509Cert2);
+
+            //cleanup cert so temp RSA keys get removed on disk
+            x509Cert2?.Dispose();
+            x509Cert2 = null;
+
             return ariCertId;
         }
 

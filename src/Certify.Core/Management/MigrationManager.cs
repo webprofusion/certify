@@ -557,6 +557,10 @@ namespace Certify.Core.Management
                     {
                         certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = "Output file already exists, it will not be re-imported" });
                     }
+
+                    //cleanup cert so temp RSA keys get removed on disk
+                    cert?.Dispose();
+                    cert = null;
                 }
                 else
                 {

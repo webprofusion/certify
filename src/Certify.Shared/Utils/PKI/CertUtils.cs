@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -41,52 +41,76 @@ namespace Certify.Shared.Core.Utils.PKI
         {
             // See also https://www.digicert.com/ssl-support/pem-ssl-creation.htm
 
-            var cert = new X509Certificate2(pfxData, pwd);
-            var chain = new X509Chain();
-            chain.Build(cert);
+            X509Certificate2 cert = null;
 
-            using (var writer = new StringWriter())
+            try
             {
-                var certParser = new X509CertificateParser();
-                var pemWriter = new PemWriter(writer);
+#if NET9_0_OR_GREATER
+            try
+            {
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+            catch (CryptographicException)
+            {
+                // try again using blank pwd
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+            }
+#else
+            cert = new X509Certificate2(pfxData, pwd);
+#endif
 
-                //output in order of private key, primary cert, intermediates, root
+                var chain = new X509Chain();
+                chain.Build(cert);
 
-                if (flags.HasFlag(ExportFlags.PrivateKey))
+                using (var writer = new StringWriter())
                 {
-                    var key = GetCertKeyPem(pfxData, pwd);
-                    writer.Write(key);
+                    var certParser = new X509CertificateParser();
+                    var pemWriter = new PemWriter(writer);
+
+                    //output in order of private key, primary cert, intermediates, root
+
+                    if (flags.HasFlag(ExportFlags.PrivateKey))
+                    {
+                        var key = GetCertKeyPem(pfxData, pwd);
+                        writer.Write(key);
+                    }
+
+                    var i = 0;
+                    foreach (var c in chain.ChainElements)
+                    {
+                        if (i == 0 && flags.HasFlag(ExportFlags.EndEntityCertificate))
+                        {
+                            // first cert is end entity cert (primary certificate)
+                            var o = c.Certificate.Export(X509ContentType.Cert);
+                            pemWriter.WriteObject(certParser.ReadCertificate(o));
+
+                        }
+                        else if (i == chain.ChainElements.Count - 1 && flags.HasFlag(ExportFlags.RootCertificate))
+                        {
+                            // last cert is root ca public cert
+                            var o = c.Certificate.Export(X509ContentType.Cert);
+                            pemWriter.WriteObject(certParser.ReadCertificate(o));
+                        }
+                        else if (i != 0 && (i != chain.ChainElements.Count - 1) && flags.HasFlag(ExportFlags.IntermediateCertificates))
+                        {
+                            // intermediate cert(s), if any, not including end entity and root
+                            var o = c.Certificate.Export(X509ContentType.Cert);
+                            pemWriter.WriteObject(certParser.ReadCertificate(o));
+                        }
+
+                        i++;
+                    }
+
+                    writer.Flush();
+
+                    return writer.ToString();
                 }
-
-                var i = 0;
-                foreach (var c in chain.ChainElements)
-                {
-                    if (i == 0 && flags.HasFlag(ExportFlags.EndEntityCertificate))
-                    {
-                        // first cert is end entity cert (primary certificate)
-                        var o = c.Certificate.Export(X509ContentType.Cert);
-                        pemWriter.WriteObject(certParser.ReadCertificate(o));
-
-                    }
-                    else if (i == chain.ChainElements.Count - 1 && flags.HasFlag(ExportFlags.RootCertificate))
-                    {
-                        // last cert is root ca public cert
-                        var o = c.Certificate.Export(X509ContentType.Cert);
-                        pemWriter.WriteObject(certParser.ReadCertificate(o));
-                    }
-                    else if (i != 0 && (i != chain.ChainElements.Count - 1) && flags.HasFlag(ExportFlags.IntermediateCertificates))
-                    {
-                        // intermediate cert(s), if any, not including end entity and root
-                        var o = c.Certificate.Export(X509ContentType.Cert);
-                        pemWriter.WriteObject(certParser.ReadCertificate(o));
-                    }
-
-                    i++;
-                }
-
-                writer.Flush();
-
-                return writer.ToString();
+            }
+            finally
+            {
+                //cleanup cert so temp RSA keys get removed on disk
+                cert?.Dispose();
+                cert = null;
             }
         }
 
