@@ -687,6 +687,11 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Used to temporarily hold PFX password when unlocking a PFX for view in the UI
+        /// </summary>
+        public string PfxUnlockPassword { get; set; }
+
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
     }
