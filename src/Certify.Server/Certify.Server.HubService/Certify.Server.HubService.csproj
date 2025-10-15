@@ -15,12 +15,12 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.8.11" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.9.0" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
 
         <!-- included to prevent conflict with older versions in plugins-->
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.1.25451.107" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.2.25502.107" />
     </ItemGroup>
 
     <ItemGroup>

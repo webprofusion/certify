@@ -9,21 +9,21 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0-rc.1.25451.107" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0-rc.2.25502.107" />
         <PackageReference Include="Polly" Version="8.6.4" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.0-rc.1.25451.107" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.0-rc.2.25502.107" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.1.25451.107" />
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.0-rc.1.25451.107" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.0-rc.2.25502.107" />
 
         <!-- only include swashbuckle in debug build -->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="9.0.6" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.1.25451.107" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.2.25502.107" />
 
     </ItemGroup>
     <ItemGroup>
