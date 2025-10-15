@@ -65,7 +65,7 @@ namespace Certify.Core.Tests
         public async Task TestIISVersionCheck()
         {
             var version = await iisManager.GetServerVersion();
-            Assert.IsTrue(version.Major >= 7);
+            Assert.IsGreaterThanOrEqualTo(7, version.Major);
         }
 
         [TestMethod]
@@ -395,7 +395,7 @@ namespace Certify.Core.Tests
             site = await iisManager.GetIISSiteById(site.Id.ToString());
             var finalBindings = site.Bindings.ToList();
 
-            Assert.IsTrue(bindingsBeforeApply.Count < finalBindings.Count, "Should have new bindings");
+            Assert.IsLessThan(finalBindings.Count, bindingsBeforeApply.Count, "Should have new bindings");
 
             try
             {

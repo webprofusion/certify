@@ -104,10 +104,10 @@ namespace Certify.Core.Tests.DataStores
                 var filter = new ManagedCertificateFilter { MaxResults = 10 };
                 var managedCertificates = await itemManager.Find(filter);
 
-                Assert.IsTrue(managedCertificates.Count > 0);
+                Assert.IsNotEmpty(managedCertificates);
 
                 var total = await itemManager.CountAll(filter);
-                Assert.IsTrue(total > 0);
+                Assert.IsGreaterThan(0, total);
             }
             finally
             {
@@ -132,8 +132,8 @@ namespace Certify.Core.Tests.DataStores
                 }
 
                 var managedCertificates = await itemManager.Find(new ManagedCertificateFilter { Id = managedCertificate.Id });
-                Assert.IsTrue(managedCertificates.Count == 1);
-                Assert.IsTrue(managedCertificates[0].Version == 10);
+                Assert.HasCount(1, managedCertificates);
+                Assert.AreEqual(10, managedCertificates[0].Version);
             }
             finally
             {
@@ -337,7 +337,7 @@ namespace Certify.Core.Tests.DataStores
             {
                 Debug.WriteLine($"Checking no previous test data exists");
                 var check = await itemManager.Find(new ManagedCertificateFilter { Keyword = "FilterMultiTest" });
-                Assert.IsTrue(check.Count == 0, "There should be no previous test data present");
+                Assert.IsEmpty(check, "There should be no previous test data present");
 
                 var rnd = new Random();
                 for (var i = 0; i < numItems; i++)
@@ -403,7 +403,7 @@ namespace Certify.Core.Tests.DataStores
                     {
                         waitCount++;
 
-                        Assert.IsTrue(waitCount < 10, "Waited too long for test data to commit");
+                        Assert.IsLessThan(10, waitCount, "Waited too long for test data to commit");
 
                         Debug.WriteLine($"Wating for test data to be committed.. Got {result.Count} of {numExtraMultiTestData} ::  {waitCount}");
                         await Task.Delay(1000);
@@ -412,12 +412,12 @@ namespace Certify.Core.Tests.DataStores
 
                 Debug.WriteLine($"Testing: Retrieve one result");
                 var testResult1 = await itemManager.Find(new ManagedCertificateFilter { MaxResults = 1 });
-                Assert.IsTrue(testResult1.Count() == 1);
+                Assert.AreEqual(1, testResult1.Count());
 
                 Debug.WriteLine($"Testing: Retrieve all results, check test data present.");
                 var testResultAll = await itemManager.Find(new ManagedCertificateFilter { });
                 var checkCount = testResultAll.Count(t => t.Name.IndexOf("FilterMultiTest") >= 0);
-                Assert.IsTrue(checkCount == numItems, "Test data set should all be present");
+                Assert.AreEqual(numItems, checkCount, "Test data set should all be present");
 
                 var testFilter = new List<ManagedCertificateFilter> {
                     new ManagedCertificateFilter { Id= inMemoryList.First().Id , FilterDescription="Test id match"},
@@ -481,21 +481,21 @@ namespace Certify.Core.Tests.DataStores
                         expectedResult = expectedResult.Take(filter.MaxResults);
                     }
 
-                    Assert.IsTrue(expectedResult.Count() > 0, $"{filter.FilterDescription} Expected results should have more than zero results");
-                    Assert.IsTrue(testResult.Count > 0, $"{filter.FilterDescription} Test results should have more than zero results");
+                    Assert.IsGreaterThan(0, expectedResult.Count(), $"{filter.FilterDescription} Expected results should have more than zero results");
+                    Assert.IsNotEmpty(testResult, $"{filter.FilterDescription} Test results should have more than zero results");
 
-                    Assert.AreEqual(expectedResult.Count(), testResult.Count, filter.FilterDescription);
+                    Assert.HasCount(expectedResult.Count(), testResult, filter.FilterDescription);
 
                     if (filter.OrderBy == ManagedCertificateFilter.SortMode.NAME_ASC)
                     {
-                        Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
-                        Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
+                        Assert.AreEqual(testResult.First().Id, expectedResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
+                        Assert.AreEqual(testResult.Last().Id, expectedResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
                     }
 
                     if (filter.OrderBy == ManagedCertificateFilter.SortMode.RENEWAL_ASC)
                     {
-                        Assert.IsTrue(expectedResult.First().Id == testResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
-                        Assert.IsTrue(expectedResult.Last().Id == testResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
+                        Assert.AreEqual(testResult.First().Id, expectedResult.First().Id, $"{filter.FilterDescription} Test and expected should return same first items");
+                        Assert.AreEqual(testResult.Last().Id, expectedResult.Last().Id, $"{filter.FilterDescription} Test and expected should return same last items");
                     }
                 }
             }

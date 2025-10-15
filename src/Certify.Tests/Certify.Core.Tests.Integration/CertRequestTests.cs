@@ -504,7 +504,7 @@ namespace Certify.Core.Tests
                 CancellationToken.None
                 );
 
-            Assert.AreEqual(1, results.Count);
+            Assert.HasCount(1, results);
 
             Assert.IsTrue(results.All(r => r.IsSuccess), "All results should be success");
 

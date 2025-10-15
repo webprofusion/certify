@@ -109,8 +109,8 @@ namespace Certify.Core.Tests
                 var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
 
                 //ensure 1 step fails
-                Assert.IsTrue(result.Actions.First(s => s.Key == "PreRequestTasks").Substeps.Count(a => a.HasError) == 1, "One pre-request step should fail");
-                Assert.IsTrue(result.Actions.First(s => s.Key == "PostRequestTasks").Substeps.Count(a => !a.HasError) == 2, "Two post-request steps should succeed");
+                Assert.AreEqual(1, result.Actions.First(s => s.Key == "PreRequestTasks").Substeps.Count(a => a.HasError), "One pre-request step should fail");
+                Assert.AreEqual(2, result.Actions.First(s => s.Key == "PostRequestTasks").Substeps.Count(a => !a.HasError), "Two post-request steps should succeed");
             }
             finally
             {

@@ -57,7 +57,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for IIS
             Assert.IsNotNull(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be null");
-            Assert.IsTrue(primaryWebsites.Count > 0, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
+            Assert.IsNotEmpty(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
             Assert.IsTrue(primaryWebsites.Exists(s => s.IsEnabled), "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to have at least one enabled site");
         }
 
@@ -71,7 +71,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for Apache
             Assert.IsNotNull(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Apache sites to not be null");
-            Assert.IsTrue(primaryWebsites.Count > 0, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Apache sites to not be empty");
+            Assert.IsNotEmpty(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Apache sites to not be empty");
             Assert.IsTrue(primaryWebsites.Exists(s => s.IsEnabled), "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Apache sites to have at least one enabled site");
         }
 
@@ -83,7 +83,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for Nginx
             Assert.IsNotNull(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Nginx sites to not be null");
-            Assert.IsTrue(primaryWebsites.Count > 0, "Expected website list returned by CertifyManager.GetPrimaryWebSites() to not be empty");
+            Assert.IsNotEmpty(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() to not be empty");
             Assert.IsTrue(primaryWebsites.Exists(s => s.IsEnabled), "Expected website list returned by CertifyManager.GetPrimaryWebSites() for Nginx sites to have at least one enabled site");
         }
 
@@ -95,7 +95,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for IIS using item id
             Assert.IsNotNull(itemIdWebsite, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be null");
-            Assert.AreEqual(1, itemIdWebsite.Count, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
+            Assert.HasCount(1, itemIdWebsite, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
             Assert.AreEqual(_testSiteId, itemIdWebsite[0].Id, "Expected the same Item Id for SiteInfo objects returned by CertifyManager.GetPrimaryWebSites() for IIS sites");
             Assert.AreEqual(_testSiteName, itemIdWebsite[0].Name, "Expected the same Name for SiteInfo objects returned by CertifyManager.GetPrimaryWebSites() for IIS sites");
         }
@@ -108,7 +108,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for IIS using a non-existent Item ID
             Assert.IsNotNull(itemIdWebsite, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be null");
-            Assert.AreEqual(1, itemIdWebsite.Count, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
+            Assert.HasCount(1, itemIdWebsite, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
             Assert.IsNull(itemIdWebsite[0], "Expected website list object returned by CertifyManager.GetPrimaryWebSites() for IIS with a bad itemId to be null");
         }
 
@@ -120,7 +120,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for IIS
             Assert.IsNotNull(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be null");
-            Assert.IsTrue(primaryWebsites.Count > 0, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
+            Assert.IsNotEmpty(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to not be empty");
             Assert.IsTrue(primaryWebsites.Exists(s => s.IsEnabled), "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to have at least one enabled site");
             Assert.IsTrue(primaryWebsites.Exists(s => s.IsEnabled == false), "Expected website list returned by CertifyManager.GetPrimaryWebSites() for IIS sites to have at least one disabled site");
         }
@@ -133,7 +133,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for StandardServerTypes.Other
             Assert.IsNotNull(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for StandardServerTypes.Other to not be null");
-            Assert.AreEqual(0, primaryWebsites.Count, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for StandardServerTypes.Other to be empty");
+            Assert.IsEmpty(primaryWebsites, "Expected website list returned by CertifyManager.GetPrimaryWebSites() for StandardServerTypes.Other to be empty");
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetDomainOptionsFromSite() for IIS")]
@@ -144,7 +144,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetDomainOptionsFromSite() for IIS
             Assert.IsNotNull(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to not be null");
-            Assert.AreEqual(1, siteDomainOptions.Count, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to not be empty");
+            Assert.HasCount(1, siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to not be empty");
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetDomainOptionsFromSite() for IIS site with no defined domain")]
@@ -167,7 +167,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetDomainOptionsFromSite() for IIS
             Assert.IsNotNull(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to not be null");
-            Assert.AreEqual(0, siteDomainOptions.Count, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to be empty");
+            Assert.IsEmpty(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for IIS to be empty");
 
             // Remove no domain site
             await _iisManager.DeleteSite(noDomainSiteName);
@@ -182,7 +182,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetDomainOptionsFromSite() for StandardServerTypes.Other
             Assert.IsNotNull(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for StandardServerTypes.Other to not be null");
-            Assert.AreEqual(0, siteDomainOptions.Count, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for StandardServerTypes.Other to be empty");
+            Assert.IsEmpty(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for StandardServerTypes.Other to be empty");
         }
 
         [TestMethod, Description("Test for using CertifyManager.GetDomainOptionsFromSite() for IIS using a bad item id")]
@@ -193,7 +193,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetDomainOptionsFromSite() using a non-existent Item ID
             Assert.IsNotNull(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() to not be null");
-            Assert.AreEqual(0, siteDomainOptions.Count, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for a non-existent Item ID to be empty");
+            Assert.IsEmpty(siteDomainOptions, "Expected domain options list returned by CertifyManager.GetDomainOptionsFromSite() for a non-existent Item ID to be empty");
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.IsServerTypeAvailable()")]
@@ -230,10 +230,10 @@ namespace Certify.Core.Tests
 
             // Evaluate returns from CertifyManager.GetServerTypeVersion()
             Assert.AreNotEqual(unknownVersion, iisServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be known when at least one IIS site is active");
-            Assert.IsTrue(iisServerVersion.Major > 0);
+            Assert.IsGreaterThan(0, iisServerVersion.Major);
 
             Assert.AreNotEqual(unknownVersion, nginxServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be known when at least one Nginx site is active");
-            Assert.IsTrue(nginxServerVersion.Major > 0);
+            Assert.IsGreaterThan(0, nginxServerVersion.Major);
 
             Assert.AreEqual(unknownVersion, apacheServerVersion, "Expected return from CertifyManager.GetServerTypeVersion() to be unknown when Apache plugin does not exist");
             // TODO: Support for Apache via plugin must be added to enable the next assert
@@ -250,7 +250,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for IIS
             Assert.IsNotNull(siteDiagnostics, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for IIS site to not be null");
-            Assert.AreEqual(1, siteDiagnostics.Count, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for IIS site to not be empty");
+            Assert.HasCount(1, siteDiagnostics, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for IIS site to not be empty");
         }
 
         [TestMethod, Description("Test for using CertifyManager.RunServerDiagnostics() when server type is not found")]
@@ -261,7 +261,7 @@ namespace Certify.Core.Tests
 
             // Evaluate return from CertifyManager.GetPrimaryWebSites() for StandardServerTypes.Other
             Assert.IsNotNull(siteDiagnostics, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for StandardServerTypes.Other to not be null");
-            Assert.AreEqual(0, siteDiagnostics.Count, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for StandardServerTypes.Other to be empty");
+            Assert.IsEmpty(siteDiagnostics, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for StandardServerTypes.Other to be empty");
         }
 
         [TestMethod, Description("Test for using CertifyManager.RunServerDiagnostics() using a bad item id")]
@@ -275,7 +275,7 @@ namespace Certify.Core.Tests
 
             // Note: There seems to be no difference at the moment as to whether the Item ID passed in is valid or not,
             // as RunServerDiagnostics() for IIS never uses the passed siteId string (is this intentional?)
-            Assert.AreEqual(1, siteDiagnostics.Count, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for IIS site to be empty");
+            Assert.HasCount(1, siteDiagnostics, "Expected diagnostics list returned by CertifyManager.RunServerDiagnostics() for IIS site to be empty");
         }
     }
 }

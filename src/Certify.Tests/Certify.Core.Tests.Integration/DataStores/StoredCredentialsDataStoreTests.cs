@@ -80,7 +80,7 @@ namespace Certify.Core.Tests.DataStores
 
             var secret = await credentialsManager.GetUnlockedCredential(test.StorageKey);
             Assert.IsNotNull(secret);
-            Assert.IsTrue(secret == testSecret, "Credential decrypted");
+            Assert.AreEqual(testSecret, secret, "Credential decrypted");
 
             // perform test update to existing credential
             test.Title = "Updated title 1";
@@ -123,7 +123,7 @@ namespace Certify.Core.Tests.DataStores
             var secret = await credentialsManager.GetUnlockedCredentialsDictionary(test.StorageKey);
 
             Assert.IsNotNull(secret);
-            Assert.IsTrue(secret["zoneid"] == "ABC123", "Credential decrypted");
+            Assert.AreEqual("ABC123", secret["zoneid"], "Credential decrypted");
         }
 
         [TestMethod]
@@ -156,11 +156,11 @@ namespace Certify.Core.Tests.DataStores
                 }
 
                 var multiResults = await credentialsManager.GetCredentials("An.Example.Provider.1");
-                Assert.IsTrue(multiResults.Count == 2, "Expected number of results for specific provider type");
+                Assert.HasCount(2, multiResults, "Expected number of results for specific provider type");
                 Assert.AreEqual("An.Example.Provider.1", multiResults[0].ProviderType, "Expected specific provider type");
 
                 var bystorageKey = await credentialsManager.GetCredentials(storageKey: testCredentials[1].StorageKey);
-                Assert.IsTrue(bystorageKey.Count == 1, "Expected number of results for specific storage key");
+                Assert.HasCount(1, bystorageKey, "Expected number of results for specific storage key");
                 Assert.AreEqual(testCredentials[1].StorageKey, bystorageKey.First().StorageKey, "Expected specific storage key");
 
             }

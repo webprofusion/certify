@@ -107,7 +107,7 @@ namespace Certify.Core.Tests.DataStores
 
                 var item = await store.Get<Role>(nameof(Role), role1.Id);
 
-                Assert.IsTrue(item.Id == role1.Id, "Role retrieved");
+                Assert.AreEqual(role1.Id, item.Id, "Role retrieved");
             }
             finally
             {
