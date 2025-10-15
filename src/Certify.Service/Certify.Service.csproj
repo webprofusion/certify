@@ -56,13 +56,13 @@
         <PackageReference Include="Microsoft.AspNet.WebApi.OwinSelfHost" Version="5.3.0" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
         <PackageReference Include="Microsoft.Identity.Client" Version="4.54.0" />
-        <PackageReference Include="Microsoft.Owin" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.Hosting" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.Security" Version="4.2.2" />
-        <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.2.2" />
+        <PackageReference Include="Microsoft.Owin" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.Cors" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.Diagnostics" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.Hosting" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.Security" Version="4.2.3" />
+        <PackageReference Include="Microsoft.Owin.SelfHost" Version="4.2.3" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Owin" Version="1.0.0" />
         <PackageReference Include="Serilog" Version="2.12.0" />
