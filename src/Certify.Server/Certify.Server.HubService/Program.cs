@@ -46,7 +46,7 @@ if (cwd != null)
     {
         var content = File.ReadAllText(defaultHubSettings);
 
-        var secret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
+        var secret = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
 
         content = content.Replace("<replace jwt secret>", secret);
 
