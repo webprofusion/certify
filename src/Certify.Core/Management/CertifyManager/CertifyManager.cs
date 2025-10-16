@@ -181,7 +181,7 @@ namespace Certify.Management
 
             InitLogging(_serverConfig);
 
-            _serviceLog?.Information("Certify Manager Initialization.");
+            _serviceLog?.Information($"Certify Manager: {Util.GetAppVersion()}");
 
             Util.SetSupportedTLSVersions();
 
