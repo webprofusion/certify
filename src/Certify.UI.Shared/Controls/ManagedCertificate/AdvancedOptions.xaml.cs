@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -39,6 +39,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (cert != null)
                 {
                     X509Certificate2UI.DisplayCertificate(cert);
+
+                    cert?.Dispose();
                 }
                 else
                 {
