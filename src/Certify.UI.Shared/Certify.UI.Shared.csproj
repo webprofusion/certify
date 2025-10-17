@@ -14,15 +14,6 @@
         <Reference Include="System.Security" />
     </ItemGroup>
 
-    <ItemGroup>
-        <None Remove="Assets\CSS\dark-mode.css" />
-        <None Remove="Assets\CSS\markdown.css" />
-        <None Remove="Assets\Images\icon.ico" />
-        <None Remove="Assets\Images\QuickStart\ChooseAuth.png" />
-        <None Remove="Assets\Images\QuickStart\ChooseDomains.png" />
-        <None Remove="Assets\Images\QuickStart\PreviewDeployment.png" />
-        <None Remove="Assets\Images\splashscreen.png" />
-    </ItemGroup>
 
     <ItemGroup>
         <Content Include="Assets\CSS\dark-mode.css">
@@ -65,29 +56,4 @@
     <ItemGroup>
         <SplashScreen Include="Assets\Images\splashscreen.png" />
     </ItemGroup>
-
-    <ItemGroup>
-        <Page Update="Windows\EditDataStoreConnection.xaml">
-            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-        </Page>
-        <Page Update="Windows\EditServerConnection.xaml">
-            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-            <SubType>Designer</SubType>
-        </Page>
-    </ItemGroup>
-
-    <ItemGroup>
-        <SplashScreen Include="Assets\Images\splashscreen.png" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Page Update="Windows\EditDataStoreConnection.xaml">
-            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-        </Page>
-        <Page Update="Windows\EditServerConnection.xaml">
-            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-            <SubType>Designer</SubType>
-        </Page>
-    </ItemGroup>
-
 </Project>
