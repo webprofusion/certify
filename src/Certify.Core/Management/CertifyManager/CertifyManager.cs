@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -121,6 +121,8 @@ namespace Certify.Management
             SettingsManager.LoadAppSettings();
 
             InitLogging(_serverConfig);
+
+            _serviceLog?.Information($"Certify Manager: {Util.GetAppVersion()}");
 
             Util.SetSupportedTLSVersions();
 
