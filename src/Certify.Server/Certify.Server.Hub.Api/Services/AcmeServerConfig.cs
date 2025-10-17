@@ -32,6 +32,9 @@ namespace Certify.Server.Hub.Api.Services
             LoadSavedState();
         }
 
+        /// <summary>
+        /// Loads the saved state from persistent storage and migrates file-based state to the database if it exists.
+        /// </summary>
         public void LoadSavedState()
         {
             // migrate file based state to database if exists
@@ -220,6 +223,10 @@ namespace Certify.Server.Hub.Api.Services
             return order;
         }
 
+        /// <summary>
+        /// Removes an ACME order and its associated authorizations from the in-memory cache.
+        /// </summary>
+        /// <param name="id">The identifier of the ACME order to remove.</param>
         public async Task RemoveAcmeOrder(string id)
         {
             var order = await GetAcmeOrder(id);
