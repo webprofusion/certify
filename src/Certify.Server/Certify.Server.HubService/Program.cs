@@ -304,7 +304,7 @@ app.UseResponseCompression();
 app.Use((context, next) =>
 {
     if ((HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method))
-        && context.Request.Path.StartsWithSegments("/ui"))
+        && (context.Request.Path.StartsWithSegments("/ui") || context.Request.Path.StartsWithSegments("/authentication")))
     {
         context.Request.Path = "/";
     }
