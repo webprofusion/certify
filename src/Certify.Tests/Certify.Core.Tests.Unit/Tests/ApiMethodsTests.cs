@@ -18,7 +18,7 @@ namespace Certify.Core.Tests.Unit
                 // For each endpoint, create a mock security principal with only the required permissions
                 var requiredPerms = api.RequiredPermissions;
                 Assert.IsNotNull(requiredPerms, $"API {api.OperationName} should have RequiredPermissions");
-                Assert.IsTrue(requiredPerms.Count > 0, $"API {api.OperationName} should have at least one RequiredPermission");
+                Assert.IsNotEmpty(requiredPerms, $"API {api.OperationName} should have at least one RequiredPermission");
 
                 // Simulate a principal with exactly these permissions
                 var mockPrincipal = new MockSecurityPrincipal(requiredPerms);

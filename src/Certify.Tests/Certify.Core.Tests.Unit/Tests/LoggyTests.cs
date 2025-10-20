@@ -56,8 +56,8 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out error text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged error message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[ERR]"), "Logged error message should contain '[ERR]'");
+            Assert.Contains(logMessage, logText, $"Logged error message should contain '{logMessage}'");
+            Assert.Contains("[ERR]", logText, "Logged error message should contain '[ERR]'");
         }
 
         [TestMethod, Description("Test Loggy.Error() Method (Exception)")]
@@ -89,9 +89,9 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out exception error text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged error message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[ERR]"), "Logged error message should contain '[ERR]'");
-            Assert.IsTrue(logText.Contains(exceptionError), $"Logged error message should contain exception error '{exceptionError}'");
+            Assert.Contains(logMessage, logText, $"Logged error message should contain '{logMessage}'");
+            Assert.Contains("[ERR]", logText, "Logged error message should contain '[ERR]'");
+            Assert.Contains(exceptionError, logText, $"Logged error message should contain exception error '{exceptionError}'");
         }
 
         [TestMethod, Description("Test Loggy.Information() Method")]
@@ -112,8 +112,8 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out info text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged info message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[INF]"), "Logged info message should contain '[INF]'");
+            Assert.Contains(logMessage, logText, $"Logged info message should contain '{logMessage}'");
+            Assert.Contains("[INF]", logText, "Logged info message should contain '[INF]'");
         }
 
         [TestMethod, Description("Test Loggy.Debug() Method")]
@@ -135,8 +135,8 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out debug text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged debug message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[DBG]"), "Logged debug message should contain '[DBG]'");
+            Assert.Contains(logMessage, logText, $"Logged debug message should contain '{logMessage}'");
+            Assert.Contains("[DBG]", logText, "Logged debug message should contain '[DBG]'");
         }
 
         [TestMethod, Description("Test Loggy.Verbose() Method")]
@@ -158,8 +158,8 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out verbose text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged verbose message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[VRB]"), "Logged verbose message should contain '[VRB]'");
+            Assert.Contains(logMessage, logText, $"Logged verbose message should contain '{logMessage}'");
+            Assert.Contains("[VRB]", logText, "Logged verbose message should contain '[VRB]'");
         }
 
         [TestMethod, Description("Test Loggy.Warning() Method")]
@@ -181,8 +181,8 @@ namespace Certify.Core.Tests.Unit
             var logText = File.ReadAllText(this.logFilePath);
 
             // Validate logged out warning text
-            Assert.IsTrue(logText.Contains(logMessage), $"Logged warning message should contain '{logMessage}'");
-            Assert.IsTrue(logText.Contains("[WRN]"), "Logged warning message should contain '[WRN]'");
+            Assert.Contains(logMessage, logText, $"Logged warning message should contain '{logMessage}'");
+            Assert.Contains("[WRN]", logText, "Logged warning message should contain '[WRN]'");
         }
     }
 }

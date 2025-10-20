@@ -104,7 +104,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test private key set ACL")]
-        [DataTestMethod]
         [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.RSA256, "read", true, "RSA Key Type, Read")]
         [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.RSA256, "fullcontrol", true, "RSA Key Type, Full Control")]
         [DataRow("NT AUTHORITY\\LOCAL SERVICE", StandardKeyTypes.ECDSA256, "read", true, "ECDSA Key Type, Read")]

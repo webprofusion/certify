@@ -302,7 +302,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(0, results.Count, "Should return empty list when no certificates exist");
+            Assert.IsEmpty(results, "Should return empty list when no certificates exist");
         }
 
         [TestMethod, Description("Test PerformRenewAll with certificates not due for renewal")]
@@ -328,7 +328,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(0, results.Count, "Should not renew certificates that are not due");
+            Assert.IsEmpty(results, "Should not renew certificates that are not due");
         }
 
         [TestMethod, Description("Test PerformRenewAll with certificates due for renewal")]
@@ -354,7 +354,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(2, results.Count, "Should renew both certificates that are due");
+            Assert.HasCount(2, results, "Should renew both certificates that are due");
             Assert.IsTrue(results.All(r => r.IsSuccess), "All renewal attempts should be successful");
         }
 
@@ -385,10 +385,10 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(2, results.Count, "Should renew cert1 (due) and cert4 (has errors but due)");
+            Assert.HasCount(2, results, "Should renew cert1 (due) and cert4 (has errors but due)");
             var renewedIds = results.Select(r => r.ManagedItem.Id).ToList();
-            Assert.IsTrue(renewedIds.Contains("cert1"), "cert1 should be renewed");
-            Assert.IsTrue(renewedIds.Contains("cert4"), "cert4 should be renewed despite errors");
+            Assert.Contains("cert1", renewedIds, "cert1 should be renewed");
+            Assert.Contains("cert4", renewedIds, "cert4 should be renewed despite errors");
         }
 
         [TestMethod, Description("Test PerformRenewAll with specific target certificates")]
@@ -423,11 +423,11 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(2, results.Count, "Should only process targeted certificates");
+            Assert.HasCount(2, results, "Should only process targeted certificates");
             var renewedIds = results.Select(r => r.ManagedItem.Id).ToList();
-            Assert.IsTrue(renewedIds.Contains("cert1"), "cert1 should be renewed");
-            Assert.IsTrue(renewedIds.Contains("cert3"), "cert3 should be renewed");
-            Assert.IsFalse(renewedIds.Contains("cert2"), "cert2 should not be renewed");
+            Assert.Contains("cert1", renewedIds, "cert1 should be renewed");
+            Assert.Contains("cert3", renewedIds, "cert3 should be renewed");
+            Assert.DoesNotContain("cert2", renewedIds, "cert2 should not be renewed");
         }
 
         [TestMethod, Description("Test PerformRenewAll with max renewal requests limit")]
@@ -435,7 +435,7 @@ namespace Certify.Core.Tests.Unit
         {
             // Arrange - Create more certificates than the limit
             var certificates = new List<ManagedCertificate>();
-            for (int i = 1; i <= 5; i++)
+            for (var i = 1; i <= 5; i++)
             {
                 var cert = CreateTestManagedCertificate($"cert{i}", $"Test{i}", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
                 certificates.Add(cert);
@@ -463,7 +463,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(3, results.Count, "Should respect max renewal requests limit");
+            Assert.HasCount(3, results, "Should respect max renewal requests limit");
             Assert.IsTrue(results.All(r => r.IsSuccess), "All processed renewals should be successful");
         }
 
@@ -490,7 +490,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.AreEqual(0, results.Count, "Should return empty results when cancelled");
+            Assert.IsEmpty(results, "Should return empty results when cancelled");
             Assert.IsTrue(_mockLog.LogEntries.Any(log => log.Contains("cancelled")), "Should log cancellation message");
         }
 
@@ -511,13 +511,13 @@ namespace Certify.Core.Tests.Unit
             var allSettings = new RenewalSettings { Mode = RenewalMode.All };
             var allResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, allSettings, _defaultPrefs, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
 
-            Assert.AreEqual(2, allResults.Count, "All mode should process all certificates");
+            Assert.HasCount(2, allResults, "All mode should process all certificates");
 
             // Test RenewalsWithErrors mode
             var errorsSettings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors };
             var errorsResults = await RenewalManager.PerformRenewAll(_mockLog, _itemStore, errorsSettings, _defaultPrefs, ReportProgress, IsManagedCertificateRunning, PerformCertificateRequest, _cancellationTokenSource.Token);
 
-            Assert.AreEqual(1, errorsResults.Count, "RenewalsWithErrors mode should only process certificates with errors");
+            Assert.HasCount(1, errorsResults, "RenewalsWithErrors mode should only process certificates with errors");
             Assert.AreEqual("cert2", errorsResults[0].ManagedItem.Id, "Should process the certificate with errors");
         }
 
@@ -610,7 +610,7 @@ namespace Certify.Core.Tests.Unit
 
             // Assert
             Assert.IsTrue(renewalCheck.IsRenewalDue, $"Certificate with DateRenewed=null should be due for renewal. Reason: {renewalCheck.Reason}");
-            Assert.AreEqual(1, results.Count, $"NewItems mode should process the new certificate. Log: {logMessages}");
+            Assert.HasCount(1, results, $"NewItems mode should process the new certificate. Log: {logMessages}");
         }
     }
 }

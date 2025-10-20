@@ -122,7 +122,7 @@ namespace Certify.Core.Tests
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
-                Assert.AreEqual(1, deployStep.Substeps.Count, "Only 1 binding deployment expected");
+                Assert.HasCount(1, deployStep.Substeps, "Only 1 binding deployment expected");
                 Assert.AreEqual($"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**", deployStep.Substeps[0].Description);
             }
             finally
@@ -203,7 +203,7 @@ namespace Certify.Core.Tests
                 System.Diagnostics.Debug.WriteLine(previewSummary);
 
                 var deployStep = preview.Find(a => a.Category == "Deployment");
-                Assert.AreEqual(1, deployStep.Substeps.Count, "Only 1 binding deployment expected");
+                Assert.HasCount(1, deployStep.Substeps, "Only 1 binding deployment expected");
                 var expected = $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**";
                 Assert.AreEqual(expected, deployStep.Substeps[0].Description);
 
@@ -214,7 +214,7 @@ namespace Certify.Core.Tests
 
                 previewSummary = GetPreviewSummary(preview);
                 deployStep = preview.Find(a => a.Category == "Deployment");
-                Assert.AreEqual(1, deployStep.Substeps.Count, "Only 1 binding deployment expected");
+                Assert.HasCount(1, deployStep.Substeps, "Only 1 binding deployment expected");
 
                 expected = $"Add https binding | {testPreviewSiteName} | ***:443:{hostname} SNI**";
                 Assert.AreEqual(expected, deployStep.Substeps[0].Description);

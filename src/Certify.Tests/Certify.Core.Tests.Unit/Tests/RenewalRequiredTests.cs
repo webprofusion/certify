@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -78,7 +78,7 @@ namespace Certify.Core.Tests.Unit
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
             Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should be on hold");
-            Assert.AreEqual(renewalDueCheck.HoldHrs, 48, "Hold should be for 48 Hrs");
+            Assert.AreEqual(48, renewalDueCheck.HoldHrs, "Hold should be for 48 Hrs");
 
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
 
@@ -116,7 +116,7 @@ namespace Certify.Core.Tests.Unit
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
             Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should be on hold");
-            Assert.AreEqual(renewalDueCheck.HoldHrs, 48, "Hold should be for 48 Hrs");
+            Assert.AreEqual(48, renewalDueCheck.HoldHrs, "Hold should be for 48 Hrs");
 
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
 
@@ -161,7 +161,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsFalse(isRenewalRequired.IsRenewalDue, "Renewal should not be required");
 
             var expectedRenewal = managedCertificate.DateRenewed.Value.AddDays(renewalPeriodDays);
-            Assert.IsTrue((expectedRenewal - isRenewalRequired.DateNextRenewalAttempt).Value.TotalMinutes < 1, "Planned renewal should be within a minute of the date last renewed plus renewal interval");
+            Assert.IsLessThan(1, (expectedRenewal - isRenewalRequired.DateNextRenewalAttempt).Value.TotalMinutes, "Planned renewal should be within a minute of the date last renewed plus renewal interval");
         }
 
         [TestMethod, Description("Ensure item which should not normally be renewed correctly requires renewal if DateNextScheduledRenewalAttempt is set and due")]
@@ -241,7 +241,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Cert with custom percentage lifetime")]
-        [DataTestMethod]
         [DataRow(true, 0, 30, 50, 60, RenewalIntervalModes.PercentageLifetime, false, "30 day cert renewing at 50% lifetime, not due for renewal")]
         [DataRow(true, 15.5f, 30, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "30 day cert renewing at 50% lifetime, due for renewal")]
         [DataRow(true, 0.5f, 1, 75, 60, RenewalIntervalModes.PercentageLifetime, false, "1 day cert renewing at 75% lifetime, not due for renewal")]
@@ -277,7 +276,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Cert with default percentage lifetime")]
-        [DataTestMethod]
         [DataRow(true, 0, 30, 50, RenewalIntervalModes.PercentageLifetime, false, "30 day cert renewing at 50% lifetime, not due for renewal")]
         [DataRow(true, 15.5f, 30, 50, RenewalIntervalModes.PercentageLifetime, true, "30 day cert renewing at 50% lifetime, due for renewal")]
         [DataRow(true, 0.5f, 1, 75, RenewalIntervalModes.PercentageLifetime, false, "1 day cert renewing at 75% lifetime, not due for renewal")]
@@ -310,7 +308,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Cert with custom percentage lifetime")]
-        [DataTestMethod]
         [DataRow(true, 45, 90, 30, RenewalIntervalModes.DaysBeforeExpiry, false, "90 day cert renewing at 30 days before expiry, not due for renewal")]
         [DataRow(true, 45, 90, 30, RenewalIntervalModes.DaysAfterLastRenewal, true, "90 day cert renewing at 30 days after last renewal, due for renewal")]
         [DataRow(true, 63, 90, 30, RenewalIntervalModes.DaysBeforeExpiry, true, "90 day cert renewing at 30 days before expiry, due for renewal")]
@@ -346,7 +343,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Cert with custom percentage lifetime, not yet successfully ordered")]
-        [DataTestMethod]
         [DataRow(0, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, due for first order")]
         [DataRow(1, 0f, 1, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "1 day cert renewing at 50% lifetime, not yet created, attempted once")]
         [DataRow(4, 1f, 0, 50, 60, RenewalIntervalModes.PercentageLifetime, true, "Unknown lifetime cert renewing at 50% lifetime, not yet created, attempted 5 times")]
@@ -396,7 +392,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Ensure a site with unknown date for last renewal should renew before expiry")]
-        [DataTestMethod]
         [DataRow(14, 90, 13, "DaysBeforeExpiry")]
         [DataRow(14, 90, 29, "DaysBeforeExpiry")]
         [DataRow(60, 90, 30, "DaysBeforeExpiry")]
@@ -448,7 +443,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Check Percentage Lifetime Elapsed calc, allowing for nulls etc")]
-        [DataTestMethod]
         [DataRow(null, null, null)]
         [DataRow(14f, 90f, 15)]
         [DataRow(0.5f, 1f, 50)]
@@ -552,7 +546,7 @@ namespace Certify.Core.Tests.Unit
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Should use normal renewal logic when no ARI scheduled date");
-            Assert.IsTrue(renewalDueCheck.Reason.Contains("default renewal settings"), "Should indicate normal renewal logic was used");
+            Assert.Contains("default renewal settings", renewalDueCheck.Reason, "Should indicate normal renewal logic was used");
         }
 
         [TestMethod, Description("Test ARI scheduled renewal with certificate revocation scenario")]
@@ -628,7 +622,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test ARI Certificate ID format validation")]
-        [DataTestMethod]
         [DataRow("validformat.withperiod", true, "ARI ID with period should be valid")]
         [DataRow("invalidformatwithoutperiod", false, "ARI ID without period should be invalid")]
         [DataRow("multiple.periods.here", true, "ARI ID with multiple periods should be valid")]
@@ -804,7 +797,6 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test leap year date calculations")]
-        [DataTestMethod]
         [DataRow(2024, 2, 29, true, "Leap year Feb 29th should be valid")]
         [DataRow(2023, 2, 28, true, "Non-leap year Feb 28th should be valid")]
         [DataRow(2020, 2, 29, true, "Leap year 2020 Feb 29th should be valid")]
@@ -875,7 +867,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test timezone offset handling")]
-        [DataTestMethod]
+       
         [DataRow(-12, "UTC-12 (Baker Island)")]
         [DataRow(-8, "UTC-8 (Pacific Time)")]
         [DataRow(-5, "UTC-5 (Eastern Time)")]
@@ -908,7 +900,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test extremely short certificate lifetimes (minutes)")]
-        [DataTestMethod]
+       
         [DataRow(1, "1 minute certificate")]
         [DataRow(5, "5 minute certificate")]
         [DataRow(15, "15 minute certificate")]
@@ -936,7 +928,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test certificate already expired scenarios")]
-        [DataTestMethod]
+       
         [DataRow(-1, "Certificate expired 1 day ago")]
         [DataRow(-7, "Certificate expired 1 week ago")]
         [DataRow(-30, "Certificate expired 1 month ago")]
@@ -992,7 +984,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test year boundary transitions")]
-        [DataTestMethod]
+       
         [DataRow(2023, 12, 31, 2024, 1, 15, "New Year transition 2023-2024")]
         [DataRow(2024, 12, 31, 2025, 1, 15, "New Year transition 2024-2025")]
         [DataRow(1999, 12, 31, 2000, 1, 15, "Y2K transition 1999-2000")]
@@ -1020,7 +1012,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test month boundary edge cases with varying month lengths")]
-        [DataTestMethod]
+       
         [DataRow(1, 31, "January 31 days")]
         [DataRow(2, 28, "February 28 days (non-leap)")]
         [DataRow(4, 30, "April 30 days")]
@@ -1047,7 +1039,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod, Description("Test certificates with very long lifetimes")]
-        [DataTestMethod]
+       
         [DataRow(365, "1 year certificate")]
         [DataRow(730, "2 year certificate")]
         [DataRow(1095, "3 year certificate")]
@@ -1087,7 +1079,7 @@ namespace Certify.Core.Tests.Unit
         #region Bulk Renewal Testing
 
         [TestMethod, Description("Test bulk renewal scenarios with 200 certificates across different renewal modes and intervals")]
-        [DataTestMethod]
+       
         [DataRow(RenewalIntervalModes.DaysAfterLastRenewal, 14, 150, "DaysAfterLastRenewal with 14 day interval")]
         [DataRow(RenewalIntervalModes.DaysAfterLastRenewal, 30, 140, "DaysAfterLastRenewal with 30 day interval")]
         [DataRow(RenewalIntervalModes.DaysBeforeExpiry, 30, 80, "DaysBeforeExpiry with 30 day interval")]
@@ -1126,12 +1118,12 @@ namespace Certify.Core.Tests.Unit
 
             // Check that we have a reasonable number of renewals for the given mode and interval
             var tolerance = 20; // Allow 20 certificate variance in expected renewals
-            Assert.IsTrue(Math.Abs(totalRenewals - expectedRenewalsApprox) <= tolerance,
-                $"{testDescription}: Expected approximately {expectedRenewalsApprox} renewals but got {totalRenewals}. Difference: {Math.Abs(totalRenewals - expectedRenewalsApprox)}");
+            Assert.IsLessThanOrEqualTo(tolerance,
+Math.Abs(totalRenewals - expectedRenewalsApprox), $"{testDescription}: Expected approximately {expectedRenewalsApprox} renewals but got {totalRenewals}. Difference: {Math.Abs(totalRenewals - expectedRenewalsApprox)}");
 
             // Verify we have diverse scenarios
             var renewalReasons = renewalResults.Where(r => r.isRenewalDue).Select(r => r.reason).Distinct().ToList();
-            Assert.IsTrue(renewalReasons.Count >= 2, $"Should have diverse renewal reasons, got: {string.Join(", ", renewalReasons)}");
+            Assert.IsGreaterThanOrEqualTo(2, renewalReasons.Count, $"Should have diverse renewal reasons, got: {string.Join(", ", renewalReasons)}");
 
             // Category Analysis
             AnalyzeBulkRenewalResults(renewalResults, renewalIntervalMode, renewalInterval, testDescription);
@@ -1193,15 +1185,15 @@ namespace Certify.Core.Tests.Unit
                 Assert.AreEqual(targetCancellationPoint, processedCertificates, $"Should have processed exactly {targetCancellationPoint} certificates before cancellation");
                 Assert.AreEqual(1, cancelledCertificates, "Should have exactly 1 certificate marked as cancelled (the one that triggered the break)");
                 Assert.AreEqual(targetCancellationPoint + 1, totalProcessedAndCancelled, "Total processed + cancelled should equal target + 1");
-                Assert.IsTrue(totalProcessedAndCancelled < certificates.Count, "Should not have processed all certificates due to cancellation");
+                Assert.IsLessThan(certificates.Count, totalProcessedAndCancelled, "Should not have processed all certificates due to cancellation");
 
                 // Verify that processed certificates before cancellation have valid renewal data
                 var validProcessedResults = renewalResults.Where(r => !r.wasCancelled && !r.reason.StartsWith("Exception")).ToList();
-                Assert.IsTrue(validProcessedResults.Count > 0, "Should have some valid processed results before cancellation");
+                Assert.IsNotEmpty(validProcessedResults, "Should have some valid processed results before cancellation");
 
                 // Verify diverse renewal reasons in the processed certificates
                 var renewalReasons = validProcessedResults.Where(r => r.isRenewalDue).Select(r => r.reason).Distinct().ToList();
-                Assert.IsTrue(renewalReasons.Count >= 1, $"Should have at least one renewal reason before cancellation, got: {string.Join(", ", renewalReasons)}");
+                Assert.IsGreaterThanOrEqualTo(1, renewalReasons.Count, $"Should have at least one renewal reason before cancellation, got: {string.Join(", ", renewalReasons)}");
 
                 // Log cancellation summary for debugging
                 var summaryMessage = $"Cancellation Test Summary: Processed {processedCertificates}, Cancelled {cancelledCertificates}, " +
@@ -1268,20 +1260,20 @@ namespace Certify.Core.Tests.Unit
                 // Assert delayed cancellation behavior
                 Assert.IsTrue(cancellationTokenSource.Token.IsCancellationRequested, "Cancellation token should be in cancelled state");
                 Assert.IsTrue(totalProcessingTime >= cancellationDelay, $"Total processing time ({totalProcessingTime.TotalMilliseconds}ms) should be at least the cancellation delay ({cancellationDelay.TotalMilliseconds}ms)");
-                Assert.IsTrue(cancelledResults.Count <= 1, "Should have at most 1 explicitly cancelled result");
-                Assert.IsTrue(renewalResults.Count < certificates.Count, "Should not have processed all certificates due to timed cancellation");
-                Assert.IsTrue(renewalResults.Count > 0, "Should have processed at least some certificates before cancellation");
+                Assert.IsLessThanOrEqualTo(1, cancelledResults.Count, "Should have at most 1 explicitly cancelled result");
+                Assert.IsLessThan(certificates.Count, renewalResults.Count, "Should not have processed all certificates due to timed cancellation");
+                Assert.IsNotEmpty(renewalResults, "Should have processed at least some certificates before cancellation");
 
                 // Verify that some certificates were processed successfully before cancellation
-                Assert.IsTrue(successfulResults.Count > 0, "Should have some successful results before cancellation occurred");
+                Assert.IsNotEmpty(successfulResults, "Should have some successful results before cancellation occurred");
 
                 // Log timing information for debugging
                 var timingInfo = $"Delayed Cancellation: Processed {renewalResults.Count}/{certificates.Count} certificates in {totalProcessingTime.TotalMilliseconds}ms " +
                                $"(target delay: {cancellationDelay.TotalMilliseconds}ms), Cancelled: {cancelledResults.Count}, Successful: {successfulResults.Count}";
 
                 // The exact number of processed certificates will vary based on timing, but should be reasonable
-                Assert.IsTrue(renewalResults.Count >= 5, $"Should have processed at least 5 certificates before cancellation. {timingInfo}");
-                Assert.IsTrue(renewalResults.Count <= 30, $"Should not have processed too many certificates after cancellation. {timingInfo}");
+                Assert.IsGreaterThanOrEqualTo(5, renewalResults.Count, $"Should have processed at least 5 certificates before cancellation. {timingInfo}");
+                Assert.IsLessThanOrEqualTo(30, renewalResults.Count, $"Should not have processed too many certificates after cancellation. {timingInfo}");
             }
         }
 
@@ -1293,7 +1285,7 @@ namespace Certify.Core.Tests.Unit
             var baseDate = new DateTimeOffset(2024, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
             // Create specific scenarios that might be processing-intensive or error-prone
-            for (int i = 0; i < 30; i++)
+            for (var i = 0; i < 30; i++)
             {
                 var cert = new ManagedCertificate
                 {
@@ -1454,15 +1446,15 @@ namespace Certify.Core.Tests.Unit
 
                 // Assert diverse scenario cancellation behavior
                 Assert.IsTrue(cancellationTokenSource.Token.IsCancellationRequested, "Cancellation token should be in cancelled state");
-                Assert.AreEqual(cancellationPoint - 1, processedResults.Count, $"Should have processed {cancellationPoint - 1} certificates before cancellation");
-                Assert.AreEqual(1, cancelledResults.Count, "Should have exactly 1 cancelled certificate");
+                Assert.HasCount(cancellationPoint - 1, processedResults, $"Should have processed {cancellationPoint - 1} certificates before cancellation");
+                Assert.HasCount(1, cancelledResults, "Should have exactly 1 cancelled certificate");
 
                 // Verify we processed different types of scenarios before cancellation
-                Assert.IsTrue(scenarioDistribution.Keys.Count >= 3, $"Should have processed at least 3 different scenario types before cancellation. Got: {string.Join(", ", scenarioDistribution.Select(kvp => $"Type {kvp.Key}: {kvp.Value}"))}");
+                Assert.IsGreaterThanOrEqualTo(3, scenarioDistribution.Keys.Count, $"Should have processed at least 3 different scenario types before cancellation. Got: {string.Join(", ", scenarioDistribution.Select(kvp => $"Type {kvp.Key}: {kvp.Value}"))}");
 
                 // Verify that complex scenarios were handled without exceptions (before cancellation)
                 var exceptionResults = processedResults.Where(r => r.reason.StartsWith("Exception")).ToList();
-                Assert.AreEqual(0, exceptionResults.Count, $"No exceptions should occur in processed results before cancellation. Exceptions: {string.Join("; ", exceptionResults.Select(r => r.reason))}");
+                Assert.IsEmpty(exceptionResults, $"No exceptions should occur in processed results before cancellation. Exceptions: {string.Join("; ", exceptionResults.Select(r => r.reason))}");
 
                 // Verify we have valid renewal decisions for different scenario types
                 var renewalsByScenario = processedResults.GroupBy(r => r.scenarioType)
@@ -1470,7 +1462,7 @@ namespace Certify.Core.Tests.Unit
 
                 foreach (var scenario in renewalsByScenario)
                 {
-                    Assert.IsTrue(scenario.Value.Total > 0, $"Scenario type {scenario.Key} should have at least 1 processed certificate");
+                    Assert.IsGreaterThan(0, scenario.Value.Total, $"Scenario type {scenario.Key} should have at least 1 processed certificate");
                     // Each scenario type should have some variation in renewal decisions (not all the same)
                     // This tests that the complex logic is actually being executed properly before cancellation
                 }
@@ -1489,7 +1481,7 @@ namespace Certify.Core.Tests.Unit
             var random = new Random(42); // Fixed seed for reproducible tests
             var baseDate = DateTimeOffset.UtcNow;
 
-            for (int i = 0; i < count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var cert = new ManagedCertificate
                 {
@@ -1769,7 +1761,7 @@ namespace Certify.Core.Tests.Unit
 
             // Verify we have good distribution
             var nonZeroCategories = categories.Count(kvp => kvp.Value > 0);
-            Assert.IsTrue(nonZeroCategories >= 10, $"{testDescription}: Should have diverse certificate categories. Categories with certificates: {nonZeroCategories}. Distribution: {categoryInfo}");
+            Assert.IsGreaterThanOrEqualTo(10, nonZeroCategories, $"{testDescription}: Should have diverse certificate categories. Categories with certificates: {nonZeroCategories}. Distribution: {categoryInfo}");
 
             // Verify specific renewal mode behavior
             var renewalCount = results.Count(r => r.isRenewalDue);
@@ -1780,20 +1772,20 @@ namespace Certify.Core.Tests.Unit
                     // Should favor certificates renewed many days ago
                     var oldCerts = results.Where(r => r.cert.DateRenewed.HasValue &&
                         (DateTimeOffset.UtcNow - r.cert.DateRenewed.Value).TotalDays > renewalInterval).Count();
-                    Assert.IsTrue(oldCerts > 0, $"{testDescription}: Should have certificates old enough for renewal");
+                    Assert.IsGreaterThan(0, oldCerts, $"{testDescription}: Should have certificates old enough for renewal");
                     break;
 
                 case RenewalIntervalModes.DaysBeforeExpiry:
                     // Should favor certificates expiring soon
                     var expiringSoon = results.Where(r => r.cert.DateExpiry.HasValue &&
                         (r.cert.DateExpiry.Value - DateTimeOffset.UtcNow).TotalDays <= renewalInterval).Count();
-                    Assert.IsTrue(expiringSoon > 0, $"{testDescription}: Should have certificates expiring within renewal interval");
+                    Assert.IsGreaterThan(0, expiringSoon, $"{testDescription}: Should have certificates expiring within renewal interval");
                     break;
 
                 case RenewalIntervalModes.PercentageLifetime:
                     // Should consider certificate lifetime percentages
                     var percentageCerts = results.Where(r => r.cert.DateStart.HasValue && r.cert.DateExpiry.HasValue).Count();
-                    Assert.IsTrue(percentageCerts > 0, $"{testDescription}: Should have certificates with calculable lifetimes");
+                    Assert.IsGreaterThan(0, percentageCerts, $"{testDescription}: Should have certificates with calculable lifetimes");
                     break;
             }
 

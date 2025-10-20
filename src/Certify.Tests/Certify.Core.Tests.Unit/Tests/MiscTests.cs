@@ -18,20 +18,20 @@ namespace Certify.Core.Tests.Unit
             string testValue = null;
 
             var result = testValue.WithDefault("ok");
-            Assert.AreEqual(result, "ok");
+            Assert.AreEqual("ok", result);
 
             testValue = "test";
             result = testValue.WithDefault("ok");
-            Assert.AreEqual(result, "test");
+            Assert.AreEqual("test", result);
 
             var ca = new Models.CertificateAuthority();
             ca.Description = null;
             result = ca.Description.WithDefault("default");
-            Assert.AreEqual(result, "default");
+            Assert.AreEqual("default", result);
 
             ca = null;
             result = ca?.Description.WithDefault("default");
-            Assert.AreEqual(result, null);
+            Assert.IsNull(result);
         }
 
         [TestMethod, Description("Test log parser using array of strings")]
@@ -46,7 +46,7 @@ namespace Certify.Core.Tests.Unit
 
             var items = LogParsing.ParseLogItems(testLog);
 
-            Assert.AreEqual(2, items.Length);
+            Assert.HasCount(2, items);
 
             Assert.AreEqual("WRN", items[0].LogLevel);
             Assert.AreEqual("INF", items[1].LogLevel);

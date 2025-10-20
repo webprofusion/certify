@@ -181,7 +181,7 @@ namespace Certify.Core.Tests.Unit
 
             // Validate SecurityPrincipal list returned by AccessControl.GetSecurityPrincipals()
             Assert.IsNotNull(storedSecurityPrincipals, "Expected list returned by AccessControl.GetSecurityPrincipals() to not be null");
-            Assert.AreEqual(2, storedSecurityPrincipals.Count, "Expected list returned by AccessControl.GetSecurityPrincipals() to have 2 SecurityPrincipal objects");
+            Assert.HasCount(2, storedSecurityPrincipals, "Expected list returned by AccessControl.GetSecurityPrincipals() to have 2 SecurityPrincipal objects");
             foreach (var passedPrincipal in adminSecurityPrincipals)
             {
                 Assert.IsNotNull(storedSecurityPrincipals.Find(x => x.Id == passedPrincipal.Id), $"Expected a SecurityPrincipal returned by GetSecurityPrincipals() to match Id '{passedPrincipal.Id}' of SecurityPrincipal passed into AddSecurityPrincipal()");
@@ -248,7 +248,7 @@ namespace Certify.Core.Tests.Unit
             {
                 var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, assignedRole.SecurityPrincipalId);
                 Assert.IsNotNull(adminAssignedRoles, "Expected list returned by AccessControl.GetAssignedRoles() to not be null");
-                Assert.AreEqual(1, adminAssignedRoles.Count, "Expected list returned by AccessControl.GetAssignedRoles() to have 1 AssignedRole object");
+                Assert.HasCount(1, adminAssignedRoles, "Expected list returned by AccessControl.GetAssignedRoles() to have 1 AssignedRole object");
                 Assert.AreEqual(assignedRole.SecurityPrincipalId, adminAssignedRoles[0].SecurityPrincipalId, "Expected AssignedRole returned by GetAssignedRoles() to match SecurityPrincipalId of AssignedRole passed into AddAssignedRole()");
             }
         }
@@ -266,7 +266,7 @@ namespace Certify.Core.Tests.Unit
             // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
             var adminAssignedRoles = await access.GetAssignedRoles(contextUserId, adminSecurityPrincipals[0].Id);
             Assert.IsNotNull(adminAssignedRoles, "Expected list returned by AccessControl.GetAssignedRoles() to not be null");
-            Assert.AreEqual(0, adminAssignedRoles.Count, "Expected list returned by AccessControl.GetAssignedRoles() to have no AssignedRole objects");
+            Assert.IsEmpty(adminAssignedRoles, "Expected list returned by AccessControl.GetAssignedRoles() to have no AssignedRole objects");
         }
 
         [TestMethod]
@@ -854,7 +854,7 @@ namespace Certify.Core.Tests.Unit
 
             var actionsWithoutRoles = actionToAllowedRoles.Where(kvp => kvp.Value.Count == 0).Select(kvp => kvp.Key).ToList();
 
-            Assert.IsTrue(actionsWithoutRoles.Count == 0, $"The following {actionsWithoutRoles.Count} actions are not allowed by any role: {string.Join(", \r\n", actionsWithoutRoles)}");
+            Assert.IsEmpty(actionsWithoutRoles, $"The following {actionsWithoutRoles.Count} actions are not allowed by any role: {string.Join(", \r\n", actionsWithoutRoles)}");
 
             // Additional assertion: Administrator role is allowed to perform each action
             var adminRole = roles.FirstOrDefault(r => r.Id == StandardRoles.Administrator.Id);
@@ -872,7 +872,7 @@ namespace Certify.Core.Tests.Unit
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedChallengeCleanup);
             actionsNotAllowedByAdmin.RemoveAll(a => a == StandardResourceActions.ManagedAcmePerformOrder);
 
-            Assert.IsTrue(actionsNotAllowedByAdmin.Count == 0, $"Administrator role is not allowed to perform the following actions: {string.Join(", \r\n", actionsNotAllowedByAdmin)}");
+            Assert.IsEmpty(actionsNotAllowedByAdmin, $"Administrator role is not allowed to perform the following actions: {string.Join(", \r\n", actionsNotAllowedByAdmin)}");
         }
     }
 }

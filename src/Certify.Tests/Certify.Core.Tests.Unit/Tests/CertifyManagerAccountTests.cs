@@ -555,7 +555,7 @@ namespace Certify.Core.Tests.Unit
             // Attempt to add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
             Assert.IsFalse(addAccountRes.IsSuccess, $"Expected account creation to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(addAccountRes.Message, "You must agree to the terms and conditions of the Certificate Authority to register with them.", "Unexpected error message");
+            Assert.AreEqual("You must agree to the terms and conditions of the Certificate Authority to register with them.", addAccountRes.Message, "Unexpected error message");
             var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
@@ -578,7 +578,7 @@ namespace Certify.Core.Tests.Unit
             // Attempt to add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
             Assert.IsFalse(addAccountRes.IsSuccess, $"Expected account creation to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(addAccountRes.Message, "Invalid Certificate Authority specified.", "Unexpected error message");
+            Assert.AreEqual("Invalid Certificate Authority specified.", addAccountRes.Message, "Unexpected error message");
             var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
@@ -601,7 +601,7 @@ namespace Certify.Core.Tests.Unit
             // Attempt to add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
             Assert.IsFalse(addAccountRes.IsSuccess, $"Expected account creation to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(addAccountRes.Message, "To import account details both the existing account URI and account key in PEM format are required. ", "Unexpected error message");
+            Assert.AreEqual("To import account details both the existing account URI and account key in PEM format are required. ", addAccountRes.Message, "Unexpected error message");
             var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
@@ -647,7 +647,7 @@ namespace Certify.Core.Tests.Unit
             // Attempt to add account
             var addAccountRes = await _certifyManager.AddAccount(contactRegistration);
             Assert.IsFalse(addAccountRes.IsSuccess, $"Expected account creation to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(addAccountRes.Message, "The provided account key was invalid or not supported for import. A PEM (text) format RSA or ECDA private key is required.", "Unexpected error message");
+            Assert.AreEqual("The provided account key was invalid or not supported for import. A PEM (text) format RSA or ECDA private key is required.", addAccountRes.Message, "Unexpected error message");
             var accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNull(accountDetails, $"Did not expect an account for {contactRegEmail} to be returned by CertifyManager.GetAccountRegistrations()");
         }
@@ -686,7 +686,7 @@ namespace Certify.Core.Tests.Unit
             var badStorageKey = "8da1a662-18ed-4787-a0b1-dc36db5a866b";
             var removeAccountRes = await _certifyManager.RemoveAccount(badStorageKey, true);
             Assert.IsFalse(removeAccountRes.IsSuccess, $"Expected account removal to be unsuccessful for storage key {badStorageKey}");
-            Assert.AreEqual(removeAccountRes.Message, "Account not found.", "Unexpected error message");
+            Assert.AreEqual("Account not found.", removeAccountRes.Message, "Unexpected error message");
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.GetAccountAndACMEProvider()")]
@@ -814,7 +814,7 @@ namespace Certify.Core.Tests.Unit
             };
             var updateAccountRes = await _certifyManager.UpdateAccountContact(accountDetails.StorageKey, newContactRegistration);
             Assert.IsFalse(updateAccountRes.IsSuccess, $"Expected account creation to not be successful for {newContactRegEmail}");
-            Assert.AreEqual(updateAccountRes.Message, "You must agree to the terms and conditions of the Certificate Authority to register with them.", "Unexpected error message");
+            Assert.AreEqual("You must agree to the terms and conditions of the Certificate Authority to register with them.", updateAccountRes.Message, "Unexpected error message");
             var newAccountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == newContactRegEmail);
             Assert.IsNull(newAccountDetails, $"Expected none of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {newContactRegEmail}");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
@@ -859,7 +859,7 @@ namespace Certify.Core.Tests.Unit
             var badStorageKey = Guid.NewGuid().ToString();
             var updateAccountRes = await _certifyManager.UpdateAccountContact(badStorageKey, newContactRegistration);
             Assert.IsFalse(updateAccountRes.IsSuccess, $"Expected account creation to not be successful for {newContactRegEmail}");
-            Assert.AreEqual(updateAccountRes.Message, "Account not found.", "Unexpected error message");
+            Assert.AreEqual("Account not found.", updateAccountRes.Message, "Unexpected error message");
             var newAccountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == newContactRegEmail);
             Assert.IsNull(newAccountDetails, $"Expected none of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {newContactRegEmail}");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
@@ -893,7 +893,7 @@ namespace Certify.Core.Tests.Unit
             var newKeyPem = KeyFactory.NewKey(KeyAlgorithm.ES256).ToPem();
             var changeAccountKeyRes = await _certifyManager.ChangeAccountKey(accountDetails.StorageKey, newKeyPem);
             Assert.IsTrue(changeAccountKeyRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
-            Assert.AreEqual(changeAccountKeyRes.Message, "Completed account key rollover", "Unexpected message for CertifyManager.GetAccountRegistrations() success");
+            Assert.AreEqual("Completed account key rollover", changeAccountKeyRes.Message, "Unexpected message for CertifyManager.GetAccountRegistrations() success");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {contactRegEmail}");
             Assert.AreNotEqual(firstAccountKey, accountDetails.AccountKey, $"Expected account key for {contactRegEmail} to have changed after successful CertifyManager.ChangeAccountKey()");
@@ -925,7 +925,7 @@ namespace Certify.Core.Tests.Unit
             // Update account key
             var changeAccountKeyRes = await _certifyManager.ChangeAccountKey(accountDetails.StorageKey);
             Assert.IsTrue(changeAccountKeyRes.IsSuccess, $"Expected account creation to be successful for {contactRegEmail}");
-            Assert.AreEqual(changeAccountKeyRes.Message, "Completed account key rollover", "Unexpected message for CertifyManager.GetAccountRegistrations() success");
+            Assert.AreEqual("Completed account key rollover", changeAccountKeyRes.Message, "Unexpected message for CertifyManager.GetAccountRegistrations() success");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {contactRegEmail}");
             Assert.AreNotEqual(firstAccountKey, accountDetails.AccountKey, $"Expected account key for {contactRegEmail} to have changed after successful CertifyManager.ChangeAccountKey()");
@@ -961,7 +961,7 @@ namespace Certify.Core.Tests.Unit
             var badStorageKey = Guid.NewGuid().ToString();
             var changeAccountKeyRes = await _certifyManager.ChangeAccountKey(badStorageKey, newKeyPem);
             Assert.IsFalse(changeAccountKeyRes.IsSuccess, $"Expected account key update to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(changeAccountKeyRes.Message, "Failed to match account to known ACME provider", "Unexpected error message for CertifyManager.GetAccountRegistrations() failure");
+            Assert.AreEqual("Failed to match account to known ACME provider", changeAccountKeyRes.Message, "Unexpected error message for CertifyManager.GetAccountRegistrations() failure");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {contactRegEmail}");
             Assert.AreEqual(firstAccountKey, accountDetails.AccountKey, $"Expected account key for {contactRegEmail} not to have changed after unsuccessful CertifyManager.ChangeAccountKey()");
@@ -996,7 +996,7 @@ namespace Certify.Core.Tests.Unit
             var badKeyPem = KeyFactory.NewKey(KeyAlgorithm.ES256).ToPem().Substring(20);
             var changeAccountKeyRes = await _certifyManager.ChangeAccountKey(accountDetails.StorageKey, badKeyPem);
             Assert.IsFalse(changeAccountKeyRes.IsSuccess, $"Expected account key update to be unsuccessful for {contactRegEmail}");
-            Assert.AreEqual(changeAccountKeyRes.Message, "Failed to use provide key for account rollover", "Unexpected error message for CertifyManager.GetAccountRegistrations() failure");
+            Assert.AreEqual("Failed to use provide key for account rollover", changeAccountKeyRes.Message, "Unexpected error message for CertifyManager.GetAccountRegistrations() failure");
             accountDetails = (await _certifyManager.GetAccountRegistrations()).Find(a => a.Email == contactRegEmail);
             Assert.IsNotNull(accountDetails, $"Expected one of the accounts returned by CertifyManager.GetAccountRegistrations() to be for {contactRegEmail}");
             Assert.AreEqual(firstAccountKey, accountDetails.AccountKey, $"Expected account key for {contactRegEmail} not to have changed after unsuccessful CertifyManager.ChangeAccountKey()");
@@ -1024,7 +1024,7 @@ namespace Certify.Core.Tests.Unit
                 };
                 var updateCaRes = await _certifyManager.UpdateCertificateAuthority(newCustomCa);
                 Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {newCustomCa.Id} to be successful");
-                Assert.AreEqual(updateCaRes.Message, "OK", "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
+                Assert.AreEqual("OK", updateCaRes.Message, "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
                 var certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
                 var newCaDetails = certificateAuthorities.Find(c => c.Id == newCustomCa.Id);
                 Assert.IsNotNull(newCaDetails, $"Expected one of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {newCustomCa.Id}");
@@ -1060,7 +1060,7 @@ namespace Certify.Core.Tests.Unit
                 // Add new CA
                 var addCaRes = await _certifyManager.UpdateCertificateAuthority(newCustomCa);
                 Assert.IsTrue(addCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {newCustomCa.Id} to be successful");
-                Assert.AreEqual(addCaRes.Message, "OK", "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
+                Assert.AreEqual("OK", addCaRes.Message, "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
                 var certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
                 var newCaDetails = certificateAuthorities.Find(c => c.Id == newCustomCa.Id);
                 Assert.IsNotNull(newCaDetails, $"Expected one of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {newCustomCa.Id}");
@@ -1082,7 +1082,7 @@ namespace Certify.Core.Tests.Unit
                 // Update existing CA
                 var updateCaRes = await _certifyManager.UpdateCertificateAuthority(updatedCustomCa);
                 Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA update for CA with ID {updatedCustomCa.Id} to be successful");
-                Assert.AreEqual(updateCaRes.Message, "OK", "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
+                Assert.AreEqual("OK", updateCaRes.Message, "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
                 certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
                 newCaDetails = certificateAuthorities.Find(c => c.Id == updatedCustomCa.Id);
                 Assert.IsNotNull(newCaDetails, $"Expected one of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {updatedCustomCa.Id}");
@@ -1120,7 +1120,7 @@ namespace Certify.Core.Tests.Unit
             // Attempt to update default CA
             var updateCaRes = await _certifyManager.UpdateCertificateAuthority(newCustomCa);
             Assert.IsFalse(updateCaRes.IsSuccess, $"Expected CA update for default CA with ID {defaultCa.Id} to be unsuccessful");
-            Assert.AreEqual(updateCaRes.Message, "Default Certificate Authorities cannot be modified.", "Unexpected result message for CertifyManager.UpdateCertificateAuthority() failure");
+            Assert.AreEqual("Default Certificate Authorities cannot be modified.", updateCaRes.Message, "Unexpected result message for CertifyManager.UpdateCertificateAuthority() failure");
         }
 
         [TestMethod, Description("Happy path test for using CertifyManager.RemoveCertificateAuthority()")]
@@ -1141,7 +1141,7 @@ namespace Certify.Core.Tests.Unit
             // Add custom CA
             var updateCaRes = await _certifyManager.UpdateCertificateAuthority(newCustomCa);
             Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA creation for CA with ID {newCustomCa.Id} to be successful");
-            Assert.AreEqual(updateCaRes.Message, "OK", "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
+            Assert.AreEqual("OK", updateCaRes.Message, "Unexpected result message for CertifyManager.UpdateCertificateAuthority() success");
             var certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
             var newCaDetails = certificateAuthorities.Find(c => c.Id == newCustomCa.Id);
             Assert.IsNotNull(newCaDetails, $"Expected one of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {newCustomCa.Id}");
@@ -1149,7 +1149,7 @@ namespace Certify.Core.Tests.Unit
             // Delete custom CA
             var deleteCaRes = await _certifyManager.RemoveCertificateAuthority(newCustomCa.Id);
             Assert.IsTrue(deleteCaRes.IsSuccess, $"Expected Custom CA deletion for CA with ID {newCustomCa.Id} to be successful");
-            Assert.AreEqual(deleteCaRes.Message, "OK", "Unexpected result message for CertifyManager.RemoveCertificateAuthority() success");
+            Assert.AreEqual("OK", deleteCaRes.Message, "Unexpected result message for CertifyManager.RemoveCertificateAuthority() success");
             certificateAuthorities = await _certifyManager.GetCertificateAuthorities();
             newCaDetails = certificateAuthorities.Find(c => c.Id == newCustomCa.Id);
             Assert.IsNull(newCaDetails, $"Expected none of the CAs returned by CertifyManager.GetCertificateAuthorities() to have an ID of {newCustomCa.Id}");

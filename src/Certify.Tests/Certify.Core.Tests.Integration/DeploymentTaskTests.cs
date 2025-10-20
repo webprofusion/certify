@@ -78,7 +78,7 @@ namespace Certify.Core.Tests
             {
                 var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
 
-                Assert.AreEqual(result.Actions.Sum(s => s.Substeps.Count), 4);
+                Assert.AreEqual(4, result.Actions.Sum(s => s.Substeps.Count));
                 //ensure process success
                 Assert.IsTrue(result.IsSuccess, "Result OK");
             }

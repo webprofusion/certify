@@ -14,7 +14,7 @@ namespace Certify.Core.Tests.Unit
     [TestClass]
     public class CertifyManagerMaintenanceTests
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(90, null, 1, 10, DisplayName = "No scheduled renewal, ARI window in future")]
         [DataRow(90, 60, 1, 10, DisplayName = "Scheduled renewal in future, ARI window in future")]
         [DataRow(10, null, -5, 5, DisplayName = "No scheduled renewal, ARI window started")]
@@ -73,7 +73,7 @@ namespace Certify.Core.Tests.Unit
             );
 
             // Assert
-            Assert.IsTrue(completedRenewalInfoChecks.Contains("test-cert"), "Certificate ID should be added to completedRenewalInfoChecks");
+            Assert.Contains("test-cert", completedRenewalInfoChecks, "Certificate ID should be added to completedRenewalInfoChecks");
 
             var nextRenewal = ManagedCertificate.CalculateNextRenewalAttempt(managedCert, CoreAppSettings.Current.RenewalIntervalDays, CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal);
 
@@ -83,7 +83,7 @@ namespace Certify.Core.Tests.Unit
 
                 if (nextRenewal.DateNextRenewalAttempt < DateTimeOffset.UtcNow.AddHours(1))
                 {
-                    Assert.IsTrue(itemsWhichRequireRenewal.Contains("test-cert"), "Certificate ID should be added to itemsWhichRequireRenewal");
+                    Assert.Contains("test-cert", itemsWhichRequireRenewal, "Certificate ID should be added to itemsWhichRequireRenewal");
                 }
             }
             else

@@ -236,10 +236,10 @@ namespace Certify.Core.Tests.Unit
 
             var result = JsonConvert.DeserializeObject<AcmeRenewalInfo>(exampleJson);
 
-            Assert.IsTrue(result.SuggestedWindow.Start.Value.Millisecond == 123);
+            Assert.AreEqual(123, result.SuggestedWindow.Start.Value.Millisecond);
 
 #if NET9_0_OR_GREATER
-            Assert.IsTrue(result.SuggestedWindow.Start.Value.Nanosecond == 800);
+            Assert.AreEqual(800, result.SuggestedWindow.Start.Value.Nanosecond);
 #endif
         }
     }

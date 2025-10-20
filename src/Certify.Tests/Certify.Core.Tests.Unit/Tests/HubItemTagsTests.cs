@@ -36,7 +36,7 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(result.IsSuccess);
 
             var allTags = await _manager.GetAllHubItemTags();
-            Assert.AreEqual(2, allTags.Count);
+            Assert.HasCount(2, allTags);
         }
 
         [TestMethod]
@@ -45,13 +45,13 @@ namespace Certify.Core.Tests.Unit
             var tag = new ItemTag("item1", "type1", "tag1", "value1");
             await _manager.AddHubItemTags(new List<ItemTag> { tag });
             var allTags = await _manager.GetAllHubItemTags();
-            Assert.AreEqual(1, allTags.Count);
+            Assert.HasCount(1, allTags);
 
             var result = await _manager.RemoveHubItemTags(new List<string> { allTags.First().Id });
             Assert.IsTrue(result.IsSuccess);
 
             allTags = await _manager.GetAllHubItemTags();
-            Assert.AreEqual(0, allTags.Count);
+            Assert.IsEmpty(allTags);
         }
 
         [TestMethod]
@@ -63,7 +63,7 @@ namespace Certify.Core.Tests.Unit
                 new ItemTag("item2", "type2", "tag2", "value2")
             });
             var allTags = await _manager.GetAllHubItemTags();
-            Assert.AreEqual(2, allTags.Count);
+            Assert.HasCount(2, allTags);
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace Certify.Core.Tests.Unit
                 new ItemTag("item2", "type2", "tag3", "value3")
             });
             var tagsForItem1 = await _manager.GetHubItemTags("item1", "type1");
-            Assert.AreEqual(2, tagsForItem1.Count);
+            Assert.HasCount(2, tagsForItem1);
             Assert.IsTrue(tagsForItem1.All(t => t.TaggedItemId == "item1"));
         }
     }

@@ -113,9 +113,9 @@ namespace Certify.Core.Tests.Unit
             var certStoreName = Certify.Management.CertificateManager.DEFAULT_STORE_NAME;
 
             var allBindings = await deploymentTarget.GetBindings(null);
-            Assert.AreEqual(allBindings.Count, _allSites.Count, "Null target id should return all bindings on all target sites");
+            Assert.HasCount(allBindings.Count, _allSites, "Null target id should return all bindings on all target sites");
             allBindings = await deploymentTarget.GetBindings("1");
-            Assert.AreEqual(allBindings.Count, 2, "Specific target id should return subset of all bindings");
+            Assert.HasCount(2, allBindings, "Specific target id should return subset of all bindings");
 
             managedCertificate.ServerSiteId = "ShouldNotMatch";
             var preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
@@ -127,33 +127,33 @@ namespace Certify.Core.Tests.Unit
 
             managedCertificate.ServerSiteId = "1";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match one binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category.EndsWith("Binding")), "Should match one binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match 1 binding (root level domain should be ignored using wildcard)");
+            Assert.AreEqual(1, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 1 binding (root level domain should be ignored using wildcard)");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 1, "Should match 1 binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 1 binding");
 
             managedCertificate.ServerSiteId = "1";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "*.test.com";
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 3, "Should match 3 bindings across all sites");
+            Assert.AreEqual(3, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 3 bindings across all sites");
 
             managedCertificate.ServerSiteId = "5";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
             managedCertificate.RequestConfig.PrimaryDomain = "altport.com";
 
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 2, "Should match 2 bindings across all sites");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 1, "Should have 1 port 9001 binding");
+            Assert.AreEqual(2, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 2 bindings across all sites");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")), "Should have 1 port 9000 binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")), "Should have 1 port 9001 binding");
 
             managedCertificate.ServerSiteId = "6";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
@@ -161,9 +161,9 @@ namespace Certify.Core.Tests.Unit
             managedCertificate.RequestConfig.SubjectAlternativeNames = new string[] { "*.wildtest.com", "wildtest.com" };
 
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
-            Assert.IsTrue(preview.Count(b => b.Category.EndsWith("Binding")) == 3, "Should match 3 bindings across all sites");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")) == 1, "Should have 1 port 9000 binding");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")) == 2, "Should have 2 port 9001 bindings");
+            Assert.AreEqual(3, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 3 bindings across all sites");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9000")), "Should have 1 port 9000 binding");
+            Assert.AreEqual(2, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":9001")), "Should have 2 port 9001 bindings");
 
             managedCertificate.ServerSiteId = "7";
             managedCertificate.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
@@ -173,9 +173,9 @@ namespace Certify.Core.Tests.Unit
 
             preview = await bindingManager.StoreAndDeploy(deploymentTarget, managedCertificate, null, pfxPwd: "", isPreviewOnly: true, certStoreName: certStoreName);
             Assert.AreEqual(3, preview.Count(b => b.Category.EndsWith("Binding")), "Should match 3 bindings across all sites");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":443")) == 1, "Should have 1 port 443 binding");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8530")) == 1, "Should have 1 port 8530 binding");
-            Assert.IsTrue(preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8531")) == 1, "Should have 1 port 8531 binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":443")), "Should have 1 port 443 binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8530")), "Should have 1 port 8530 binding");
+            Assert.AreEqual(1, preview.Count(b => b.Category == "Deployment.UpdateBinding" && b.Description.Contains(":8531")), "Should have 1 port 8531 binding");
 
             foreach (var a in preview)
             {
@@ -362,17 +362,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate will be stored in the computer certificate store", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Storage", results[0].Title);
 
             Assert.IsTrue(results[1].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsTrue(results[2].HasError, "This call to StoreAndDeploy() should have an error adding binding while deploying certificate in preview");
             Assert.AreEqual("Deployment.AddBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI** Failed to add/update binding. [IIS Site Id could not be determined]", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -418,17 +418,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update https binding |  | **\\*:443:test.com SNI**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -474,17 +474,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update https binding |  | **\\*:443:test.com SNI**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -609,17 +609,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update https binding |  | **\\*:443:test.com SNI**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -661,16 +661,16 @@ namespace Certify.Core.Tests.Unit
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, "BadCertStoreName");
 
-            Assert.AreEqual(1, results.Count);
+            Assert.HasCount(1, results);
             Assert.IsTrue(results[0].HasError);
             Assert.AreEqual("CertificateStorage", results[0].Category);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The system cannot find the file specified."), $"Unexpected description: '{results[0].Description}'");
+                Assert.Contains("Error storing certificate. The system cannot find the file specified.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             }
             else
             {
-                Assert.IsTrue(results[0].Description.Contains("Error storing certificate. The specified X509 certificate store does not exist."), $"Unexpected description: '{results[0].Description}'");
+                Assert.Contains("Error storing certificate. The specified X509 certificate store does not exist.", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             }
 
             Assert.AreEqual("Certificate Storage Failed", results[0].Title);
@@ -716,10 +716,10 @@ namespace Certify.Core.Tests.Unit
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, _dummyCertPath, pfxPwd: "", false, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
-            Assert.AreEqual(1, results.Count);
+            Assert.HasCount(1, results);
             Assert.IsFalse(results[0].HasError);
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
         }
 
@@ -762,13 +762,13 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(2, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate will be stored in the computer certificate store"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate will be stored in the computer certificate store", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Storage", results[0].Title);
 
             // because the existing binding uses an IP address with non-SNI the resulting update should also use the IP address and no SNI.
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update https binding |  | **127.0.0.1:443:test.com Non-SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Update https binding |  | **127.0.0.1:443:test.com Non-SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
         }
 
@@ -819,17 +819,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update https binding |  | **\\*:443:test.com SNI**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
 
             CertificateManager.RemoveCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
@@ -883,17 +883,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.AddBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Add https binding |  | ***:443:test.com SNI**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Add https binding |  | ***:443:test.com SNI**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update https binding |  | **\\*:443:test.com SNI**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update https binding |  | **\\*:443:test.com SNI**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
 
             CertificateManager.RemoveCertificate(cert, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
@@ -939,17 +939,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Update ftp binding |  | ***:20:ftp.test.com**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -994,17 +994,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: {results[0].Description}");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: {results[0].Description}");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: {results[1].Description}");
+            Assert.Contains("Update ftp binding |  | ***:20:ftp.test.com**", results[1].Description, $"Unexpected description: {results[1].Description}");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: {results[2].Description}");
+            Assert.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**", results[2].Description, $"Unexpected description: {results[2].Description}");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -1049,17 +1049,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:20:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Update ftp binding |  | ***:20:ftp.test.com**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update ftp binding |  | **127.0.0.1:20:ftp.test.com**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -1102,7 +1102,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(1, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
         }
 
@@ -1146,7 +1146,7 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(1, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             testManagedCert.RequestConfig.DeploymentSiteOption = DeploymentOption.AllSites;
@@ -1156,17 +1156,17 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual(3, results.Count());
             Assert.IsFalse(results[0].HasError, "This call to StoreAndDeploy() should have no errors storing certificate");
             Assert.AreEqual("CertificateStorage", results[0].Category);
-            Assert.IsTrue(results[0].Description.Contains("Certificate stored OK"), $"Unexpected description: '{results[0].Description}'");
+            Assert.Contains("Certificate stored OK", results[0].Description, $"Unexpected description: '{results[0].Description}'");
             Assert.AreEqual("Certificate Stored", results[0].Title);
 
             Assert.IsFalse(results[1].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[1].Category);
-            Assert.IsTrue(results[1].Description.Contains("Update ftp binding |  | ***:21:ftp.test.com**"), $"Unexpected description: '{results[1].Description}'");
+            Assert.Contains("Update ftp binding |  | ***:21:ftp.test.com**", results[1].Description, $"Unexpected description: '{results[1].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[1].Title);
 
             Assert.IsFalse(results[2].HasError, "This call to StoreAndDeploy() should not have an error adding binding while deploying certificate");
             Assert.AreEqual("Deployment.UpdateBinding", results[2].Category);
-            Assert.IsTrue(results[2].Description.Contains("Update ftp binding |  | **127.0.0.1:21:ftp.test.com**"), $"Unexpected description: '{results[2].Description}'");
+            Assert.Contains("Update ftp binding |  | **127.0.0.1:21:ftp.test.com**", results[2].Description, $"Unexpected description: '{results[2].Description}'");
             Assert.AreEqual("Install Certificate For Binding", results[2].Title);
         }
 
@@ -1210,7 +1210,7 @@ namespace Certify.Core.Tests.Unit
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
             // this test will currently fail because we are not looking at all sites to prevent duplicate bindings
-            Assert.AreEqual(1, results.Count);
+            Assert.HasCount(1, results);
         }
 
         [TestMethod, Description("Test that existing IP specific https bindings is preserved")]
@@ -1328,7 +1328,7 @@ namespace Certify.Core.Tests.Unit
 
             var results = await deployment.StoreAndDeploy(mockTarget, testManagedCert, "test.pfx", pfxPwd: "", true, Certify.Management.CertificateManager.DEFAULT_STORE_NAME);
 
-            Assert.AreEqual(2, results.Count);
+            Assert.HasCount(2, results);
 
             var bindingResult = results.Last();
             var bindingInfo = bindingResult.ObjectResult as BindingInfo;
