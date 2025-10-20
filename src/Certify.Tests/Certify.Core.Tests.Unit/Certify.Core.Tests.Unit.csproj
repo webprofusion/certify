@@ -98,11 +98,8 @@
         <PackageReference Include="MSTest.TestAdapter" Version="4.0.1" />
         <PackageReference Include="MSTest.TestFramework" Version="4.0.1" />
         <PackageReference Include="Polly" Version="8.6.4" />
-        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.0-rc.2.25502.107" />
-        <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
-        <PackageReference Include="System.Text.Json" Version="10.0.0-rc.2.25502.107" />
-        <PackageReference Include="Testcontainers" Version="4.7.0" />
+        <PackageReference Include="Testcontainers" Version="4.8.0" />
         <PackageReference Include="Npgsql" Version="9.0.4" />
     </ItemGroup>
 
