@@ -31,7 +31,7 @@
             <NoWarn>NU1701</NoWarn>
         </PackageReference>
         <PackageReference Include="MahApps.Metro" Version="3.0.0-rc0525" />
-        <PackageReference Include="Markdig" Version="0.42.0" />
+        <PackageReference Include="Markdig" Version="0.43.0" />
         <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
         <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />
         <PackageReference Include="ToastNotifications.Messages" Version="2.5.1">

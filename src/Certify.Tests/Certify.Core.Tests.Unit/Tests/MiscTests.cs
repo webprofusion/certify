@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Certify.Management;
 using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -121,7 +122,7 @@ yNQwCgYIKoZIzj0EAwIDRwAwRAIge09+S5TZAlw5tgtiVvuERV6cT4mfutXIlwTb
             var rsaCount = System.IO.Directory.GetFiles(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft", "Crypto", "RSA", "MachineKeys")).Length;
 
 #if NET9_0_OR_GREATER
-            var x509Cert2 = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(item.CertificatePath, await GetPfxPassword(item));
+            var x509Cert2 = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile("Assets/dummycert_rsa.pfx", "");
 #else
             var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2("Assets/dummycert_rsa.pfx","", X509KeyStorageFlags.MachineKeySet);
 #endif
