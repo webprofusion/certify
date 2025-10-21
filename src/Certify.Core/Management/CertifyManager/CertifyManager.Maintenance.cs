@@ -333,7 +333,7 @@ namespace Certify.Management
 
         public async Task<bool> PerformRenewalInfoCheck(ILog log, List<string> completedRenewalInfoChecks, List<string> itemsWhichRequireRenewal, Dictionary<string, DateTimeOffset> itemsViaARI, Dictionary<string, AcmeDirectoryInfo> directoryInfoCache, ManagedCertificate item)
         {
-            bool newAriRenewalScheduled = false;
+            var newAriRenewalScheduled = false;
 
             if (item.CertificateRevoked || item.DateExpiry < DateTimeOffset.UtcNow)
             {
