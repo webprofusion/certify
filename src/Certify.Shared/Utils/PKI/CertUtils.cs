@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -48,12 +48,12 @@ namespace Certify.Shared.Core.Utils.PKI
 #if NET9_0_OR_GREATER
             try
             {
-                cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd);
             }
             catch (CryptographicException)
             {
                 // try again using blank pwd
-                cert = X509CertificateLoader.LoadPkcs12(pfxData, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                cert = X509CertificateLoader.LoadPkcs12(pfxData, "");
             }
 #else
             cert = new X509Certificate2(pfxData, pwd);

@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using Certify.Management;
+using Certify.Models;
+using Certify.Shared.Core.Utils.PKI;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.Unit
@@ -62,5 +66,35 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("aYhba4dGQEHhs3uEe6CuLN4ByNQ.AIdlQyE", certId);
         }
 #endif
+
+        [TestMethod, Description("Test loading X509 does not leave RSA keys behind on disk")]
+        public void TestX509Load()
+        {
+
+            //count number of RSA key files under C:\ProgramData\Microsoft\Crypto\RSA\MachineKeys
+            var rsaCount = System.IO.Directory.GetFiles(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft", "Crypto", "RSA", "MachineKeys")).Length;
+
+#if NET9_0_OR_GREATER
+            var x509Cert2 = System.Security.Cryptography.X509Certificates.X509CertificateLoader.LoadPkcs12FromFile(item.CertificatePath, await GetPfxPassword(item));
+#else
+            var x509Cert2 = new System.Security.Cryptography.X509Certificates.X509Certificate2("Assets/dummycert_rsa.pfx","", X509KeyStorageFlags.MachineKeySet);
+#endif
+            var ariCertId =  Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(x509Cert2);
+            Assert.AreEqual("9kMDkS9mJa-FJd3kZNFpfsuiHNk.LISueX2pFKa-v-iddDPp2xJA", ariCertId);
+            //cleanup cert so temp RSA keys get removed on disk
+            x509Cert2?.Dispose();
+            x509Cert2 = null;
+ 
+            var updatedRsaKeyCount = System.IO.Directory.GetFiles(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft", "Crypto", "RSA", "MachineKeys")).Length;
+
+            Assert.AreEqual(rsaCount, updatedRsaKeyCount, "RSA Key file count should be unchanged after loading X509Certificate2");
+
+            CertificateManager.LoadCertificate("Assets/dummycert_rsa.pfx");
+
+            updatedRsaKeyCount = System.IO.Directory.GetFiles(System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Microsoft", "Crypto", "RSA", "MachineKeys")).Length;
+
+            Assert.AreEqual(rsaCount, updatedRsaKeyCount, "RSA Key file count should be unchanged after loading X509Certificate2");
+
+        }
     }
 }

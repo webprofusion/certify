@@ -989,6 +989,8 @@ namespace Certify.Management
 
                         managedCertificate.ARICertificateId = Certify.Shared.Core.Utils.PKI.CertUtils.GetARICertIdBase64(certInfo);
                         managedCertificate.CertificateCurrentCA = managedCertificate.LastAttemptedCA;
+
+                        certInfo.Dispose();
                     }
                     catch (Exception exp)
                     {

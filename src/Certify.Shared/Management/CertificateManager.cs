@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -243,7 +243,7 @@ namespace Certify.Management
         {
             try
             {
-                var cert = new X509Certificate2(filename, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                var cert = new X509Certificate2(filename, pwd);
                 return cert;
             }
             catch (Exception exp)
@@ -337,6 +337,8 @@ namespace Certify.Management
             // now check if cert is accessible and private key is OK (in some cases cert is not
             // storing private key properly)
             var storedCert = GetCertificateByThumbprint(cert.Thumbprint, storeName);
+            
+            cert.Dispose();
 
             if (enableRetryBehaviour)
             {
