@@ -90,7 +90,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Click="Button_ApplyRegistrationKey"
-                Content="Add License Key.."
+                Content="Apply License Key.."
                 DockPanel.Dock="Top" />
 
             <Button
