@@ -98,6 +98,11 @@ namespace Certify.UI.ViewModel
         public string FilterKeyword { get; set; } = string.Empty;
 
         /// <summary>
+        /// If true, more managed certificates are currently being loaded
+        /// </summary>
+        public bool IsLoadingMore { get; set; }
+
+        /// <summary>
         /// Refresh the cached list of managed certs via the connected service
         /// </summary>
         /// <returns></returns>
@@ -116,6 +121,52 @@ namespace Certify.UI.ViewModel
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
             TotalManagedCertificates = result.TotalResults;
+
+            // Reset page index when refreshing
+            _filterPageIndex = 0;
+        }
+
+        /// <summary>
+        /// Load the next page of managed certificates and append to the current list
+        /// </summary>
+        /// <returns></returns>
+        public async Task LoadNextManagedCertificatesPage()
+        {
+            // Check if there are more results to load
+            if (ManagedCertificates == null || ManagedCertificates.Count >= TotalManagedCertificates)
+            {
+                return;
+            }
+
+            _filterPageIndex++;
+
+            var filter = new ManagedCertificateFilter();
+            filter.IncludeExternal = IsFeatureEnabled(FeatureFlags.EXTERNAL_CERT_MANAGERS) && Preferences.EnableExternalCertManagers;
+            filter.PageSize = _filterPageSize;
+            filter.PageIndex = _filterPageIndex;
+            filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
+
+            var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+
+            if (result?.Results != null && result.Results.Any())
+            {
+                await _managedCertCacheSemaphore.WaitAsync();
+                try
+                {
+                    // Append new results to existing collection
+                    foreach (var cert in result.Results)
+                    {
+                        if (!ManagedCertificates.Any(c => c.Id == cert.Id))
+                        {
+                            ManagedCertificates.Add(cert);
+                        }
+                    }
+                }
+                finally
+                {
+                    _managedCertCacheSemaphore.Release();
+                }
+            }
         }
 
         public async Task<StatusSummary> GetManagedCertificateSummary()

@@ -23,6 +23,10 @@ namespace Certify.UI.Controls
 
         private string _sortOrder { get; set; } = "NameAsc";
 
+        private bool _isLoadingMore = false;
+        private bool _hasMoreResults = true;
+        private readonly object _loadLock = new object();
+
         /// <summary>
         /// event for Duplicate option
         /// </summary>
@@ -39,71 +43,162 @@ namespace Certify.UI.Controls
             _appViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             _appViewModel.PropertyChanged += AppViewModel_PropertyChanged;
 
+            // Attach scroll event handler for incremental loading
+            lvManagedCertificates.Loaded += (s, e) =>
+        {
+            var scrollViewer = FindScrollViewer(lvManagedCertificates);
+            if (scrollViewer != null)
+            {
+                scrollViewer.ScrollChanged += ScrollViewer_ScrollChanged;
+            }
+        };
         }
 
         private void AppViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             Dispatcher.Invoke(() =>
+ {
+     if (e.PropertyName == "ManagedCertificates" || (e.PropertyName == "SelectedItem" &&
+_appViewModel.ManagedCertificates != null))
+     {
+         SetFilter(); // reset listeners when ManagedCertificates are reset
+         _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
+         _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
+     }
+ });
+        }
+
+        /// <summary>
+        /// Find ScrollViewer in visual tree
+        /// </summary>
+        private ScrollViewer FindScrollViewer(DependencyObject obj)
+        {
+            if (obj is ScrollViewer scrollViewer)
             {
-                if (e.PropertyName == "ManagedCertificates" || (e.PropertyName == "SelectedItem" &&
-                    _appViewModel.ManagedCertificates != null))
+                return scrollViewer;
+            }
+
+            for (var i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(obj); i++)
+            {
+                var child = System.Windows.Media.VisualTreeHelper.GetChild(obj, i);
+                var result = FindScrollViewer(child);
+                if (result != null)
                 {
-                    SetFilter(); // reset listeners when ManagedCertificates are reset
-                    _itemViewModel.RaisePropertyChangedEvent("SelectedItem");
-                    _itemViewModel.RaisePropertyChangedEvent("IsSelectedItemValid");
+                    return result;
                 }
-            });
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Handle scroll event to load more results when near bottom
+        /// </summary>
+        private async void ScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            var scrollViewer = sender as ScrollViewer;
+
+            if (scrollViewer == null)
+            {
+                return;
+            }
+
+            // Check if we're near the bottom (within 100 pixels)
+            var threshold = 100;
+            var scrollPosition = scrollViewer.VerticalOffset + scrollViewer.ViewportHeight;
+            var scrollHeight = scrollViewer.ExtentHeight;
+
+            if (scrollPosition >= scrollHeight - threshold && !_isLoadingMore && _hasMoreResults)
+            {
+                await LoadMoreResults();
+            }
+        }
+
+        /// <summary>
+        /// Load the next batch of results
+        /// </summary>
+        private async Task LoadMoreResults()
+        {
+            lock (_loadLock)
+            {
+                if (_isLoadingMore)
+                {
+                    return; // Already loading
+                }
+
+                _isLoadingMore = true;
+            }
+
+            try
+            {
+                _appViewModel.IsLoadingMore = true;
+
+                var previousCount = _appViewModel.ManagedCertificates?.Count ?? 0;
+
+                // Load next page of results
+                await _appViewModel.LoadNextManagedCertificatesPage();
+
+                var newCount = _appViewModel.ManagedCertificates?.Count ?? 0;
+
+                // If no new items were added, we've reached the end
+                _hasMoreResults = newCount > previousCount;
+            }
+            finally
+            {
+                _appViewModel.IsLoadingMore = false;
+                _isLoadingMore = false;
+            }
         }
 
         private void SetFilter()
         {
             Dispatcher.Invoke(() =>
-            {
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
-                {
-                    var filter = txtFilter.Text.Trim();
-                    var matchItem = item as Models.ManagedCertificate;
+                    {
+                        CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
+                 {
+                     var filter = txtFilter.Text.Trim();
+                     var matchItem = item as Models.ManagedCertificate;
 
-                    return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                     return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
 
-                            // match on a specific status filter
-                            (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
-                            (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
-                            (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
-                            (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
-                            (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
-                            (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
-                            // match on selected or primary domain options with domain containing keyword
-                            (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
-                            // match on requestconfig primary or san containing keyword
-                            (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
-                            (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
-                            // match on comments containing keyword
-                            (matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-                            // match on name containing keyword
-                            matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-                            // match on ID
-                            matchItem.Id == f
-                        );
-                };
+       // match on a specific status filter
+       (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
+          (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
+   (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
+ (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
+  (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
+     (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
+        // match on selected or primary domain options with domain containing keyword
+        (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+ // match on requestconfig primary or san containing keyword
+ (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
+           (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
+// match on comments containing keyword
+(matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+           // match on name containing keyword
+           matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
+// match on ID
+matchItem.Id == f
+   );
+                 };
 
-                //sort by name ascending
-                CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
+                        //sort by name ascending
+                        CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
 
-                if (_sortOrder == "NameAsc")
-                {
-                    CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                       new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
-                   );
-                }
+                        if (_sortOrder == "NameAsc")
+                        {
+                            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
+                               new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+                     );
+                        }
 
-                if (_sortOrder == "ExpiryDateAsc")
-                {
-                    CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                       new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
-                   );
-                }
-            });
+                        if (_sortOrder == "ExpiryDateAsc")
+                        {
+                            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
+                         new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
+               );
+                        }
+                    });
         }
 
         private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
@@ -186,21 +281,14 @@ namespace Certify.UI.Controls
 
             _appViewModel.FilterKeyword = txtFilter.Text;
 
+            // Reset for new search
+            _hasMoreResults = true;
+
             await _filterDebouncer.Debounce(_appViewModel.RefreshManagedCertificates);
 
             var defaultView = CollectionViewSource.GetDefaultView(lvManagedCertificates.ItemsSource);
 
             defaultView.Refresh();
-
-            /* if (lvManagedCertificates.SelectedIndex == -1 && _appViewModel.SelectedItem != null)
-             {
-                 // if the data model's selected item has come into view after filter box text
-                 // changed, select the item in the list
-                 if (defaultView.Filter(_appViewModel.SelectedItem))
-                 {
-                     lvManagedCertificates.SelectedItem = _appViewModel.SelectedItem;
-                 }
-             }*/
         }
 
         private async void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -238,6 +326,9 @@ namespace Certify.UI.Controls
 
             txtFilter.Text = "";
             txtFilter.Focus();
+
+            // Reset for new search
+            _hasMoreResults = true;
 
             if (lvManagedCertificates.SelectedItem != null)
             {
@@ -354,7 +445,7 @@ namespace Certify.UI.Controls
         private void lvManagedCertificates_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (_appViewModel.SelectedItem != null &&
-                !_appViewModel.ManagedCertificates.Contains(_appViewModel.SelectedItem))
+         !_appViewModel.ManagedCertificates.Contains(_appViewModel.SelectedItem))
             {
                 if (lvManagedCertificates.Items.Count == 0)
                 {
@@ -385,13 +476,13 @@ namespace Certify.UI.Controls
             if (window != null) // null in XAML designer
             {
                 KeyEventHandler p = (obj, args) =>
-                                   {
-                                       if (args.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
-                                       {
-                                           txtFilter.Focus();
-                                           txtFilter.SelectAll();
-                                       }
-                                   };
+                       {
+                           if (args.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
+                           {
+                               txtFilter.Focus();
+                               txtFilter.SelectAll();
+                           }
+                       };
 
                 window.KeyDown -= p;
                 window.KeyDown += p;
@@ -411,6 +502,7 @@ namespace Certify.UI.Controls
 
         private async void Refresh_Click(object sender, RoutedEventArgs e)
         {
+            _hasMoreResults = true;
             await _appViewModel.RefreshManagedCertificates();
         }
 
@@ -438,16 +530,6 @@ namespace Certify.UI.Controls
         {
             txtFilter.Text = filter;
         }
-
-        private async void Prev_Click(object sender, RoutedEventArgs e)
-        {
-            await _appViewModel.ManagedCertificatesPrevPage();
-        }
-
-        private async void Next_Click(object sender, RoutedEventArgs e)
-        {
-            await _appViewModel.ManagedCertificatesNextPage();
-        }
     }
 
     public static class StringExtensions
@@ -455,17 +537,17 @@ namespace Certify.UI.Controls
         // older .net doesn't have string.Contains  https://learn.microsoft.com/en-us/dotnet/api/system.string.contains?view=net-7.0
 
         public static bool Contains(this String str, String substring,
-                                    StringComparison comp)
+         StringComparison comp)
         {
             if (substring == null)
             {
                 throw new ArgumentNullException("substring",
-                                             "substring cannot be null.");
+                  "substring cannot be null.");
             }
             else if (!Enum.IsDefined(typeof(StringComparison), comp))
             {
                 throw new ArgumentException("comp is not a member of StringComparison",
-                                         "comp");
+              "comp");
             }
 
             return str.IndexOf(substring, comp) >= 0;
