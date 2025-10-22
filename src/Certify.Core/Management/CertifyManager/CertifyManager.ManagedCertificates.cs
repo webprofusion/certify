@@ -65,6 +65,11 @@ namespace Certify.Management
 
             list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
 
+            if (!string.IsNullOrWhiteSpace(filter.Health) && filter.Health.ToLower() != "nocertificate")
+            {
+                list = list.Where(c => c.Health.ToString().ToLower() == filter.Health.ToLower()).ToList();
+            }
+
             return list;
         }
 
@@ -201,6 +206,12 @@ namespace Certify.Management
                     list.ForEach(i => i.InstanceId = _serverConfig.HubAssignedInstanceId);
                     result.Results = list;
                 }
+            }
+
+            // filter on health where health matches an applicable health state
+            if (!string.IsNullOrWhiteSpace(filter.Health) && filter.Health.ToLower() != "nocertificate")
+            {
+                result.Results = result.Results.Where(c => c.Health.ToString().ToLower() == filter.Health.ToLower());
             }
 
             if (filter.PageSize > 0)

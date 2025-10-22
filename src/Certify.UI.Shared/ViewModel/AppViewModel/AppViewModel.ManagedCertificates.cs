@@ -93,10 +93,11 @@ namespace Certify.UI.ViewModel
         }
 
         int _filterPageIndex = 0;
-        int _filterPageSize = 15;
+        int _filterPageSize = 25;
 
         public string FilterKeyword { get; set; } = string.Empty;
 
+        public string FilterHealth { get; set; } = string.Empty;
         /// <summary>
         /// If true, more managed certificates are currently being loaded
         /// </summary>
@@ -108,6 +109,9 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public virtual async Task RefreshManagedCertificates()
         {
+            // Reset page index at the start of refresh to ensure we load from page 0
+            _filterPageIndex = 0;
+            
             var filter = new ManagedCertificateFilter();
 
             // include external managed certs if enabled
@@ -116,14 +120,12 @@ namespace Certify.UI.ViewModel
             filter.PageIndex = _filterPageIndex;
 
             filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
+            filter.Health = string.IsNullOrWhiteSpace(FilterHealth) ? null : FilterHealth;
 
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
             TotalManagedCertificates = result.TotalResults;
-
-            // Reset page index when refreshing
-            _filterPageIndex = 0;
         }
 
         /// <summary>
@@ -145,6 +147,7 @@ namespace Certify.UI.ViewModel
             filter.PageSize = _filterPageSize;
             filter.PageIndex = _filterPageIndex;
             filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
+            filter.Health = string.IsNullOrWhiteSpace(FilterHealth) ? null : FilterHealth;
 
             var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
 

@@ -1,4 +1,4 @@
-namespace Certify.Models
+﻿namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
@@ -24,6 +24,11 @@ namespace Certify.Models
 
         // optional keyword to filter name or domains
         public string? Keyword { get; set; }
+
+        /// <summary>
+        /// Filter by health status
+        /// </summary>
+        public string? Health { get; set; }
 
         // filter results to just those sites which will be included in the next auto renewal
         public bool IncludeOnlyNextAutoRenew { get; set; }

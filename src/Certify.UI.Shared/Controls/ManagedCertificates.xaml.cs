@@ -153,52 +153,32 @@ _appViewModel.ManagedCertificates != null))
         private void SetFilter()
         {
             Dispatcher.Invoke(() =>
-                    {
-                        CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).Filter = (item) =>
-                 {
-                     var filter = txtFilter.Text.Trim();
-                     var matchItem = item as Models.ManagedCertificate;
+            {
+                // Remove client-side filtering - all filtering is now done server-side via RefreshManagedCertificates
+                // The filter keyword is set in _appViewModel.FilterKeyword and passed to the database query
 
-                     return filter == "" || filter.Split(';').Where(f => f.Trim() != "").Any(f =>
+                var view = CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates);
 
-       // match on a specific status filter
-       (f == "[Status=Error]" && matchItem.Health == Models.ManagedCertificateHealth.Error) ||
-          (f == "[Status=OK]" && matchItem.Health == Models.ManagedCertificateHealth.OK) ||
-   (f == "[Status=Warning]" && matchItem.Health == Models.ManagedCertificateHealth.Warning) ||
- (f == "[Status=AwaitingUser]" && matchItem.Health == Models.ManagedCertificateHealth.AwaitingUser) ||
-  (f == "[Status=InvalidConfig]" && matchItem.DomainOptions?.Count(d => d.IsPrimaryDomain) > 1) ||
-     (f == "[Status=NoCertificate]" && matchItem.CertificatePath == null) ||
-        // match on selected or primary domain options with domain containing keyword
-        (matchItem.DomainOptions?.Any(d => (d.IsSelected || d.IsPrimaryDomain) && d.Domain.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
- // match on requestconfig primary or san containing keyword
- (matchItem.RequestConfig.SubjectAlternativeNames?.Any(d => d.Contains(f, StringComparison.InvariantCultureIgnoreCase)) ?? false) ||
-           (matchItem.RequestConfig.PrimaryDomain?.Contains(f, StringComparison.InvariantCultureIgnoreCase) ?? false) ||
-// match on comments containing keyword
-(matchItem.Comments ?? "").Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-           // match on name containing keyword
-           matchItem.Name.Contains(f, StringComparison.InvariantCultureIgnoreCase) ||
-// match on ID
-matchItem.Id == f
-   );
-                 };
+                // Clear any existing filter
+                view.Filter = null;
 
-                        //sort by name ascending
-                        CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Clear();
+                //sort by name ascending
+                view.SortDescriptions.Clear();
 
-                        if (_sortOrder == "NameAsc")
-                        {
-                            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                               new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+                if (_sortOrder == "NameAsc")
+                {
+                    view.SortDescriptions.Add(
+                         new System.ComponentModel.SortDescription("Name", System.ComponentModel.ListSortDirection.Ascending)
+           );
+                }
+
+                if (_sortOrder == "ExpiryDateAsc")
+                {
+                    view.SortDescriptions.Add(
+             new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
                      );
-                        }
-
-                        if (_sortOrder == "ExpiryDateAsc")
-                        {
-                            CollectionViewSource.GetDefaultView(_appViewModel.ManagedCertificates).SortDescriptions.Add(
-                         new System.ComponentModel.SortDescription("DateExpiry", System.ComponentModel.ListSortDirection.Ascending)
-               );
-                        }
-                    });
+                }
+            });
         }
 
         private async void ListViewItem_InteractionEvent(object sender, InputEventArgs e)
@@ -277,25 +257,33 @@ matchItem.Id == f
 
         private async void TxtFilter_TextChanged(object sender, TextChangedEventArgs e)
         {
-            // refresh db results, then refresh UI view
-
-            _appViewModel.FilterKeyword = txtFilter.Text;
+            // Set filter keyword which will be used in the next database query
+            var filterKeyword = txtFilter.Text.Trim();
+            string filterHealth = null;
+            if (filterKeyword.StartsWith("[Status="))
+            {
+                filterHealth = filterKeyword.Substring(filterKeyword.IndexOf("=")+1).TrimEnd(']').ToLower();
+                filterKeyword = null;
+            }
+            
+            _appViewModel.FilterKeyword = filterKeyword;
+            _appViewModel.FilterHealth = filterHealth;
 
             // Reset for new search
             _hasMoreResults = true;
 
+            // Refresh results from server with new filter
             await _filterDebouncer.Debounce(_appViewModel.RefreshManagedCertificates);
 
-            var defaultView = CollectionViewSource.GetDefaultView(lvManagedCertificates.ItemsSource);
-
-            defaultView.Refresh();
+            // No need to refresh the view as the collection is replaced entirely from the server
         }
 
         private async void TxtFilter_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            if (e.Key == Key.Escape || string.IsNullOrWhiteSpace(txtFilter.Text))
             {
                 ResetFilter();
+                return;
             }
 
             if (e.Key == Key.Enter || e.Key == Key.Down)
@@ -320,7 +308,7 @@ matchItem.Id == f
             }
         }
 
-        private void ResetFilter()
+        private async void ResetFilter()
         {
             _appViewModel.FilterKeyword = string.Empty;
 
@@ -329,6 +317,9 @@ matchItem.Id == f
 
             // Reset for new search
             _hasMoreResults = true;
+
+            // Reload all results from server when filter is cleared
+            await _appViewModel.RefreshManagedCertificates();
 
             if (lvManagedCertificates.SelectedItem != null)
             {
