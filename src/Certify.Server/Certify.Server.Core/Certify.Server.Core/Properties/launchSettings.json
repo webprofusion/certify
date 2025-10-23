@@ -9,8 +9,8 @@
         "CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET": "b83af1ea-ef84-4095-84aa-49df81e9ded6",
         "CERTIFY_MANAGEMENT_HUB": "https://localhost:44361",
         "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
-        "CERTIFY_SERVICE_AUTH_MODE": "none",
-        "CERTIFY_UPGRADE_SETTINGS": "true"
+        "CERTIFY_SERVICE_AUTH_MODE": "none"
+        //"CERTIFY_UPGRADE_SETTINGS": "true"
       }
     },
     "Certify.Server.Core (windows auth)": {
@@ -18,8 +18,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9696",
-        "CERTIFY_SERVICE_AUTH_MODE": "windows",
-        "CERTIFY_UPGRADE_SETTINGS": "true"
+        "CERTIFY_SERVICE_AUTH_MODE": "windows"
+        //"CERTIFY_UPGRADE_SETTINGS": "true"
       }
     },
     "IIS Express": {
