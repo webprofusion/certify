@@ -6,6 +6,7 @@
     <TestAdaptersPaths>%SystemDrive%\%HOMEPATH%\.nuget\packages\microsoft.codecoverage\17.8.0\build\netstandard2.0</TestAdaptersPaths>
     <ResultsDirectory>.\TestResults-windows</ResultsDirectory>
     <CollectSourceInformation>true</CollectSourceInformation>
+      
   </RunConfiguration>
   <!-- Configurations for data collectors -->
   <DataCollectionRunSettings>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net10.0;</TargetFrameworks>
-        <Configurations>Debug;Release</Configurations>
+        <Configurations>Debug;</Configurations>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>latest</LangVersion>
         <OutputType>Library</OutputType>
@@ -12,8 +12,6 @@
         <FileAlignment>512</FileAlignment>
         <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
 
-        <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-        <ReferencePath>$(ProgramFiles)\Common Files\microsoft shared\VSTT\$(VisualStudioVersion)\UITestExtensionPackages</ReferencePath>
         <IsCodedUITest>False</IsCodedUITest>
         <TestProjectType>UnitTest</TestProjectType>
 
@@ -21,8 +19,7 @@
         <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
         <ProjectGuid>{C0534CD8-10E9-438D-B9A1-A8C09A6BB964}</ProjectGuid>
         <NoWarn>1701;1702;NU1701</NoWarn>
-        <EnableMSTestRunner>true</EnableMSTestRunner>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
         <DebugSymbols>true</DebugSymbols>
@@ -49,7 +46,7 @@
         <Configuration Condition="'$(OS)|$(Configuration)' == 'UNIX|Debug'"></Configuration>
         <DebugType>portable</DebugType>
     </PropertyGroup>
-    <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
+
 
     <PropertyGroup Condition="'$(OS)'=='WINDOWS_NT'">
         <RunSettingsFilePath>$(MSBuildThisFileDirectory)\unit-test.runsettings</RunSettingsFilePath>
@@ -58,15 +55,21 @@
         <RunSettingsFilePath>$(MSBuildThisFileDirectory)\unit-test-linux.runsettings</RunSettingsFilePath>
     </PropertyGroup>
     <ItemGroup>
+      <None Remove="Assets\dummycert_rsa.pfx" />
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="Assets\dummycert_rsa.pfx">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
         <Content Include="Assets\Powershell\Simple.ps1">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <None Include="Assets\dummycert.pfx">
+        <Content Include="Assets\dummycert.pfx">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-        <None Include="Assets\badcert.pfx">
+        </Content>
+        <Content Include="Assets\badcert.pfx">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+        </Content>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\Postgres\Plugin.Datastore.Postgres.csproj" />

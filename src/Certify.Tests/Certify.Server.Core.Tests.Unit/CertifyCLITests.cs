@@ -16,6 +16,7 @@ namespace Certify.Server.Core.Tests.Unit
         private async Task<Command> StartCertifyService()
         {
             var certifyService = Command.Run(_serviceExePath);
+           
             await Task.Delay(3000); // Wait for service to start
             return certifyService;
         }
