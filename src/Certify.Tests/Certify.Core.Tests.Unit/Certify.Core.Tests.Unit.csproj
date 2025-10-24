@@ -1,45 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>net10.0;</TargetFrameworks>
-        <Configurations>Debug;</Configurations>
-        <Platforms>AnyCPU</Platforms>
+        <TargetFramework>net10.0</TargetFramework>
         <LangVersion>latest</LangVersion>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Certify.Core.Tests.Unit</RootNamespace>
-        <AssemblyName>Certify.Core.Tests.Unit</AssemblyName>
-
-        <FileAlignment>512</FileAlignment>
-        <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-
-        <IsCodedUITest>False</IsCodedUITest>
-        <TestProjectType>UnitTest</TestProjectType>
-
-        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-        <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-        <ProjectGuid>{C0534CD8-10E9-438D-B9A1-A8C09A6BB964}</ProjectGuid>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
         <NoWarn>1701;1702;NU1701</NoWarn>
-    
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <PlatformTarget>AnyCPU</PlatformTarget>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-        <PlatformTarget>AnyCPU</PlatformTarget>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -54,12 +22,10 @@
     <PropertyGroup Condition="'$(OS)'=='UNIX'">
         <RunSettingsFilePath>$(MSBuildThisFileDirectory)\unit-test-linux.runsettings</RunSettingsFilePath>
     </PropertyGroup>
-    <ItemGroup>
-      <None Remove="Assets\dummycert_rsa.pfx" />
-    </ItemGroup>
+
     <ItemGroup>
         <Content Include="Assets\dummycert_rsa.pfx">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Content Include="Assets\Powershell\Simple.ps1">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -104,13 +70,6 @@
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
         <PackageReference Include="Testcontainers" Version="4.8.1" />
         <PackageReference Include="Npgsql" Version="9.0.4" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="app.config" />
-    </ItemGroup>
-    <ItemGroup>
-        <Folder Include="Properties\" />
     </ItemGroup>
 
 </Project>
