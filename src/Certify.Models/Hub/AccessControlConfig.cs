@@ -39,6 +39,7 @@ namespace Certify.Models.Hub
                 StandardPolicies.ManagementHubReader,
                 StandardPolicies.ManagedItemAdmin,
                 StandardPolicies.StoredCredentialAdmin,
+                StandardPolicies.CertificateConsumer,
                 StandardPolicies.SystemUser
                     ]);
         public static Role HubViewer { get; } = new Role("hub_viewer_role", "Hub Viewer", "Can view all hub managed certificates and summary information",
@@ -50,7 +51,7 @@ namespace Certify.Models.Hub
         public static Role CertificateConsumer { get; } = new Role("cert_consumer_role", "Certificate Consumer", "User of a given certificate", policies: [StandardPolicies.CertificateConsumer]);
 
         public static Role StoredCredentialConsumer { get; } = new Role("storedcredential_consumer_role", "Stored Credential Fetch Consumer", "Can fetch a decrypted stored credential", policies: [StandardPolicies.StoredCredentialConsumer]);
-
+        public static Role ManagedChallengeAdmin { get; } = new Role("managedchallenge_admin_role", "Managed Challenge Admin", "Can administer managed challenge configurations", policies: [StandardPolicies.ManagedChallengeAdmin]);
         public static Role ManagedChallengeConsumer { get; } = new Role("managedchallenge_consumer_role", "Managed Challenge Consumer", "Can perform specific managed challenges", policies: [StandardPolicies.ManagedChallengeConsumer]);
 
         public static Role ManagedInstance { get; } = new Role("managedinstance_role", "Hub Managed Instance", "Can join the hub and be managed via the hub.", policies: [StandardPolicies.ManagedInstance]);
@@ -243,6 +244,7 @@ namespace Certify.Models.Hub
                 StandardRoles.CertificateManager,
                 StandardRoles.CertificateConsumer,
                 StandardRoles.StoredCredentialConsumer,
+                StandardRoles.ManagedChallengeAdmin,
                 StandardRoles.ManagedChallengeConsumer,
                 StandardRoles.ManagedAcmeConsumer,
                 StandardRoles.HubViewer,
