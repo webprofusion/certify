@@ -139,7 +139,7 @@ namespace Certify.Server.Hub.Api.Services
             managedCert.RequestConfig.Challenges =
             [
                 new() {
-                    ChallengeProvider = "managed" ,
+                    ChallengeProvider = "ManagedAcme" ,
                     ChallengeType = "dns-01",
                 }
             ];

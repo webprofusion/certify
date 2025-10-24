@@ -1,14 +1,16 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
@@ -199,6 +201,11 @@ namespace Certify.Management
                     PluginManager.PLUGINS_SERVER_PROVIDERS,
                     PluginManager.PLUGINS_DATASTORE_PROVIDERS
                 });
+
+                if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
+                {
+                  _pluginManager.DnsProviderProviders.Add(new ManagedDnsChallengeAuto());
+                }
             }
 
             // setup supported target server types for default deployment

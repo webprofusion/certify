@@ -678,7 +678,8 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetChallengeProviders)
             {
-                val = await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
+                var providers = await Core.Management.Challenges.ChallengeProviders.GetChallengeAPIProviders();
+                val = providers;
             }
 
             else if (arg.CommandType == ManagementHubCommands.GetDnsZones)

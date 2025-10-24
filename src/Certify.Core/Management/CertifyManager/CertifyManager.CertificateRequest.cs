@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -927,9 +928,9 @@ namespace Certify.Management
 
             if (!validationFailed)
             {
-                if (managedCertificate.RequestConfig.Challenges.Any(c => c.ChallengeProvider == "managed") && string.IsNullOrEmpty(managedCertificate.RequestConfig.CustomCSR))
+                if (managedCertificate.RequestConfig.Challenges.Any(c => c.ChallengeProvider == "ManagedAcme") && string.IsNullOrEmpty(managedCertificate.RequestConfig.CustomCSR))
                 {
-                    // pause order here so CME proxy can fianlize using custom csr
+                    // pause order here so CME proxy can finalize using custom csr
                     managedCertificate.LastRenewalStatus = RequestState.Paused;
                     ReportProgress(progress, new RequestProgressState(RequestState.Paused, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
@@ -1319,7 +1320,7 @@ namespace Certify.Management
 
                         var serverProvider = GetTargetServerProvider(managedCertificate);
 
-                        if (challengeConfig.ChallengeProvider == "managed")
+                        if (challengeConfig.ChallengeProvider == "ManagedAcme" || challengeConfig.ChallengeProvider == "DNS01.ManagedChallengeHub")
                         {
                             // attempt to complete challenge using internal managed challenge provider
                             var request = new Models.Hub.ManagedChallengeRequest

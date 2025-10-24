@@ -5,11 +5,67 @@ using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
 {
+
+    public class ManagedDnsChallengeAuto : IDnsProvider, IDnsProviderProviderPlugin
+    {
+        int IDnsProvider.PropagationDelaySeconds => Definition.PropagationDelaySeconds;
+
+        string IDnsProvider.ProviderId => Definition.Id;
+
+        string IDnsProvider.ProviderTitle => Definition.Title;
+
+        string IDnsProvider.ProviderDescription => Definition.Description;
+
+        string IDnsProvider.ProviderHelpUrl => Definition.HelpUrl;
+
+        bool IDnsProvider.IsTestModeSupported => Definition.IsTestModeSupported;
+
+        List<ProviderParameter> IDnsProvider.ProviderParameters => Definition.ProviderParameters;
+
+        private ILog _log;
+
+        public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
+        {
+            Id = "DNS01.ManagedChallengeHub",
+            Title = "(Use Managed Challenge)",
+            Description = "Use the currently defined Managed Challenges for automated DNS challenge responses.",
+            ProviderParameters = [],
+            HelpUrl = "https://docs.certifytheweb.com/",
+            PropagationDelaySeconds = 60,
+            IsTestModeSupported = false,
+            ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+            HandlerType = ChallengeHandlerType.INTERNAL
+        };
+
+        public ManagedDnsChallengeAuto()
+        {
+        }
+
+        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null) => Task.FromResult(true);
+        public Task<ActionResult> Test() => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });
+        public Task<ActionResult> CreateRecord(DnsRecord request) => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });
+        public Task<ActionResult> DeleteRecord(DnsRecord request) => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });
+        public Task<List<DnsZone>> GetZones()
+        {
+            return Task.FromResult(new List<DnsZone>());
+        }
+
+        public List<ChallengeProviderDefinition> GetProviders(Type pluginType)
+        {
+            return new List<ChallengeProviderDefinition> { Definition };
+        }
+        public IDnsProvider GetProvider(Type pluginType, string id)
+        {
+            return new ManagedDnsChallengeAuto();
+        }
+    }
+
     public struct DnsChallengeHelperResult
     {
         public DnsChallengeHelperResult(ActionResult result)
