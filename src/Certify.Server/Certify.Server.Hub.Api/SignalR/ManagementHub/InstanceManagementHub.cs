@@ -70,7 +70,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns></returns>
         public async override Task OnConnectedAsync()
         {
-            _logger?.LogInformation("InstanceManagementHub: Remote instance connected to instance management hub..");
+            _logger?.LogDebug("InstanceManagementHub: Remote instance connected to management hub..");
 
             // validate jwt passed by joining instance
             var isAuthenticated = false;
@@ -310,7 +310,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 // update our cached instance info
                 _stateProvider.UpdateInstanceConnectionInfo(Context?.ConnectionId ?? _localInstanceId, instanceInfo);
 
-                _logger?.LogInformation("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
+                _logger?.LogDebug("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
 
                 // TODO: update our stored instance info for this instance
                 await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
@@ -352,7 +352,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instanceId != null)
             {
                 // action this message from this instance
-                _logger?.LogInformation("Received instance message {msg}", message);
+                _logger?.LogDebug("Received instance message {msg}", message);
             }
             else
             {

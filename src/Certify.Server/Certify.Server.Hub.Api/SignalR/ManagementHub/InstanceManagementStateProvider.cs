@@ -143,7 +143,29 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="summary"></param>
         public void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary)
         {
+            if (summary == null)
+            {
+                // we don't store null summary updates, keep latest if any
+                return;
+            }
+
             _managedInstanceStatusSummary.AddOrUpdate(instanceId, summary, (i, oldValue) => summary);
+
+            // Cleanup any mismatched entries where the key doesn't match the summary's InstanceId, these can appear if instance id was temporary while verifying connection
+            var keysToRemove = _managedInstanceStatusSummary
+                .Where(kvp => kvp.Key != kvp.Value.InstanceId)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            if (keysToRemove.Count > 0)
+            {
+                _logger.LogInformation("Cleaning up {count} mismatched managed instance status summary entries.", keysToRemove.Count);
+            }
+
+            foreach (var key in keysToRemove)
+            {
+                _managedInstanceStatusSummary.TryRemove(key, out _);
+            }
         }
 
         /// <summary>

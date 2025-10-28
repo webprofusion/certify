@@ -273,9 +273,10 @@ namespace Certify.Server.Hub.Api.Services
             var allSummary = _mgmtStateProvider.GetManagedInstanceStatusSummaries();
             var sum = new StatusSummary();
 
-            foreach (var item in allSummary)
+            // summarize info for each instance, skipping temporary instance reports from initial connections etc
+            foreach (var item in allSummary.Where(i=>i.Value != null && i.Key == i.Value.InstanceId))
             {
-                if (item.Value != null)
+                if (item.Value != null && item.Key == item.Value.InstanceId)
                 {
                     sum.Total += item.Value.Total;
                     sum.Error += item.Value.Error;
