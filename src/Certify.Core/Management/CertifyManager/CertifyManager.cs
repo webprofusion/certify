@@ -200,7 +200,7 @@ namespace Certify.Management
                     PluginManager.PLUGINS_DNS_PROVIDERS,
                     PluginManager.PLUGINS_SERVER_PROVIDERS,
                     PluginManager.PLUGINS_DATASTORE_PROVIDERS
-                });
+                }, usePluginSubfolder:false);
 
                 if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
                 {
