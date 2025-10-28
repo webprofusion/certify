@@ -53,7 +53,7 @@ namespace Certify.Server.Hub.Api.Services
         private void DoWork(object? state)
         {
             var instances = _stateProvider.GetConnectedInstances();
-            _logger.LogInformation("{svc} connected instances: {count}", _serviceName, instances.Count());
+            _logger.LogDebug("{svc} connected instances: {count}", _serviceName, instances.Count());
 
             foreach (var instance in instances)
             {
