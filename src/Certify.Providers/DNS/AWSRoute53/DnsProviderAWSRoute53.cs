@@ -164,13 +164,6 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                     );
 
-                if (response.ResourceRecordSets == null)
-                {
-                    var msg = $"Route53 :: Create Record : No record sets returned using ListResourceRecordSetsAsync. Check credentials have ListResourceRecordSet permissions ";
-                    _log?.Warning(msg);
-                    return new ActionResult { IsSuccess = false, Message = $"Dns Record Create/Update: {msg}" };
-                }
-                
                 var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => (string.Equals(r.Name, request.RecordName, StringComparison.OrdinalIgnoreCase) || string.Equals(r.Name, request.RecordName + ".")) && r.Type.Value.ToUpper() == "TXT");
 
                 if (targetRecordSet != null)
@@ -237,7 +230,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                 );
 
-                var targetRecordSet = response.ResourceRecordSets.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
+                var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
 
                 if (targetRecordSet != null)
                 {
