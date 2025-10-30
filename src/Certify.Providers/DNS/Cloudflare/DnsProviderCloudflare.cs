@@ -124,8 +124,9 @@ namespace Certify.Providers.DNS.Cloudflare
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderCloudflare()
+        public DnsProviderCloudflare(IHttpClientProvider clientProvider = null)
         {
+            _client = clientProvider?.CreateClient() ?? new HttpClient();
         }
 
         public async Task<ActionResult> Test()
@@ -425,8 +426,11 @@ namespace Certify.Providers.DNS.Cloudflare
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
         {
             _log = log;
-
-            _client = new HttpClient();
+            // Use client created in constructor if it was already set (from DI)
+            if (_client == null)
+            {
+                _client = new HttpClient();
+            }
 
             var credentialError = $"{ProviderTitle} requires either an API Token or an Email Address + AuthKey";
 

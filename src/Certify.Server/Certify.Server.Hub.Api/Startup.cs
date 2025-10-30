@@ -7,6 +7,8 @@ using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
+using Certify.Shared.Core.Utils;
+using Certify.Shared.Net;
 using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -85,6 +87,22 @@ namespace Certify.Server.Hub.Api
             services.AddOpenApi(); // required in net9 to resolve warning "Unable to find service type 'Microsoft.Extensions.ApiDescriptions.IDocumentProvider' in dependency injection container."
 
             services.AddEndpointsApiExplorer();
+
+            // Register proxy provider and HTTP client provider
+            services.AddSingleton<IProxyProvider>(sp =>
+            {
+                return new ProxyProvider(() =>
+                {
+                    // For Hub API, default to environment proxy since it doesn't have direct access to CoreAppSettings
+                    return new Certify.Models.Preferences
+                    {
+                        ProxyMode = Certify.Models.ProxyMode.Environment,
+                        ProxyEnabled = true
+                    };
+                });
+            });
+
+            services.AddSingleton<Certify.Models.Providers.IHttpClientProvider, HttpClientProvider>();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             // https://docs.microsoft.com/en-us/aspnet/core/tutorials/getting-started-with-swashbuckle?view=aspnetcore-3.1&tabs=visual-studio

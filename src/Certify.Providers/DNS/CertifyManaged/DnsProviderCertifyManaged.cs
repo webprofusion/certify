@@ -45,23 +45,27 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
         }
 
-        public DnsProviderCertifyManaged() : base()
+        public DnsProviderCertifyManaged(IHttpClientProvider clientProvider = null) : base()
         {
-
 #if DEBUG
-            // allow invalid TLS
-            var handler = new HttpClientHandler();
-            handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-            handler.ServerCertificateCustomValidationCallback =
-                (httpRequestMessage, cert, cetChain, policyErrors) =>
-                {
-                    return true;
-                };
-            _client = new HttpClient(handler);
-
+            if (clientProvider != null)
+            {
+                _client = clientProvider.CreateClient();
+            }
+            else
+            {
+                // allow invalid TLS
+                var handler = new HttpClientHandler();
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                handler.ServerCertificateCustomValidationCallback =
+                    (httpRequestMessage, cert, cetChain, policyErrors) =>
+                    {
+                        return true;
+                    };
+                _client = new HttpClient(handler);
+            }
 #else
-            _client = new HttpClient();
-
+            _client = clientProvider?.CreateClient() ?? new HttpClient();
 #endif
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyManaged");
 

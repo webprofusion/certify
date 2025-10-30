@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -148,6 +148,9 @@ namespace Certify.Providers.ACME.Anvil
             {
                 httpHandler.ServerCertificateCustomValidationCallback = (message, certificate, chain, sslPolicyErrors) => true;
             }
+
+            // Apply proxy configuration from environment if configured
+            Certify.Shared.Net.ProxyHelper.ApplyProxyIfConfigured(httpHandler);
 
             _loggingHandler = new LoggingHandler(httpHandler, _log, maxRequestsPerSecond: 2);
             var customHttpClient = new System.Net.Http.HttpClient(_loggingHandler);

@@ -251,6 +251,22 @@ var acmeServerState = new AcmeServerConfig(acmeStore, "acme-server");
 builder.Services.AddSingleton<AcmeServerConfig>(acmeServerState);
 builder.Services.AddAcmeServices();
 
+// Register proxy provider and HTTP client provider
+builder.Services.AddSingleton<Certify.Shared.Net.IProxyProvider>(sp =>
+{
+    return new Certify.Shared.Net.ProxyProvider(() =>
+    {
+        // For Hub Service, default to environment proxy
+        return new Certify.Models.Preferences
+        {
+            ProxyMode = Certify.Models.ProxyMode.Environment,
+            ProxyEnabled = true
+        };
+    });
+});
+
+builder.Services.AddSingleton<Certify.Models.Providers.IHttpClientProvider, Certify.Shared.Net.HttpClientProvider>();
+
 // setup public/hub api
 builder.Services.AddSingleton<Certify.Management.ICertifyManager, Certify.Management.CertifyManager>();
 

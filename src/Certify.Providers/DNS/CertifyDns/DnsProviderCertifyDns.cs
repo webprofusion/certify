@@ -67,13 +67,13 @@ namespace Certify.Providers.DNS.CertifyDns
             }
         }
 
-        public DnsProviderCertifyDns() : base()
+        public DnsProviderCertifyDns(IHttpClientProvider clientProvider = null) : base()
         {
             EnableExtensions = true;
 
             _settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 
-            _client = new HttpClient();
+            _client = clientProvider?.CreateClient() ?? new HttpClient();
             _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyDns");
 
             _serializerSettings = new JsonSerializerSettings

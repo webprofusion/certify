@@ -20,6 +20,26 @@ namespace Certify.Models
         FullCleanup = 3
     }
 
+    public enum ProxyMode
+    {
+        /// <summary>
+        /// No proxy configured
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Use system default proxy settings
+        /// </summary>
+        System = 1,
+        /// <summary>
+        /// Use environment variables (HTTP_PROXY, HTTPS_PROXY, NO_PROXY)
+        /// </summary>
+        Environment = 2,
+        /// <summary>
+        /// Use custom proxy configuration
+        /// </summary>
+        Custom = 3
+    }
+
     public static class RenewalIntervalModes
     {
         /// <summary>
@@ -142,6 +162,41 @@ namespace Certify.Models
         /// Preferences for external certificate managers (enable/disable, config/log paths)
         /// </summary>
         public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
+
+        /// <summary>
+        /// If true, proxy configuration is enabled for outbound HTTP requests
+        /// </summary>
+        public bool ProxyEnabled { get; set; }
+
+        /// <summary>
+        /// Proxy mode: None, System, Environment, or Custom
+        /// </summary>
+        public ProxyMode ProxyMode { get; set; } = ProxyMode.None;
+
+        /// <summary>
+        /// Custom proxy URI (e.g., http://proxy.example.com:8080)
+        /// </summary>
+        public string? ProxyUri { get; set; }
+
+        /// <summary>
+        /// If true, bypass proxy for local addresses
+        /// </summary>
+        public bool ProxyBypassOnLocal { get; set; } = true;
+
+        /// <summary>
+        /// Comma-separated list of addresses to bypass proxy (e.g., localhost,127.0.0.1,*.local)
+        /// </summary>
+        public string? ProxyBypassList { get; set; }
+
+        /// <summary>
+        /// If true, use default network credentials for proxy authentication
+        /// </summary>
+        public bool ProxyUseDefaultCredentials { get; set; }
+
+        /// <summary>
+        /// Storage key for proxy credentials (references a StoredCredential)
+        /// </summary>
+        public string? ProxyCredentialKey { get; set; }
     }
 
     public static class FeatureFlags

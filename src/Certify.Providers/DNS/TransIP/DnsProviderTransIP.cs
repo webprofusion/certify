@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,6 +6,7 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Plugins;
+using System.Net.Http;
 
 namespace Certify.Providers.DNS.TransIP
 {
@@ -21,6 +22,7 @@ namespace Certify.Providers.DNS.TransIP
         private DnsClient _dnsClient;
         private string _login;
         private string _privateKey;
+        private HttpClient _httpClient;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => _customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds;
@@ -60,8 +62,9 @@ namespace Certify.Providers.DNS.TransIP
             }
         }
 
-        public DnsProviderTransIP()
+        public DnsProviderTransIP(IHttpClientProvider clientProvider = null)
         {
+            _httpClient = clientProvider?.CreateClient() ?? new HttpClient();
         }
 
         public async Task<ActionResult> Test()
@@ -144,7 +147,8 @@ namespace Certify.Providers.DNS.TransIP
                 }
             }
 
-            _dnsClient = new DnsClient(_login, _privateKey, PropagationDelaySeconds + 60);
+            // Always (re-)initialize DnsClient with the appropriate HttpClient
+            _dnsClient = new DnsClient(_login, _privateKey, PropagationDelaySeconds + 60, _httpClient);
 
             return await Task.FromResult(true);
         }
