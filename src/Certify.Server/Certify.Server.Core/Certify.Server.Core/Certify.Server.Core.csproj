@@ -23,7 +23,6 @@
 
         <!-- only include swashbuckle in debug build -->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Swashbuckle.AspNetCore" Version="9.0.6" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.2.25502.107" />
 
     </ItemGroup>
     <ItemGroup>

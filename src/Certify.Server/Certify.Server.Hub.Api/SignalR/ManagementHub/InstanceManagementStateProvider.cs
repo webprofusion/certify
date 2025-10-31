@@ -258,7 +258,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             if (cmdResult == null)
             {
-                _logger.LogError("[ConsumeAwaitedCommandResult] Gave up waiting for command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
+                _logger.LogDebug("[ConsumeAwaitedCommandResult] Gave up waiting for command result {commandId} {cmdType}..", cmd.CommandId, cmd.CommandType);
             }
             else
             {

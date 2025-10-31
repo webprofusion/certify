@@ -42,8 +42,7 @@ namespace Certify.Server.Core.Tests.Unit
                 var result = await cliCommand.Task;
 
                 Assert.AreEqual(0, result.ExitCode, "CLI version command should succeed");
-                Assert.IsTrue(result.StandardOutput.Contains("Certify Certificate Manager"),
-                    "Version output should contain product name");
+                Assert.Contains("Certify Certificate Manager", result.StandardOutput, "Version output should contain product name");
             }
             finally
             {
@@ -130,8 +129,7 @@ namespace Certify.Server.Core.Tests.Unit
                 Assert.AreEqual(0, result.ExitCode, "CLI list command should succeed");
 
                 // Output might be table format, just check it's not empty
-                Assert.IsTrue(result.StandardOutput.Length > 0,
-                    "List command should produce output");
+                Assert.IsGreaterThan(0, result.StandardOutput.Length, "List command should produce output");
             }
             finally
             {
@@ -147,8 +145,7 @@ namespace Certify.Server.Core.Tests.Unit
             var result = await cliCommand.Task;
 
             Assert.AreEqual(0, result.ExitCode, "CLI help command should succeed");
-            Assert.IsTrue(result.StandardOutput.Contains("Usage: certify"),
-                "Help output should contain usage information");
+            Assert.Contains("Usage: certify", result.StandardOutput, "Help output should contain usage information");
         }
 
         [TestMethod, Description("Test CLI service not available error")]
@@ -159,8 +156,7 @@ namespace Certify.Server.Core.Tests.Unit
             var result = await cliCommand.Task;
 
             Assert.AreEqual(-1, result.ExitCode, "CLI should return error code when service unavailable");
-            Assert.IsTrue(result.StandardOutput.Contains("service not started"),
-                "Error message should indicate service not started");
+            Assert.Contains("service not started", result.StandardOutput, "Error message should indicate service not started");
         }
     }
 }

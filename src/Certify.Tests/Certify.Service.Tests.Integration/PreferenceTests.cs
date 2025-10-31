@@ -26,7 +26,7 @@ namespace Certify.Service.Tests.Integration
             Assert.IsTrue(result, "Prefs updates");
 
             prefs = await _client.GetPreferences();
-            Assert.IsTrue(prefs.MaxRenewalRequests == 69, "Pref value updated and confirmed");
+            Assert.AreEqual(69, prefs.MaxRenewalRequests, "Pref value updated and confirmed");
 
             prefs.MaxRenewalRequests = 14;
             await _client.SetPreferences(prefs);

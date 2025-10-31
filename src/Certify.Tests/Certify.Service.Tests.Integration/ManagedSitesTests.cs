@@ -27,7 +27,7 @@ namespace Certify.Service.Tests.Integration
             var filter = new ManagedCertificateFilter { MaxResults = 10 };
             var results = await _client.GetManagedCertificates(filter);
 
-            Assert.IsTrue(results.Count > 0, "Got one or more managed sites");
+            Assert.IsNotEmpty(results, "Got one or more managed sites");
 
             //attempt to get single item
             var site = await _client.GetManagedCertificate(results[0].Id);

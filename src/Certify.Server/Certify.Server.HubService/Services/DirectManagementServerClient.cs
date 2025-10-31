@@ -1,4 +1,6 @@
-﻿using Certify.Management;
+﻿#pragma warning disable CS0067 // Event is never used
+
+using Certify.Management;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 
@@ -98,14 +100,18 @@ namespace Certify.Server.HubService.Services
         }
 
         /// <summary>
-        /// 
+        /// Sets the joining token for the instance.
         /// </summary>
-        /// <param name="joiningToken"></param>
+        /// <param name="joiningToken">The joining token.</param>
         public void SetJoiningToken(string joiningToken)
         {
             _joiningToken = joiningToken;
         }
 
+        /// <summary>
+        /// Updates the cached instance information.
+        /// </summary>
+        /// <param name="instanceInfo">The updated instance information.</param>
         public void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo)
         {
 
@@ -113,3 +119,5 @@ namespace Certify.Server.HubService.Services
         }
     }
 }
+
+#pragma warning restore CS0067

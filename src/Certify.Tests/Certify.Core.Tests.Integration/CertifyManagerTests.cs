@@ -202,8 +202,8 @@ namespace Certify.Core.Tests
             foreach (var step in performImportRes)
             {
                 Assert.AreEqual("Import", step.Category, $"Unexpected Category value in step '{step.Title}' from response of CertifyManager.PerformImport()");
-                Assert.IsTrue(!string.IsNullOrEmpty(step.Title), $"Unexpected Title value in step '{step.Title}' from response of CertifyManager.PerformImport()");
-                Assert.IsTrue(!string.IsNullOrEmpty(step.Key), $"Unexpected Key value in step '{step.Title}' from response of CertifyManager.PerformImport()");
+                Assert.IsFalse(string.IsNullOrEmpty(step.Title), $"Unexpected Title value in step '{step.Title}' from response of CertifyManager.PerformImport()");
+                Assert.IsFalse(string.IsNullOrEmpty(step.Key), $"Unexpected Key value in step '{step.Title}' from response of CertifyManager.PerformImport()");
                 Assert.IsFalse(step.HasError, $"Unexpected HasError value in step '{step.Title}' from response of CertifyManager.PerformImport()");
                 Assert.IsFalse(step.HasWarning, $"Unexpected HasWarning value in step '{step.Title}' from response of CertifyManager.PerformImport()");
             }

@@ -20,7 +20,6 @@
 
         <!-- included to prevent conflict with older versions in plugins-->
         <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
-        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.0-rc.2.25502.107" />
     </ItemGroup>
 
     <ItemGroup>

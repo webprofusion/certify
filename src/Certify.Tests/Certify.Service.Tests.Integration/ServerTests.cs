@@ -29,7 +29,7 @@ namespace Certify.Service.Tests.Integration
 
             Assert.IsNotNull(result, "Server Site List returned");
 
-            Assert.IsTrue(result.Count > 0, "Has one or more results");
+            Assert.IsNotEmpty(result, "Has one or more results");
         }
 
         [TestMethod]
@@ -43,7 +43,7 @@ namespace Certify.Service.Tests.Integration
 
             Assert.IsNotNull(result, "Domain Options List returned");
 
-            Assert.IsTrue(result.Count > 0, "Has one or more results");
+            Assert.IsNotEmpty(result, "Has one or more results");
         }
     }
 }
