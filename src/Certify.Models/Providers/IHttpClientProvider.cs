@@ -14,6 +14,12 @@ namespace Certify.Models.Providers
         HttpClient CreateClient();
 
         /// <summary>
+        /// Create an HttpClient configured with proxy settings for external/internet requests
+        /// </summary>
+        /// <param name="userAgent">Optional user agent string to set on the client</param>
+        HttpClient CreateClient(string? userAgent = null, bool allowInvalidTls = false);
+
+        /// <summary>
         /// Create an HttpClient without proxy for service-to-service communication
         /// </summary>
         HttpClient CreateInternalClient();
@@ -21,7 +27,7 @@ namespace Certify.Models.Providers
         /// <summary>
         /// Create an HttpMessageHandler configured with proxy settings
         /// </summary>
-        HttpMessageHandler CreateHandler();
+        HttpMessageHandler CreateHandler(bool allowInvalidTls = false);
 
         /// <summary>
         /// Create an HttpMessageHandler without proxy

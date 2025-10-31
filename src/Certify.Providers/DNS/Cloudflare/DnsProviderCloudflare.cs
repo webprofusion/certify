@@ -72,7 +72,7 @@ namespace Certify.Providers.DNS.Cloudflare
     /// <remarks> 
     /// See <see cref="https://api.cloudflare.com/#getting-started-endpoints" /> for more details.
     /// </remarks>
-    public class DnsProviderCloudflare : IDnsProvider
+    public class DnsProviderCloudflare : IDnsProvider, IDisposable
     {
         private ILog _log;
 
@@ -124,9 +124,8 @@ namespace Certify.Providers.DNS.Cloudflare
             HandlerType = ChallengeHandlerType.INTERNAL
         };
 
-        public DnsProviderCloudflare(IHttpClientProvider clientProvider = null)
+        public DnsProviderCloudflare()
         {
-            _client = clientProvider?.CreateClient() ?? new HttpClient();
         }
 
         public async Task<ActionResult> Test()
@@ -423,14 +422,11 @@ namespace Certify.Providers.DNS.Cloudflare
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
-            // Use client created in constructor if it was already set (from DI)
-            if (_client == null)
-            {
-                _client = new HttpClient();
-            }
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             var credentialError = $"{ProviderTitle} requires either an API Token or an Email Address + AuthKey";
 
@@ -457,6 +453,11 @@ namespace Certify.Providers.DNS.Cloudflare
             }
 
             return await Task.FromResult(true);
+        }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
         }
     }
 }

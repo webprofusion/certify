@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Certify.Datastore.SQLite;
 using Certify.Models.Providers;
+using Certify.Shared.Net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Core.Tests.DNS
@@ -51,7 +52,7 @@ namespace Certify.Core.Tests.DNS
             _credentials = await credentialsManager.GetUnlockedCredentialsDictionary(_credStorageKey);
 
             _provider = new Providers.DNS.Cloudflare.DnsProviderCloudflare();
-            await _provider.InitProvider(_credentials, new Dictionary<string, string> { });
+            await _provider.InitProvider(_credentials, [], new HttpClientProvider(new ProxyProvider()));
         }
 
         [TestMethod, TestCategory("DNS")]

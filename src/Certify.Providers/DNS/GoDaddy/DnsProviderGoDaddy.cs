@@ -36,7 +36,7 @@ namespace Certify.Providers.DNS.GoDaddy
     /// <summary>
     /// GoDaddy DNS API Provider contributed by https://github.com/alphaz18
     /// </summary>
-    public class DnsProviderGoDaddy : DnsProviderBase, IDnsProvider
+    public class DnsProviderGoDaddy : DnsProviderBase, IDnsProvider, IDisposable
     {
         private ILog _log;
         private HttpClient _client;
@@ -347,15 +347,17 @@ namespace Certify.Providers.DNS.GoDaddy
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
 
-            _client = new HttpClient();
-            _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
+
+            _client.DefaultRequestHeaders.Remove("Accept");
+            _client.DefaultRequestHeaders.Add("Accept", "application/json");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -366,6 +368,10 @@ namespace Certify.Providers.DNS.GoDaddy
             }
 
             return await Task.FromResult(true);
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
     }
 }

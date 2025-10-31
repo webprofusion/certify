@@ -22,17 +22,40 @@ namespace Certify.Shared.Net
             return new HttpClient(CreateHandler());
         }
 
+        public HttpClient CreateClient(string? userAgent = null, bool allowInvalidTls = false)
+        {
+            var client = new HttpClient(CreateHandler(allowInvalidTls));
+
+            if (!string.IsNullOrWhiteSpace(userAgent))
+            {
+                client.DefaultRequestHeaders.Remove("User-Agent");
+                client.DefaultRequestHeaders.Add("User-Agent", userAgent);
+            }
+
+            return client;
+        }
+
         public HttpClient CreateInternalClient()
         {
             return new HttpClient(CreateInternalHandler());
         }
 
-        public HttpMessageHandler CreateHandler()
+        public HttpMessageHandler CreateHandler(bool allowInvalidTls = false)
         {
             var handler = new HttpClientHandler
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
             };
+
+            if (allowInvalidTls)
+            {
+#if NET9_0_OR_GREATER
+                handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+#else
+                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+                handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true;                
+#endif
+            }
 
             if (_proxyProvider.IsProxyEnabled)
             {

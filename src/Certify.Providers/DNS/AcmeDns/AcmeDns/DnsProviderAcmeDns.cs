@@ -92,9 +92,6 @@ namespace Certify.Providers.DNS.AcmeDns
         {
             _settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 
-            _client = new HttpClient();
-            _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderAcmeDns");
-
             _serializerSettings = new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
@@ -339,11 +336,13 @@ namespace Certify.Providers.DNS.AcmeDns
             return await Task.FromResult(results);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _credentials = credentials;
             _log = log;
             _parameters = parameters;
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

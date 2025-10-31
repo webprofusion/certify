@@ -47,7 +47,7 @@ namespace Certify.Core.Management.Challenges
         {
         }
 
-        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null) => Task.FromResult(true);
+        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null) => Task.FromResult(true);
         public Task<ActionResult> Test() => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });
         public Task<ActionResult> CreateRecord(DnsRecord request) => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });
         public Task<ActionResult> DeleteRecord(DnsRecord request) => Task.FromResult(new ActionResult { IsSuccess = true, Message = $"{Definition.Title} provider currently does not support tests." });

@@ -19,7 +19,7 @@ namespace Certify.Providers.DNS.CertifyManaged
 {
     public class DnsProviderCertifyManagedProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
-    public class DnsProviderCertifyManaged : IDnsProvider
+    public class DnsProviderCertifyManaged : IDnsProvider, IDisposable
     {
         public static ChallengeProviderDefinition Definition
         {
@@ -45,36 +45,8 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
         }
 
-        public DnsProviderCertifyManaged(IHttpClientProvider clientProvider = null) : base()
+        public DnsProviderCertifyManaged() : base()
         {
-#if DEBUG
-            if (clientProvider != null)
-            {
-                _client = clientProvider.CreateClient();
-            }
-            else
-            {
-                // allow invalid TLS
-                var handler = new HttpClientHandler();
-                handler.ClientCertificateOptions = ClientCertificateOption.Manual;
-                handler.ServerCertificateCustomValidationCallback =
-                    (httpRequestMessage, cert, cetChain, policyErrors) =>
-                    {
-                        return true;
-                    };
-                _client = new HttpClient(handler);
-            }
-#else
-            _client = clientProvider?.CreateClient() ?? new HttpClient();
-#endif
-            _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyManaged");
-
-            _serializerSettings = new JsonSerializerSettings
-            {
-                Formatting = Formatting.None,
-                MissingMemberHandling = MissingMemberHandling.Ignore,
-                NullValueHandling = NullValueHandling.Ignore
-            };
         }
 
         private Dictionary<string, string> _credentials;
@@ -103,7 +75,6 @@ namespace Certify.Providers.DNS.CertifyManaged
 
         private JsonSerializerSettings _serializerSettings;
 
-        private string _settingsPath { get; set; }
         private Uri _apiBaseUri { get; set; }
 
         public async Task<ActionResult> Test()
@@ -239,17 +210,24 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _credentials = credentials;
             _log = log;
             _parameters = parameters;
 
-            if (_credentials == null || _credentials.Count == 0)
+#if DEBUG
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}", allowInvalidTls: true);
+#else
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
+#endif
+
+            _serializerSettings = new JsonSerializerSettings
             {
-                _log.Error("Certify Managed Challenge DNS Provider could not be created: credentials missing or not set for managed challenge API.");
-                return false;
-            }
+                Formatting = Formatting.None,
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore
+            };
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -257,6 +235,12 @@ namespace Certify.Providers.DNS.CertifyManaged
                 {
                     _customPropagationDelay = customPropDelay;
                 }
+            }
+
+            if (_credentials == null || _credentials.Count == 0)
+            {
+                _log?.Error("Certify Managed Challenge DNS Provider could not be created: credentials missing or not set for managed challenge API.");
+                return false;
             }
 
             if (_parameters.TryGetValue("api", out var apiBase) && !string.IsNullOrWhiteSpace(apiBase))
@@ -277,9 +261,7 @@ namespace Certify.Providers.DNS.CertifyManaged
 
                 if (!string.IsNullOrWhiteSpace(mgmtHubAPI))
                 {
-                    // if we have a management hub API URL, use that
                     _apiBaseUri = new System.Uri(mgmtHubAPI);
-
                     if (!_apiBaseUri.ToString().EndsWith("/"))
                     {
                         _apiBaseUri = new Uri($"{_apiBaseUri}/");
@@ -289,7 +271,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
                 else
                 {
-                    _log.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
+                    _log?.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
                     return false;
                 }
             }
@@ -300,6 +282,10 @@ namespace Certify.Providers.DNS.CertifyManaged
         public Task<List<DnsZone>> GetZones()
         {
             return Task.FromResult(new List<DnsZone>());
+        }
+
+        public void Dispose() { 
+            _client?.Dispose();
         }
     }
 }

@@ -40,10 +40,10 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
     /// <summary>
     /// SimpleDNSPlus DNS API Provider contributed by https://github.com/alphaz18
     /// </summary>
-    public class DnsProviderSimpleDNSPlus : DnsProviderBase, IDnsProvider
+    public class DnsProviderSimpleDNSPlus : DnsProviderBase, IDnsProvider, IDisposable
     {
         private ILog _log;
-        private HttpClient _client = new HttpClient();
+        private HttpClient _client = null;
         private string _authKey;
         private string _authSecret;
         private string _authServer;
@@ -266,9 +266,11 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             _authKey = credentials["authkey"];
             _authSecret = credentials["authsecret"];
@@ -295,6 +297,10 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             }
 
             return await Task.FromResult(true);
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
     }
 }

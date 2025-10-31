@@ -17,11 +17,11 @@ namespace Certify.Providers.DNS.TransIP
             string login,
             string privateKey,
             int loginDuration,
-            HttpClient client = null)
+            HttpClient client)
         {
-            _authenticator = new Authenticator(login, privateKey, loginDuration);
+            _authenticator = new Authenticator(login, privateKey, loginDuration, client);
 
-            _client = client ?? new HttpClient();
+            _client = client;
         }
 
         private async Task<ActionResult<HttpRequestMessage>> CreateRequest(HttpMethod method, string url)
@@ -33,7 +33,10 @@ namespace Certify.Providers.DNS.TransIP
             }
 
             var request = new HttpRequestMessage(method, url);
+            
+            request.Headers.Remove("Authorization");
             request.Headers.Add("Authorization", $"Bearer {login.Result}");
+            
             return new ActionResult<HttpRequestMessage> { IsSuccess = true, Result = request };
         }
 

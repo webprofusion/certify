@@ -40,7 +40,7 @@ namespace Certify.Providers.DNS.CertifyDns
 
     public class DnsProviderCertifyDnsProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
-    public class DnsProviderCertifyDns : IDnsProvider
+    public class DnsProviderCertifyDns : IDnsProvider, IDisposable
     {
         public static ChallengeProviderDefinition Definition
         {
@@ -67,15 +67,10 @@ namespace Certify.Providers.DNS.CertifyDns
             }
         }
 
-        public DnsProviderCertifyDns(IHttpClientProvider clientProvider = null) : base()
+        public DnsProviderCertifyDns()
         {
-            EnableExtensions = true;
-
+            _enableExtensions = true;
             _settingsPath = EnvironmentUtil.EnsuredAppDataPath();
-
-            _client = clientProvider?.CreateClient() ?? new HttpClient();
-            _client.DefaultRequestHeaders.Add("User-Agent", "Certify/DnsProviderCertifyDns");
-
             _serializerSettings = new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
@@ -91,9 +86,9 @@ namespace Certify.Providers.DNS.CertifyDns
         private int? _customPropagationDelay = null;
 
         /// <summary>
-        /// if true, enable extensions to the base standard
+        /// if true, enable extensions to the base standard e.g. subject field
         /// </summary>
-        public bool EnableExtensions = false;
+        private bool _enableExtensions = false;
 
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
 
@@ -226,7 +221,7 @@ namespace Certify.Providers.DNS.CertifyDns
                 }
             }
 
-            if (EnableExtensions)
+            if (_enableExtensions)
             {
                 registration.subject = domainId;
             }
@@ -348,11 +343,13 @@ namespace Certify.Providers.DNS.CertifyDns
             return await Task.FromResult(results);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _credentials = credentials;
             _log = log;
             _parameters = parameters;
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -378,6 +375,10 @@ namespace Certify.Providers.DNS.CertifyDns
         {
             var bytes = System.Text.UTF8Encoding.UTF8.GetBytes(val);
             return ToUrlSafeBase64String(bytes);
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
     }
 }

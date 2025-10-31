@@ -1,8 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Azure;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Identity;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Dns;
@@ -51,14 +54,14 @@ namespace Certify.Providers.DNS.Azure
             HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/azuredns",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany (deprecated); usgov=Azure US Government" },
-                        new ProviderParameter{ Key="tenantid", Name="Directory (tenant) Id", IsRequired=false },
-                        new ProviderParameter{ Key="clientid", Name="Application (client) Id", IsRequired=false },
-                        new ProviderParameter{ Key="secret",Name="Client Secret", IsRequired=true , IsPassword=true},
-                        new ProviderParameter{ Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
-                        new ProviderParameter{ Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
-                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
-                    },
+                new ProviderParameter{ Key="service",Name="Azure Service", IsRequired=true, IsPassword=false, IsCredential=true, Value="global", OptionsList="global=Azure Cloud; china=Azure China; germany=Azure Germany (deprecated); usgov=Azure US Government" },
+                new ProviderParameter{ Key="tenantid", Name="Directory (tenant) Id", IsRequired=false },
+                new ProviderParameter{ Key="clientid", Name="Application (client) Id", IsRequired=false },
+                new ProviderParameter{ Key="secret",Name="Client Secret", IsRequired=true , IsPassword=true},
+                new ProviderParameter{ Key="subscriptionid",Name="DNS Subscription Id", IsRequired=true , IsPassword=false},
+                new ProviderParameter{ Key="resourcegroupname",Name="Resource Group Name", IsRequired=true , IsPassword=false},
+                new ProviderParameter{ Key="zoneid",Name="DNS Zone Name", IsRequired=true, IsPassword=false, IsCredential=false }
+            },
             ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.Azure",
             HandlerType = ChallengeHandlerType.INTERNAL
@@ -110,7 +113,7 @@ namespace Certify.Providers.DNS.Azure
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 
@@ -121,8 +124,24 @@ namespace Certify.Providers.DNS.Azure
 
             _credentials.TryGetValue("service", out var azureServiceEnvironment);
 
-            var azureCred = new ClientSecretCredential(credentials["tenantid"], credentials["clientid"], credentials["secret"], new ClientSecretCredentialOptions { AuthorityHost = MapServiceToAuthorityHost(azureServiceEnvironment) });
-            _azureClient = new ArmClient(azureCred, credentials["subscriptionid"], new ArmClientOptions { Environment = MapAzureServiceToAzureEnvironment(azureServiceEnvironment) });
+            var azureCred = new ClientSecretCredential(
+                credentials["tenantid"],
+                credentials["clientid"],
+                credentials["secret"],
+                new ClientSecretCredentialOptions { AuthorityHost = MapServiceToAuthorityHost(azureServiceEnvironment) }
+            );
+
+            // Create HttpClient transport using IHttpClientProvider for proxy support
+            var httpClient = clientProvider.CreateClient($"Certify/{Definition.Id}");
+            var transport = new HttpClientTransport(httpClient);
+
+            var armClientOptions = new ArmClientOptions
+            {
+                Environment = MapAzureServiceToAzureEnvironment(azureServiceEnvironment),
+                Transport = transport
+            };
+
+            _azureClient = new ArmClient(azureCred, credentials["subscriptionid"], armClientOptions);
             _subscription = await _azureClient.GetDefaultSubscriptionAsync();
 
             if (parameters?.ContainsKey("propagationdelay") == true)

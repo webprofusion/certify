@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -1215,7 +1215,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Id = "DNS01.API.PoshACME.WEDOS",
                 Title = "WEDOS DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
-                HelpUrl = "https://poshac.me/docs/latest/Plugins/WEDOS/",
+                HelpUrl = "https://poshach.me/docs/latest/Plugins/WEDOS/",
                 PropagationDelaySeconds = 600,
                 ProviderParameters =
                 [
@@ -1464,7 +1464,7 @@ namespace Certify.Core.Management.Challenges.DNS
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
 
-        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
+        Task<bool> IDnsProvider.InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log)
         {
             _log = log;
 

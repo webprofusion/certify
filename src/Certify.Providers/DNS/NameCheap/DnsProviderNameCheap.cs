@@ -16,7 +16,7 @@ namespace Certify.Providers.DNS.NameCheap
 {
     public class DnsProviderNameCheapProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
-    public class DnsProviderNameCheap : IDnsProvider
+    public class DnsProviderNameCheap : IDnsProvider, IDisposable
     {
         public DnsProviderNameCheap()
         {
@@ -26,7 +26,7 @@ namespace Certify.Providers.DNS.NameCheap
         private string _apiKey;
         private string _ip;
 
-        private HttpClient _http;
+        private HttpClient _client;
 
         private ILog _log;
 
@@ -87,7 +87,7 @@ namespace Certify.Providers.DNS.NameCheap
         /// <summary>
         /// Initializes the provider.
         /// </summary>
-        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 
@@ -95,7 +95,7 @@ namespace Certify.Providers.DNS.NameCheap
             _apiKey = credentials[PARAM_API_KEY];
             _ip = credentials[PARAM_IP];
 
-            _http = new HttpClient();
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -353,7 +353,7 @@ namespace Certify.Providers.DNS.NameCheap
         /// </summary>
         private async Task<XElement> InvokeApiAsync(HttpRequestMessage request)
         {
-            var response = await _http.SendAsync(request);
+            var response = await _client.SendAsync(request);
             var content = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
@@ -424,6 +424,10 @@ namespace Certify.Providers.DNS.NameCheap
                 SLD = matchingZone.Substring(0, dotPos),
                 TLD = matchingZone.Substring(dotPos + 1)
             };
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
 
         private class ParsedDomain

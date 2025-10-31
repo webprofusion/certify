@@ -19,9 +19,10 @@ namespace Certify.Providers.DNS.Aliyun
     /// Alibaba Cloud DNS API Provider contributed by https://github.com/TkYu
     /// </summary>
     /// 
-    public class DnsProviderAliyun : DnsProviderBase, IDnsProvider
+    public class DnsProviderAliyun : DnsProviderBase, IDnsProvider, IDisposable
     {
         private ILog _log;
+        private HttpClient _client;
 
         private string _accessKeyId;
         private string _accessKeySecret;
@@ -217,7 +218,6 @@ namespace Certify.Providers.DNS.Aliyun
 
         public override async Task<List<DnsZone>> GetZones()
         {
-            //TODO does aliyun really have Zones?
             var zones = new List<DnsZone>();
             var finishedPaginating = false;
             var page = 1;
@@ -255,11 +255,13 @@ namespace Certify.Providers.DNS.Aliyun
             return zones;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
             _accessKeyId = credentials["accesskeyid"];
             _accessKeySecret = credentials["accesskeysecret"];
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -309,12 +311,10 @@ namespace Certify.Providers.DNS.Aliyun
 
             var request = new AliDnsRequest(HttpMethod.Get, _accessKeyId, _accessKeySecret, parameters);
             var url = request.GetUrl();
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<DomainRecord>(content);
-            }
+
+            var response = await _client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DomainRecord>(content);
         }
 
         private async Task<DomainRecord> DeleteDomainRecord(string recordId)
@@ -326,12 +326,10 @@ namespace Certify.Providers.DNS.Aliyun
             };
             var request = new AliDnsRequest(HttpMethod.Get, _accessKeyId, _accessKeySecret, parameters);
             var url = request.GetUrl();
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<DomainRecord>(content);
-            }
+
+            var response = await _client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DomainRecord>(content);
         }
 
         private async Task<DescribeDomainRecords> GetDomainRecords(string domain, int pageNumber = 1, int pageSize = 20)
@@ -345,12 +343,10 @@ namespace Certify.Providers.DNS.Aliyun
             };
             var request = new AliDnsRequest(HttpMethod.Get, _accessKeyId, _accessKeySecret, parameters);
             var url = request.GetUrl();
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<DescribeDomainRecords>(content);
-            }
+
+            var response = await _client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DescribeDomainRecords>(content);
         }
 
         private async Task<DescribeDomainsResponse> GetDomains(int pageNumber = 1, int pageSize = 20)
@@ -363,12 +359,15 @@ namespace Certify.Providers.DNS.Aliyun
             };
             var request = new AliDnsRequest(HttpMethod.Get, _accessKeyId, _accessKeySecret, parameters);
             var url = request.GetUrl();
-            using (var httpClient = new HttpClient())
-            {
-                var response = await httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<DescribeDomainsResponse>(content);
-            }
+
+            var response = await _client.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<DescribeDomainsResponse>(content);
+        }
+
+        public void Dispose()
+        {
+            _client?.Dispose();
         }
 
         #endregion AliMethods
