@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -20,6 +21,7 @@ namespace Certify.Providers.DNS.OVH
 
         private ILog _log;
         private Dictionary<string, string> credentials;
+        private HttpClient _httpClient;
         private int? _customPropagationDelay = null;
 
         public int PropagationDelaySeconds => (_customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds);
@@ -53,7 +55,7 @@ namespace Certify.Providers.DNS.OVH
                         new ProviderParameter{Key=ApplicationKeyParamKey, Name="Application Key", IsRequired=true },
                         new ProviderParameter{Key=ApplicationSecretParamKey, Name="Application Secret", IsRequired=true },
                         new ProviderParameter{Key=ApplicationEndpointParamKey, Name="Endpoint name of OVH API", IsRequired=false,
-                                              Description =$"Should be one of the following : {OvhClient.GetAvailableEndpointsAsString()}" },
+                                              Description =$"Should be one of the following : ovh-eu, ovh-us, ovh-ca, kimsufi-eu, kimsufi-ca, soyoustart-ca,runabove-ca", OptionsList="ovh-eu;ovh-us;ovh-ca;kimsufi-eu;kimsufi-ca;soyoustart-ca;runabove-ca" },
                         new ProviderParameter{Key=ConsumerKeyParamKey, Name="Consumer Key", IsRequired=true },
                         new ProviderParameter{Key="zoneid", Name="DNS Zone Id", Description="Zone Id is the root domain name e.g. example.com", IsRequired=true, IsPassword=false, IsCredential=false },
                         new ProviderParameter{Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="120", IsCredential=false }
@@ -99,13 +101,13 @@ namespace Certify.Providers.DNS.OVH
                     { "target",  request.RecordValue },
                     { "ttl", 1 }
                 };
-                var recordCreationResult = await ovh.Post<OvhDnsRecord>($"/domain/zone/{request.ZoneId}/record", content);
+                var recordCreationResult = await ovh.PostAsync<OvhDnsRecord>($"/domain/zone/{request.ZoneId}/record", content);
                 creationId = recordCreationResult.Id;
                 request.RecordId = creationId.ToString();
 
                 _createdRecords.Add((request.RecordValue, request.RecordId));
 
-                var zoneRefreshResult = ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
+                var zoneRefreshResult = ovh.PostAsync($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
                 return new ActionResult { IsSuccess = true, Message = $"DNS record \"{request.RecordName}\" added. OVH id : {creationId} ." };
             }
@@ -137,8 +139,8 @@ namespace Certify.Providers.DNS.OVH
                     _createdRecords.RemoveAll(record => record.Item1 == request.RecordValue);
                 }
 
-                var recordDeletionResult = await ovh.Delete<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
-                var zoneRefreshResult = await ovh.Post($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
+                var recordDeletionResult = await ovh.DeleteAsync<object>($"/domain/zone/{request.ZoneId}/record/{request.RecordId}");
+                var zoneRefreshResult = await ovh.PostAsync($"/domain/zone/{request.ZoneId}/refresh", string.Empty);
 
                 return new ActionResult { IsSuccess = true, Message = $"DNS record {request.RecordName} successfully deleted and zone was refreshed." };
             }
@@ -151,7 +153,7 @@ namespace Certify.Providers.DNS.OVH
         public async override Task<List<DnsZone>> GetZones()
         {
             var ovh = CreateOvhClient();
-            var result = await ovh.Get<List<string>>("/domain/zone");
+            var result = await ovh.GetAsync<List<string>>("/domain/zone");
             return result.Select(x => new DnsZone()
             {
                 Name = x,
@@ -159,9 +161,9 @@ namespace Certify.Providers.DNS.OVH
             }).ToList();
         }
 
-        private OvhClient CreateOvhClient()
+        private Ovh.Api.Client CreateOvhClient()
         {
-            return new OvhClient(OvhApplicationEndpoint ?? DefaultOvhEndpoint, OvhApplicationKey, OvhApplicationSecret, OvhConsumerKey);
+            return new Ovh.Api.Client(OvhApplicationEndpoint ?? DefaultOvhEndpoint, OvhApplicationKey, OvhApplicationSecret, OvhConsumerKey, httpClient: _httpClient);
         }
 
         public DnsProviderOvh()
@@ -173,6 +175,8 @@ namespace Certify.Providers.DNS.OVH
             _log = log;
 
             this.credentials = credentials;
+
+            _httpClient = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
