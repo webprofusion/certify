@@ -82,22 +82,6 @@ namespace Certify.Core.Management.Challenges
                 // test - wait for DNS changes
                 await Task.Delay(5000);
 
-                // do our own txt record query before proceeding with challenge completion
-                /*
-                int attempts = 3;
-                bool recordCheckedOK = false;
-                var networkUtil = new NetworkUtils(false);
-
-                while (attempts > 0 && !recordCheckedOK)
-                {
-                    recordCheckedOK = networkUtil.CheckDNSRecordTXT(domain, txtRecordName, txtRecordValue);
-                    attempts--;
-                    if (!recordCheckedOK)
-                    {
-                        await Task.Delay(1000); // hold on a sec
-                    }
-                }
-                */
                 return helperResult;
             }
             else
@@ -112,7 +96,7 @@ namespace Certify.Core.Management.Challenges
 
         public Task<List<DnsZone>> GetZones() => throw new NotImplementedException();
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log)
         {
             _log = log;
             return await Task.FromResult(true);

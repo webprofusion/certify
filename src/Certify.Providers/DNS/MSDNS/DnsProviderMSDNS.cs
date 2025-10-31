@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -127,7 +127,7 @@ namespace Certify.Providers.DNS.MSDNS
             return await Task.FromResult(zones);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 

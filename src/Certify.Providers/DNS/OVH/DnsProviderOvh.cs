@@ -168,7 +168,7 @@ namespace Certify.Providers.DNS.OVH
         {
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 

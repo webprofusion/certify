@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon.Route53;
 using Amazon.Route53.Model;
@@ -332,11 +333,31 @@ namespace Certify.Providers.DNS.AWSRoute53
             return results;
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 
-            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], Amazon.RegionEndpoint.USEast1);
+            var route53Config = new AmazonRoute53Config
+            {
+                RegionEndpoint = Amazon.RegionEndpoint.USEast1
+            };
+
+            // Configure proxy if needed
+
+            var handler = clientProvider.CreateHandler();
+            if (handler is HttpClientHandler httpClientHandler && httpClientHandler.Proxy != null)
+            {
+                route53Config.ProxyHost = httpClientHandler.Proxy.GetProxy(new Uri("https://route53.amazonaws.com"))?.Host;
+                route53Config.ProxyPort = httpClientHandler.Proxy.GetProxy(new Uri("https://route53.amazonaws.com"))?.Port ?? 0;
+
+                // If proxy credentials are required
+                if (httpClientHandler.Proxy.Credentials != null)
+                {
+                    route53Config.ProxyCredentials = httpClientHandler.Proxy.Credentials;
+                }
+            }
+
+            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], route53Config);
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {

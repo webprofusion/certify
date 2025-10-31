@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Shared.Net;
 
 namespace Certify.Core.Management.Challenges
 {
@@ -214,7 +215,7 @@ namespace Certify.Core.Management.Challenges
             }
             else
             {
-                await dnsAPIProvider.InitProvider(credentials, parameters, log);
+                await dnsAPIProvider.InitProvider(credentials, parameters, new HttpClientProvider(new ProxyProvider()), log);
             }
 
             return dnsAPIProvider;

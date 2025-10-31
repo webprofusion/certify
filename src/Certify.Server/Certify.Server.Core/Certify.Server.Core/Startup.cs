@@ -3,6 +3,8 @@ using System.Security.Claims;
 using Certify.Management;
 using Certify.Models;
 using Certify.Service.Controllers;
+using Certify.Shared.Core.Utils;
+using Certify.Shared.Net;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.DataProtection;
@@ -77,6 +79,9 @@ namespace Certify.Server.Core
 
             ConfigureClaimsTransformation(services);
             Log("Added ClaimsTransformation");
+
+            ConfigureNetworking(services);
+            Log("Added Networking services");
 
             await ConfigureCertifyManager(services);
             Log("Added CertifyManager");
@@ -284,6 +289,38 @@ namespace Certify.Server.Core
             var certifyManager = new Management.CertifyManager();
             await certifyManager.Init();
             services.AddSingleton<Management.ICertifyManager>(certifyManager);
+        }
+
+        private void ConfigureNetworking(IServiceCollection services)
+        {
+            // Register proxy provider as singleton with preferences resolver
+            services.AddSingleton<IProxyProvider>(sp =>
+            {
+                return new ProxyProvider(() =>
+                {
+                    // Read preferences from SettingsManager
+                    try
+                    {
+                        return SettingsManager.ToPreferences() ?? new Certify.Models.Preferences
+                        {
+                            ProxyMode = Certify.Models.ProxyMode.Environment,
+                            ProxyEnabled = true
+                        };
+                    }
+                    catch
+                    {
+                        // Fallback to environment-only proxy
+                        return new Certify.Models.Preferences
+                        {
+                            ProxyMode = Certify.Models.ProxyMode.Environment,
+                            ProxyEnabled = true
+                        };
+                    }
+                });
+            });
+
+            // Register HTTP client provider as singleton
+            services.AddSingleton<Models.Providers.IHttpClientProvider, HttpClientProvider>();
         }
 
         private bool DetermineWindowsAuthRequired()

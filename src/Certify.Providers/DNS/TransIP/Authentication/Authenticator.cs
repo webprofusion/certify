@@ -17,16 +17,18 @@ namespace Certify.Providers.DNS.TransIP.Authentication
         private readonly Util _util;
         private readonly DigestCreator _digestCreator;
         private readonly DigestSigner _digestSigner;
-
+        private readonly HttpClient _client;
         private string _token = "";
         private DateTime _tokenValidUntil = DateTime.MinValue;
 
         public Authenticator(
             string login,
             string privateKey,
-            int loginDuration
+            int loginDuration,
+            HttpClient client
         )
         {
+            _client = client ?? throw new ArgumentNullException(nameof(client));
             _login = login ?? throw new ArgumentNullException(nameof(login));
             _privateKey = privateKey ?? throw new ArgumentNullException(nameof(privateKey));
             _loginDuration = GetLoginDuration(loginDuration);
@@ -104,12 +106,14 @@ namespace Certify.Providers.DNS.TransIP.Authentication
             return _digestSigner.Sign(digest, _privateKey);
         }
 
-        private static async Task<HttpResponseMessage> Login(string loginRequest, string signature)
+        private async Task<HttpResponseMessage> Login(string loginRequest, string signature)
         {
             var content = new StringContent(loginRequest, Encoding.UTF8, "application/json");
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Signature", signature);
-            return await client.PostAsync($"{DnsProviderTransIP.BASE_URI}auth", content);
+
+            _client.DefaultRequestHeaders.Remove("Signature");
+            _client.DefaultRequestHeaders.Add("Signature", signature);
+
+            return await _client.PostAsync($"{DnsProviderTransIP.BASE_URI}auth", content);
         }
 
         private ActionResult<string> ProcessResponse(HttpResponseMessage response)

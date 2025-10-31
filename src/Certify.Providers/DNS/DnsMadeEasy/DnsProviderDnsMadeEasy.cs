@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -41,7 +41,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         private static string _apiUrl = "https://api.dnsmadeeasy.com/V2.0/";
 
-        private static readonly HttpClient _httpClient;
+        private HttpClient _client;
         private string _apiKey;
         private string _apiSecret;
         private bool _useSandbox = false;
@@ -82,7 +82,6 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         static DnsProviderDnsMadeEasy()
         {
-            _httpClient = new HttpClient();
         }
 
         private static string ComputeHMAC(string input, string key)
@@ -157,7 +156,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
             apiRequest.Content.Headers.ContentType.MediaType = "application/json";
 
-            var result = await _httpClient.SendAsync(apiRequest);
+            var result = await _client.SendAsync(apiRequest);
 
             if (!result.IsSuccessStatusCode)
             {
@@ -212,7 +211,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
                     //delete existing record
                     var url = $"{_apiUrl}dns/managed/{request.ZoneId}/records/{r.RecordId}";
                     var apiRequest = CreateRequest(HttpMethod.Delete, url, DateTimeOffset.Now);
-                    var result = await _httpClient.SendAsync(apiRequest);
+                    var result = await _client.SendAsync(apiRequest);
 
                     if (!result.IsSuccessStatusCode)
                     {
@@ -233,7 +232,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             var url = $"{_apiUrl}dns/managed/{zoneId}/records/";
 
             var request = CreateRequest(HttpMethod.Get, url, DateTimeOffset.Now);
-            var response = await _httpClient.SendAsync(request);
+            var response = await _client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
@@ -258,7 +257,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             var url = $"{_apiUrl}dns/managed/";
 
             var request = CreateRequest(HttpMethod.Get, url, DateTimeOffset.Now);
-            var response = await _httpClient.SendAsync(request);
+            var response = await _client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
@@ -278,11 +277,13 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
             _apiKey = credentials["apikey"];
             _apiSecret = credentials["apisecret"];
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -326,6 +327,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
 
         public void Dispose()
         {
+            _client?.Dispose();
         }
     }
 }

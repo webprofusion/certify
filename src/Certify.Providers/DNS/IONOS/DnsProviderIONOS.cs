@@ -17,7 +17,7 @@ namespace Certify.Providers.DNS.IONOS
     {
     }
 
-    public class DnsProviderIONOS : DnsProviderBase, IDnsProvider
+    public class DnsProviderIONOS : DnsProviderBase, IDnsProvider, IDisposable
     {
 
         private ILog _log;
@@ -41,13 +41,12 @@ namespace Certify.Providers.DNS.IONOS
             HelpUrl = "https://developer.hosting.ionos.com/docs/getstarted"
         };
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters,
-            ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
             _credentials = credentials;
 
-            _client = new HttpClient();
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             return await Task.FromResult(true);
         }
@@ -225,6 +224,10 @@ namespace Certify.Providers.DNS.IONOS
             request.Headers.Add("X-API-Key", $"{_credentials["public"]}.{_credentials["secret"]}");
             request.Headers.Add("User-Agent", "Certify");
             return request;
+        }
+
+        public void Dispose() {
+            _client?.Dispose();
         }
 
         public int PropagationDelaySeconds => Definition.PropagationDelaySeconds;

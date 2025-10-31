@@ -6,12 +6,13 @@ using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Plugins;
+using System.Net.Http;
 
 namespace Certify.Providers.DNS.TransIP
 {
     public class DnsProviderTransIPProvider : PluginProviderBase<IDnsProvider, ChallengeProviderDefinition>, IDnsProviderProviderPlugin { }
 
-    public class DnsProviderTransIP : DnsProviderBase, IDnsProvider
+    public class DnsProviderTransIP : DnsProviderBase, IDnsProvider, IDisposable
     {
         internal const string BASE_URI = "https://api.transip.nl/v6/";
         internal const string LIST_DOMAINS_URI = BASE_URI + "domains";
@@ -21,6 +22,7 @@ namespace Certify.Providers.DNS.TransIP
         private DnsClient _dnsClient;
         private string _login;
         private string _privateKey;
+        private HttpClient _client;
 
         private int? _customPropagationDelay = null;
         public int PropagationDelaySeconds => _customPropagationDelay != null ? (int)_customPropagationDelay : Definition.PropagationDelaySeconds;
@@ -129,12 +131,13 @@ namespace Certify.Providers.DNS.TransIP
             return await _dnsClient.Remove(root.RootDomain, entry);
         }
 
-        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log = null)
+        public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
-
             _login = credentials["login"];
             _privateKey = credentials["privatekey"];
+
+            _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -144,7 +147,7 @@ namespace Certify.Providers.DNS.TransIP
                 }
             }
 
-            _dnsClient = new DnsClient(_login, _privateKey, PropagationDelaySeconds + 60);
+            _dnsClient = new DnsClient(_login, _privateKey, PropagationDelaySeconds + 60, _client);
 
             return await Task.FromResult(true);
         }
@@ -157,5 +160,9 @@ namespace Certify.Providers.DNS.TransIP
                 name = NormaliseRecordName(root, request.RecordName),
                 type = "TXT"
             };
+        public void Dispose()
+        {
+            _client?.Dispose();
+        }
     }
 }
