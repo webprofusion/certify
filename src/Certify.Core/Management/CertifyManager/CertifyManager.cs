@@ -408,6 +408,11 @@ namespace Certify.Management
         private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             await EnsureMgmtHubConnection();
+
+            if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
+            {
+                await RandomlyUpdateDemoItems();
+            }
         }
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)

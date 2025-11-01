@@ -933,7 +933,7 @@ namespace Certify.Management
 
         private async Task GenerateDemoItems(int? numItems)
         {
-            var currentItems = await GetManagedCertificateSummary(new ManagedCertificateFilter { });
+            var currentItems = await GetManagedCertificateSummary(new ManagedCertificateFilter { Keyword = "DemoData" });
             if (currentItems.Total == 0)
             {
                 var items = DemoDataGenerator.GenerateDemoItems(numItems ?? 100, numItems ?? 500);
@@ -941,6 +941,60 @@ namespace Certify.Management
                 {
 
                     _ = UpdateManagedCertificate(item);
+                }
+            }
+        }
+        private async Task RandomlyUpdateDemoItems()
+        {
+            // randomly update status of demo items
+            var items = await GetManagedCertificates(new ManagedCertificateFilter { IncludeExternal = true, Keyword = "DemoData" });
+            var rand = new Random();
+
+            // randomly update status for a few demo items
+            foreach (var item in items)
+            {
+                if (rand.NextDouble() < 0.02) // 2% chance to update
+                {
+                    item.LastRenewalStatus = rand.NextDouble() < 0.8 ? RequestState.Success : RequestState.Error;
+
+                    if (item.LastRenewalStatus == RequestState.Error)
+                    {
+                        item.RenewalFailureCount++;
+                        item.RenewalFailureMessage = "Simulated renewal failure for demo purposes.";
+                    }
+                    else
+                    {
+                        item.RenewalFailureCount = 0;
+                        item.RenewalFailureMessage = null;
+                    }
+
+                    item.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
+
+                    _ = UpdateManagedCertificate(item);
+                }
+            }
+
+            // randomly remove a few demo items
+
+            foreach (var item in items)
+            {
+                if (rand.NextDouble() < 0.01) // 10% chance to remove
+                {
+                    _ = DeleteManagedCertificate(item.Id);
+                }
+            }
+
+            // randomly add a few demo items
+
+            for (var i = 0; i < 5; i++)
+            {
+                if (rand.NextDouble() < 0.03) // 3% chance to add
+                {
+                    var newItems = DemoDataGenerator.GenerateDemoItems(1, 1);
+                    foreach (var newItem in newItems)
+                    {
+                        _ = UpdateManagedCertificate(newItem);
+                    }
                 }
             }
         }

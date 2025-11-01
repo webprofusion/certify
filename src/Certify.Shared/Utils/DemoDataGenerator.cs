@@ -30,6 +30,7 @@ namespace Certify.Shared.Core.Utils
                 item.DomainOptions.Add(new DomainOption { Domain = $"{item.Name}.dev.projectbids.co.uk", IsManualEntry = true, IsPrimaryDomain = true, IsSelected = true, Type = CertIdentifierType.Dns });
                 item.RequestConfig.PrimaryDomain = item.DomainOptions[0].Domain;
                 item.RequestConfig.SubjectAlternativeNames = new string[] { item.DomainOptions[0].Domain };
+                item.IncludeInAutoRenew = false;
 
                 var validation = CertificateEditorService.Validate(item, null, null, applyAutoConfiguration: true);
                 if (validation.IsValid)
