@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Certify.Models.Reporting;
 using Registration.Core.Models.Shared;
 
 namespace Certify.Models.Hub
@@ -24,6 +25,8 @@ namespace Certify.Models.Hub
         public bool IsAuthenticated { get; set; }
 
         public LicenseCheckResult License { get; set; } = new LicenseCheckResult();
+
+        public StatusSummary? Summary { get; set; }
     }
 
     public class ConnectionStatus

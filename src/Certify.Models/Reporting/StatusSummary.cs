@@ -14,5 +14,5 @@
 
         public int ExternallyManaged { get; set; }
         public int TotalDomains { get; set; }
-    }
+    }   
 }

@@ -164,6 +164,11 @@ namespace Certify.Server.Hub.Api.Controllers
                     knownInstance.ConnectionStatus = ConnectionStatus.Disconnected;
                     knownInstance.IsAuthenticated = true; // Still authenticated, just not connected
                 }
+
+                // Get latest status summary for instance (if any)
+                var statusSummary = _mgmtStateProvider.GetManagedInstanceStatusSummary(knownInstance.InstanceId);
+                knownInstance.Summary = statusSummary;
+
             }
 
             // Return all instances (both connected and disconnected) ordered by title
