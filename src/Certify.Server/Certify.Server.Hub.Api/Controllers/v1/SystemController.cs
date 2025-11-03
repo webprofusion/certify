@@ -147,7 +147,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var joiningInfo = new HubJoiningInfo();
 
-            var versionInfo = await _client.GetAppVersion();
+            var versionInfo = Management.Util.GetAppVersion().ToString();
 
             joiningInfo.Version = new VersionInfo
             {
