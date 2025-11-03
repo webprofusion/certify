@@ -136,27 +136,38 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
             }
 
-            var managedInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
+            // Get all known instances from database (including disconnected ones)
+            var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
 
+            // Get currently connected instances from in-memory state
             var connectedInstances = _mgmtStateProvider.GetConnectedInstances();
-            foreach (var i in managedInstances)
+
+            // Merge: update known instances with current connection status
+            foreach (var knownInstance in allKnownInstances)
             {
-                var connected = connectedInstances.FirstOrDefault(c => c.InstanceId == i.InstanceId);
+                var connected = connectedInstances.FirstOrDefault(c => c.InstanceId == knownInstance.InstanceId);
                 if (connected != null)
                 {
-                    i.DateLastReported = connected.DateLastReported;
-                    i.ConnectionStatus = connected.ConnectionStatus;
-                    i.License = connected.License;
-                    i.IsAuthenticated = true;
+                    // Instance is currently connected - update with real-time data
+                    knownInstance.DateLastReported = connected.DateLastReported;
+                    knownInstance.ConnectionStatus = connected.ConnectionStatus;
+                    knownInstance.License = connected.License;
+                    knownInstance.IsAuthenticated = true;
 
-                    // copy db values to in memory connect instance representation
-                    connected.DateRegistered = i.DateRegistered;
-                    connected.Tags = i.Tags;
-
+                    // Copy db values to in-memory connected instance representation
+                    connected.DateRegistered = knownInstance.DateRegistered;
+                    connected.Tags = knownInstance.Tags;
+                }
+                else
+                {
+                    // Instance is not currently connected - mark as disconnected
+                    knownInstance.ConnectionStatus = ConnectionStatus.Disconnected;
+                    knownInstance.IsAuthenticated = true; // Still authenticated, just not connected
                 }
             }
 
-            return new OkObjectResult(managedInstances.Where(c => c.IsAuthenticated).OrderBy(o => o.Title));
+            // Return all instances (both connected and disconnected) ordered by title
+            return new OkObjectResult(allKnownInstances.OrderBy(o => o.Title));
         }
 
         /// <summary>

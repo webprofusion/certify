@@ -312,9 +312,9 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 _logger?.LogDebug("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
 
-                // TODO: update our stored instance info for this instance
+                // update our stored instance info for this instance
                 await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
-
+                
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
                 {
