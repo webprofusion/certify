@@ -428,7 +428,7 @@ namespace Certify.Management
                 InstanceId = _serverConfig.HubAssignedInstanceId,
                 Title = $"{Environment.MachineName}",
                 OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
-                OSVersion = EnvironmentUtil.GetFriendlyOSName(),
+                OSVersion = EnvironmentUtil.GetOSVersion(),
                 ClientVersion = Util.GetAppVersion().ToString(),
                 ClientName = _isMgtmHubBackend ? "Certify Management Hub" : ConfigResources.AppName,
                 License = _cachedLicenseCheck

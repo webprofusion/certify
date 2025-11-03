@@ -141,6 +141,19 @@ namespace Certify.Models
             return path;
         }
 
+        public static string GetOSVersion()
+        {
+            var shortname = GetFriendlyOSName(detailed: false);
+            var osDescription = RuntimeInformation.OSDescription;
+
+            if (osDescription.StartsWith(shortname, StringComparison.OrdinalIgnoreCase))
+            {
+                return osDescription.Substring(shortname.Length).Trim();
+            }
+
+            return osDescription.Trim();
+        }
+
         public static string GetFriendlyOSName(bool detailed = true)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
