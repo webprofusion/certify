@@ -186,6 +186,14 @@ namespace Certify.Management
                         }
                     }
                 }
+                catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
+                {
+                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Connection refused (port may not be open or service not running). {endpoint}", isSuccess: false);
+                }
+                catch (HttpRequestException httpEx)
+                {
+                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Network error: {httpEx.Message}", isSuccess: false);
+                }
                 catch (Exception exp)
                 {
                     return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp}", isSuccess: false);
