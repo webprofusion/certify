@@ -67,7 +67,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
         [HttpPost]
         [AuthorizedApi]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/html")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK, "text/plain")]
         [Route("rendermarkdown")]
         public async Task<string> RenderMarkdown([FromBody] string markdown)
         {
