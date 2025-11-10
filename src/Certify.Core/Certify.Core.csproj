@@ -38,7 +38,7 @@
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
         <PackageReference Include="Polly" Version="8.6.4" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="9.0.2" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     </ItemGroup>
 
     <ItemGroup>
