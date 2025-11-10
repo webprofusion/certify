@@ -4,6 +4,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddJsonFile("appsettings-api.json", optional: false, reloadOnChange: true);
 
+#if DEBUG
+builder.Configuration.AddJsonFile("appsettings-api.Development.json", optional: false, reloadOnChange: true);
+#endif
+
 #if ASPIRE
 builder.AddServiceDefaults();
 #endif
