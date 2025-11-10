@@ -404,7 +404,7 @@ namespace Certify.Core.Management
                 }
             }
 
-            steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials" });
+            steps.Add(new ActionStep {Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials", HasError = credentialImportSteps.Any(i => i.HasError), HasWarning = credentialImportSteps.Any(i => i.HasWarning) });
 
             var targetSiteBindings = new List<BindingInfo>();
             foreach (var targetServer in _targetServers)
@@ -495,7 +495,7 @@ namespace Certify.Core.Management
                 }
             }
 
-            steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts" });
+            steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts", HasError=managedCertImportSteps.Any(i=>i.HasError), HasWarning= managedCertImportSteps.Any(i => i.HasWarning) });
 
             // certificate files
             var certFileImportSteps = new List<ActionStep>();
@@ -581,7 +581,7 @@ namespace Certify.Core.Management
                 }
             }
 
-            steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles" });
+            steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles", HasError = certFileImportSteps.Any(i => i.HasError), HasWarning = certFileImportSteps.Any(i => i.HasWarning) });
 
             return steps;
         }
