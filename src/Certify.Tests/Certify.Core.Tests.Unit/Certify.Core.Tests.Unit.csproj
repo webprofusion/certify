@@ -59,15 +59,15 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="MedallionShell" Version="1.6.2" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
         <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.1.0" />
         <PackageReference Include="Moq" Version="4.20.72" />
         <PackageReference Include="NETStandard.Library" Version="2.0.3" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
-        <PackageReference Include="MSTest.TestAdapter" Version="4.0.1" />
-        <PackageReference Include="MSTest.TestFramework" Version="4.0.1" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
+        <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
         <PackageReference Include="Polly" Version="8.6.4" />
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
         <PackageReference Include="Testcontainers" Version="4.8.1" />
         <PackageReference Include="Npgsql" Version="9.0.4" />
     </ItemGroup>

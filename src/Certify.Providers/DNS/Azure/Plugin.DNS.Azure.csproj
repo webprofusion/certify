@@ -7,10 +7,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Azure.Core" Version="1.49.0" />
+        <PackageReference Include="Azure.Core" Version="1.50.0" />
         <PackageReference Include="Azure.Identity" Version="1.17.0" />
         <PackageReference Include="Azure.ResourceManager.Dns" Version="1.2.0-beta.2" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0-rc.2.25502.107" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
     </ItemGroup>
 
