@@ -17,9 +17,9 @@ namespace Certify.Server.Core
     {
         private const string ServiceAuthScheme = "ServiceAuthScheme";
         private const string CertifyServiceAuthPolicy = "CertifyServiceAuth";
-        private const string SwaggerDocTitle = "Certify Agent Service Internal API";
-        private const string SwaggerDocVersion = "v1";
-        private const string SwaggerDocDescription = "Provides a private API for use by the Certify The Web Desktop UI and related components. This internal API changes between versions, you should use the public Hub API when building integrations instead.";
+        private const string ApiDocTitle = "Certify Agent Service Internal API";
+        private const string ApiDocVersion = "v1";
+        private const string ApiDocDescription = "Provides a private API for use by the Certify The Web Desktop UI and related components. This internal API changes between versions, you should use the public Hub API when building integrations instead.";
 
         public Startup(IConfiguration configuration)
         {
@@ -71,8 +71,8 @@ namespace Certify.Server.Core
             Log("Added Authorization");
 
 #if DEBUG
-            ConfigureSwagger(services);
-            Log("Added Swagger");
+            ConfigureOpenApi(services);
+            Log("Added OpenApi");
 #endif
             ConfigureHttpsRedirection(services);
             Log("Added HttpsRedirection");
@@ -107,9 +107,6 @@ namespace Certify.Server.Core
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-#if DEBUG
-                ConfigureSwaggerUI(app);
-#endif
             }
 
             certifyManager.SetStatusReporting(new Service.StatusHubReporting(statusHubContext));
@@ -128,6 +125,9 @@ namespace Certify.Server.Core
                 endpoints.MapHub<Service.StatusHub>("/api/status");
                 endpoints.MapControllers();
 #if DEBUG
+                // Map OpenAPI endpoint
+                endpoints.MapOpenApi();
+
                 endpoints.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
                 {
                     var sb = new System.Text.StringBuilder();
@@ -212,58 +212,42 @@ namespace Certify.Server.Core
         }
 
 #if DEBUG
-        private void ConfigureSwagger(IServiceCollection services)
+        private void ConfigureOpenApi(IServiceCollection services)
         {
-
             services.AddEndpointsApiExplorer();
 
-            services.AddSwaggerGen(c =>
+            services.AddOpenApi(ApiDocVersion, options =>
             {
-                c.SwaggerDoc(SwaggerDocVersion, new Microsoft.OpenApi.Models.OpenApiInfo
-                {
-                    Title = SwaggerDocTitle,
-                    Version = SwaggerDocVersion,
-                    Description = SwaggerDocDescription
-                });
+                options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
 
-                c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                var info = new Microsoft.OpenApi.OpenApiInfo
                 {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
-                    In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-                    Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http
-                });
+                    Title = ApiDocTitle,
+                    Version = ApiDocVersion,
+                    Description = ApiDocDescription
+                };
 
-                c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+                options.AddDocumentTransformer((document, context, cancellationToken) =>
                 {
+                    document.Info = info;
+
+                    // Add security schemes
+                    document.Components ??= new Microsoft.OpenApi.OpenApiComponents();
+                    document.Components.SecuritySchemes["Bearer"] = new Microsoft.OpenApi.OpenApiSecurityScheme
                     {
-                        new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-                        {
-                            Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                            {
-                                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        }, new List<string>()
-                    }
+                        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                        Name = "Authorization",
+                        In = Microsoft.OpenApi.ParameterLocation.Header,
+                        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+                        Scheme = "Bearer",
+                        BearerFormat = "JWT"
+                    };
+
+                    return Task.CompletedTask;
                 });
             });
-
         }
 
-        private void ConfigureSwaggerUI(IApplicationBuilder app)
-        {
-            app.UseSwagger();
-
-            app.UseSwaggerUI(c =>
-            {
-                c.RoutePrefix = "docs";
-                c.DocumentTitle = "Certify Core Server API";
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Certify Core Server API");
-            });
-        }
 #endif
 
         private void ConfigureHttpsRedirection(IServiceCollection services)

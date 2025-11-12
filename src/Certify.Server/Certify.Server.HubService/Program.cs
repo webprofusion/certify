@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -145,103 +145,82 @@ builder.Services
     })
     .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
 
-// configure OpenAPI, swagger and API explorer
-builder.Services.AddOpenApi();
-
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(c =>
+// configure OpenAPI
+builder.Services.AddOpenApi("v1", options =>
 {
-    // docs UI will be available at /docs
+    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
 
-    c.SwaggerDoc("v1", new OpenApiInfo
+    // Add document information
+    var info = new OpenApiInfo
     {
         Title = "Certify Management Hub API",
         Version = "v1",
         Description = "The Certify Management Hub API provides a certificate services API for use in UI, devops, CI/CD, middleware etc. See certifytheweb.com for more details."
-    });
+    };
 
-    c.UseAllOfToExtendReferenceSchemas();
-
-    // use the actual method names as the generated operation id
-    c.CustomOperationIds(e =>
-        $"{e.ActionDescriptor.RouteValues["action"]}"
-    );
-
-    // declare authorization method
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-        Name = "Authorization",
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.Http
-    });
+        document.Info = info;
 
-    // add custom security definitions for client ID and client secret
-    c.AddSecurityDefinition("X-Client-ID", new OpenApiSecurityScheme
-    {
-        Description = "Client ID header",
-        Name = "X-Client-ID",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey
-    });
-    c.AddSecurityDefinition("X-Client-Secret", new OpenApiSecurityScheme
-    {
-        Description = "Client Secret header",
-        Name = "X-Client-Secret",
-        In = ParameterLocation.Header,
-        Type = SecuritySchemeType.ApiKey
-    });
-
-    // Add security requirements: either Bearer OR (X-Client-ID AND X-Client-Secret)
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+        // Add security schemes
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            }, new List<string>()
-        }
-    });
-
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "X-Client-ID" }
-            },
-            new List<string>()
-        },
-        {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "X-Client-Secret" }
-            },
-            new List<string>()
-        }
-    });
-
-    // Set the comments path for the Swagger JSON and UI.
-    var xmlFile = $"Certify.Server.Hub.Api.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
-
-    c.MapType<FileContentResult>(() =>
-    {
-        return new Microsoft.OpenApi.Models.OpenApiSchema
-        {
-            Type = "string",
-            Format = "binary",
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT"
         };
+
+        document.Components.SecuritySchemes["X-Client-ID"] = new OpenApiSecurityScheme
+        {
+            Description = "Client ID header",
+            Name = "X-Client-ID",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey
+        };
+
+        document.Components.SecuritySchemes["X-Client-Secret"] = new OpenApiSecurityScheme
+        {
+            Description = "Client Secret header",
+            Name = "X-Client-Secret",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey
+        };
+
+        return Task.CompletedTask;
     });
+
+    // Add operation customization for XML comments
+    options.AddOperationTransformer((operation, context, cancellationToken) =>
+    {
+        // Use the actual method names as the generated operation id
+        if (context.Description.ActionDescriptor.RouteValues.TryGetValue("action", out var action))
+        {
+            operation.OperationId = action;
+        }
+
+        return Task.CompletedTask;
+    });
+
+    // Add schema transformer for FileContentResult
+    options.AddSchemaTransformer((schema, context, cancellationToken) =>
+    {
+        if (context.JsonTypeInfo.Type == typeof(FileContentResult))
+        {
+            schema.Type = Microsoft.OpenApi.JsonSchemaType.String;
+            schema.Format = "binary";
+        }
+
+        return Task.CompletedTask;
+    });
+
 });
+
+builder.Services.AddEndpointsApiExplorer();
 
 // add an internal config store for hub api internal use (acme config etc)
 var acmeStore = new Certify.Datastore.SQLite.SQLiteConfigurationStore("acme-server", customDbFileName: "acme-config");
@@ -364,8 +343,8 @@ app.MapDefaultControllerRoute().WithStaticAssets();
 
 // publish scalar api docs endpoint in dev, e.g. https://localhost:44361/api/docs
 
-// Enable middleware to serve generated Swagger as a JSON endpoint.
-app.UseSwagger();
+// Enable middleware to serve generated OpenAPI document as a JSON endpoint.
+app.MapOpenApi();
 
 // Enable middleware to serve API docs
 app.MapScalarApiReference("/api/docs/", options =>
@@ -374,7 +353,7 @@ app.MapScalarApiReference("/api/docs/", options =>
                     .WithTitle("Certify Management Hub API")
                     .WithTheme(ScalarTheme.Solarized)
                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-                    .WithOpenApiRoutePattern("/swagger/v1/swagger.json");
+                    .WithOpenApiRoutePattern("/openapi/v1.json");
 
 });
 

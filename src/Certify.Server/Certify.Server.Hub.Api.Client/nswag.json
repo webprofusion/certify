@@ -3,7 +3,7 @@
   "defaultVariables": null,
   "documentGenerator": {
     "fromDocument": {
-      "url": "https://local.dev.certificatemanager.app:44361/swagger/v1/swagger.json",
+      "url": "https://local.dev.certificatemanager.app:44361/openapi/v1.json",
       "output": null,
       "newLineBehavior": "Auto"
     }
