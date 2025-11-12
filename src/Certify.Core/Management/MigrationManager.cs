@@ -24,7 +24,7 @@ namespace Certify.Core.Management
     /// </summary>
     public class MigrationManager
     {
-        private const string EncryptionScheme = "Default";
+        private const string EncryptionScheme = "default";
         private IManagedItemStore _itemManager;
         private ICredentialsManager _credentialsManager;
         private List<ITargetWebServer> _targetServers;
@@ -40,7 +40,9 @@ namespace Certify.Core.Management
         /// <summary>
         /// Export the managed certificates and related settings for the given filter
         /// </summary>
-        /// <param name="filter"></param>
+        /// <param name="filter">Filter to determine which certificates to export</param>
+        /// <param name="settings">Export settings including encryption password</param>
+        /// <param name="isPreview">If true, perform preview only without actual export</param>
         /// <returns>Package of exported settings</returns>
         public async Task<ImportExportPackage> PerformExport(ManagedCertificateFilter filter, ExportSettings settings, bool isPreview)
         {
@@ -54,14 +56,10 @@ namespace Certify.Core.Management
                 EncryptionSalt = salt,
                 EncryptionValidation = new EncryptedContent
                 {
-                    Content = EncryptBytes(Encoding.ASCII.GetBytes("Secret"), settings.EncryptionSecret, salt),
+                    Content = EncryptBytes(Encoding.UTF8.GetBytes("Secret"), settings.EncryptionSecret, salt),
                     Scheme = EncryptionScheme
                 }
             };
-
-            // export managed certs, related certificate files, stored credentials
-
-            // deployment tasks with local script or path references will need to copy the scripts separately. Need a summary of items to copy.
 
             var managedCerts = await _itemManager.Find(filter);
 
@@ -100,11 +98,17 @@ namespace Certify.Core.Management
 
             // for each managed cert, check used stored credentials (DNS challenges or deployment tasks)
             var allCredentials = await _credentialsManager.GetCredentials();
-            var usedCredentials = new List<StoredCredential>();
+            var usedCredentialsDict = new Dictionary<string, StoredCredential>();
 
             if (settings.ExportAllStoredCredentials)
             {
-                usedCredentials.AddRange(allCredentials);
+                foreach (var cred in allCredentials)
+                {
+                    if (cred.StorageKey != null && !usedCredentialsDict.ContainsKey(cred.StorageKey))
+                    {
+                        usedCredentialsDict[cred.StorageKey] = cred;
+                    }
+                }
             }
             else
             {
@@ -113,12 +117,12 @@ namespace Certify.Core.Management
                     // gather credentials used by cert 
                     if (c.CertificatePasswordCredentialId?.AsNullWhenBlank() != null)
                     {
-                        if (!usedCredentials.Any(u => u.StorageKey == c.CertificatePasswordCredentialId))
+                        if (!usedCredentialsDict.ContainsKey(c.CertificatePasswordCredentialId))
                         {
                             var usedCredential = allCredentials.FirstOrDefault(a => a.StorageKey == c.CertificatePasswordCredentialId);
                             if (usedCredential != null)
                             {
-                                usedCredentials.Add(usedCredential);
+                                usedCredentialsDict[c.CertificatePasswordCredentialId] = usedCredential;
                             }
                         }
                     }
@@ -140,20 +144,17 @@ namespace Certify.Core.Management
                     {
                         var usedTaskCredentials = allTasks
                             .Select(t => t.ChallengeCredentialKey)
-                            .Distinct()
-                            .Where(t => allCredentials.Any(ac => ac.StorageKey == t));
+                            .Where(k => !string.IsNullOrEmpty(k))
+                            .Distinct();
 
-                        foreach (var used in usedTaskCredentials)
+                        foreach (var credKey in usedTaskCredentials)
                         {
-                            if (used != null)
+                            if (!usedCredentialsDict.ContainsKey(credKey))
                             {
-                                var usedCredential = allCredentials.FirstOrDefault(u => u.StorageKey == used);
+                                var usedCredential = allCredentials.FirstOrDefault(u => u.StorageKey == credKey);
                                 if (usedCredential != null)
                                 {
-                                    if (!usedCredentials.Any(u => u.StorageKey == used))
-                                    {
-                                        usedCredentials.Add(usedCredential);
-                                    }
+                                    usedCredentialsDict[credKey] = usedCredential;
                                 }
                             }
                         }
@@ -162,11 +163,11 @@ namespace Certify.Core.Management
             }
 
             // decrypt each used stored credential, re-encrypt and base64 encode secret
-            foreach (var c in usedCredentials)
+            foreach (var c in usedCredentialsDict.Values)
             {
                 try
                 {
-                    var decrypted = await _credentialsManager.GetUnlockedCredential(c?.StorageKey);
+                    var decrypted = await _credentialsManager.GetUnlockedCredential(c.StorageKey);
                     if (decrypted != null)
                     {
                         var encBytes = EncryptBytes(Encoding.UTF8.GetBytes(decrypted), settings.EncryptionSecret, export.EncryptionSalt);
@@ -175,26 +176,23 @@ namespace Certify.Core.Management
                 }
                 catch (Exception)
                 {
-                    // decryption failed
-                    c.Title += " [Update Required. Decryption Failed]";
+                    // decryption failed - add to errors list without modifying the credential title
+                    var originalTitle = c.Title;
+                    export.Errors.Add($"Stored Credential [{originalTitle}] could not be decrypted for export. It may be owned by a different user.");
                     c.Secret = "";
-                    export.Errors.Add($"Stored Credential [{c.Title}] could not be decrypted for export. It may be owned by a different user.");
                 }
             }
 
-            export.Content.StoredCredentials = usedCredentials;
+            export.Content.StoredCredentials = usedCredentialsDict.Values.ToList();
 
-            // for each managed cert, check and summarise used local scripts
-
-            // copy acme-dns settings
-
-            // export acme accounts?
             return export;
         }
 
         private IEnumerable<EncryptedContent> GetTaskScriptsAndContent(ObservableCollection<DeploymentTaskConfig> tasks, string secret, string salt)
         {
             var scriptsAndContent = new List<EncryptedContent>();
+            var processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             if (tasks?.Any() == true)
             {
                 foreach (var t in tasks)
@@ -205,7 +203,7 @@ namespace Certify.Core.Management
                         {
                             if (p.Value.IndexOfAny(Path.GetInvalidPathChars()) == -1)
                             {
-                                if (File.Exists(p.Value))
+                                if (File.Exists(p.Value) && processedFiles.Add(p.Value))
                                 {
                                     try
                                     {
@@ -231,9 +229,11 @@ namespace Certify.Core.Management
         private Aes GetAlg(string secret, string salt)
         {
 #if NET9_0_OR_GREATER
+            var saltBytes = Encoding.ASCII.GetBytes(salt);
+
             if (_encryptionScheme == "default")
             {
-                var saltBytes = Encoding.ASCII.GetBytes(salt);
+                // Legacy mode for backward compatibility with existing packages
 #pragma warning disable SYSLIB0041 // Type or member is obsolete
                 var key = new Rfc2898DeriveBytes(secret, saltBytes);
 #pragma warning restore SYSLIB0041 // Type or member is obsolete
@@ -249,8 +249,7 @@ namespace Certify.Core.Management
             }
             else
             {
-
-                var saltBytes = Encoding.ASCII.GetBytes(salt);
+                // Modern encryption with higher iteration count
                 var key = new Rfc2898DeriveBytes(secret, saltBytes, 600000, HashAlgorithmName.SHA256);
 
                 var aesAlg = Aes.Create();
@@ -264,7 +263,9 @@ namespace Certify.Core.Management
             }
 #else
             var saltBytes = Encoding.ASCII.GetBytes(salt);
-            var key = new Rfc2898DeriveBytes(secret, saltBytes);
+            
+            // Use stronger iteration count even on older .NET versions where possible
+            var key = new Rfc2898DeriveBytes(secret, saltBytes, 100000, HashAlgorithmName.SHA256);
 
             var aesAlg = Aes.Create();
             aesAlg.Mode = CipherMode.CBC;
@@ -289,32 +290,26 @@ namespace Certify.Core.Management
 
         public byte[] DecryptBytes(byte[] source, string secret, string salt)
         {
-            using (var rmCrypto = GetAlg(secret, salt))
-            {
-                using (var decryptor = rmCrypto.CreateDecryptor())
-                {
-                    using var memoryStream = new MemoryStream(source);
-                    using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
-                    using var resultStream = new MemoryStream();
-                    cryptoStream.CopyTo(resultStream);
+            using var rmCrypto = GetAlg(secret, salt);
+            using var decryptor = rmCrypto.CreateDecryptor();
+            using var memoryStream = new MemoryStream(source);
+            using var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read);
+            using var resultStream = new MemoryStream();
+            cryptoStream.CopyTo(resultStream);
 
-                    return resultStream.ToArray();
-                }
-            }
+            return resultStream.ToArray();
         }
 
         /// <summary>
-        /// 
+        /// Import managed certificates and related settings from an export package
         /// </summary>
-        /// <param name="package"></param>
-        /// <param name="isPreviewMode"></param>
-        /// <returns></returns>
+        /// <param name="package">The import/export package to import from</param>
+        /// <param name="settings">Import settings including encryption password</param>
+        /// <param name="isPreviewMode">If true, perform preview only without actual import</param>
+        /// <returns>List of action steps describing what was imported</returns>
         public async Task<List<ActionStep>> PerformImport(ImportExportPackage package, ImportSettings settings, bool isPreviewMode)
         {
-            // apply import
             var steps = new List<ActionStep>();
-
-            // import managed certs, certificate files, stored credentials, CAs
 
             var currentAppVersion = Certify.Management.Util.GetAppVersion();
 
@@ -335,10 +330,9 @@ namespace Certify.Core.Management
             try
             {
                 var decryptionCheckBytes = DecryptBytes(package.EncryptionValidation.Content, settings.EncryptionSecret, package.EncryptionSalt);
-                var decryptionCheckString = Encoding.ASCII.GetString(decryptionCheckBytes).Trim('\0');
+                var decryptionCheckString = Encoding.UTF8.GetString(decryptionCheckBytes).Trim('\0');
                 if (decryptionCheckString != "Secret")
                 {
-                    // failed decryption
                     decryptionFailed = true;
                 }
             }
@@ -355,7 +349,6 @@ namespace Certify.Core.Management
             else
             {
                 steps.Add(new ActionStep { Title = "Decryption Check", Category = "Import", Key = "Decrypt", Description = "Secrets can be decrypted OK using the provided password." });
-
             }
 
             // stored credentials
@@ -376,7 +369,6 @@ namespace Certify.Core.Management
                     {
                         if (!isPreviewMode)
                         {
-                            // perform import
                             var result = await _credentialsManager.Update(c);
                             if (result != null)
                             {
@@ -389,13 +381,11 @@ namespace Certify.Core.Management
                         }
                         else
                         {
-                            // preview only
                             credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey });
                         }
                     }
                     else
                     {
-                        // credential already exists
                         credentialImportSteps.Add(new ActionStep { Title = c.Title, Key = c.StorageKey, HasWarning = true, Description = $"Credential already exists, it will not be re-imported." });
                     }
                 }
@@ -409,11 +399,15 @@ namespace Certify.Core.Management
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials", HasError = credentialImportSteps.Any(i => i.HasError), HasWarning = credentialImportSteps.Any(i => i.HasWarning) });
 
             var targetSiteBindings = new List<BindingInfo>();
-            foreach (var targetServer in _targetServers)
+            
+            if (_targetServers != null)
             {
-                if (await targetServer?.IsAvailable() == true)
+                foreach (var targetServer in _targetServers)
                 {
-                    targetSiteBindings.AddRange(await targetServer.GetSiteBindingList(false));
+                    if (await targetServer?.IsAvailable() == true)
+                    {
+                        targetSiteBindings.AddRange(await targetServer.GetSiteBindingList(false));
+                    }
                 }
             }
 
@@ -424,11 +418,8 @@ namespace Certify.Core.Management
                 var existing = await _itemManager.GetById(c.Id);
                 if (existing == null || settings.OverwriteExisting)
                 {
-
-                    // check if item is auto deployment or single site, if single site warn if we don't have an exact match (convert to Auto)
                     var deploymentMode = c.RequestConfig.DeploymentSiteOption;
                     var hasUnmatchedTargets = false;
-                    var siteIdChanged = false;
 
                     var warningMsg = "";
                     if (deploymentMode == DeploymentOption.SingleSite)
@@ -437,8 +428,6 @@ namespace Certify.Core.Management
 
                         if (targets.Any())
                         {
-                            //exact match on site id, check domains
-
                             var unmatchedDomains = new List<string>();
                             foreach (var d in c.GetCertificateDomains())
                             {
@@ -448,32 +437,32 @@ namespace Certify.Core.Management
                                 {
                                     unmatchedDomains.Add(d);
                                     hasUnmatchedTargets = true;
-                                    warningMsg += " " + d;
+                                    warningMsg += (string.IsNullOrEmpty(warningMsg) ? "Unmatched domains:" : ",") + " " + d;
                                 }
                             }
                         }
                         else
                         {
                             hasUnmatchedTargets = true;
-                            warningMsg += $"IIS SiteID {c.ServerSiteId} could not be matched for Single Site deployment mode. Deployment switched to Auto mode.";
+                            warningMsg = $"IIS SiteID {c.ServerSiteId} could not be matched for Single Site deployment mode. Deployment switched to Auto mode.";
                             c.RequestConfig.DeploymentSiteOption = DeploymentOption.Auto;
                         }
                     }
 
                     if (!isPreviewMode)
                     {
-                        // perform actual import
                         try
                         {
-                            // TODO : re-map certificate pfx path, could be a different location on this instance
-                            // warn if deployment task script paths don't match an existing file?
-
-                            // TODO : warn if Certificate Authority ID does not match one we have (cert renewal will fail)
-
                             var result = await _itemManager.Update(c);
                             if (result != null)
                             {
-                                managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id, HasWarning = (hasUnmatchedTargets || siteIdChanged) });
+                                managedCertImportSteps.Add(new ActionStep 
+                                { 
+                                    Title = c.Name, 
+                                    Key = c.Id, 
+                                    HasWarning = hasUnmatchedTargets,
+                                    Description = hasUnmatchedTargets ? warningMsg : null
+                                });
                             }
                             else
                             {
@@ -487,8 +476,13 @@ namespace Certify.Core.Management
                     }
                     else
                     {
-                        // preview only
-                        managedCertImportSteps.Add(new ActionStep { Title = c.Name, Key = c.Id });
+                        managedCertImportSteps.Add(new ActionStep 
+                        { 
+                            Title = c.Name, 
+                            Key = c.Id,
+                            HasWarning = hasUnmatchedTargets,
+                            Description = hasUnmatchedTargets ? warningMsg : null
+                        });
                     }
                 }
                 else
@@ -505,7 +499,7 @@ namespace Certify.Core.Management
             {
                 var pfxBytes = DecryptBytes(c.Content, settings.EncryptionSecret, package.EncryptionSalt);
 
-                X509Certificate2 cert = null;
+                X509Certificate2? cert = null;
 
                 try
                 {
@@ -517,7 +511,6 @@ namespace Certify.Core.Management
                     var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename && m.CertificatePasswordCredentialId?.AsNullWhenBlank() != null);
                     if (managedCert != null)
                     {
-                        //get stored cred
                         var cred = await _credentialsManager.GetUnlockedCredentialsDictionary(managedCert.CertificatePasswordCredentialId);
                         if (cred != null)
                         {
@@ -528,7 +521,7 @@ namespace Certify.Core.Management
                             }
                             catch
                             {
-                                // failed to load the provided cert, cert will remain null and failure will be reported in the import action step
+                                // failed to load the provided cert, cert will remain null
                             }
                         }
                     }
@@ -536,72 +529,64 @@ namespace Certify.Core.Management
 
                 if (cert != null)
                 {
-
-                    var isVerified = cert.Verify();
-                    var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename);
-                    string pfxPath = null;
-                    if (managedCert != null)
+                    using (cert)
                     {
-                        // remap a new path
-
-                        var primaryIdentifierPath = CertificateManager.GetPrimaryIdentifierAsPath(managedCert.RequestConfig, managedCert.Id);
-
-                        var storePath = Path.GetFullPath(Path.Combine(new string[] { EnvironmentUtil.EnsuredAppDataPath(), "assets", primaryIdentifierPath }));
-
-                        if (!isPreviewMode && !System.IO.Directory.Exists(storePath))
+                        var isVerified = cert.Verify();
+                        var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename);
+                        string? pfxPath = null;
+                        
+                        if (managedCert != null)
                         {
-                            System.IO.Directory.CreateDirectory(storePath);
+                            var primaryIdentifierPath = CertificateManager.GetPrimaryIdentifierAsPath(managedCert.RequestConfig, managedCert.Id);
+                            var storePath = Path.GetFullPath(Path.Combine(new string[] { EnvironmentUtil.EnsuredAppDataPath(), "assets", primaryIdentifierPath }));
+                            
+                            if (!isPreviewMode && !System.IO.Directory.Exists(storePath))
+                            {
+                                System.IO.Directory.CreateDirectory(storePath);
+                            }
+
+                            // Extract just the filename from the original path, handling both Windows and Unix path separators
+                            var pfxFile = Path.GetFileName(c.Filename.Replace('\\', Path.DirectorySeparatorChar));
+                            pfxPath = Path.Combine(storePath, pfxFile);
                         }
 
-                        var pfxFile = Path.GetFileName(c.Filename);
-                        pfxPath = Path.Combine(storePath, pfxFile);
-                    }
-
-                    if (pfxPath != null && (!System.IO.File.Exists(pfxPath) || settings.OverwriteExisting))
-                    {
-
-                        if (!isPreviewMode)
+                        if (pfxPath != null && (!System.IO.File.Exists(pfxPath) || settings.OverwriteExisting))
                         {
-                            // perform actual import, re-map cert PFX storage location
-                            try
+                            if (!isPreviewMode)
                             {
-                                // write cert file
-                                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
-
-                                // update managed cert to point to new path
-                                var item = await _itemManager.GetById(managedCert.Id);
-                                if (item.CertificatePath != pfxPath)
+                                try
                                 {
-                                    item.CertificatePath = pfxPath;
-                                    await _itemManager.Update(item);
-                                }
+                                    System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
 
-                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
+                                    // update managed cert to point to new path
+                                    var item = await _itemManager.GetById(managedCert.Id);
+                                    if (item != null && item.CertificatePath != pfxPath)
+                                    {
+                                        item.CertificatePath = pfxPath;
+                                        await _itemManager.Update(item);
+                                    }
+
+                                    certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
+                                }
+                                catch (Exception exp)
+                                {
+                                    certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {pfxPath} [{exp.Message}]" });
+                                }
                             }
-                            catch (Exception exp)
+                            else
                             {
-                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {pfxPath} [{exp.Message}]" });
+                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? $"Source path {c.Filename} would import to " + pfxPath : "Certificate did not pass verify check." });
                             }
                         }
                         else
                         {
-                            // preview only
-                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? $"Source path {c.Filename} would import to " + pfxPath : "Certificate did not pass verify check." });
+                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = $"Output file [{pfxPath}] already exists, it will not be re-imported" });
                         }
                     }
-                    else
-                    {
-                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = $"Output file [{pfxPath}] already exists, it will not be re-imported" });
-                    }
-
-                    //cleanup cert so temp RSA keys get removed on disk
-                    cert?.Dispose();
-                    cert = null;
                 }
                 else
                 {
                     certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX Failed", Key = c.Filename, HasWarning = true, Description = "Could not create PFX from bytes. Password may be incorrect." });
-
                 }
             }
 
