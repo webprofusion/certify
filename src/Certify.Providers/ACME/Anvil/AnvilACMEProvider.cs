@@ -11,6 +11,7 @@ using Certify.ACME.Anvil;
 using Certify.ACME.Anvil.Acme;
 using Certify.ACME.Anvil.Acme.Resource;
 using Certify.ACME.Anvil.Jws;
+using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -1483,7 +1484,7 @@ namespace Certify.Providers.ACME.Anvil
 
             IKey csrKey = null;
 
-            var primaryIdentifierAsPath = GetPrimaryIdentifierAsPath(config, managedCertificate.Id);
+            var primaryIdentifierAsPath = CertificateManager.GetPrimaryIdentifierAsPath(config, managedCertificate.Id);
 
             if (!string.IsNullOrEmpty(config.CustomPrivateKey))
             {
@@ -1692,21 +1693,6 @@ namespace Certify.Providers.ACME.Anvil
                 SupportingData = cert
             };
         }
-
-        private string GetIdentifierAsPath(string identifier)
-        {
-            var path = identifier?.Replace("*", "_") ?? "";
-
-            if (path.StartsWith("con."))
-            {
-                // on some versions of windows creating a path with a con. prefix fails.
-                path = path.Replace("con.", "_con.");
-            }
-
-            return path;
-        }
-
-        private string GetPrimaryIdentifierAsPath(CertRequestConfig config, string internalId) => GetIdentifierAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
 
         private byte[] GetCACertsFromStore(System.Security.Cryptography.X509Certificates.StoreName storeName)
         {

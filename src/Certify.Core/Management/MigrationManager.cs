@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -14,6 +15,7 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
+using Certify.Providers.ACME.Anvil;
 
 namespace Certify.Core.Management
 {
@@ -404,7 +406,7 @@ namespace Certify.Core.Management
                 }
             }
 
-            steps.Add(new ActionStep {Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials", HasError = credentialImportSteps.Any(i => i.HasError), HasWarning = credentialImportSteps.Any(i => i.HasWarning) });
+            steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials", HasError = credentialImportSteps.Any(i => i.HasError), HasWarning = credentialImportSteps.Any(i => i.HasWarning) });
 
             var targetSiteBindings = new List<BindingInfo>();
             foreach (var targetServer in _targetServers)
@@ -495,7 +497,7 @@ namespace Certify.Core.Management
                 }
             }
 
-            steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts", HasError=managedCertImportSteps.Any(i=>i.HasError), HasWarning= managedCertImportSteps.Any(i => i.HasWarning) });
+            steps.Add(new ActionStep { Title = "Import Managed Certificates", Category = "Import", Substeps = managedCertImportSteps, Key = "ManagedCerts", HasError = managedCertImportSteps.Any(i => i.HasError), HasWarning = managedCertImportSteps.Any(i => i.HasWarning) });
 
             // certificate files
             var certFileImportSteps = new List<ActionStep>();
@@ -536,38 +538,60 @@ namespace Certify.Core.Management
                 {
 
                     var isVerified = cert.Verify();
+                    var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename);
+                    string pfxPath = null;
+                    if (managedCert != null)
+                    {
+                        // remap a new path
 
-                    if (!System.IO.File.Exists(c.Filename) || settings.OverwriteExisting)
+                        var primaryIdentifierPath = CertificateManager.GetPrimaryIdentifierAsPath(managedCert.RequestConfig, managedCert.Id);
+
+                        var storePath = Path.GetFullPath(Path.Combine(new string[] { EnvironmentUtil.EnsuredAppDataPath(), "assets", primaryIdentifierPath }));
+
+                        if (!isPreviewMode && !System.IO.Directory.Exists(storePath))
+                        {
+                            System.IO.Directory.CreateDirectory(storePath);
+                        }
+
+                        var pfxFile = Path.GetFileName(c.Filename);
+                        pfxPath = Path.Combine(storePath, pfxFile);
+                    }
+
+                    if (pfxPath != null && (!System.IO.File.Exists(pfxPath) || settings.OverwriteExisting))
                     {
 
                         if (!isPreviewMode)
                         {
-                            // perform actual import, TODO: re-map cert PFX storage location
+                            // perform actual import, re-map cert PFX storage location
                             try
                             {
-                                // create path if we need to
-                                var pathInfo = new System.IO.FileInfo(c.Filename);
-                                pathInfo.Directory.Create();
-
                                 // write cert file
-                                System.IO.File.WriteAllBytes(c.Filename, pfxBytes);
+                                System.IO.File.WriteAllBytes(pfxPath, pfxBytes);
+
+                                // update managed cert to point to new path
+                                var item = await _itemManager.GetById(managedCert.Id);
+                                if (item.CertificatePath != pfxPath)
+                                {
+                                    item.CertificatePath = pfxPath;
+                                    await _itemManager.Update(item);
+                                }
 
                                 certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? null : "Certificate did not pass verify check." });
                             }
                             catch (Exception exp)
                             {
-                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {c.Filename} [{exp.Message}]" });
+                                certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasError = true, Description = $"Failed to write certificate to destination: {pfxPath} [{exp.Message}]" });
                             }
                         }
                         else
                         {
                             // preview only
-                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? "Would import to " + c.Filename : "Certificate did not pass verify check." });
+                            certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = !isVerified, Description = isVerified ? $"Source path {c.Filename} would import to " + pfxPath : "Certificate did not pass verify check." });
                         }
                     }
                     else
                     {
-                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = "Output file already exists, it will not be re-imported" });
+                        certFileImportSteps.Add(new ActionStep { Title = $"Importing PFX {cert.Subject}, expiring {cert.NotAfter}", Key = c.Filename, HasWarning = true, Description = $"Output file [{pfxPath}] already exists, it will not be re-imported" });
                     }
 
                     //cleanup cert so temp RSA keys get removed on disk

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -420,7 +420,7 @@ namespace Certify.Management
             // now check if cert is accessible and private key is OK (in some cases cert is not
             // storing private key properly)
             var storedCert = GetCertificateByThumbprint(cert.Thumbprint, storeName);
-            
+
             cert.Dispose();
 
             if (enableRetryBehaviour)
@@ -1036,5 +1036,22 @@ namespace Certify.Management
                 return false;
             }
         }
+
+        public static string GetIdentifierAsPath(string identifier)
+        {
+            var path = identifier?.Replace("*", "_") ?? "";
+
+            if (path.StartsWith("con."))
+            {
+                // on some versions of windows creating a path with a con. prefix fails.
+                path = path.Replace("con.", "_con.");
+            }
+
+            return path;
+        }
+
+        public static string GetPrimaryIdentifierAsPath(CertRequestConfig config, string internalId) => GetIdentifierAsPath(string.IsNullOrEmpty(config.PrimaryDomain) ? internalId : config.PrimaryDomain);
+
     }
 }
+
