@@ -677,6 +677,8 @@ namespace Certify.Management
         /// </summary>
         private void LoadCertificateAuthorities()
         {
+            bool alreadyLoaded = _certificateAuthorities.Any();
+
             _certificateAuthorities.Clear();
 
             // load core CAs and custom CAs
@@ -694,12 +696,15 @@ namespace Certify.Management
                     _certificateAuthorities.TryAdd(ca.Id, ca);
                 }
 
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_CA_CUSTOM_LOAD,
-                    title: "Core Service Load Custom CAs",
-                    description: $"Loaded custom Certificate Authority config"
-                );
+                if (!alreadyLoaded)
+                {
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_CA_CUSTOM_LOAD,
+                        title: "Core Service Load Custom CAs",
+                        description: $"Loaded custom Certificate Authority config"
+                    );
+                }
             }
             catch (Exception exp)
             {
