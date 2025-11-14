@@ -188,7 +188,7 @@ namespace Certify.Management
 
             try
             {
-                var cert = LoadCertificate(filename, pwd);
+                using var cert = LoadCertificate(filename, pwd, ephemeralKeySet: true);
 
                 var chain = new X509Chain();
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
@@ -217,13 +217,20 @@ namespace Certify.Management
             }
         }
 
-        public static X509Certificate2 LoadCertificate(string filename, string pwd = "", bool throwOnError = false)
+        public static X509Certificate2 LoadCertificate(string filename, string pwd = "", bool throwOnError = false, bool ephemeralKeySet = false)
         {
 #if NET9_0_OR_GREATER
             try
             {
                 var pfxBytes = File.ReadAllBytes(filename);
-                return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                if (ephemeralKeySet)
+                {
+                    return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.EphemeralKeySet);
+                }
+                else
+                {
+                    return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                }
             }
             catch (Exception exp)
             {
@@ -240,8 +247,7 @@ namespace Certify.Management
 #else
             try
             {
-                var cert = new X509Certificate2(filename, pwd);
-                return cert;
+                return new X509Certificate2(filename, pwd);
             }
             catch (Exception exp)
             {
