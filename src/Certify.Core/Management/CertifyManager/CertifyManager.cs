@@ -426,6 +426,22 @@ namespace Certify.Management
 
             // perform managhed challenge cleanup tasks (if any)
             _ = PerformManagedChallengeCleanup();
+
+            CleanupStaleChallengeResponses();
+        }
+
+        // Add periodic cleanup for stale challenges
+        private void CleanupStaleChallengeResponses()
+        {
+            var staleKeys = _currentChallenges
+                .Where(kvp => DateTimeOffset.Now - kvp.Value.Created > TimeSpan.FromHours(1))
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in staleKeys)
+            {
+                _currentChallenges.TryRemove(key, out _);
+            }
         }
 
         private async Task PerformServiceUpgrades()

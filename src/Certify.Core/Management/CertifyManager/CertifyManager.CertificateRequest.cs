@@ -1308,7 +1308,8 @@ namespace Certify.Management
                                 {
                                     ChallengeType = rc.ChallengeType,
                                     Key = rc.Key,
-                                    Value = rc.Value
+                                    Value = rc.Value,
+                                    Created = DateTimeOffset.UtcNow
                                 });
                         }
 

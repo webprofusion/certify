@@ -48,6 +48,8 @@ namespace Certify.Models
         public string? ChallengeType { get; set; } = string.Empty;
         public string? Key { get; set; }
         public string? Value { get; set; }
+
+        public DateTimeOffset? Created { get; set; }
     }
 
     /// <summary>

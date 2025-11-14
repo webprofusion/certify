@@ -113,9 +113,6 @@ namespace Certify.Management
 
                 _tc?.TrackEvent("ServiceDailyTaskCheck");
 
-                // clear old cache of challenge responses
-                _currentChallenges = new ConcurrentDictionary<string, SimpleAuthorizationChallengeItem>();
-
                 // use latest settings
                 SettingsManager.LoadAppSettings();
 
@@ -137,7 +134,6 @@ namespace Certify.Management
 
                 // update current license check
                 await RefreshCachedLicenseCheck();
-
             }
             catch (Exception exp)
             {
