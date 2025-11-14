@@ -411,7 +411,10 @@ namespace Certify.Management
 
             if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
             {
-                await RandomlyUpdateDemoItems();
+                if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEM_UPDATES") == "true")
+                {
+                    await RandomlyUpdateDemoItems();
+                }
             }
         }
 
