@@ -237,7 +237,7 @@ namespace Certify.Management
 
                     if (renewalInfoItemsToCheck?.Any() == true)
                     {
-                        _serviceLog.Information($"Performing Renewal Info checks for {renewalInfoItemsToCheck.Count} items");
+                        _serviceLog.Debug($"Performing Renewal Info checks for {renewalInfoItemsToCheck.Count} items");
 
                         var directoryInfoCache = new Dictionary<string, AcmeDirectoryInfo>();
 
@@ -256,7 +256,7 @@ namespace Certify.Management
                 }
                 else if (disableARIChecks)
                 {
-                    _serviceLog.Information("ARI Checks are disabled.");
+                    _serviceLog.Debug("ARI Checks are disabled.");
                 }
 
                 var allItemsToUpdate = new List<string>(completedOcspUpdateChecks);
