@@ -125,7 +125,7 @@ namespace Certify.Core.Management.Challenges
                     _isActive = true;
                     _httpListener = new HttpListener();
 
-                    _baseUri = $"http://{serverConfig.Host}:{serverConfig.Port}/api/";
+                    _baseUri = $"{(serverConfig.UseHTTPS ? "https" : "http")}://{serverConfig.Host}:{serverConfig.Port}/api/";
 
                     _apiClient = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true });
                     _apiClient.DefaultRequestHeaders.Add("User-Agent", "Certify/HttpChallengeServer");
