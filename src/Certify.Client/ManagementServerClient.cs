@@ -11,7 +11,6 @@ namespace Certify.Client
     /// </summary>
     public class ManagementServerClient : IManagementServerClient
     {
-#pragma warning disable CS0067 // The event is never used
         public event Action OnConnectionReconnecting;
 
         public event Action OnConnectionReconnected;
@@ -19,7 +18,6 @@ namespace Certify.Client
         public event Action OnConnectionClosed;
 
         public event Func<ManagedInstanceItems> OnGetInstanceItems;
-#pragma warning restore CS0067 // The event is never used
 
         public event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
 
@@ -92,22 +90,50 @@ namespace Certify.Client
                 PerformRequestedCommand(s);
             }));
 
-            await _connection.StartAsync();
+            // Wire up connection lifecycle events
+            _connection.Reconnecting += (error) =>
+            {
+                Log($"[ManagementServerClient] Reconnecting to hub. Error: {error?.Message}");
+                OnConnectionReconnecting?.Invoke();
+                return Task.CompletedTask;
+            };
+
+            _connection.Reconnected += (connectionId) =>
+            {
+                Log($"[ManagementServerClient] Reconnected to hub. ConnectionId: {connectionId}");
+                OnConnectionReconnected?.Invoke();
+                return Task.CompletedTask;
+            };
 
             _connection.Closed += async (error) =>
             {
+                Log($"[ManagementServerClient] Connection closed. Error: {error?.Message}");
+                OnConnectionClosed?.Invoke();
+                
                 // if we are disconnected, wait a random amount of time and try to reconnect
                 await Task.Delay(new Random().Next(0, 5) * 1000);
-                await _connection.StartAsync();
+                
+                try
+                {
+                    await _connection.StartAsync();
+                }
+                catch (Exception ex)
+                {
+                    Log($"[ManagementServerClient] Failed to reconnect: {ex.Message}");
+                }
             };
 
+            await _connection.StartAsync();
         }
 
         public async Task Disconnect()
         {
-            await _connection.StopAsync();
-
+            if (_connection != null)
+            {
+                await _connection.StopAsync();
+            }
         }
+
         private void PerformRequestedCommand(InstanceCommandRequest cmd)
         {
             Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
@@ -138,17 +164,31 @@ namespace Certify.Client
         /// <param name="isCommandResponse">If false, message is not being sent in response to an existing query </param>
         public void SendInstanceInfo(Guid commandId, bool isCommandResponse = true)
         {
-            // send this clients instance ID back to the hub to identify it in the connection: should send a shared secret before this to confirm this client knows and is not impersonating another instance
-            var result = new InstanceCommandResult
+            try
             {
-                CommandId = commandId,
-                CommandType = ManagementHubCommands.GetInstanceInfo,
-                Value = System.Text.Json.JsonSerializer.Serialize(_instanceInfo),
-                IsCommandResponse = isCommandResponse
-            };
+                if (_connection?.State != HubConnectionState.Connected)
+                {
+                    Log($"[ManagementServerClient] Cannot send instance info - not connected (State: {_connection?.State})");
+                    return;
+                }
 
-            result.ObjectValue = _instanceInfo;
-            _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                // send this clients instance ID back to the hub to identify it in the connection: should send a shared secret before this to confirm this client knows and is not impersonating another instance
+                var result = new InstanceCommandResult
+                {
+                    CommandId = commandId,
+                    CommandType = ManagementHubCommands.GetInstanceInfo,
+                    Value = System.Text.Json.JsonSerializer.Serialize(_instanceInfo),
+                    IsCommandResponse = isCommandResponse
+                };
+
+                result.ObjectValue = _instanceInfo;
+                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result).Wait();
+            }
+            catch (Exception ex)
+            {
+                Log($"[ManagementServerClient] Error sending instance info: {ex.Message}");
+                throw;
+            }
         }
 
         /// <summary>
@@ -156,18 +196,32 @@ namespace Certify.Client
         /// </summary>
         public void SendNotificationToManagementHub(string msgCommandType, object updateMsg)
         {
-            var result = new InstanceCommandResult
+            try
             {
-                CommandId = Guid.NewGuid(),
-                InstanceId = _instanceInfo.InstanceId,
-                CommandType = msgCommandType,
-                Value = System.Text.Json.JsonSerializer.Serialize(updateMsg),
-                ObjectValue = updateMsg,
-                IsCommandResponse = false
-            };
+                if (_connection?.State != HubConnectionState.Connected)
+                {
+                    Log($"[ManagementServerClient] Cannot send notification - not connected (State: {_connection?.State})");
+                    return;
+                }
 
-            result.ObjectValue = updateMsg;
-            _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                var result = new InstanceCommandResult
+                {
+                    CommandId = Guid.NewGuid(),
+                    InstanceId = _instanceInfo.InstanceId,
+                    CommandType = msgCommandType,
+                    Value = System.Text.Json.JsonSerializer.Serialize(updateMsg),
+                    ObjectValue = updateMsg,
+                    IsCommandResponse = false
+                };
+
+                result.ObjectValue = updateMsg;
+                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result).Wait();
+            }
+            catch (Exception ex)
+            {
+                Log($"[ManagementServerClient] Error sending notification ({msgCommandType}): {ex.Message}");
+                throw;
+            }
         }
 
         public void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo)

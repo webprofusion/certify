@@ -424,8 +424,42 @@ namespace Certify.Management
 
         private void SendHeartbeatToManagementHub()
         {
-            _managementServerClient.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
-            _managementServerClient.SendInstanceInfo(Guid.NewGuid(), isCommandResponse: false);
+            try
+            {
+                if (_managementServerClient == null || !_managementServerClient.IsConnected())
+                {
+                    _serviceLog.Warning("Cannot send heartbeat - not connected to Management Hub");
+                    
+                    // Trigger reconnection attempt
+                    _ = Task.Run(async () => await EnsureMgmtHubConnection());
+                    
+                    return;
+                }
+                
+                _managementServerClient.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
+                _managementServerClient.SendInstanceInfo(Guid.NewGuid(), isCommandResponse: false);
+                
+                _serviceLog.Debug("Heartbeat sent to Management Hub");
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Failed to send heartbeat to Management Hub");
+                
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                    "Management Hub Connection",
+                    $"Heartbeat failed: {ex.Message}. Will attempt to reconnect.",
+                    hasWarning: true
+                );
+                
+                // Trigger reconnection attempt
+                _ = Task.Run(async () => 
+                {
+                    await Task.Delay(1000);
+                    await EnsureMgmtHubConnection();
+                });
+            }
         }
 
         public ManagedInstanceInfo GetManagedInstanceInfo()
@@ -461,6 +495,8 @@ namespace Certify.Management
             {
                 _managementServerClient.OnGetCommandResult -= PerformHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
+                _managementServerClient.OnConnectionReconnected -= _managementServerClient_OnConnectionReconnected;
+                _managementServerClient.OnConnectionClosed -= _managementServerClient_OnConnectionClosed;
             }
 
             _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
@@ -472,15 +508,34 @@ namespace Certify.Management
 
                 _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
                 _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
+                _managementServerClient.OnConnectionReconnected += _managementServerClient_OnConnectionReconnected;
+                _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
 
                 _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
+                
+                _isHubConnectionErrorLogged = false; // Reset error flag on successful connection
+                
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                    "Management Hub Connection",
+                    "Successfully connected to Management Hub"
+                );
             }
             catch (Exception ex)
             {
                 if (!_isHubConnectionErrorLogged)
                 {
-                    _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically, subsequent failures will not be logged.", hubUri);
+                    _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically.", hubUri);
                     _isHubConnectionErrorLogged = true;
+                    
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                        "Management Hub Connection",
+                        $"Failed to connect to Management Hub: {ex.Message}",
+                        hasError: true
+                    );
                 }
 
                 _managementServerClient = null;
@@ -919,24 +974,140 @@ namespace Certify.Management
 
         private void ReportManagedItemUpdateToMgmtHub(ManagedCertificate item)
         {
-            if (item != null)
+            if (item == null)
             {
-                _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationUpdatedManagedItem, item);
+                return;
+            }
+            
+            try
+            {
+                if (_managementServerClient?.IsConnected() == true)
+                {
+                    _managementServerClient.SendNotificationToManagementHub(
+                        ManagementHubCommands.NotificationUpdatedManagedItem, item);
+                    
+                    _serviceLog.Debug("Reported managed item update to hub for {itemId}", item.Id);
+                }
+                else
+                {
+                    _serviceLog.Warning("Cannot report managed item update - not connected to hub. Update for {itemId} not sent.", item.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Failed to report managed item update to hub for {itemId}", item.Id);
             }
         }
+
         private void ReportManagedItemDeleteToMgmtHub(string id)
         {
-            _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationRemovedManagedItem, id);
+            try
+            {
+                if (_managementServerClient?.IsConnected() == true)
+                {
+                    _managementServerClient.SendNotificationToManagementHub(
+                        ManagementHubCommands.NotificationRemovedManagedItem, id);
+                    
+                    _serviceLog.Debug("Reported managed item deletion to hub for {itemId}", id);
+                }
+                else
+                {
+                    _serviceLog.Warning("Cannot report managed item deletion - not connected to hub. Deletion for {itemId} not sent.", id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Failed to report managed item deletion to hub for {itemId}", id);
+            }
         }
 
         private void ReportRequestProgressToMgmtHub(RequestProgressState progress)
         {
-            _managementServerClient?.SendNotificationToManagementHub(ManagementHubCommands.NotificationManagedItemRequestProgress, progress);
+            try
+            {
+                if (_managementServerClient?.IsConnected() == true)
+                {
+                    _managementServerClient.SendNotificationToManagementHub(
+                        ManagementHubCommands.NotificationManagedItemRequestProgress, progress);
+                    
+                    _serviceLog.Debug("Reported request progress to hub for {itemId}", progress.ManagedCertificate?.Id);
+                }
+                else
+                {
+                    _serviceLog.Debug("Cannot report request progress - not connected to hub. Progress for {itemId} not sent.", progress.ManagedCertificate?.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Failed to report request progress to hub for {itemId}", progress.ManagedCertificate?.Id);
+            }
         }
 
         private void _managementServerClient_OnConnectionReconnecting()
         {
-            _serviceLog.Warning("Reconnecting to Management Hub.");
+            _serviceLog.Warning("Reconnecting to Management Hub...");
+            
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                "Management Hub Connection",
+                "Attempting to reconnect to Management Hub",
+                hasWarning: true
+            );
+        }
+
+        private void _managementServerClient_OnConnectionReconnected()
+        {
+            _serviceLog.Information("Successfully reconnected to Management Hub");
+            
+            _isHubConnectionErrorLogged = false; // Reset error flag
+            
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                "Management Hub Connection",
+                "Successfully reconnected to Management Hub"
+            );
+            
+            // Re-register instance with updated information after reconnection
+            try
+            {
+                SendHeartbeatToManagementHub();
+                _serviceLog.Debug("Sent heartbeat after reconnection to re-register instance");
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Failed to send heartbeat after reconnection");
+            }
+        }
+
+        private void _managementServerClient_OnConnectionClosed()
+        {
+            _serviceLog.Error("Management Hub connection closed");
+            
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                "Management Hub Connection",
+                "Connection to Management Hub lost. Will attempt to reconnect.",
+                hasError: true
+            );
+            
+            // Trigger reconnection attempt after a delay
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(5000);
+                
+                try
+                {
+                    _serviceLog.Information("Attempting to re-establish connection to Management Hub");
+                    await EnsureMgmtHubConnection();
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog.Error(ex, "Failed to re-establish connection to Management Hub");
+                }
+            });
         }
 
         private async Task GenerateDemoItems(int? numItems)
@@ -952,6 +1123,7 @@ namespace Certify.Management
                 }
             }
         }
+
         private async Task RandomlyUpdateDemoItems()
         {
             // randomly update status of demo items

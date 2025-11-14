@@ -28,6 +28,7 @@
         public const string SERVICE_CORE_CA_CUSTOM_LOAD = "service.core.ca.custom.load";
         public const string SERVICE_CORE_HUB_JOINING_KEY = "service.core.hub.joining.key";
         public const string SERVICE_CORE_HUB_JOINING_AUTH = "service.core.hub.joining.auth";
+        public const string SERVICE_CORE_HUB_CONNECTION = "service.core.hub.connection";
 
     }
 }
