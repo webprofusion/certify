@@ -286,6 +286,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 if (result.CommandType == ManagementHubCommands.NotificationUpdatedManagedItem && result.Value != null)
                 {
                     await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+
+                    _stateProvider.UpdateCachedManagedInstanceItem(instanceId, System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions)!);
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
@@ -293,8 +295,9 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
-                    // deleted :TODO
                     await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
+
+                    _stateProvider.DeleteCachedManagedInstanceItem(instanceId, result.Value);
                 }
             }
         }
