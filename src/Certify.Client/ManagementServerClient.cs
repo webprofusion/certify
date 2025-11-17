@@ -215,7 +215,7 @@ namespace Certify.Client
                 };
 
                 result.ObjectValue = updateMsg;
-                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result).Wait();
+                _ = _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
             catch (Exception ex)
             {
