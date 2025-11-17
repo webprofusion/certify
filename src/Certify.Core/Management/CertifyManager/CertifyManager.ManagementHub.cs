@@ -429,22 +429,22 @@ namespace Certify.Management
                 if (_managementServerClient == null || !_managementServerClient.IsConnected())
                 {
                     _serviceLog.Warning("Cannot send heartbeat - not connected to Management Hub");
-                    
+
                     // Trigger reconnection attempt
                     _ = Task.Run(async () => await EnsureMgmtHubConnection());
-                    
+
                     return;
                 }
-                
+
                 _managementServerClient.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
                 _managementServerClient.SendInstanceInfo(Guid.NewGuid(), isCommandResponse: false);
-                
+
                 _serviceLog.Debug("Heartbeat sent to Management Hub");
             }
             catch (Exception ex)
             {
                 _serviceLog.Error(ex, "Failed to send heartbeat to Management Hub");
-                
+
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
                     SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -452,9 +452,9 @@ namespace Certify.Management
                     $"Heartbeat failed: {ex.Message}. Will attempt to reconnect.",
                     hasWarning: true
                 );
-                
+
                 // Trigger reconnection attempt
-                _ = Task.Run(async () => 
+                _ = Task.Run(async () =>
                 {
                     await Task.Delay(1000);
                     await EnsureMgmtHubConnection();
@@ -512,9 +512,9 @@ namespace Certify.Management
                 _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
 
                 _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
-                
+
                 _isHubConnectionErrorLogged = false; // Reset error flag on successful connection
-                
+
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
                     SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -528,7 +528,7 @@ namespace Certify.Management
                 {
                     _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically.", hubUri);
                     _isHubConnectionErrorLogged = true;
-                    
+
                     AddSystemStatusItem(
                         SystemStatusCategories.SERVICE_CORE,
                         SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -974,18 +974,18 @@ namespace Certify.Management
 
         private void ReportManagedItemUpdateToMgmtHub(ManagedCertificate item)
         {
-            if (item == null)
+            if (item == null || _managementServerClient == null)
             {
                 return;
             }
-            
+
             try
             {
                 if (_managementServerClient?.IsConnected() == true)
                 {
                     _managementServerClient.SendNotificationToManagementHub(
                         ManagementHubCommands.NotificationUpdatedManagedItem, item);
-                    
+
                     _serviceLog.Debug("Reported managed item update to hub for {itemId}", item.Id);
                 }
                 else
@@ -1001,13 +1001,18 @@ namespace Certify.Management
 
         private void ReportManagedItemDeleteToMgmtHub(string id)
         {
+            if (_managementServerClient == null)
+            {
+                return;
+            }
+
             try
             {
                 if (_managementServerClient?.IsConnected() == true)
                 {
                     _managementServerClient.SendNotificationToManagementHub(
                         ManagementHubCommands.NotificationRemovedManagedItem, id);
-                    
+
                     _serviceLog.Debug("Reported managed item deletion to hub for {itemId}", id);
                 }
                 else
@@ -1023,13 +1028,18 @@ namespace Certify.Management
 
         private void ReportRequestProgressToMgmtHub(RequestProgressState progress)
         {
+            if (_managementServerClient == null)
+            {
+                return;
+            }
+
             try
             {
                 if (_managementServerClient?.IsConnected() == true)
                 {
                     _managementServerClient.SendNotificationToManagementHub(
                         ManagementHubCommands.NotificationManagedItemRequestProgress, progress);
-                    
+
                     _serviceLog.Debug("Reported request progress to hub for {itemId}", progress.ManagedCertificate?.Id);
                 }
                 else
@@ -1046,7 +1056,7 @@ namespace Certify.Management
         private void _managementServerClient_OnConnectionReconnecting()
         {
             _serviceLog.Warning("Reconnecting to Management Hub...");
-            
+
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -1059,16 +1069,16 @@ namespace Certify.Management
         private void _managementServerClient_OnConnectionReconnected()
         {
             _serviceLog.Information("Successfully reconnected to Management Hub");
-            
+
             _isHubConnectionErrorLogged = false; // Reset error flag
-            
+
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
                 "Management Hub Connection",
                 "Successfully reconnected to Management Hub"
             );
-            
+
             // Re-register instance with updated information after reconnection
             try
             {
@@ -1084,7 +1094,7 @@ namespace Certify.Management
         private void _managementServerClient_OnConnectionClosed()
         {
             _serviceLog.Error("Management Hub connection closed");
-            
+
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -1092,12 +1102,12 @@ namespace Certify.Management
                 "Connection to Management Hub lost. Will attempt to reconnect.",
                 hasError: true
             );
-            
+
             // Trigger reconnection attempt after a delay
             _ = Task.Run(async () =>
             {
                 await Task.Delay(5000);
-                
+
                 try
                 {
                     _serviceLog.Information("Attempting to re-establish connection to Management Hub");

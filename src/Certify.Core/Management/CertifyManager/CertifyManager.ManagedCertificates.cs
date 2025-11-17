@@ -339,7 +339,7 @@ namespace Certify.Management
                 await ReportManagedCertificateStatus(managedCertificate);
             }
 
-            _tc?.TrackEvent("UpdateManagedCertificatesStatus_" + status);
+            ReportManagedItemUpdateToMgmtHub(managedCertificate);
         }
 
         private ConcurrentDictionary<string, RenewalStatusReport> _statusReportQueue { get; set; } = new ConcurrentDictionary<string, RenewalStatusReport>();
