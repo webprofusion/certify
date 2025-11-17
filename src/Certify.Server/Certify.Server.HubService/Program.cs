@@ -162,9 +162,11 @@ builder.Services.AddOpenApi("v1", options =>
     {
         document.Info = info;
 
-        // Add security schemes
+        // Add security schemes - JWT Bearer OR API Key authentication (not both)
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+
+        // JWT Bearer authentication scheme
         document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
         {
             Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -175,20 +177,26 @@ builder.Services.AddOpenApi("v1", options =>
             BearerFormat = "JWT"
         };
 
-        document.Components.SecuritySchemes["X-Client-ID"] = new OpenApiSecurityScheme
+        // API Key authentication scheme (Client ID + Secret)
+        document.Components.SecuritySchemes["ApiKey"] = new OpenApiSecurityScheme
         {
-            Description = "Client ID header",
-            Name = "X-Client-ID",
+            Description = "API Key authentication using X-Client-ID and X-Client-Secret headers",
+            Type = SecuritySchemeType.ApiKey,
             In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey
+            Name = "X-Client-ID"
         };
 
-        document.Components.SecuritySchemes["X-Client-Secret"] = new OpenApiSecurityScheme
+        // Define security requirements - use either Bearer OR ApiKey (not both)
+        document.Security = new List<OpenApiSecurityRequirement>
         {
-            Description = "Client Secret header",
-            Name = "X-Client-Secret",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.ApiKey
+            // Option 1: JWT Bearer token
+            new() {
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+            },
+            // Option 2: API Key (Client ID + Secret)
+            new() {
+                 [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+            }
         };
 
         return Task.CompletedTask;
@@ -203,6 +211,23 @@ builder.Services.AddOpenApi("v1", options =>
             operation.OperationId = action;
         }
 
+        // Ensure each operation has the security requirements from the document level
+        // This will show both authentication options in Scalar/Swagger UI
+        if (operation.Security == null || operation.Security.Count == 0)
+        {
+            operation.Security = new List<OpenApiSecurityRequirement>
+            {
+                // Option 1: JWT Bearer token
+                new() {
+                [new OpenApiSecuritySchemeReference("Bearer")] = []
+            },
+                // Option 2: API Key (Client ID + Secret)
+             new() {
+                [new OpenApiSecuritySchemeReference("ApiKey")] = []
+            },
+            };
+        }
+
         return Task.CompletedTask;
     });
 
@@ -211,7 +236,7 @@ builder.Services.AddOpenApi("v1", options =>
     {
         if (context.JsonTypeInfo.Type == typeof(FileContentResult))
         {
-            schema.Type = Microsoft.OpenApi.JsonSchemaType.String;
+            schema.Type = JsonSchemaType.String;
             schema.Format = "binary";
         }
 
