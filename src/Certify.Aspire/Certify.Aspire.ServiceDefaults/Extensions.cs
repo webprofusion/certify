@@ -43,7 +43,8 @@ public static class Extensions
             .WithMetrics(metrics =>
             {
                 metrics.AddRuntimeInstrumentation()
-                       .AddBuiltInMeters();
+                       .AddBuiltInMeters()
+                       .AddCertifyMeters(); // Add Certify custom meters
             })
             .WithTracing(tracing =>
             {
@@ -55,7 +56,8 @@ public static class Extensions
 
                 tracing.AddAspNetCoreInstrumentation()
                        .AddGrpcClientInstrumentation()
-                       .AddHttpClientInstrumentation();
+                       .AddHttpClientInstrumentation()
+                       .AddCertifyActivitySources(); // Add Certify custom activity sources
             });
 
         builder.AddOpenTelemetryExporters();
@@ -116,4 +118,24 @@ public static class Extensions
             "Microsoft.AspNetCore.Hosting",
             "Microsoft.AspNetCore.Server.Kestrel",
             "System.Net.Http");
+
+    /// <summary>
+    /// Add Certify custom meters for observability
+    /// </summary>
+    private static MeterProviderBuilder AddCertifyMeters(this MeterProviderBuilder meterProviderBuilder) =>
+        meterProviderBuilder.AddMeter(
+            "Certify.BindingDeploymentManager",
+            "Certify.CertifyManager",
+            "Certify.CertificateRequest"
+        );
+
+    /// <summary>
+    /// Add Certify custom activity sources for distributed tracing
+    /// </summary>
+    private static TracerProviderBuilder AddCertifyActivitySources(this TracerProviderBuilder tracerProviderBuilder) =>
+        tracerProviderBuilder.AddSource(
+            "Certify.BindingDeploymentManager",
+            "Certify.CertifyManager",
+            "Certify.CertificateRequest"
+        );
 }
