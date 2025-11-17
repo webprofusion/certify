@@ -444,6 +444,7 @@ namespace Certify.Management
             catch (Exception ex)
             {
                 _serviceLog.Error(ex, "Failed to send heartbeat to Management Hub");
+                _mgmtHubJoiningToken = null; // force rejoin on next attempt
 
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
