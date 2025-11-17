@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -45,6 +46,8 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<bool> PerformRenewalTasks(CancellationToken cancellationToken)
         {
+            using var activity = _activitySource.StartActivity("PerformRenewalTasks", ActivityKind.Internal);
+            
             var renewalPerformedOK = false;
 
             // perform next renewal batch (if any)
@@ -56,12 +59,16 @@ namespace Certify.Management
 
                     await PerformRenewAll(new RenewalSettings { }, renewalCancellationSource.Token);
 
+                    activity?.SetStatus(ActivityStatusCode.Ok);
                     renewalPerformedOK = true;
                 }
-                catch (TimeoutException)
+                catch (TimeoutException ex)
                 {
                     renewalCancellationSource.Cancel();
 
+                    activity?.SetStatus(ActivityStatusCode.Error, "Timeout during renewal tasks");
+                    activity?.AddException(ex);
+                    
                     _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
                     renewalPerformedOK = false;
                 }
@@ -69,6 +76,9 @@ namespace Certify.Management
                 {
                     renewalCancellationSource.Cancel();
 
+                    activity?.SetStatus(ActivityStatusCode.Error, exp.Message);
+                    activity?.AddException(exp);
+                    
                     _tc?.TrackException(exp);
                     _serviceLog?.Error(exp, "PerformRenewalTasks: Error performing periodic renewal tasks: {exp}", exp);
                     renewalPerformedOK = false;
@@ -111,69 +121,111 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken)
         {
-            if (_isRenewAllInProgress)
-            {
-                _serviceLog?.Information("Renew All operation is already is progress, skipping..");
-                return [];
-            }
-
-            _isRenewAllInProgress = true;
-
+            using var activity = _activitySource.StartActivity("PerformRenewAll", ActivityKind.Internal);
+            var stopwatch = Stopwatch.StartNew();
+            
+            System.Threading.Interlocked.Increment(ref _activeRenewals);
+            
             try
             {
-                _serviceLog?.Verbose($"Performing Renew All for all applicable managed certificates.");
-
-                var prefs = new RenewalPrefs
+                if (_isRenewAllInProgress)
                 {
-                    MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
-                    RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
-                    RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
-                    IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
-                    SuppressSkippedItems = true,
-                    PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
-                };
+                    activity?.AddEvent(new ActivityEvent("RenewAllAlreadyInProgress"));
+                    _serviceLog?.Information("Renew All operation is already is progress, skipping..");
+                    return [];
+                }
 
-                using (var renewalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                _isRenewAllInProgress = true;
+
+                try
                 {
-                    try
+                    _serviceLog?.Verbose($"Performing Renew All for all applicable managed certificates.");
+
+                    var prefs = new RenewalPrefs
                     {
-                        var renewalTask = RenewalManager.PerformRenewAll(
-                                                _serviceLog,
-                                                _itemManager,
-                                                settings,
-                                                prefs,
-                                                ReportProgress, IsManagedCertificateRunning,
-                                                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
-                                                {
-                                                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
-                                                },
-                                                renewalCancellationSource.Token);
+                        MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
+                        RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
+                        RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
+                        IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
+                        SuppressSkippedItems = true,
+                        PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
+                    };
 
-                        return await TaskWithTimeoutAndException(renewalTask, TimeSpan.FromHours(3));
-                    }
-                    catch (TimeoutException)
+                    activity?.SetTag("renewal.max_requests", prefs.MaxRenewalRequests);
+                    activity?.SetTag("renewal.interval_days", prefs.RenewalIntervalDays);
+                    activity?.SetTag("renewal.parallel_enabled", prefs.PerformParallelRenewals);
+
+                    using (var renewalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                     {
-                        renewalCancellationSource.Cancel();
+                        try
+                        {
+                            var renewalTask = RenewalManager.PerformRenewAll(
+                                                    _serviceLog,
+                                                    _itemManager,
+                                                    settings,
+                                                    prefs,
+                                                    ReportProgress, IsManagedCertificateRunning,
+                                                    (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
+                                                    {
+                                                        return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
+                                                    },
+                                                    renewalCancellationSource.Token);
 
-                        _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
+                            var results = await TaskWithTimeoutAndException(renewalTask, TimeSpan.FromHours(3));
+                            
+                            stopwatch.Stop();
+                            
+                            var successCount = results.Count(r => r.IsSuccess);
+                            var failedCount = results.Count(r => !r.IsSuccess);
+                            
+                            activity?.SetTag("renewal.total_count", results.Count);
+                            activity?.SetTag("renewal.success_count", successCount);
+                            activity?.SetTag("renewal.failed_count", failedCount);
+                            activity?.SetTag("renewal.duration_ms", stopwatch.ElapsedMilliseconds);
+                            
+                            _renewalsSuccessCounter.Add(successCount);
+                            _renewalsFailedCounter.Add(failedCount);
+                            _renewalDurationHistogram.Record(stopwatch.ElapsedMilliseconds,
+                                new KeyValuePair<string, object>("parallel_enabled", prefs.PerformParallelRenewals));
+                            
+                            activity?.SetStatus(ActivityStatusCode.Ok);
+                            
+                            return results;
+                        }
+                        catch (TimeoutException ex)
+                        {
+                            renewalCancellationSource.Cancel();
 
-                        return [];
+                            activity?.SetStatus(ActivityStatusCode.Error, "Renewal batch timeout");
+                            activity?.AddException(ex);
+                            
+                            _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
+
+                            return [];
+                        }
+                        catch (Exception exp)
+                        {
+                            renewalCancellationSource.Cancel();
+
+                            activity?.SetStatus(ActivityStatusCode.Error, exp.Message);
+                            activity?.AddException(exp);
+                            
+                            _tc?.TrackException(exp);
+
+                            _serviceLog?.Error(exp, "PerformRenewalTasks: Error performing periodic renewal tasks: {exp}", exp);
+
+                            return [];
+                        }
                     }
-                    catch (Exception exp)
-                    {
-                        renewalCancellationSource.Cancel();
-
-                        _tc?.TrackException(exp);
-
-                        _serviceLog?.Error(exp, "PerformRenewalTasks: Error performing periodic renewal tasks: {exp}", exp);
-
-                        return [];
-                    }
+                }
+                finally
+                {
+                    _isRenewAllInProgress = false;
                 }
             }
             finally
             {
-                _isRenewAllInProgress = false;
+                System.Threading.Interlocked.Decrement(ref _activeRenewals);
             }
         }
 

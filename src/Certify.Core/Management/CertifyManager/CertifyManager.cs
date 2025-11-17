@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -24,6 +26,34 @@ namespace Certify.Management
 {
     public partial class CertifyManager : ICertifyManager, IDisposable
     {
+        private static readonly ActivitySource _activitySource = new("Certify.CertifyManager");
+        private static readonly Meter _meter = new("Certify.CertifyManager", "1.0.0");
+        
+        // Counters
+        private static readonly Counter<int> _certificateRequestsCounter = _meter.CreateCounter<int>("certify.certificate.requests", "requests", "Number of certificate requests initiated");
+        private static readonly Counter<int> _certificateRequestsSuccessCounter = _meter.CreateCounter<int>("certify.certificate.requests_success", "requests", "Number of successful certificate requests");
+        private static readonly Counter<int> _certificateRequestsFailedCounter = _meter.CreateCounter<int>("certify.certificate.requests_failed", "requests", "Number of failed certificate requests");
+        private static readonly Counter<int> _renewalsAttemptedCounter = _meter.CreateCounter<int>("certify.renewals.attempted", "renewals", "Number of renewal attempts");
+        private static readonly Counter<int> _renewalsSuccessCounter = _meter.CreateCounter<int>("certify.renewals.success", "renewals", "Number of successful renewals");
+        private static readonly Counter<int> _renewalsFailedCounter = _meter.CreateCounter<int>("certify.renewals.failed", "renewals", "Number of failed renewals");
+        private static readonly Counter<int> _challengeResponsesCounter = _meter.CreateCounter<int>("certify.challenges.responses", "challenges", "Number of challenge responses provided");
+        private static readonly Counter<int> _deploymentTasksExecutedCounter = _meter.CreateCounter<int>("certify.deployment_tasks.executed", "tasks", "Number of deployment tasks executed");
+        private static readonly Counter<int> _deploymentTasksFailedCounter = _meter.CreateCounter<int>("certify.deployment_tasks.failed", "tasks", "Number of deployment task failures");
+        
+        // Histograms
+        private static readonly Histogram<double> _certificateRequestDurationHistogram = _meter.CreateHistogram<double>("certify.certificate.request_duration", "ms", "Duration of certificate request operations");
+        private static readonly Histogram<double> _renewalDurationHistogram = _meter.CreateHistogram<double>("certify.renewal.duration", "ms", "Duration of renewal operations");
+        private static readonly Histogram<double> _deploymentTaskDurationHistogram = _meter.CreateHistogram<double>("certify.deployment_task.duration", "ms", "Duration of deployment task operations");
+        private static readonly Histogram<int> _managedCertificatesCountHistogram = _meter.CreateHistogram<int>("certify.managed_certificates.count", "certificates", "Number of managed certificates");
+        
+        // Gauges
+        private static int _activeCertificateRequests = 0;
+        private static int _activeRenewals = 0;
+        private static int _activeDeploymentTasks = 0;
+        private static readonly ObservableGauge<int> _activeCertificateRequestsGauge = _meter.CreateObservableGauge<int>("certify.certificate.requests_active", () => _activeCertificateRequests, "requests", "Number of certificate requests currently in progress");
+        private static readonly ObservableGauge<int> _activeRenewalsGauge = _meter.CreateObservableGauge<int>("certify.renewals.active", () => _activeRenewals, "renewals", "Number of renewals currently in progress");
+        private static readonly ObservableGauge<int> _activeDeploymentTasksGauge = _meter.CreateObservableGauge<int>("certify.deployment_tasks.active", () => _activeDeploymentTasks, "tasks", "Number of deployment tasks currently executing");
+
         private IConfigurationStore _configStore = null;
         /// <summary>
         /// Storage service for managed certificates
@@ -151,159 +181,196 @@ namespace Certify.Management
 
         public async Task Init(bool enablePlugins = true)
         {
-            _useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-
-            AddSystemStatusItem(
-                SystemStatusCategories.SERVICE_CORE,
-                SystemStatusKeys.SERVICE_CORE_PLATFORM,
-                title: "Core Service Platform",
-                description: $"Core service platform is {RuntimeInformation.OSDescription}"
-            );
-
-            _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-
-            if (_serverConfig.ConfigStatus == Shared.ConfigStatus.DefaultFailed)
+            using var activity = _activitySource.StartActivity("Init", ActivityKind.Internal);
+            var stopwatch = Stopwatch.StartNew();
+            
+            try
             {
+                _useWindowsNativeFeatures = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+                activity?.SetTag("platform", RuntimeInformation.OSDescription);
+                activity?.SetTag("use_windows_native_features", _useWindowsNativeFeatures);
+                activity?.SetTag("enable_plugins", enablePlugins);
+
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
-                    title: "Core Service Config",
-                    description: $"Could not load service config for core service.", hasError: true
+                    SystemStatusKeys.SERVICE_CORE_PLATFORM,
+                    title: "Core Service Platform",
+                    description: $"Core service platform is {RuntimeInformation.OSDescription}"
                 );
-            }
-            else
-            {
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
-                    title: "Core Service Config",
-                    description: $"Loaded service config"
-                );
-            }
 
-            InitLogging(_serverConfig);
+                _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            _serviceLog?.Information($"Certify Manager: {Util.GetAppVersion()}");
-
-            Util.SetSupportedTLSVersions();
-
-            _pluginManager = new PluginManager(_injectedServiceProvider)
-            {
-                EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
-            };
-
-            if (enablePlugins)
-            {
-                _pluginManager.LoadPlugins(new List<string> {
-                    PluginManager.PLUGINS_DEPLOYMENT_TASKS,
-                    PluginManager.PLUGINS_CERTIFICATE_MANAGERS,
-                    PluginManager.PLUGINS_DNS_PROVIDERS,
-                    PluginManager.PLUGINS_SERVER_PROVIDERS,
-                    PluginManager.PLUGINS_DATASTORE_PROVIDERS
-                }, usePluginSubfolder:false);
-
-                if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
+                if (_serverConfig.ConfigStatus == Shared.ConfigStatus.DefaultFailed)
                 {
-                  _pluginManager.DnsProviderProviders.Add(new ManagedDnsChallengeAuto());
+                    activity?.AddEvent(new ActivityEvent("ConfigLoadFailed"));
+                    
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
+                        title: "Core Service Config",
+                        description: $"Could not load service config for core service.", hasError: true
+                    );
                 }
-            }
-
-            // setup supported target server types for default deployment
-            if (_pluginManager.ServerProviders != null)
-            {
-                foreach (var p in _pluginManager.ServerProviders)
+                else
                 {
-                    var providers = p.GetProviders(p.GetType());
-                    foreach (var provider in providers)
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_SVCCONFIG,
+                        title: "Core Service Config",
+                        description: $"Loaded service config"
+                    );
+                }
+
+                InitLogging(_serverConfig);
+
+                _serviceLog?.Information($"Certify Manager: {Util.GetAppVersion()}");
+
+                Util.SetSupportedTLSVersions();
+
+                _pluginManager = new PluginManager(_injectedServiceProvider)
+                {
+                    EnableExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins
+                };
+
+                if (enablePlugins)
+                {
+                    _pluginManager.LoadPlugins(new List<string> {
+                        PluginManager.PLUGINS_DEPLOYMENT_TASKS,
+                        PluginManager.PLUGINS_CERTIFICATE_MANAGERS,
+                        PluginManager.PLUGINS_DNS_PROVIDERS,
+                        PluginManager.PLUGINS_SERVER_PROVIDERS,
+                        PluginManager.PLUGINS_DATASTORE_PROVIDERS
+                    }, usePluginSubfolder:false);
+
+                    if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
                     {
-                        var pr = p.GetProvider(p.GetType(), provider.Id);
-                        if (pr != null)
+                      _pluginManager.DnsProviderProviders.Add(new ManagedDnsChallengeAuto());
+                    }
+                }
+
+                // setup supported target server types for default deployment
+                if (_pluginManager.ServerProviders != null)
+                {
+                    foreach (var p in _pluginManager.ServerProviders)
+                    {
+                        var providers = p.GetProviders(p.GetType());
+                        foreach (var provider in providers)
                         {
-                            pr.Init(_serviceLog);
-                            _serverProviders.Add(pr);
+                            var pr = p.GetProvider(p.GetType(), provider.Id);
+                            if (pr != null)
+                            {
+                                pr.Init(_serviceLog);
+                                _serverProviders.Add(pr);
+                            }
                         }
                     }
                 }
-            }
 
-            if (_pluginManager.PluginLoadResults?.Any(r => !r.IsSuccess) == true)
-            {
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
-                    title: "Core Service Load Plugins",
-                    description: $"One or more service plugins failed to load. Some functionality may be unavailable.",
-                    hasError: true
-                );
+                activity?.SetTag("server_providers_count", _serverProviders.Count);
 
-                foreach (var r in _pluginManager.PluginLoadResults.Where(r => !r.IsSuccess))
+                if (_pluginManager.PluginLoadResults?.Any(r => !r.IsSuccess) == true)
                 {
-                    _serviceLog.Error($"Plugin load error: {r.PluginName} - {r.Message}");
+                    var failedPlugins = _pluginManager.PluginLoadResults.Where(r => !r.IsSuccess).Count();
+                    activity?.SetTag("plugins.failed_count", failedPlugins);
+                    activity?.AddEvent(new ActivityEvent("PluginLoadFailures", 
+                        tags: new ActivityTagsCollection { { "failed_count", failedPlugins } }));
+                    
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
+                        title: "Core Service Load Plugins",
+                        description: $"One or more service plugins failed to load. Some functionality may be unavailable.",
+                        hasError: true
+                    );
+
+                    foreach (var r in _pluginManager.PluginLoadResults.Where(r => !r.IsSuccess))
+                    {
+                        _serviceLog.Error($"Plugin load error: {r.PluginName} - {r.Message}");
+                    }
                 }
+                else
+                {
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
+                        title: "Core Service Load Plugins",
+                        description: $"Plugins loaded with no errors."
+                    );
+                }
+
+                // add default IIS target server provider
+                var iisServerProvider = new Servers.ServerProviderIIS();
+                iisServerProvider.Init(_serviceLog);
+                _serverProviders.Add(iisServerProvider);
+
+                try
+                {
+                    await InitDataStore();
+
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
+                        title: "Core Service Datastore Init",
+                        description: $"Data store initialized OK."
+                    );
+                }
+                catch (Exception exp)
+                {
+                    var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
+                    
+                    activity?.SetStatus(ActivityStatusCode.Error, "Datastore initialization failed");
+                    activity?.AddException(exp);
+                    
+                    _serviceLog.Error(exp, msg);
+
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
+                        title: "Core Service Datastore Init",
+                        description: $"Data store failed to initialize. All functionality will be impaired or unavailable."
+                    );
+
+                    throw (new Exception(msg));
+                }
+
+                LoadCertificateAuthorities();
+
+                // init remaining utilities and optionally enable telematics
+                _challengeResponseService = new ChallengeResponseService(CoreAppSettings.Current.EnableValidationProxyAPI);
+
+                if (CoreAppSettings.Current.EnableAppTelematics)
+                {
+                    _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
+                }
+
+                _httpChallengePort = _serverConfig.HttpChallengeServerPort;
+                _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
+
+                _tc?.TrackEvent("ServiceStarted");
+
+                SetupJobs();
+
+                await UpgradeSettings();
+
+                _ = RefreshCachedLicenseCheck();
+
+                stopwatch.Stop();
+                
+                activity?.SetTag("init.duration_ms", stopwatch.ElapsedMilliseconds);
+                activity?.SetStatus(ActivityStatusCode.Ok);
+                
+                _serviceLog?.Information($"Certify Manager Started (initialization took {stopwatch.ElapsedMilliseconds}ms)");
             }
-            else
+            catch (Exception ex)
             {
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_LOADPLUGINS,
-                    title: "Core Service Load Plugins",
-                    description: $"Plugins loaded with no errors."
-                );
+                stopwatch.Stop();
+                activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                activity?.AddException(ex);
+                
+                _serviceLog?.Error(ex, "Fatal error during CertifyManager initialization");
+                throw;
             }
-
-            // add default IIS target server provider
-            var iisServerProvider = new Servers.ServerProviderIIS();
-            iisServerProvider.Init(_serviceLog);
-            _serverProviders.Add(iisServerProvider);
-
-            try
-            {
-                await InitDataStore();
-
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
-                    title: "Core Service Datastore Init",
-                    description: $"Data store initialized OK."
-                );
-            }
-            catch (Exception exp)
-            {
-                var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
-                _serviceLog.Error(exp, msg);
-
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
-                    title: "Core Service Datastore Init",
-                    description: $"Data store failed to initialize. All functionality will be impaired or unavailable."
-                );
-
-                throw (new Exception(msg));
-            }
-
-            LoadCertificateAuthorities();
-
-            // init remaining utilities and optionally enable telematics
-            _challengeResponseService = new ChallengeResponseService(CoreAppSettings.Current.EnableValidationProxyAPI);
-
-            if (CoreAppSettings.Current.EnableAppTelematics)
-            {
-                _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
-            }
-
-            _httpChallengePort = _serverConfig.HttpChallengeServerPort;
-            _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
-
-            _tc?.TrackEvent("ServiceStarted");
-
-            SetupJobs();
-
-            await UpgradeSettings();
-
-            _ = RefreshCachedLicenseCheck();
-
-            _serviceLog?.Information("Certify Manager Started");
         }
 
         private async Task RefreshCachedLicenseCheck()
