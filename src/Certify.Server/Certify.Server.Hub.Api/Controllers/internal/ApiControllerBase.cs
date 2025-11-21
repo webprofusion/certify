@@ -123,7 +123,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
                     var jwt = new Hub.Api.Services.JwtService(_config);
-                    var claimsIdentity = jwt.ClaimsIdentityFromTokenAsync(authToken, false).Result;
+                    var claimsIdentity = jwt.ClaimsIdentityFromTokenAsync(authToken, validateTokenLifetime:true).Result;
                     var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
 
                     var authContext = new AuthContext { Token = authToken, UserId = userId };
