@@ -306,6 +306,7 @@ namespace Certify.Core.Tests.DataStores
                 Name = "TestSite..",
                 GroupId = "test",
                 UseStagingMode = true,
+                IncludeInAutoRenew = true,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = "testsite.com",
@@ -346,6 +347,7 @@ namespace Certify.Core.Tests.DataStores
                     newTestItem.Name = "FilterMultiTest_" + i;
                     newTestItem.Id = Guid.NewGuid().ToString();
                     newTestItem.RequestConfig.PrimaryDomain = i + "_" + testItem.RequestConfig.PrimaryDomain;
+                    newTestItem.IncludeInAutoRenew = rnd.Next(1, 30) < 10 ? true : false;
                     newTestItem.DateExpiry = DateTimeOffset.UtcNow.AddDays(rnd.Next(5, 90));
                     newTestItem.DateStart = newTestItem.DateExpiry.Value.AddDays(-rnd.Next(1, 30));
                     newTestItem.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 60));
@@ -432,7 +434,8 @@ namespace Certify.Core.Tests.DataStores
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", PageIndex=2, PageSize =5, FilterDescription="Paging test 4 with sorting by renewal date", OrderBy= ManagedCertificateFilter.SortMode.RENEWAL_ASC },
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeType ="http-01", FilterDescription="Challenge type filter"},
                     new ManagedCertificateFilter { Keyword = "FilterMultiTest_", ChallengeProvider ="A.Test.Provider", FilterDescription="Challenge provider filter"},
-                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", StoredCredentialKey ="ABCD123", FilterDescription="Stored Credential filter"}
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", StoredCredentialKey ="ABCD123", FilterDescription="Stored Credential filter"},
+                    new ManagedCertificateFilter { Keyword = "FilterMultiTest_", IncludeOnlyNextAutoRenew =true, FilterDescription="Only Auto Renew filter"}
                 };
 
                 foreach (var filter in testFilter)
@@ -450,6 +453,7 @@ namespace Certify.Core.Tests.DataStores
                            && (filter.ChallengeType == null || i.RequestConfig.Challenges.Any(c => c.ChallengeType == filter.ChallengeType))
                            && (filter.ChallengeProvider == null || i.RequestConfig.Challenges.Any(c => c.ChallengeProvider == filter.ChallengeProvider))
                            && (filter.StoredCredentialKey == null || i.RequestConfig.Challenges.Any(c => c.ChallengeCredentialKey == filter.StoredCredentialKey))
+                           && (filter.IncludeOnlyNextAutoRenew == false || i.IncludeInAutoRenew == true)
                         ).AsQueryable();
 
                     if (filter.OrderBy == ManagedCertificateFilter.SortMode.NAME_ASC)
