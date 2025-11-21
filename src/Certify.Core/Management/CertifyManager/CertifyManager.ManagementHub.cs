@@ -527,12 +527,15 @@ namespace Certify.Management
 
             if (_managementServerClient != null)
             {
+                // if not currently connected, attempt connection
                 if (!_managementServerClient.IsConnected())
                 {
                     _serviceLog.Information("Hub not connected, attempting connection. {hubUri}", hubUri);
                     await _managementServerClient.ConnectAsync(hubConnectionAuthToken);
                 }
-                else
+
+                // if connected now, update status
+                if (_managementServerClient.IsConnected())
                 {
                     AddSystemStatusItem(
                             SystemStatusCategories.SERVICE_CORE,
