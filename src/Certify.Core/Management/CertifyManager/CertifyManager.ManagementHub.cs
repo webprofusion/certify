@@ -534,14 +534,16 @@ namespace Certify.Management
                 }
                 else
                 {
-                    _serviceLog.Information("Hub client connected", hubUri);
+                    AddSystemStatusItem(
+                            SystemStatusCategories.SERVICE_CORE,
+                            SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                            "Management Hub Connection",
+                            $"Successfully connected to Management Hub: {hubUri}"
+                        );
                 }
             }
             else
             {
-
-                _serviceLog.Information("Hub client needs new connection to hub {hubUri}, creating", hubUri);
-
                 try
                 {
                     _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
@@ -555,19 +557,15 @@ namespace Certify.Management
 
                     if (_managementServerClient.IsConnected())
                     {
-                        _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
-
                         AddSystemStatusItem(
                             SystemStatusCategories.SERVICE_CORE,
                             SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
                             "Management Hub Connection",
-                            "Successfully connected to Management Hub"
+                            $"Successfully connected to Management Hub: {hubUri}"
                         );
                     }
                     else
                     {
-                        _serviceLog.Warning("Connect to management hub {hubUri} did not succeed", hubUri);
-
                         AddSystemStatusItem(
                             SystemStatusCategories.SERVICE_CORE,
                             SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -579,13 +577,11 @@ namespace Certify.Management
                 }
                 catch (Exception ex)
                 {
-                    _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically.", hubUri);
-
                     AddSystemStatusItem(
                         SystemStatusCategories.SERVICE_CORE,
                         SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
                         "Management Hub Connection",
-                        $"Failed to connect to Management Hub: {ex.Message}",
+                        $"Failed to connect to Management Hub at {hubUri}: {ex.Message}",
                         hasError: true
                     );
                 }
