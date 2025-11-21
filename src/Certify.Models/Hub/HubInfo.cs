@@ -20,6 +20,8 @@
         /// if set, provides the authenticated caller with a JWT joining token for use in subsequent hub communication
         /// </summary>
         public string JoiningToken { get; set; } = default!;
+
+        public bool RejoinRequired { get; set; } = false;
     }
 
     public class HubHealth

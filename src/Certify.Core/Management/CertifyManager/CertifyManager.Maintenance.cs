@@ -74,9 +74,7 @@ namespace Certify.Management
                     newInstance.Description = "Primary Certify Manager Instance (Hub)";
 
                     var newHubInstanceResult = await AddHubManagedInstance(newInstance);
-
-                    _serverConfig.HubAssignedInstanceId = newHubInstanceResult.Result.InstanceId;
-                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+                    SetHubAssignedInstanceId(newHubInstanceResult.Result.InstanceId);
                 }
                 else
                 {

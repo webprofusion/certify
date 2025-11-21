@@ -413,6 +413,7 @@ await certifyManager.Init();
 
 // setup direct management client, this tells the primary backend CertifyManager instance to talk directly to the management hub instead of via SignalR
 var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
+
 certifyManager.SetDirectManagementClient(directServerClient);
 
 // wire up status reporting, include management hub cached state handlers for request progress state updates and item updates

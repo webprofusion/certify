@@ -26,7 +26,6 @@ namespace Certify.Client
         private string _hubUri = "";
 
         private ManagedInstanceInfo _instanceInfo;
-        private string _joiningToken = default;
 
         public ManagementServerClient(string hubUri, ManagedInstanceInfo instanceInfo)
         {
@@ -34,14 +33,9 @@ namespace Certify.Client
             _instanceInfo = instanceInfo;
         }
 
-        public void SetJoiningToken(string joiningToken)
-        {
-            _joiningToken = joiningToken;
-        }
-
         private void Log(string msg)
         {
-            System.Diagnostics.Debug.WriteLine(msg);
+            System.Diagnostics.Debug.WriteLine($"[{DateTimeOffset.UtcNow.ToString("HH:mm:ss")} INF] {msg}");
         }
 
         public bool IsConnected()
@@ -54,7 +48,7 @@ namespace Certify.Client
             return true;
         }
 
-        public async Task ConnectAsync()
+        public async Task ConnectAsync(string hubConnectionAuthToken)
         {
             var allowUntrusted = true;
 
@@ -78,7 +72,7 @@ namespace Certify.Client
                 };
 
                 opts.UseStatefulReconnect = true;
-                opts.AccessTokenProvider = () => Task.FromResult(_joiningToken ?? "");
+                opts.AccessTokenProvider = () => Task.FromResult(hubConnectionAuthToken ?? "");
 
             })
             .WithAutomaticReconnect()
@@ -108,19 +102,9 @@ namespace Certify.Client
             _connection.Closed += async (error) =>
             {
                 Log($"[ManagementServerClient] Connection closed. Error: {error?.Message}");
+
+                // rely on delegate to organize reconnect
                 OnConnectionClosed?.Invoke();
-                
-                // if we are disconnected, wait a random amount of time and try to reconnect
-                await Task.Delay(new Random().Next(0, 5) * 1000);
-                
-                try
-                {
-                    await _connection.StartAsync();
-                }
-                catch (Exception ex)
-                {
-                    Log($"[ManagementServerClient] Failed to reconnect: {ex.Message}");
-                }
             };
 
             await _connection.StartAsync();

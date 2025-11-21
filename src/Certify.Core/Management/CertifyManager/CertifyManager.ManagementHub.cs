@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
+using System.Security.Policy;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -24,10 +26,9 @@ namespace Certify.Management
         private IManagementServerClient _managementServerClient;
         private bool _isDirectMgmtHubBackend = false;
         private bool _isMgtmHubBackend = false;
-        private bool _isHubConnectionErrorLogged = false;
+
         private ClientSecret _mgmtHubJoiningSecret;
         public const string MgmtHubJoiningCredId = "_ManagementHubJoiningKey";
-        private string _mgmtHubJoiningToken = default!;
 
         public async Task<ActionResult> CheckManagementHubConnectionStatus()
         {
@@ -41,47 +42,48 @@ namespace Certify.Management
             }
         }
 
+        private void SetHubAssignedInstanceId(string? val)
+        {
+            _serverConfig.HubAssignedInstanceId = val;
+            SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+        }
         public async Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret)
         {
+            var hubConnectionAuthToken = string.Empty;
+
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-            var registerInstance = true;
             ActionResult<HubJoiningInfo> joiningCredentialsCheck = null;
 
             if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
             {
+                _serviceLog.Information("Hub already joined, will reconnect.");
                 // when have already joined a hub, first check if we are rejoining the same hub by just verifying the credentials
                 joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: false);
 
-                if (joiningCredentialsCheck.IsSuccess)
+                if (!joiningCredentialsCheck.IsSuccess && joiningCredentialsCheck.Result.RejoinRequired)
                 {
-                    // already registered, just joining again
-                    registerInstance = false;
-                }
-                else
-                {
-                    // if we are not rejoining the same hub (or our credentials failed), we need to register a new instance
-                    registerInstance = true;
-                    _serverConfig.HubAssignedInstanceId = null;
+                    _serviceLog.Information("Hub rejoin required, will attempt to re-register instance.");
+                    // need to re-register
+                    SetHubAssignedInstanceId(val: null);
+
+                    joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: true);
                 }
             }
             else
             {
+                // if we are not rejoining the same hub, we need to register a new instance
                 _serviceLog.Information("Hub not yet joined, will attempt to join.");
-                registerInstance = true;
-            }
-
-            // if we are not rejoining the same hub, we need to register a new instance
-            if (joiningCredentialsCheck == null || joiningCredentialsCheck?.IsSuccess != true)
-            {
-                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: registerInstance);
+                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: true);
             }
 
             if (joiningCredentialsCheck.IsSuccess)
             {
-                _mgmtHubJoiningToken = joiningCredentialsCheck.Result.JoiningToken;
+                hubConnectionAuthToken = joiningCredentialsCheck.Result.JoiningToken;
 
                 var hubEndpoint = joiningCredentialsCheck.Result.HubEndpoint;
+
+                // store hub api endpoint and assigned id
 
                 _serverConfig.ManagementServerHubAPI = url;
                 _serverConfig.ManagementServerHubEndpoint = hubEndpoint;
@@ -89,7 +91,14 @@ namespace Certify.Management
                 // store our hub managed instance id if it has changed/been created
                 if (_serverConfig.HubAssignedInstanceId != joiningCredentialsCheck.Result.HubAssignedInstanceId)
                 {
-                    _serverConfig.HubAssignedInstanceId = joiningCredentialsCheck.Result.HubAssignedInstanceId;
+                    if (!string.IsNullOrWhiteSpace(joiningCredentialsCheck.Result.HubAssignedInstanceId))
+                    {
+                        _serverConfig.HubAssignedInstanceId = joiningCredentialsCheck.Result.HubAssignedInstanceId;
+                    }
+                    else
+                    {
+                        _serviceLog.Warning("Hub joined ok but hub assigned instance id was empty.");
+                    }
                 }
 
                 SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
@@ -105,11 +114,9 @@ namespace Certify.Management
                     Secret = JsonSerializer.Serialize(clientSecret)
                 });
 
-                _managementServerClient = null;
-
                 try
                 {
-                    await EnsureMgmtHubConnection();
+                    await EnsureMgmtHubConnection(hubConnectionAuthToken);
                 }
                 catch
                 {
@@ -120,6 +127,7 @@ namespace Certify.Management
             }
             else
             {
+                _serviceLog.Information("Hub credentials check failed.");
                 return joiningCredentialsCheck;
             }
         }
@@ -148,67 +156,108 @@ namespace Certify.Management
                 handler.ServerCertificateCustomValidationCallback = null;
             }
 
+            if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && registerInstance == false)
+            {
+                _serviceLog.Warning("Attempting to rejoin hub but hub assigned instance ID is empty, need to re-register with hub");
+                registerInstance = true;
+            }
+
             var endpoint = $"{url.TrimEnd('/')}/api/v1/hub/{(registerInstance ? "register" : "joincheck")}";
 
-            _serviceLog.Information("Checking credentials via Management Hub {url}", endpoint);
+            _serviceLog.Debug("Checking credentials via Management Hub {url}", endpoint);
 
-            using (var httpClient = new System.Net.Http.HttpClient(handler))
+            using var httpClient = new System.Net.Http.HttpClient(handler);
+
+            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpoint);
+            request.Headers.Add("X-Client-ID", clientSecret.ClientId);
+            request.Headers.Add("X-Client-Secret", clientSecret.Secret);
+
+            request.Headers.Add("X-Certify-Trace-InstanceName", GetManagedInstanceInfo().Title);
+
+            if (!registerInstance)
             {
-
-                var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpoint);
-                request.Headers.Add("X-Client-ID", clientSecret.ClientId);
-                request.Headers.Add("X-Client-Secret", clientSecret.Secret);
-
+                // already joined , include assigned id to verify
                 if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
                 {
                     request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
                 }
-
-                try
+                else
                 {
-                    var response = await httpClient.SendAsync(request);
+                    // if we are not registering, we should have an assigned id to check against
+                    return new ActionResult<HubJoiningInfo>("Hub Assigned Instance ID is required when rejoining the hub.", isSuccess: false);
+                }
+            }
 
-                    if (response.IsSuccessStatusCode)
+            try
+            {
+                var response = await httpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    var hubInfo = JsonSerializer.Deserialize<HubJoiningInfo>(json, JsonOptions.DefaultJsonSerializerOptions);
+                    return new ActionResult<HubJoiningInfo>("Connected to Management Hub.", isSuccess: true, hubInfo);
+                }
+                else
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    if (response.Content.Headers.ContentType?.MediaType == "application/problem+json")
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        var hubInfo = JsonSerializer.Deserialize<HubJoiningInfo>(json, JsonOptions.DefaultJsonSerializerOptions);
-                        return new ActionResult<HubJoiningInfo>("Connected to Management Hub.", isSuccess: true, hubInfo);
+                        try
+                        {
+                            var problemDetails = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+
+                            var result = new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {problemDetails.Title} - {problemDetails.Detail}", isSuccess: false);
+                            if (problemDetails.Type.EndsWith("/hub-unknown-instance-id"))
+                            {
+                                result.Result = new HubJoiningInfo
+                                {
+                                    Message = "The provided Hub Assigned Instance ID is not recognized by the Management Hub. It may be incorrect or associated with a different hub.",
+                                    RejoinRequired = true
+                                };
+                            }
+
+                            return result;
+                        }
+                        catch (System.Text.Json.JsonException)
+                        {
+                            _serviceLog.Debug("Failed to parse problem+json response from hub.");
+                        }
+                    }
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    {
+                        return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). {content} - Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}. {response}", isSuccess: false);
                     }
                     else
                     {
-                        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                        {
-                            return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}. {response}", isSuccess: false);
-                        }
-                        else
-                        {
-                            return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);
-                        }
+                        return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);
                     }
                 }
-                catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
-                {
-                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Connection refused (port may not be open or service not running). {endpoint}", isSuccess: false);
-                }
-                catch (HttpRequestException httpEx)
-                {
-                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Network error: {httpEx.Message}", isSuccess: false);
-                }
-                catch (Exception exp)
-                {
-                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp}", isSuccess: false);
-                }
+            }
+            catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
+            {
+                return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Connection refused (port may not be open or service not running). {endpoint}", isSuccess: false);
+            }
+            catch (HttpRequestException httpEx)
+            {
+                return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Network error: {httpEx.Message}", isSuccess: false);
+            }
+            catch (Exception exp)
+            {
+                return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp}", isSuccess: false);
             }
         }
 
         public void EnableManagementHubBackend(bool isDirectHubBackend)
         {
             _isDirectMgmtHubBackend = isDirectHubBackend;
-
         }
 
         public void SetDirectManagementClient(IManagementServerClient client)
         {
+            client.UpdateCachedInstanceInfo(GetManagedInstanceInfo());
             _managementServerClient = client;
         }
 
@@ -240,33 +289,15 @@ namespace Certify.Management
         }
 
         private JsonWebTokenHandler _joiningTokenHandler = new JsonWebTokenHandler();
-        private async Task EnsureMgmtHubConnection()
+
+        /// <summary>
+        /// Ensures there is a current connection to the management hub, reconnecting if necessary. Sends a heartbeat message to the hub if already connected.
+        /// </summary>
+        /// <returns></returns>
+        private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null)
         {
-            if (!_isDirectMgmtHubBackend)
-            {
-                // check we have a current non-expired joining token
-                if (!string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
-                {
-                    // check jwt has not expired
-
-                    var validation = await _joiningTokenHandler.ValidateTokenAsync(_mgmtHubJoiningToken, new Microsoft.IdentityModel.Tokens.TokenValidationParameters
-                    {
-                        ValidateLifetime = true,
-                        ValidateAudience = false,
-                        ValidateIssuer = false,
-                        ValidateIssuerSigningKey = false
-                    });
-
-                    if (!validation.IsValid)
-                    {
-                        // token has expired, will need a new one
-                        _mgmtHubJoiningToken = null;
-                    }
-                }
-            }
-
-            // connect/reconnect to management hub if enabled
-            if (_managementServerClient == null || !_managementServerClient.IsConnected())
+            // connect/reconnect to management hub if enabled (either connection not established or our joining token is null/expired)
+            if (_managementServerClient?.IsConnected() != true)
             {
                 var mgmtHubUri = string.Empty;
                 var api = string.Empty;
@@ -305,92 +336,87 @@ namespace Certify.Management
 
                     if (!string.IsNullOrWhiteSpace(mgmtHubUri))
                     {
-                        if (string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
+
+                        if (_mgmtHubJoiningSecret == null)
                         {
+                            // check if we have an environment variable for client id and client secret
+                            var clientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID");
+                            var clientSecret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET");
+                            if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+                            {
+                                _mgmtHubJoiningSecret = new ClientSecret
+                                {
+                                    ClientId = clientId,
+                                    Secret = clientSecret
+                                };
+
+                                AddSystemStatusItem(
+                                    SystemStatusCategories.SERVICE_CORE,
+                                    SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
+                                    "Management Hub Joining Key",
+                                    "Using management hub joining key from environment variables"
+                                    );
+                            }
+
+                            // if not set by env, check if we already have a management hub joining key as a stored credential
                             if (_mgmtHubJoiningSecret == null)
                             {
-                                // check if we have an environment variable for client id and client secret
-                                var clientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID");
-                                var clientSecret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET");
-                                if (!string.IsNullOrWhiteSpace(clientId) && !string.IsNullOrWhiteSpace(clientSecret))
+                                try
                                 {
-                                    _mgmtHubJoiningSecret = new ClientSecret
-                                    {
-                                        ClientId = clientId,
-                                        Secret = clientSecret
-                                    };
+                                    var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
 
-                                    AddSystemStatusItem(
-                                        SystemStatusCategories.SERVICE_CORE,
-                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
-                                        "Management Hub Joining Key",
-                                        "Using management hub joining key from environment variables"
-                                        );
-                                }
-
-                                // if not set by env, check if we already have a management hub joining key as a stored credential
-                                if (_mgmtHubJoiningSecret == null)
-                                {
-                                    try
+                                    if (secret != null)
                                     {
-                                        var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
-
-                                        if (secret != null)
-                                        {
-                                            _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        _serviceLog.Error(ex, "Error retrieving management hub joining key from credentials store.");
+                                        _mgmtHubJoiningSecret = JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
                                     }
                                 }
-
-                                if (_mgmtHubJoiningSecret == null)
+                                catch (Exception ex)
                                 {
-
-                                    AddSystemStatusItem(
-                                        SystemStatusCategories.SERVICE_CORE,
-                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
-                                        "Management Hub Joining Key",
-                                        "Management hub joining key not set, instance cannot join hub.",
-                                        hasWarning: true
-                                        );
-
-                                    _serviceLog.Error($"Hub joining secret invalid or not found while attempting to join {mgmtHubUri}");
-                                    return;
+                                    _serviceLog.Error(ex, "Error retrieving management hub joining key from credentials store.");
                                 }
                             }
 
-                            // acquire new token
-                            var check = await CheckManagementHubCredentials(api, _mgmtHubJoiningSecret);
-
-                            if (check.IsSuccess)
+                            if (_mgmtHubJoiningSecret == null)
                             {
-                                if (_serverConfig.HubAssignedInstanceId != check.Result.HubAssignedInstanceId)
-                                {
-                                    AddSystemStatusItem(
-                                        SystemStatusCategories.SERVICE_CORE,
-                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
-                                        "Management Hub Joining Auth",
-                                        "Management hub joining auth successful but hub assigned instance ID did not match. Current settings may be for a different hub.",
-                                        hasError: true
+
+                                AddSystemStatusItem(
+                                    SystemStatusCategories.SERVICE_CORE,
+                                    SystemStatusKeys.SERVICE_CORE_HUB_JOINING_KEY,
+                                    "Management Hub Joining Key",
+                                    "Management hub joining key not set, instance cannot join hub.",
+                                    hasWarning: true
                                     );
 
-                                    _serviceLog.Error($"Failed to match hub assigned instance ID current id. Hub has changed or instance is duplicated.");
-                                    return;
-                                }
-                                else
-                                {
-                                    _mgmtHubJoiningToken = check.Result.JoiningToken;
+                                _serviceLog.Error($"Hub joining secret invalid or not found while attempting to join {mgmtHubUri}");
+                                return;
+                            }
+                        }
 
-                                    AddSystemStatusItem(
-                                        SystemStatusCategories.SERVICE_CORE,
-                                        SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
-                                        "Management Hub Joining Auth",
-                                        "Management hub joining auth successful."
-                                    );
-                                }
+                        // acquire new token
+                        var check = await CheckManagementHubCredentials(api, _mgmtHubJoiningSecret);
+
+                        if (check.IsSuccess)
+                        {
+                            hubConnectionAuthToken = check.Result.JoiningToken;
+
+                            if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && !string.IsNullOrWhiteSpace(check.Result.HubAssignedInstanceId))
+                            {
+                                // first time join, store assigned id
+                                SetHubAssignedInstanceId(check.Result.HubAssignedInstanceId);
+
+                                _serviceLog.Warning($"EnsureMgmtHubConnection: hub assigned instance ID was previously empty, updated to new assigned ID.");
+                            }
+                            else if (_serverConfig.HubAssignedInstanceId != check.Result.HubAssignedInstanceId)
+                            {
+                                AddSystemStatusItem(
+                                    SystemStatusCategories.SERVICE_CORE,
+                                    SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
+                                    "Management Hub Joining Auth",
+                                    "Management hub joining auth successful but hub assigned instance ID did not match. Current settings may be for a different hub. Hub assigned instance id updated.",
+                                    hasError: true
+                                );
+
+                                SetHubAssignedInstanceId(check.Result.HubAssignedInstanceId);
                             }
                             else
                             {
@@ -398,20 +424,37 @@ namespace Certify.Management
                                     SystemStatusCategories.SERVICE_CORE,
                                     SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
                                     "Management Hub Joining Auth",
-                                    "Management hub joining auth failed, instance cannot join hub. Joining key (or current Hub Assigned ID) may be invalid or for a different hub.",
-                                    hasError: true
+                                    "Management hub joining auth successful."
                                 );
-
-                                _serviceLog.Error($"Failed to acquire new hub joining token using current joining key: {check.Message}");
-                                return;
                             }
+                        }
+                        else
+                        {
+
+                            AddSystemStatusItem(
+                                SystemStatusCategories.SERVICE_CORE,
+                                SystemStatusKeys.SERVICE_CORE_HUB_JOINING_AUTH,
+                                "Management Hub Joining Auth",
+                                $"Management hub joining auth failed: {check.Message}",
+                                hasError: true
+                            );
+
+                            if (check.Result?.RejoinRequired == true)
+                            {
+                                _serviceLog.Information("Hub rejoin required, will attempt to re-register instance.");
+
+                                // need to re-register
+                                SetHubAssignedInstanceId(val: null);
+                            }
+
+                            return;
                         }
                     }
                 }
 
                 if (!string.IsNullOrWhiteSpace(mgmtHubUri))
                 {
-                    await StartManagementHubConnection(mgmtHubUri);
+                    await StartManagementHubConnection(mgmtHubUri, hubConnectionAuthToken);
                 }
             }
             else
@@ -444,22 +487,14 @@ namespace Certify.Management
             catch (Exception ex)
             {
                 _serviceLog.Error(ex, "Failed to send heartbeat to Management Hub");
-                _mgmtHubJoiningToken = null; // force rejoin on next attempt
 
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
                     SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
                     "Management Hub Connection",
-                    $"Heartbeat failed: {ex.Message}. Will attempt to reconnect.",
+                    $"Heartbeat failed: {ex.Message}. Will attempt to reconnect shortly.",
                     hasWarning: true
                 );
-
-                // Trigger reconnection attempt
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(1000);
-                    await EnsureMgmtHubConnection();
-                });
             }
         }
 
@@ -478,15 +513,13 @@ namespace Certify.Management
             };
         }
 
-        private async Task StartManagementHubConnection(string hubUri)
+        private async Task StartManagementHubConnection(string hubUri, string hubConnectionAuthToken)
         {
-            if (string.IsNullOrWhiteSpace(_mgmtHubJoiningToken))
+            if (string.IsNullOrWhiteSpace(hubConnectionAuthToken))
             {
-                _serviceLog.Error("No joining token available, cannot connect to management hub.");
+                _serviceLog.Error("No hub connection auth token available, cannot connect to management hub.");
                 return;
             }
-
-            _serviceLog.Debug("Attempting connection to management hub {hubUri}", hubUri);
 
             var appVersion = Util.GetAppVersion().ToString();
 
@@ -494,41 +527,59 @@ namespace Certify.Management
 
             if (_managementServerClient != null)
             {
-                _managementServerClient.OnGetCommandResult -= PerformHubCommandWithResult;
-                _managementServerClient.OnConnectionReconnecting -= _managementServerClient_OnConnectionReconnecting;
-                _managementServerClient.OnConnectionReconnected -= _managementServerClient_OnConnectionReconnected;
-                _managementServerClient.OnConnectionClosed -= _managementServerClient_OnConnectionClosed;
+                if (!_managementServerClient.IsConnected())
+                {
+                    _serviceLog.Information("Hub not connected, attempting connection. {hubUri}", hubUri);
+                    await _managementServerClient.ConnectAsync(hubConnectionAuthToken);
+                }
+                else
+                {
+                    _serviceLog.Information("Hub client connected", hubUri);
+                }
             }
-
-            _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
-            _managementServerClient.SetJoiningToken(_mgmtHubJoiningToken);
-
-            try
+            else
             {
-                await _managementServerClient.ConnectAsync();
 
-                _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
-                _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
-                _managementServerClient.OnConnectionReconnected += _managementServerClient_OnConnectionReconnected;
-                _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
+                _serviceLog.Information("Hub client needs new connection to hub {hubUri}, creating", hubUri);
 
-                _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
+                try
+                {
+                    _managementServerClient = new ManagementServerClient(hubUri, instanceInfo);
 
-                _isHubConnectionErrorLogged = false; // Reset error flag on successful connection
+                    _managementServerClient.OnGetCommandResult += PerformHubCommandWithResult;
+                    _managementServerClient.OnConnectionReconnecting += _managementServerClient_OnConnectionReconnecting;
+                    _managementServerClient.OnConnectionReconnected += _managementServerClient_OnConnectionReconnected;
+                    _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
 
-                AddSystemStatusItem(
-                    SystemStatusCategories.SERVICE_CORE,
-                    SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
-                    "Management Hub Connection",
-                    "Successfully connected to Management Hub"
-                );
-            }
-            catch (Exception ex)
-            {
-                if (!_isHubConnectionErrorLogged)
+                    await _managementServerClient.ConnectAsync(hubConnectionAuthToken);
+
+                    if (_managementServerClient.IsConnected())
+                    {
+                        _serviceLog.Information("Connected to management hub {hubUri}", hubUri);
+
+                        AddSystemStatusItem(
+                            SystemStatusCategories.SERVICE_CORE,
+                            SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                            "Management Hub Connection",
+                            "Successfully connected to Management Hub"
+                        );
+                    }
+                    else
+                    {
+                        _serviceLog.Warning("Connect to management hub {hubUri} did not succeed", hubUri);
+
+                        AddSystemStatusItem(
+                            SystemStatusCategories.SERVICE_CORE,
+                            SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
+                            "Management Hub Connection",
+                            $"Could not connect to Management Hub at {hubUri}",
+                            hasError: true
+                        );
+                    }
+                }
+                catch (Exception ex)
                 {
                     _serviceLog.Error(ex, "Could not connect to Certify Management Hub {hubUri}. Service may not be currently available. Will retry periodically.", hubUri);
-                    _isHubConnectionErrorLogged = true;
 
                     AddSystemStatusItem(
                         SystemStatusCategories.SERVICE_CORE,
@@ -538,8 +589,6 @@ namespace Certify.Management
                         hasError: true
                     );
                 }
-
-                _managementServerClient = null;
             }
         }
 
@@ -953,8 +1002,14 @@ namespace Certify.Management
                 val = new ActionResult { IsSuccess = deactivated, Message = deactivated ? "Deactivated." : "Deactivation failed." };
 
             }
+            else if (arg.CommandType == ManagementHubCommands.NotificationAuthenticationRequired)
+            {
+                _serviceLog.Information("Hub has requested that this instance re-authenticate");
+                await _managementServerClient.Disconnect();
+            }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
             {
+                _serviceLog.Information("Hub has requested that this instance re-connect");
                 await _managementServerClient.Disconnect();
             }
 
@@ -1071,8 +1126,6 @@ namespace Certify.Management
         {
             _serviceLog.Information("Successfully reconnected to Management Hub");
 
-            _isHubConnectionErrorLogged = false; // Reset error flag
-
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -1094,7 +1147,7 @@ namespace Certify.Management
 
         private void _managementServerClient_OnConnectionClosed()
         {
-            _serviceLog.Error("Management Hub connection closed");
+            _serviceLog.Warning("Management Hub connection closed");
 
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
@@ -1103,22 +1156,6 @@ namespace Certify.Management
                 "Connection to Management Hub lost. Will attempt to reconnect.",
                 hasError: true
             );
-
-            // Trigger reconnection attempt after a delay
-            _ = Task.Run(async () =>
-            {
-                await Task.Delay(5000);
-
-                try
-                {
-                    _serviceLog.Information("Attempting to re-establish connection to Management Hub");
-                    await EnsureMgmtHubConnection();
-                }
-                catch (Exception ex)
-                {
-                    _serviceLog.Error(ex, "Failed to re-establish connection to Management Hub");
-                }
-            });
         }
 
         private async Task GenerateDemoItems(int? numItems)
@@ -1129,7 +1166,6 @@ namespace Certify.Management
                 var items = DemoDataGenerator.GenerateDemoItems(numItems ?? 100, numItems ?? 500);
                 foreach (var item in items)
                 {
-
                     _ = UpdateManagedCertificate(item);
                 }
             }

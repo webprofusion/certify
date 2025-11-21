@@ -16,7 +16,7 @@ namespace Certify.Server.Hub.Api.Services
     {
         private readonly string _secret = default!;
         private readonly string _issuer = default!;
-        private readonly string _expDate = default!;
+        private readonly string _expMinutes = default!;
 
         /// <summary>
         /// Constructor
@@ -26,7 +26,7 @@ namespace Certify.Server.Hub.Api.Services
         {
             _secret = config.GetSection("JwtSettings").GetSection("secret").Value ?? "";
             _issuer = config.GetSection("JwtSettings").GetSection("issuer").Value ?? "";
-            _expDate = config.GetSection("JwtSettings").GetSection("expirationInDays").Value ?? "1";
+            _expMinutes = config.GetSection("JwtSettings").GetSection("authTokenExpirationInMinutes").Value ?? "5";
 
         }
 
@@ -63,7 +63,7 @@ namespace Certify.Server.Hub.Api.Services
                     new Claim(ClaimTypes.Sid, identifier)
                 }),
                 Issuer = _issuer,
-                Expires = expiryMinutes != null ? DateTime.UtcNow.AddMinutes((double)expiryMinutes) : DateTime.UtcNow.AddDays(double.Parse(_expDate)), //token expiry could be role specific - e.g. 1 yr vs 1 month
+                Expires = expiryMinutes != null ? DateTime.UtcNow.AddMinutes((double)expiryMinutes) : DateTime.UtcNow.AddMinutes(double.Parse(_expMinutes)), //token expiry could be role specific - e.g. 1 yr vs 1 month
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -95,11 +95,12 @@ namespace Certify.Server.Hub.Api.Services
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateLifetime = validateTokenLifetime,
-                ValidIssuer = _issuer
+                ValidIssuer = _issuer, 
+                IncludeTokenOnFailedValidation = true
             };
 
             var tokenHandler = new JsonWebTokenHandler();
-
+ 
             var result = await tokenHandler.ValidateTokenAsync(token, tokenValidationParameters);
             if (result.IsValid)
             {
@@ -107,7 +108,7 @@ namespace Certify.Server.Hub.Api.Services
             }
             else
             {
-                throw new SecurityTokenException("Invalid token");
+                throw new SecurityTokenException($"Invalid token: {result.Exception.Message} {result.TokenOnFailedValidation}");
             }
         }
     }

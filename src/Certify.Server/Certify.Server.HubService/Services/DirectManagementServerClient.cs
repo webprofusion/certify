@@ -36,29 +36,24 @@ namespace Certify.Server.HubService.Services
         /// </summary>
         public event Func<ManagedInstanceItems>? OnGetInstanceItems;
 
-        private ICertifyManager _certifyManager;
         private IInstanceManagementHub _managementHub;
-        private ManagedInstanceInfo _instanceInfo;
-        private string _joiningToken = default!;
+        private ManagedInstanceInfo _instanceInfo = default!;
         /// <summary>
         /// Initializes a new instance of the <see cref="DirectManagementServerClient"/> class.
         /// </summary>
-        /// <param name="certifyManager">The certify manager.</param>
+
         /// <param name="serviceProvider">The service provider.</param>
         /// <param name="instanceManagementHub">The instance management hub.</param>
-        public DirectManagementServerClient(ICertifyManager certifyManager, IServiceProvider serviceProvider, IInstanceManagementHub instanceManagementHub)
+        public DirectManagementServerClient(IServiceProvider serviceProvider, IInstanceManagementHub instanceManagementHub)
         {
-            _certifyManager = certifyManager;
             _managementHub = instanceManagementHub;
-
-            _instanceInfo = certifyManager.GetManagedInstanceInfo();
         }
 
         /// <inheritdoc/>
-        public Task ConnectAsync() => Task.CompletedTask;
+        public Task ConnectAsync(string hubConnectionAuthToken) => Task.CompletedTask;
 
         /// <inheritdoc/>
-        public Task Disconnect() => throw new NotImplementedException();
+        public Task Disconnect() => Task.CompletedTask;
 
         /// <inheritdoc/>
         public bool IsConnected() => true;
@@ -100,21 +95,11 @@ namespace Certify.Server.HubService.Services
         }
 
         /// <summary>
-        /// Sets the joining token for the instance.
-        /// </summary>
-        /// <param name="joiningToken">The joining token.</param>
-        public void SetJoiningToken(string joiningToken)
-        {
-            _joiningToken = joiningToken;
-        }
-
-        /// <summary>
         /// Updates the cached instance information.
         /// </summary>
         /// <param name="instanceInfo">The updated instance information.</param>
         public void UpdateCachedInstanceInfo(ManagedInstanceInfo instanceInfo)
         {
-
             _instanceInfo = instanceInfo;
         }
     }

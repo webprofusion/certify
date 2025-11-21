@@ -71,6 +71,11 @@ namespace Certify.Models.Hub
         public const string NotificationRemovedManagedItem = "NotificationRemovedManagedItem";
         public const string NotificationUpdatedManagedItem = "NotificationUpdatedManagedItem";
         public const string NotificationManagedItemRequestProgress = "NotificationManagedItemRequestProgress";
+
+        /// <summary>
+        /// Caller instance needs to authenticate before proceeding, they should reacquire a valid auth token and reconnect
+        /// </summary>
+        public const string NotificationAuthenticationRequired = "NotificationAuthenticationRequired";
     }
 
     /// <summary>

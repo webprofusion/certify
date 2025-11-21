@@ -12,9 +12,7 @@ namespace Certify.Client
         event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
         event Func<ManagedInstanceItems> OnGetInstanceItems;
 
-        void SetJoiningToken(string joiningToken);
-
-        Task ConnectAsync();
+        Task ConnectAsync(string hubConnectionAuthToken);
         Task Disconnect();
         bool IsConnected();
         void SendInstanceInfo(Guid commandId, bool isCommandResponse = true);

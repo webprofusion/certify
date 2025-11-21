@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -6,6 +6,7 @@ using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Shared;
+using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.SignalR.ManagementHub
@@ -65,6 +66,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         }
 
         /// <summary>
+        /// If true, abort connections from instances that fail authentication to force them to re-authenticate
+        /// </summary>
+        bool _abortConnectionsWhenNotAuthenticated = true;
+
+        /// <summary>
         /// Handle connection event from an instance using SignalR
         /// </summary>
         /// <returns></returns>
@@ -79,10 +85,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             try
             {
                 var accessToken = Context.GetHttpContext()?.Request.Headers.Authorization;
-                if (accessToken.HasValue)
+                if (!string.IsNullOrWhiteSpace(accessToken?.ToString()))
                 {
                     var joiningJwt = accessToken.ToString().Replace("Bearer ", "");
                     var jwtService = new Hub.Api.Services.JwtService(_config);
+
                     var claimsIdentity = await jwtService.ClaimsIdentityFromTokenAsync(joiningJwt, true);
                     var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
                     hubAssignedId = claimsIdentity.FindFirst("hub-assigned-id")?.Value;
@@ -90,36 +97,88 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 }
                 else
                 {
-                    _logger?.LogWarning("InstanceManagementHub: No JWT token provided by instance. Connection attempt ignored.");
+                    _logger?.LogWarning("InstanceManagementHub: No JWT token provided by instance. Connection attempt aborted.");
+
+                    await Clients.Caller.SendCommandRequest(new InstanceCommandRequest
+                    {
+                        CommandId = Guid.NewGuid(),
+                        CommandType = ManagementHubCommands.NotificationAuthenticationRequired,
+                        Value = "No authentication token provided"
+                    });
+
+                    if (_abortConnectionsWhenNotAuthenticated)
+                    {
+                        Context.Abort();
+                    }
+
                     return;
                 }
             }
-            catch (Exception)
+            catch (Exception exp)
             {
                 // could not validate jwt
-                _logger?.LogWarning("InstanceManagementHub: Failed to read auth token. Connection attempt ignored.");
+                _logger?.LogWarning(exp, "InstanceManagementHub: Failed to read auth token. Connection attempt aborted.");
+
+                await Clients.Caller.SendCommandRequest(new InstanceCommandRequest
+                {
+                    CommandId = Guid.NewGuid(),
+                    CommandType = ManagementHubCommands.NotificationAuthenticationRequired,
+                    Value = "No authentication token provided"
+                });
+
+                if (_abortConnectionsWhenNotAuthenticated)
+                {
+                    Context.Abort();
+                }
+
+                return;
+            }
+
+            if (!isAuthenticated)
+            {
+                _logger?.LogWarning("InstanceManagementHub: Instance connection not authenticated. Instance commanded to re-authenticate. Connection attempt aborted.");
+
+                await Clients.Caller.SendCommandRequest(new InstanceCommandRequest
+                {
+                    CommandId = Guid.NewGuid(),
+                    CommandType = ManagementHubCommands.NotificationAuthenticationRequired,
+                    Value = "No authentication token provided"
+                });
+
+                if (_abortConnectionsWhenNotAuthenticated)
+                {
+                    Context.Abort();
+                }
                 return;
             }
 
             // begin tracking connection 
-            _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo
+            if (!string.IsNullOrEmpty(hubAssignedId))
             {
-                Id = hubAssignedId ?? String.Empty,
-                InstanceId = hubAssignedId ?? String.Empty,
-                ConnectionStatus = ConnectionStatus.Connected,
-                DateLastReported = DateTimeOffset.UtcNow,
-                IsAuthenticated = isAuthenticated
+                _logger?.LogInformation("InstanceManagementHub: Instance connected to management hub. Assigned Hub ID: {hubId}", hubAssignedId);
+                _stateProvider.UpdateInstanceConnectionInfo(Context.ConnectionId, new ManagedInstanceInfo
+                {
+                    Id = hubAssignedId ?? String.Empty,
+                    InstanceId = hubAssignedId ?? String.Empty,
+                    ConnectionStatus = ConnectionStatus.Connected,
+                    DateLastReported = DateTimeOffset.UtcNow,
+                    IsAuthenticated = isAuthenticated
+                }
+           );
+
+                // at this stage we don't know which instance id this is, we need to issue a command for it to identify itself before it can participate
+                var request = new InstanceCommandRequest
+                {
+                    CommandId = Guid.NewGuid(),
+                    CommandType = ManagementHubCommands.GetInstanceInfo
+                };
+
+                IssueCommandViaSignalR(request);
             }
-            );
-
-            // at this stage we don't know which instance id this is, we need to issue a command for it to identify itself before it can participate
-            var request = new InstanceCommandRequest
+            else
             {
-                CommandId = Guid.NewGuid(),
-                CommandType = ManagementHubCommands.GetInstanceInfo
-            };
-
-            IssueCommandViaSignalR(request);
+                _logger?.LogWarning("InstanceManagementHub: Instance connected to management hub with no Hub ID assigned.", hubAssignedId);
+            }
         }
 
         private void IssueCommandViaSignalR(InstanceCommandRequest cmd)
@@ -317,7 +376,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 // update our stored instance info for this instance
                 await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
-                
+
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
                 {

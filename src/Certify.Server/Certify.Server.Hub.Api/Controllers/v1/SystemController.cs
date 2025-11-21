@@ -104,7 +104,6 @@ namespace Certify.Server.Hub.Api.Controllers
         {
 
             // auth based on client id and client secret
-            // check token and access control before allowing download
 
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
 
@@ -113,7 +112,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
             }
 
-            var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"];
+            var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString(); ;
+            var instanceTitle = Request.Headers["X-Certify-Trace-InstanceName"].ToString();
 
             // if hub assigned instance id is provided we will either check the supplied hub assigned instance id or create a new one
 
@@ -124,7 +124,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (instanceInfo == null)
                 {
-                    return Problem(detail: "Invalid or unknown hub assigned instance id", statusCode: (int)HttpStatusCode.Unauthorized);
+                    return Problem(detail: "Invalid or unknown hub assigned instance id", statusCode: (int)HttpStatusCode.Unauthorized, type: "https://api.certifytheweb.com/problemtype/hub-unknown-instance-id");
                 }
             }
             else if (register == true)
@@ -163,7 +163,8 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var additionalClaims = new List<Claim>
                 {
-                    new Claim("hub-assigned-id", Guid.NewGuid().ToString())
+                    new Claim("hub-assigned-id", hubAssignedInstanceId),
+                    new Claim(ClaimTypes.Name, instanceTitle??""),
                 };
 
             joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{Request.Headers["X-Client-ID"]}", additionalClaims: additionalClaims);
