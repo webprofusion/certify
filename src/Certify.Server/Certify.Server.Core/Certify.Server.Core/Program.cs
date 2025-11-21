@@ -3,11 +3,6 @@ using Certify.Server.Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
-#if DEBUG
-//  https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0
-builder.WebHost.ConfigureKestrel(opts => opts.ListenNamedPipe("certify-service"));
-#endif
-
 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 {
     builder.Services.AddSystemd()
@@ -15,6 +10,11 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 }
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
+#if DEBUG
+    //  https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0
+    builder.WebHost.ConfigureKestrel(opts => opts.ListenNamedPipe("certify-service"));
+#endif
+
     builder.Services.AddWindowsService()
                     .AddHostedService<AgentBackgroundService>();
 }
