@@ -15,7 +15,18 @@
         <TextBlock Style="{StaticResource Subheading}">Manage this instance using Certify Management Hub</TextBlock>
         <TextBlock Style="{StaticResource Instructions}">You can centrally manage this instance of Certify Certificate Manager using Certify Management Hub. See https://certifytheweb.com for more information.</TextBlock>
 
-        <TextBlock Style="{StaticResource SubheadingWithMargin}" Text="{Binding StatusMessage}" />
+        <TextBlock Text="{Binding StatusMessage}">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource SubheadingWithMargin}">
+                    <Setter Property="Foreground" Value="{DynamicResource ErrorColorBrush}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource SuccessColorBrush}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
 
         <TextBlock Style="{StaticResource Instructions}">To add or update the hub connection, enter the API URL of your management hub API plus your Client ID and Secret, then select Join Hub:</TextBlock>
 
