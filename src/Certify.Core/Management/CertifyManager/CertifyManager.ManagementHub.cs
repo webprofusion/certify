@@ -61,7 +61,7 @@ namespace Certify.Management
                 // when have already joined a hub, first check if we are rejoining the same hub by just verifying the credentials
                 joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: false);
 
-                if (!joiningCredentialsCheck.IsSuccess && joiningCredentialsCheck.Result.RejoinRequired)
+                if (!joiningCredentialsCheck.IsSuccess && joiningCredentialsCheck.Result?.RejoinRequired == true)
                 {
                     _serviceLog.Information("Hub rejoin required, will attempt to re-register instance.");
                     // need to re-register
