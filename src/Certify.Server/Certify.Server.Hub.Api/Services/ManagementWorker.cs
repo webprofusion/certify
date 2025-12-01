@@ -57,7 +57,30 @@ namespace Certify.Server.Hub.Api.Services
 
             foreach (var instance in instances)
             {
-                _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
+                _ = _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
+            }
+
+            // refresh instance managed items where due, distribute refresh randomly to avoid always requesting all at once
+            var dueRefresh = _stateProvider.GetInstancesDueRefresh(5);
+            var rnd = new Random();
+            foreach (var instanceId in dueRefresh)
+            {
+                try
+                {
+                    var instance = instances.Find(i => i.InstanceId == instanceId);
+                    if (instance?.ConnectionStatus == Certify.Models.Hub.ConnectionStatus.Connected)
+                    {
+                        // randomly choose to apply refresh or not to spread load
+                        if (rnd.Next(0, 100) > 50)
+                        {
+                            _ = _mgmtAPI.RefreshInstanceManagedItems(instanceId, null);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "{svc} error refreshing managed items for {id}", _serviceName, instanceId);
+                }
             }
         }
 

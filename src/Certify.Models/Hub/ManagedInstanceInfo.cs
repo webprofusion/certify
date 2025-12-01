@@ -38,6 +38,7 @@ namespace Certify.Models.Hub
     public record ManagedInstanceItems
     {
         public string InstanceId { get; set; } = string.Empty;
+        public DateTimeOffset? LastRefreshed { get; set; }
         public List<ManagedCertificate> Items { get; set; } = [];
     }
 }

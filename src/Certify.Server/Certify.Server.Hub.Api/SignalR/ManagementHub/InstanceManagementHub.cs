@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -6,7 +6,6 @@ using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Shared;
-using Microsoft.AspNet.SignalR.Client;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.SignalR.ManagementHub
@@ -149,6 +148,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 {
                     Context.Abort();
                 }
+
                 return;
             }
 
@@ -167,13 +167,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
            );
 
                 // at this stage we don't know which instance id this is, we need to issue a command for it to identify itself before it can participate
-                var request = new InstanceCommandRequest
-                {
-                    CommandId = Guid.NewGuid(),
-                    CommandType = ManagementHubCommands.GetInstanceInfo
-                };
-
-                IssueCommandViaSignalR(request);
+                IssueCommandViaSignalR(new InstanceCommandRequest(ManagementHubCommands.GetInstanceInfo));
             }
             else
             {
@@ -215,6 +209,11 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 _logger?.LogWarning("Attempted direct command but result was null {cmdType}", cmd.CommandType);
                 _stateProvider.RemoveAwaitedCommandRequest(cmd.CommandId);
             }
+        }
+
+        private async Task IssueInstanceCommand(string instanceId, string commandType)
+        {
+            await IssueInstanceCommand(instanceId, new InstanceCommandRequest(commandType));
         }
 
         private async Task IssueInstanceCommand(string instanceId, InstanceCommandRequest cmd)
@@ -380,25 +379,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
                 {
-                    var request = new InstanceCommandRequest
-                    {
-                        CommandId = Guid.NewGuid(),
-                        CommandType = ManagementHubCommands.GetManagedItems
-                    };
-
-                    await IssueInstanceCommand(instanceInfo.InstanceId, request);
+                    await IssueInstanceCommand(instanceInfo.InstanceId, ManagementHubCommands.GetManagedItems);
                 }
 
                 // if we don't have a status summary, ask for that
                 if (!_stateProvider.HasStatusSummaryForManagedInstance(instanceInfo.InstanceId))
                 {
-                    var request = new InstanceCommandRequest
-                    {
-                        CommandId = Guid.NewGuid(),
-                        CommandType = ManagementHubCommands.GetStatusSummary
-                    };
-
-                    await IssueInstanceCommand(instanceInfo.InstanceId, request);
+                    await IssueInstanceCommand(instanceInfo.InstanceId, ManagementHubCommands.GetStatusSummary);
                 }
             }
         }

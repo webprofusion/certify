@@ -100,13 +100,20 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="cmd">The command request to send.</param>
-        private async Task SendCommandWithNoResult(string instanceId, InstanceCommandRequest cmd)
+        /// <param name="isOptionallyAwaited">if true, command will be added to awaited command requests as we may or may not get a result later</param>
+        /// 
+        private async Task SendCommandWithNoResult(string instanceId, InstanceCommandRequest cmd, bool isOptionallyAwaited = false)
         {
             var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
 
             if (connectionId == null)
             {
                 throw new Exception("Instance connection info not known, cannot send commands to instance.");
+            }
+
+            if (isOptionallyAwaited)
+            {
+                _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
             }
 
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
@@ -188,6 +195,17 @@ namespace Certify.Server.Hub.Api.Services
 
             var result = await PerformInstanceCommandTaskWithResult<StatusSummary?>(instanceId, args, ManagementHubCommands.GetStatusSummary);
             _mgmtStateProvider.UpdateInstanceStatusSummary(instanceId, result);
+        }
+
+        /// <summary>
+        /// Refreshes the collection of managed items for the specified instance.
+        /// </summary>
+        /// <param name="instanceId">The unique identifier of the instance whose managed items are to be refreshed. Cannot be null or empty.</param>
+        /// <param name="currentAuthContext">The authentication context to use for the operation. If null, the default authentication context is applied.</param>
+        /// <returns>A task that represents the asynchronous refresh operation.</returns>
+        public async Task RefreshInstanceManagedItems(string instanceId, AuthContext? currentAuthContext)
+        {
+            await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.GetManagedItems), isOptionallyAwaited: true);
         }
 
         /// <summary>
@@ -274,7 +292,7 @@ namespace Certify.Server.Hub.Api.Services
             var sum = new StatusSummary();
 
             // summarize info for each instance, skipping temporary instance reports from initial connections etc
-            foreach (var item in allSummary.Where(i=>i.Value != null && i.Key == i.Value.InstanceId))
+            foreach (var item in allSummary.Where(i => i.Value != null && i.Key == i.Value.InstanceId))
             {
                 if (item.Value != null && item.Key == item.Value.InstanceId)
                 {

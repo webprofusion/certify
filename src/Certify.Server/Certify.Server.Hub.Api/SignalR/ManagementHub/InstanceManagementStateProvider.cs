@@ -32,6 +32,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <returns></returns>
         Task<InstanceCommandResult?> ConsumeAwaitedCommandResult(InstanceCommandRequest cmd);
         void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items);
+        IEnumerable<string> GetInstancesDueRefresh(int minutes);
         ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
         void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
@@ -282,10 +283,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 _logger.LogDebug("[RemoveAwaitedCommandRequest] Removed awaited command request {commandId} {cmdType}..", request.CommandId, request.CommandType);
             }
-            else
-            {
-                _logger.LogWarning("[RemoveAwaitedCommandRequest] Could not remove unknown command request {commandId}..", commandId);
-            }
         }
 
         /// <summary>
@@ -295,8 +292,23 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         /// <param name="items"></param>
         public void UpdateInstanceItemInfo(string instanceId, List<ManagedCertificate> items)
         {
-            var info = new ManagedInstanceItems { InstanceId = instanceId, Items = items };
+            var info = new ManagedInstanceItems { InstanceId = instanceId, Items = items, LastRefreshed = DateTimeOffset.UtcNow };
             _managedInstanceItems.AddOrUpdate(instanceId, info, (k, old) => info);
+        }
+
+        /// <summary>
+        /// Get a list of instance IDs which are due a refresh based on last refreshed time
+        /// </summary>
+        /// <param name="minutes"></param>
+        /// <returns></returns>
+        public IEnumerable<string> GetInstancesDueRefresh(int minutes)
+        {
+            // return list of instance IDs which are due a refresh based on last refreshed time
+            var dueInstances = _managedInstanceItems
+                .Where(kvp => kvp.Value.LastRefreshed == null || kvp.Value.LastRefreshed <= DateTimeOffset.UtcNow.AddMinutes(-minutes))
+                .Select(kvp => kvp.Key);
+
+            return dueInstances;
         }
 
         /// <summary>
