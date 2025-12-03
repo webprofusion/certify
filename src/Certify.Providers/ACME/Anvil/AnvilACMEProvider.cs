@@ -1611,6 +1611,12 @@ namespace Certify.Providers.ACME.Anvil
 
                 certificateChain = await orderContext.Download(preferredChain);
 
+                // Log if the preferred chain was not matched
+                if (!string.IsNullOrEmpty(preferredChain) && !certificateChain.MatchesPreferredChain(preferredChain))
+                {
+                    log?.Warning($"The downloaded certificate chain did not match the requested preferred chain: '{preferredChain}'");
+                }
+
 #if NET9_0_OR_GREATER
                 cert = X509CertificateLoader.LoadCertificate(certificateChain.Certificate.ToDer());
 #else

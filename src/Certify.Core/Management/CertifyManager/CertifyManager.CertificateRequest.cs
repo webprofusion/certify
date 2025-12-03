@@ -5,7 +5,6 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -945,16 +944,16 @@ namespace Certify.Management
                 ReportProgress(progress, new RequestProgressState(RequestState.Running, CoreSR.CertifyManager_RequestCertificate, managedCertificate));
 
                 // check item or settings for preferred chain option, prefer most specific first in order of: Managed Cert config, Account Settings config, CA Default config
-                var preferredChain = managedCertificate.RequestConfig.PreferredChain;
+                var preferredChain = managedCertificate.RequestConfig.PreferredChain?.Trim();
 
                 if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(caAccount.PreferredChain))
                 {
-                    preferredChain = caAccount.PreferredChain;
+                    preferredChain = caAccount.PreferredChain?.Trim();
                 }
 
                 if (string.IsNullOrEmpty(preferredChain) && !string.IsNullOrEmpty(certAuthority?.DefaultPreferredChain))
                 {
-                    preferredChain = certAuthority.DefaultPreferredChain;
+                    preferredChain = certAuthority.DefaultPreferredChain?.Trim();
                 }
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
