@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;

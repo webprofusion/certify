@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -13,6 +13,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         string GetManagementHubInstanceId();
         void UpdateInstanceConnectionInfo(string connectionId, ManagedInstanceInfo instanceInfo);
         void UpdateInstanceStatusSummary(string instanceId, StatusSummary summary);
+        bool HasLastUpdateIdChanged(string instanceId, long newLastUpdateId);
         string GetConnectionIdForInstance(string instanceId);
         string? GetInstanceIdForConnection(string connectionId);
         List<ManagedInstanceInfo> GetConnectedInstances();
@@ -150,6 +151,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
+            var previousSummary = _managedInstanceStatusSummary.TryGetValue(instanceId, out var existing) ? existing : null;
+
             _managedInstanceStatusSummary.AddOrUpdate(instanceId, summary, (i, oldValue) => summary);
 
             // Cleanup any mismatched entries where the key doesn't match the summary's InstanceId, these can appear if instance id was temporary while verifying connection
@@ -167,6 +170,32 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 _managedInstanceStatusSummary.TryRemove(key, out _);
             }
+        }
+
+        /// <summary>
+        /// Check if the LastUpdateId has changed for a given instance, indicating managed items have been added/updated/deleted
+        /// </summary>
+        /// <param name="instanceId">The instance to check</param>
+        /// <param name="newLastUpdateId">The new LastUpdateId from the status summary</param>
+        /// <returns>True if the LastUpdateId has changed (or if this is the first status summary), false otherwise</returns>
+        public bool HasLastUpdateIdChanged(string instanceId, long newLastUpdateId)
+        {
+            if (!_managedInstanceStatusSummary.TryGetValue(instanceId, out var currentSummary))
+            {
+                // No existing summary, this is a new instance or first report
+                return true;
+            }
+
+            // Check if the LastUpdateId has changed
+            var hasChanged = currentSummary.LastUpdateId != newLastUpdateId;
+
+            if (hasChanged)
+            {
+                _logger.LogDebug("[HasLastUpdateIdChanged] Instance {instanceId} LastUpdateId changed from {oldId} to {newId}",
+                    instanceId, currentSummary.LastUpdateId, newLastUpdateId);
+            }
+
+            return hasChanged;
         }
 
         /// <summary>

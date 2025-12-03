@@ -20,6 +20,12 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
+        /// Tracks when managed certificates are added, updated, or deleted to enable change detection
+        /// </summary>
+        private long _lastUpdateId = 0;
+        private readonly object _lastUpdateIdLock = new object();
+
+        /// <summary>
         /// Get managed certificate details by ID
         /// </summary>
         /// <param name="id"></param>
@@ -253,6 +259,9 @@ namespace Certify.Management
 
             summary.TotalDomains = ms.Sum(s => s.RequestConfig.SubjectAlternativeNames.Count());
 
+            // Include the last update ID for change detection
+            summary.LastUpdateId = _lastUpdateId;
+
             return summary;
         }
 
@@ -270,6 +279,12 @@ namespace Certify.Management
             managedCert = await _itemManager.Update(managedCert);
 
             managedCert.InstanceId = _serverConfig.HubAssignedInstanceId;
+
+            // Update the change tracking ID
+            lock (_lastUpdateIdLock)
+            {
+                _lastUpdateId++;
+            }
 
             // report request state to status hub clients
 
@@ -443,6 +458,12 @@ namespace Certify.Management
                 if (item != null)
                 {
                     await _itemManager.Delete(item);
+
+                    // Update the change tracking ID
+                    lock (_lastUpdateIdLock)
+                    {
+                        _lastUpdateId++;
+                    }
 
                     if (item.RequestConfig?.EnableFailureNotifications == true && CoreAppSettings.Current.EnableStatusReporting)
                     {

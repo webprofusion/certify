@@ -17,6 +17,7 @@ namespace Certify.Server.Hub.Api.Services
 
         private int _updateFrequency = 30;
         private string _serviceName = "[Management Worker]";
+        private bool _isBatchRunning = false;
 
         /// <summary>
         /// Create a new instance of the management worker
@@ -52,35 +53,54 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="state"></param>
         private void DoWork(object? state)
         {
-            var instances = _stateProvider.GetConnectedInstances();
-            _logger.LogDebug("{svc} connected instances: {count}", _serviceName, instances.Count());
-
-            foreach (var instance in instances)
-            {
-                _ = _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
-            }
-
-            // refresh instance managed items where due, distribute refresh randomly to avoid always requesting all at once
-            var dueRefresh = _stateProvider.GetInstancesDueRefresh(5);
-            var rnd = new Random();
-            foreach (var instanceId in dueRefresh)
+            if (!_isBatchRunning)
             {
                 try
                 {
-                    var instance = instances.Find(i => i.InstanceId == instanceId);
-                    if (instance?.ConnectionStatus == Certify.Models.Hub.ConnectionStatus.Connected)
+                    var instances = _stateProvider.GetConnectedInstances();
+                    _logger.LogDebug("{svc} connected instances: {count}", _serviceName, instances.Count());
+
+                    List<string> instancesToRefresh = [];
+
+                    foreach (var instance in instances)
                     {
-                        // randomly choose to apply refresh or not to spread load
-                        if (rnd.Next(0, 100) > 50)
+                        // Check if LastUpdateId has changed, indicating managed items have been added/updated/deleted
+                        var currentSummary = _stateProvider.GetManagedInstanceStatusSummary(instance.InstanceId);
+
+                        // Refresh status summary for each instance
+                        _ = _mgmtAPI.RefreshManagedCertificateSummary(instance.InstanceId, null);
+
+                        if (currentSummary != null)
                         {
-                            _ = _mgmtAPI.RefreshInstanceManagedItems(instanceId, null);
+                            var hasChanges = _stateProvider.HasLastUpdateIdChanged(instance.InstanceId, currentSummary.LastUpdateId);
+
+                            if (hasChanges && !string.IsNullOrWhiteSpace(instance?.InstanceId))
+                            {
+                                instancesToRefresh.Add(instance.InstanceId);
+                            }
                         }
+                    }
+
+                    foreach (var instanceId in instancesToRefresh)
+                    {
+                        _logger.LogInformation("{svc} Instance {instanceId} has updated items, scheduling full refresh of managed items", _serviceName, instanceId);
+
+                        // Schedule a full refresh of managed items since something has changed
+                        _ = _mgmtAPI.RefreshInstanceManagedItems(instanceId, null);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "{svc} error refreshing managed items for {id}", _serviceName, instanceId);
+                    _logger.LogError(ex, "{svc} background worker error", _serviceName);
                 }
+                finally
+                {
+                    _isBatchRunning = false;
+                }
+            }
+            else
+            {
+                _logger.LogInformation("{svc} background worker is still running a previous batch", _serviceName);
             }
         }
 
