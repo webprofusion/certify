@@ -27,6 +27,11 @@
 
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="4.14.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
         <PackageReference Include="SimpleImpersonation" Version="4.2.0" />
         <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.5.4" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
         <PackageReference Include="Microsoft.PowerShell.5.ReferenceAssemblies" Version="1.1.0" Condition="'$(TargetFramework)' == 'netstandard2.0'" />
