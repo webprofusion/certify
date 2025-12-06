@@ -21,6 +21,7 @@ namespace Certify.CertificateAuthorities.Definitions
                 IsCustom = false,
                 SANLimit = 2,
                 StandardExpiryDays = 90,
+                RequiresCN = true, // SSL.com currently requires a CN to be specified in the finalize CSR
                 RequiresEmailAddress = true,
                 RequiresExternalAccountBinding = true,
                 SupportsCachedValidations = true,
