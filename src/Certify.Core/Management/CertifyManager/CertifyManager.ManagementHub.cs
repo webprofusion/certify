@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Security.Policy;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -235,6 +234,10 @@ namespace Certify.Management
                         return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);
                     }
                 }
+            }
+            catch (TaskCanceledException)
+            {
+                return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Timeout trying to connect to hub, service may unavailable. {endpoint}", isSuccess: false);
             }
             catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
             {
@@ -1110,8 +1113,6 @@ namespace Certify.Management
 
         private void _managementServerClient_OnConnectionReconnecting()
         {
-            _serviceLog.Warning("Reconnecting to Management Hub...");
-
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -1123,8 +1124,6 @@ namespace Certify.Management
 
         private void _managementServerClient_OnConnectionReconnected()
         {
-            _serviceLog.Information("Successfully reconnected to Management Hub");
-
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
@@ -1146,8 +1145,6 @@ namespace Certify.Management
 
         private void _managementServerClient_OnConnectionClosed()
         {
-            _serviceLog.Warning("Management Hub connection closed");
-
             AddSystemStatusItem(
                 SystemStatusCategories.SERVICE_CORE,
                 SystemStatusKeys.SERVICE_CORE_HUB_CONNECTION,
