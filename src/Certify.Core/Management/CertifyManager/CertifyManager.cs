@@ -3,14 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
@@ -316,12 +314,15 @@ namespace Certify.Management
                 {
                     var productType = _isMgtmHubBackend ? 2 : 1; // 1 = ccm or agent, 2 = hub
 
+                    // check local license config is valid
                     _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(productType, EnvironmentUtil.EnsuredAppDataPath());
                     if (_cachedLicenseCheck.IsValid)
                     {
+                        // check remote license state is valid
                         if (await _licensingManager?.IsInstallActive(productType, EnvironmentUtil.EnsuredAppDataPath()) == false)
                         {
                             _cachedLicenseCheck.StatusCode = LicenseCheckStatusCode.Invalid;
+                            _cachedLicenseCheck.IsValid = false;
                         }
                     }
                 }

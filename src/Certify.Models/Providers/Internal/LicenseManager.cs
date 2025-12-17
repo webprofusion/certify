@@ -631,7 +631,7 @@ namespace Certify.Providers.Internal
             var result = GetLicenseKeyInstallResult(productTypeId, settingsPath);
             if (result?.IsSuccess == true)
             {
-                return new LicenseCheckResult { IsValid = false, StatusCode = LicenseCheckStatusCode.Licensed, ManagedLicenseId = result.ManagedLicenceId };
+                return new LicenseCheckResult { IsValid = result.IsSuccess, StatusCode = LicenseCheckStatusCode.Licensed, ManagedLicenseId = result.ManagedLicenceId };
             }
             else
             {
