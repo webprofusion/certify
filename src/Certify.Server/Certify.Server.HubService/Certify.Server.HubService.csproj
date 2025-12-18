@@ -14,12 +14,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.11.2" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.1" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.11.7" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
 
         <!-- included to prevent conflict with older versions in plugins-->
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.0" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.1" />
     </ItemGroup>
 
     <ItemGroup>
