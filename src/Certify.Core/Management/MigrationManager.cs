@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -15,7 +14,6 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Providers;
 using Certify.Providers;
-using Certify.Providers.ACME.Anvil;
 
 namespace Certify.Core.Management
 {
@@ -184,6 +182,20 @@ namespace Certify.Core.Management
             }
 
             export.Content.StoredCredentials = usedCredentialsDict.Values.ToList();
+
+            // Export custom certificate authorities if requested
+            if (settings.ExportCustomCertificateAuthorities)
+            {
+                try
+                {
+                    var customCAs = SettingsManager.GetCustomCertificateAuthorities();
+                    export.Content.CertificateAuthorities = customCAs.Where(ca => ca.IsCustom).ToList();
+                }
+                catch (Exception)
+                {
+                    export.Errors.Add("Failed to export custom Certificate Authorities. They may not be available on this system.");
+                }
+            }
 
             return export;
         }
@@ -399,7 +411,7 @@ namespace Certify.Core.Management
             steps.Add(new ActionStep { Title = "Import Stored Credentials", Category = "Import", Substeps = credentialImportSteps, Key = "StoredCredentials", HasError = credentialImportSteps.Any(i => i.HasError), HasWarning = credentialImportSteps.Any(i => i.HasWarning) });
 
             var targetSiteBindings = new List<BindingInfo>();
-            
+
             if (_targetServers != null)
             {
                 foreach (var targetServer in _targetServers)
@@ -456,10 +468,10 @@ namespace Certify.Core.Management
                             var result = await _itemManager.Update(c);
                             if (result != null)
                             {
-                                managedCertImportSteps.Add(new ActionStep 
-                                { 
-                                    Title = c.Name, 
-                                    Key = c.Id, 
+                                managedCertImportSteps.Add(new ActionStep
+                                {
+                                    Title = c.Name,
+                                    Key = c.Id,
                                     HasWarning = hasUnmatchedTargets,
                                     Description = hasUnmatchedTargets ? warningMsg : null
                                 });
@@ -476,9 +488,9 @@ namespace Certify.Core.Management
                     }
                     else
                     {
-                        managedCertImportSteps.Add(new ActionStep 
-                        { 
-                            Title = c.Name, 
+                        managedCertImportSteps.Add(new ActionStep
+                        {
+                            Title = c.Name,
                             Key = c.Id,
                             HasWarning = hasUnmatchedTargets,
                             Description = hasUnmatchedTargets ? warningMsg : null
@@ -534,12 +546,12 @@ namespace Certify.Core.Management
                         var isVerified = cert.Verify();
                         var managedCert = package.Content.ManagedCertificates.FirstOrDefault(m => m.CertificatePath == c.Filename);
                         string? pfxPath = null;
-                        
+
                         if (managedCert != null)
                         {
                             var primaryIdentifierPath = CertificateManager.GetPrimaryIdentifierAsPath(managedCert.RequestConfig, managedCert.Id);
                             var storePath = Path.GetFullPath(Path.Combine(new string[] { EnvironmentUtil.EnsuredAppDataPath(), "assets", primaryIdentifierPath }));
-                            
+
                             if (!isPreviewMode && !System.IO.Directory.Exists(storePath))
                             {
                                 System.IO.Directory.CreateDirectory(storePath);
@@ -591,6 +603,71 @@ namespace Certify.Core.Management
             }
 
             steps.Add(new ActionStep { Title = "Import Certificate Files", Category = "Import", Substeps = certFileImportSteps, Key = "CertFiles", HasError = certFileImportSteps.Any(i => i.HasError), HasWarning = certFileImportSteps.Any(i => i.HasWarning) });
+
+            // Import custom certificate authorities
+            var caImportSteps = new List<ActionStep>();
+            if (package.Content.CertificateAuthorities?.Any() == true)
+            {
+                try
+                {
+                    var existingCustomCAs = SettingsManager.GetCustomCertificateAuthorities();
+
+                    foreach (var ca in package.Content.CertificateAuthorities)
+                    {
+                        // Only import custom CAs
+                        if (!ca.IsCustom)
+                        {
+                            caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, HasWarning = true, Description = "Built-in Certificate Authority cannot be imported." });
+                            continue;
+                        }
+
+                        var existingCA = existingCustomCAs.FirstOrDefault(c => c.Id == ca.Id);
+
+                        if (existingCA == null || settings.OverwriteExisting)
+                        {
+                            if (!isPreviewMode)
+                            {
+                                try
+                                {
+                                    if (existingCA != null)
+                                    {
+                                        existingCustomCAs.Remove(existingCA);
+                                    }
+
+                                    existingCustomCAs.Add(ca);
+
+                                    if (SettingsManager.SaveCustomCertificateAuthorities(existingCustomCAs))
+                                    {
+                                        caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, Description = existingCA != null ? "Updated existing CA" : null });
+                                    }
+                                    else
+                                    {
+                                        caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, HasError = true, Description = "Failed to save Certificate Authority." });
+                                    }
+                                }
+                                catch (Exception exp)
+                                {
+                                    caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, HasError = true, Description = $"Failed to import Certificate Authority: {exp.Message}" });
+                                }
+                            }
+                            else
+                            {
+                                caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, Description = existingCA != null ? "Would update existing CA" : null });
+                            }
+                        }
+                        else
+                        {
+                            caImportSteps.Add(new ActionStep { Title = ca.Title, Key = ca.Id, HasWarning = true, Description = "Certificate Authority already exists, it will not be re-imported." });
+                        }
+                    }
+                }
+                catch (Exception exp)
+                {
+                    caImportSteps.Add(new ActionStep { Title = "Certificate Authorities", Key = "CAs", HasError = true, Description = $"Failed to import Certificate Authorities: {exp.Message}" });
+                }
+            }
+
+            steps.Add(new ActionStep { Title = "Import Certificate Authorities", Category = "Import", Substeps = caImportSteps, Key = "CertificateAuthorities", HasError = caImportSteps.Any(i => i.HasError), HasWarning = caImportSteps.Any(i => i.HasWarning) });
 
             return steps;
         }
