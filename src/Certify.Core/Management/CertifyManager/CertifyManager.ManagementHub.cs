@@ -905,6 +905,9 @@ namespace Certify.Management
 
                     prefs.CertificateManagers = update.CertificateManagers;
 
+                    prefs.MaintenanceWindows = update.MaintenanceWindows;
+                    prefs.DefaultMaintenanceWindowId = update.DefaultMaintenanceWindowId;
+
                     SettingsManager.FromPreferences(prefs);
 
                     try

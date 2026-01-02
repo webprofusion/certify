@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers;
 
@@ -18,6 +19,65 @@ namespace Certify.Management
         private const int MAX_CERTIFICATE_REQUEST_TASKS = 75;
 
         private const int DEFAULT_CERTIFICATE_REQUEST_TASKS = 50;
+
+        /// <summary>
+        /// Checks if the current time is within the maintenance window for a managed certificate
+        /// </summary>
+        /// <param name="item">The managed certificate to check</param>
+        /// <param name="prefs">Renewal preferences containing maintenance windows configuration</param>
+        /// <param name="currentTime">The current time to check against (defaults to now if not specified)</param>
+        /// <returns>Tuple containing: isWithinWindow (bool), reason (string)</returns>
+        public static (bool IsWithinWindow, string Reason) IsWithinMaintenanceWindow(
+            ManagedCertificate item,
+            RenewalPrefs prefs,
+            DateTimeOffset? currentTime = null)
+        {
+            var checkTime = currentTime ?? DateTimeOffset.Now;
+
+            // If no maintenance windows are configured, renewal is always allowed
+            if (prefs.MaintenanceWindows == null || !prefs.MaintenanceWindows.Any())
+            {
+                return (true, "No maintenance windows configured - renewal allowed anytime");
+            }
+
+            // Determine which maintenance window to use for this item
+            var windowId = item.MaintenanceWindowId ?? prefs.DefaultMaintenanceWindowId;
+
+            // If no window is specified for this item and no default is set, renewal is allowed
+            if (string.IsNullOrEmpty(windowId))
+            {
+                return (true, "No maintenance window assigned - renewal allowed anytime");
+            }
+
+            // Find the maintenance window
+            var window = prefs.MaintenanceWindows.FirstOrDefault(w => w.Id == windowId);
+
+            if (window == null)
+            {
+                // Window ID is set but window not found - allow renewal (could be deleted window)
+                return (true, $"Configured maintenance window '{windowId}' not found - renewal allowed");
+            }
+
+            if (!window.IsEnabled)
+            {
+                return (true, $"Maintenance window '{window.Name}' is disabled - renewal allowed anytime");
+            }
+
+            // Check if we're within the window
+            if (window.IsWithinWindow(checkTime))
+            {
+                return (true, $"Within maintenance window '{window.Name}' ({window.GetScheduleDescription()})");
+            }
+            else
+            {
+                var nextOccurrence = window.GetNextOccurrence(checkTime);
+                var nextTimeStr = nextOccurrence.HasValue
+                    ? nextOccurrence.Value.ToString("g")
+                    : "unknown";
+
+                return (false, $"Outside maintenance window '{window.Name}' ({window.GetScheduleDescription()}). Next window: {nextTimeStr}");
+            }
+        }
 
         private static Progress<RequestProgressState> SetupProgressTracker(
             ManagedCertificate item, string renewalReason,
@@ -157,57 +217,73 @@ namespace Certify.Management
                             if (item.LastRenewalStatus != RequestState.Paused)
                             {
 
-                                if (settings.Mode == RenewalMode.RenewalsWithErrors && item.LastRenewalStatus != RequestState.Error)
-                                {
-                                    // if we are only renewing items with errors, skip this one
-                                    continue;
-                                }
-                                // check if item is due for renewal based on current settings
+                                                if (settings.Mode == RenewalMode.RenewalsWithErrors && item.LastRenewalStatus != RequestState.Error)
+                                                {
+                                                    // if we are only renewing items with errors, skip this one
+                                                    continue;
+                                                }
+                                                // check if item is due for renewal based on current settings
 
-                                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
-                                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
+                                                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
+                                                var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
-                                var renewalReason = renewalDueCheck.Reason;
+                                                var renewalReason = renewalDueCheck.Reason;
 
-                                if (settings.Mode == RenewalMode.All)
-                                {
-                                    // on all mode, everything gets an attempted renewal
-                                    isRenewalRequired = true;
-                                    renewalReason = "Renewal Mode is set to All";
-                                }
+                                                if (settings.Mode == RenewalMode.All)
+                                                {
+                                                    // on all mode, everything gets an attempted renewal
+                                                    isRenewalRequired = true;
+                                                    renewalReason = "Renewal Mode is set to All";
+                                                }
 
-                                // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
-                                if (!prefs.IncludeStoppedSites && !string.IsNullOrEmpty(item.ServerSiteId) && item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
-                                {
-                                    var isSiteRunning = await isManagedCertificateRunning(item.Id);
+                                                // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
+                                                if (!prefs.IncludeStoppedSites && !string.IsNullOrEmpty(item.ServerSiteId) && item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                                                {
+                                                    var isSiteRunning = await isManagedCertificateRunning(item.Id);
 
-                                    if (!isSiteRunning)
-                                    {
-                                        isRenewalRequired = false;
-                                        renewalReason = "Target site is not running and 'Include Stopped Sites' preference is False. Renewal will not be attempted.";
+                                                    if (!isSiteRunning)
+                                                    {
+                                                        isRenewalRequired = false;
+                                                        renewalReason = "Target site is not running and 'Include Stopped Sites' preference is False. Renewal will not be attempted.";
+                                                    }
+                                                }
+
+                                                // Check if we're within the maintenance window for this item
+                                                if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
+                                                {
+                                                    var maintenanceWindowCheck = IsWithinMaintenanceWindow(item, prefs);
+                                                    if (!maintenanceWindowCheck.IsWithinWindow)
+                                                    {
+                                                        isRenewalRequired = false;
+                                                        renewalReason = maintenanceWindowCheck.Reason;
+
+                                                        if (!prefs.SuppressSkippedItems)
+                                                        {
+                                                            serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
+                                                        }
+                                                    }
+                                                }
+
+                                                if (isRenewalRequired && !renewalDueCheck.IsRenewalOnHold)
+                                                {
+                                                    batch.Add(item);
+
+                                                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
+
+                                                    renewalTasks.Add(
+                                                        new Task<CertificateRequestResult>(
+                                                                () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
+                                                                    cancellationToken: cancellationToken,
+                                                                    TaskCreationOptions.LongRunning
+                                                                )
+                                                        );
+                                                }
+                                            }
+                                        }
                                     }
+
+                                    filter.PageIndex++;
                                 }
-
-                                if (isRenewalRequired && !renewalDueCheck.IsRenewalOnHold)
-                                {
-                                    batch.Add(item);
-
-                                    var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
-
-                                    renewalTasks.Add(
-                                        new Task<CertificateRequestResult>(
-                                                () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
-                                                    cancellationToken: cancellationToken,
-                                                    TaskCreationOptions.LongRunning
-                                                )
-                                        );
-                                }
-                            }
-                        }
-                    }
-
-                    filter.PageIndex++;
-                }
 
                 managedCertificateBatch = batch;
             }

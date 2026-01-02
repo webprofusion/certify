@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Providers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -161,6 +162,7 @@ namespace Certify.Core.Tests.Unit
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
                 ItemType = item.ItemType,
+                MaintenanceWindowId = item.MaintenanceWindowId,
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = item.RequestConfig?.PrimaryDomain ?? "",
@@ -608,9 +610,583 @@ namespace Certify.Core.Tests.Unit
             var logMessages = string.Join("\n", _mockLog.LogEntries);
             _mockLog.Information($"Log messages: {logMessages}");
 
-            // Assert
-            Assert.IsTrue(renewalCheck.IsRenewalDue, $"Certificate with DateRenewed=null should be due for renewal. Reason: {renewalCheck.Reason}");
-            Assert.HasCount(1, results, $"NewItems mode should process the new certificate. Log: {logMessages}");
-        }
-    }
-}
+                    // Assert
+                        Assert.IsTrue(renewalCheck.IsRenewalDue, $"Certificate with DateRenewed=null should be due for renewal. Reason: {renewalCheck.Reason}");
+                        Assert.HasCount(1, results, $"NewItems mode should process the new certificate. Log: {logMessages}");
+                    }
+
+                    #region Maintenance Window Tests
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - no windows configured")]
+                    public void TestMaintenanceWindow_NoWindowsConfigured()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = null,
+                            DefaultMaintenanceWindowId = null
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal when no maintenance windows are configured");
+                        Assert.IsTrue(result.Reason.Contains("No maintenance windows configured"), $"Reason should indicate no windows configured. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - empty windows list")]
+                    public void TestMaintenanceWindow_EmptyWindowsList()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>(),
+                            DefaultMaintenanceWindowId = null
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal when maintenance windows list is empty");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - no window assigned to item and no default")]
+                    public void TestMaintenanceWindow_NoWindowAssigned()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = null;
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow { Id = "window1", Name = "Test Window", IsEnabled = true }
+                            },
+                            DefaultMaintenanceWindowId = null
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal when no window is assigned and no default is set");
+                        Assert.IsTrue(result.Reason.Contains("No maintenance window assigned"), $"Reason should indicate no window assigned. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - window not found")]
+                    public void TestMaintenanceWindow_WindowNotFound()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "deleted-window-id";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow { Id = "window1", Name = "Test Window", IsEnabled = true }
+                            },
+                            DefaultMaintenanceWindowId = null
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal when configured window is not found (may have been deleted)");
+                        Assert.IsTrue(result.Reason.Contains("not found"), $"Reason should indicate window not found. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - window is disabled")]
+                    public void TestMaintenanceWindow_WindowDisabled()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "window1";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "window1",
+                                    Name = "Disabled Window",
+                                    IsEnabled = false,
+                                    Days = MaintenanceDays.Weekdays,
+                                    StartTime = TimeSpan.FromHours(18),
+                                    EndTime = TimeSpan.FromHours(21)
+                                }
+                            },
+                            DefaultMaintenanceWindowId = null
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal when maintenance window is disabled");
+                        Assert.IsTrue(result.Reason.Contains("disabled"), $"Reason should indicate window is disabled. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - uses default window when item has none")]
+                    public void TestMaintenanceWindow_UsesDefaultWindow()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = null;
+
+                        // Create a window that covers all times (24/7)
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "default-window",
+                                    Name = "Default Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All,
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))
+                                }
+                            },
+                            DefaultMaintenanceWindowId = "default-window"
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, DateTimeOffset.Now);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should use default window when item has no specific window");
+                        Assert.IsTrue(result.Reason.Contains("Default Window"), $"Reason should reference the default window. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - item window overrides default")]
+                    public void TestMaintenanceWindow_ItemWindowOverridesDefault()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "item-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "default-window",
+                                    Name = "Default Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.None, // Never allows renewal
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(0)
+                                },
+                                new MaintenanceWindow
+                                {
+                                    Id = "item-window",
+                                    Name = "Item Specific Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All, // Always allows renewal
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))
+                                }
+                            },
+                            DefaultMaintenanceWindowId = "default-window"
+                        };
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, DateTimeOffset.Now);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Item-specific window should override default window");
+                        Assert.IsTrue(result.Reason.Contains("Item Specific Window"), $"Reason should reference item window, not default. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - weekday window on a weekday")]
+                    public void TestMaintenanceWindow_WeekdayWindow_OnWeekday()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "weekday-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "weekday-window",
+                                    Name = "Weekday Evening",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.Weekdays,
+                                    StartTime = TimeSpan.FromHours(18),
+                                    EndTime = TimeSpan.FromHours(21)
+                                }
+                            }
+                        };
+
+                        // Test on a Wednesday at 19:00
+                        var testTime = new DateTimeOffset(2024, 1, 10, 19, 0, 0, TimeSpan.Zero); // Wednesday
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime);
+
+                        // Assert
+                        Assert.IsTrue(result.IsWithinWindow, "Should allow renewal on weekday within time window");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - weekday window on a weekend")]
+                    public void TestMaintenanceWindow_WeekdayWindow_OnWeekend()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "weekday-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "weekday-window",
+                                    Name = "Weekday Evening",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.Weekdays,
+                                    StartTime = TimeSpan.FromHours(18),
+                                    EndTime = TimeSpan.FromHours(21)
+                                }
+                            }
+                        };
+
+                        // Test on a Saturday at 19:00
+                        var testTime = new DateTimeOffset(2024, 1, 13, 19, 0, 0, TimeSpan.Zero); // Saturday
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime);
+
+                        // Assert
+                        Assert.IsFalse(result.IsWithinWindow, "Should not allow renewal on weekend when window is weekdays only");
+                        Assert.IsTrue(result.Reason.Contains("Outside maintenance window"), $"Reason should indicate outside window. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - time outside window hours")]
+                    public void TestMaintenanceWindow_OutsideWindowHours()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "evening-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "evening-window",
+                                    Name = "Evening Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All,
+                                    StartTime = TimeSpan.FromHours(18),
+                                    EndTime = TimeSpan.FromHours(21)
+                                }
+                            }
+                        };
+
+                        // Test at 10:00 AM (outside 18:00-21:00 window)
+                        var testTime = new DateTimeOffset(2024, 1, 10, 10, 0, 0, TimeSpan.Zero);
+
+                        // Act
+                        var result = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime);
+
+                        // Assert
+                        Assert.IsFalse(result.IsWithinWindow, "Should not allow renewal outside window hours");
+                        Assert.IsTrue(result.Reason.Contains("Next window:"), $"Reason should include next occurrence. Got: {result.Reason}");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - overnight window")]
+                    public void TestMaintenanceWindow_OvernightWindow()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "overnight-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "overnight-window",
+                                    Name = "Overnight Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All,
+                                    StartTime = TimeSpan.FromHours(22), // 10 PM
+                                    EndTime = TimeSpan.FromHours(6)     // 6 AM (next day)
+                                }
+                            }
+                        };
+
+                        // Test at 11 PM (within overnight window)
+                        var testTime1 = new DateTimeOffset(2024, 1, 10, 23, 0, 0, TimeSpan.Zero);
+                        var result1 = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime1);
+                        Assert.IsTrue(result1.IsWithinWindow, "Should allow renewal at 11 PM in overnight window");
+
+                        // Test at 3 AM (within overnight window)
+                        var testTime2 = new DateTimeOffset(2024, 1, 11, 3, 0, 0, TimeSpan.Zero);
+                        var result2 = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime2);
+                        Assert.IsTrue(result2.IsWithinWindow, "Should allow renewal at 3 AM in overnight window");
+
+                        // Test at 10 AM (outside overnight window)
+                        var testTime3 = new DateTimeOffset(2024, 1, 11, 10, 0, 0, TimeSpan.Zero);
+                        var result3 = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, testTime3);
+                        Assert.IsFalse(result3.IsWithinWindow, "Should not allow renewal at 10 AM outside overnight window");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - weekend only window")]
+                    public void TestMaintenanceWindow_WeekendOnly()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "weekend-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "weekend-window",
+                                    Name = "Weekend Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.Weekends,
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))
+                                }
+                            }
+                        };
+
+                        // Test on Saturday
+                        var saturday = new DateTimeOffset(2024, 1, 13, 12, 0, 0, TimeSpan.Zero);
+                        var resultSaturday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, saturday);
+                        Assert.IsTrue(resultSaturday.IsWithinWindow, "Should allow renewal on Saturday");
+
+                        // Test on Sunday
+                        var sunday = new DateTimeOffset(2024, 1, 14, 12, 0, 0, TimeSpan.Zero);
+                        var resultSunday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, sunday);
+                        Assert.IsTrue(resultSunday.IsWithinWindow, "Should allow renewal on Sunday");
+
+                        // Test on Monday
+                        var monday = new DateTimeOffset(2024, 1, 15, 12, 0, 0, TimeSpan.Zero);
+                        var resultMonday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, monday);
+                        Assert.IsFalse(resultMonday.IsWithinWindow, "Should not allow renewal on Monday");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - specific days (Mon, Wed, Fri)")]
+                    public void TestMaintenanceWindow_SpecificDays()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "mwf-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "mwf-window",
+                                    Name = "Mon/Wed/Fri Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.Monday | MaintenanceDays.Wednesday | MaintenanceDays.Friday,
+                                    StartTime = TimeSpan.FromHours(9),
+                                    EndTime = TimeSpan.FromHours(17)
+                                }
+                            }
+                        };
+
+                        // Monday at noon - should be allowed
+                        var monday = new DateTimeOffset(2024, 1, 8, 12, 0, 0, TimeSpan.Zero);
+                        var resultMonday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, monday);
+                        Assert.IsTrue(resultMonday.IsWithinWindow, "Should allow renewal on Monday");
+
+                        // Tuesday at noon - should not be allowed
+                        var tuesday = new DateTimeOffset(2024, 1, 9, 12, 0, 0, TimeSpan.Zero);
+                        var resultTuesday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, tuesday);
+                        Assert.IsFalse(resultTuesday.IsWithinWindow, "Should not allow renewal on Tuesday");
+
+                        // Wednesday at noon - should be allowed
+                        var wednesday = new DateTimeOffset(2024, 1, 10, 12, 0, 0, TimeSpan.Zero);
+                        var resultWednesday = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, wednesday);
+                        Assert.IsTrue(resultWednesday.IsWithinWindow, "Should allow renewal on Wednesday");
+                    }
+
+                    [TestMethod, Description("Test IsWithinMaintenanceWindow - boundary times")]
+                    public void TestMaintenanceWindow_BoundaryTimes()
+                    {
+                        // Arrange
+                        var cert = CreateTestManagedCertificate("cert1", "Test1");
+                        cert.MaintenanceWindowId = "precise-window";
+
+                        var prefs = new RenewalPrefs
+                        {
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "precise-window",
+                                    Name = "Precise Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All,
+                                    StartTime = TimeSpan.FromHours(14).Add(TimeSpan.FromMinutes(30)), // 14:30
+                                    EndTime = TimeSpan.FromHours(16).Add(TimeSpan.FromMinutes(45))   // 16:45
+                                }
+                            }
+                        };
+
+                        // At exact start time
+                        var atStart = new DateTimeOffset(2024, 1, 10, 14, 30, 0, TimeSpan.Zero);
+                        var resultStart = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, atStart);
+                        Assert.IsTrue(resultStart.IsWithinWindow, "Should allow renewal at exact start time");
+
+                        // At exact end time
+                        var atEnd = new DateTimeOffset(2024, 1, 10, 16, 45, 0, TimeSpan.Zero);
+                        var resultEnd = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, atEnd);
+                        Assert.IsTrue(resultEnd.IsWithinWindow, "Should allow renewal at exact end time");
+
+                        // One minute before start
+                        var beforeStart = new DateTimeOffset(2024, 1, 10, 14, 29, 0, TimeSpan.Zero);
+                        var resultBeforeStart = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, beforeStart);
+                        Assert.IsFalse(resultBeforeStart.IsWithinWindow, "Should not allow renewal one minute before start");
+
+                        // One minute after end
+                        var afterEnd = new DateTimeOffset(2024, 1, 10, 16, 46, 0, TimeSpan.Zero);
+                        var resultAfterEnd = RenewalManager.IsWithinMaintenanceWindow(cert, prefs, afterEnd);
+                        Assert.IsFalse(resultAfterEnd.IsWithinWindow, "Should not allow renewal one minute after end");
+                    }
+
+                    [TestMethod, Description("Test PerformRenewAll respects maintenance windows in Auto mode")]
+                    public async Task TestPerformRenewAll_RespectsMaintenanceWindow()
+                    {
+                        // Arrange
+                        await _itemStore.DeleteAll();
+
+                        var cert1 = CreateTestManagedCertificate("cert1", "InWindow", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
+                        cert1.MaintenanceWindowId = "all-day-window";
+
+                        var cert2 = CreateTestManagedCertificate("cert2", "OutsideWindow", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
+                        cert2.MaintenanceWindowId = "never-window";
+
+                        await _itemStore.Update(cert1);
+                        await _itemStore.Update(cert2);
+
+                        var prefsWithWindows = new RenewalPrefs
+                        {
+                            RenewalIntervalDays = 30,
+                            RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal,
+                            MaxRenewalRequests = 10,
+                            PerformParallelRenewals = false,
+                            SuppressSkippedItems = false,
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "all-day-window",
+                                    Name = "All Day Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.All,
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(23).Add(TimeSpan.FromMinutes(59))
+                                },
+                                new MaintenanceWindow
+                                {
+                                    Id = "never-window",
+                                    Name = "Never Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.None, // No days enabled
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(0)
+                                }
+                            }
+                        };
+
+                        var autoSettings = new RenewalSettings { Mode = RenewalMode.Auto };
+
+                        // Act
+                        var results = await RenewalManager.PerformRenewAll(
+                            _mockLog,
+                            _itemStore,
+                            autoSettings,
+                            prefsWithWindows,
+                            ReportProgress,
+                            IsManagedCertificateRunning,
+                            PerformCertificateRequest,
+                            _cancellationTokenSource.Token
+                        );
+
+                        // Assert
+                        Assert.HasCount(1, results, "Should only renew certificate within maintenance window");
+                        Assert.AreEqual("cert1", results[0].ManagedItem.Id, "cert1 (in window) should be renewed");
+
+                        // Check logs for skipped item
+                        var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("OutsideWindow") && l.Contains("Outside maintenance window"));
+                        Assert.IsNotNull(skipLog, "Should log that cert2 was skipped due to maintenance window");
+                    }
+
+                    [TestMethod, Description("Test PerformRenewAll ignores maintenance windows in All mode")]
+                    public async Task TestPerformRenewAll_IgnoresMaintenanceWindowInAllMode()
+                    {
+                        // Arrange
+                        await _itemStore.DeleteAll();
+
+                        var cert1 = CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
+                        cert1.MaintenanceWindowId = "never-window";
+
+                        await _itemStore.Update(cert1);
+
+                        var prefsWithWindows = new RenewalPrefs
+                        {
+                            RenewalIntervalDays = 30,
+                            RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal,
+                            MaxRenewalRequests = 10,
+                            PerformParallelRenewals = false,
+                            MaintenanceWindows = new List<MaintenanceWindow>
+                            {
+                                new MaintenanceWindow
+                                {
+                                    Id = "never-window",
+                                    Name = "Never Window",
+                                    IsEnabled = true,
+                                    Days = MaintenanceDays.None, // No days enabled
+                                    StartTime = TimeSpan.FromHours(0),
+                                    EndTime = TimeSpan.FromHours(0)
+                                }
+                            }
+                        };
+
+                        var allModeSettings = new RenewalSettings { Mode = RenewalMode.All };
+
+                        // Act
+                        var results = await RenewalManager.PerformRenewAll(
+                            _mockLog,
+                            _itemStore,
+                            allModeSettings,
+                            prefsWithWindows,
+                            ReportProgress,
+                            IsManagedCertificateRunning,
+                            PerformCertificateRequest,
+                            _cancellationTokenSource.Token
+                        );
+
+                        // Assert - In "All" mode, maintenance windows should be ignored
+                        Assert.HasCount(1, results, "All mode should ignore maintenance windows and process certificate");
+                    }
+
+                    #endregion
+                }
+            }

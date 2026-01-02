@@ -189,6 +189,16 @@ namespace Certify.Management
         public bool DisableARIChecks { get; set; }
 
         public List<CertificateManagerPreference> CertificateManagers { get; set; } = new List<CertificateManagerPreference>();
+
+        /// <summary>
+        /// Collection of named maintenance windows defining when renewals can occur
+        /// </summary>
+        public List<MaintenanceWindow> MaintenanceWindows { get; set; } = new List<MaintenanceWindow>();
+
+        /// <summary>
+        /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
+        /// </summary>
+        public string? DefaultMaintenanceWindowId { get; set; }
     }
 
     public class SettingsManager
@@ -250,6 +260,9 @@ namespace Certify.Management
 
             CoreAppSettings.Current.CertificateManagers = prefs.CertificateManagers;
 
+            CoreAppSettings.Current.MaintenanceWindows = prefs.MaintenanceWindows;
+            CoreAppSettings.Current.DefaultMaintenanceWindowId = prefs.DefaultMaintenanceWindowId;
+
             return true;
         }
 
@@ -287,7 +300,9 @@ namespace Certify.Management
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
                 DisableARIChecks = CoreAppSettings.Current.DisableARIChecks,
                 DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval,
-                CertificateManagers = CoreAppSettings.Current.CertificateManagers
+                CertificateManagers = CoreAppSettings.Current.CertificateManagers,
+                MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows,
+                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
             };
 
             return prefs;

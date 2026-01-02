@@ -193,11 +193,21 @@ namespace Certify.Models
         /// </summary>
         public bool ProxyUseDefaultCredentials { get; set; }
 
-        /// <summary>
-        /// Storage key for proxy credentials (references a StoredCredential)
-        /// </summary>
-        public string? ProxyCredentialKey { get; set; }
-    }
+            /// <summary>
+            /// Storage key for proxy credentials (references a StoredCredential)
+            /// </summary>
+            public string? ProxyCredentialKey { get; set; }
+
+            /// <summary>
+            /// Collection of named maintenance windows defining when renewals can occur
+            /// </summary>
+            public List<MaintenanceWindow> MaintenanceWindows { get; set; } = new List<MaintenanceWindow>();
+
+            /// <summary>
+            /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
+            /// </summary>
+            public string? DefaultMaintenanceWindowId { get; set; }
+        }
 
     public static class FeatureFlags
     {

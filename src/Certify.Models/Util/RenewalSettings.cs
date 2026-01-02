@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Certify.Models.Config;
 
 namespace Certify.Models
 {
@@ -47,14 +48,24 @@ namespace Certify.Models
         public int MaxRenewalRequests { get; set; }
         public bool IncludeStoppedSites { get; set; }
 
-        /// <summary>
-        ///  If true, don't send status UI messages for skipped items (items not due for renewal)
-        /// </summary>
-        public bool SuppressSkippedItems { get; set; }
+                /// <summary>
+                ///  If true, don't send status UI messages for skipped items (items not due for renewal)
+                /// </summary>
+                public bool SuppressSkippedItems { get; set; }
 
-        /// <summary>
-        /// If true, perform batches of items in parallel
-        /// </summary>
-        public bool PerformParallelRenewals { get; set; }
-    }
-}
+                /// <summary>
+                /// If true, perform batches of items in parallel
+                /// </summary>
+                public bool PerformParallelRenewals { get; set; }
+
+                /// <summary>
+                /// Collection of configured maintenance windows
+                /// </summary>
+                public List<MaintenanceWindow> MaintenanceWindows { get; set; } = new List<MaintenanceWindow>();
+
+                /// <summary>
+                /// If set, the ID of the default maintenance window for items that don't specify their own
+                /// </summary>
+                public string? DefaultMaintenanceWindowId { get; set; }
+            }
+        }

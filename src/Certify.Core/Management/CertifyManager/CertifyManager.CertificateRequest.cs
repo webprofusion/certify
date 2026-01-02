@@ -129,7 +129,9 @@ namespace Certify.Management
                     RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
                     IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
                     SuppressSkippedItems = true,
-                    PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals
+                    PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
+                    MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows ?? [],
+                    DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
                 };
 
                 using (var renewalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))

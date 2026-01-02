@@ -303,6 +303,12 @@ namespace Certify.Models
         public string? CustomRenewalIntervalMode { get; set; }
 
         /// <summary>
+        /// If specified, the ID of a maintenance window that constrains when this certificate can be renewed.
+        /// If null, uses the instance default maintenance window (if any).
+        /// </summary>
+        public string? MaintenanceWindowId { get; set; }
+
+        /// <summary>
         /// PEM encoded version of public certificate
         /// </summary>
         public string? CertificatePEM { get; set; }
