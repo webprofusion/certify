@@ -65,7 +65,7 @@
         <PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
         <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
         <PackageReference Include="Polly" Version="8.6.5" />
-        <PackageReference Include="Npgsql" Version="10.0.0" />
+        <PackageReference Include="Npgsql" Version="10.0.1" />
     </ItemGroup>
     <ItemGroup>
         <None Include="app.config" />
