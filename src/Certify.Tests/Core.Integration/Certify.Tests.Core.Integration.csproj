@@ -1,0 +1,87 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;</TargetFrameworks>
+        <Configurations>Debug;Release;</Configurations>
+        <RootNamespace>Certify.Core.Tests</RootNamespace>
+        <AssemblyName>Certify.Core.Tests</AssemblyName>
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{7D4DEE0D-88B3-4DB8-B214-C0EC4FC4711F}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>Certify.Core.Tests</RootNamespace>
+        <AssemblyName>Certify.Core.Tests</AssemblyName>
+        <FileAlignment>512</FileAlignment>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin\Debug\</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release' ">
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+
+    <Import Project="..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\..\Certify.Plugins\Licensing\packages\MSTest.TestAdapter.1.1.18\build\net45\MSTest.TestAdapter.props')" />
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0|AnyCPU'">
+        <NoWarn>1701;1702;NU1701</NoWarn>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0|AnyCPU'">
+        <NoWarn>1701;1702;NU1701</NoWarn>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\Postgres\Plugin.Datastore.Postgres.csproj" />
+        <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
+        <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
+
+        <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
+        <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+        <ProjectReference Include="..\..\Certify.Providers\DNS\AWSRoute53\Plugin.DNS.AWSRoute53.csproj" />
+        <ProjectReference Include="..\..\Certify.Providers\DNS\Azure\Plugin.DNS.Azure.csproj" />
+        <ProjectReference Include="..\..\Certify.Providers\DNS\Cloudflare\Plugin.DNS.Cloudflare.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
+        <ProjectReference Include="..\..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
+        <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MedallionShell" Version="1.6.2" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <PackageReference Include="Microsoft.Web.Administration" Version="11.1.0" />
+        <PackageReference Include="Moq" Version="4.20.72" />
+        <PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
+        <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
+        <PackageReference Include="Polly" Version="8.6.5" />
+        <PackageReference Include="Npgsql" Version="10.0.1" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="app.config" />
+        <None Include="Assets\dummycert.pfx">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Properties\" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="Assets\Powershell\Simple.ps1">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+</Project>

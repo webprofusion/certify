@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsTestProject>true</IsTestProject>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Testcontainers" Version="4.10.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.6.3" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.6.3" />
+
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
+        <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
+        <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj" />
+        <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
+    </ItemGroup>
+
+</Project>
