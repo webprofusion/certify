@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <LangVersion>latest</LangVersion>
@@ -8,6 +8,8 @@
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <ValidateExecutableReferencesMatchSelfContained>false</ValidateExecutableReferencesMatchSelfContained>
         <NoWarn>1701;1702;NU1701</NoWarn>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <PreserveCompilationContext>true</PreserveCompilationContext>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -42,10 +44,13 @@
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLServer\Plugin.Datastore.SQLServer.csproj" />
         <ProjectReference Include="..\..\Certify.Core\Certify.Core.csproj" />
-
+       
         <ProjectReference Include="..\..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
         <ProjectReference Include="..\..\Certify.Shared\Certify.Shared.Core.csproj" />
         <ProjectReference Include="..\..\Certify.SourceGenerators\Certify.SourceGenerators.csproj" />
+        <ProjectReference Include="..\..\Certify.Locales\Certify.Locales.csproj" />
+        <ProjectReference Include="..\..\Certify.Models\Certify.Models.csproj"  />
+        
 
     </ItemGroup>
     <ItemGroup>
@@ -71,5 +76,9 @@
         <PackageReference Include="Testcontainers" Version="4.10.0" />
         <PackageReference Include="Npgsql" Version="10.0.1" />
     </ItemGroup>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <!-- Workaround to copy depenencies that are affected by SourceGenerator restrictions, this is to ensure we use assemblies targeting our required .net version instead of netstandard-->
+        <Exec Command="powershell -Command &quot;&amp; { $depsPath = '$(TargetDir)Certify.Core.Tests.Unit.deps.json'; if (Test-Path $depsPath) { $deps = Get-Content $depsPath | ConvertFrom-Json; $certifyKeys = $deps.targets.'.NETCoreApp,Version=v10.0'.PSObject.Properties.Name | Where-Object { $_ -like 'Certify.Models/*' -or $_ -like 'Certify.Locales/*' }; foreach ($key in $certifyKeys) { $deps.targets.'.NETCoreApp,Version=v10.0'.$key.compileOnly = $false; if (-not $deps.targets.'.NETCoreApp,Version=v10.0'.$key.runtime) { $dllName = ($key -split '/')[0] + '.dll'; $runtimeEntry = @{}; $runtimeEntry['bin/placeholder/' + $dllName] = @{}; $deps.targets.'.NETCoreApp,Version=v10.0'.$key | Add-Member -MemberType NoteProperty -Name 'runtime' -Value $runtimeEntry -Force } }; $deps | ConvertTo-Json -Depth 10 | Set-Content $depsPath; Write-Host 'Fixed Certify assemblies in deps.json' } }&quot;" />
+    </Target>
 
 </Project>

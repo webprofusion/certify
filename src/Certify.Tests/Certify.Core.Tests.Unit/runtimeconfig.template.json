@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      ".",
+      "bin\\Debug\\net10.0"
+    ]
+  }
+}
