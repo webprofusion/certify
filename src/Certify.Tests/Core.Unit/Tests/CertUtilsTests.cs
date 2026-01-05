@@ -203,6 +203,11 @@ namespace Certify.Tests.Core.Unit.Tests
                 var firstObject = pemReader.ReadObject();
                 Assert.IsNotNull(firstObject, "Should be able to parse PEM content");
             }
+
+            // Debug output: decode PEM to attributes
+            var attributes = CertUtils.DecodePemToAttributes(pem);
+            Assert.IsNotNull(attributes, "Should be able to decode PEM to attributes");
+            Assert.IsTrue(attributes.Count > 0, "Should have at least one object in PEM");
         }
 
         [TestMethod, Description("Test GetCertComponentsAsPEMBytes returns valid bytes")]

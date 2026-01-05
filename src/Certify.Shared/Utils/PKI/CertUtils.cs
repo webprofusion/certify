@@ -338,5 +338,94 @@ namespace Certify.Shared.Core.Utils.PKI
                 return null;
             }
         }
+
+        /// <summary>
+        /// Decode a PEM string containing certificates and/or keys into key-value pairs for debugging
+        /// </summary>
+        /// <param name="pem">PEM encoded string</param>
+        /// <returns>List of dictionaries representing attributes of each object in the PEM</returns>
+        public static System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>> DecodePemToAttributes(string pem)
+        {
+            var results = new System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>();
+
+            using (var reader = new StringReader(pem))
+            {
+                var pemReader = new PemReader(reader);
+                object obj;
+                while ((obj = pemReader.ReadObject()) != null)
+                {
+                    var attributes = new System.Collections.Generic.Dictionary<string, object>();
+
+                    if (obj is Org.BouncyCastle.X509.X509Certificate cert)
+                    {
+                        attributes["type"] = "certificate";
+                        attributes["subject"] = cert.SubjectDN.ToString();
+                        attributes["issuer"] = cert.IssuerDN.ToString();
+                        attributes["serialNumber"] = cert.SerialNumber.ToString();
+                        attributes["notBefore"] = cert.NotBefore.ToString("O");
+                        attributes["notAfter"] = cert.NotAfter.ToString("O");
+                        attributes["signatureAlgorithm"] = cert.SigAlgName;
+                        attributes["publicKeyAlgorithm"] = cert.GetPublicKey().GetType().Name;
+
+                        // Extensions
+                        var extensions = new System.Collections.Generic.List<System.Collections.Generic.Dictionary<string, object>>();
+                        foreach (var extOid in cert.GetCriticalExtensionOids())
+                        {
+                            var oid = new Org.BouncyCastle.Asn1.DerObjectIdentifier(extOid);
+                            var extDict = new System.Collections.Generic.Dictionary<string, object>
+                            {
+                                ["oid"] = extOid,
+                                ["critical"] = true,
+                                ["value"] = System.Convert.ToBase64String(cert.GetExtensionValue(oid).GetOctets())
+                            };
+                            extensions.Add(extDict);
+                        }
+
+                        foreach (var extOid in cert.GetNonCriticalExtensionOids())
+                        {
+                            var oid = new Org.BouncyCastle.Asn1.DerObjectIdentifier(extOid);
+                            var extDict = new System.Collections.Generic.Dictionary<string, object>
+                            {
+                                ["oid"] = extOid,
+                                ["critical"] = false,
+                                ["value"] = System.Convert.ToBase64String(cert.GetExtensionValue(oid).GetOctets())
+                            };
+                            extensions.Add(extDict);
+                        }
+
+                        attributes["extensions"] = extensions;
+                    }
+                    else if (obj is Org.BouncyCastle.Crypto.AsymmetricCipherKeyPair key)
+                    {
+                        attributes["type"] = "key";
+                        attributes["algorithm"] = key.GetType().Name;
+                        if (key.Private is Org.BouncyCastle.Crypto.Parameters.RsaKeyParameters rsaKey)
+                        {
+                            attributes["keyType"] = "RSA";
+                            attributes["modulusLength"] = rsaKey.Modulus.BitLength;
+                        }
+                        else if (key.Private is Org.BouncyCastle.Crypto.Parameters.ECKeyParameters ecKey)
+                        {
+                            attributes["keyType"] = "EC";
+                            attributes["curve"] = ecKey.Parameters.Curve.ToString();
+                        }
+                        else if (key.Private is Org.BouncyCastle.Crypto.Parameters.DsaKeyParameters dsaKey)
+                        {
+                            attributes["keyType"] = "DSA";
+                            attributes["parameters"] = dsaKey.Parameters.ToString();
+                        }
+                    }
+                    else
+                    {
+                        attributes["type"] = "unknown";
+                        attributes["objectType"] = obj.GetType().Name;
+                    }
+
+                    results.Add(attributes);
+                }
+            }
+
+            return results;
+        }
     }
 }
