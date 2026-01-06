@@ -643,7 +643,14 @@ namespace Certify.Management
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var managedCertIdArg = args.FirstOrDefault(a => a.Key == "managedCertId");
                 var format = args.FirstOrDefault(a => a.Key == "format");
-                val = await ExportCertificate(managedCertIdArg.Value, format.Value);
+                var strictExportArg = args.FirstOrDefault(a => a.Key == "strictExport");
+                var strictExport = false;
+                if (strictExportArg.Key != null && bool.TryParse(strictExportArg.Value, out var se))
+                {
+                    strictExport = se;
+                }
+
+                val = await ExportCertificate(managedCertIdArg.Value, format.Value, strictExport);
             }
             else if (arg.CommandType == ManagementHubCommands.UpdateManagedItem)
             {

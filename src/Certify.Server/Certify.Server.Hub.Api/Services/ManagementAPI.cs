@@ -214,16 +214,18 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="instanceId">The target instance identifier.</param>
         /// <param name="managedCertId">The managed certificate identifier.</param>
         /// <param name="format">The export format (e.g. PFX, PEM).</param>
+        /// <param name="strictExport"></param>
         /// <param name="authContext">The authentication context.</param>
         /// <returns>An <see cref="ActionResult{T}"/> that wraps the exported certificate as a byte array.</returns>
-        public async Task<ActionResult<byte[]?>> ExportCertificate(string instanceId, string managedCertId, string format, AuthContext authContext)
+        public async Task<ActionResult<byte[]?>> ExportCertificate(string instanceId, string managedCertId, string format, bool? strictExport, AuthContext authContext)
         {
             // get managed cert via local api or via management hub
 
             var args = new KeyValuePair<string, string>[] {
                         new("instanceId", instanceId) ,
                         new("managedCertId", managedCertId),
-                        new("format", format)
+                        new("format", format),
+                        new("strictExport", (strictExport ?? false).ToString())
                     };
 
             return await PerformInstanceCommandTaskWithResult<ActionResult<byte[]?>>(instanceId, args, ManagementHubCommands.ExportCertificate);

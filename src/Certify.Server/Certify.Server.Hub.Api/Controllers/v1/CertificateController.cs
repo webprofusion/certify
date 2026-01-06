@@ -6,6 +6,7 @@ using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
+using Certify.Shared.Core.Utils.PKI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -96,7 +97,8 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             // perform the export from the instance holding the cert
-            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, format, CurrentAuthContext);
+            var strictExport = Request.Query["strictExport"].ToString() == "true";
+            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, format, strictExport, CurrentAuthContext);
 
             //return the cert or cert component as a file
             if (exportResult.IsSuccess && exportResult.Result != null)
@@ -115,6 +117,30 @@ namespace Certify.Server.Hub.Api.Controllers
                     // for PEM formats, return as text/plain
                     return new FileContentResult(exportResult.Result, "text/plain") { FileDownloadName = $"{format}.pem" };
                 }
+            }
+            else
+            {
+                return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.BadRequest);
+            }
+        }
+
+        [HttpGet]
+        [Route("{instanceId}/{managedCertId}/decoded")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
+        public async Task<object> GetDecodedCertificate(string instanceId, string managedCertId, bool strictExport)
+        {
+            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, "pem_fullchain_root", strictExport, CurrentAuthContext);
+
+            if (exportResult.IsSuccess && exportResult.Result != null)
+            {
+                var pem = Encoding.ASCII.GetString(exportResult.Result ?? []);
+
+                var attributes = CertUtils.DecodePemToAttributes(pem);
+
+                return attributes != null
+                    ? Ok(attributes)
+                    : new BadRequestResult();
             }
             else
             {

@@ -3,6 +3,7 @@
   "defaultVariables": null,
   "documentGenerator": {
     "fromDocument": {
+      "json": "",
       "url": "https://local.dev.certificatemanager.app:44361/openapi/v1.json",
       "output": null,
       "newLineBehavior": "Auto"
@@ -33,9 +34,6 @@
       "exposeJsonSerializerSettings": false,
       "clientClassAccessModifier": "public",
       "typeAccessModifier": "public",
-      "propertySetterAccessModifier": "",
-      "generateNativeRecords": false,
-      "useRequiredKeyword": false,
       "generateContractsOutput": false,
       "contractsNamespace": null,
       "contractsOutputFilePath": null,
@@ -56,6 +54,7 @@
         "Certify.Models.Config",
         "Certify.Models.API",
         "Certify.Models.Providers",
+        "Certify.Models.Util",
         "Certify.Models.Hub",
         "Certify.Models.Config.Migration",
         "Certify.Shared",
@@ -91,6 +90,7 @@
       "classStyle": "Poco",
       "jsonLibrary": "NewtonsoftJson",
       "jsonPolymorphicSerializationStyle": "NJsonSchema",
+      "jsonLibraryVersion": 8.0,
       "generateDefaultValues": true,
       "generateDataAnnotations": true,
       "excludedTypeNames": [
@@ -112,6 +112,10 @@
       "inlineNamedDictionaries": false,
       "inlineNamedTuples": true,
       "inlineNamedAny": false,
+      "propertySetterAccessModifier": "",
+      "generateNativeRecords": false,
+      "useRequiredKeyword": false,
+      "writeAccessor": "set",
       "generateDtoTypes": false,
       "generateOptionalPropertiesAsNullable": false,
       "generateNullableReferenceTypes": false,

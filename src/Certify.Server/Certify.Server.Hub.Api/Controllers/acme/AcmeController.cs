@@ -424,7 +424,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             }
 
             var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", CurrentAuthContext);
+            var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", strictExport: false, CurrentAuthContext);
 
             if (result?.Result == null)
             {

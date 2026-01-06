@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Certify.Management;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.OpenSsl;
 using Org.BouncyCastle.Pkcs;
@@ -41,19 +40,20 @@ namespace Certify.Shared.Core.Utils.PKI
         /// <param name="pfxData"></param>
         /// <param name="pwd">private key password</param>
         /// <param name="flags">Flags for component types to export</param>
+        /// <param name="strictExport">If true, only export certificates from the PFX file, do not include certificates from the local certificate store</param>
         /// <returns></returns>
-        public static byte[] GetCertComponentsAsPEMBytes(byte[] pfxData, string pwd, ExportFlags flags)
+        public static byte[] GetCertComponentsAsPEMBytes(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false)
         {
-            var pem = GetCertComponentsAsPEMString(pfxData, pwd, flags);
+            var pem = GetCertComponentsAsPEMString(pfxData, pwd, flags, strictExport);
             return System.Text.Encoding.ASCII.GetBytes(pem);
         }
 
-        public static string GetCertComponentsAsPEMString(byte[] pfxData, string pwd, ExportFlags flags)
+        public static string GetCertComponentsAsPEMString(byte[] pfxData, string pwd, ExportFlags flags, bool strictExport = false)
         {
             // See also https://www.digicert.com/ssl-support/pem-ssl-creation.htm
 
             X509Certificate2 cert = null;
-
+            X509Chain builtChain = null;
             try
             {
 #if NET9_0_OR_GREATER
@@ -85,9 +85,12 @@ namespace Certify.Shared.Core.Utils.PKI
                 // Try to get certificates from the original PFX chain first
                 var originalCerts = GetCertificatesFromPfx(pfxData, pwd);
 
-                // Always build the system chain as we may need it for missing components
-                var builtChain = new X509Chain();
-                builtChain.Build(cert);
+                if (!strictExport)
+                {
+                    // Always build the system chain as we may need it for missing components
+                    builtChain = new X509Chain();
+                    builtChain.Build(cert);
+                }
 
                 // Export end entity certificate (leaf) - always prefer from PFX if available
                 if (flags.HasFlag(ExportFlags.EndEntityCertificate))
@@ -97,7 +100,7 @@ namespace Certify.Shared.Core.Utils.PKI
                         // Use the end entity cert from PFX
                         pemWriter.WriteObject(originalCerts[0]);
                     }
-                    else if (builtChain.ChainElements.Count > 0)
+                    else if (builtChain != null && builtChain.ChainElements.Count > 0)
                     {
                         // Fallback to built chain
                         var certBytes = builtChain.ChainElements[0].Certificate.Export(X509ContentType.Cert);
@@ -105,16 +108,52 @@ namespace Certify.Shared.Core.Utils.PKI
                     }
                 }
 
-                // Export intermediate certificates - blend from both sources
+                // Export intermediate certificates - blend from both sources if not strict
                 if (flags.HasFlag(ExportFlags.IntermediateCertificates))
                 {
-                    ExportIntermediateCertificates(originalCerts, builtChain, certParser, pemWriter);
+                    if (strictExport)
+                    {
+                        // Only export intermediates from PFX
+                        if (originalCerts != null && originalCerts.Count > 1)
+                        {
+                            // Determine how many intermediates we have in the PFX
+                            var intermediateCount = originalCerts.Count - 1; // Exclude end entity
+
+                            for (var i = 1; i < intermediateCount; i++)
+                            {
+                                if (i < originalCerts.Count)
+                                {
+                                    pemWriter.WriteObject(originalCerts[i]);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ExportIntermediateCertificates(originalCerts, builtChain, certParser, pemWriter);
+                    }
                 }
 
-                // Export root certificate - typically only available from built chain
+                // Export root certificate - only from built chain if not strict
                 if (flags.HasFlag(ExportFlags.RootCertificate))
                 {
-                    ExportRootCertificate(originalCerts, builtChain, certParser, pemWriter);
+                    if (strictExport)
+                    {
+                        // Only export root from PFX if present
+                        if (originalCerts != null && originalCerts.Count > 2)
+                        {
+                            var lastCert = originalCerts[originalCerts.Count - 1];
+                            // Verify it's actually a root (self-signed: issuer == subject)
+                            if (lastCert.IssuerDN.Equivalent(lastCert.SubjectDN))
+                            {
+                                pemWriter.WriteObject(lastCert);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ExportRootCertificate(originalCerts, builtChain, certParser, pemWriter);
+                    }
                 }
 
                 writer.Flush();
@@ -126,6 +165,7 @@ namespace Certify.Shared.Core.Utils.PKI
                 //cleanup cert so temp RSA keys get removed on disk
                 cert?.Dispose();
                 cert = null;
+                builtChain?.Dispose();
             }
         }
 
@@ -328,7 +368,7 @@ namespace Certify.Shared.Core.Utils.PKI
                 var certAKIbytes = certAKI.GetKeyIdentifier();
 
                 var certSerialBytes = cert.SerialNumber.ToByteArray();
-                var certId = $"{Util.ToUrlSafeBase64String(certAKIbytes)}.{Util.ToUrlSafeBase64String(certSerialBytes)}";
+                var certId = $"{Certify.Management.Util.ToUrlSafeBase64String(certAKIbytes)}.{Certify.Management.Util.ToUrlSafeBase64String(certSerialBytes)}";
 
                 return certId;
             }

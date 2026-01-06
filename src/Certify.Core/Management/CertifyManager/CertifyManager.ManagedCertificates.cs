@@ -701,7 +701,7 @@ namespace Certify.Management
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public async Task<ActionResult<byte[]>> ExportCertificate(string managedCertId, string format)
+        public async Task<ActionResult<byte[]>> ExportCertificate(string managedCertId, string format, bool strictExport = false)
         {
             var item = await GetManagedCertificate(managedCertId);
 
@@ -743,23 +743,23 @@ namespace Certify.Management
                 }
                 else if (format == "pem_key")
                 {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey);
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey, strictExport);
                 }
                 else if (format == "pem_fullchain")
                 {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates);
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
                 }
                 else if (format == "pem_fullchain_key")
                 {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates);
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
                 }
                 else if (format == "pem_fullchain_root")
                 {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate);
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
                 }
                 else if (format == "pem_fullchain_root_key")
                 {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate);
+                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
                 }
 
                 if (result.Length == 0)
