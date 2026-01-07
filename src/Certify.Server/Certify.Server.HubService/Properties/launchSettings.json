@@ -3,21 +3,23 @@
     "http": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CERTIFY_MANAGEMENT_HUB": "http://localhost:5028/api/internal/managementhub",
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "http://localhost:5028",
-      "CERTIFY_MANAGEMENT_HUB": "http://localhost:5028/api/internal/managementhub",
-      "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+      "applicationUrl": "http://localhost:5028"
     },
     "https": {
       "commandName": "Project",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
+        "CERTIFY_GENERATE_DEMO_ITEMS": "true"
+        //"CERTIFY_PROXY": "http://localhost:8888"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://0.0.0.0:44361",
-      "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+      "applicationUrl": "https://0.0.0.0:44361"
     },
     "Container (.NET SDK)": {
       "commandName": "SdkContainer",

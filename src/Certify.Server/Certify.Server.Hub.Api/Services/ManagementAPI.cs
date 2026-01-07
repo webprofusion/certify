@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
@@ -225,7 +225,7 @@ namespace Certify.Server.Hub.Api.Services
                         new("instanceId", instanceId) ,
                         new("managedCertId", managedCertId),
                         new("format", format),
-                        new("strictExport", (strictExport ?? false).ToString())
+                        new("strictExport", strictExport.ToString())
                     };
 
             return await PerformInstanceCommandTaskWithResult<ActionResult<byte[]?>>(instanceId, args, ManagementHubCommands.ExportCertificate);
