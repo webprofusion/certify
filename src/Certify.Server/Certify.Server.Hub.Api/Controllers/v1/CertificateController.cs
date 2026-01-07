@@ -149,49 +149,6 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Get decoded certificate details for the given managed certificate.
-        /// </summary>
-        /// <param name="instanceId">Instance to fetch managed certificate info from</param>
-        /// <param name="managedCertId">Id of managed cert to fetch</param>
-        /// <param name="strictExport">If true, only export certificates from the PFX file</param>
-        /// <returns>The decoded certificate details</returns>
-        [HttpGet]
-        [Route("{instanceId}/decoded/{managedCertId}")]
-        [AllowAnonymous]
-        [ProducesResponseType(typeof(DecodedCertificate), 200)]
-        public async Task<IActionResult> GetDecodedCertificate(string instanceId, string managedCertId, bool strictExport = false)
-        {
-            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
-
-            if (!accessCheck.IsSuccess)
-            {
-                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
-            }
-
-            var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
-
-            if (managedCert == null)
-            {
-                return new NotFoundResult();
-            }
-
-            var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, "pem_fullchain_root_key", strictExport, CurrentAuthContext);
-
-            if (!exportResult.IsSuccess)
-            {
-                return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.InternalServerError);
-            }
-
-            var pem = System.Text.Encoding.ASCII.GetString(exportResult.Result);
-
-            var attributes = Certify.Shared.Core.Utils.PKI.CertUtils.DecodePemToAttributes(pem);
-
-            var decoded = new DecodedCertificate { Pem = pem, Attributes = attributes };
-
-            return Ok(decoded);
-        }
-
-        /// <summary>
         /// Download log entries for the given managed certificate
         /// </summary>
         /// <param name="instanceId"></param>

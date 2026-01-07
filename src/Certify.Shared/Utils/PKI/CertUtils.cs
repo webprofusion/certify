@@ -57,15 +57,15 @@ namespace Certify.Shared.Core.Utils.PKI
             try
             {
 #if NET9_0_OR_GREATER
-            try
-            {
-                cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd);
-            }
-            catch (CryptographicException)
-            {
-                // try again using blank pwd
-                cert = X509CertificateLoader.LoadPkcs12(pfxData, "");
-            }
+                try
+                {
+                    cert = X509CertificateLoader.LoadPkcs12(pfxData, pwd);
+                }
+                catch (CryptographicException)
+                {
+                    // try again using blank pwd
+                    cert = X509CertificateLoader.LoadPkcs12(pfxData, "");
+                }
 #else
                 cert = new X509Certificate2(pfxData, pwd);
 #endif
@@ -111,49 +111,13 @@ namespace Certify.Shared.Core.Utils.PKI
                 // Export intermediate certificates - blend from both sources if not strict
                 if (flags.HasFlag(ExportFlags.IntermediateCertificates))
                 {
-                    if (strictExport)
-                    {
-                        // Only export intermediates from PFX
-                        if (originalCerts != null && originalCerts.Count > 1)
-                        {
-                            // Determine how many intermediates we have in the PFX
-                            var intermediateCount = originalCerts.Count - 1; // Exclude end entity
-
-                            for (var i = 1; i < intermediateCount; i++)
-                            {
-                                if (i < originalCerts.Count)
-                                {
-                                    pemWriter.WriteObject(originalCerts[i]);
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ExportIntermediateCertificates(originalCerts, builtChain, certParser, pemWriter);
-                    }
+                    ExportIntermediateCertificates(originalCerts, builtChain, certParser, pemWriter, strictExport);
                 }
 
                 // Export root certificate - only from built chain if not strict
                 if (flags.HasFlag(ExportFlags.RootCertificate))
                 {
-                    if (strictExport)
-                    {
-                        // Only export root from PFX if present
-                        if (originalCerts != null && originalCerts.Count > 2)
-                        {
-                            var lastCert = originalCerts[originalCerts.Count - 1];
-                            // Verify it's actually a root (self-signed: issuer == subject)
-                            if (lastCert.IssuerDN.Equivalent(lastCert.SubjectDN))
-                            {
-                                pemWriter.WriteObject(lastCert);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        ExportRootCertificate(originalCerts, builtChain, certParser, pemWriter);
-                    }
+                    ExportRootCertificate(originalCerts, builtChain, certParser, pemWriter);
                 }
 
                 writer.Flush();
@@ -235,7 +199,7 @@ namespace Certify.Shared.Core.Utils.PKI
             System.Collections.Generic.List<Org.BouncyCastle.X509.X509Certificate> originalCerts,
             X509Chain builtChain,
             X509CertificateParser certParser,
-            PemWriter pemWriter)
+            PemWriter pemWriter, bool strictExport)
         {
             var exportedThumbprints = new System.Collections.Generic.HashSet<string>();
 
@@ -261,19 +225,22 @@ namespace Certify.Shared.Core.Utils.PKI
                 }
             }
 
-            // Now supplement with any missing intermediates from the built chain
-            // Skip index 0 (end entity) and last index (root)
-            for (var i = 1; i < builtChain.ChainElements.Count - 1; i++)
+            if (!strictExport)
             {
-                var chainElement = builtChain.ChainElements[i];
-                var certBytes = chainElement.Certificate.Export(X509ContentType.Cert);
-                var thumbprint = System.BitConverter.ToString(certBytes).Replace("-", "");
-
-                // Only add if we haven't already exported this certificate
-                if (!exportedThumbprints.Contains(thumbprint))
+                // Now supplement with any missing intermediates from the built chain
+                // Skip index 0 (end entity) and last index (root)
+                for (var i = 1; i < builtChain.ChainElements.Count - 1; i++)
                 {
-                    pemWriter.WriteObject(certParser.ReadCertificate(certBytes));
-                    exportedThumbprints.Add(thumbprint);
+                    var chainElement = builtChain.ChainElements[i];
+                    var certBytes = chainElement.Certificate.Export(X509ContentType.Cert);
+                    var thumbprint = System.BitConverter.ToString(certBytes).Replace("-", "");
+
+                    // Only add if we haven't already exported this certificate
+                    if (!exportedThumbprints.Contains(thumbprint))
+                    {
+                        pemWriter.WriteObject(certParser.ReadCertificate(certBytes));
+                        exportedThumbprints.Add(thumbprint);
+                    }
                 }
             }
         }
@@ -290,7 +257,7 @@ namespace Certify.Shared.Core.Utils.PKI
             Org.BouncyCastle.X509.X509Certificate rootCert = null;
 
             // Check if the PFX contains what appears to be a root certificate
-            // This would be the last certificate in a chain of 3+ certificates
+            // This would be the last certificate in a chain of 3+ certificates, self-signed
             if (originalCerts != null && originalCerts.Count >= 3)
             {
                 var lastCert = originalCerts[originalCerts.Count - 1];
@@ -302,8 +269,8 @@ namespace Certify.Shared.Core.Utils.PKI
                 }
             }
 
-            // If we didn't find a root in the PFX, use the one from the built chain
-            if (rootCert == null && builtChain.ChainElements.Count > 0)
+            // If we didn't find a root in the PFX, use the one from the built chain (even for strict export as the original archive will not contain the root, only the trust store does)
+            if (rootCert == null && builtChain?.ChainElements.Count > 0)
             {
                 var rootElement = builtChain.ChainElements[builtChain.ChainElements.Count - 1];
                 var certBytes = rootElement.Certificate.Export(X509ContentType.Cert);

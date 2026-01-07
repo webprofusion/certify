@@ -735,45 +735,50 @@ namespace Certify.Management
                     }
                 }
 
-                byte[] result = [];
-
-                if (format == "pfx")
-                {
-                    result = pfxData;
-                }
-                else if (format == "pem_key")
-                {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey, strictExport);
-                }
-                else if (format == "pem_fullchain")
-                {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
-                }
-                else if (format == "pem_fullchain_key")
-                {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
-                }
-                else if (format == "pem_fullchain_root")
-                {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
-                }
-                else if (format == "pem_fullchain_root_key")
-                {
-                    result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
-                }
-
-                if (result.Length == 0)
-                {
-                    return new ActionResult<byte[]>($"Export - no files where selected for export or export could not be applied for source certificate.", false);
-                }
-                else
-                {
-                    return new ActionResult<byte[]> { Result = result, IsSuccess = true };
-                }
+                return GetCertificateExportResult(format, strictExport, pfxData, certPwd);
             }
             catch (Exception exp)
             {
                 return new ActionResult<byte[]>($"Export - {exp}", false);
+            }
+        }
+
+        public static ActionResult<byte[]> GetCertificateExportResult(string format, bool strictExport, byte[] pfxData, string certPwd)
+        {
+            byte[] result = [];
+
+            if (format == "pfx")
+            {
+                result = pfxData;
+            }
+            else if (format == "pem_key")
+            {
+                result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey, strictExport);
+            }
+            else if (format == "pem_fullchain")
+            {
+                result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
+            }
+            else if (format == "pem_fullchain_key")
+            {
+                result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates, strictExport);
+            }
+            else if (format == "pem_fullchain_root")
+            {
+                result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
+            }
+            else if (format == "pem_fullchain_root_key")
+            {
+                result = CertUtils.GetCertComponentsAsPEMBytes(pfxData, certPwd, ExportFlags.PrivateKey | ExportFlags.EndEntityCertificate | ExportFlags.IntermediateCertificates | ExportFlags.RootCertificate, strictExport);
+            }
+
+            if (result.Length == 0)
+            {
+                return new ActionResult<byte[]>($"Export - no files where selected for export or export could not be applied for source certificate.", false);
+            }
+            else
+            {
+                return new ActionResult<byte[]> { Result = result, IsSuccess = true };
             }
         }
 
