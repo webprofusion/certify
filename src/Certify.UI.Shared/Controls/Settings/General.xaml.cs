@@ -28,6 +28,13 @@ namespace Certify.UI.Controls.Settings
                 new KeyValuePair<string,string>("RS256_4096", "RSA256 4096" )
             };
         }
+
+        public class MaintenanceWindowViewModel
+        {
+            public string Id { get; set; }
+            public string DisplayText { get; set; }
+        }
+
         public Model EditModel { get; set; } = new Model();
 
         public General()

@@ -99,11 +99,11 @@
                             </StackPanel>
                         </DockPanel>
 
-                        <DockPanel Margin="0,0,0,0" LastChildFill="False">
+                        <DockPanel Margin="0,16,0,0" LastChildFill="False">
                             <TextBlock
-                                Margin="0,8,0,8"
+                                Margin="0,0,0,8"
                                 DockPanel.Dock="Top"
-                                Style="{StaticResource SubheadingWithMargin}">
+                                Style="{StaticResource Subheading}">
                                 Other Settings
                             </TextBlock>
                             <StackPanel
@@ -305,6 +305,17 @@
                         <local:Credentials />
                     </StackPanel>
 
+                </TabItem>
+
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Maintenance Windows">
+                    <StackPanel Margin="16,0,0,0">
+                        <TextBlock Style="{StaticResource Subheading}">Maintenance Windows</TextBlock>
+                        <local:MaintenanceWindows />
+                    </StackPanel>
                 </TabItem>
 
                 <TabItem

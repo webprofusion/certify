@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -14,6 +15,12 @@ namespace Certify.UI.Controls.ManagedCertificate
     public partial class AdvancedOptions : UserControl
     {
         protected Certify.UI.ViewModel.ManagedCertificateViewModel ItemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
+
+        public class MaintenanceWindowViewModel
+        {
+            public string Id { get; set; }
+            public string DisplayText { get; set; }
+        }
 
         public AdvancedOptions()
         {
@@ -240,6 +247,31 @@ namespace Certify.UI.Controls.ManagedCertificate
             DataContext = ItemViewModel;
 
             ItemViewModel.RaisePropertyChangedEvent(null);
+
+            LoadMaintenanceWindows();
+        }
+
+        private void LoadMaintenanceWindows()
+        {
+            var windowOptions = new List<MaintenanceWindowViewModel>
+            {
+                new MaintenanceWindowViewModel { Id = null, DisplayText = "(Use instance default)" }
+            };
+
+            if (ViewModel.AppViewModel.Current.Preferences.MaintenanceWindows != null)
+            {
+                foreach (var window in ViewModel.AppViewModel.Current.Preferences.MaintenanceWindows.Where(w => w.IsEnabled))
+                {
+                    windowOptions.Add(new MaintenanceWindowViewModel
+                    {
+                        Id = window.Id,
+                        DisplayText = $"{window.Name} - {window.GetScheduleDescription()}"
+                    });
+                }
+            }
+
+            MaintenanceWindowSelector.ItemsSource = windowOptions;
+            MaintenanceWindowSelector.SelectedValue = ItemViewModel.SelectedItem?.MaintenanceWindowId;
         }
 
         private async void ResetFailureInfo_Click(object sender, RoutedEventArgs e)

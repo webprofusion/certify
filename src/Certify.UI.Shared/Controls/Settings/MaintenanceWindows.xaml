@@ -1,0 +1,128 @@
+<UserControl
+    x:Class="Certify.UI.Controls.Settings.MaintenanceWindows"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:fa="http://schemas.fontawesome.io/icons/"
+    xmlns:local="clr-namespace:Certify.UI.Controls.Settings"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    Loaded="UserControl_Loaded"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <DockPanel Margin="0,8,0,8" LastChildFill="False">
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,16,0">
+      
+                <TextBlock 
+                    Style="{StaticResource Instructions}" 
+                    TextWrapping="Wrap">
+                    Optionally define time windows when certificate renewals can occur. Renewals can then be set to only be attempted during active maintenance windows. Each managed certificate can then be configured to use a specific maintenance window, or they can use the default (if set).
+                </TextBlock>
+
+                <Button
+                    x:Name="AddMaintenanceWindow"
+                    Width="180"
+                    Margin="0,16,0,16"
+                    HorizontalAlignment="Left"
+                    Click="AddMaintenanceWindow_Click">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            Width="16"
+                            Height="16"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                            Icon="Plus" />
+                        <TextBlock VerticalAlignment="Center">Add Window</TextBlock>
+                    </StackPanel>
+                </Button>
+
+                <TextBlock Style="{StaticResource SubheadingWithMargin}">Default Maintenance Window</TextBlock>
+                <TextBlock 
+                    Style="{StaticResource Instructions}" 
+                    TextWrapping="Wrap">
+                    The default maintenance window is used for certificates that don't have a specific window assigned. If no default is set, renewals can occur at any time.
+                </TextBlock>
+
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
+                    <ComboBox
+                        x:Name="DefaultMaintenanceWindow"
+                        Width="400"
+                        Margin="0,0,8,0"
+                        HorizontalAlignment="Left"
+                        DisplayMemberPath="DisplayText"
+                        SelectionChanged="DefaultMaintenanceWindow_SelectionChanged"
+                        SelectedValue="{Binding Prefs.DefaultMaintenanceWindowId}"
+                        SelectedValuePath="Id" />
+                    <Button
+                        x:Name="SaveDefaultWindow"
+                        Width="100"
+                        Click="SaveDefaultWindow_Click">
+                        Save Default
+                    </Button>
+                </StackPanel>
+
+                <TextBlock Style="{StaticResource SubheadingWithMargin}">Configured Windows</TextBlock>
+
+                <DataGrid
+                    x:Name="MaintenanceWindowsList"
+                    Height="300"
+                    Margin="0,8,0,0"
+                    AutoGenerateColumns="False"
+                    CanUserAddRows="False"
+                    CanUserDeleteRows="False"
+                    SelectionMode="Single"
+                    IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="*"
+                            Binding="{Binding Name}"
+                            Header="Name" />
+                        <DataGridTextColumn
+                            Width="2*"
+                            Binding="{Binding ScheduleDescription}"
+                            Header="Schedule" />
+                        <DataGridTextColumn
+                            Width="Auto"
+                            Binding="{Binding StatusText}"
+                            Header="Status" />
+                        <DataGridTemplateColumn Width="Auto" Header="Actions">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button
+                                            Width="60"
+                                            Margin="4,0"
+                                            Click="EditMaintenanceWindow_Click"
+                                            Tag="{Binding}">
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            Width="60"
+                                            Margin="4,0"
+                                            Click="DeleteMaintenanceWindow_Click"
+                                            Tag="{Binding}">
+                                            Delete
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <TextBlock
+                    x:Name="NoWindowsMessage"
+                    Margin="0,16,0,0"
+                    Style="{StaticResource Instructions}"
+                    Visibility="Collapsed">
+                    No maintenance windows configured. Click "Add Window" to create one.
+                </TextBlock>
+            </StackPanel>
+        </DockPanel>
+    </ScrollViewer>
+</UserControl>
