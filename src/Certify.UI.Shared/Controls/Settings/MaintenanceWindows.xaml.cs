@@ -98,7 +98,15 @@ namespace Certify.UI.Controls.Settings
             items.AddRange(EditModel.WindowsList.Where(w => w.Window.IsEnabled));
 
             DefaultMaintenanceWindow.ItemsSource = items;
-            DefaultMaintenanceWindow.SelectedValue = EditModel.Prefs.DefaultMaintenanceWindowId;
+
+            if (EditModel.Prefs.DefaultMaintenanceWindowId == null)
+            {
+                DefaultMaintenanceWindow.SelectedIndex = 0;
+            }
+            else
+            {
+                DefaultMaintenanceWindow.SelectedValue = EditModel.Prefs.DefaultMaintenanceWindowId;
+            }
         }
 
         private async void AddMaintenanceWindow_Click(object sender, RoutedEventArgs e)
