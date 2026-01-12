@@ -91,14 +91,23 @@ namespace Certify.UI.Controls.Settings
             if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
             {
                 RenewalIntervalMode_DaysBeforeExpiry.IsChecked = true;
+                RenewalIntervalMode_DaysBeforeExpiry.Visibility = Visibility.Visible;
+                DeprecationWarning.Visibility = Visibility.Visible;
             }
             else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.PercentageLifetime)
             {
                 RenewalIntervalMode_PercentageLifetime.IsChecked = true;
             }
-            else
+            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysAfterLastRenewal)
             {
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
+                RenewalIntervalMode_DaysAfterLastRenewal.Visibility = Visibility.Visible;
+                DeprecationWarning.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // Default to PercentageLifetime for new configurations
+                RenewalIntervalMode_PercentageLifetime.IsChecked = true;
             }
 
             DefaultKeyType.ItemsSource = EditModel.KeyTypeList;
@@ -168,16 +177,19 @@ namespace Certify.UI.Controls.Settings
                 if (RenewalIntervalMode_DaysAfterLastRenewal.IsChecked == true)
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+                    DeprecationWarning.Visibility = Visibility.Visible;
                     RefreshRewalIntervalLimits();
                 }
                 else if (RenewalIntervalMode_PercentageLifetime.IsChecked == true)
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
+                    DeprecationWarning.Visibility = Visibility.Collapsed;
                     RefreshRewalIntervalLimits();
                 }
                 else
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysBeforeExpiry;
+                    DeprecationWarning.Visibility = Visibility.Visible;
                     RefreshRewalIntervalLimits();
                 }
 

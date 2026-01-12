@@ -59,26 +59,35 @@
                                     Minimum="1"
                                     Value="{Binding Prefs.RenewalIntervalDays}" />
                                 <RadioButton
+                                    x:Name="RenewalIntervalMode_PercentageLifetime"
+                                    Margin="8,0,0,4"
+                                    Checked="SettingsUpdated"
+                                    Content="Percentage of Elapsed Lifetime (Recommended)"
+                                    GroupName="RenewalIntervalMode"
+                                    Unchecked="SettingsUpdated" />
+                                <RadioButton
                                     x:Name="RenewalIntervalMode_DaysAfterLastRenewal"
                                     Margin="8,0,0,4"
                                     Checked="SettingsUpdated"
-                                    Content="Days After Last Renewal"
+                                    Content="Days After Last Renewal (Deprecated)"
                                     GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated" />
+                                    Unchecked="SettingsUpdated"
+                                    Visibility="Collapsed" />
                                 <RadioButton
                                     x:Name="RenewalIntervalMode_DaysBeforeExpiry"
                                     Margin="8,0,0,4"
                                     Checked="SettingsUpdated"
-                                    Content="Days Before Expiry"
+                                    Content="Days Before Expiry (Deprecated)"
                                     GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated" />
-                                <RadioButton
-                                    x:Name="RenewalIntervalMode_PercentageLifetime"
-                                    Margin="8,0,0,4"
-                                    Checked="SettingsUpdated"
-                                    Content="Percentage of Elapsed Lifetime"
-                                    GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated" />
+                                    Unchecked="SettingsUpdated"
+                                    Visibility="Collapsed" />
+                                <TextBlock
+                                    x:Name="DeprecationWarning"
+                                    Margin="8,8,0,4"
+                                    Foreground="Orange"
+                                    Text="This renewal mode is deprecated. Switch to Percentage of Elapsed Lifetime for better compatibility with varying certificate lifetimes."
+                                    TextWrapping="Wrap"
+                                    Visibility="Collapsed" />
                             </StackPanel>
 
                             <StackPanel

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Certify.Models.Config;
 
 namespace Certify.Models
@@ -45,11 +46,13 @@ namespace Certify.Models
         /// <summary>
         /// Renew certs N days after last renewal
         /// </summary>
+        [Obsolete("DaysAfterLastRenewal is deprecated. Use PercentageLifetime instead for better compatibility with varying certificate lifetimes.")]
         public const string DaysAfterLastRenewal = "DaysAfterLastRenewal";
 
         /// <summary>
         /// Renew certs N days before expiry
         /// </summary>
+        [Obsolete("DaysBeforeExpiry is deprecated. Use PercentageLifetime instead for better compatibility with varying certificate lifetimes.")]
         public const string DaysBeforeExpiry = "DaysBeforeExpiry";
 
         /// <summary>
@@ -193,21 +196,21 @@ namespace Certify.Models
         /// </summary>
         public bool ProxyUseDefaultCredentials { get; set; }
 
-            /// <summary>
-            /// Storage key for proxy credentials (references a StoredCredential)
-            /// </summary>
-            public string? ProxyCredentialKey { get; set; }
+        /// <summary>
+        /// Storage key for proxy credentials (references a StoredCredential)
+        /// </summary>
+        public string? ProxyCredentialKey { get; set; }
 
-            /// <summary>
-            /// Collection of named maintenance windows defining when renewals can occur
-            /// </summary>
-            public List<MaintenanceWindow> MaintenanceWindows { get; set; } = new List<MaintenanceWindow>();
+        /// <summary>
+        /// Collection of named maintenance windows defining when renewals can occur
+        /// </summary>
+        public List<MaintenanceWindow> MaintenanceWindows { get; set; } = new List<MaintenanceWindow>();
 
-            /// <summary>
-            /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
-            /// </summary>
-            public string? DefaultMaintenanceWindowId { get; set; }
-        }
+        /// <summary>
+        /// If set, the ID of the default maintenance window to use for certificates that don't specify their own
+        /// </summary>
+        public string? DefaultMaintenanceWindowId { get; set; }
+    }
 
     public static class FeatureFlags
     {
