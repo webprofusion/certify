@@ -67,6 +67,11 @@ namespace Certify.Models.Hub
         /// If true, is managed by an external certificate manager (e.g. Certbot, Posh-ACME, etc.)
         /// </summary>
         public bool IsExternallyManaged { get; set; }
+
+        /// <summary>
+        /// Tags assigned to this managed certificate
+        /// </summary>
+        public List<TagSummary> Tags { get; set; } = new();
     }
 
     public record ManagedCertificateSummaryResult

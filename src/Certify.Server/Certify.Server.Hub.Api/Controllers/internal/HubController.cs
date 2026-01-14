@@ -43,6 +43,10 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="instanceId"></param>
         /// <param name="keyword"></param>
         /// <param name="health"></param>
+        /// <param name="tagCategory"></param>
+        /// <param name="tagValue"></param>
+        /// <param name="requireAllTags"></param>
+        /// <param name="includeUntagged"></param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
@@ -50,12 +54,59 @@ namespace Certify.Server.Hub.Api.Controllers
         [Route("items")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, string? tagCategory = null, string? tagValue = null, bool requireAllTags = false, bool includeUntagged = true, int? page = null, int? pageSize = null)
         {
             var result = new ManagedCertificateSummaryResult();
 
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
+
+            // Pre-load all item tags for ManagedCertificates to display in the list
+            Dictionary<string, List<TagSummary>> tagsByItemId = new();
+            Dictionary<string, TagCategory> categoriesByKey = new();
+            var isTagFilterActive = !string.IsNullOrEmpty(tagCategory);
+
+            // Always load tags for display in the list
+            try
+            {
+                // Load tag categories to get display names and colors
+                var categories = await _client.GetTagCategories(CurrentAuthContext);
+                if (categories != null)
+                {
+                    foreach (var cat in categories)
+                    {
+                        categoriesByKey[cat.CategoryKey] = cat;
+                    }
+                }
+
+                var allItemTags = await _client.GetAllHubItemTags(null, null, "ManagedCertificate", CurrentAuthContext);
+                if (allItemTags != null)
+                {
+                    // Group tags by item ID for efficient lookup
+                    foreach (var tag in allItemTags)
+                    {
+                        if (!tagsByItemId.ContainsKey(tag.TaggedItemId))
+                        {
+                            tagsByItemId[tag.TaggedItemId] = new List<TagSummary>();
+                        }
+
+                        // Get category info for color and display name
+                        categoriesByKey.TryGetValue(tag.CategoryKey, out var category);
+
+                        tagsByItemId[tag.TaggedItemId].Add(new TagSummary
+                        {
+                            CategoryKey = tag.CategoryKey,
+                            CategoryDisplayName = category?.DisplayName ?? tag.CategoryKey,
+                            Value = tag.Value,
+                            ColorHint = category?.ColorHint
+                        });
+                    }
+                }
+            }
+            catch
+            {
+                // If tag loading fails, continue without tags
+            }
 
             var list = new List<ManagedCertificateSummary>();
 
@@ -81,6 +132,9 @@ namespace Certify.Server.Hub.Api.Controllers
                         {
                             var instance = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId);
 
+                            // Get tags for this managed certificate from pre-loaded data
+                            var tags = tagsByItemId.TryGetValue(i.Id ?? "", out var itemTags) ? itemTags : new List<TagSummary>();
+
                             return new ManagedCertificateSummary
                             {
                                 InstanceId = remote.InstanceId,
@@ -97,12 +151,45 @@ namespace Certify.Server.Hub.Api.Controllers
                                 Status = i.Health.ToString(),
                                 DateRetrieved = i.DateRetrieved,
                                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged,
+                                Tags = tags
                             };
                         }
                         )
                     );
                 }
+            }
+
+            // Apply tag filtering if specified
+            if (isTagFilterActive)
+            {
+                var tagScopes = new List<TagScope> { new TagScope { CategoryKey = tagCategory!, Value = tagValue } };
+
+                list = list.Where(item =>
+                {
+                    var hasTags = item.Tags.Any();
+
+                    if (!hasTags)
+                    {
+                        // Item has no tags - include only if includeUntagged is true AND no specific tag filter value is set
+                        return includeUntagged && string.IsNullOrEmpty(tagValue);
+                    }
+
+                    if (requireAllTags)
+                    {
+                        // Item must match ALL scopes
+                        return tagScopes.All(scope =>
+                            item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
+                                (scope.Value == null || tag.Value == scope.Value)));
+                    }
+                    else
+                    {
+                        // Item must match ANY scope
+                        return tagScopes.Any(scope =>
+                            item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
+                                (scope.Value == null || tag.Value == scope.Value)));
+                    }
+                }).ToList();
             }
 
             result.TotalResults = list.Count;

@@ -313,6 +313,32 @@ namespace Certify.Client
             }
         }
 
+        private async Task<HttpResponseMessage> DeleteAsync(string endpoint, object data, AuthContext authContext)
+        {
+            using (var request = new HttpRequestMessage(HttpMethod.Delete, new Uri(_baseUri + endpoint)))
+            {
+                SetAuthContextForRequest(request, authContext);
+
+                if (data != null)
+                {
+                    var json = JsonConvert.SerializeObject(data);
+                    request.Content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
+                }
+
+                var response = await _client.SendAsync(request).ConfigureAwait(false);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return response;
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    throw new ServiceCommsException($"Internal Service Error: {endpoint}: {error}");
+                }
+            }
+        }
+
         #region System
 
         public async Task<string> GetAppVersion(AuthContext authContext = null) => await FetchAsync("system/appversion", authContext);
@@ -836,6 +862,7 @@ namespace Certify.Client
         }
 
         #endregion
+
         private T JsonToObject<T>(string json)
         {
             return JsonConvert.DeserializeObject<T>(json);

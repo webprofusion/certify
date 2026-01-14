@@ -17,7 +17,7 @@ namespace Certify.Models.Hub
         public string ClientName { get; set; } = string.Empty;
         public string ClientVersion { get; set; } = string.Empty;
 
-        public List<string> Tags { get; set; } = [];
+        public List<TagSummary> Tags { get; set; } = [];
         public DateTimeOffset DateLastReported { get; set; }
         public DateTimeOffset DateRegistered { get; set; }
 

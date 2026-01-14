@@ -57,51 +57,67 @@ namespace Certify.Models.Hub
 
             if (policies != null)
             {
-                Policies = policies;
-            }
-        }
-    }
+                            Policies = policies;
+                        }
+                    }
+                }
 
-    /// <summary>
-    /// A role assigned to a security principal, optionally specific to a set of resources
-    /// </summary>
-    public class AssignedRole : ConfigurationStoreItem
-    {
-        /// <summary>
-        /// Defines the role to be assigned 
-        /// </summary>
-        public string RoleId { get; set; } = default!;
+                /// <summary>
+                /// A role assigned to a security principal, optionally specific to a set of resources
+                /// </summary>
+                public class AssignedRole : ConfigurationStoreItem
+                {
+                    /// <summary>
+                    /// Defines the role to be assigned 
+                    /// </summary>
+                    public string RoleId { get; set; } = default!;
 
-        /// <summary>
-        /// Specific security principal assigned to the role
-        /// </summary>
-        public string SecurityPrincipalId { get; set; } = default!;
+                    /// <summary>
+                    /// Specific security principal assigned to the role
+                    /// </summary>
+                    public string SecurityPrincipalId { get; set; } = default!;
 
-        public List<Resource>? IncludedResources { get; set; } = [];
-    }
+                    public List<Resource>? IncludedResources { get; set; } = [];
 
-    public class AccessCheck
-    {
-        public string? SecurityPrincipalId { get; set; } = default!;
-        public string ResourceType { get; set; } = default!;
-        public string ResourceActionId { get; set; } = default!;
-        public string? Identifier { get; set; } = default!;
+                    /// <summary>
+                    /// If set, this role assignment is scoped to resources matching these tag scopes.
+                    /// Null/empty means no tag-based restriction.
+                    /// </summary>
+                    public List<TagScope>? ScopedTags { get; set; }
 
-        public List<string> ScopedAssignedRoles { get; set; } = [];
+                    /// <summary>
+                    /// If true, require all tag scopes to match (AND). Default false (OR).
+                                    /// </summary>
+                                    public bool RequireAllScopedTags { get; set; } = false;
+                                }
 
-        public AccessCheck() { }
-        public AccessCheck(string? securityPrincipalId, string resourceType, string resourceActionId, string? identifier = null)
-        {
-            SecurityPrincipalId = securityPrincipalId;
-            ResourceType = resourceType;
-            ResourceActionId = resourceActionId;
-            Identifier = identifier;
-        }
-    }
+                                public class AccessCheck
+                                {
+                                    public string? SecurityPrincipalId { get; set; } = default!;
+                        public string ResourceType { get; set; } = default!;
+                        public string ResourceActionId { get; set; } = default!;
+                        public string? Identifier { get; set; } = default!;
 
-    public class AccessTokenCheck
-    {
-        public AccessToken Token { get; set; } = default!;
+                        public List<string> ScopedAssignedRoles { get; set; } = [];
+
+                        /// <summary>
+                        /// Tags on the resource being accessed (for scope validation)
+                        /// </summary>
+                        public List<TagSummary>? ResourceTags { get; set; }
+
+                        public AccessCheck() { }
+                        public AccessCheck(string? securityPrincipalId, string resourceType, string resourceActionId, string? identifier = null)
+                        {
+                            SecurityPrincipalId = securityPrincipalId;
+                            ResourceType = resourceType;
+                            ResourceActionId = resourceActionId;
+                            Identifier = identifier;
+                        }
+                    }
+
+                    public class AccessTokenCheck
+                    {
+                        public AccessToken Token { get; set; } = default!;
         public AccessCheck Check { get; set; } = default!;
     }
 

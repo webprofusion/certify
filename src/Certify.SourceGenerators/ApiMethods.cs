@@ -363,7 +363,7 @@ namespace Certify.SourceGenerators
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup)]
                 },
                 new()
-                {
+                 {
                      OperationName = "GetManagedLicenses",
                      OperationMethod = HttpGet,
                      Comment = "Get list of managed product license keys for instance license management",
@@ -909,29 +909,208 @@ namespace Certify.SourceGenerators
                      },
                      RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsUpdate)]
                  },
-                 new()
+                // Tag Categories
+                new()
+                {
+                    OperationName = "GetTagCategories",
+                    OperationMethod = HttpGet,
+                    Comment = "Get all tag categories",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/categories",
+                    ServiceAPIRoute = "tags/categories",
+                    ReturnType = "ICollection<Certify.Models.Hub.TagCategory>",
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
+                new()
+                {
+                    OperationName = "GetTagCategory",
+                    OperationMethod = HttpGet,
+                    Comment = "Get a tag category by key",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/categories/{categoryKey}",
+                    ServiceAPIRoute = "tags/categories/{categoryKey}",
+                    ReturnType = "Certify.Models.Hub.TagCategory",
+                    Params = new Dictionary<string, string> { { "categoryKey", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
+                new()
+                {
+                    OperationName = "AddOrUpdateTagCategory",
+                    OperationMethod = HttpPost,
+                    Comment = "Add or update a tag category",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/categories",
+                    ServiceAPIRoute = "tags/categories",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "category", GetFormattedTypeName(typeof(Certify.Models.Hub.TagCategory)) } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagUpdate)]
+                },
+                new()
+                {
+                    OperationName = "DeleteTagCategory",
+                    OperationMethod = HttpDelete,
+                    Comment = "Delete a tag category",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/categories/{categoryKey}",
+                    ServiceAPIRoute = "tags/categories/{categoryKey}",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "categoryKey", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagDelete)]
+                },
+
+                // Tag Values
+                new()
+                {
+                    OperationName = "GetTagValues",
+                    OperationMethod = HttpGet,
+                    Comment = "Get tag values (optional category filter)",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/values",
+                    ServiceAPIRoute = "tags/values",
+                    ReturnType = "ICollection<Certify.Models.Hub.TagValue>",
+                    Params = new Dictionary<string, string> { { "categoryKey", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
+                new()
+                {
+                    OperationName = "GetOrCreateTagValue",
+                    OperationMethod = HttpPost,
+                    Comment = "Get or create a tag value",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/values",
+                    ServiceAPIRoute = "tags/values",
+                    ReturnType = "Certify.Models.Hub.TagValue",
+                    Params = new Dictionary<string, string> { { "request", "Certify.Models.Hub.TagValueRequest" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagAdd)]
+                },
+                new()
+                {
+                    OperationName = "UpdateTagValue",
+                    OperationMethod = HttpPost,
+                    Comment = "Update a tag value",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/values/update",
+                    ServiceAPIRoute = "tags/values/update",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "request", "Certify.Models.Hub.TagValueUpdateRequest" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagUpdate)]
+                },
+                new()
+                {
+                    OperationName = "DeleteTagValue",
+                    OperationMethod = HttpDelete,
+                    Comment = "Delete a tag value",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/values/{valueId}",
+                    ServiceAPIRoute = "tags/values/{valueId}",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "valueId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagDelete)]
+                },
+                new()
+                {
+                    OperationName = "MergeTagValues",
+                    OperationMethod = HttpPost,
+                    Comment = "Merge tag values",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/values/merge",
+                    ServiceAPIRoute = "tags/values/merge",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "request", "Certify.Models.Hub.TagValueMergeRequest" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagUpdate)]
+                },
+
+                // Item Tags
+                new()
+                {
+                    OperationName = "GetAllHubItemTags",
+                    OperationMethod = HttpGet,
+                    Comment = "Get all item tags",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items",
+                    ServiceAPIRoute = "tags/items",
+                    ReturnType = "ICollection<Certify.Models.Hub.ItemTag>",
+                    Params = new Dictionary<string, string> { { "categoryKey", "string" }, { "value", "string" }, { "itemType", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
+                new()
+                {
+                    OperationName = "GetHubItemTags",
+                    OperationMethod = HttpGet,
+                    Comment = "Get tags for an item",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items/{itemType}/{itemId}",
+                    ServiceAPIRoute = "tags/items/{itemType}/{itemId}",
+                    ReturnType = "ICollection<Certify.Models.Hub.TagSummary>",
+                    Params = new Dictionary<string, string> { { "itemType", "string" }, { "itemId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
+                new()
+                {
+                    OperationName = "AddHubItemTags",
+                    OperationMethod = HttpPost,
+                    Comment = "Add tags to items",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items",
+                    ServiceAPIRoute = "tags/items",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "tags", "ICollection<Certify.Models.Hub.ItemTag>" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagAdd)]
+                },
+                new()
+                {
+                    OperationName = "RemoveHubItemTags",
+                    OperationMethod = HttpDelete,
+                    Comment = "Remove item tags by id",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items",
+                    ServiceAPIRoute = "tags/items",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "tagIds", "ICollection<string>" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagDelete)]
+                },
+                /*new()
+                {
+                    OperationName = "GetItemsByTagScopes",
+                    OperationMethod = HttpGet,
+                    Comment = "Get item tags matching tag scopes",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items",
+                    ServiceAPIRoute = "tags/items",
+                    ReturnType = "ICollection<Certify.Models.Hub.ItemTag>",
+                    Params = new Dictionary<string, string> { { "scopes", "ICollection<Certify.Models.Hub.TagScope>" }, { "itemType", "string" }, { "requireAll", "bool" } },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },*/
+                new()
+                {
+                    OperationName = "BulkTagOperation",
+                    OperationMethod = HttpPost,
+                    Comment = "Bulk add/remove tags",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/items/bulk",
+                    ServiceAPIRoute = "tags/items/bulk",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string>
                     {
-                        OperationName = "GetHubItemTags",
-                        OperationMethod = HttpGet,
-                        Comment = "Get hub item tags",
-                        PublicAPIController = "Hub",
-                        PublicAPIRoute = "tags/list",
-                        ServiceAPIRoute = "tags/list",
-                        ReturnType = "ICollection<ItemTag>",
-                        RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                        { "request", "Certify.Models.Hub.BulkTagOperationRequest" }
                     },
-                   new()
-                  {
-                      OperationName = "AddHubItemTag",
-                      OperationMethod = HttpPost,
-                      Comment = "Add hub item tag",
-                      PublicAPIController = "Hub",
-                      PublicAPIRoute = "tags/add",
-                      ServiceAPIRoute = "tags/add",
-                      ReturnType = actionResultTypeName,
-                      Params = new Dictionary<string, string> { { "tag", GetFormattedTypeName(typeof(ItemTag)) } },
-                      RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagAdd)]
-                  },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagUpdate)]
+                },
+                new()
+                {
+                    OperationName = "PreviewTagScope",
+                    OperationMethod = HttpPost,
+                    Comment = "Preview resources matching tag scopes",
+                    PublicAPIController = "Tag",
+                    PublicAPIRoute = "tags/scope-preview",
+                    ServiceAPIRoute = "tags/scope-preview",
+                    ReturnType = "Certify.Models.Hub.ScopePreviewResult",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "request", "Certify.Models.Hub.ScopePreviewRequest" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
+                },
             };
         }
     }

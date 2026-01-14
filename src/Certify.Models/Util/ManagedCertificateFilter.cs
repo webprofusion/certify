@@ -1,4 +1,7 @@
-﻿namespace Certify.Models
+﻿using System.Collections.Generic;
+using Certify.Models.Hub;
+
+namespace Certify.Models
 {
     public class ManagedCertificateFilter
     {
@@ -75,5 +78,22 @@
         public string FilterDescription { get; set; } = string.Empty;
 
         public SortMode OrderBy { get; set; } = ManagedCertificateFilter.SortMode.NAME_ASC;
+
+        /// <summary>
+        /// Filter by tag scopes. Each scope specifies a CategoryKey and optional Value.
+        /// </summary>
+        public List<TagScope>? TagScopes { get; set; }
+
+        /// <summary>
+        /// If true, item must match ALL specified tag scopes (AND logic).
+        /// If false (default), item must match ANY specified tag scope (OR logic).
+        /// </summary>
+        public bool RequireAllTagScopes { get; set; } = false;
+
+        /// <summary>
+        /// If true, include items with no tags in results. Default true for backward compatibility.
+        /// Only applies when TagScopes is specified.
+        /// </summary>
+        public bool IncludeUntagged { get; set; } = true;
     }
 }

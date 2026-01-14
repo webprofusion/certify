@@ -299,6 +299,9 @@ namespace Certify.Management
 
             await UpgradeSettings();
 
+            // Ensure default tag categories exist
+            await EnsureDefaultTagCategories();
+
             _ = RefreshCachedLicenseCheck();
 
             _serviceLog?.Information("Certify Manager Started");

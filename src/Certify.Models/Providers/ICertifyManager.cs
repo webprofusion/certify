@@ -104,10 +104,23 @@ namespace Certify.Management
         Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
         Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);
 
+        // Tags
+        Task<ICollection<TagCategory>> GetTagCategories();
+        Task<TagCategory?> GetTagCategory(string categoryKey);
+        Task<Certify.Models.Config.ActionResult> AddOrUpdateTagCategory(TagCategory category);
+        Task<Certify.Models.Config.ActionResult> DeleteTagCategory(string categoryKey);
+        Task<ICollection<TagValue>> GetTagValues(string? categoryKey = null);
+        Task<TagValue?> GetOrCreateTagValue(string categoryKey, string value);
+        Task<Certify.Models.Config.ActionResult> UpdateTagValue(string valueId, string newValue, string? description = null);
+        Task<Certify.Models.Config.ActionResult> DeleteTagValue(string valueId);
+        Task<Certify.Models.Config.ActionResult> MergeTagValues(ICollection<string> sourceValueIds, string targetValueId);
+        Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null);
+        Task<ICollection<TagSummary>> GetHubItemTags(string itemId, string itemTypeId);
         Task<Certify.Models.Config.ActionResult> AddHubItemTags(ICollection<ItemTag> tags);
         Task<Certify.Models.Config.ActionResult> RemoveHubItemTags(ICollection<string> tagsIds);
-        Task<ICollection<ItemTag>> GetAllHubItemTags();
-        Task<ICollection<ItemTag>> GetHubItemTags(string itemId, string itemTypeId);
+        Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string? itemType = null, bool requireAll = false);
+        Task<Certify.Models.Config.ActionResult> BulkTagOperation(ICollection<string> itemIds, string itemType, ICollection<TagScope>? addTags, ICollection<TagScope>? removeTags);
+        Task<ScopePreviewResult> PreviewTagScope(ICollection<TagScope> scopes, ICollection<string>? resourceTypes = null, bool requireAll = false);
 
         Task<ICollection<ManagedLicense>> GetManagedLicenses();
         Task<ActionResult> AddManagedLicense(ManagedLicense item);

@@ -10,6 +10,7 @@ using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
 using Microsoft.AspNetCore.DataProtection;
+using ActionResultConfig = Certify.Models.Config.ActionResult;
 using ServiceControllers = Certify.Service.Controllers;
 
 namespace Certify.Server.HubService.Services
@@ -185,7 +186,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext? authContext = null) => throw new NotImplementedException();
 
-        public Task<ActionResult> AddHubItemTag(ItemTag tag, AuthContext authContext) => _tagController(authContext).AddTag(tag);
+        public Task<ActionResultConfig> AddHubItemTag(ItemTag tag, AuthContext authContext) => _tagController(authContext).AddTag(tag);
         public Task<ICollection<ItemTag>> GetHubItemTags(AuthContext authContext) => _tagController(authContext).GetTags();
         public Task<DnsZoneQueryResult> GetDnsProviderZones(string providerTypeId, string credentialId, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null) => throw new NotImplementedException();
@@ -200,6 +201,25 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> AddOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).AddOidcProvider(item);
         public Task<ActionResult> UpdateOidcProvider(OidcProviderConfig item, AuthContext authContext) => __oidcProviderController(authContext).UpdateOidcProvider(item);
         public Task<OidcProviderConfig> GetOidcProviderWithSecret(string id, AuthContext authContext) => __oidcProviderController(authContext).GetOidcProvidersWithSecret(id);
+        public Task<ICollection<TagCategory>> GetTagCategories(AuthContext authContext = null) => _tagController(authContext).GetTagCategories();
+        public Task<TagCategory?> GetTagCategory(string categoryKey, AuthContext authContext = null) => _tagController(authContext).GetTagCategory(categoryKey);
+        public Task<ActionResultConfig> AddOrUpdateTagCategory(TagCategory category, AuthContext authContext = null) => _tagController(authContext).AddOrUpdateTagCategory(category);
+        public Task<ActionResultConfig> DeleteTagCategory(string categoryKey, AuthContext authContext = null) => _tagController(authContext).DeleteTagCategory(categoryKey);
+        public Task<ICollection<TagValue>> GetTagValues(string categoryKey = null, AuthContext authContext = null) => _tagController(authContext).GetTagValues(categoryKey);
+        public Task<TagValue?> GetOrCreateTagValue(TagValueRequest request, AuthContext authContext = null) => _tagController(authContext).GetOrCreateTagValue(request);
+        public Task<ActionResultConfig> UpdateTagValue(TagValueUpdateRequest request, AuthContext authContext = null) => _tagController(authContext).UpdateTagValue(request);
+        public Task<ActionResultConfig> DeleteTagValue(string valueId, AuthContext authContext = null) => _tagController(authContext).DeleteTagValue(valueId);
+        public Task<ActionResultConfig> MergeTagValues(TagValueMergeRequest request, AuthContext authContext = null) => _tagController(authContext).MergeTagValues(request);
+        public async Task<ICollection<ItemTag>> GetAllHubItemTags(string categoryKey = null, string value = null, string itemType = null, AuthContext authContext = null)
+        {
+            return await _tagController(authContext).GetItemTags(categoryKey, value, itemType);
+        }
+        public Task<ICollection<TagSummary>> GetHubItemTags(string itemType, string itemId, AuthContext authContext = null) => _tagController(authContext).GetItemTags(itemType, itemId);
+        public Task<ActionResultConfig> AddHubItemTags(ICollection<ItemTag> tags, AuthContext authContext = null) => _tagController(authContext).AddItemTags(tags);
+        public Task<ActionResultConfig> RemoveHubItemTags(ICollection<string> tagIds, AuthContext authContext = null) => _tagController(authContext).RemoveItemTags(tagIds);
+        public Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string itemType = null, bool requireAll = false, AuthContext authContext = null) => _certifyManager.GetItemsByTagScopes(scopes, itemType, requireAll);
+        public Task<ActionResultConfig> BulkTagOperation(BulkTagOperationRequest request, AuthContext authContext = null) => _tagController(authContext).BulkTagOperation(request);
+        public Task<ScopePreviewResult> PreviewTagScope(ScopePreviewRequest request, AuthContext authContext = null) => _tagController(authContext).PreviewTagScope(request);
 
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }
