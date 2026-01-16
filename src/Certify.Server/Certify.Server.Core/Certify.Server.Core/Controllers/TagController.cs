@@ -134,6 +134,12 @@ namespace Certify.Service.Controllers
             return await _certifyManager.RemoveHubItemTags(tagIds);
         }
 
+        [HttpDelete("items/{itemType}/{itemId}/{categoryKey}/{value}")]
+        public async Task<ActionResultConfig> RemoveItemTagByKey(string itemType, string itemId, string categoryKey, string value)
+        {
+            return await _certifyManager.RemoveHubItemTagByKey(itemId, itemType, categoryKey, value);
+        }
+
         [HttpPost("items/bulk")]
         public async Task<ActionResultConfig> BulkTagOperation([FromBody] BulkTagOperationRequest request)
         {

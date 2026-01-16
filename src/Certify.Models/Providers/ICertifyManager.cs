@@ -118,6 +118,7 @@ namespace Certify.Management
         Task<ICollection<TagSummary>> GetHubItemTags(string itemId, string itemTypeId);
         Task<Certify.Models.Config.ActionResult> AddHubItemTags(ICollection<ItemTag> tags);
         Task<Certify.Models.Config.ActionResult> RemoveHubItemTags(ICollection<string> tagsIds);
+        Task<Certify.Models.Config.ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value);
         Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string? itemType = null, bool requireAll = false);
         Task<Certify.Models.Config.ActionResult> BulkTagOperation(ICollection<string> itemIds, string itemType, ICollection<TagScope>? addTags, ICollection<TagScope>? removeTags);
         Task<ScopePreviewResult> PreviewTagScope(ICollection<TagScope> scopes, ICollection<string>? resourceTypes = null, bool requireAll = false);

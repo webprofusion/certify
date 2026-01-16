@@ -408,12 +408,31 @@ namespace Certify.Management
                 }
             }
 
-            return new ActionResult("Tags removed", true);
-        }
+                return new ActionResult("Tags removed", true);
+            }
 
-        /// <summary>
-        /// Get all item tags, optionally filtered by category, value, or item type
-        /// </summary>
+            /// <summary>
+            /// Remove a tag by its composite key (more efficient than fetching all tags first)
+            /// </summary>
+            public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value)
+            {
+                var itemTags = await GetItemTagsInternal(itemId, itemType);
+                var tagToRemove = itemTags.FirstOrDefault(t => t.CategoryKey == categoryKey && t.Value == value);
+
+                if (tagToRemove == null)
+                {
+                    return new ActionResult("Tag not found", false);
+                }
+
+                await _configStore.Delete<ItemTag>(nameof(ItemTag), tagToRemove.Id);
+                await RecalculateTagValueUsageCount(categoryKey, value);
+
+                return new ActionResult("Tag removed", true);
+            }
+
+            /// <summary>
+            /// Get all item tags, optionally filtered by category, value, or item type
+            /// </summary>
         public async Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null)
         {
             var list = await _configStore.GetItems<ItemTag>(nameof(ItemTag));

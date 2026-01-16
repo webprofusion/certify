@@ -217,6 +217,7 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<TagSummary>> GetHubItemTags(string itemType, string itemId, AuthContext authContext = null) => _tagController(authContext).GetItemTags(itemType, itemId);
         public Task<ActionResultConfig> AddHubItemTags(ICollection<ItemTag> tags, AuthContext authContext = null) => _tagController(authContext).AddItemTags(tags);
         public Task<ActionResultConfig> RemoveHubItemTags(ICollection<string> tagIds, AuthContext authContext = null) => _tagController(authContext).RemoveItemTags(tagIds);
+        public Task<ActionResultConfig> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, AuthContext authContext = null) => _tagController(authContext).RemoveItemTagByKey(itemType, itemId, categoryKey, value);
         public Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string itemType = null, bool requireAll = false, AuthContext authContext = null) => _certifyManager.GetItemsByTagScopes(scopes, itemType, requireAll);
         public Task<ActionResultConfig> BulkTagOperation(BulkTagOperationRequest request, AuthContext authContext = null) => _tagController(authContext).BulkTagOperation(request);
         public Task<ScopePreviewResult> PreviewTagScope(ScopePreviewRequest request, AuthContext authContext = null) => _tagController(authContext).PreviewTagScope(request);
