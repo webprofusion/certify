@@ -278,7 +278,7 @@ namespace Certify.Core.Management.Access
             // get all role definitions included in the principals assigned roles 
             var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
 
-            var spSpecificAssignedRoles = spAssignedRoles.Where(a => spAssignedRoleDefinitions.Any(r => r.Id == a.RoleId));
+            var spSpecificAssignedRoles = spAssignedRoles.Where(a => spAssignedRoleDefinitions.Any(r => r.Id == a.RoleId)).ToList();
 
             // get all resource policies included in the principals assigned roles
             var spAssignedPolicies = allPolicies.Where(r => spAssignedRoleDefinitions.Any(p => p.Policies.Contains(r.Id)));
@@ -286,6 +286,36 @@ namespace Certify.Core.Management.Access
             // check an assigned policy allows the required resource action
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(check.ResourceActionId)))
             {
+                // Check for tag-based scoping on the assigned roles
+                var tagScopedRoles = spSpecificAssignedRoles.Where(a => a.ScopedTags != null && a.ScopedTags.Count > 0).ToList();
+
+                if (tagScopedRoles.Count > 0 && check.ResourceTags != null)
+                {
+                    // At least one role has tag restrictions - check if resource tags match any role's scope
+                    var tagMatched = false;
+
+                    foreach (var role in tagScopedRoles)
+                    {
+                        if (IsResourceTagScopeMatch(check.ResourceTags, role.ScopedTags, role.RequireAllScopedTags))
+                        {
+                            tagMatched = true;
+                            break;
+                        }
+                    }
+
+                    // Also check if there are non-tag-scoped roles that would grant unrestricted access
+                    var nonTagScopedRoles = spSpecificAssignedRoles.Where(a => a.ScopedTags == null || a.ScopedTags.Count == 0).ToList();
+                    if (nonTagScopedRoles.Count > 0)
+                    {
+                        tagMatched = true;
+                    }
+
+                    if (!tagMatched)
+                    {
+                        // No tag scope match found - deny access
+                        return false;
+                    }
+                }
 
                 // if any of the service principals assigned roles are restricted by resource type,
                 // check for identifier matches (e.g. role assignment restricted on domains )
@@ -352,7 +382,8 @@ namespace Certify.Core.Management.Access
                 ResourceActionId = check.ResourceActionId,
                 Identifier = check.Identifier,
                 ResourceType = check.ResourceType,
-                ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles
+                ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles,
+                ResourceTags = check.ResourceTags // Pass resource tags for tag-based access control
             };
 
             var isAuthorised = await IsSecurityPrincipalAuthorised(scopedCheck.SecurityPrincipalId, scopedCheck);
@@ -670,23 +701,87 @@ namespace Certify.Core.Management.Access
             return await _store.Delete<AssignedAccessToken>(nameof(AssignedAccessToken), id);
         }
 
-        public string GetSHA256Hash(string val)
-        {
-            using (var sha256Hash = SHA256.Create())
-            {
-                var data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(val));
-                var sBuilder = new StringBuilder();
-
-                // Loop through each byte of the hashed data
-                // and format each one as a hexadecimal string.
-                for (var i = 0; i < data.Length; i++)
+                public string GetSHA256Hash(string val)
                 {
-                    sBuilder.Append(data[i].ToString("x2"));
+                    using (var sha256Hash = SHA256.Create())
+                    {
+                        var data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(val));
+                        var sBuilder = new StringBuilder();
+
+                        // Loop through each byte of the hashed data
+                        // and format each one as a hexadecimal string.
+                        for (var i = 0; i < data.Length; i++)
+                        {
+                            sBuilder.Append(data[i].ToString("x2"));
+                        }
+
+                        // Return the hexadecimal string.
+                        return sBuilder.ToString();
+                    }
                 }
 
-                // Return the hexadecimal string.
-                return sBuilder.ToString();
-            }
-        }
-    }
-}
+                /// <summary>
+                /// Check if resource tags match the required tag scope for access control
+                /// </summary>
+                /// <param name="resourceTags">Tags on the resource being accessed</param>
+                /// <param name="scopedTags">Required tag scopes from the assigned role</param>
+                /// <param name="requireAll">If true, all scopes must match; if false, any scope match is sufficient</param>
+                /// <returns>True if the resource tags satisfy the scope requirements</returns>
+                public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
+                {
+                    if (scopedTags == null || scopedTags.Count == 0)
+                    {
+                        // No tag restrictions - access granted
+                        return true;
+                    }
+
+                    if (resourceTags == null || resourceTags.Count == 0)
+                    {
+                        // Resource has no tags but scope requires tags - deny access
+                                                return false;
+                                    }
+
+                                    if (requireAll)
+                                    {
+                                        // All scopes must match (AND logic)
+                                        foreach (var scope in scopedTags)
+                                        {
+                                            var hasMatch = false;
+                                            foreach (var tag in resourceTags)
+                                            {
+                                                if (tag.CategoryKey == scope.CategoryKey &&
+                                                    (scope.Value == null || tag.Value == scope.Value))
+                                                {
+                                                    hasMatch = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (!hasMatch)
+                                            {
+                                                return false;
+                                            }
+                                        }
+
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        // Any scope match is sufficient (OR logic)
+                                        foreach (var scope in scopedTags)
+                                        {
+                                            foreach (var tag in resourceTags)
+                                            {
+                                                if (tag.CategoryKey == scope.CategoryKey &&
+                                                    (scope.Value == null || tag.Value == scope.Value))
+                                                {
+                                                    return true;
+                                                }
+                                            }
+                                        }
+
+                                        return false;
+                                    }
+                                }
+                            }
+                        }

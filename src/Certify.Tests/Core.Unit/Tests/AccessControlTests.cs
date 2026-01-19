@@ -874,5 +874,498 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsEmpty(actionsNotAllowedByAdmin, $"Administrator role is not allowed to perform the following actions: {string.Join(", \r\n", actionsNotAllowedByAdmin)}");
         }
+
+        #region Tag-Based Access Control Tests
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_NoRestrictions_ReturnsTrue()
+        {
+            // When no tag restrictions are defined, access should be granted
+            var result = AccessControl.IsResourceTagScopeMatch(
+                resourceTags: new List<TagSummary> { new TagSummary { CategoryKey = "environment", Value = "production" } },
+                scopedTags: null,
+                requireAll: false);
+
+            Assert.IsTrue(result, "Should grant access when no tag restrictions are defined");
+
+            result = AccessControl.IsResourceTagScopeMatch(
+                resourceTags: new List<TagSummary> { new TagSummary { CategoryKey = "environment", Value = "production" } },
+                scopedTags: new List<TagScope>(),
+                requireAll: false);
+
+            Assert.IsTrue(result, "Should grant access when tag restrictions list is empty");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_ResourceHasNoTags_ReturnsFalse()
+        {
+            // When resource has no tags but restrictions exist, access should be denied
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(
+                resourceTags: null,
+                scopedTags: scopedTags,
+                requireAll: false);
+
+            Assert.IsFalse(result, "Should deny access when resource has no tags but restrictions exist");
+
+            result = AccessControl.IsResourceTagScopeMatch(
+                resourceTags: new List<TagSummary>(),
+                scopedTags: scopedTags,
+                requireAll: false);
+
+            Assert.IsFalse(result, "Should deny access when resource has empty tags list but restrictions exist");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_ExactMatch_ReturnsTrue()
+        {
+            // When resource tags exactly match the scope
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            Assert.IsTrue(result, "Should grant access when tags match exactly (OR logic)");
+
+            result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            Assert.IsTrue(result, "Should grant access when tags match exactly (AND logic)");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_CategoryOnlyMatch_ReturnsTrue()
+        {
+            // When scope specifies only category (null value = any value in category)
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "staging" }
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = null } // Any value in environment
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            Assert.IsTrue(result, "Should grant access when resource has any value in the scoped category");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_NoMatch_ReturnsFalse()
+        {
+            // When resource tags don't match the scope
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "development" }
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            Assert.IsFalse(result, "Should deny access when tags don't match");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_OrLogic_AnyMatch()
+        {
+            // OR logic: any scope match is sufficient
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "staging" },
+                            new TagSummary { CategoryKey = "department", Value = "IT" }
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" }, // Doesn't match
+                            new TagScope { CategoryKey = "department", Value = "IT" } // Matches
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            Assert.IsTrue(result, "Should grant access when any scope matches (OR logic)");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_AndLogic_AllMustMatch()
+        {
+            // AND logic: all scopes must match
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" },
+                            new TagSummary { CategoryKey = "department", Value = "IT" }
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" },
+                            new TagScope { CategoryKey = "department", Value = "IT" }
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            Assert.IsTrue(result, "Should grant access when all scopes match (AND logic)");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_AndLogic_PartialMatch_ReturnsFalse()
+        {
+            // AND logic: partial match should fail
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" },
+                            new TagSummary { CategoryKey = "department", Value = "Finance" } // Different value
+                        };
+
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = "production" }, // Matches
+                            new TagScope { CategoryKey = "department", Value = "IT" } // Doesn't match
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            Assert.IsFalse(result, "Should deny access when not all scopes match (AND logic)");
+        }
+
+        [TestMethod]
+        public async Task TestTagScopedRoleAuthorization()
+        {
+            // Test that tag-scoped roles properly restrict access
+
+            // Setup admin roles for context user
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+
+            // Add test devops user security principal
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            // Setup security principal actions for managed items
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedItemUpdate), bypassIntegrityCheck: true);
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedItemAdmin);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateManager.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            // Create a tag-scoped assigned role (only for resources tagged with environment:production)
+            var tagScopedRole = new AssignedRole
+            {
+                RoleId = StandardRoles.CertificateManager.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                            {
+                                new TagScope { CategoryKey = "environment", Value = "production" }
+                            },
+                RequireAllScopedTags = false
+            };
+
+            await access.AddAssignedRole(contextUserId, tagScopedRole, bypassIntegrityCheck: true);
+
+            // Test 1: Resource with matching tag - should be authorized
+            var productionResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = productionResourceTags
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "User should have access to resources tagged with environment:production");
+
+            // Test 2: Resource with non-matching tag - should NOT be authorized
+            var developmentResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "development" }
+                        };
+
+            check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = developmentResourceTags
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "User should NOT have access to resources tagged with environment:development");
+
+            // Test 3: Resource with no tags - should NOT be authorized (role requires tags)
+            check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = new List<TagSummary>()
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "User should NOT have access to resources with no tags when role requires specific tags");
+        }
+
+        [TestMethod]
+        public async Task TestTagScopedRoleWithMultipleTags()
+        {
+            // Test AND logic for tag scopes (require all tags)
+
+            // Setup admin roles for context user
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+
+            // Add test devops user security principal
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            // Setup security principal actions
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedItemUpdate), bypassIntegrityCheck: true);
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedItemAdmin);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateManager.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            // Create a tag-scoped assigned role requiring ALL tags (AND logic)
+            var tagScopedRole = new AssignedRole
+            {
+                RoleId = StandardRoles.CertificateManager.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                            {
+                                new TagScope { CategoryKey = "environment", Value = "production" },
+                                new TagScope { CategoryKey = "department", Value = "IT" }
+                            },
+                RequireAllScopedTags = true // AND logic
+            };
+
+            await access.AddAssignedRole(contextUserId, tagScopedRole, bypassIntegrityCheck: true);
+
+            // Test 1: Resource with ALL matching tags - should be authorized
+            var matchingResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" },
+                            new TagSummary { CategoryKey = "department", Value = "IT" }
+                        };
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = matchingResourceTags
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "User should have access when ALL required tags match");
+
+            // Test 2: Resource with only ONE matching tag - should NOT be authorized (AND logic)
+            var partialMatchResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" },
+                            new TagSummary { CategoryKey = "department", Value = "Finance" } // Wrong department
+                        };
+
+            check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = partialMatchResourceTags
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "User should NOT have access when only some tags match (AND logic)");
+        }
+
+        [TestMethod]
+        public async Task TestNonTagScopedRoleGrantsFullAccess()
+        {
+            // Test that a user with a non-tag-scoped role can access any resource
+
+            // Setup admin roles for context user
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+
+            // Add test devops user security principal
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            // Setup security principal actions
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedItemUpdate), bypassIntegrityCheck: true);
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedItemAdmin);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateManager.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            // Create a non-tag-scoped assigned role (full access)
+            var nonTagScopedRole = new AssignedRole
+            {
+                RoleId = StandardRoles.CertificateManager.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = null // No tag restrictions
+            };
+
+            await access.AddAssignedRole(contextUserId, nonTagScopedRole, bypassIntegrityCheck: true);
+
+            // User should be able to access any resource regardless of tags
+            var anyResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "any-value" },
+                            new TagSummary { CategoryKey = "random-category", Value = "random-value" }
+                        };
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = anyResourceTags
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "User with non-tag-scoped role should have access to any resource");
+        }
+
+        [TestMethod]
+        public async Task TestApiTokenWithTagScopedRole()
+        {
+            // Test that API tokens respect tag scopes on their assigned roles
+
+            // Setup admin roles for context user
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+
+            // Add test devops user security principal
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            // Setup security principal actions
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedItemUpdate), bypassIntegrityCheck: true);
+
+            // Setup policy with actions and add policy to store
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedItemAdmin);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            // Setup and add roles and policy assignments to store
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateManager.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            // Create a tag-scoped assigned role
+            var tagScopedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.CertificateManager.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                            {
+                                new TagScope { CategoryKey = "environment", Value = "production" }
+                            },
+                RequireAllScopedTags = false
+            };
+
+            await access.AddAssignedRole(contextUserId, tagScopedRole, bypassIntegrityCheck: true);
+
+            // Create and assign an API token scoped to the tag-scoped role
+            var apiToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id,
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple,
+                Description = "Tag-scoped API token"
+            };
+
+            var assignedToken = new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccessTokens = new List<AccessToken> { apiToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Production API Token",
+                ScopedAssignedRoles = new List<string> { tagScopedRole.Id }
+            };
+
+            await access.AddAssignedAccessToken(contextUserId, assignedToken);
+
+            // Test 1: API token accessing resource with matching tag - should be authorized
+            var productionResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "production" }
+                        };
+
+            var check = new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = productionResourceTags
+            };
+
+            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            Assert.IsTrue(isAuthorized.IsSuccess, "API token should have access to production resources");
+
+            // Test 2: API token accessing resource with non-matching tag - should NOT be authorized
+            var developmentResourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "development" }
+                        };
+
+            check = new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedItem,
+                ResourceActionId = StandardResourceActions.ManagedItemUpdate,
+                ResourceTags = developmentResourceTags
+            };
+
+            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            Assert.IsFalse(isAuthorized.IsSuccess, "API token should NOT have access to development resources");
+        }
+
+        [TestMethod]
+        public void TestIsResourceTagScopeMatch_MixedCategoryAndValueScopes()
+        {
+            // Test mixed scopes: some with specific values, some with any value in category
+            var resourceTags = new List<TagSummary>
+                        {
+                            new TagSummary { CategoryKey = "environment", Value = "staging" },
+                            new TagSummary { CategoryKey = "department", Value = "IT" },
+                            new TagSummary { CategoryKey = "region", Value = "us-east" }
+                        };
+
+            // Scope: environment:* (any) AND department:IT (specific)
+            var scopedTags = new List<TagScope>
+                        {
+                            new TagScope { CategoryKey = "environment", Value = null }, // Any value
+                            new TagScope { CategoryKey = "department", Value = "IT" } // Specific value
+                        };
+
+            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            Assert.IsTrue(result, "Should match when resource has any environment tag and department:IT");
+
+            // Change department to Finance - should NOT match
+            resourceTags[1] = new TagSummary { CategoryKey = "department", Value = "Finance" };
+            result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            Assert.IsFalse(result, "Should NOT match when department doesn't match specific value");
+        }
+
+        #endregion
     }
 }
