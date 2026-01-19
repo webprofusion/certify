@@ -21,12 +21,13 @@ namespace Certify.Models.Hub
     {
         public ItemTag() { }
 
-        public ItemTag(string taggedItemId, string taggedItemType, string categoryKey, string value)
+        public ItemTag(string taggedItemId, string taggedItemType, string categoryKey, string value, string? instanceId = null)
         {
             TaggedItemId = taggedItemId;
             TaggedItemType = taggedItemType;
             CategoryKey = categoryKey;
             Value = value;
+            InstanceId = instanceId;
         }
 
         /// <summary>
@@ -48,6 +49,11 @@ namespace Certify.Models.Hub
         /// Value within the category (e.g., "Finance", "Production")
         /// </summary>
         public string Value { get; set; } = default!;
+
+        /// <summary>
+        /// ID of the instance the tagged item belongs to (null for hub-level items)
+        /// </summary>
+        public string? InstanceId { get; set; }
     }
 
     /// <summary>
@@ -156,6 +162,11 @@ namespace Certify.Models.Hub
         public string? ColorHint { get; set; }
 
         /// <summary>
+        /// ID of the instance the tagged item belongs to
+        /// </summary>
+        public string? InstanceId { get; set; }
+
+        /// <summary>
         /// Formatted display string (e.g., "Department: Finance")
         /// </summary>
         public string DisplayText => $"{CategoryDisplayName}: {Value}";
@@ -226,6 +237,12 @@ namespace Certify.Models.Hub
     {
         public ICollection<string> ItemIds { get; set; } = new List<string>();
         public string ItemType { get; set; } = default!;
+
+        /// <summary>
+        /// Instance ID for the items being tagged
+        /// </summary>
+        public string? InstanceId { get; set; }
+
         public ICollection<TagScope> AddTags { get; set; } = new List<TagScope>();
         public ICollection<TagScope> RemoveTags { get; set; } = new List<TagScope>();
     }

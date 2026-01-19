@@ -411,49 +411,61 @@ namespace Certify.Management
                 return new ActionResult("Tags removed", true);
             }
 
-            /// <summary>
-            /// Remove a tag by its composite key (more efficient than fetching all tags first)
-            /// </summary>
-            public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value)
-            {
-                var itemTags = await GetItemTagsInternal(itemId, itemType);
-                var tagToRemove = itemTags.FirstOrDefault(t => t.CategoryKey == categoryKey && t.Value == value);
-
-                if (tagToRemove == null)
+                /// <summary>
+                /// Remove a tag by its composite key (more efficient than fetching all tags first)
+                /// </summary>
+                public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, string? instanceId = null)
                 {
-                    return new ActionResult("Tag not found", false);
+                    var itemTags = await GetItemTagsInternal(itemId, itemType);
+
+                    // Filter by instanceId if specified
+                    if (!string.IsNullOrEmpty(instanceId))
+                    {
+                        itemTags = itemTags.Where(t => t.InstanceId == instanceId).ToList();
+                    }
+
+                    var tagToRemove = itemTags.FirstOrDefault(t => t.CategoryKey == categoryKey && t.Value == value);
+
+                    if (tagToRemove == null)
+                    {
+                        return new ActionResult("Tag not found", false);
+                    }
+
+                    await _configStore.Delete<ItemTag>(nameof(ItemTag), tagToRemove.Id);
+                    await RecalculateTagValueUsageCount(categoryKey, value);
+
+                    return new ActionResult("Tag removed", true);
                 }
 
-                await _configStore.Delete<ItemTag>(nameof(ItemTag), tagToRemove.Id);
-                await RecalculateTagValueUsageCount(categoryKey, value);
-
-                return new ActionResult("Tag removed", true);
-            }
-
-            /// <summary>
-            /// Get all item tags, optionally filtered by category, value, or item type
-            /// </summary>
-        public async Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null)
-        {
-            var list = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
-
-            if (!string.IsNullOrEmpty(categoryKey))
+                /// <summary>
+                /// Get all item tags, optionally filtered by category, value, item type, or instance
+                /// </summary>
+            public async Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null, string? instanceId = null)
             {
-                list = list.Where(t => t.CategoryKey == categoryKey).ToList();
-            }
+                var list = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
 
-            if (!string.IsNullOrEmpty(value))
-            {
-                list = list.Where(t => t.Value == value).ToList();
-            }
+                if (!string.IsNullOrEmpty(categoryKey))
+                {
+                    list = list.Where(t => t.CategoryKey == categoryKey).ToList();
+                }
 
-            if (!string.IsNullOrEmpty(itemTypeId))
-            {
-                list = list.Where(t => t.TaggedItemType == itemTypeId).ToList();
-            }
+                if (!string.IsNullOrEmpty(value))
+                {
+                    list = list.Where(t => t.Value == value).ToList();
+                }
 
-            return list;
-        }
+                if (!string.IsNullOrEmpty(itemTypeId))
+                {
+                    list = list.Where(t => t.TaggedItemType == itemTypeId).ToList();
+                }
+
+                if (!string.IsNullOrEmpty(instanceId))
+                {
+                    list = list.Where(t => t.InstanceId == instanceId).ToList();
+                }
+
+                return list;
+            }
 
         /// <summary>
         /// Internal helper to get raw item tags for a specific item (used by AddHubItemTags)
@@ -481,7 +493,8 @@ namespace Certify.Management
                     CategoryKey = t.CategoryKey,
                     CategoryDisplayName = category?.DisplayName ?? t.CategoryKey,
                     Value = t.Value,
-                    ColorHint = category?.ColorHint
+                    ColorHint = category?.ColorHint,
+                    InstanceId = t.InstanceId
                 };
             }).ToList();
         }
@@ -489,9 +502,9 @@ namespace Certify.Management
         /// <summary>
         /// Get items matching tag scopes
         /// </summary>
-        public async Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string? itemType = null, bool requireAll = false)
+        public async Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string? itemType = null, bool requireAll = false, string? instanceId = null)
         {
-            var allTags = await GetAllHubItemTags(null, null, null);
+            var allTags = await GetAllHubItemTags(null, null, null, instanceId);
 
             if (itemType != null)
             {
@@ -547,6 +560,7 @@ namespace Certify.Management
         public async Task<ActionResult> BulkTagOperation(
             ICollection<string> itemIds,
             string itemType,
+            string? instanceId,
             ICollection<TagScope>? addTags,
             ICollection<TagScope>? removeTags)
         {
@@ -561,7 +575,7 @@ namespace Certify.Management
                 {
                     foreach (var scope in addTags.Where(s => s.Value != null))
                     {
-                        tagsToAdd.Add(new ItemTag(itemId, itemType, scope.CategoryKey, scope.Value!));
+                        tagsToAdd.Add(new ItemTag(itemId, itemType, scope.CategoryKey, scope.Value!, instanceId));
                     }
                 }
 
@@ -575,7 +589,7 @@ namespace Certify.Management
             // Remove tags
             if (removeTags != null && removeTags.Any())
             {
-                var allTags = await GetAllHubItemTags(null, null, null);
+                var allTags = await GetAllHubItemTags(null, null, null, instanceId);
                 var idsToRemove = new List<string>();
 
                 foreach (var itemId in itemIds)
@@ -605,9 +619,9 @@ namespace Certify.Management
         /// <summary>
         /// Preview resources matching tag scopes
         /// </summary>
-        public async Task<ScopePreviewResult> PreviewTagScope(ICollection<TagScope> scopes, ICollection<string>? resourceTypes = null, bool requireAll = false)
+        public async Task<ScopePreviewResult> PreviewTagScope(ICollection<TagScope> scopes, ICollection<string>? resourceTypes = null, bool requireAll = false, string? instanceId = null)
         {
-            var matching = await GetItemsByTagScopes(scopes, itemType: null, requireAll: requireAll);
+            var matching = await GetItemsByTagScopes(scopes, itemType: null, requireAll: requireAll, instanceId: instanceId);
 
             if (resourceTypes != null && resourceTypes.Any())
             {

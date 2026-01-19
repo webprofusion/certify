@@ -98,84 +98,84 @@ namespace Certify.Service.Controllers
             return await _certifyManager.GetAllHubItemTags(null, null, null);
         }
 
-        [HttpGet("items/{itemType}/{itemId}")]
-        public async Task<ICollection<TagSummary>> GetItemTags(string itemType, string itemId)
-        {
-            return await _certifyManager.GetHubItemTags(itemType, itemId);
-        }
-
-        [HttpGet("items")]
-        public async Task<ICollection<ItemTag>> GetItemTags([FromQuery] string? categoryKey = null, [FromQuery] string? value = null, [FromQuery] string? itemType = null, [FromQuery] bool requireAll = false)
-        {
-            if (categoryKey == null && value == null)
+            [HttpGet("items/{itemType}/{itemId}")]
+            public async Task<ICollection<TagSummary>> GetItemTags(string itemType, string itemId)
             {
-                var allTags = await _certifyManager.GetAllHubItemTags(null, null, itemType);
-                return allTags;
+                return await _certifyManager.GetHubItemTags(itemType, itemId);
             }
 
-            var scopes = new List<TagScope>();
-            if (categoryKey != null)
+            [HttpGet("items")]
+            public async Task<ICollection<ItemTag>> GetItemTags([FromQuery] string? categoryKey = null, [FromQuery] string? value = null, [FromQuery] string? itemType = null, [FromQuery] string? instanceId = null, [FromQuery] bool requireAll = false)
             {
-                scopes.Add(new TagScope { CategoryKey = categoryKey, Value = value });
-            }
-
-            return await _certifyManager.GetItemsByTagScopes(scopes, itemType, requireAll);
-        }
-
-        [HttpPost("items")]
-        public async Task<ActionResultConfig> AddItemTags([FromBody] ICollection<ItemTag> tags)
-        {
-            return await _certifyManager.AddHubItemTags(tags);
-        }
-
-        [HttpDelete("items")]
-        public async Task<ActionResultConfig> RemoveItemTags([FromBody] ICollection<string> tagIds)
-        {
-            return await _certifyManager.RemoveHubItemTags(tagIds);
-        }
-
-        [HttpDelete("items/{itemType}/{itemId}/{categoryKey}/{value}")]
-        public async Task<ActionResultConfig> RemoveItemTagByKey(string itemType, string itemId, string categoryKey, string value)
-        {
-            return await _certifyManager.RemoveHubItemTagByKey(itemId, itemType, categoryKey, value);
-        }
-
-        [HttpPost("items/bulk")]
-        public async Task<ActionResultConfig> BulkTagOperation([FromBody] BulkTagOperationRequest request)
-        {
-            return await _certifyManager.BulkTagOperation(request.ItemIds, request.ItemType, request.AddTags, request.RemoveTags);
-        }
-
-        #endregion
-
-        #region Scope Preview
-
-        [HttpPost("scope-preview")]
-        public async Task<ScopePreviewResult> PreviewTagScope([FromBody] ScopePreviewRequest request)
-        {
-            // Basic implementation using tag scopes
-            var matching = await _certifyManager.GetItemsByTagScopes(request.TagScopes, itemType: null, requireAll: request.RequireAll);
-
-            var result = new ScopePreviewResult
-            {
-                TotalMatchingItems = matching.Select(t => t.TaggedItemId).Distinct().Count(),
-                UnmatchedItemsCount = 0, // not calculated here
-                ScopeDescription = string.Join(" OR ", request.TagScopes.Select(s => s.Value != null ? $"{s.CategoryKey}:{s.Value}" : $"{s.CategoryKey}:*"))
-            };
-
-            var grouped = matching.GroupBy(t => t.TaggedItemType);
-            foreach (var group in grouped)
-            {
-                result.MatchesByResourceType[group.Key] = new ScopePreviewResourceType
+                if (categoryKey == null && value == null)
                 {
-                    Count = group.Select(g => g.TaggedItemId).Distinct().Count(),
-                    Items = new List<ScopePreviewItem>()
-                };
+                    var allTags = await _certifyManager.GetAllHubItemTags(null, null, itemType, instanceId);
+                    return allTags;
+                }
+
+                var scopes = new List<TagScope>();
+                if (categoryKey != null)
+                {
+                    scopes.Add(new TagScope { CategoryKey = categoryKey, Value = value });
+                }
+
+                return await _certifyManager.GetItemsByTagScopes(scopes, itemType, requireAll, instanceId);
             }
 
-            return result;
-        }
+            [HttpPost("items")]
+            public async Task<ActionResultConfig> AddItemTags([FromBody] ICollection<ItemTag> tags)
+            {
+                return await _certifyManager.AddHubItemTags(tags);
+            }
 
-        #endregion
-    }
+            [HttpDelete("items")]
+            public async Task<ActionResultConfig> RemoveItemTags([FromBody] ICollection<string> tagIds)
+            {
+                return await _certifyManager.RemoveHubItemTags(tagIds);
+            }
+
+            [HttpDelete("items/{itemType}/{itemId}/{categoryKey}/{value}")]
+            public async Task<ActionResultConfig> RemoveItemTagByKey(string itemType, string itemId, string categoryKey, string value, [FromQuery] string? instanceId = null)
+            {
+                return await _certifyManager.RemoveHubItemTagByKey(itemId, itemType, categoryKey, value, instanceId);
+            }
+
+            [HttpPost("items/bulk")]
+            public async Task<ActionResultConfig> BulkTagOperation([FromBody] BulkTagOperationRequest request)
+            {
+                return await _certifyManager.BulkTagOperation(request.ItemIds, request.ItemType, request.InstanceId, request.AddTags, request.RemoveTags);
+            }
+
+            #endregion
+
+            #region Scope Preview
+
+            [HttpPost("scope-preview")]
+            public async Task<ScopePreviewResult> PreviewTagScope([FromBody] ScopePreviewRequest request)
+            {
+                // Basic implementation using tag scopes
+                var matching = await _certifyManager.GetItemsByTagScopes(request.TagScopes, itemType: null, requireAll: request.RequireAll, instanceId: null);
+
+                var result = new ScopePreviewResult
+                {
+                    TotalMatchingItems = matching.Select(t => t.TaggedItemId).Distinct().Count(),
+                    UnmatchedItemsCount = 0, // not calculated here
+                    ScopeDescription = string.Join(" OR ", request.TagScopes.Select(s => s.Value != null ? $"{s.CategoryKey}:{s.Value}" : $"{s.CategoryKey}:*"))
+                };
+
+                var grouped = matching.GroupBy(t => t.TaggedItemType);
+                foreach (var group in grouped)
+                {
+                    result.MatchesByResourceType[group.Key] = new ScopePreviewResourceType
+                    {
+                        Count = group.Select(g => g.TaggedItemId).Distinct().Count(),
+                        Items = new List<ScopePreviewItem>()
+                    };
+                }
+
+                return result;
+            }
+
+            #endregion
+        }
 }

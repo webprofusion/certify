@@ -1030,7 +1030,7 @@ namespace Certify.SourceGenerators
                     PublicAPIRoute = "tags/items",
                     ServiceAPIRoute = "tags/items",
                     ReturnType = "ICollection<Certify.Models.Hub.ItemTag>",
-                    Params = new Dictionary<string, string> { { "categoryKey", "string" }, { "value", "string" }, { "itemType", "string" } },
+                    Params = new Dictionary<string, string> { { "categoryKey", "string" }, { "value", "string" }, { "itemType", "string" }, { "instanceId", "string" } },
                     RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagList)]
                 },
                 new()
@@ -1069,6 +1069,19 @@ namespace Certify.SourceGenerators
                     Params = new Dictionary<string, string> { { "tagIds", "ICollection<string>" } },
                     RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagDelete)]
                 },
+                // TODO: Add RemoveHubItemTagByKey after NSwag client regeneration
+                // new()
+                // {
+                //     OperationName = "RemoveHubItemTagByKey",
+                //     OperationMethod = HttpDelete,
+                //     Comment = "Remove item tag by composite key",
+                //     PublicAPIController = "Tag",
+                //     PublicAPIRoute = "tags/items/{itemType}/{itemId}/{categoryKey}/{value}",
+                //     ServiceAPIRoute = "tags/items/{itemType}/{itemId}/{categoryKey}/{value}",
+                //     ReturnType = actionResultTypeName,
+                //     Params = new Dictionary<string, string> { { "itemType", "string" }, { "itemId", "string" }, { "categoryKey", "string" }, { "value", "string" }, { "instanceId", "string" } },
+                //     RequiredPermissions = [new(ResourceTypes.Tag, StandardResourceActions.TagDelete)]
+                // },
                 /*new()
                 {
                     OperationName = "GetItemsByTagScopes",

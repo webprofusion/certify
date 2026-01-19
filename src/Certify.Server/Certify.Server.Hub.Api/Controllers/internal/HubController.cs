@@ -79,7 +79,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
-                var allItemTags = await _client.GetAllHubItemTags(null, null, "ManagedCertificate", CurrentAuthContext);
+                var allItemTags = await _client.GetAllHubItemTags(null, null, "ManagedCertificate", null, CurrentAuthContext);
                 if (allItemTags != null)
                 {
                     // Group tags by item ID for efficient lookup
