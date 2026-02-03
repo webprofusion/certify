@@ -84,9 +84,12 @@ namespace Certify.Management
         Task<IAccessControl> GetCurrentAccessControl();
 
         Task<ICollection<ManagedChallenge>> GetManagedChallenges();
+        Task<ICollection<ManagedChallenge>> GetManagedChallengesWithTagFilter(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
+        Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
         Task<ActionResult> DeleteManagedChallenge(string id);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
         Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret);

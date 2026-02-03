@@ -59,6 +59,11 @@ namespace Certify.Client
     {
         public string UserId { get; set; }
         public string Token { get; set; }
+
+        /// <summary>
+        /// If set, the assigned role IDs this auth context is scoped to (from API token)
+        /// </summary>
+        public List<string> ScopedAssignedRoles { get; set; }
     }
 
     // This version of the client communicates with the Certify.Service instance on the local machine

@@ -12,6 +12,7 @@ namespace Certify.Models.Hub
         public const string ManagedInstance = "ManagedInstance";
         public const string StoredCredential = "StoredCredential";
         public const string DeploymentTask = "DeploymentTask";
+        public const string ManagedChallenge = "ManagedChallenge";
     }
 
     /// <summary>

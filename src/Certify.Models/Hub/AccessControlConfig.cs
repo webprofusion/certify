@@ -494,10 +494,11 @@ namespace Certify.Models.Hub
                 new() {
                     Id = StandardPolicies.ManagedChallengeConsumer,
                     Title = "Managed Challenge Consumer",
-                    Description = "Allows consumer to request that a managed challenge be performed.",
+                    Description = "Allows consumer to request that a managed challenge be performed. When assigned with tag scopes, only challenges matching those tags are accessible.",
                     SecurityPermissionType = SecurityPermissionType.ALLOW,
                     IsResourceSpecific = true,
                     ResourceActions = [
+                        StandardResourceActions.ManagedChallengeList,
                         StandardResourceActions.ManagedChallengeRequest,
                         StandardResourceActions.ManagedChallengeCleanup
                     ]

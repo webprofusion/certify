@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Certify.Models.Hub;
 
 namespace Certify.Models.Config
 {
@@ -23,6 +25,11 @@ namespace Certify.Models.Config
         /// If true, this item can be unlocked for download or sharing to authorized consumers
         /// </summary>
         public bool AllowUnlock { get; set; }
+
+        /// <summary>
+        /// Tags associated with this credential (populated when querying with tag info)
+        /// </summary>
+        public List<TagSummary>? Tags { get; set; }
     }
 
     public class StoredCredentialUnlockResult : ActionResult<StoredCredential>

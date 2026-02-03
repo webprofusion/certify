@@ -18,6 +18,99 @@ namespace Certify.Management
             return await _configStore.GetItems<ManagedChallenge>(nameof(ManagedChallenge));
         }
 
+        /// <summary>
+        /// Get managed challenges filtered by tag scopes (for access control)
+        /// </summary>
+        /// <param name="tagScopes">Tag scopes to filter by. If null/empty, returns all challenges.</param>
+        /// <param name="requireAllTags">If true, challenge must match ALL tag scopes (AND). If false, match ANY (OR).</param>
+        /// <param name="includeUntagged">If true, include challenges with no tags. Default false for tag-scoped access.</param>
+        /// <returns>Filtered collection of managed challenges</returns>
+        public async Task<ICollection<ManagedChallenge>> GetManagedChallengesWithTagFilter(
+            ICollection<TagScope>? tagScopes = null,
+            bool requireAllTags = false,
+            bool includeUntagged = false)
+        {
+            var challenges = await GetManagedChallenges();
+
+            if (tagScopes == null || !tagScopes.Any())
+            {
+                // No tag filtering - return all
+                return challenges;
+            }
+
+            // Get tags for all managed challenges
+            var challengeTags = await GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge);
+            var tagsByChallengeId = challengeTags.GroupBy(t => t.TaggedItemId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            var filteredChallenges = new List<ManagedChallenge>();
+
+            foreach (var challenge in challenges)
+            {
+                if (!tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags) || !itemTags.Any())
+                {
+                    // Challenge has no tags
+                    if (includeUntagged)
+                    {
+                        filteredChallenges.Add(challenge);
+                    }
+
+                    continue;
+                }
+
+                // Check if challenge matches tag scopes
+                bool matches;
+
+                if (requireAllTags)
+                {
+                    // Must match ALL scopes
+                    matches = tagScopes.All(scope =>
+                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
+                            (scope.Value == null || t.Value == scope.Value)));
+                }
+                else
+                {
+                    // Must match ANY scope
+                    matches = tagScopes.Any(scope =>
+                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
+                            (scope.Value == null || t.Value == scope.Value)));
+                }
+
+                if (matches)
+                {
+                    filteredChallenges.Add(challenge);
+                }
+            }
+
+            return filteredChallenges;
+        }
+
+        /// <summary>
+        /// Get managed challenge summaries with tags included (for API responses)
+        /// </summary>
+        public async Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(
+            ICollection<TagScope>? tagScopes = null,
+            bool requireAllTags = false,
+            bool includeUntagged = false)
+        {
+            var challenges = await GetManagedChallengesWithTagFilter(tagScopes, requireAllTags, includeUntagged);
+            var summaries = new List<ManagedChallengeSummary>();
+
+            foreach (var challenge in challenges)
+            {
+                var tags = await GetHubItemTags(TaggedItemTypes.ManagedChallenge, challenge.Id);
+                summaries.Add(new ManagedChallengeSummary
+                {
+                    Id = challenge.Id,
+                    Title = challenge.Title,
+                    ChallengeConfig = challenge.ChallengeConfig,
+                    Tags = tags.ToList()
+                });
+            }
+
+            return summaries;
+        }
+
         public async Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update)
         {
             if (string.IsNullOrEmpty(update.Id))
@@ -138,9 +231,27 @@ namespace Certify.Management
 
         public async Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
         {
+            return await PerformManagedChallengeRequest(request, tagScopes: null);
+        }
+
+        /// <summary>
+        /// Perform a managed challenge request with tag-based access control
+        /// </summary>
+        /// <param name="request">The challenge request details</param>
+        /// <param name="tagScopes">Tag scopes the caller is authorized for. If null, no tag filtering applied.</param>
+        /// <param name="requireAllTags">If true, challenge must match ALL tag scopes</param>
+        /// <returns>Result of the challenge operation</returns>
+        public async Task<ActionResult> PerformManagedChallengeRequest(
+            ManagedChallengeRequest request,
+            ICollection<TagScope>? tagScopes,
+            bool requireAllTags = false)
+        {
             var log = _serviceLog;
 
-            var managedChallenges = await GetManagedChallenges();
+            // Get challenges filtered by caller's tag scope
+            var managedChallenges = tagScopes?.Any() == true
+                ? await GetManagedChallengesWithTagFilter(tagScopes, requireAllTags, includeUntagged: false)
+                : await GetManagedChallenges();
 
             var matchingChallenge = ManagedChallengeFindBestMatch(request, managedChallenges);
 
