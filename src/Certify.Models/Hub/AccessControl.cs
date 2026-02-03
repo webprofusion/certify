@@ -41,6 +41,11 @@ namespace Certify.Models.Hub
 
         public string AvatarUrl { get; set; } = string.Empty;
         public bool IsBuiltIn { get; set; }
+
+        /// <summary>
+        /// Tags associated with this security principal (populated when querying with tag info)
+        /// </summary>
+        public List<TagSummary>? Tags { get; set; }
     }
 
     /// <summary>
