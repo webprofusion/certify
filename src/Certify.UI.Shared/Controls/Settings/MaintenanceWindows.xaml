@@ -15,12 +15,10 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <DockPanel Margin="0,8,0,8" LastChildFill="False">
-            <StackPanel DockPanel.Dock="Top" Margin="0,0,16,0">
-      
-                <TextBlock 
-                    Style="{StaticResource Instructions}" 
-                    TextWrapping="Wrap">
-                    Optionally define time windows when certificate renewals can occur. Renewals can then be set to only be attempted during active maintenance windows. Each managed certificate can then be configured to use a specific maintenance window, or they can use the default (if set).
+            <StackPanel Margin="0,0,16,0" DockPanel.Dock="Top">
+
+                <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
+                    Optionally define time windows when certificate renewals can occur. Renewals can then be set to only be attempted during active maintenance windows. Each managed certificate can then be configured to use a specific maintenance window, or they can use the default (if set). It is recommended to only use these if strictly necessary as limiting renewals reduces resilience.
                 </TextBlock>
 
                 <Button
@@ -42,22 +40,20 @@
                 </Button>
 
                 <TextBlock Style="{StaticResource SubheadingWithMargin}">Default Maintenance Window</TextBlock>
-                <TextBlock 
-                    Style="{StaticResource Instructions}" 
-                    TextWrapping="Wrap">
+                <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
                     The default maintenance window is used for certificates that don't have a specific window assigned. If no default is set, renewals can occur at any time.
                 </TextBlock>
 
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
+                <StackPanel Margin="0,8,0,16" Orientation="Horizontal">
                     <ComboBox
                         x:Name="DefaultMaintenanceWindow"
                         Width="400"
                         Margin="0,0,8,0"
                         HorizontalAlignment="Left"
                         DisplayMemberPath="DisplayText"
-                        SelectionChanged="DefaultMaintenanceWindow_SelectionChanged"
                         SelectedValue="{Binding Prefs.DefaultMaintenanceWindowId}"
-                        SelectedValuePath="Id" />
+                        SelectedValuePath="Id"
+                        SelectionChanged="DefaultMaintenanceWindow_SelectionChanged" />
                     <Button
                         x:Name="SaveDefaultWindow"
                         Width="100"
@@ -75,8 +71,8 @@
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
                     CanUserDeleteRows="False"
-                    SelectionMode="Single"
-                    IsReadOnly="True">
+                    IsReadOnly="True"
+                    SelectionMode="Single">
                     <DataGrid.Columns>
                         <DataGridTextColumn
                             Width="*"
