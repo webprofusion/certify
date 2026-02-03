@@ -248,7 +248,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             ItemViewModel.RaisePropertyChangedEvent(null);
 
-            LoadMaintenanceWindows();
+            Dispatcher.Invoke(() =>
+            {
+                LoadMaintenanceWindows();
+            });
         }
 
         private void LoadMaintenanceWindows()
@@ -271,7 +274,19 @@ namespace Certify.UI.Controls.ManagedCertificate
             }
 
             MaintenanceWindowSelector.ItemsSource = windowOptions;
-            MaintenanceWindowSelector.SelectedValue = ItemViewModel.SelectedItem?.MaintenanceWindowId;
+
+            // Find and select the matching item
+            var currentId = ItemViewModel.SelectedItem?.MaintenanceWindowId;
+            var selectedOption = windowOptions.FirstOrDefault(w => w.Id == currentId);
+            MaintenanceWindowSelector.SelectedItem = selectedOption ?? windowOptions.First();
+        }
+
+        private void MaintenanceWindowSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (ItemViewModel.SelectedItem != null && MaintenanceWindowSelector.SelectedItem is MaintenanceWindowViewModel selected)
+            {
+                ItemViewModel.SelectedItem.MaintenanceWindowId = selected.Id;
+            }
         }
 
         private async void ResetFailureInfo_Click(object sender, RoutedEventArgs e)

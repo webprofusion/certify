@@ -300,46 +300,48 @@
                             </TextBox>
 
                         </DockPanel>
-                                <StackPanel
-                                    Margin="0,8,0,0"
-                                    DockPanel.Dock="Top"
-                                    Orientation="Vertical">
-                                    <CheckBox
-                                        Margin="0,4,0,4"
-                                        Content="{x:Static Resources:SR.ManagedCertificateSettings_EnableAutoRenewal}"
-                                        IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
-                                    <CheckBox
-                                        Margin="0,4,0,4"
-                                        Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}"
-                                        IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
-                                    <CheckBox
-                                        Margin="0,4,0,4"
-                                        Content="Skip Certificate Request (no new certificate order performed)"
-                                        IsChecked="{Binding SelectedItem.SkipCertificateRequest}" />
-                                </StackPanel>
+                        <StackPanel
+                            Margin="0,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical">
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_EnableAutoRenewal}"
+                                IsChecked="{Binding SelectedItem.IncludeInAutoRenew}" />
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_NotifyPrimaryContactOnRenewalFailure}"
+                                IsChecked="{Binding SelectedItem.RequestConfig.EnableFailureNotifications}" />
+                            <CheckBox
+                                Margin="0,4,0,4"
+                                Content="Skip Certificate Request (no new certificate order performed)"
+                                IsChecked="{Binding SelectedItem.SkipCertificateRequest}" />
+                        </StackPanel>
 
-                                <TextBlock 
-                                    Margin="0,16,0,0"
-                                    DockPanel.Dock="Top" 
-                                    Style="{StaticResource Subheading}">Maintenance Window</TextBlock>
-                                <TextBlock 
-                                    DockPanel.Dock="Top" 
-                                    Style="{StaticResource Instructions}"
-                                    TextWrapping="Wrap">
-                                    Optionally restrict when this certificate can be renewed to a specific maintenance window.
-                                </TextBlock>
-                                <ComboBox
-                                    x:Name="MaintenanceWindowSelector"
-                                    Width="400"
-                                    Margin="0,8,0,0"
-                                    HorizontalAlignment="Left"
-                                    DockPanel.Dock="Top"
-                                    DisplayMemberPath="DisplayText"
-                                    SelectedValue="{Binding SelectedItem.MaintenanceWindowId, Converter={StaticResource NullValueConverter}, ConverterParameter='(Empty)'}"
-                                    SelectedValuePath="Id" />
-                            </DockPanel>
+                        <TextBlock
+                            Margin="0,16,0,0"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Subheading}">
+                            Maintenance Window
+                        </TextBlock>
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            TextWrapping="Wrap">
+                            Optionally restrict when this certificate can be renewed to a specific maintenance window.
+                        </TextBlock>
+                        <ComboBox
+                            x:Name="MaintenanceWindowSelector"
+                            Width="400"
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Left"
+                            DisplayMemberPath="DisplayText"
+                            DockPanel.Dock="Top"
+                            SelectedValuePath="Id"
+                            SelectionChanged="MaintenanceWindowSelector_SelectionChanged" />
+                    </DockPanel>
 
-                        </TabItem>
+                </TabItem>
 
 
 
