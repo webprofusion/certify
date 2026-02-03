@@ -192,6 +192,26 @@ namespace Certify.Server.Hub.Api.Controllers
                 }).ToList();
             }
 
+            // Apply user role-based tag scope filtering
+            // If the user has scoped tags on their assigned roles, they can only see items matching those tags
+            var userTagScopes = await GetUserTagScopes();
+            if (userTagScopes != null && userTagScopes.Any())
+            {
+                list = list.Where(item =>
+                {
+                    // If item has no tags, user with scoped tags cannot see it
+                    if (!item.Tags.Any())
+                    {
+                        return false;
+                    }
+
+                    // Item must match at least one of the user's tag scopes
+                    return userTagScopes.Any(scope =>
+                        item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
+                            (scope.Value == null || tag.Value == scope.Value)));
+                }).ToList();
+            }
+
             result.TotalResults = list.Count;
 
             var skip = 0;
@@ -315,6 +335,69 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             return new OkObjectResult(status);
+        }
+
+        /// <summary>
+        /// Get the tag scopes that should restrict what the current user can see/manage.
+        /// Returns null if no restrictions apply (user can see everything).
+        /// </summary>
+        private async Task<List<TagScope>?> GetUserTagScopes()
+        {
+            // Only apply tag scope restrictions if we have a valid user context
+            if (CurrentAuthContext?.UserId == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                // Get all assigned roles for the user
+                var assignedRoles = await _client.GetSecurityPrincipalAssignedRoles(CurrentAuthContext.UserId, CurrentAuthContext);
+
+                if (assignedRoles == null || !assignedRoles.Any())
+                {
+                    return null;
+                }
+
+                // If this is a scoped token (API access), only consider the scoped roles
+                // Otherwise, consider all assigned roles
+                IEnumerable<AssignedRole> rolesToCheck;
+
+                if (CurrentAuthContext.ScopedAssignedRoles != null && CurrentAuthContext.ScopedAssignedRoles.Any())
+                {
+                    // API token with specific scoped roles - only check those roles
+                    rolesToCheck = assignedRoles.Where(r => CurrentAuthContext.ScopedAssignedRoles.Contains(r.Id));
+                }
+                else
+                {
+                    // Regular user authentication - check all assigned roles for tag scopes
+                    rolesToCheck = assignedRoles;
+                }
+
+                // Collect tag scopes from the applicable roles
+                var tagScopes = new List<TagScope>();
+
+                foreach (var role in rolesToCheck)
+                {
+                    if (role.ScopedTags != null && role.ScopedTags.Any())
+                    {
+                        tagScopes.AddRange(role.ScopedTags);
+                    }
+                }
+
+                // If no tag restrictions found, return null (meaning no filtering)
+                if (!tagScopes.Any())
+                {
+                    return null;
+                }
+
+                return tagScopes;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user tag scopes");
+                return null;
+            }
         }
     }
 }
