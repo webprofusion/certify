@@ -115,10 +115,12 @@ namespace Certify.Management
 
             var defaults = new[]
             {
-                new TagCategory { CategoryKey = "environment", DisplayName = "Environment", Description = "Deployment environment", ColorHint = "#4CAF50", IsSingleValue = true, SortOrder = 1, IsSystemCategory = true },
-                new TagCategory { CategoryKey = "department", DisplayName = "Department", Description = "Organizational department", ColorHint = "#2196F3", IsSingleValue = true, SortOrder = 2, IsSystemCategory = true },
-                new TagCategory { CategoryKey = "project", DisplayName = "Project", Description = "Project or application", ColorHint = "#9C27B0", IsSingleValue = false, SortOrder = 3, IsSystemCategory = true },
-                new TagCategory { CategoryKey = "region", DisplayName = "Region", Description = "Geographic region", ColorHint = "#FF9800", IsSingleValue = true, SortOrder = 4, IsSystemCategory = true }
+                new TagCategory { CategoryKey = "environment", DisplayName = "Environment", Description = "Deployment environment (Production, Staging, Development, etc.)", ColorHint = "#4CAF50", IsSingleValue = true, SortOrder = 1, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "application", DisplayName = "Application", Description = "Application or service name", ColorHint = "#2196F3", IsSingleValue = false, SortOrder = 2, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "department", DisplayName = "Department", Description = "Business unit or team ownership", ColorHint = "#9C27B0", IsSingleValue = false, SortOrder = 3, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "criticality", DisplayName = "Criticality", Description = "Business criticality level (e.g. Critical, High, Medium, Low)", ColorHint = "#F44336", IsSingleValue = true, SortOrder = 4, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "region", DisplayName = "Region", Description = "Geographic location or data center region", ColorHint = "#FF9800", IsSingleValue = false, SortOrder = 5, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "organization", DisplayName = "Organization", Description = "Customer or tenant organization (when managing multiple companies)", ColorHint = "#00BCD4", IsSingleValue = true, SortOrder = 6, IsSystemCategory = true }
             };
 
             foreach (var defaultCat in defaults)
@@ -127,6 +129,29 @@ namespace Certify.Management
                 {
                     defaultCat.Id = Guid.NewGuid().ToString();
                     await _configStore.Add<TagCategory>(nameof(TagCategory), defaultCat);
+                }
+            }
+
+            // Seed common values for certain categories
+            await EnsureDefaultTagValues();
+        }
+
+        /// <summary>
+        /// Create default tag values for system categories
+        /// </summary>
+        private async Task EnsureDefaultTagValues()
+        {
+            var defaultValues = new Dictionary<string, string[]>
+            {
+                ["environment"] = ["Production", "Staging", "Development", "Test", "QA"],
+                ["criticality"] = ["Critical", "High", "Medium", "Low"]
+            };
+
+            foreach (var kvp in defaultValues)
+            {
+                foreach (var value in kvp.Value)
+                {
+                    await GetOrCreateTagValue(kvp.Key, value);
                 }
             }
         }
@@ -408,64 +433,64 @@ namespace Certify.Management
                 }
             }
 
-                return new ActionResult("Tags removed", true);
-            }
+            return new ActionResult("Tags removed", true);
+        }
 
-                /// <summary>
-                /// Remove a tag by its composite key (more efficient than fetching all tags first)
-                /// </summary>
-                public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, string? instanceId = null)
-                {
-                    var itemTags = await GetItemTagsInternal(itemId, itemType);
+        /// <summary>
+        /// Remove a tag by its composite key (more efficient than fetching all tags first)
+        /// </summary>
+        public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, string? instanceId = null)
+        {
+            var itemTags = await GetItemTagsInternal(itemId, itemType);
 
-                    // Filter by instanceId if specified
-                    if (!string.IsNullOrEmpty(instanceId))
-                    {
-                        itemTags = itemTags.Where(t => t.InstanceId == instanceId).ToList();
-                    }
-
-                    var tagToRemove = itemTags.FirstOrDefault(t => t.CategoryKey == categoryKey && t.Value == value);
-
-                    if (tagToRemove == null)
-                    {
-                        return new ActionResult("Tag not found", false);
-                    }
-
-                    await _configStore.Delete<ItemTag>(nameof(ItemTag), tagToRemove.Id);
-                    await RecalculateTagValueUsageCount(categoryKey, value);
-
-                    return new ActionResult("Tag removed", true);
-                }
-
-                /// <summary>
-                /// Get all item tags, optionally filtered by category, value, item type, or instance
-                /// </summary>
-            public async Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null, string? instanceId = null)
+            // Filter by instanceId if specified
+            if (!string.IsNullOrEmpty(instanceId))
             {
-                var list = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
-
-                if (!string.IsNullOrEmpty(categoryKey))
-                {
-                    list = list.Where(t => t.CategoryKey == categoryKey).ToList();
-                }
-
-                if (!string.IsNullOrEmpty(value))
-                {
-                    list = list.Where(t => t.Value == value).ToList();
-                }
-
-                if (!string.IsNullOrEmpty(itemTypeId))
-                {
-                    list = list.Where(t => t.TaggedItemType == itemTypeId).ToList();
-                }
-
-                if (!string.IsNullOrEmpty(instanceId))
-                {
-                    list = list.Where(t => t.InstanceId == instanceId).ToList();
-                }
-
-                return list;
+                itemTags = itemTags.Where(t => t.InstanceId == instanceId).ToList();
             }
+
+            var tagToRemove = itemTags.FirstOrDefault(t => t.CategoryKey == categoryKey && t.Value == value);
+
+            if (tagToRemove == null)
+            {
+                return new ActionResult("Tag not found", false);
+            }
+
+            await _configStore.Delete<ItemTag>(nameof(ItemTag), tagToRemove.Id);
+            await RecalculateTagValueUsageCount(categoryKey, value);
+
+            return new ActionResult("Tag removed", true);
+        }
+
+        /// <summary>
+        /// Get all item tags, optionally filtered by category, value, item type, or instance
+        /// </summary>
+        public async Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null, string? instanceId = null)
+        {
+            var list = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
+
+            if (!string.IsNullOrEmpty(categoryKey))
+            {
+                list = list.Where(t => t.CategoryKey == categoryKey).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                list = list.Where(t => t.Value == value).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(itemTypeId))
+            {
+                list = list.Where(t => t.TaggedItemType == itemTypeId).ToList();
+            }
+
+            if (!string.IsNullOrEmpty(instanceId))
+            {
+                list = list.Where(t => t.InstanceId == instanceId).ToList();
+            }
+
+            return list;
+        }
 
         /// <summary>
         /// Internal helper to get raw item tags for a specific item (used by AddHubItemTags)
