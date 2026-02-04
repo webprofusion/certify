@@ -107,7 +107,7 @@
                 Height="23"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                Controls:TextBoxHelper.Watermark="(Url for the staging/test directory endpoint)"
+                Controls:TextBoxHelper.Watermark="(Optional Url for the staging/test directory endpoint)"
                 Text="{Binding Model.Item.StagingAPIEndpoint}"
                 TextWrapping="Wrap" />
         </StackPanel>
@@ -124,10 +124,9 @@
                 <Controls:ToggleSwitch Content="Enabled" IsOn="{Binding Model.Item.IsEnabled}" />
                 <Controls:ToggleSwitch Content="Email Address Required" IsOn="{Binding Model.Item.RequiresEmailAddress}" />
                 <Controls:ToggleSwitch Content="Allow Untrusted TLS" IsOn="{Binding Model.Item.AllowUntrustedTls}" />
-
                 <Controls:ToggleSwitch Content="Allow Internal Hostnames" IsOn="{Binding Model.Item.AllowInternalHostnames}" />
-
-
+                <Controls:ToggleSwitch Content="Requires CN (Common Name)" IsOn="{Binding Model.Item.RequiresCN}" />
+                <Controls:ToggleSwitch Content="Requires External Account Binding" IsOn="{Binding Model.Item.RequiresExternalAccountBinding}" />
             </StackPanel>
         </StackPanel>
 
