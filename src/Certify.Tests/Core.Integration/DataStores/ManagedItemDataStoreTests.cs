@@ -9,7 +9,10 @@ using Certify.Datastore.SQLite;
 using Certify.Datastore.SQLServer;
 using Certify.Models;
 using Certify.Providers;
+using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Npgsql;
 
 namespace Certify.Core.Tests.DataStores
 {
@@ -19,6 +22,49 @@ namespace Certify.Core.Tests.DataStores
         private string _storeType = "postgres";
 
         private const string TEST_PATH = "Tests";
+
+        private const string PostgresLegacySchemaSql = "DROP TABLE IF EXISTS manageditem; CREATE TABLE manageditem (id TEXT NOT NULL PRIMARY KEY, json JSONB NOT NULL);";
+        private const string SqlServerSchemaSql = @"IF OBJECT_ID('manageditem', 'U') IS NULL
+BEGIN
+    CREATE TABLE manageditem (
+        id NVARCHAR(64) NOT NULL PRIMARY KEY,
+        itemtype NVARCHAR(100) NOT NULL,
+        config NVARCHAR(MAX) NOT NULL,
+        itemvalue NVARCHAR(MAX) NULL
+    );
+END";
+        private const string SqlServerLegacySchemaSql = @"IF OBJECT_ID('manageditem', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE manageditem;
+END
+CREATE TABLE manageditem (
+    id NVARCHAR(64) NOT NULL PRIMARY KEY,
+    json NVARCHAR(MAX) NOT NULL
+);";
+
+        [ClassInitialize]
+        public static async Task ClassInitialize(TestContext context)
+        {
+            await DataStoreTestContainers.InitializeAsync();
+        }
+
+        [ClassCleanup]
+        public static async Task ClassCleanup()
+        {
+            await DataStoreTestContainers.DisposeAsync();
+        }
+
+        public static IEnumerable<object[]> LegacyTestDataStores
+        {
+            get
+            {
+                return new[]
+                {
+                    new object[] { "postgres" },
+                    new object[] { "sqlserver" }
+                };
+            }
+        }
 
         public static IEnumerable<object[]> TestDataStores
         {
@@ -50,16 +96,52 @@ namespace Certify.Core.Tests.DataStores
             }
             else if (storeType == "postgres")
             {
-                return new PostgresManagedItemStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+                return new PostgresManagedItemStore(DataStoreTestContainers.PostgresConnectionString);
             }
             else if (storeType == "sqlserver")
             {
-                return new SQLServerManagedItemStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
+                return new SQLServerManagedItemStore(DataStoreTestContainers.SqlServerConnectionString);
             }
             else
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
+        }
+
+        private static async Task InitializeLegacyPostgresSchema(string connectionString)
+        {
+            await using var conn = new NpgsqlConnection(connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new NpgsqlCommand(PostgresLegacySchemaSql, conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private static async Task InitializeLegacySqlServerSchema(string connectionString)
+        {
+            await using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new SqlCommand(SqlServerLegacySchemaSql, conn);
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private static async Task InsertLegacyPostgresManagedItem(string connectionString, ManagedCertificate cert)
+        {
+            await using var conn = new NpgsqlConnection(connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new NpgsqlCommand("INSERT INTO manageditem(id, json) VALUES(@id, CAST(@config as jsonb));", conn);
+            cmd.Parameters.Add(new NpgsqlParameter("@id", cert.Id));
+            cmd.Parameters.Add(new NpgsqlParameter("@config", JsonConvert.SerializeObject(cert)));
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        private static async Task InsertLegacySqlServerManagedItem(string connectionString, ManagedCertificate cert)
+        {
+            await using var conn = new SqlConnection(connectionString);
+            await conn.OpenAsync();
+            await using var cmd = new SqlCommand("INSERT INTO manageditem(id, json) VALUES(@id, @config);", conn);
+            cmd.Parameters.Add(new SqlParameter("@id", cert.Id));
+            cmd.Parameters.Add(new SqlParameter("@config", JsonConvert.SerializeObject(cert)));
+            await cmd.ExecuteNonQueryAsync();
         }
 
         private static ManagedCertificate BuildTestManagedCertificate()
@@ -108,6 +190,62 @@ namespace Certify.Core.Tests.DataStores
 
                 var total = await itemManager.CountAll(filter);
                 Assert.IsGreaterThan(0, total);
+            }
+            finally
+            {
+                await itemManager.Delete(testCert);
+            }
+        }
+
+        [TestMethod, Description("Test migration from legacy schema to new schema")]
+        [DynamicData(nameof(LegacyTestDataStores))]
+        public async Task TestLegacySchemaMigration(string storeType = null)
+        {
+            var testCert = BuildTestManagedCertificate();
+            testCert.Name = "LegacySchemaTest_" + Guid.NewGuid().ToString();
+
+            if (storeType == "postgres")
+            {
+                await InitializeLegacyPostgresSchema(DataStoreTestContainers.PostgresConnectionString);
+                await InsertLegacyPostgresManagedItem(DataStoreTestContainers.PostgresConnectionString, testCert);
+            }
+            else if (storeType == "sqlserver")
+            {
+                await InitializeLegacySqlServerSchema(DataStoreTestContainers.SqlServerConnectionString);
+                await InsertLegacySqlServerManagedItem(DataStoreTestContainers.SqlServerConnectionString, testCert);
+            }
+            else
+            {
+                Assert.Fail("Legacy schema migration test only applies to postgres and sqlserver.");
+            }
+
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            try
+            {
+                var retrieved = await itemManager.GetById(testCert.Id);
+                Assert.IsNotNull(retrieved, "Should retrieve managed certificate after migration");
+                Assert.AreEqual(testCert.Name, retrieved.Name, "Retrieved certificate should have correct name after migration");
+                Assert.IsTrue(await itemManager.IsInitialised(), "Store should be initialised after migration");
+
+                if (storeType == "postgres")
+                {
+                    await using var conn = new NpgsqlConnection(DataStoreTestContainers.PostgresConnectionString);
+                    await conn.OpenAsync();
+                    await using var cmd = new NpgsqlCommand("SELECT itemtype FROM manageditem WHERE id=@id", conn);
+                    cmd.Parameters.Add(new NpgsqlParameter("@id", testCert.Id));
+                    var itemType = (string)await cmd.ExecuteScalarAsync();
+                    Assert.AreEqual("managedcertificate", itemType, "Item type should be set after migration");
+                }
+                else if (storeType == "sqlserver")
+                {
+                    await using var conn = new SqlConnection(DataStoreTestContainers.SqlServerConnectionString);
+                    await conn.OpenAsync();
+                    await using var cmd = new SqlCommand("SELECT itemtype FROM manageditem WHERE id=@id", conn);
+                    cmd.Parameters.Add(new SqlParameter("@id", testCert.Id));
+                    var itemType = (string)await cmd.ExecuteScalarAsync();
+                    Assert.AreEqual("managedcertificate", itemType, "Item type should be set after migration");
+                }
             }
             finally
             {
@@ -512,6 +650,452 @@ namespace Certify.Core.Tests.DataStores
 
                 // allow time for deletes to finish
                 await Task.Delay(5000);
+            }
+        }
+
+        [TestMethod, Description("Test that schema upgrade handles existing data correctly")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestSchemaUpgradePreservesData(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var testCert = BuildTestManagedCertificate();
+            testCert.Name = "SchemaUpgradeTest_" + Guid.NewGuid().ToString();
+
+            try
+            {
+                // Create a managed certificate
+                var managedCertificate = await itemManager.Update(testCert);
+
+                Assert.IsNotNull(managedCertificate, "Managed certificate should be created");
+                Assert.IsNotNull(managedCertificate.Id, "Managed certificate should have an ID");
+
+                // Retrieve it to verify it was stored correctly
+                var retrieved = await itemManager.GetById(managedCertificate.Id);
+                Assert.IsNotNull(retrieved, "Should be able to retrieve managed certificate");
+                Assert.AreEqual(testCert.Name, retrieved.Name, "Retrieved certificate should have correct name");
+
+                // Verify IsInitialised works
+                var isInit = await itemManager.IsInitialised();
+                Assert.IsTrue(isInit, "Store should be initialised");
+
+                // Verify count works
+                var count = await itemManager.CountAll(new ManagedCertificateFilter { Keyword = "SchemaUpgradeTest_" });
+                Assert.IsGreaterThan(0, count, "Should find at least one test item");
+            }
+            finally
+            {
+                await itemManager.Delete(testCert);
+            }
+        }
+
+        [TestMethod, Description("Test Health filter works correctly")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestHealthFilter(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var testCertOk = BuildTestManagedCertificate();
+            testCertOk.Name = "HealthFilterTest_OK_" + Guid.NewGuid().ToString();
+            testCertOk.LastRenewalStatus = RequestState.Success;
+            testCertOk.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+
+            var testCertError = BuildTestManagedCertificate();
+            testCertError.Name = "HealthFilterTest_Error_" + Guid.NewGuid().ToString();
+            testCertError.LastRenewalStatus = RequestState.Error;
+            testCertError.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+
+            var testCertPaused = BuildTestManagedCertificate();
+            testCertPaused.Name = "HealthFilterTest_Paused_" + Guid.NewGuid().ToString();
+            testCertPaused.LastRenewalStatus = RequestState.Paused;
+            testCertPaused.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+
+            var testCertNoCert = BuildTestManagedCertificate();
+            testCertNoCert.Name = "HealthFilterTest_NoCert_" + Guid.NewGuid().ToString();
+            testCertNoCert.LastRenewalStatus = null;
+            testCertNoCert.DateExpiry = null;
+
+            try
+            {
+                await itemManager.Update(testCertOk);
+                await itemManager.Update(testCertError);
+                await itemManager.Update(testCertPaused);
+                await itemManager.Update(testCertNoCert);
+
+                // Test OK filter
+                var okResults = await itemManager.Find(new ManagedCertificateFilter { Keyword = "HealthFilterTest_", Health = "ok" });
+                Assert.IsTrue(okResults.Any(r => r.Name == testCertOk.Name), "OK filter should include success items");
+
+                // Test Error filter
+                var errorResults = await itemManager.Find(new ManagedCertificateFilter { Keyword = "HealthFilterTest_", Health = "error" });
+                Assert.IsTrue(errorResults.Any(r => r.Name == testCertError.Name), "Error filter should include error items");
+
+                // Test Paused filter
+                var pausedResults = await itemManager.Find(new ManagedCertificateFilter { Keyword = "HealthFilterTest_", Health = "paused" });
+                Assert.IsTrue(pausedResults.Any(r => r.Name == testCertPaused.Name), "Paused filter should include paused items");
+
+                // Test NoCertificate filter
+                var noCertResults = await itemManager.Find(new ManagedCertificateFilter { Keyword = "HealthFilterTest_", Health = "nocertificate" });
+                Assert.IsTrue(noCertResults.Any(r => r.Name == testCertNoCert.Name), "NoCertificate filter should include items with no expiry");
+            }
+            finally
+            {
+                await itemManager.Delete(testCertOk);
+                await itemManager.Delete(testCertError);
+                await itemManager.Delete(testCertPaused);
+                await itemManager.Delete(testCertNoCert);
+            }
+        }
+
+        [TestMethod, Description("Test IncludeOnlyNextAutoRenew filter works correctly")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestAutoRenewFilter(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var testCertAutoRenew = BuildTestManagedCertificate();
+            testCertAutoRenew.Name = "AutoRenewTest_Yes_" + Guid.NewGuid().ToString();
+            testCertAutoRenew.IncludeInAutoRenew = true;
+
+            var testCertNoAutoRenew = BuildTestManagedCertificate();
+            testCertNoAutoRenew.Name = "AutoRenewTest_No_" + Guid.NewGuid().ToString();
+            testCertNoAutoRenew.IncludeInAutoRenew = false;
+
+            try
+            {
+                await itemManager.Update(testCertAutoRenew);
+                await itemManager.Update(testCertNoAutoRenew);
+
+                // Test IncludeOnlyNextAutoRenew filter
+                var autoRenewResults = await itemManager.Find(new ManagedCertificateFilter { Keyword = "AutoRenewTest_", IncludeOnlyNextAutoRenew = true });
+
+                Assert.IsTrue(autoRenewResults.Any(r => r.Name == testCertAutoRenew.Name), "Auto-renew filter should include items set to auto-renew");
+                Assert.IsFalse(autoRenewResults.Any(r => r.Name == testCertNoAutoRenew.Name), "Auto-renew filter should exclude items not set to auto-renew");
+            }
+            finally
+            {
+                await itemManager.Delete(testCertAutoRenew);
+                await itemManager.Delete(testCertNoAutoRenew);
+            }
+        }
+
+        [TestMethod, Description("Test keyword search matches on Comments field")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestKeywordSearchOnComments(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var uniqueTag = Guid.NewGuid().ToString("N")[..8];
+            var commentSearchTerm = $"UniqueComment_{uniqueTag}";
+
+            var testCertWithComment = BuildTestManagedCertificate();
+            testCertWithComment.Name = $"CommentTest_NoMatch_{uniqueTag}";
+            testCertWithComment.Comments = $"This item has a {commentSearchTerm} in the notes";
+
+            var testCertWithoutComment = BuildTestManagedCertificate();
+            testCertWithoutComment.Name = $"CommentTest_Plain_{uniqueTag}";
+            testCertWithoutComment.Comments = null;
+
+            var testCertNameMatch = BuildTestManagedCertificate();
+            testCertNameMatch.Name = $"CommentTest_{commentSearchTerm}_InName";
+            testCertNameMatch.Comments = null;
+
+            try
+            {
+                await itemManager.Update(testCertWithComment);
+                await itemManager.Update(testCertWithoutComment);
+                await itemManager.Update(testCertNameMatch);
+
+                // Search by the unique comment term - should match the item with the comment AND the item with it in the name
+                var results = await itemManager.Find(new ManagedCertificateFilter { Keyword = commentSearchTerm });
+                Assert.IsTrue(results.Any(r => r.Id == testCertWithComment.Id), $"[{storeType}] Keyword search should find item by Comments field");
+                Assert.IsTrue(results.Any(r => r.Id == testCertNameMatch.Id), $"[{storeType}] Keyword search should find item by Name field");
+                Assert.IsFalse(results.Any(r => r.Id == testCertWithoutComment.Id), $"[{storeType}] Keyword search should NOT find item without matching Comment or Name");
+
+                // Verify CountAll matches Find for the same filter
+                var filter = new ManagedCertificateFilter { Keyword = commentSearchTerm };
+                var count = await itemManager.CountAll(filter);
+                var findResults = await itemManager.Find(filter);
+                Assert.AreEqual(findResults.Count, (int)count, $"[{storeType}] CountAll should match Find count for keyword filter");
+            }
+            finally
+            {
+                await itemManager.Delete(testCertWithComment);
+                await itemManager.Delete(testCertWithoutComment);
+                await itemManager.Delete(testCertNameMatch);
+            }
+        }
+
+        [TestMethod, Description("Test Name filter works in isolation without Keyword")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestNameFilterAlone(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var uniqueTag = Guid.NewGuid().ToString("N")[..8];
+            var exactName = $"NameFilterTest_Exact_{uniqueTag}";
+
+            var testCertExact = BuildTestManagedCertificate();
+            testCertExact.Name = exactName;
+
+            var testCertSimilar = BuildTestManagedCertificate();
+            testCertSimilar.Name = $"NameFilterTest_Other_{uniqueTag}";
+
+            try
+            {
+                await itemManager.Update(testCertExact);
+                await itemManager.Update(testCertSimilar);
+
+                // Name filter alone should match exactly
+                var results = await itemManager.Find(new ManagedCertificateFilter { Name = exactName });
+                Assert.HasCount(1, results, $"[{storeType}] Name filter should match exactly one item");
+                Assert.AreEqual(testCertExact.Id, results.First().Id, $"[{storeType}] Name filter should return the exact match");
+
+                // Name filter should not match partial names
+                var noResults = await itemManager.Find(new ManagedCertificateFilter { Name = "NameFilterTest_NonExistent_" + uniqueTag });
+                Assert.IsEmpty(noResults, $"[{storeType}] Name filter should return empty for non-matching name");
+            }
+            finally
+            {
+                await itemManager.Delete(testCertExact);
+                await itemManager.Delete(testCertSimilar);
+            }
+        }
+
+        [TestMethod, Description("Test CountAll matches Find for each filter type")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestCountAllMatchesFind(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var uniqueTag = Guid.NewGuid().ToString("N")[..8];
+
+            var testItems = new List<ManagedCertificate>();
+            var rnd = new Random(42);
+
+            for (var i = 0; i < 10; i++)
+            {
+                var item = BuildTestManagedCertificate();
+                item.Name = $"CountAllTest_{uniqueTag}_{i}";
+                item.IncludeInAutoRenew = i % 2 == 0;
+                item.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 60));
+                item.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-rnd.Next(1, 30));
+                item.DateExpiry = i < 3 ? null : DateTimeOffset.UtcNow.AddDays(rnd.Next(5, 90));
+                item.LastRenewalStatus = i switch
+                {
+                    0 => RequestState.Success,
+                    1 => RequestState.Error,
+                    2 => RequestState.Paused,
+                    _ => RequestState.Success
+                };
+                item.Comments = i % 3 == 0 ? $"SomeComment_{uniqueTag}" : null;
+
+                if (i % 4 == 0)
+                {
+                    item.RequestConfig.Challenges.Add(new CertRequestChallengeConfig
+                    {
+                        ChallengeType = "dns-01",
+                        ChallengeProvider = "Test.DnsProvider",
+                        ChallengeCredentialKey = "TestCredKey123"
+                    });
+                }
+
+                testItems.Add(item);
+            }
+
+            try
+            {
+                foreach (var item in testItems)
+                {
+                    await itemManager.Update(item);
+                }
+
+                // Define filters to test CountAll consistency
+                var filters = new List<ManagedCertificateFilter>
+                {
+                    new ManagedCertificateFilter { Id = testItems[0].Id, FilterDescription = "Id filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", FilterDescription = "Keyword filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", Name = testItems[0].Name, FilterDescription = "Name + Keyword filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", IncludeOnlyNextAutoRenew = true, FilterDescription = "AutoRenew filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", LastOCSPCheckMins = 10, FilterDescription = "LastOCSPCheckMins filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", LastRenewalInfoCheckMins = 5, FilterDescription = "LastRenewalInfoCheckMins filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", ChallengeType = "dns-01", FilterDescription = "ChallengeType filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", ChallengeProvider = "Test.DnsProvider", FilterDescription = "ChallengeProvider filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", StoredCredentialKey = "TestCredKey123", FilterDescription = "StoredCredentialKey filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", Health = "ok", FilterDescription = "Health=ok filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", Health = "error", FilterDescription = "Health=error filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", Health = "paused", FilterDescription = "Health=paused filter" },
+                    new ManagedCertificateFilter { Keyword = $"CountAllTest_{uniqueTag}", Health = "nocertificate", FilterDescription = "Health=nocertificate filter" },
+                };
+
+                foreach (var filter in filters)
+                {
+                    var findResults = await itemManager.Find(filter);
+                    var countResult = await itemManager.CountAll(filter);
+
+                    Assert.AreEqual(findResults.Count, (int)countResult, $"[{storeType}] CountAll should match Find count for {filter.FilterDescription}");
+                    Debug.WriteLine($"[{storeType}] {filter.FilterDescription}: Find={findResults.Count}, CountAll={countResult}");
+                }
+            }
+            finally
+            {
+                foreach (var item in testItems)
+                {
+                    await itemManager.Delete(item);
+                }
+            }
+        }
+
+        [TestMethod, Description("Test each filter parameter returns correct results in isolation")]
+        [DynamicData(nameof(TestDataStores))]
+        public async Task TestIndividualFilterParameters(string storeType = null)
+        {
+            var itemManager = GetManagedItemStore(storeType ?? _storeType);
+
+            var uniqueTag = Guid.NewGuid().ToString("N")[..8];
+
+            // Create items with specific properties to test each filter in isolation
+            var itemAutoRenewYes = BuildTestManagedCertificate();
+            itemAutoRenewYes.Name = $"IndFilter_{uniqueTag}_AutoYes";
+            itemAutoRenewYes.IncludeInAutoRenew = true;
+            itemAutoRenewYes.LastRenewalStatus = RequestState.Success;
+            itemAutoRenewYes.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+            itemAutoRenewYes.DateLastOcspCheck = DateTimeOffset.UtcNow.AddMinutes(-60);
+            itemAutoRenewYes.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow.AddMinutes(-60);
+
+            var itemAutoRenewNo = BuildTestManagedCertificate();
+            itemAutoRenewNo.Name = $"IndFilter_{uniqueTag}_AutoNo";
+            itemAutoRenewNo.IncludeInAutoRenew = false;
+            itemAutoRenewNo.LastRenewalStatus = RequestState.Error;
+            itemAutoRenewNo.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+            itemAutoRenewNo.DateLastOcspCheck = DateTimeOffset.UtcNow; // recent check
+            itemAutoRenewNo.DateLastRenewalInfoCheck = DateTimeOffset.UtcNow; // recent check
+
+            var itemNoCert = BuildTestManagedCertificate();
+            itemNoCert.Name = $"IndFilter_{uniqueTag}_NoCert";
+            itemNoCert.LastRenewalStatus = null;
+            itemNoCert.DateExpiry = null;
+            itemNoCert.IncludeInAutoRenew = true;
+
+            var itemPaused = BuildTestManagedCertificate();
+            itemPaused.Name = $"IndFilter_{uniqueTag}_Paused";
+            itemPaused.LastRenewalStatus = RequestState.Paused;
+            itemPaused.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+            itemPaused.IncludeInAutoRenew = true;
+
+            var itemDns = BuildTestManagedCertificate();
+            itemDns.Name = $"IndFilter_{uniqueTag}_Dns";
+            itemDns.LastRenewalStatus = RequestState.Success;
+            itemDns.DateExpiry = DateTimeOffset.UtcNow.AddDays(30);
+            itemDns.IncludeInAutoRenew = true;
+            itemDns.RequestConfig.Challenges = new ObservableCollection<CertRequestChallengeConfig>(
+                new List<CertRequestChallengeConfig>
+                {
+                    new CertRequestChallengeConfig
+                    {
+                        ChallengeType = "dns-01",
+                        ChallengeProvider = "Ind.TestProvider",
+                        ChallengeCredentialKey = "IndCredKey_" + uniqueTag
+                    }
+                });
+
+            var allItems = new List<ManagedCertificate> { itemAutoRenewYes, itemAutoRenewNo, itemNoCert, itemPaused, itemDns };
+
+            try
+            {
+                foreach (var item in allItems)
+                {
+                    await itemManager.Update(item);
+                }
+
+                // Test 1: Id filter
+                var idResult = await itemManager.Find(new ManagedCertificateFilter { Id = itemAutoRenewYes.Id });
+                Assert.HasCount(1, idResult, $"[{storeType}] Id filter should return exactly one");
+                Assert.AreEqual(itemAutoRenewYes.Id, idResult.First().Id);
+
+                // Test 2: Name filter (exact match)
+                var nameResult = await itemManager.Find(new ManagedCertificateFilter { Name = itemDns.Name });
+                Assert.HasCount(1, nameResult, $"[{storeType}] Name filter should return exactly one");
+                Assert.AreEqual(itemDns.Id, nameResult.First().Id);
+
+                // Test 3: Keyword filter
+                var keywordResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}" });
+                Assert.HasCount(allItems.Count, keywordResult, $"[{storeType}] Keyword filter should match all test items");
+
+                // Test 4: IncludeOnlyNextAutoRenew
+                var autoRenewResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", IncludeOnlyNextAutoRenew = true });
+                Assert.IsFalse(autoRenewResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] AutoRenew filter should exclude non-auto-renew items");
+                Assert.IsTrue(autoRenewResult.Any(r => r.Id == itemAutoRenewYes.Id), $"[{storeType}] AutoRenew filter should include auto-renew items");
+
+                // Test 5: Health = ok (Success or null status, WITH expiry)
+                var healthOkResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", Health = "ok" });
+                Assert.IsTrue(healthOkResult.Any(r => r.Id == itemAutoRenewYes.Id), $"[{storeType}] Health=ok should include Success items");
+                Assert.IsFalse(healthOkResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] Health=ok should exclude Error items");
+
+                // Test 6: Health = error
+                var healthErrorResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", Health = "error" });
+                Assert.IsTrue(healthErrorResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] Health=error should include Error items");
+                Assert.IsFalse(healthErrorResult.Any(r => r.Id == itemAutoRenewYes.Id), $"[{storeType}] Health=error should exclude Success items");
+
+                // Test 7: Health = warning (maps to same SQL as error)
+                var healthWarningResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", Health = "warning" });
+                Assert.IsTrue(healthWarningResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] Health=warning should include Error items");
+
+                // Test 8: Health = paused
+                var healthPausedResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", Health = "paused" });
+                Assert.IsTrue(healthPausedResult.Any(r => r.Id == itemPaused.Id), $"[{storeType}] Health=paused should include Paused items");
+                Assert.HasCount(1, healthPausedResult, $"[{storeType}] Health=paused should only return paused items");
+
+                // Test 9: Health = nocertificate
+                var healthNoCertResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", Health = "nocertificate" });
+                Assert.IsTrue(healthNoCertResult.Any(r => r.Id == itemNoCert.Id), $"[{storeType}] Health=nocertificate should include items with no expiry");
+
+                // Test 10: ChallengeType filter
+                var challengeTypeResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", ChallengeType = "dns-01" });
+                Assert.HasCount(1, challengeTypeResult, $"[{storeType}] ChallengeType filter should match one item");
+                Assert.AreEqual(itemDns.Id, challengeTypeResult.First().Id);
+
+                // Test 11: ChallengeProvider filter
+                var challengeProviderResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", ChallengeProvider = "Ind.TestProvider" });
+                Assert.HasCount(1, challengeProviderResult, $"[{storeType}] ChallengeProvider filter should match one item");
+                Assert.AreEqual(itemDns.Id, challengeProviderResult.First().Id);
+
+                // Test 12: StoredCredentialKey filter
+                var credKeyResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", StoredCredentialKey = "IndCredKey_" + uniqueTag });
+                Assert.HasCount(1, credKeyResult, $"[{storeType}] StoredCredentialKey filter should match one item");
+                Assert.AreEqual(itemDns.Id, credKeyResult.First().Id);
+
+                // Test 13: LastOCSPCheckMins (items checked more than 30 mins ago)
+                var ocspResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", LastOCSPCheckMins = 30 });
+                Assert.IsTrue(ocspResult.Any(r => r.Id == itemAutoRenewYes.Id), $"[{storeType}] OCSP filter should include items with old check date");
+                Assert.IsFalse(ocspResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] OCSP filter should exclude items with recent check date");
+
+                // Test 14: LastRenewalInfoCheckMins (items checked more than 30 mins ago)
+                var renewalInfoResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", LastRenewalInfoCheckMins = 30 });
+                Assert.IsTrue(renewalInfoResult.Any(r => r.Id == itemAutoRenewYes.Id), $"[{storeType}] RenewalInfoCheck filter should include items with old check date");
+                Assert.IsFalse(renewalInfoResult.Any(r => r.Id == itemAutoRenewNo.Id), $"[{storeType}] RenewalInfoCheck filter should exclude items with recent check date");
+
+                // Test 15: MaxResults
+                var maxResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", MaxResults = 2 });
+                Assert.HasCount(2, maxResult, $"[{storeType}] MaxResults should limit results");
+
+                // Test 16: Paging (PageIndex=0, PageSize=2)
+                var page0Result = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", PageIndex = 0, PageSize = 2 });
+                var page1Result = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", PageIndex = 1, PageSize = 2 });
+                Assert.HasCount(2, page0Result, $"[{storeType}] Page 0 should return PageSize items");
+                Assert.HasCount(2, page1Result, $"[{storeType}] Page 1 should return PageSize items");
+                Assert.IsFalse(page0Result.Select(r => r.Id).Intersect(page1Result.Select(r => r.Id)).Any(), $"[{storeType}] Pages should not overlap");
+
+                // Test 17: No results for non-matching filter
+                var emptyResult = await itemManager.Find(new ManagedCertificateFilter { Keyword = $"IndFilter_{uniqueTag}", ChallengeType = "nonexistent-01" });
+                Assert.IsEmpty(emptyResult, $"[{storeType}] Non-matching filter should return empty");
+            }
+            finally
+            {
+                foreach (var item in allItems)
+                {
+                    await itemManager.Delete(item);
+                }
             }
         }
     }

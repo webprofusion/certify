@@ -17,6 +17,18 @@ namespace Certify.Core.Tests.DataStores
         private string _storeType = "postgres";
         private const string TEST_PATH = "Tests";
 
+        [ClassInitialize]
+        public static async Task ClassInitialize(TestContext context)
+        {
+            await DataStoreTestContainers.InitializeAsync();
+        }
+
+        [ClassCleanup]
+        public static async Task ClassCleanup()
+        {
+            await DataStoreTestContainers.DisposeAsync();
+        }
+
         public static IEnumerable<object[]> TestDataStores
         {
             get
@@ -43,11 +55,11 @@ namespace Certify.Core.Tests.DataStores
             }
             else if (storeType == "postgres")
             {
-                return new PostgresCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_POSTGRES"));
+                return new PostgresCredentialStore(DataStoreTestContainers.PostgresConnectionString);
             }
             else if (storeType == "sqlserver")
             {
-                return new SQLServerCredentialStore(Environment.GetEnvironmentVariable("CERTIFY_TEST_SQLSERVER"));
+                return new SQLServerCredentialStore(DataStoreTestContainers.SqlServerConnectionString);
             }
             else
             {
