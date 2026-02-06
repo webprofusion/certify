@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -75,6 +76,48 @@ namespace Certify.Server.Hub.Api.Controllers
 #endif
 
             return new OkObjectResult(health);
+        }
+
+        /// <summary>
+        /// Get the current data store connection status
+        /// </summary>
+        /// <returns>Data store status including connection state and any error information</returns>
+        [HttpGet]
+        [Route("datastore/status")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DataStoreStatus))]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable, Type = typeof(DataStoreStatus))]
+        public async Task<IActionResult> GetDataStoreStatus()
+        {
+            var status = await _client.GetDataStoreStatus(CurrentAuthContext);
+
+            if (status.IsDegradedMode)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, status);
+            }
+
+            return new OkObjectResult(status);
+        }
+
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        /// <returns>Result of the reconnection attempt</returns>
+        [HttpPost]
+        [Route("datastore/reconnect")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Certify.Models.Config.ActionResult))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(Certify.Models.Config.ActionResult))]
+        public async Task<IActionResult> AttemptDataStoreReconnection()
+        {
+            var result = await _client.AttemptDataStoreReconnection(CurrentAuthContext);
+
+            if (!result.IsSuccess)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, result);
+            }
+
+            return new OkObjectResult(result);
         }
 
         /// <summary>

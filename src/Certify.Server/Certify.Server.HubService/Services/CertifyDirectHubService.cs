@@ -176,6 +176,8 @@ namespace Certify.Server.HubService.Services
         public Task<List<StatusMessage>> TestChallengeConfiguration(ManagedCertificate site, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> TestCredentials(string credentialKey, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<DataStoreStatus> GetDataStoreStatus(AuthContext? authContext = null) => Task.FromResult(_systemController(authContext).GetDataStoreStatus());
+        public Task<ActionResult> AttemptDataStoreReconnection(AuthContext? authContext = null) => _systemController(authContext).AttemptDataStoreReconnection();
         public Task<ActionResult> UpdateAccountContact(ContactRegistration contact, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<ActionResult> UpdateCertificateAuthority(CertificateAuthority ca, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<StoredCredential> UpdateCredentials(StoredCredential credential, AuthContext? authContext = null) => throw new NotImplementedException();

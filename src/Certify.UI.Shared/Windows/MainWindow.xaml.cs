@@ -547,5 +547,19 @@ namespace Certify.UI.Windows
         {
             await Application.Current.Dispatcher.InvokeAsync(async delegate { await NewCertificate(original); });
         }
+
+        private async void Button_AttemptReconnection(object sender, RoutedEventArgs e)
+        {
+            var result = await _appViewModel.AttemptDataStoreReconnection();
+
+            if (result.IsSuccess)
+            {
+                _appViewModel.ShowNotification("Data store reconnected successfully.", NotificationType.Success);
+            }
+            else
+            {
+                _appViewModel.ShowNotification($"Failed to reconnect: {result.Message}", NotificationType.Error);
+            }
+        }
     }
 }

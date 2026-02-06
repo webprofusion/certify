@@ -28,6 +28,8 @@ namespace Certify.Client
         Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null);
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
+        Task<DataStoreStatus> GetDataStoreStatus(AuthContext authContext = null);
+        Task<ActionResult> AttemptDataStoreReconnection(AuthContext authContext = null);
 
         Task<ActionResult> JoinManagementHub(HubJoiningClientSecret hubJoiningClientSecret, AuthContext authContext = null);
         Task<ActionResult> CheckManagementHubCredentials(HubJoiningClientSecret hubJoiningClientSecret, AuthContext authContext = null);

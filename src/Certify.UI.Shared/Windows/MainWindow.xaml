@@ -10,6 +10,7 @@
     xmlns:local="clr-namespace:Certify.UI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
     Title="{x:Static res:ConfigResources.AppName}"
     Width="1085"
     Height="656"
@@ -25,8 +26,13 @@
     WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
+    <Controls:MetroWindow.Resources>
+        <utils:InverseBooleanConverter x:Key="InvBoolConverter" />
+    </Controls:MetroWindow.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="48" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -35,8 +41,46 @@
             <ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
         </Grid.LayoutTransform>
 
-        <DockPanel
+        <!--  Degraded Mode Banner  -->
+        <Border
             Grid.Row="0"
+            Padding="12,8"
+            Background="#D32F2F"
+            Visibility="{Binding IsInDegradedMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+            <DockPanel>
+                <Button
+                    Margin="8,0,0,0"
+                    Padding="12,4"
+                    Click="Button_AttemptReconnection"
+                    DockPanel.Dock="Right"
+                    IsEnabled="{Binding IsReconnecting, Converter={StaticResource ResourceKey=InvBoolConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            Height="12"
+                            Foreground="{StaticResource MahApps.Brushes.Accent}"
+                            Icon="Refresh"
+                            Spin="{Binding IsReconnecting}" />
+                        <TextBlock
+                            Margin="6,0,0,0"
+                            VerticalAlignment="Center"
+                            Text="Reconnect" />
+                    </StackPanel>
+                </Button>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="Service Running in Degraded Mode" />
+                    <TextBlock
+                        Foreground="#FFFFFFCC"
+                        Text="{Binding DegradedModeMessage}"
+                        TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <DockPanel
+            Grid.Row="1"
             Margin="8,8,8,0"
             VerticalAlignment="Top">
 
@@ -161,7 +205,7 @@
 
         <TabControl
             x:Name="MainTabControl"
-            Grid.Row="1"
+            Grid.Row="2"
             Width="auto"
             Height="auto"
             Margin="8,8,8,8"

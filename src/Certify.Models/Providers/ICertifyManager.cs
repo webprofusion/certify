@@ -10,6 +10,7 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Shared;
 
@@ -19,6 +20,22 @@ namespace Certify.Management
     {
         Task Init(bool enablePlugins = true);
         void SetStatusReporting(IStatusReporting statusReporting);
+
+        /// <summary>
+        /// Returns true if the service is running in degraded mode (data store unavailable)
+        /// </summary>
+        bool IsInDegradedMode { get; }
+
+        /// <summary>
+        /// Gets the current data store connection status
+        /// </summary>
+        DataStoreStatus GetDataStoreStatus();
+
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        Task<ActionResult> AttemptDataStoreReconnection();
+
         Task<bool> IsServerTypeAvailable(StandardServerTypes serverType);
         Task<Version> GetServerTypeVersion(StandardServerTypes serverType);
         Task<List<ActionStep>> RunServerDiagnostics(StandardServerTypes serverType, string siteId);

@@ -235,6 +235,9 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(ConnectionState));
             RaisePropertyChangedEvent(nameof(ConnectionTitle));
 
+            // Fetch data store status after successful connection
+            await RefreshDataStoreStatus();
+
             return true;
         }
 

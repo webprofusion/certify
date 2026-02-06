@@ -174,12 +174,13 @@ namespace Certify.UI.ViewModel
         public virtual async Task LoadSettingsAsync()
         {
             Preferences = await GetPreferences();
+            if (!IsInDegradedMode)
+            {
+                await RefreshAllDataStoreItems();
 
-            await RefreshAllDataStoreItems();
-
-            await RefreshChallengeAPIList();
-            await RefreshDeploymentTaskProviderList();
-
+                await RefreshChallengeAPIList();
+                await RefreshDeploymentTaskProviderList();
+            }
         }
 
         public AuthContext DefaultAuthContext

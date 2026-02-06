@@ -10,6 +10,7 @@ using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.SharedUtils;
 using Certify.UI.Shared;
@@ -175,6 +176,93 @@ namespace Certify.UI.ViewModel
         /// UI message describing a current system diagnostics error (no disk space etc)
         /// </summary>
         public string SystemDiagnosticError { get; set; }
+
+        private DataStoreStatus _dataStoreStatus;
+        /// <summary>
+        /// Current data store connection status
+        /// </summary>
+        public DataStoreStatus DataStoreStatus
+        {
+            get => _dataStoreStatus;
+            set
+            {
+                _dataStoreStatus = value;
+                RaisePropertyChangedEvent(nameof(DataStoreStatus));
+                RaisePropertyChangedEvent(nameof(IsInDegradedMode));
+                RaisePropertyChangedEvent(nameof(DegradedModeMessage));
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the service is running in degraded mode
+        /// </summary>
+        public bool IsInDegradedMode => DataStoreStatus?.IsDegradedMode == true;
+
+        /// <summary>
+        /// Message to display when in degraded mode
+        /// </summary>
+        public string DegradedModeMessage => DataStoreStatus?.LastErrorMessage ?? "Data store connection failed.";
+
+        private bool _isReconnecting;
+        /// <summary>
+        /// If true, a reconnection attempt is in progress
+        /// </summary>
+        public bool IsReconnecting
+        {
+            get => _isReconnecting;
+            set
+            {
+                _isReconnecting = value;
+                RaisePropertyChangedEvent(nameof(IsReconnecting));
+            }
+        }
+
+        /// <summary>
+        /// Fetch and update the data store status from the service
+        /// </summary>
+        public async Task RefreshDataStoreStatus()
+        {
+            try
+            {
+                DataStoreStatus = await _certifyClient.GetDataStoreStatus();
+            }
+            catch (Exception ex)
+            {
+                Log?.Error($"Failed to get data store status: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Attempt to reconnect to the data store
+        /// </summary>
+        public async Task<ActionResult> AttemptDataStoreReconnection()
+        {
+            if (IsReconnecting)
+            {
+                return new ActionResult("Reconnection already in progress.", false);
+            }
+
+            IsReconnecting = true;
+
+            try
+            {
+                var result = await _certifyClient.AttemptDataStoreReconnection();
+
+                // Refresh the status regardless of result
+                await RefreshDataStoreStatus();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Log?.Error($"Failed to reconnect to data store: {ex.Message}");
+                return new ActionResult($"Failed to reconnect: {ex.Message}", false);
+            }
+            finally
+            {
+                IsReconnecting = false;
+            }
+        }
 
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {

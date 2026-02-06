@@ -24,6 +24,13 @@ namespace Certify.Management
         {
             _serviceLog?.Information("Performing settings and db upgrades.");
 
+            // Skip data-dependent upgrades if in degraded mode
+            if (IsInDegradedMode)
+            {
+                _serviceLog?.Warning("Skipping settings upgrades - service is in degraded mode due to data store issues.");
+                return;
+            }
+
             var systemVersion = Util.GetAppVersion().ToString();
             var previousVersion = CoreAppSettings.Current.CurrentServiceVersion;
 

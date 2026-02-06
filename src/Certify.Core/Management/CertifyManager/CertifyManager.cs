@@ -264,20 +264,49 @@ namespace Certify.Management
                     title: "Core Service Datastore Init",
                     description: $"Data store initialized OK."
                 );
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                    title: "Data Store Status",
+                    description: $"Data store connected and operational."
+                );
+            }
+            catch (DataStoreConnectionException dsEx)
+            {
+                var msg = $"Data store initialization failed: {dsEx.Message}";
+                _serviceLog.Error(dsEx, msg);
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
+                    title: "Core Service Datastore Init",
+                    description: $"Data store failed to initialize. Service running in DEGRADED MODE.",
+                    hasError: true
+                );
+
+                // Initialize in degraded mode instead of throwing
+                await InitDataStoreDegradedMode(dsEx.Message, dsEx.DataStoreId, dsEx.DataStoreType);
+
+                _serviceLog.Warning("Service started in DEGRADED MODE. All certificate management functionality is disabled until the database connection is restored.");
             }
             catch (Exception exp)
             {
-                var msg = $"Certify Manager failed to start. Failed to load datastore {exp}";
+                var msg = $"Certify Manager data store initialization failed: {exp.Message}";
                 _serviceLog.Error(exp, msg);
 
                 AddSystemStatusItem(
                     SystemStatusCategories.SERVICE_CORE,
                     SystemStatusKeys.SERVICE_CORE_DATASTORE_INIT,
                     title: "Core Service Datastore Init",
-                    description: $"Data store failed to initialize. All functionality will be impaired or unavailable."
+                    description: $"Data store failed to initialize. Service running in DEGRADED MODE.",
+                    hasError: true
                 );
 
-                throw (new Exception(msg));
+                // Initialize in degraded mode instead of throwing
+                await InitDataStoreDegradedMode(exp.Message, null, null);
+
+                _serviceLog.Warning("Service started in DEGRADED MODE. All certificate management functionality is disabled until the database connection is restored.");
             }
 
             LoadCertificateAuthorities();
@@ -299,8 +328,11 @@ namespace Certify.Management
 
             await UpgradeSettings();
 
-            // Ensure default tag categories exist
-            await EnsureDefaultTagCategories();
+            // Ensure default tag categories exist (only when running as a hub)
+            if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
+            {
+                await EnsureDefaultTagCategories();
+            }
 
             _ = RefreshCachedLicenseCheck();
 

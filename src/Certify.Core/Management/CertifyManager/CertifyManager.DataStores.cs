@@ -7,6 +7,7 @@ using Certify.Core.Management.Access;
 using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Shared;
 
@@ -16,9 +17,26 @@ namespace Certify.Management
     {
         private object _dataStoreLocker = new object();
 
+        /// <summary>
+        /// Tracks the current data store connection status
+        /// </summary>
+        private DataStoreStatus _dataStoreStatus = new DataStoreStatus();
+
+        /// <summary>
+        /// Gets the current data store connection status
+        /// </summary>
+        public DataStoreStatus GetDataStoreStatus() => _dataStoreStatus;
+
+        /// <summary>
+        /// Returns true if the service is running in degraded mode (data store unavailable)
+        /// </summary>
+        public bool IsInDegradedMode => _dataStoreStatus.IsDegradedMode;
+
         private async Task InitDataStore()
         {
             var enableExtendedDataStores = true;
+
+            _dataStoreStatus = new DataStoreStatus();
 
             try
             {
@@ -27,6 +45,9 @@ namespace Certify.Management
 
                     var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
                     var dataStoreInfo = await GetDataStore(defaultStoreId);
+
+                    _dataStoreStatus.DataStoreId = defaultStoreId;
+                    _dataStoreStatus.DataStoreType = dataStoreInfo?.TypeId;
 
                     if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)" || defaultStoreId == "0")
                     {
@@ -37,6 +58,8 @@ namespace Certify.Management
                         // config store is a generic store for settings etc
                         _configStore = new SQLiteConfigurationStore("", _serviceLog);
                         _accessControl = new AccessControl(_serviceLog, _configStore);
+
+                        _dataStoreStatus.DataStoreType = "sqlite";
                     }
                     else
                     {
@@ -44,18 +67,18 @@ namespace Certify.Management
                         var managedItemStoreOK = await SelectManagedItemStore(defaultStoreId);
                         if (!managedItemStoreOK)
                         {
-                            var msg = $"FATAL: Managed Item Store {defaultStoreId} could not connect or load. Service will not start.";
+                            var msg = $"Managed Item Store {defaultStoreId} could not connect or load.";
                             _serviceLog.Error(msg);
-                            throw new Exception(msg);
+                            throw new DataStoreConnectionException(msg, defaultStoreId, dataStoreInfo?.TypeId);
                         }
 
                         var credentialStoreOK = await SelectCredentialsStore(defaultStoreId);
 
                         if (!credentialStoreOK)
                         {
-                            var msg = $"FATAL: Credential Store {defaultStoreId} could not connect or load. Service will not start.";
+                            var msg = $"Credential Store {defaultStoreId} could not connect or load.";
                             _serviceLog.Error(msg);
-                            throw new Exception(msg);
+                            throw new DataStoreConnectionException(msg, defaultStoreId, dataStoreInfo?.TypeId);
                         }
 
                         _serviceLog.Information($"Certify Manager is connected to data store {dataStoreInfo.Id} '{dataStoreInfo.Title}' [{dataStoreInfo.TypeId}]");
@@ -82,22 +105,141 @@ namespace Certify.Management
                 catch (Exception ex)
                 {
                     _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
-                    throw;
+                    throw new DataStoreConnectionException($"Data store write test failed: {ex.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
                 }
 
                 var isInitialised = await _itemManager.IsInitialised();
                 if (!isInitialised)
                 {
-                    var msg = $"FATAL: Managed Item Store is not initialised. Service will not start.";
+                    var msg = $"Managed Item Store is not initialised.";
                     _serviceLog?.Error(msg);
-                    throw new Exception(msg);
+                    throw new DataStoreConnectionException(msg, _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
                 }
+
+                // Data store connected successfully
+                _dataStoreStatus.IsConnected = true;
+                _dataStoreStatus.IsDegradedMode = false;
+                _dataStoreStatus.StatusMessage = "Data store connected and operational.";
+                _dataStoreStatus.LastSuccessfulConnection = DateTimeOffset.UtcNow;
+                _dataStoreStatus.ConsecutiveFailures = 0;
+            }
+            catch (DataStoreConnectionException dsEx)
+            {
+                HandleDataStoreFailure(dsEx.Message, dsEx.DataStoreId, dsEx.DataStoreType);
+                throw;
             }
             catch (Exception exp)
             {
                 var msg = $"Failed to open or upgrade the managed items data store. :: {exp}";
                 _serviceLog?.Error(msg);
-                throw new Exception(msg);
+                HandleDataStoreFailure(msg, _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+                throw new DataStoreConnectionException(msg, _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+            }
+        }
+
+        /// <summary>
+        /// Initialize the service in degraded mode when data store connection fails
+        /// </summary>
+        private async Task InitDataStoreDegradedMode(string errorMessage, string? dataStoreId, string? dataStoreType)
+        {
+            _serviceLog?.Warning("Initializing service in DEGRADED MODE due to data store failure.");
+
+            _dataStoreStatus = new DataStoreStatus
+            {
+                IsConnected = false,
+                IsDegradedMode = true,
+                StatusMessage = $"Service running in degraded mode. Data store unavailable: {errorMessage}",
+                DataStoreId = dataStoreId,
+                DataStoreType = dataStoreType,
+                LastErrorTime = DateTimeOffset.UtcNow,
+                LastErrorMessage = errorMessage,
+                ConsecutiveFailures = 1
+            };
+
+            // Set item manager and credentials manager to null - all operations will fail gracefully
+            _itemManager = null;
+            _credentialsManager = null;
+            _configStore = null;
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                title: "Data Store Status",
+                description: $"DEGRADED MODE: {errorMessage}",
+                hasError: true
+            );
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Handle data store connection failure
+        /// </summary>
+        private void HandleDataStoreFailure(string errorMessage, string? dataStoreId, string? dataStoreType)
+        {
+            _dataStoreStatus.IsConnected = false;
+            _dataStoreStatus.IsDegradedMode = true;
+            _dataStoreStatus.StatusMessage = $"Data store connection failed: {errorMessage}";
+            _dataStoreStatus.DataStoreId = dataStoreId;
+            _dataStoreStatus.DataStoreType = dataStoreType;
+            _dataStoreStatus.LastErrorTime = DateTimeOffset.UtcNow;
+            _dataStoreStatus.LastErrorMessage = errorMessage;
+            _dataStoreStatus.ConsecutiveFailures++;
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                title: "Data Store Status",
+                description: $"Connection failed: {errorMessage}",
+                hasError: true
+            );
+        }
+
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        public async Task<ActionResult> AttemptDataStoreReconnection()
+        {
+            if (!_dataStoreStatus.IsDegradedMode)
+            {
+                return new ActionResult("Data store is already connected.", true);
+            }
+
+            _serviceLog?.Information("Attempting to reconnect to data store...");
+
+            try
+            {
+                await InitDataStore();
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                    title: "Data Store Status",
+                    description: "Data store reconnected successfully.",
+                    hasError: false
+                );
+
+                return new ActionResult("Data store reconnected successfully.", true);
+            }
+            catch (Exception ex)
+            {
+                var msg = $"Failed to reconnect to data store: {ex.Message}";
+                _serviceLog?.Error(ex, msg);
+                return new ActionResult(msg, false);
+            }
+        }
+
+        /// <summary>
+        /// Check if data store operations are available
+        /// </summary>
+        private void EnsureDataStoreAvailable()
+        {
+            if (_dataStoreStatus.IsDegradedMode || _itemManager == null)
+            {
+                throw new InvalidOperationException(
+                    $"Data store is not available. Service is running in degraded mode. " +
+                    $"Error: {_dataStoreStatus.LastErrorMessage ?? "Unknown error"}. " +
+                    $"Please resolve the database connection issue and restart the service or attempt reconnection.");
             }
         }
 

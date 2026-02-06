@@ -37,8 +37,11 @@ namespace Certify.UI.Controls.Settings
             DataContext = EditModel;
 
             //load stored credentials list
-            await EditModel.MainViewModel.RefreshStoredCredentialsList();
-            CredentialsList.ItemsSource = FilteredStoredCredentials;
+            if (!EditModel.MainViewModel.IsInDegradedMode)
+            {
+                await EditModel.MainViewModel.RefreshStoredCredentialsList();
+                CredentialsList.ItemsSource = FilteredStoredCredentials;
+            }
         }
         private IEnumerable<StoredCredential> FilteredStoredCredentials => EditModel.MainViewModel.StoredCredentials.Where(c => c.ProviderType != StandardAuthTypes.STANDARD_ACME_ACCOUNT);
         private async void UserControl_Loaded(object sender, RoutedEventArgs e) => await LoadCurrentSettings();

@@ -421,6 +421,18 @@ namespace Certify.Client
             var result = await PostAsync($"system/datastores/test", dataStoreConnection, authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
+
+        public async Task<DataStoreStatus> GetDataStoreStatus(AuthContext authContext = null)
+        {
+            var result = await FetchAsync("system/datastores/status", authContext);
+            return JsonConvert.DeserializeObject<DataStoreStatus>(result);
+        }
+
+        public async Task<ActionResult> AttemptDataStoreReconnection(AuthContext authContext = null)
+        {
+            var result = await PostAsync("system/datastores/reconnect", null, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
         #endregion System
 
         #region Server

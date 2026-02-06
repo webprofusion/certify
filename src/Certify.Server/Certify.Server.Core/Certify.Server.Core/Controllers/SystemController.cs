@@ -3,6 +3,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
+using Certify.Models.Reporting;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -97,6 +98,20 @@ namespace Certify.Service.Controllers
 
         [HttpPost, Route("datastores/delete")]
         public async Task<List<ActionStep>> RemoveDataStore(string dataStoreId) => await _certifyManager.RemoveDataStoreConnection(dataStoreId);
+
+        /// <summary>
+        /// Get the current data store connection status
+        /// </summary>
+        /// <returns>Data store status including connection state and any error information</returns>
+        [HttpGet, Route("datastores/status")]
+        public DataStoreStatus GetDataStoreStatus() => _certifyManager.GetDataStoreStatus();
+
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        /// <returns>Result of the reconnection attempt</returns>
+        [HttpPost, Route("datastores/reconnect")]
+        public async Task<Models.Config.ActionResult> AttemptDataStoreReconnection() => await _certifyManager.AttemptDataStoreReconnection();
 
         [HttpPost, Route("hub/join")]
         public async Task<Models.Config.ActionResult> JoinManagementHub(HubJoiningClientSecret joiningClientSecret) => await _certifyManager.JoinManagementHub(joiningClientSecret.Url, new ClientSecret { ClientId = joiningClientSecret.ClientId, Secret = joiningClientSecret.Secret });

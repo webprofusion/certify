@@ -1,4 +1,6 @@
-﻿namespace Certify.Models.Reporting
+﻿using System;
+
+namespace Certify.Models.Reporting
 {
     public class SystemStatusCategories
     {
@@ -25,10 +27,62 @@
         public const string SERVICE_CORE_SVCCONFIG = "service.core.svcconfig";
         public const string SERVICE_CORE_LOADPLUGINS = "service.core.loadplugins";
         public const string SERVICE_CORE_DATASTORE_INIT = "service.core.datastore.init";
+        public const string SERVICE_CORE_DATASTORE_STATUS = "service.core.datastore.status";
         public const string SERVICE_CORE_CA_CUSTOM_LOAD = "service.core.ca.custom.load";
         public const string SERVICE_CORE_HUB_JOINING_KEY = "service.core.hub.joining.key";
         public const string SERVICE_CORE_HUB_JOINING_AUTH = "service.core.hub.joining.auth";
         public const string SERVICE_CORE_HUB_CONNECTION = "service.core.hub.connection";
 
+    }
+
+    /// <summary>
+    /// Represents the current status of the data store connection
+    /// </summary>
+    public class DataStoreStatus
+    {
+        /// <summary>
+        /// True if the data store is connected and operational
+        /// </summary>
+        public bool IsConnected { get; set; }
+
+        /// <summary>
+        /// True if the service is running in degraded mode due to data store issues
+        /// </summary>
+        public bool IsDegradedMode { get; set; }
+
+        /// <summary>
+        /// Description of the current status or error
+        /// </summary>
+        public string StatusMessage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The ID of the data store connection being used
+        /// </summary>
+        public string? DataStoreId { get; set; }
+
+        /// <summary>
+        /// The type of data store (e.g., sqlite, postgres, sqlserver)
+        /// </summary>
+        public string? DataStoreType { get; set; }
+
+        /// <summary>
+        /// When the last successful connection was made
+        /// </summary>
+        public DateTimeOffset? LastSuccessfulConnection { get; set; }
+
+        /// <summary>
+        /// When the last error occurred
+        /// </summary>
+        public DateTimeOffset? LastErrorTime { get; set; }
+
+        /// <summary>
+        /// The error message from the last failure
+        /// </summary>
+        public string? LastErrorMessage { get; set; }
+
+        /// <summary>
+        /// Number of consecutive failures
+        /// </summary>
+        public int ConsecutiveFailures { get; set; }
     }
 }
