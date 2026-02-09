@@ -23,6 +23,65 @@ namespace Certify.Core.Tests.DataStores
             await DataStoreTestContainers.InitializeAsync();
         }
 
+        [TestMethod, Description("Ensure multi-tenant isolation for credentials")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestCredentialStoreMultiTenancy(string storeType)
+        {
+            var tenantA = $"tenantA_{Guid.NewGuid():N}";
+            var tenantB = $"tenantB_{Guid.NewGuid():N}";
+
+            var storeA = GetCredentialManager(storeType, tenantA);
+            var storeB = GetCredentialManager(storeType, tenantB);
+
+            var credA = new StoredCredential
+            {
+                ProviderType = "DNS01.API.Route53",
+                Title = "Tenant A Credential",
+                StorageKey = Guid.NewGuid().ToString(),
+                Secret = "SecretA"
+            };
+
+            var credB = new StoredCredential
+            {
+                ProviderType = "DNS01.API.Route53",
+                Title = "Tenant B Credential",
+                StorageKey = Guid.NewGuid().ToString(),
+                Secret = "SecretB"
+            };
+
+            try
+            {
+                await storeA.Update(credA);
+                await storeB.Update(credB);
+
+                var listA = await storeA.GetCredentials();
+                var listB = await storeB.GetCredentials();
+
+                Assert.IsTrue(listA.Any(c => c.StorageKey == credA.StorageKey), $"[{storeType}] Tenant A should see its own credential");
+                Assert.IsFalse(listA.Any(c => c.StorageKey == credB.StorageKey), $"[{storeType}] Tenant A should not see tenant B credential");
+
+                Assert.IsTrue(listB.Any(c => c.StorageKey == credB.StorageKey), $"[{storeType}] Tenant B should see its own credential");
+                Assert.IsFalse(listB.Any(c => c.StorageKey == credA.StorageKey), $"[{storeType}] Tenant B should not see tenant A credential");
+
+                var unlockedA = await storeA.GetUnlockedCredential(credA.StorageKey);
+                var unlockedB = await storeB.GetUnlockedCredential(credB.StorageKey);
+
+                Assert.AreEqual("SecretA", unlockedA, $"[{storeType}] Tenant A should decrypt its own credential");
+                Assert.AreEqual("SecretB", unlockedB, $"[{storeType}] Tenant B should decrypt its own credential");
+
+                var crossA = await storeA.GetUnlockedCredential(credB.StorageKey);
+                var crossB = await storeB.GetUnlockedCredential(credA.StorageKey);
+
+                Assert.IsNull(crossA, $"[{storeType}] Tenant A should not access tenant B credential");
+                Assert.IsNull(crossB, $"[{storeType}] Tenant B should not access tenant A credential");
+            }
+            finally
+            {
+                await storeA.Delete(itemStore: null, credA.StorageKey);
+                await storeB.Delete(itemStore: null, credB.StorageKey);
+            }
+        }
+
         [ClassCleanup]
         public static async Task ClassCleanup()
         {
@@ -37,6 +96,18 @@ namespace Certify.Core.Tests.DataStores
                 {
                     new object[] { "postgres" },
                     new object[] { "sqlite" },
+                    new object[] { "sqlserver" }
+                };
+            }
+        }
+
+        public static IEnumerable<object[]> ExternalTestDataStores
+        {
+            get
+            {
+                return new[]
+                {
+                    new object[] { "postgres" },
                     new object[] { "sqlserver" }
                 };
             }
@@ -65,6 +136,24 @@ namespace Certify.Core.Tests.DataStores
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
+        }
+
+        private ICredentialsManager GetCredentialManager(string storeType, string instanceId)
+        {
+            if (storeType == "sqlite")
+            {
+                return new SQLiteCredentialStore(storageSubfolder: TEST_PATH);
+            }
+            else if (storeType == "postgres")
+            {
+                return new PostgresCredentialStore(DataStoreTestContainers.PostgresConnectionString, instanceId: instanceId);
+            }
+            else if (storeType == "sqlserver")
+            {
+                return new SQLServerCredentialStore(DataStoreTestContainers.SqlServerConnectionString, instanceId: instanceId);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
         }
 
         [TestMethod]

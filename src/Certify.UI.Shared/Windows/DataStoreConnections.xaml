@@ -63,7 +63,21 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
 
-                                    <DockPanel Margin="4">
+                                    <Border Margin="4" Padding="4">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="BorderBrush" Value="Transparent" />
+                                                <Setter Property="BorderThickness" Value="1" />
+                                                <Setter Property="CornerRadius" Value="3" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent4}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <DockPanel>
                                         <Button
                                             Height="28"
                                             Margin="0,0,8,0"
@@ -110,7 +124,8 @@
                                             </StackPanel>
 
                                         </StackPanel>
-                                    </DockPanel>
+                                        </DockPanel>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

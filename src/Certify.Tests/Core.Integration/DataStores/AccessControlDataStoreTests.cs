@@ -47,6 +47,18 @@ namespace Certify.Core.Tests.DataStores
             }
         }
 
+        public static IEnumerable<object[]> ExternalTestDataStores
+        {
+            get
+            {
+                return new[]
+                {
+                    new object[] { "postgres" },
+                    new object[] { "sqlserver" }
+                };
+            }
+        }
+
         private IConfigurationStore GetStore(string storeType = null)
         {
             if (storeType == null)
@@ -70,6 +82,24 @@ namespace Certify.Core.Tests.DataStores
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
+        }
+
+        private IConfigurationStore GetStore(string storeType, string instanceId)
+        {
+            if (storeType == "sqlite")
+            {
+                return new SQLiteConfigurationStore(storageSubfolder: TEST_PATH);
+            }
+            else if (storeType == "postgres")
+            {
+                return new PostgresConfigurationStore(DataStoreTestContainers.PostgresConnectionString, instanceId: instanceId);
+            }
+            else if (storeType == "sqlserver")
+            {
+                return new SQLServerConfigurationStore(DataStoreTestContainers.SqlServerConnectionString, instanceId: instanceId);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
         }
 
         [TestMethod]
@@ -98,6 +128,53 @@ namespace Certify.Core.Tests.DataStores
             {
                 // cleanup
                 await store.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), sp.Id);
+            }
+        }
+
+        [TestMethod, Description("Test multi-tenant isolation for configuration items")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestConfigurationStoreMultiTenancy(string storeType)
+        {
+            var tenantA = $"tenantA_{Guid.NewGuid():N}";
+            var tenantB = $"tenantB_{Guid.NewGuid():N}";
+
+            var storeA = GetStore(storeType, tenantA);
+            var storeB = GetStore(storeType, tenantB);
+
+            var spA = new SecurityPrincipal
+            {
+                Email = "tenantA@test.com",
+                PrincipalType = SecurityPrincipalType.User,
+                Username = "tenantA",
+                Provider = StandardIdentityProviders.INTERNAL
+            };
+
+            var spB = new SecurityPrincipal
+            {
+                Email = "tenantB@test.com",
+                PrincipalType = SecurityPrincipalType.User,
+                Username = "tenantB",
+                Provider = StandardIdentityProviders.INTERNAL
+            };
+
+            try
+            {
+                await storeA.Add(nameof(SecurityPrincipal), spA);
+                await storeB.Add(nameof(SecurityPrincipal), spB);
+
+                var listA = await storeA.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
+                var listB = await storeB.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
+
+                Assert.IsTrue(listA.Any(s => s.Id == spA.Id), $"[{storeType}] Tenant A should see its own item");
+                Assert.IsFalse(listA.Any(s => s.Id == spB.Id), $"[{storeType}] Tenant A should not see tenant B item");
+
+                Assert.IsTrue(listB.Any(s => s.Id == spB.Id), $"[{storeType}] Tenant B should see its own item");
+                Assert.IsFalse(listB.Any(s => s.Id == spA.Id), $"[{storeType}] Tenant B should not see tenant A item");
+            }
+            finally
+            {
+                await storeA.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), spA.Id);
+                await storeB.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), spB.Id);
             }
         }
 

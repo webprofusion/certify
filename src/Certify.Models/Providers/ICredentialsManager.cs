@@ -9,7 +9,7 @@ namespace Certify.Management
 {
     public interface ICredentialsManager
     {
-        bool Init(string connectionString, ILog log);
+        bool Init(string connectionString, ILog log, string instanceId = null);
         Task<bool> IsInitialised();
 
         Task<ActionResult> Delete(IManagedItemStore itemStore, string storageKey);

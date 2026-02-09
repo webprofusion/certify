@@ -48,6 +48,43 @@ CREATE TABLE manageditem (
             await DataStoreTestContainers.InitializeAsync();
         }
 
+        [TestMethod, Description("Ensure multi-tenant isolation for managed items")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestManagedItemMultiTenancy(string storeType = null)
+        {
+            var tenantA = $"tenantA_{Guid.NewGuid():N}";
+            var tenantB = $"tenantB_{Guid.NewGuid():N}";
+
+            var storeA = GetManagedItemStore(storeType ?? _storeType, tenantA);
+            var storeB = GetManagedItemStore(storeType ?? _storeType, tenantB);
+
+            var itemA = BuildTestManagedCertificate();
+            itemA.Name = $"TenantA_{Guid.NewGuid():N}";
+
+            var itemB = BuildTestManagedCertificate();
+            itemB.Name = $"TenantB_{Guid.NewGuid():N}";
+
+            try
+            {
+                await storeA.Update(itemA);
+                await storeB.Update(itemB);
+
+                var listA = await storeA.Find(new ManagedCertificateFilter { Keyword = "Tenant" });
+                var listB = await storeB.Find(new ManagedCertificateFilter { Keyword = "Tenant" });
+
+                Assert.IsTrue(listA.Any(i => i.Id == itemA.Id), $"[{storeType}] Tenant A should see its own item");
+                Assert.IsFalse(listA.Any(i => i.Id == itemB.Id), $"[{storeType}] Tenant A should not see tenant B item");
+
+                Assert.IsTrue(listB.Any(i => i.Id == itemB.Id), $"[{storeType}] Tenant B should see its own item");
+                Assert.IsFalse(listB.Any(i => i.Id == itemA.Id), $"[{storeType}] Tenant B should not see tenant A item");
+            }
+            finally
+            {
+                await storeA.Delete(itemA);
+                await storeB.Delete(itemB);
+            }
+        }
+
         [ClassCleanup]
         public static async Task ClassCleanup()
         {
@@ -74,6 +111,18 @@ CREATE TABLE manageditem (
                 {
                     new object[] { "postgres" },
                     new object[] { "sqlite" },
+                    new object[] { "sqlserver" }
+                };
+            }
+        }
+
+        public static IEnumerable<object[]> ExternalTestDataStores
+        {
+            get
+            {
+                return new[]
+                {
+                    new object[] { "postgres" },
                     new object[] { "sqlserver" }
                 };
             }
@@ -106,6 +155,24 @@ CREATE TABLE manageditem (
             {
                 throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
             }
+        }
+
+        private IManagedItemStore GetManagedItemStore(string storeType, string instanceId)
+        {
+            if (storeType == "sqlite")
+            {
+                return new SQLiteManagedItemStore(TEST_PATH);
+            }
+            else if (storeType == "postgres")
+            {
+                return new PostgresManagedItemStore(DataStoreTestContainers.PostgresConnectionString, instanceId: instanceId);
+            }
+            else if (storeType == "sqlserver")
+            {
+                return new SQLServerManagedItemStore(DataStoreTestContainers.SqlServerConnectionString, instanceId: instanceId);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(storeType), "Unsupported store type " + storeType);
         }
 
         private static async Task InitializeLegacyPostgresSchema(string connectionString)

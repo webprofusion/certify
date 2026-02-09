@@ -18,14 +18,14 @@ namespace Certify.Core.Tests
         {
 
             var itemManager = new SQLiteManagedItemStore();
-            itemManager.Init(string.Empty, null);
+            itemManager.Init(string.Empty, null, performBackup: false);
             return itemManager;
         }
 
         private ICredentialsManager GetCredentialsStore()
         {
             var itemManager = new SQLiteCredentialStore();
-            itemManager.Init(string.Empty, null);
+            itemManager.Init(string.Empty, null, instanceId: null);
             return itemManager;
         }
 

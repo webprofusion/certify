@@ -7,7 +7,7 @@ namespace Certify.Providers
 {
     public interface IManagedItemStore
     {
-        bool Init(string connectionString, ILog log);
+        bool Init(string connectionString, ILog log, string instanceId = null);
         Task DeleteAll();
         Task StoreAll(IEnumerable<ManagedCertificate> list);
         Task Delete(ManagedCertificate site);

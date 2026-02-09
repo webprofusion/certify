@@ -69,6 +69,35 @@ namespace Certify.Tests.Core.Unit.Tests
 
             return r;
         }
+
+        public Task<bool> IsInitialised()
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<List<SerializedConfigurationItem>> GetAllSerializedItems()
+        {
+            var items = _store.Values.Select(item => new SerializedConfigurationItem
+            {
+                Id = item.Id,
+                ItemType = item.ItemType,
+                Config = JsonConvert.SerializeObject(item)
+            }).ToList();
+
+            return Task.FromResult(items);
+        }
+
+        public Task UpsertSerializedItem(SerializedConfigurationItem item)
+        {
+            var configItem = JsonConvert.DeserializeObject<ConfigurationStoreItem>(item.Config);
+            if (configItem != null)
+            {
+                configItem.ItemType = item.ItemType;
+                _store.AddOrUpdate(configItem.Id, configItem, (_, __) => configItem);
+            }
+
+            return Task.CompletedTask;
+        }
     }
 
     public class TestAssignedRoles

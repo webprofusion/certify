@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Datastore.SQLite;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Providers;
 using Certify.Shared;
@@ -77,6 +79,14 @@ namespace Certify.Management
                         if (!credentialStoreOK)
                         {
                             var msg = $"Credential Store {defaultStoreId} could not connect or load.";
+                            _serviceLog.Error(msg);
+                            throw new DataStoreConnectionException(msg, defaultStoreId, dataStoreInfo?.TypeId);
+                        }
+
+                        var configStoreOK = await SelectConfigurationStore(defaultStoreId);
+                        if (!configStoreOK)
+                        {
+                            var msg = $"Configuration Store {defaultStoreId} could not connect or load.";
                             _serviceLog.Error(msg);
                             throw new DataStoreConnectionException(msg, defaultStoreId, dataStoreInfo?.TypeId);
                         }
@@ -262,7 +272,7 @@ namespace Certify.Management
                             }
                             else
                             {
-                                pr.Init(dataStore.ConnectionConfig, _serviceLog);
+                                pr.Init(dataStore.ConnectionConfig, _serviceLog, CoreAppSettings.Current.InstanceId);
                             }
 
                             if (!await pr.IsInitialised())
@@ -314,7 +324,7 @@ namespace Certify.Management
                             }
                             else
                             {
-                                pr.Init(dataStore.ConnectionConfig, _serviceLog);
+                                pr.Init(dataStore.ConnectionConfig, _serviceLog, CoreAppSettings.Current.InstanceId);
                             }
 
                             if (!await pr.IsInitialised())
@@ -361,6 +371,83 @@ namespace Certify.Management
             }
         }
 
+        private IConfigurationStore CreateExternalConfigurationStore(string typeId, string connectionConfig, string instanceId)
+        {
+            var assemblies = new HashSet<Assembly>();
+
+            if (_pluginManager?.ManagedItemStoreProviders != null)
+            {
+                foreach (var provider in _pluginManager.ManagedItemStoreProviders)
+                {
+                    assemblies.Add(provider.GetType().Assembly);
+                }
+            }
+
+            if (_pluginManager?.CredentialStoreProviders != null)
+            {
+                foreach (var provider in _pluginManager.CredentialStoreProviders)
+                {
+                    assemblies.Add(provider.GetType().Assembly);
+                }
+            }
+
+            foreach (var assembly in assemblies)
+            {
+                IConfigurationStore store = TryCreateConfigurationStoreFromAssembly(assembly, typeId, connectionConfig, instanceId);
+                if (store != null)
+                {
+                    return store;
+                }
+            }
+
+            return null;
+        }
+
+        private IConfigurationStore TryCreateConfigurationStoreFromAssembly(Assembly assembly, string typeId, string connectionConfig, string instanceId)
+        {
+            try
+            {
+                var candidates = assembly.GetTypes()
+                    .Where(t => typeof(IConfigurationStore).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass);
+
+                foreach (var candidate in candidates)
+                {
+                    var definitionProperty = candidate.GetProperty("Definition", BindingFlags.Public | BindingFlags.Static);
+                    if (definitionProperty == null)
+                    {
+                        continue;
+                    }
+
+                    if (definitionProperty.GetValue(null) is ProviderDefinition definition && definition.ProviderCategoryId == typeId)
+                    {
+                        var constructor = candidate.GetConstructor(new[] { typeof(string), typeof(ILog), typeof(string) });
+                        if (constructor != null)
+                        {
+                            return (IConfigurationStore)constructor.Invoke(new object[] { connectionConfig, _serviceLog, instanceId });
+                        }
+
+                        var instance = (IConfigurationStore)Activator.CreateInstance(candidate);
+                        if (instance != null)
+                        {
+                            var initMethod = candidate.GetMethod("Init", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string), typeof(ILog), typeof(string) }, null);
+                            initMethod?.Invoke(instance, new object[] { connectionConfig, _serviceLog, instanceId });
+                            return instance;
+                        }
+                    }
+                }
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                _serviceLog?.Error(ex, $"Failed to inspect configuration store types in assembly {assembly.FullName}.");
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, $"Failed to create configuration store from assembly {assembly.FullName}.");
+            }
+
+            return null;
+        }
+
         public async Task<bool> SelectCredentialsStore(string dataStoreId)
         {
             var dataStore = await GetDataStore(dataStoreId);
@@ -375,6 +462,42 @@ namespace Certify.Management
                 _credentialsManager = provider;
                 return true;
             }
+        }
+
+        public async Task<bool> SelectConfigurationStore(string dataStoreId)
+        {
+            var dataStore = await GetDataStore(dataStoreId);
+
+            if (dataStore == null)
+            {
+                _serviceLog.Error($"Could not match data store connection information to the specified store id: {dataStoreId}");
+                return false;
+            }
+
+            if (dataStore.TypeId == "sqlite")
+            {
+                _configStore = new SQLiteConfigurationStore("", _serviceLog);
+            }
+            else
+            {
+                _configStore = CreateExternalConfigurationStore(dataStore.TypeId, dataStore.ConnectionConfig, CoreAppSettings.Current.InstanceId);
+            }
+
+            if (_configStore == null)
+            {
+                _serviceLog.Error($"Unsupported configuration store type {dataStore.TypeId}");
+                return false;
+            }
+
+            _accessControl = new AccessControl(_serviceLog, _configStore);
+
+            if (!await _configStore.IsInitialised())
+            {
+                _serviceLog.Error($"Configuration store failed to initialise {dataStore.Id} : {dataStore.Title}");
+                return false;
+            }
+
+            return true;
         }
 
         public async Task<DataStoreConnection> GetDataStore(string dataStoreId)
@@ -430,6 +553,8 @@ namespace Certify.Management
             var destCredManager = await GetCredentialManagerProvider(await GetDataStore(destId));
             var sourceItemManager = await GetManagedItemStoreProvider(await GetDataStore(sourceId));
             var destItemManager = await GetManagedItemStoreProvider(await GetDataStore(destId));
+            var sourceConfigStore = await GetConfigurationStoreProvider(await GetDataStore(sourceId));
+            var destConfigStore = await GetConfigurationStoreProvider(await GetDataStore(destId));
 
             if (!await sourceCredManager.IsInitialised())
             {
@@ -452,6 +577,18 @@ namespace Certify.Management
             if (!await destItemManager.IsInitialised())
             {
                 results.Add(new ActionStep { HasError = true, Title = "Destination Managed Item Store", Description = "Failed to initialise the target managed item store." });
+                return results;
+            }
+
+            if (sourceConfigStore == null || !await sourceConfigStore.IsInitialised())
+            {
+                results.Add(new ActionStep { HasError = true, Title = "Source Configuration Store", Description = "Failed to initialise the configuration store source." });
+                return results;
+            }
+
+            if (destConfigStore == null || !await destConfigStore.IsInitialised())
+            {
+                results.Add(new ActionStep { HasError = true, Title = "Destination Configuration Store", Description = "Failed to initialise the target configuration store." });
                 return results;
             }
 
@@ -478,7 +615,31 @@ namespace Certify.Management
             await destItemManager.StoreAll(allItems);
 
             results.Add(new ActionStep { Title = "Copied managed item from source to target", Description = $"{allItems.Count} managed items copied to target." });
+
+            // copy configuration items
+            var configItems = await sourceConfigStore.GetAllSerializedItems();
+            foreach (var configItem in configItems)
+            {
+                await destConfigStore.UpsertSerializedItem(configItem);
+            }
+
+            results.Add(new ActionStep { Title = "Copied configuration items from source to target", Description = $"{configItems.Count} configuration items copied to target." });
             return results;
+        }
+
+        private async Task<IConfigurationStore> GetConfigurationStoreProvider(DataStoreConnection dataStore)
+        {
+            if (dataStore == null)
+            {
+                return null;
+            }
+
+            if (dataStore.TypeId == "sqlite")
+            {
+                return new SQLiteConfigurationStore("", _serviceLog);
+            }
+
+            return CreateExternalConfigurationStore(dataStore.TypeId, dataStore.ConnectionConfig, CoreAppSettings.Current.InstanceId);
         }
 
         public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStore)
@@ -487,7 +648,7 @@ namespace Certify.Management
             var results = new List<ActionStep>();
 
             var dataStoreAvailable = false;
-
+            var errorDetail = "";
             try
             {
                 var itemProvider = await GetManagedItemStoreProvider(dataStore);
@@ -498,9 +659,10 @@ namespace Certify.Management
                     dataStoreAvailable = true;
                 }
             }
-            catch
+            catch (Exception exp)
             {
                 dataStoreAvailable = false;
+                errorDetail = exp.Message;
             }
 
             if (!dataStoreAvailable)
@@ -508,7 +670,7 @@ namespace Certify.Management
                 results.Add(new ActionStep
                 {
                     Title = "Data Store Init Failed",
-                    Description = "The data store failed to connect. Verify the connection string is correct and the required connectivity, schema and permissions are present.",
+                    Description = $"The data store failed to connect. Verify the connection string is correct and the required connectivity, schema and permissions are present. [{errorDetail}]",
                     HasError = true
                 });
             }

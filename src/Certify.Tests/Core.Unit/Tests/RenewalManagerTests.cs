@@ -22,7 +22,7 @@ namespace Certify.Tests.Core.Unit.Tests
         private readonly object _lock = new object();
         private bool _isInitialised = false;
 
-        public bool Init(string connectionString, ILog log)
+        public bool Init(string connectionString, ILog log, string instanceId = null)
         {
             _isInitialised = true;
             return true;

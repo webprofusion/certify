@@ -1,4 +1,4 @@
-namespace Certify.Shared
+﻿namespace Certify.Shared
 {
     public class DataStoreConnection
     {
@@ -6,5 +6,6 @@ namespace Certify.Shared
         public string Title { get; set; } = string.Empty;
         public string TypeId { get; set; } = string.Empty;
         public string ConnectionConfig { get; set; } = string.Empty;
+        public bool IsDefault { get; set; }
     }
 }

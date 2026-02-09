@@ -13,22 +13,24 @@ namespace Certify.Core.Tests.DataStores
         private static int _referenceCount;
         private static bool _initialized;
 
-        private const string PostgresSchemaSql = "CREATE TABLE IF NOT EXISTS manageditem (id TEXT NOT NULL PRIMARY KEY, itemtype TEXT NOT NULL, config JSONB NOT NULL, itemvalue TEXT NULL);";
+        private const string PostgresSchemaSql = "CREATE TABLE IF NOT EXISTS manageditem (id TEXT NOT NULL PRIMARY KEY, itemtype TEXT NOT NULL, instanceid TEXT NOT NULL DEFAULT '', config JSONB NOT NULL, itemvalue TEXT NULL);";
         private const string SqlServerSchemaSql = @"IF OBJECT_ID('manageditem', 'U') IS NULL
 BEGIN
     CREATE TABLE manageditem (
         id NVARCHAR(64) NOT NULL PRIMARY KEY,
         itemtype NVARCHAR(100) NOT NULL,
+        instanceid NVARCHAR(64) NOT NULL DEFAULT '',
         config NVARCHAR(MAX) NOT NULL,
         itemvalue NVARCHAR(MAX) NULL
     );
 END";
 
-        private const string PostgresCredentialSchemaSql = "CREATE TABLE IF NOT EXISTS credential (id TEXT NOT NULL PRIMARY KEY, config JSONB NOT NULL, protectedvalue TEXT NULL);";
+        private const string PostgresCredentialSchemaSql = "CREATE TABLE IF NOT EXISTS credential (id TEXT NOT NULL PRIMARY KEY, instanceid TEXT NOT NULL DEFAULT '', config JSONB NOT NULL, protectedvalue TEXT NULL);";
         private const string SqlServerCredentialSchemaSql = @"IF OBJECT_ID('credential', 'U') IS NULL
 BEGIN
     CREATE TABLE credential (
         id NVARCHAR(64) NOT NULL PRIMARY KEY,
+        instanceid NVARCHAR(64) NOT NULL DEFAULT '',
         config NVARCHAR(MAX) NOT NULL,
         protectedvalue NVARCHAR(MAX) NULL
     );

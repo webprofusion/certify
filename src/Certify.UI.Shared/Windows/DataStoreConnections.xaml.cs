@@ -55,6 +55,11 @@ namespace Certify.UI.Windows
                 _model.DefaultStore = _model.Connections.FirstOrDefault(c => c.Id == AppViewModel.Current.Preferences.ConfigDataStoreConnectionId);
             }
 
+            foreach (var store in _model.Connections)
+            {
+                store.IsDefault = _model.DefaultStore != null && store.Id == _model.DefaultStore.Id;
+            }
+
             ConnectionList.ItemsSource = dataStores;
             SourceList.ItemsSource = dataStores;
             TargetList.ItemsSource = dataStores;

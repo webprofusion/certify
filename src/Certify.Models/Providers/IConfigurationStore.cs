@@ -13,6 +13,9 @@ namespace Certify.Providers
         Task Update<T>(string itemType, T item);
         Task<bool> Delete<T>(string itemType, string id);
         Task<List<T>> GetItems<T>(string itemType);
+        Task<bool> IsInitialised();
+        Task<List<SerializedConfigurationItem>> GetAllSerializedItems();
+        Task UpsertSerializedItem(SerializedConfigurationItem item);
     }
 
     /// <summary>
