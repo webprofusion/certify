@@ -25,17 +25,6 @@ BEGIN
     );
 END";
 
-        private const string PostgresCredentialSchemaSql = "CREATE TABLE IF NOT EXISTS credential (id TEXT NOT NULL PRIMARY KEY, instanceid TEXT NOT NULL DEFAULT '', config JSONB NOT NULL, protectedvalue TEXT NULL);";
-        private const string SqlServerCredentialSchemaSql = @"IF OBJECT_ID('credential', 'U') IS NULL
-BEGIN
-    CREATE TABLE credential (
-        id NVARCHAR(64) NOT NULL PRIMARY KEY,
-        instanceid NVARCHAR(64) NOT NULL DEFAULT '',
-        config NVARCHAR(MAX) NOT NULL,
-        protectedvalue NVARCHAR(MAX) NULL
-    );
-END";
-
         public static PostgreSqlContainer PostgresContainer { get; private set; }
         public static MsSqlContainer SqlServerContainer { get; private set; }
 
@@ -120,8 +109,6 @@ END";
             await conn.OpenAsync();
             await using var cmd = new NpgsqlCommand(PostgresSchemaSql, conn);
             await cmd.ExecuteNonQueryAsync();
-            await using var credCmd = new NpgsqlCommand(PostgresCredentialSchemaSql, conn);
-            await credCmd.ExecuteNonQueryAsync();
         }
 
         private static async Task EnsureSqlServerSchema(string connectionString)
@@ -130,8 +117,6 @@ END";
             await conn.OpenAsync();
             await using var cmd = new SqlCommand(SqlServerSchemaSql, conn);
             await cmd.ExecuteNonQueryAsync();
-            await using var credCmd = new SqlCommand(SqlServerCredentialSchemaSql, conn);
-            await credCmd.ExecuteNonQueryAsync();
         }
     }
 }

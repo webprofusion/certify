@@ -26,6 +26,7 @@ namespace Certify.Providers
         public string Id { get; set; }
         public string ItemType { get; set; }
         public string Config { get; set; }
+        public string ItemValue { get; set; }
     }
 
     /// <summary>

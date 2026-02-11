@@ -545,85 +545,61 @@ namespace Certify.Management
         public async Task<List<ActionStep>> CopyDateStoreToTarget(string sourceId, string destId)
         {
 
-            // connect to source and dest, copy data to target
+            // connect to source and dest, copy all data to target via the configuration store
+            // which now contains all item types (managed certificates, credentials, and other configuration items)
             var results = new List<ActionStep>();
 
-            // copy credentials TODO: may require re-encryption if being decrypted by a different machine
-            var sourceCredManager = await GetCredentialManagerProvider(await GetDataStore(sourceId));
-            var destCredManager = await GetCredentialManagerProvider(await GetDataStore(destId));
-            var sourceItemManager = await GetManagedItemStoreProvider(await GetDataStore(sourceId));
-            var destItemManager = await GetManagedItemStoreProvider(await GetDataStore(destId));
             var sourceConfigStore = await GetConfigurationStoreProvider(await GetDataStore(sourceId));
             var destConfigStore = await GetConfigurationStoreProvider(await GetDataStore(destId));
 
-            if (!await sourceCredManager.IsInitialised())
-            {
-                results.Add(new ActionStep { HasError = true, Title = "Source Credentials Store", Description = "Failed to initialise the credential source." });
-                return results;
-            }
-
-            if (!await destCredManager.IsInitialised())
-            {
-                results.Add(new ActionStep { HasError = true, Title = "Destination Credentials Store", Description = "Failed to initialise the target credential store." });
-                return results;
-            }
-
-            if (!await sourceItemManager.IsInitialised())
-            {
-                results.Add(new ActionStep { HasError = true, Title = "Source Managed Item Store", Description = "Failed to initialise the managed item source." });
-                return results;
-            }
-
-            if (!await destItemManager.IsInitialised())
-            {
-                results.Add(new ActionStep { HasError = true, Title = "Destination Managed Item Store", Description = "Failed to initialise the target managed item store." });
-                return results;
-            }
-
             if (sourceConfigStore == null || !await sourceConfigStore.IsInitialised())
             {
-                results.Add(new ActionStep { HasError = true, Title = "Source Configuration Store", Description = "Failed to initialise the configuration store source." });
+                results.Add(new ActionStep { HasError = true, Title = "Source Data Store", Description = "Failed to initialise the source data store." });
                 return results;
             }
 
             if (destConfigStore == null || !await destConfigStore.IsInitialised())
             {
-                results.Add(new ActionStep { HasError = true, Title = "Destination Configuration Store", Description = "Failed to initialise the target configuration store." });
+                results.Add(new ActionStep { HasError = true, Title = "Destination Data Store", Description = "Failed to initialise the target data store." });
                 return results;
             }
 
-            // copy credentials
-            var allCredentials = await sourceCredManager.GetCredentials();
-            foreach (var cred in allCredentials)
+            // copy all items from source to destination (managed certificates, credentials with protected secrets, and configuration items)
+            var allItems = await sourceConfigStore.GetAllSerializedItems();
+
+            var managedCertCount = 0;
+            var credentialCount = 0;
+            var configItemCount = 0;
+
+            foreach (var item in allItems)
             {
                 try
                 {
-                    var unprotected = await sourceCredManager.GetUnlockedCredential(cred.StorageKey);
-                    cred.Secret = unprotected;
-                    await destCredManager.Update(cred);
+                    await destConfigStore.UpsertSerializedItem(item);
+
+                    if (item.ItemType == "managedcertificate")
+                    {
+                        managedCertCount++;
+                    }
+                    else if (item.ItemType == "credential")
+                    {
+                        credentialCount++;
+                    }
+                    else
+                    {
+                        configItemCount++;
+                    }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    results.Add(new ActionStep { HasWarning = true, Description = $"Could not decrypt credential {cred.Title}. Copy will continue." });
+                    results.Add(new ActionStep { HasWarning = true, Description = $"Could not copy item {item.Id} [{item.ItemType}]: {ex.Message}" });
                 }
             }
 
-            results.Add(new ActionStep { Title = "Copied credentials from source to target", Description = $"{allCredentials.Count} credentials copied to target." });
+            results.Add(new ActionStep { Title = "Copied managed certificates", Description = $"{managedCertCount} managed certificates copied to target." });
+            results.Add(new ActionStep { Title = "Copied credentials", Description = $"{credentialCount} credentials copied to target." });
+            results.Add(new ActionStep { Title = "Copied configuration items", Description = $"{configItemCount} configuration items copied to target." });
 
-            // copy managed items
-            var allItems = await sourceItemManager.Find(new ManagedCertificateFilter { });
-            await destItemManager.StoreAll(allItems);
-
-            results.Add(new ActionStep { Title = "Copied managed item from source to target", Description = $"{allItems.Count} managed items copied to target." });
-
-            // copy configuration items
-            var configItems = await sourceConfigStore.GetAllSerializedItems();
-            foreach (var configItem in configItems)
-            {
-                await destConfigStore.UpsertSerializedItem(configItem);
-            }
-
-            results.Add(new ActionStep { Title = "Copied configuration items from source to target", Description = $"{configItems.Count} configuration items copied to target." });
             return results;
         }
 
