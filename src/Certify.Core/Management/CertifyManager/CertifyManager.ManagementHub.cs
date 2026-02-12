@@ -944,6 +944,8 @@ namespace Certify.Management
                 if (configVal != null)
                 {
                     _serverConfig.LogLevel = configVal.LogLevel;
+                    _serverConfig.PowershellExecutionPolicy = configVal.PowershellExecutionPolicy;
+
                     _serverConfig.ManagementServerHubAPI = configVal.ManagementServerHubAPI;
                     _serverConfig.ManagementServerHubEndpoint = configVal.ManagementServerHubEndpoint;
                     _serverConfig.UseHTTPS = configVal.UseHTTPS;
