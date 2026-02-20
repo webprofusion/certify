@@ -27,6 +27,7 @@ Windows ACME Certificate Manager, powered by [Let's Encrypt](https://letsencrypt
 	- Built-in Http Challenge Server for easier configuration of challenge responses
 	- DNS Validation via over 30 supported APIs (including Azure DNS, Alibaba Cloud, AWS Route53, Cloudflare, DnsMadeEasy, GoDaddy, OVH, SimpleDNSPlus). Some providers are implemented via the [Posh-ACME project](https://github.com/rmbolger/Posh-ACME/tree/main/Posh-ACME)
 	- Support for the *Certify DNS* cloud managed dns challenge validation service, allowing DNS validation via any DNS provider.
+ 	- Support for dns-persist-01 persistent DNS validation 
 	- Multiple authorizations supported, allowing a mix of domain validation settings per managed certificate
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
 - Pre/post request Deployment Tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Hashicorp Vault, Azure KeyVault etc**)
@@ -61,3 +62,4 @@ In addition, create a \libs subdirectory and clone:
 Run `dotnet build Certify.Core.Service.sln` and `dotnet build Certify.UI.sln` or open using Visual Studio. The UI needs the service running to connect to for normal operation.
 
 When developing plugins, the plugin and dependencies of the plugin need to be copied to the debug \plugins\ location for the service to load them.
+
