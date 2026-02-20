@@ -1033,6 +1033,7 @@ namespace Certify.Providers.ACME.Anvil
                         var includeHttp01 = true;
                         var includeDns01 = true;
                         var includeTkAuth01 = true;
+                        var includeDnsPersist01 = config.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST) == true;
 
                         if (_compatibilityMode == ACMECompatibilityMode.AltProvider1)
                         {
@@ -1213,6 +1214,63 @@ namespace Certify.Providers.ACME.Anvil
                                     ChallengeContext = tkAuthChallenge,
                                     IsValidated = (authorityTokenChallenge.Status == ChallengeStatus.Valid)
                                 });
+                            }
+                        }
+
+                        // add dns-persist-01 challenge (if any) - draft-ietf-acme-dns-persist
+                        if (includeDnsPersist01)
+                        {
+                            IChallengeContext dnsPersistChallenge = null;
+                            try
+                            {
+                                var allChallenges = await authContext.Challenges();
+                                dnsPersistChallenge = allChallenges.FirstOrDefault(ch => ch.Type == ChallengeTypes.DnsPersist01);
+                            }
+                            catch (Exception)
+                            {
+                                log.Information("Could not fetch a dns-persist-01 challenge for this identifier: " + authzDomain);
+                            }
+
+                            if (dnsPersistChallenge != null)
+                            {
+                                Challenge dnsPersistChallengeStatus;
+                                if (useAuthzForChallengeStatus)
+                                {
+                                    dnsPersistChallengeStatus = allIdentifierChallenges.FirstOrDefault(c => c.Type == ChallengeTypes.DnsPersist01);
+                                }
+                                else
+                                {
+                                    dnsPersistChallengeStatus = await dnsPersistChallenge.Resource();
+                                }
+
+                                if (dnsPersistChallengeStatus != null)
+                                {
+                                    log.Information($"Got dns-persist-01 challenge {dnsPersistChallengeStatus.Url}");
+
+                                    if (dnsPersistChallengeStatus.Status == ChallengeStatus.Invalid)
+                                    {
+                                        log?.Error($"dns-persist-01 challenge has an invalid status");
+                                    }
+
+                                    // choose first available issuer domain name provided by the CA
+                                    var issuerDomainName = dnsPersistChallengeStatus.IssuerDomainNames?.FirstOrDefault() ?? string.Empty;
+
+                                    // TXT record name: _validation-persist.{domain} (wildcards use base domain)
+                                    var persistKey = $"_validation-persist.{authzDomain}".Replace("*.", "");
+
+                                    // TXT record value per spec: "{issuer-domain-name}; accounturi={accountUri}"
+                                    var accountUri = _settings?.AccountUri ?? string.Empty;
+                                    var persistValue = $"{issuerDomainName}; accounturi={accountUri}";
+
+                                    challenges.Add(new AuthorizationChallengeItem
+                                    {
+                                        ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST,
+                                        Key = persistKey,
+                                        Value = persistValue,
+                                        ChallengeContext = dnsPersistChallenge,
+                                        IsValidated = (dnsPersistChallengeStatus.Status == ChallengeStatus.Valid)
+                                    });
+                                }
                             }
                         }
 

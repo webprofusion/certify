@@ -224,6 +224,45 @@ namespace Certify.Core.Management.Challenges
 
                         results.Add(result);
                     }
+                    else if (challengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+                    {
+                        // dns-persist-01: simulate a _validation-persist record creation check
+                        var persistRecordName = $"_validation-persist.{domain.Value}".Replace("*.", "");
+
+                        var simulatedAuthorization = new PendingAuthorization
+                        {
+                            Challenges = new List<AuthorizationChallengeItem> {
+                                new AuthorizationChallengeItem
+                                {
+                                    ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST,
+                                    Key = persistRecordName,
+                                    Value = GenerateSimulatedDnsAuthValue()
+                                }
+                            }
+                        };
+                        generatedAuthorizations.Add(simulatedAuthorization);
+
+                        var persistResult =
+                            await PerformChallengeResponse_DnsPersist01(
+                                log,
+                                domain,
+                                managedCertificate,
+                                simulatedAuthorization,
+                                isTestMode: performCleanupOnly ? false : true,
+                                isCleanupOnly: performCleanupOnly,
+                                credentialsManager
+                            );
+
+                        var result = new StatusMessage();
+                        result.Message = persistResult.Result.Message;
+                        result.IsOK = persistResult.Result.IsSuccess;
+                        if (!result.IsOK)
+                        {
+                            result.FailedItemSummary.Add(persistResult.Result.Message);
+                        }
+
+                        results.Add(result);
+                    }
                     else
                     {
                         throw new NotSupportedException($"ChallengeType not supported: {challengeConfig.ChallengeType}");
@@ -319,6 +358,20 @@ namespace Certify.Core.Management.Challenges
                     {
                         // perform dns-01 challenge response
                         var check = await PerformChallengeResponse_Dns01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
+                        pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
+                        pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
+                        pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
+                        pendingAuth.AttemptedChallenge.PropagationSeconds = check.PropagationSeconds;
+                        pendingAuth.IsFailure = !check.Result.IsSuccess;
+                        pendingAuth.AuthorizationError = pendingAuth.IsFailure ? check.Result.Message : "";
+                    }
+
+                    if (requiredChallenge.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+                    {
+                        // perform dns-persist-01 challenge response (draft-ietf-acme-dns-persist)
+                        // uses the same DNS provider infrastructure as dns-01 but creates a persistent
+                        // _validation-persist TXT record instead of _acme-challenge
+                        var check = await PerformChallengeResponse_DnsPersist01(log, pendingAuth.Identifier, managedCertificate, pendingAuth, isTestMode: false, isCleanupOnly: false, credentialsManager);
                         pendingAuth.AttemptedChallenge.IsFailure = !check.Result.IsSuccess;
                         pendingAuth.AttemptedChallenge.ChallengeResultMsg = check.Result.Message;
                         pendingAuth.AttemptedChallenge.IsAwaitingUser = check.IsAwaitingUser;
@@ -596,6 +649,60 @@ namespace Certify.Core.Management.Challenges
                {
                    _ = await _dnsHelper.DeleteDNSChallenge(log, managedCertificate, domain, dnsChallenge.Key, dnsChallenge.Value);
                };
+
+            return dnsResult;
+        }
+
+        /// <summary>
+        /// Creates or verifies the persistent DNS TXT record required for dns-persist-01 validation
+        /// (draft-ietf-acme-dns-persist). The record at _validation-persist.{domain} is persistent
+        /// and intentionally not cleaned up after each use.
+        /// </summary>
+        internal async Task<DnsChallengeHelperResult> PerformChallengeResponse_DnsPersist01(ILog log, CertIdentifierItem domain, ManagedCertificate managedCertificate, PendingAuthorization pendingAuth, bool isTestMode, bool isCleanupOnly, ICredentialsManager credentialsManager)
+        {
+            var persistChallenge = pendingAuth.Challenges.FirstOrDefault(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST);
+
+            if (persistChallenge == null)
+            {
+                var msg = $"No dns-persist-01 challenge to complete for {managedCertificate.Name}. Request cannot continue.";
+                log.Warning(msg);
+                return new DnsChallengeHelperResult(new ActionResult { IsSuccess = false, Message = msg });
+            }
+
+            if (_dnsHelper == null)
+            {
+                _dnsHelper = new DnsChallengeHelper(credentialsManager);
+            }
+
+            DnsChallengeHelperResult dnsResult;
+            if (!isCleanupOnly)
+            {
+                // create the persistent _validation-persist TXT record using the existing DNS challenge infrastructure
+                dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, persistChallenge.Key, persistChallenge.Value, isTestMode);
+
+                if (!dnsResult.Result.IsSuccess)
+                {
+                    if (dnsResult.IsAwaitingUser)
+                    {
+                        log?.Error($"Action Required: {dnsResult.Result.Message}");
+                    }
+                    else
+                    {
+                        log?.Error($"DNS update failed for dns-persist-01: {dnsResult.Result.Message}");
+                    }
+                }
+                else
+                {
+                    log.Information($"DNS persist record created/verified: {dnsResult.Result.Message}");
+                }
+            }
+            else
+            {
+                dnsResult = new DnsChallengeHelperResult { Result = new ActionResult("Skipping cleanup for persistent dns-persist-01 record.", true) };
+            }
+
+            // the _validation-persist record is intentionally persistent - no cleanup action
+            pendingAuth.Cleanup = () => Task.CompletedTask;
 
             return dnsResult;
         }
