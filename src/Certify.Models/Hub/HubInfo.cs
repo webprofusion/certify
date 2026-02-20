@@ -26,10 +26,20 @@
 
     public class HubHealth
     {
+        /// <summary>
+        /// "OK" if all systems are operational, "Degraded" if a subsystem (e.g. data store) is unavailable
+        /// </summary>
         public string Status { get; set; } = default!;
+        /// <summary>
+        /// Human-readable detail about the current status, populated when Status is not "OK"
+        /// </summary>
         public string Detail { get; set; } = default!;
         public string Version { get; set; } = default!;
         public bool ServiceAvailable { get; set; } = default!;
+        /// <summary>
+        /// True when the backing data store is connected and operational
+        /// </summary>
+        public bool IsDataStoreAvailable { get; set; }
         public object env { get; set; } = default!;
     }
 }

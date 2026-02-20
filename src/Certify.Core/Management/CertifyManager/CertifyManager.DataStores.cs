@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -152,6 +152,7 @@ namespace Certify.Management
         /// </summary>
         private async Task InitDataStoreDegradedMode(string errorMessage, string? dataStoreId, string? dataStoreType)
         {
+
             _serviceLog?.Warning("Initializing service in DEGRADED MODE due to data store failure.");
 
             _dataStoreStatus = new DataStoreStatus

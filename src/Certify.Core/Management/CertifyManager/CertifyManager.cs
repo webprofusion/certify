@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -329,7 +329,7 @@ namespace Certify.Management
             await UpgradeSettings();
 
             // Ensure default tag categories exist (only when running as a hub)
-            if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
+            if (!IsInDegradedMode && (_isMgtmHubBackend || _isDirectMgmtHubBackend))
             {
                 await EnsureDefaultTagCategories();
             }

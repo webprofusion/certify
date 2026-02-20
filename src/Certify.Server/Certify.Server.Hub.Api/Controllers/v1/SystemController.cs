@@ -61,7 +61,10 @@ namespace Certify.Server.Hub.Api.Controllers
         public async Task<IActionResult> GetHealth()
         {
             var serviceAvailable = false;
+            var isDataStoreAvailable = false;
             var versionInfo = "Not available. Cannot connect to core service.";
+            var detail = string.Empty;
+
             try
             {
                 versionInfo = await _client.GetAppVersion();
@@ -69,10 +72,27 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             catch { }
 
+            if (serviceAvailable)
+            {
+                try
+                {
+                    var dataStoreStatus = await _client.GetDataStoreStatus();
+                    isDataStoreAvailable = !dataStoreStatus.IsDegradedMode;
+
+                    if (dataStoreStatus.IsDegradedMode)
+                    {
+                        detail = dataStoreStatus.LastErrorMessage ?? "Data store is unavailable.";
+                    }
+                }
+                catch { }
+            }
+
+            var status = serviceAvailable && isDataStoreAvailable ? "OK" : "Degraded";
+
 #if DEBUG
-            var health = new HubHealth { Status = "OK", Version = versionInfo, ServiceAvailable = serviceAvailable, env = Environment.GetEnvironmentVariables() };
+            var health = new HubHealth { Status = status, Detail = detail, Version = versionInfo, ServiceAvailable = serviceAvailable, IsDataStoreAvailable = isDataStoreAvailable, env = Environment.GetEnvironmentVariables() };
 #else
-            var health = new HubHealth { Status = "OK", Version = versionInfo, ServiceAvailable = serviceAvailable };
+            var health = new HubHealth { Status = status, Detail = detail, Version = versionInfo, ServiceAvailable = serviceAvailable, IsDataStoreAvailable = isDataStoreAvailable };
 #endif
 
             return new OkObjectResult(health);
