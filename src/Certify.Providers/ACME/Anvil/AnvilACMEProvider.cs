@@ -1328,7 +1328,7 @@ namespace Certify.Providers.ACME.Anvil
                 return new StatusMessage
                 {
                     IsOK = false,
-                    Message = "Challenge could not be submitted. No matching attempted challenge."
+                    Message = "Challenge could not be submitted. No matching attempted challenge. Check the CA supports the configured challenge type."
                 };
             }
 

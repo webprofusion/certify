@@ -674,32 +674,7 @@ namespace Certify.Core.Management.Challenges
                 _dnsHelper = new DnsChallengeHelper(credentialsManager);
             }
 
-            DnsChallengeHelperResult dnsResult;
-            if (!isCleanupOnly)
-            {
-                // create the persistent _validation-persist TXT record using the existing DNS challenge infrastructure
-                dnsResult = await _dnsHelper.CompleteDNSChallenge(log, managedCertificate, domain, persistChallenge.Key, persistChallenge.Value, isTestMode);
-
-                if (!dnsResult.Result.IsSuccess)
-                {
-                    if (dnsResult.IsAwaitingUser)
-                    {
-                        log?.Error($"Action Required: {dnsResult.Result.Message}");
-                    }
-                    else
-                    {
-                        log?.Error($"DNS update failed for dns-persist-01: {dnsResult.Result.Message}");
-                    }
-                }
-                else
-                {
-                    log.Information($"DNS persist record created/verified: {dnsResult.Result.Message}");
-                }
-            }
-            else
-            {
-                dnsResult = new DnsChallengeHelperResult { Result = new ActionResult("Skipping cleanup for persistent dns-persist-01 record.", true) };
-            }
+            var dnsResult = new DnsChallengeHelperResult { Result = new ActionResult($"To complete the dns-persist-01 challenge create a TXT record {persistChallenge.Key} in your domain DNS with value {persistChallenge.Value}", true) };
 
             // the _validation-persist record is intentionally persistent - no cleanup action
             pendingAuth.Cleanup = () => Task.CompletedTask;
