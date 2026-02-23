@@ -63,6 +63,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [RFC2136](https://poshac.me/docs/latest/Plugins/RFC2136),
             [Selectel](https://poshac.me/docs/latest/Plugins/Selectel),
             [Simply](https://poshac.me/docs/latest/Plugins/Simply),
+            [Technitium](https://poshac.me/docs/latest/Plugins/Technitium),
             [TencentDNS](https://poshac.me/docs/latest/Plugins/TencentDNS),
             [TotalUptime](https://poshac.me/docs/latest/Plugins/TotalUptime),
             [UKFast](https://poshac.me/docs/latest/Plugins/UKFast),
@@ -1094,6 +1095,28 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=SimplyCom",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Technitium",
+                Title = "Technitium DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Technitium/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "TechnitiumToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new() { Key = "TechnitiumServer", Name = "Server", IsRequired = true, IsCredential = false, Description = "e.g. dns.example.com:5380" },
+                    new() { Key = "TechnitiumProtocol", Name = "Protocol", IsRequired = false, IsCredential = false, Value = "https", OptionsList = "https;http", Type = OptionType.Select },
+                    new() { Key = "TechnitiumTTL", Name = "TTL", IsRequired = false, IsCredential = false, Type = OptionType.Integer, Value = "3600" },
+                    new() { Key = "TechnitiumIgnoreCert", Name = "Ignore Certificate Errors", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsCredential = false, IsHidden = false },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Technitium",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
 
