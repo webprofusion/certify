@@ -11,6 +11,7 @@
         <NoWarn>NU1701</NoWarn>
         <LangVersion>latest</LangVersion>
         <ApplicationManifest>app.manifest</ApplicationManifest>
+     
 
     </PropertyGroup>
     <ItemGroup>
