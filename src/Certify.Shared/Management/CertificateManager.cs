@@ -109,6 +109,52 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Creates a new PKCS#12 (PFX) data blob with the specified friendly name applied to all key and certificate
+        /// entries.
+        /// </summary>
+        /// <remarks>This method replaces the friendly name for all key and certificate entries in the
+        /// provided PKCS#12 (PFX) data. The resulting PFX will use the same password as the input. If the input
+        /// contains multiple entries, all will be assigned the same friendly name.</remarks>
+        /// <param name="newFriendlyName">The friendly name to assign to all key and certificate entries in the resulting PKCS#12 (PFX) data.</param>
+        /// <param name="pfxData">The PKCS#12 (PFX) data as a byte array to be modified.</param>
+        /// <param name="certPwd">The password used to decrypt and re-encrypt the PKCS#12 (PFX) data. Can be null for passwordless PFX files.</param>
+        /// <returns>A byte array containing the PKCS#12 (PFX) data with the new friendly name applied.</returns>
+        public static byte[] GetPfxDataWithNewFriendlyName(string newFriendlyName, byte[] pfxData, string? certPwd)
+        {
+            var pkcs12Store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
+
+            using (var stream = new MemoryStream(pfxData))
+            {
+                pkcs12Store.Load(stream, certPwd?.ToCharArray() ?? []);
+            }
+
+            // Rebuild the store with the desired friendly name
+            var newStore = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
+            foreach (var alias in pkcs12Store.Aliases)
+            {
+                if (pkcs12Store.IsKeyEntry(alias))
+                {
+                    var keyEntry = pkcs12Store.GetKey(alias);
+                    var chain = pkcs12Store.GetCertificateChain(alias);
+                    newStore.SetKeyEntry(newFriendlyName, keyEntry, chain);
+                }
+                else if (pkcs12Store.IsCertificateEntry(alias))
+                {
+                    var certEntry = pkcs12Store.GetCertificate(alias);
+                    newStore.SetCertificateEntry(newFriendlyName, certEntry);
+                }
+            }
+
+            using (var output = new MemoryStream())
+            {
+                newStore.Save(output, certPwd?.ToCharArray() ?? [], new Org.BouncyCastle.Security.SecureRandom());
+                pfxData = output.ToArray();
+            }
+
+            return pfxData;
+        }
+
         public static bool VerifyCertificateSAN(System.Security.Cryptography.X509Certificates.X509Certificate certificate, string sni)
         {
             // check subject alternate name (must have exactly 1, equal to sni)
