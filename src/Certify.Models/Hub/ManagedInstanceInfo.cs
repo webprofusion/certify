@@ -12,6 +12,21 @@ namespace Certify.Models.Hub
         /// </summary>
         public string InstanceId { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Linked security principal id used for access control checks.
+        /// </summary>
+        public string SecurityPrincipalId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional custom friendly name set by hub admin. If not set, use <see cref="Title"/>.
+        /// </summary>
+        public string? CustomTitle { get; set; }
+
+        /// <summary>
+        /// Effective friendly name for UI/display (custom title preferred).
+        /// </summary>
+        public string DisplayTitle => string.IsNullOrWhiteSpace(CustomTitle) ? Title : CustomTitle;
+
         public string OS { get; set; } = string.Empty;
         public string OSVersion { get; set; } = string.Empty;
         public string ClientName { get; set; } = string.Empty;

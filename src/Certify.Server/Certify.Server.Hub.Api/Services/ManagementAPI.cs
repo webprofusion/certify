@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
@@ -811,7 +811,7 @@ namespace Certify.Server.Hub.Api.Services
                 InstanceId = instanceId,
                 AppVersion = instance.ClientVersion,
                 AppName = instance.ClientName,
-                MachineName = instance.Title,
+                MachineName = instance.DisplayTitle,
                 OS = instance.OS
             };
 

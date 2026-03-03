@@ -22,6 +22,11 @@
         public string JoiningToken { get; set; } = default!;
 
         public bool RejoinRequired { get; set; } = false;
+
+        /// <summary>
+        /// True when the joining request presented a known hub-assigned instance id and the hub reused existing instance identity.
+        /// </summary>
+        public bool IsKnownInstance { get; set; }
     }
 
     public class HubHealth

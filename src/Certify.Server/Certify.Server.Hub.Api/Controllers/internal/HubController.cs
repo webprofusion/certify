@@ -138,7 +138,7 @@ namespace Certify.Server.Hub.Api.Controllers
                             return new ManagedCertificateSummary
                             {
                                 InstanceId = remote.InstanceId,
-                                InstanceTitle = instance?.Title,
+                                InstanceTitle = instance?.DisplayTitle,
                                 Id = i.Id ?? "",
                                 Title = $"{i.Name}" ?? "",
                                 OS = instance?.OS,
@@ -278,8 +278,63 @@ namespace Certify.Server.Hub.Api.Controllers
 
             }
 
-            // Return all instances (both connected and disconnected) ordered by title
-            return new OkObjectResult(allKnownInstances.OrderBy(o => o.Title));
+            // Return all instances (both connected and disconnected) ordered by display title
+            return new OkObjectResult(allKnownInstances.OrderBy(o => o.DisplayTitle));
+        }
+
+        /// <summary>
+        /// Get a managed instance by id.
+        /// </summary>
+        [HttpGet]
+        [Route("instances/{id}")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedInstanceInfo))]
+        public async Task<IActionResult> GetHubManagedInstance(string id)
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            var instance = await _client.GetHubManagedInstance(id, CurrentAuthContext);
+
+            if (instance == null)
+            {
+                return NotFound();
+            }
+
+            return new OkObjectResult(instance);
+        }
+
+        /// <summary>
+        /// Update a managed instance by id.
+        /// </summary>
+        [HttpPut]
+        [Route("instances/{id}")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(global::Certify.Models.Config.ActionResult))]
+        public async Task<IActionResult> UpdateHubManagedInstance(string id, [FromBody] ManagedInstanceInfo item)
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
+            if (item == null || string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest();
+            }
+
+            item.Id = id;
+            item.InstanceId = id;
+
+            var result = await _client.UpdateHubManagedInstance(item, CurrentAuthContext);
+
+            return new OkObjectResult(result);
         }
 
         /// <summary>

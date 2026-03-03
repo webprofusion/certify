@@ -177,6 +177,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString(); ;
             var instanceTitle = Request.Headers["X-Certify-Trace-InstanceName"].ToString();
+            var isKnownInstance = false;
 
             // if hub assigned instance id is provided we will either check the supplied hub assigned instance id or create a new one
 
@@ -187,7 +188,33 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (instanceInfo == null)
                 {
-                    return Problem(detail: "Invalid or unknown hub assigned instance id", statusCode: (int)HttpStatusCode.Unauthorized, type: "https://api.certifytheweb.com/problemtype/hub-unknown-instance-id");
+                    if (!Guid.TryParse(hubAssignedInstanceId, out _))
+                    {
+                        return Problem(detail: "Invalid hub assigned instance id format", statusCode: (int)HttpStatusCode.Unauthorized, type: "https://api.certifytheweb.com/problemtype/hub-unknown-instance-id");
+                    }
+
+                    var newInstance = new ManagedInstanceInfo
+                    {
+                        Id = hubAssignedInstanceId,
+                        InstanceId = hubAssignedInstanceId,
+                        DateRegistered = DateTimeOffset.UtcNow,
+                        DateLastReported = DateTimeOffset.UtcNow,
+                        ConnectionStatus = ConnectionStatus.Disconnected,
+                        IsAuthenticated = false,
+                        Title = instanceTitle
+                    };
+
+                    var addResult = await _client.AddHubManagedInstance(newInstance, CurrentAuthContext);
+                    if (!addResult.IsSuccess || addResult.Result == null)
+                    {
+                        return Problem(detail: addResult.Message ?? "Could not register presented hub assigned instance id", statusCode: (int)HttpStatusCode.BadRequest);
+                    }
+
+                    hubAssignedInstanceId = addResult.Result.InstanceId;
+                }
+                else
+                {
+                    isKnownInstance = true;
                 }
             }
             else if (register == true)
@@ -219,7 +246,8 @@ namespace Certify.Server.Hub.Api.Controllers
             };
 
             joiningInfo.HubEndpoint = "api/internal/managementhub";
-            joiningInfo.Message = "Joining OK";
+            joiningInfo.IsKnownInstance = isKnownInstance;
+            joiningInfo.Message = isKnownInstance ? "Joining OK. Existing instance registration reused." : "Joining OK. New instance registration created.";
 
             var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
             var jwtService = new Hub.Api.Services.JwtService(_config);

@@ -56,7 +56,14 @@ namespace Certify.UI.Controls.Settings
 
             if (result.IsSuccess)
             {
-                MessageBox.Show("Successfully joined Management Hub.");
+                if (!string.IsNullOrWhiteSpace(result.Message) && result.Message.Contains("instance already known to hub", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("Successfully re-joined Management Hub. This instance was already known to the hub. If this host was cloned, verify the hub-assigned identity is intentional.");
+                }
+                else
+                {
+                    MessageBox.Show("Successfully joined Management Hub.");
+                }
             }
             else
             {

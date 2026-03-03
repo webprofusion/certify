@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -15,6 +15,7 @@ using Certify.Models.Reporting;
 using Certify.Models.Shared;
 using Certify.Shared;
 using Certify.Shared.Core.Utils;
+using Certify.SharedUtils;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Registration.Core.Models.Shared;
 
@@ -43,7 +44,19 @@ namespace Certify.Management
 
         private void SetHubAssignedInstanceId(string? val)
         {
-            _serverConfig.HubAssignedInstanceId = val;
+            if (string.IsNullOrWhiteSpace(val))
+            {
+                _serviceLog.Warning("Hub assigned instance ID cannot be cleared automatically. Existing identity is retained.");
+                return;
+            }
+
+            var updated = HubInstanceIdentityManager.TrySetHubAssignedInstanceId(val, overwriteExisting: false);
+            if (!updated)
+            {
+                _serviceLog.Warning("Hub assigned instance ID update ignored because a different immutable identity is already stored.");
+            }
+
+            _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
             SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
         }
         public async Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret)
@@ -51,6 +64,7 @@ namespace Certify.Management
             var hubConnectionAuthToken = string.Empty;
 
             _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+            _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
 
             ActionResult<HubJoiningInfo> joiningCredentialsCheck = null;
 
@@ -64,7 +78,7 @@ namespace Certify.Management
                 {
                     _serviceLog.Information("Hub rejoin required, will attempt to re-register instance.");
                     // need to re-register
-                    SetHubAssignedInstanceId(val: null);
+                    _serviceLog.Warning("Hub rejoin required but hub assigned instance ID is immutable. Re-enroll this instance explicitly to change identity.");
 
                     joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: true);
                 }
@@ -92,7 +106,7 @@ namespace Certify.Management
                 {
                     if (!string.IsNullOrWhiteSpace(joiningCredentialsCheck.Result.HubAssignedInstanceId))
                     {
-                        _serverConfig.HubAssignedInstanceId = joiningCredentialsCheck.Result.HubAssignedInstanceId;
+                        SetHubAssignedInstanceId(joiningCredentialsCheck.Result.HubAssignedInstanceId);
                     }
                     else
                     {
@@ -122,7 +136,15 @@ namespace Certify.Management
                     return new ActionResult("A problem occurred when connecting to the management hub. Check URL and credentials.", isSuccess: false);
                 }
 
-                return new ActionResult("Connected to Management Hub.", isSuccess: true);
+                var wasKnownInstance = joiningCredentialsCheck.Result?.IsKnownInstance == true;
+                var joinMessage = wasKnownInstance
+                    ? "Connected to Management Hub. Re-join successful: instance already known to hub."
+                    : "Connected to Management Hub.";
+
+                return new ActionResult(joinMessage, isSuccess: true)
+                {
+                    Result = joiningCredentialsCheck.Result
+                };
             }
             else
             {
@@ -155,6 +177,8 @@ namespace Certify.Management
                 handler.ServerCertificateCustomValidationCallback = null;
             }
 
+            _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
+
             if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && registerInstance == false)
             {
                 _serviceLog.Warning("Attempting to rejoin hub but hub assigned instance ID is empty, need to re-register with hub");
@@ -173,18 +197,15 @@ namespace Certify.Management
 
             request.Headers.Add("X-Certify-Trace-InstanceName", GetManagedInstanceInfo().Title);
 
-            if (!registerInstance)
+            if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
             {
-                // already joined , include assigned id to verify
-                if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
-                {
-                    request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
-                }
-                else
-                {
-                    // if we are not registering, we should have an assigned id to check against
-                    return new ActionResult<HubJoiningInfo>("Hub Assigned Instance ID is required when rejoining the hub.", isSuccess: false);
-                }
+                // include assigned id whenever available so the hub can reuse existing registration
+                request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
+            }
+            else if (!registerInstance)
+            {
+                // if we are not registering, we should have an assigned id to check against
+                return new ActionResult<HubJoiningInfo>("Hub Assigned Instance ID is required when rejoining the hub.", isSuccess: false);
             }
 
             try
@@ -447,7 +468,7 @@ namespace Certify.Management
                                 _serviceLog.Information("Hub rejoin required, will attempt to re-register instance.");
 
                                 // need to re-register
-                                SetHubAssignedInstanceId(val: null);
+                                _serviceLog.Warning("Hub requested rejoin but assigned identity is immutable. Manual re-enroll is required.");
                             }
 
                             return;

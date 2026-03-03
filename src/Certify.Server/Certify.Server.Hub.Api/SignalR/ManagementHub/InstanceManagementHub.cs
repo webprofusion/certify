@@ -373,8 +373,25 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                 _logger?.LogDebug("Received instance {instanceId} {instanceTitle} for mgmt hub connection.", instanceInfo.InstanceId, instanceInfo.Title);
 
-                // update our stored instance info for this instance
-                await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
+                // update our stored instance info for this instance while preserving persistent metadata fields
+                var storedInstance = await _backendClient?.GetHubManagedInstance(instanceInfo.InstanceId, null);
+
+                if (storedInstance != null)
+                {
+                    storedInstance.OS = instanceInfo.OS;
+                    storedInstance.OSVersion = instanceInfo.OSVersion;
+                    storedInstance.ClientName = instanceInfo.ClientName;
+                    storedInstance.ClientVersion = instanceInfo.ClientVersion;
+                    storedInstance.Title = instanceInfo.Title;
+                    storedInstance.DateLastReported = instanceInfo.DateLastReported;
+                    storedInstance.License = instanceInfo.License;
+
+                    await _backendClient?.UpdateHubManagedInstance(storedInstance, null);
+                }
+                else
+                {
+                    await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
+                }
 
                 // if we don't yet have any managed items for this instance, ask for them
                 if (!_stateProvider.HasItemsForManagedInstance(instanceInfo.InstanceId))
