@@ -189,6 +189,9 @@ namespace Certify.Management
 
         private async Task RemoveManagedInstanceAccessArtifacts(string instanceId)
         {
+            // Cleanup all resources for a managed instance we are removing
+
+            // Remove instance tags
             var instanceTags = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
             foreach (var tag in instanceTags.Where(t => t.TaggedItemType == TaggedItemTypes.ManagedInstance && t.TaggedItemId == instanceId).ToList())
             {
@@ -197,7 +200,7 @@ namespace Certify.Management
 
             var allPrincipals = await _configStore.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
             var principalIds = allPrincipals
-                .Where(p => string.Equals(p.ExternalIdentifier, instanceId, StringComparison.OrdinalIgnoreCase) || string.Equals(p.Id, instanceId, StringComparison.OrdinalIgnoreCase))
+                .Where(p => p.PrincipalType == SecurityPrincipalType.ManagedInstance && string.Equals(p.ExternalIdentifier, instanceId, StringComparison.OrdinalIgnoreCase) || string.Equals(p.Id, instanceId, StringComparison.OrdinalIgnoreCase))
                 .Select(p => p.Id)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -207,18 +210,21 @@ namespace Certify.Management
                 return;
             }
 
+            // Remove assigned roles
             var assignedRoles = await _configStore.GetItems<AssignedRole>(nameof(AssignedRole));
             foreach (var assignedRole in assignedRoles.Where(r => principalIds.Contains(r.SecurityPrincipalId)).ToList())
             {
                 await _configStore.Delete<AssignedRole>(nameof(AssignedRole), assignedRole.Id);
             }
 
+            // Remove access tokens
             var assignedTokens = await _configStore.GetItems<AssignedAccessToken>(nameof(AssignedAccessToken));
             foreach (var token in assignedTokens.Where(t => principalIds.Contains(t.SecurityPrincipalId)).ToList())
             {
                 await _configStore.Delete<AssignedAccessToken>(nameof(AssignedAccessToken), token.Id);
             }
 
+            // Remove security principal(s)
             foreach (var principalId in principalIds)
             {
                 await _configStore.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), principalId);
