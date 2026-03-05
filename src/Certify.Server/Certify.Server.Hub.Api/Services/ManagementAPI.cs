@@ -278,6 +278,7 @@ namespace Certify.Server.Hub.Api.Services
             if (result.IsSuccess)
             {
                 _mgmtStateProvider.DeleteCachedManagedInstanceItem(instanceId, managedCertId);
+                await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedCertificate, managedCertId, authContext);
             }
 
             return result;
@@ -547,7 +548,39 @@ namespace Certify.Server.Hub.Api.Services
                         new("storageKey",storageKey)
                     };
 
-            return await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveStoredCredential);
+            var result = await PerformInstanceCommandTaskWithResult<ActionResult?>(instanceId, args, ManagementHubCommands.RemoveStoredCredential);
+
+            if (result?.IsSuccess == true)
+            {
+                await RemoveHubItemTagsForItem(TaggedItemTypes.StoredCredential, storageKey, authContext);
+            }
+
+            return result;
+        }
+
+        private async Task RemoveHubItemTagsForItem(string itemType, string itemId, AuthContext? authContext)
+        {
+            if (string.IsNullOrWhiteSpace(itemType) || string.IsNullOrWhiteSpace(itemId) || _certifyManager == null)
+            {
+                return;
+            }
+
+            // an item has been removed from an instance, tell the hub to remove associated item tags
+            // this implementation assumes direction hub con
+
+            // get all tags for this item, then remove them
+
+            var tags = await _certifyManager.GetAllHubItemTags(itemTypeId: itemType);
+
+            var tagsToRemove = tags?
+                .Where(t => string.Equals(t.TaggedItemId, itemId, StringComparison.OrdinalIgnoreCase))
+                .Select(t => t.Id)
+                .ToList();
+
+            if (tagsToRemove?.Any() == true)
+            {
+                await _certifyManager.RemoveHubItemTags(tagsToRemove);
+            }
         }
 
         /// <summary>

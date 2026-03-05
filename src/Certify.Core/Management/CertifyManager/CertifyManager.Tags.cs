@@ -437,6 +437,30 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Remove all tags for a tagged item.
+        /// </summary>
+        public async Task RemoveHubItemTagsForItem(string itemTypeId, string itemId)
+        {
+            if (string.IsNullOrWhiteSpace(itemTypeId) || string.IsNullOrWhiteSpace(itemId))
+            {
+                return;
+            }
+
+            var allTags = await GetAllHubItemTags(null, null, itemTypeId);
+            var tagIds = allTags
+                .Where(t => string.Equals(t.TaggedItemId, itemId, StringComparison.OrdinalIgnoreCase))
+                .Select(t => t.Id)
+                .ToList();
+
+            if (!tagIds.Any())
+            {
+                return;
+            }
+
+            await RemoveHubItemTags(tagIds);
+        }
+
+        /// <summary>
         /// Remove a tag by its composite key (more efficient than fetching all tags first)
         /// </summary>
         public async Task<ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, string? instanceId = null)

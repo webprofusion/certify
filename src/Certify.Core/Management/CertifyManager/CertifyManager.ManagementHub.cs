@@ -792,7 +792,14 @@ namespace Certify.Management
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
-                val = await _credentialsManager.Delete(_itemManager, itemArg.Value);
+                var deleteResult = await _credentialsManager.Delete(_itemManager, itemArg.Value);
+
+                if (deleteResult?.IsSuccess == true)
+                {
+                    await RemoveHubItemTagsForItem(TaggedItemTypes.StoredCredential, itemArg.Value);
+                }
+
+                val = deleteResult;
             }
             else if (arg.CommandType == ManagementHubCommands.UnlockStoredCredential)
             {

@@ -126,6 +126,11 @@ namespace Certify.Management
         {
             var deleted = await _configStore.Delete<ManagedChallenge>(nameof(ManagedChallenge), id);
 
+            if (deleted)
+            {
+                await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedChallenge, id);
+            }
+
             return new ActionResult { IsSuccess = deleted };
         }
 

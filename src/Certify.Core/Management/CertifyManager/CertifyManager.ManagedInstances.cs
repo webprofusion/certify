@@ -125,10 +125,23 @@ namespace Certify.Management
 
         public async Task<ActionResult> RemoveHubManagedInstance(string id)
         {
-            var deleted = await _configStore.Delete<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);
+            var existing = await _configStore.Get<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), id);
+
+            if (existing == null)
+            {
+                var allInstances = await _configStore.GetItems<ManagedInstanceInfo>(nameof(ManagedInstanceInfo));
+                existing = allInstances.FirstOrDefault(i => string.Equals(i.InstanceId, id, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (existing == null)
+            {
+                return new ActionResult("Not found", false);
+            }
+
+            var deleted = await _configStore.Delete<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), existing.Id);
             if (deleted)
             {
-                await RemoveManagedInstanceAccessArtifacts(id);
+                await RemoveManagedInstanceAccessArtifacts(existing, id);
                 return new ActionResult("Deleted", true);
             }
             else
@@ -187,23 +200,47 @@ namespace Certify.Management
             }
         }
 
-        private async Task RemoveManagedInstanceAccessArtifacts(string instanceId)
+        private async Task RemoveManagedInstanceAccessArtifacts(ManagedInstanceInfo? instance, string deletedIdentifier)
         {
-            // Cleanup all resources for a managed instance we are removing
+            var managedInstanceIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            // Remove instance tags
-            var instanceTags = await _configStore.GetItems<ItemTag>(nameof(ItemTag));
-            foreach (var tag in instanceTags.Where(t => t.TaggedItemType == TaggedItemTypes.ManagedInstance && t.TaggedItemId == instanceId).ToList())
+            if (!string.IsNullOrWhiteSpace(deletedIdentifier))
             {
-                await _configStore.Delete<ItemTag>(nameof(ItemTag), tag.Id);
+                managedInstanceIds.Add(deletedIdentifier);
+            }
+
+            if (!string.IsNullOrWhiteSpace(instance?.Id))
+            {
+                managedInstanceIds.Add(instance.Id);
+            }
+
+            if (!string.IsNullOrWhiteSpace(instance?.InstanceId))
+            {
+                managedInstanceIds.Add(instance.InstanceId);
+            }
+
+            foreach (var managedInstanceId in managedInstanceIds)
+            {
+                await RemoveHubItemTagsForItem(TaggedItemTypes.ManagedInstance, managedInstanceId);
             }
 
             var allPrincipals = await _configStore.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
-            var principalIds = allPrincipals
-                .Where(p => p.PrincipalType == SecurityPrincipalType.ManagedInstance && string.Equals(p.ExternalIdentifier, instanceId, StringComparison.OrdinalIgnoreCase) || string.Equals(p.Id, instanceId, StringComparison.OrdinalIgnoreCase))
+            var principalIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (!string.IsNullOrWhiteSpace(instance?.SecurityPrincipalId))
+            {
+                principalIds.Add(instance.SecurityPrincipalId);
+            }
+
+            foreach (var principalId in allPrincipals
+                .Where(p =>
+                    managedInstanceIds.Contains(p.Id)
+                    || (!string.IsNullOrWhiteSpace(p.ExternalIdentifier) && managedInstanceIds.Contains(p.ExternalIdentifier)))
                 .Select(p => p.Id)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+                .Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                principalIds.Add(principalId);
+            }
 
             if (!principalIds.Any())
             {
@@ -224,9 +261,9 @@ namespace Certify.Management
                 await _configStore.Delete<AssignedAccessToken>(nameof(AssignedAccessToken), token.Id);
             }
 
-            // Remove security principal(s)
             foreach (var principalId in principalIds)
             {
+                await RemoveHubItemTagsForItem(TaggedItemTypes.SecurityPrincipal, principalId);
                 await _configStore.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), principalId);
             }
         }
