@@ -64,7 +64,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
         <PackageReference Include="MSTest.TestAdapter" Version="4.1.0" />
         <PackageReference Include="MSTest.TestFramework" Version="4.1.0" />
-        <PackageReference Include="Polly" Version="8.6.5" />
+        <PackageReference Include="Polly" Version="8.6.6" />
         <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" />
     </ItemGroup>
     <ItemGroup>

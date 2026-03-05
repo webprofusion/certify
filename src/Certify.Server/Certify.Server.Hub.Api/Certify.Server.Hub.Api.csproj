@@ -25,7 +25,7 @@
         <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.16.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.12.48" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.13.1" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
