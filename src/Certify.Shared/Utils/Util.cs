@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -663,6 +663,12 @@ namespace Certify.Management
             _config.ConnectionString = $"InstrumentationKey={key}";
 
             _tc = new TelemetryClient(_config);
+
+            // Set session data:
+
+            _tc.Context.Session.Id = Guid.NewGuid().ToString();
+            _tc.Context.Component.Version = Util.GetAppVersion().ToString();
+            _tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
         }
 
         public void TrackEvent(string eventName, IDictionary<string, string> properties = null)
