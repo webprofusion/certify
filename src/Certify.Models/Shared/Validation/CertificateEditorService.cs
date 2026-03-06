@@ -346,27 +346,31 @@ namespace Certify.Models.Shared.Validation
                         );
                     }
 
-                    // if wildcard domain included, check first level labels not also specified, i.e.
-                    // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
-                    // test.www.example.com can
-                    var invalidLabels = new List<CertIdentifierItem>();
-                    var dnsIdentifiers = item.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns);
-
-                    if (dnsIdentifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                    // for non-custom CAs check for wildcard overlap (not supported by LE etc) e.g. *.example.com and www.example.com on the same cert
+                    if (preferredCA == null || preferredCA?.IsCustom == false)
                     {
-                        foreach (var wildcard in dnsIdentifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
-                        {
-                            var rootDomain = wildcard.Value.Replace("*.", "");
-                            // add list of identifiers where label count exceeds root domain label count
-                            invalidLabels.AddRange(dnsIdentifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith($".{rootDomain}", StringComparison.OrdinalIgnoreCase) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
+                        // if wildcard domain included, check first level labels not also specified, i.e.
+                        // *.example.com & www.example.com cannot be mixed, but example.com, *.example.com &
+                        // test.www.example.com can
+                        var invalidLabels = new List<CertIdentifierItem>();
+                        var dnsIdentifiers = item.GetCertificateIdentifiers().Where(i => i.IdentifierType == CertIdentifierType.Dns);
 
-                            if (invalidLabels.Count > 0)
+                        if (dnsIdentifiers.Any(d => d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
+                        {
+                            foreach (var wildcard in dnsIdentifiers.Where(d => d.IdentifierType == CertIdentifierType.Dns && d.Value.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
                             {
-                                return new ValidationResult(
-                                   false,
-                                   $"Wildcard domain certificate requests (e.g. {wildcard}) cannot be mixed with requests including immediate subdomains (e.g. {invalidLabels[0]}).",
-                                   ValidationErrorCodes.MIXED_WILDCARD_WITH_LABELS.ToString()
-                               );
+                                var rootDomain = wildcard.Value.Replace("*.", "");
+                                // add list of identifiers where label count exceeds root domain label count
+                                invalidLabels.AddRange(dnsIdentifiers.Where(domain => domain.Value != wildcard.Value && domain.Value.EndsWith($".{rootDomain}", StringComparison.OrdinalIgnoreCase) && domain.Value.Count(s => s == '.') == wildcard.Value.Count(s => s == '.')));
+
+                                if (invalidLabels.Count > 0)
+                                {
+                                    return new ValidationResult(
+                                       false,
+                                       $"Wildcard domain certificate requests (e.g. {wildcard}) cannot be mixed with requests including immediate subdomains (e.g. {invalidLabels[0]}).",
+                                       ValidationErrorCodes.MIXED_WILDCARD_WITH_LABELS.ToString()
+                                   );
+                                }
                             }
                         }
                     }
