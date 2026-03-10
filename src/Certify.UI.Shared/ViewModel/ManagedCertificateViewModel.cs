@@ -31,6 +31,8 @@ namespace Certify.UI.ViewModel
         public void RaiseSelectedItemChanges()
         {
 
+            EnsureExternalSourceConfiguration();
+
             // check for invalid primary domains (from previous RadioButton in DataGrid UI bug)
             if (SelectedItem?.DomainOptions.Count(d => d.IsPrimaryDomain) > 1)
             {
@@ -63,6 +65,15 @@ namespace Certify.UI.ViewModel
 
             RaisePropertyChangedEvent(nameof(StoredPasswords));
             RaisePropertyChangedEvent(nameof(CertificateAuthorities));
+            RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
+            RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+            RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
+            RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
+            RaisePropertyChangedEvent(nameof(ExternalSourceTypes));
+            RaisePropertyChangedEvent(nameof(ExternalRetrievalModes));
+            RaisePropertyChangedEvent(nameof(ExternalPollingIntervals));
+            RaisePropertyChangedEvent(nameof(ExternalSourceCredentials));
+            RaisePropertyChangedEvent(nameof(SelectedExternalCredential));
 
             RaisePropertyChangedEvent(nameof(IsEditable));
 
@@ -313,6 +324,148 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        private ObservableCollection<StoredCredential> _externalSourceCredentials = new ObservableCollection<StoredCredential>();
+        private string? _externalSourceCredentialFilter = null;
+
+        [DependsOn("_appViewModel.StoredCredentials")]
+        public IEnumerable<Models.Config.StoredCredential> ExternalSourceCredentials
+        {
+            get
+            {
+                // When source type is AzureKeyVault, filter to matching Azure AD credential type
+                var sourceType = SelectedItem?.ExternalSource?.SourceType;
+                string? providerFilter = null;
+
+                var list = _appViewModel.StoredCredentials?.ToList();
+
+                if (_externalSourceCredentialFilter != providerFilter)
+                {
+                    // Source type changed — rebuild the collection with the new filter
+                    _externalSourceCredentialFilter = providerFilter;
+                    _externalSourceCredentials.Clear();
+                }
+
+                if (_externalSourceCredentials.Count == 0)
+                {
+                    _externalSourceCredentials.Add(new Models.Config.StoredCredential
+                    {
+                        StorageKey = null,
+                        Title = "(None)"
+                    });
+
+                    if (list != null)
+                    {
+                        foreach (var a in list)
+                        {
+                            _externalSourceCredentials.Add(a);
+                        }
+                    }
+                }
+                else if (list != null)
+                {
+                    foreach (var p in list)
+                    {
+                        if (!_externalSourceCredentials.Any(c => c.StorageKey == p.StorageKey))
+                        {
+                            _externalSourceCredentials.Add(p);
+                        }
+                    }
+                }
+
+                return _externalSourceCredentials;
+            }
+        }
+
+        public StoredCredential? SelectedExternalCredential
+        {
+            get
+            {
+                var key = SelectedItem?.ExternalSource?.CredentialKey;
+                return ExternalSourceCredentials.FirstOrDefault(c => c.StorageKey == key);
+            }
+            set
+            {
+                if (SelectedItem?.ExternalSource != null)
+                {
+                    SelectedItem.ExternalSource.CredentialKey = value?.StorageKey;
+                    SelectedItem.IsChanged = true;
+                }
+            }
+        }
+
+        public ObservableCollection<Models.Hub.ManagedCertificateSummary> SubscribableManagedCertificates { get; } = new();
+        public bool IsLoadingSubscribableCertificates { get; private set; }
+        public bool HasAttemptedLoadSubscribableCertificates { get; private set; }
+
+        public bool ShowNoSubscribableManagedCertificatesIndicator
+        {
+            get
+            {
+                var isHubSource = string.Equals(
+                    SelectedItem?.ExternalSource?.SourceType,
+                    ExternalCertificateSourceTypes.ManagementHub,
+                    StringComparison.OrdinalIgnoreCase);
+
+                return isHubSource
+                    && HasAttemptedLoadSubscribableCertificates
+                    && !IsLoadingSubscribableCertificates
+                    && SubscribableManagedCertificates.Count == 0;
+            }
+        }
+
+        private Models.Hub.ManagedCertificateSummary? _selectedSubscribableCertificate;
+        public Models.Hub.ManagedCertificateSummary? SelectedSubscribableCertificate
+        {
+            get => _selectedSubscribableCertificate;
+            set
+            {
+                _selectedSubscribableCertificate = value;
+                if (value != null && SelectedItem?.ExternalSource != null)
+                {
+                    SelectedItem.ExternalSource.ExternalReference = $"{value.InstanceId}/{value.Id}";
+                    SelectedItem.IsChanged = true;
+                    RaisePropertyChangedEvent(nameof(SelectedItem));
+                }
+            }
+        }
+
+        public async Task LoadSubscribableManagedCertificates()
+        {
+            HasAttemptedLoadSubscribableCertificates = true;
+
+            IsLoadingSubscribableCertificates = true;
+            RaisePropertyChangedEvent(nameof(IsLoadingSubscribableCertificates));
+            RaisePropertyChangedEvent(nameof(HasAttemptedLoadSubscribableCertificates));
+            RaisePropertyChangedEvent(nameof(ShowNoSubscribableManagedCertificatesIndicator));
+
+            SubscribableManagedCertificates.Clear();
+
+            var results = await _appViewModel.GetHubSubscribableManagedCertificates();
+            foreach (var item in results)
+            {
+                SubscribableManagedCertificates.Add(item);
+            }
+
+            IsLoadingSubscribableCertificates = false;
+            RaisePropertyChangedEvent(nameof(IsLoadingSubscribableCertificates));
+            RaisePropertyChangedEvent(nameof(SubscribableManagedCertificates));
+            RaisePropertyChangedEvent(nameof(ShowNoSubscribableManagedCertificatesIndicator));
+        }
+
+        public void ClearSubscribableManagedCertificates(bool resetLoadAttemptState = true)
+        {
+            SubscribableManagedCertificates.Clear();
+
+            if (resetLoadAttemptState)
+            {
+                HasAttemptedLoadSubscribableCertificates = false;
+                RaisePropertyChangedEvent(nameof(HasAttemptedLoadSubscribableCertificates));
+            }
+
+            RaisePropertyChangedEvent(nameof(SubscribableManagedCertificates));
+            RaisePropertyChangedEvent(nameof(ShowNoSubscribableManagedCertificatesIndicator));
+        }
+
         private ObservableCollection<StoredCredential> _storedPasswords = new ObservableCollection<StoredCredential>();
 
         [DependsOn("_appViewModel.StoredCredentials")]
@@ -445,6 +598,71 @@ namespace Certify.UI.ViewModel
         public bool UseAuthorityTokenListView { get; set; }
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
+        [DependsOn(nameof(SelectedItem))]
+        public bool IsExternalManagedCertificateItem => SelectedItem?.ItemType == ManagedCertificateType.SSL_ExternallyManaged;
+
+        [DependsOn(nameof(SelectedItem))]
+        public bool IsExternalSubscriptionMode
+        {
+            get => IsExternalManagedCertificateItem;
+            set
+            {
+                if (SelectedItem == null)
+                {
+                    return;
+                }
+
+                var targetType = value
+                    ? ManagedCertificateType.SSL_ExternallyManaged
+                    : ManagedCertificateType.SSL_ACME;
+
+                if (SelectedItem.ItemType == targetType)
+                {
+                    return;
+                }
+
+                SelectedItem.ItemType = targetType;
+
+                if (value)
+                {
+                    EnsureExternalSourceConfiguration();
+                    UseAuthorityTokenListView = false;
+                }
+                else if (SelectedItem.ExternalSource != null)
+                {
+                    SelectedItem.ExternalSource.IsEnabled = false;
+                }
+
+                SelectedItem.IsChanged = true;
+
+                RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
+                RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+                RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
+                RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
+            }
+        }
+
+        [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
+        public bool ShowStandardIdentifiersEditor => !IsExternalManagedCertificateItem && !UseAuthorityTokenListView;
+
+        [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
+        public bool ShowAuthorityTokenEditor => !IsExternalManagedCertificateItem && UseAuthorityTokenListView;
+
+        public IEnumerable<string> ExternalSourceTypes => new[]
+        {
+            ExternalCertificateSourceTypes.ManagementHub,
+            ExternalCertificateSourceTypes.SecretsStore
+        };
+
+        public IEnumerable<string> ExternalRetrievalModes => new[]
+        {
+            ExternalCertificateRetrievalModes.Pull,
+            ExternalCertificateRetrievalModes.Push,
+            ExternalCertificateRetrievalModes.Auto
+        };
+
+        public IEnumerable<int> ExternalPollingIntervals => new[] { 5, 15, 30, 60, 120, 240, 720, 1440 };
+
         public Preferences Preferences => _appViewModel.Preferences;
 
         public static ManagedCertificateViewModel GetModel()
@@ -543,6 +761,11 @@ namespace Certify.UI.ViewModel
             if (SelectedItem == null)
             {
                 return new ValidationResult(false, "No item selected", ValidationErrorCodes.ITEM_NOT_FOUND.ToString());
+            }
+
+            if (IsExternalManagedCertificateItem)
+            {
+                return ValidateExternalSource();
             }
 
             var caId = Preferences.DefaultCertificateAuthority.WithDefault(StandardCertAuthorities.LETS_ENCRYPT);
@@ -693,5 +916,57 @@ namespace Certify.UI.ViewModel
 
         public ICommand SANSelectAllCommand => new RelayCommand<object>(SANSelectAll);
         public ICommand SANSelectNoneCommand => new RelayCommand<object>(SANSelectNone);
+
+        public void EnsureExternalSourceConfiguration()
+        {
+            if (!IsExternalManagedCertificateItem || SelectedItem == null)
+            {
+                return;
+            }
+
+            SelectedItem.ExternalSource ??= new ExternalCertificateSubscription();
+
+            if (string.IsNullOrWhiteSpace(SelectedItem.ExternalSource.RetrievalMode))
+            {
+                SelectedItem.ExternalSource.RetrievalMode = ExternalCertificateRetrievalModes.Pull;
+            }
+
+            if (SelectedItem.ExternalSource.PollIntervalMinutes <= 0)
+            {
+                SelectedItem.ExternalSource.PollIntervalMinutes = 30;
+            }
+        }
+
+        private ValidationResult ValidateExternalSource()
+        {
+            EnsureExternalSourceConfiguration();
+
+            var source = SelectedItem.ExternalSource;
+
+            if (source == null)
+            {
+                return new ValidationResult(false, "External source settings are not available.", "EXTERNAL_SOURCE_MISSING");
+            }
+
+            if (source.IsEnabled)
+            {
+                if (string.IsNullOrWhiteSpace(source.SourceType))
+                {
+                    return new ValidationResult(false, "Source Type is required when external subscription is enabled.", "EXTERNAL_SOURCE_TYPE_REQUIRED");
+                }
+
+                if (string.IsNullOrWhiteSpace(source.ExternalReference))
+                {
+                    return new ValidationResult(false, "External Reference is required when external subscription is enabled.", "EXTERNAL_SOURCE_REFERENCE_REQUIRED");
+                }
+            }
+
+            if (source.PollIntervalMinutes <= 0)
+            {
+                source.PollIntervalMinutes = 30;
+            }
+
+            return new ValidationResult(true, string.Empty, string.Empty);
+        }
     }
 }

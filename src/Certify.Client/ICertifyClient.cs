@@ -97,6 +97,11 @@ namespace Certify.Client
         Task<ActionResult> RemoveAccount(string storageKey, bool deactivate, AuthContext authContext = null);
         Task<ActionResult> ChangeAccountKey(string storageKey, string newKeyPEM = null, AuthContext authContext = null);
         #endregion Accounts
+
+        #region Hub Subscriptions
+        /// <summary>Returns managed certificate summaries that the calling instance is permitted to pull via the management hub.</summary>
+        Task<List<Models.Hub.ManagedCertificateSummary>> GetHubSubscribableManagedCertificates(AuthContext authContext = null);
+        #endregion Hub Subscriptions
     }
 
     /// <summary>

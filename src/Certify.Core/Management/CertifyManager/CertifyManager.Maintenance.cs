@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -94,7 +93,7 @@ namespace Certify.Management
                     hubInstance.ClientName = updatedInstance.ClientName;
                     hubInstance.ClientVersion = updatedInstance.ClientVersion;
 
-                    await UpdateHubManagedInstance(hubInstance.Id, hubInstance);
+                    await UpdateHubManagedInstance(hubInstance.Id, hubInstance, isHeartBeatInfo: true);
                 }
             }
 

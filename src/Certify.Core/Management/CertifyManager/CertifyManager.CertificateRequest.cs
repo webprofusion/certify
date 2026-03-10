@@ -263,6 +263,12 @@ namespace Certify.Management
 
             // start with a failure result, set to success when succeeding
             var requestResult = new CertificateRequestResult(managedCertificate);
+            var isExternalSubscriptionRequest = false;
+
+            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged && managedCertificate.ExternalSource?.SourceType != null)
+            {
+                isExternalSubscriptionRequest = true;
+            }
 
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
             var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
@@ -307,7 +313,7 @@ namespace Certify.Management
                 }
 
                 // if the script has requested the certificate request to be aborted, skip the request
-                if (!requestResult.Abort)
+                if (!isExternalSubscriptionRequest && !requestResult.Abort)
                 {
 
                     if (!skipRequest && managedCertificate.SkipCertificateRequest != true)
@@ -368,6 +374,44 @@ namespace Certify.Management
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate));
                     }
                 }
+
+                if (isExternalSubscriptionRequest)
+                {
+
+                    if (managedCertificate.ExternalSource?.IsEnabled == true)
+                    {
+                        // attempt out external request. If source is unavailbale request should fail
+                        requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
+                        if (requestResult.IsSuccess)
+                        {
+                            // wait for result
+                            await Task.Delay(5000);
+
+                            // wait for any other subscription tasks to complete
+                            while (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
+                            {
+                                await Task.Delay(1000);
+                            }
+
+                            try
+                            {
+                                await ProcessExternalManagedCertificate(managedCertificate, CancellationToken.None);
+                            }
+                            finally
+                            {
+                                Interlocked.Exchange(ref _isExternalSubscriptionTaskRunning, 0);
+                            }
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                    else
+                    {
+                        log?.Information($"Certificate request is an external subscription [{managedCertificate.ExternalSource.SourceType}] but is not currently enabled. Request skipped.");
+                    }
+                }
             }
             catch (Exception exp)
             {
@@ -397,7 +441,7 @@ namespace Certify.Management
                 requestResult.ManagedItem = managedCertificate;
 
                 // if request is not awaiting user and there are any post requests tasks, run them now
-                if (managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
+                if (!isExternalSubscriptionRequest && managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
 
                     // run applicable deployment tasks (whether success or failed), powershell
@@ -445,22 +489,25 @@ namespace Certify.Management
                     }
                 }
 
-                // final state is either paused, success or error
-                var finalState = managedCertificate.Health == ManagedCertificateHealth.AwaitingUser ?
-                     RequestState.Paused :
-                     (requestResult.IsSuccess ? RequestState.Success : RequestState.Error);
-
-                ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate), logThisEvent: false);
-
-                if (string.IsNullOrEmpty(requestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
+                if (!isExternalSubscriptionRequest)
                 {
-                    requestResult.Message = managedCertificate.RenewalFailureMessage;
+                    // final state is either paused, success or error
+                    var finalState = managedCertificate.Health == ManagedCertificateHealth.AwaitingUser ?
+                         RequestState.Paused :
+                         (requestResult.IsSuccess ? RequestState.Success : RequestState.Error);
+
+                    ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate), logThisEvent: false);
+
+                    if (string.IsNullOrEmpty(requestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
+                    {
+                        requestResult.Message = managedCertificate.RenewalFailureMessage;
+                    }
+
+                    await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
                 }
 
-                await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
+                _renewalsInProgress.TryRemove(managedCertificate.Id, out _);
             }
-
-            _renewalsInProgress.TryRemove(managedCertificate.Id, out _);
 
             if (isInteractive)
             {
@@ -1253,6 +1300,12 @@ namespace Certify.Management
                 // if our challenge takes a while to propagate, wait
                 if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS)
                 {
+                    result.ChallengeResponsePropagationSeconds = 60;
+                }
+
+                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+                {
+                    // persistent record may already exist; allow propagation time for newly created records
                     result.ChallengeResponsePropagationSeconds = 60;
                 }
 

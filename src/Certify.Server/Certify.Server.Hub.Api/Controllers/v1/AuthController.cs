@@ -463,7 +463,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 };
 
                 // If user does not exist, create a new user with no permissions
-                var added = await _client.AddSecurityPrincipal(sp, new AuthContext { UserId = "system" });
+                var added = await _client.AddSecurityPrincipal(sp, SystemAuthContext);
 
                 if (!added.IsSuccess)
                 {

@@ -61,6 +61,9 @@ namespace Certify.Server.Hub.Api.Controllers
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
 
+            // TODO: would fetching cached hub status summaries be faster
+            var knownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
+
             // Pre-load all item tags for ManagedCertificates to display in the list
             Dictionary<string, List<TagSummary>> tagsByItemId = new();
             Dictionary<string, TagCategory> categoriesByKey = new();
@@ -79,6 +82,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
+                // TODO: we need to optimize this by only loading tags for items we know are in the result set, but for now we'll load all tags for display purposes and filter in-memory
                 var allItemTags = await _client.GetAllHubItemTags(null, null, "ManagedCertificate", null, CurrentAuthContext);
                 if (allItemTags != null)
                 {
@@ -130,7 +134,8 @@ namespace Certify.Server.Hub.Api.Controllers
                         .Where(i => healthFilter == null || (healthFilter != null && i.Health == healthFilter))
                         .Select(i =>
                         {
-                            var instance = instances.FirstOrDefault(i => i.InstanceId == remote.InstanceId);
+                            var instance = knownInstances.FirstOrDefault(k => k.InstanceId == remote.InstanceId)
+                                           ?? instances.FirstOrDefault(c => c.InstanceId == remote.InstanceId);
 
                             // Get tags for this managed certificate from pre-loaded data
                             var tags = tagsByItemId.TryGetValue(i.Id ?? "", out var itemTags) ? itemTags : new List<TagSummary>();

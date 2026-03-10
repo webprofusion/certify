@@ -38,8 +38,158 @@
                 Header="Identifiers"
                 IsSelected="False">
 
-                <Grid>
-                    <WrapPanel Orientation="Vertical" Visibility="{Binding UseAuthorityTokenListView, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                <DockPanel LastChildFill="True">
+                    <DockPanel
+                        Margin="8,0,8,8"
+                        DockPanel.Dock="Top"
+                        Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                        <StackPanel Orientation="Horizontal">
+                            <Label Width="200" Content="Use External Subscription" />
+                            <CheckBox
+                                VerticalAlignment="Center"
+                                IsChecked="{Binding IsExternalSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"
+                                ToolTip="Switch this managed certificate to use an external source subscription instead of ACME request/authorization settings." />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <DockPanel
+                        Margin="8,0,8,8"
+                        DockPanel.Dock="Top"
+                        Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
+                            Configure how this externally managed certificate is synchronized from its source.
+                        </TextBlock>
+
+                        <StackPanel Margin="0,12,0,0" Orientation="Vertical">
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Subscription Enabled" />
+                                <CheckBox IsChecked="{Binding SelectedItem.ExternalSource.IsEnabled, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Source Type" />
+                                <ComboBox
+                                    Width="240"
+                                    ItemsSource="{Binding ExternalSourceTypes}"
+                                    SelectedItem="{Binding SelectedItem.ExternalSource.SourceType, UpdateSourceTrigger=PropertyChanged}"
+                                    SelectionChanged="ExternalSourceType_SelectionChanged" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Width="200" Content="External Reference" />
+                                    <TextBox
+                                        Width="360"
+                                        Controls:TextBoxHelper.Watermark="Hub: {instanceId}/{managedCertId} or Key Vault: {secret}/{version}"
+                                        Text="{Binding SelectedItem.ExternalSource.ExternalReference, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+
+                                <StackPanel Margin="200,4,0,0" Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SelectedItem.ExternalSource.SourceType}" Value="ManagementHub">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <ComboBox
+                                        x:Name="HubCertificateBrowser"
+                                        Width="320"
+                                        Controls:TextBoxHelper.Watermark="Browse available hub certificates..."
+                                        ItemsSource="{Binding SubscribableManagedCertificates}"
+                                        SelectedItem="{Binding SelectedSubscribableCertificate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Vertical">
+                                                    <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
+                                                    <TextBlock
+                                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                        Text="{Binding InstanceTitle}" />
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button
+                                        Margin="4,0,0,0"
+                                        Click="LoadHubCertificates_Click"
+                                        Content="Load"
+                                        IsEnabled="{Binding IsLoadingSubscribableCertificates, Converter={StaticResource ResourceKey=InvBoolConverter}}" />
+                                </StackPanel>
+
+                                <TextBlock
+                                    Margin="200,6,0,0"
+                                    Foreground="{DynamicResource WarningColorBrush}"
+                                    Text="No certificates are currently permitted by the hub for this instance. Review the subscription policy on the hub."
+                                    TextWrapping="Wrap"
+                                    Visibility="{Binding ShowNoSubscribableManagedCertificatesIndicator, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.ExternalSource.SourceType}" Value="ManagementHub">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Label Width="200" Content="Credential" />
+                                <ComboBox
+                                    x:Name="ExternalSourceCredential"
+                                    Width="240"
+                                    DisplayMemberPath="Title"
+                                    ItemsSource="{Binding ExternalSourceCredentials}"
+                                    SelectedItem="{Binding SelectedExternalCredential, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button
+                                    Margin="4,0,0,0"
+                                    Click="AddExternalSourceCredential_Click"
+                                    Content="New" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding SelectedItem.ExternalSource.SourceType}" Value="ManagementHub">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Label Width="200" Content="Poll Interval Minutes" />
+                                <ComboBox
+                                    Width="240"
+                                    ItemsSource="{Binding ExternalPollingIntervals}"
+                                    SelectedItem="{Binding SelectedItem.ExternalSource.PollIntervalMinutes, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
+                            <TextBlock Margin="0,16,0,0" FontWeight="SemiBold" Text="Sync Status" />
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Last Poll" />
+                                <TextBlock VerticalAlignment="Center" Text="{Binding SelectedItem.ExternalSource.DateLastPoll}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Last Source Version" />
+                                <TextBlock VerticalAlignment="Center" Text="{Binding SelectedItem.ExternalSource.LastSourceVersion}" />
+                            </StackPanel>
+
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Last Source Error" />
+                                <TextBlock VerticalAlignment="Center" Text="{Binding SelectedItem.ExternalSource.LastError}" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <WrapPanel
+                        DockPanel.Dock="Top"
+                        Orientation="Vertical"
+                        Visibility="{Binding ShowStandardIdentifiersEditor, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <DockPanel Margin="8,0,8,8" Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
 
                             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_DomainsIntro}" /></TextBlock>
@@ -346,7 +496,7 @@
                     <WrapPanel Orientation="Vertical" Visibility="{Binding UseAuthorityTokenListView, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <managedcertificate:AuthorityTokenList />
                     </WrapPanel>
-                </Grid>
+                </DockPanel>
 
             </TabItem>
 

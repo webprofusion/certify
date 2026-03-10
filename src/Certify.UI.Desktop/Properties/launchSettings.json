@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Certify.UI.Desktop": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "CERTIFY_APPDATA_PATH": "C:\\\\ProgramData\\\\CertifyDebugDesktop"
+      }
+    }
+  }
+}

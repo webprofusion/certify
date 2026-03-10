@@ -14,8 +14,8 @@
       "commandName": "Project",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true",
-        "CERTIFY_GENERATE_DEMO_ITEMS": "true"
+        "CERTIFY_ENABLE_MANAGEMENT_HUB": "true"
+        //"CERTIFY_GENERATE_DEMO_ITEMS": "true"
         //"CERTIFY_PROXY": "http://localhost:8888"
       },
       "dotnetRunMessages": true,

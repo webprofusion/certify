@@ -878,6 +878,12 @@ namespace Certify.Client
             return JsonToObject<OidcProviderConfig>(result);
         }
 
+        public async Task<List<Models.Hub.ManagedCertificateSummary>> GetHubSubscribableManagedCertificates(AuthContext authContext = null)
+        {
+            var result = await FetchAsync("system/hub/subscribable", authContext);
+            return JsonToObject<List<Models.Hub.ManagedCertificateSummary>>(result) ?? new();
+        }
+
         #endregion
 
         private T JsonToObject<T>(string json)

@@ -176,7 +176,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Check a given security principal has permissions to perform a specific action for a specific resource action [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<bool> CheckSecurityPrincipalHasAccessAsync(AccessCheck body)
         {
@@ -184,7 +186,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Check a given security principal has permissions to perform a specific action for a specific resource action [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<bool> CheckSecurityPrincipalHasAccessAsync(AccessCheck body, System.Threading.CancellationToken cancellationToken)
         {
@@ -261,7 +265,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of Assigned Roles for a given security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedRole>> GetSecurityPrincipalAssignedRolesAsync(string id)
         {
@@ -269,7 +275,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of Assigned Roles for a given security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedRole>> GetSecurityPrincipalAssignedRolesAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -344,7 +352,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of Assigned Roles etc for a given security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<RoleStatus> GetSecurityPrincipalRoleStatusAsync(string id)
         {
@@ -352,7 +362,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of Assigned Roles etc for a given security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<RoleStatus> GetSecurityPrincipalRoleStatusAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -427,7 +439,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available security Roles [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Role>> GetAccessRolesAsync()
         {
@@ -435,7 +449,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available security Roles [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<Role>> GetAccessRolesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -505,7 +521,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of API assigned access tokens [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync()
         {
@@ -513,7 +531,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of API assigned access tokens [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AssignedAccessToken>> GetAssignedAccessTokensAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -583,7 +603,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add new assigned access token [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body)
         {
@@ -591,7 +613,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add new assigned access token [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddAssignedAccessTokenAsync(AssignedAccessToken body, System.Threading.CancellationToken cancellationToken)
         {
@@ -668,7 +692,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove assigned access token [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveAssignedAccessTokenAsync(string id)
         {
@@ -676,7 +702,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove assigned access token [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveAssignedAccessTokenAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -752,7 +780,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available security principals [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SecurityPrincipal>> GetSecurityPrincipalsAsync()
         {
@@ -760,7 +790,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available security principals [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SecurityPrincipal>> GetSecurityPrincipalsAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -830,7 +862,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Check password valid for security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<SecurityPrincipalCheckResponse> ValidateSecurityPrincipalPasswordAsync(SecurityPrincipalPasswordCheck body)
         {
@@ -838,7 +872,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Check password valid for security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<SecurityPrincipalCheckResponse> ValidateSecurityPrincipalPasswordAsync(SecurityPrincipalPasswordCheck body, System.Threading.CancellationToken cancellationToken)
         {
@@ -915,7 +951,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update password for security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalPasswordAsync(SecurityPrincipalPasswordUpdate body)
         {
@@ -923,7 +961,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update password for security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalPasswordAsync(SecurityPrincipalPasswordUpdate body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1000,7 +1040,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add new security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddSecurityPrincipalAsync(SecurityPrincipal body)
         {
@@ -1008,7 +1050,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add new security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddSecurityPrincipalAsync(SecurityPrincipal body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1085,7 +1129,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveSecurityPrincipalAsync(string id)
         {
@@ -1093,7 +1139,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveSecurityPrincipalAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -1169,7 +1217,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update existing security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalAsync(SecurityPrincipal body)
         {
@@ -1177,7 +1227,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update existing security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalAsync(SecurityPrincipal body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1254,7 +1306,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update assigned roles for a security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalAssignedRolesAsync(SecurityPrincipalAssignedRoleUpdate body)
         {
@@ -1262,7 +1316,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update assigned roles for a security principal [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateSecurityPrincipalAssignedRolesAsync(SecurityPrincipalAssignedRoleUpdate body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1339,7 +1395,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get All Acme Accounts [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId)
         {
@@ -1347,7 +1405,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get All Acme Accounts [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountDetails>> GetAcmeAccountsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -1422,7 +1482,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add New Acme Account [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body)
         {
@@ -1430,7 +1492,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add New Acme Account [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddAcmeAccountAsync(string instanceId, ContactRegistration body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1512,7 +1576,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of defined Certificate Authorities [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateAuthority>> GetCertificateAuthoritiesAsync(string instanceId)
         {
@@ -1520,7 +1586,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of defined Certificate Authorities [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateAuthority>> GetCertificateAuthoritiesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -1595,7 +1663,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/Update Certificate Authority [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateCertificateAuthorityAsync(string instanceId, CertificateAuthority body)
         {
@@ -1603,7 +1673,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/Update Certificate Authority [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateCertificateAuthorityAsync(string instanceId, CertificateAuthority body, System.Threading.CancellationToken cancellationToken)
         {
@@ -1685,7 +1757,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Certificate Authority [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveCertificateAuthorityAsync(string instanceId, string id)
         {
@@ -1693,7 +1767,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Certificate Authority [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveCertificateAuthorityAsync(string instanceId, string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -1772,7 +1848,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove ACME Account [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveAcmeAccountAsync(string instanceId, string storageKey, bool deactivate)
         {
@@ -1780,7 +1858,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove ACME Account [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveAcmeAccountAsync(string instanceId, string storageKey, bool deactivate, System.Threading.CancellationToken cancellationToken)
         {
@@ -1864,7 +1944,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Dns Challenge Providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ChallengeProviderDefinition>> GetChallengeProvidersAsync(string instanceId)
         {
@@ -1872,7 +1954,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Dns Challenge Providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ChallengeProviderDefinition>> GetChallengeProvidersAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -1946,7 +2030,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get List of Zones with the current DNS provider and credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<DnsZoneQueryResult> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId)
         {
@@ -1954,7 +2040,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get List of Zones with the current DNS provider and credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<DnsZoneQueryResult> GetDnsZonesAsync(string instanceId, string providerTypeId, string credentialId, System.Threading.CancellationToken cancellationToken)
         {
@@ -2038,7 +2126,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Deployment Task Providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DeploymentProviderDefinition>> GetDeploymentProvidersAsync(string instanceId)
         {
@@ -2046,7 +2136,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Deployment Task Providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DeploymentProviderDefinition>> GetDeploymentProvidersAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -2120,7 +2212,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Execute Deployment Task [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> ExecuteDeploymentTaskAsync(string instanceId, string managedCertificateId, string taskId)
         {
@@ -2128,7 +2222,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Execute Deployment Task [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> ExecuteDeploymentTaskAsync(string instanceId, string managedCertificateId, string taskId, System.Threading.CancellationToken cancellationToken)
         {
@@ -2415,6 +2511,275 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <summary>
+        /// Get a managed instance by id.
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ManagedInstanceInfo> GetHubManagedInstanceAsync(string id)
+        {
+            return GetHubManagedInstanceAsync(id, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get a managed instance by id.
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ManagedInstanceInfo> GetHubManagedInstanceAsync(string id, System.Threading.CancellationToken cancellationToken)
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/hub/instances/{id}"
+                    urlBuilder_.Append("internal/v1/hub/instances/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ManagedInstanceInfo>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Update a managed instance by id.
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ActionResult> UpdateHubManagedInstanceAsync(string id, ManagedInstanceInfo body)
+        {
+            return UpdateHubManagedInstanceAsync(id, body, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Update a managed instance by id.
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ActionResult> UpdateHubManagedInstanceAsync(string id, ManagedInstanceInfo body, System.Threading.CancellationToken cancellationToken)
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            if (body == null)
+                throw new System.ArgumentNullException("body");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(body, JsonSerializerSettings);
+                    var content_ = new System.Net.Http.StringContent(json_);
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("PUT");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/hub/instances/{id}"
+                    urlBuilder_.Append("internal/v1/hub/instances/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Remove existing managed instance in the hub [Generated]
+        /// </summary>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id)
+        {
+            return RemoveHubManagedInstanceAsync(id, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Remove existing managed instance in the hub [Generated]
+        /// </summary>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id, System.Threading.CancellationToken cancellationToken)
+        {
+            if (id == null)
+                throw new System.ArgumentNullException("id");
+
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/hub/instances/{id}"
+                    urlBuilder_.Append("internal/v1/hub/instances/");
+                    urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Flush all hub managed instances
         /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -2660,17 +3025,103 @@ namespace Certify.Server.Hub.Api
             }
         }
 
+        /// <summary>
+        /// Returns managed certificate summaries that the authenticated calling instance is permitted to pull.
+        /// <br/>Authenticated via X-Client-ID / X-Client-Secret + X-Certify-HubAssignedId headers (hub joining credentials).
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id)
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedCertificateSummary>> GetSubscribableManagedCertificatesAsync()
         {
-            return RemoveHubManagedInstanceAsync(id, System.Threading.CancellationToken.None);
+            return GetSubscribableManagedCertificatesAsync(System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns managed certificate summaries that the authenticated calling instance is permitted to pull.
+        /// <br/>Authenticated via X-Client-ID / X-Client-Secret + X-Certify-HubAssignedId headers (hub joining credentials).
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedCertificateSummary>> GetSubscribableManagedCertificatesAsync(System.Threading.CancellationToken cancellationToken)
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "internal/v1/hub/subscription/available"
+                    urlBuilder_.Append("internal/v1/hub/subscription/available");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<ManagedCertificateSummary>>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedCertificateSummary>> GetSubscribableManagedCertificatesBySecurityPrincipalAsync(string id)
+        {
+            return GetSubscribableManagedCertificatesBySecurityPrincipalAsync(id, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<ActionResult> RemoveHubManagedInstanceAsync(string id, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedCertificateSummary>> GetSubscribableManagedCertificatesBySecurityPrincipalAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -2681,13 +3132,13 @@ namespace Certify.Server.Hub.Api
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    request_.Method = new System.Net.Http.HttpMethod("DELETE");
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
                     request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
 
                     var urlBuilder_ = new System.Text.StringBuilder();
                     if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
-                    // Operation Path: "internal/v1/hub/instances/{id}"
-                    urlBuilder_.Append("internal/v1/hub/instances/");
+                    // Operation Path: "internal/v1/hub/subscription/available/securityprincipal/{id}"
+                    urlBuilder_.Append("internal/v1/hub/subscription/available/securityprincipal/");
                     urlBuilder_.Append(System.Uri.EscapeDataString(ConvertToString(id, System.Globalization.CultureInfo.InvariantCulture)));
 
                     PrepareRequest(client_, request_, urlBuilder_);
@@ -2715,7 +3166,7 @@ namespace Certify.Server.Hub.Api
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<System.Collections.Generic.ICollection<ManagedCertificateSummary>>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -3460,7 +3911,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get List of Stored Credentials [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StoredCredential>> GetStoredCredentialsAsync(string instanceId)
         {
@@ -3468,7 +3921,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get List of Stored Credentials [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<StoredCredential>> GetStoredCredentialsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -3542,7 +3997,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/Update Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateStoredCredentialAsync(string instanceId, StoredCredential body)
         {
@@ -3550,7 +4007,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/Update Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateStoredCredentialAsync(string instanceId, StoredCredential body, System.Threading.CancellationToken cancellationToken)
         {
@@ -3631,7 +4090,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveStoredCredentialAsync(string instanceId, string storageKey)
         {
@@ -3639,7 +4100,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveStoredCredentialAsync(string instanceId, string storageKey, System.Threading.CancellationToken cancellationToken)
         {
@@ -3718,7 +4181,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Unlock Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<StoredCredentialUnlockResult> UnlockStoredCredentialAsync(string instanceId, string storageKey)
         {
@@ -3726,7 +4191,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Unlock Stored Credential [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<StoredCredentialUnlockResult> UnlockStoredCredentialAsync(string instanceId, string storageKey, System.Threading.CancellationToken cancellationToken)
         {
@@ -3807,7 +4274,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of IP addresses available on the target for service binding (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<IPAddressOption>> GetTargetIPAddressesAsync(string instanceId)
         {
@@ -3815,7 +4284,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of IP addresses available on the target for service binding (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<IPAddressOption>> GetTargetIPAddressesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -3890,7 +4361,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service Types present on instance (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetTargetServiceTypesAsync(string instanceId)
         {
@@ -3898,7 +4371,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service Types present on instance (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> GetTargetServiceTypesAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -3973,7 +4448,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service items (sites) present on instance (IIS, nginx etc). [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SiteInfo>> GetTargetServiceItemsAsync(string instanceId, string serviceType)
         {
@@ -3981,7 +4458,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service items (sites) present on instance (IIS, nginx etc). [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SiteInfo>> GetTargetServiceItemsAsync(string instanceId, string serviceType, System.Threading.CancellationToken cancellationToken)
         {
@@ -4061,7 +4540,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service item identifiers (domains on a website etc) present on instance (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DomainOption>> GetTargetServiceItemIdentifiersAsync(string instanceId, string serviceType, string itemId)
         {
@@ -4069,7 +4550,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get Service item identifiers (domains on a website etc) present on instance (IIS, nginx etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<DomainOption>> GetTargetServiceItemIdentifiersAsync(string instanceId, string serviceType, string itemId, System.Threading.CancellationToken cancellationToken)
         {
@@ -5363,7 +5846,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Managed Certificate [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId)
         {
@@ -5371,7 +5856,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove Managed Certificate [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedCertificateAsync(string instanceId, string managedCertId, System.Threading.CancellationToken cancellationToken)
         {
@@ -6142,7 +6629,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available managed challenges (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedChallenge>> GetManagedChallengesAsync()
         {
@@ -6150,7 +6639,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of available managed challenges (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedChallenge>> GetManagedChallengesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -6220,7 +6711,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/update a managed challenge (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateManagedChallengeAsync(ManagedChallenge body)
         {
@@ -6228,7 +6721,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add/update a managed challenge (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateManagedChallengeAsync(ManagedChallenge body, System.Threading.CancellationToken cancellationToken)
         {
@@ -6305,7 +6800,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a managed challenge (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedChallengeAsync(string id)
         {
@@ -6313,7 +6810,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a managed challenge (DNS challenge delegation etc) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedChallengeAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -6389,7 +6888,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of managed product license keys for instance license management [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedLicense>> GetManagedLicensesAsync()
         {
@@ -6397,7 +6898,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of managed product license keys for instance license management [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ManagedLicense>> GetManagedLicensesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -6467,7 +6970,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddManagedLicenseAsync(ManagedLicense body)
         {
@@ -6475,7 +6980,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddManagedLicenseAsync(ManagedLicense body, System.Threading.CancellationToken cancellationToken)
         {
@@ -6552,7 +7059,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateManagedLicenseAsync(ManagedLicense body)
         {
@@ -6560,7 +7069,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateManagedLicenseAsync(ManagedLicense body, System.Threading.CancellationToken cancellationToken)
         {
@@ -6637,7 +7148,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveManagedLicenseAsync(string id)
         {
@@ -6645,7 +7158,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveManagedLicenseAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -6721,7 +7236,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Activate a managed license for an instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> ActivateManagedLicenseAsync(string instanceId, string licenseId)
         {
@@ -6729,7 +7246,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Activate a managed license for an instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> ActivateManagedLicenseAsync(string instanceId, string licenseId, System.Threading.CancellationToken cancellationToken)
         {
@@ -6809,7 +7328,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Deactivate a managed license for an instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> DeactivateManagedLicenseAsync(string instanceId)
         {
@@ -6817,7 +7338,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Deactivate a managed license for an instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> DeactivateManagedLicenseAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -6894,7 +7417,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get status for a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<LicenseCheckResult> GetManagedLicenseStatusAsync(string id)
         {
@@ -6902,7 +7427,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get status for a managed license [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<LicenseCheckResult> GetManagedLicenseStatusAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -7057,7 +7584,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of oidc providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<OidcProviderConfig>> GetOidcProvidersAsync()
         {
@@ -7065,7 +7594,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get list of oidc providers [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<OidcProviderConfig>> GetOidcProvidersAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -7135,7 +7666,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add an Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddOidcProviderAsync(OidcProviderConfig body)
         {
@@ -7143,7 +7676,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add an Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddOidcProviderAsync(OidcProviderConfig body, System.Threading.CancellationToken cancellationToken)
         {
@@ -7220,7 +7755,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateOidcProviderAsync(OidcProviderConfig body)
         {
@@ -7228,7 +7765,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateOidcProviderAsync(OidcProviderConfig body, System.Threading.CancellationToken cancellationToken)
         {
@@ -7305,7 +7844,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete an Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveOidcProviderAsync(string id)
         {
@@ -7313,7 +7854,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete an Oidc Provider [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveOidcProviderAsync(string id, System.Threading.CancellationToken cancellationToken)
         {
@@ -7554,6 +8097,195 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <summary>
+        /// Get the current data store connection status
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<DataStoreStatus> GetDataStoreStatusAsync()
+        {
+            return GetDataStoreStatusAsync(System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Get the current data store connection status
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<DataStoreStatus> GetDataStoreStatusAsync(System.Threading.CancellationToken cancellationToken)
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Method = new System.Net.Http.HttpMethod("GET");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/v1/system/datastore/status"
+                    urlBuilder_.Append("api/v1/system/datastore/status");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<DataStoreStatus>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 503)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<DataStoreStatus>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<DataStoreStatus>("Service Unavailable", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual System.Threading.Tasks.Task<ActionResult> AttemptDataStoreReconnectionAsync()
+        {
+            return AttemptDataStoreReconnectionAsync(System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Attempt to reconnect to the data store after a failure
+        /// </summary>
+        /// <returns>OK</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public virtual async System.Threading.Tasks.Task<ActionResult> AttemptDataStoreReconnectionAsync(System.Threading.CancellationToken cancellationToken)
+        {
+            var client_ = _httpClient;
+            var disposeClient_ = false;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    request_.Content = new System.Net.Http.StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
+
+                    var urlBuilder_ = new System.Text.StringBuilder();
+                    if (!string.IsNullOrEmpty(_baseUrl)) urlBuilder_.Append(_baseUrl);
+                    // Operation Path: "api/v1/system/datastore/reconnect"
+                    urlBuilder_.Append("api/v1/system/datastore/reconnect");
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    var disposeResponse_ = true;
+                    try
+                    {
+                        var headers_ = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.IEnumerable<string>>();
+                        foreach (var item_ in response_.Headers)
+                            headers_[item_.Key] = item_.Value;
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = (int)response_.StatusCode;
+                        if (status_ == 200)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            return objectResponse_.Object;
+                        }
+                        else
+                        if (status_ == 500)
+                        {
+                            var objectResponse_ = await ReadObjectResponseAsync<ActionResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            if (objectResponse_.Object == null)
+                            {
+                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
+                            }
+                            throw new ApiException<ActionResult>("Internal Server Error", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+                        }
+                        else
+                        {
+                            var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
+                        }
+                    }
+                    finally
+                    {
+                        if (disposeResponse_)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+                if (disposeClient_)
+                    client_.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Attempt to register as a new instance with the management hub
         /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -7725,7 +8457,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get current info for the instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ManagedInstanceInfo> GetManagedInstanceInfoAsync(string instanceId)
         {
@@ -7733,7 +8467,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get current info for the instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ManagedInstanceInfo> GetManagedInstanceInfoAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -7807,7 +8543,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Perform an export of all settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body)
         {
@@ -7815,7 +8553,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Perform an export of all settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ImportExportPackage> PerformInstanceExportAsync(string instanceId, ExportRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -7897,7 +8637,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Perform an import of all settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body)
         {
@@ -7905,7 +8647,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Perform an import of all settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> PerformInstanceImportAsync(string instanceId, ImportRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -7987,7 +8731,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get instance status items [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetInstanceStatusItemsAsync(string instanceId)
         {
@@ -7995,7 +8741,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get instance status items [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ActionStep>> GetInstanceStatusItemsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -8070,7 +8818,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get service config for a managed instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ServiceConfig> GetServiceConfigAsync(string instanceId)
         {
@@ -8078,7 +8828,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get service config for a managed instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ServiceConfig> GetServiceConfigAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -8153,7 +8905,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update instance service config [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateServiceConfigAsync(string instanceId, ServiceConfig body)
         {
@@ -8161,7 +8915,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update instance service config [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateServiceConfigAsync(string instanceId, ServiceConfig body, System.Threading.CancellationToken cancellationToken)
         {
@@ -8243,7 +8999,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get core settings for a managed instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<Preferences> GetServiceCoreSettingsAsync(string instanceId)
         {
@@ -8251,7 +9009,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get core settings for a managed instance [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<Preferences> GetServiceCoreSettingsAsync(string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -8326,7 +9086,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update instance service core settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateServiceCoreSettingsAsync(string instanceId, Preferences body)
         {
@@ -8334,7 +9096,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update instance service core settings [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateServiceCoreSettingsAsync(string instanceId, Preferences body, System.Threading.CancellationToken cancellationToken)
         {
@@ -8416,7 +9180,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get all tag categories [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagCategory>> GetTagCategoriesAsync()
         {
@@ -8424,7 +9190,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get all tag categories [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagCategory>> GetTagCategoriesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -8494,7 +9262,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add or update a tag category [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddOrUpdateTagCategoryAsync(TagCategory body)
         {
@@ -8502,7 +9272,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add or update a tag category [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddOrUpdateTagCategoryAsync(TagCategory body, System.Threading.CancellationToken cancellationToken)
         {
@@ -8579,7 +9351,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get a tag category by key [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<TagCategory> GetTagCategoryAsync(string categoryKey)
         {
@@ -8587,7 +9361,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get a tag category by key [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<TagCategory> GetTagCategoryAsync(string categoryKey, System.Threading.CancellationToken cancellationToken)
         {
@@ -8661,7 +9437,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a tag category [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> DeleteTagCategoryAsync(string categoryKey)
         {
@@ -8669,7 +9447,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a tag category [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> DeleteTagCategoryAsync(string categoryKey, System.Threading.CancellationToken cancellationToken)
         {
@@ -8743,7 +9523,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get tag values (optional category filter) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagValue>> GetTagValuesAsync(string categoryKey)
         {
@@ -8751,7 +9533,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get tag values (optional category filter) [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagValue>> GetTagValuesAsync(string categoryKey, System.Threading.CancellationToken cancellationToken)
         {
@@ -8827,7 +9611,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get or create a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<TagValue> GetOrCreateTagValueAsync(TagValueRequest body)
         {
@@ -8835,7 +9621,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get or create a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<TagValue> GetOrCreateTagValueAsync(TagValueRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -8912,7 +9700,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> UpdateTagValueAsync(TagValueUpdateRequest body)
         {
@@ -8920,7 +9710,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Update a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> UpdateTagValueAsync(TagValueUpdateRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -8997,7 +9789,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> DeleteTagValueAsync(string valueId)
         {
@@ -9005,7 +9799,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Delete a tag value [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> DeleteTagValueAsync(string valueId, System.Threading.CancellationToken cancellationToken)
         {
@@ -9079,7 +9875,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Merge tag values [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> MergeTagValuesAsync(TagValueMergeRequest body)
         {
@@ -9087,7 +9885,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Merge tag values [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> MergeTagValuesAsync(TagValueMergeRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -9164,7 +9964,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get all item tags [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ItemTag>> GetAllHubItemTagsAsync(string categoryKey, string value, string itemType, string instanceId)
         {
@@ -9172,7 +9974,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get all item tags [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ItemTag>> GetAllHubItemTagsAsync(string categoryKey, string value, string itemType, string instanceId, System.Threading.CancellationToken cancellationToken)
         {
@@ -9260,7 +10064,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add tags to items [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> AddHubItemTagsAsync(System.Collections.Generic.IEnumerable<ItemTag> body)
         {
@@ -9268,7 +10074,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Add tags to items [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> AddHubItemTagsAsync(System.Collections.Generic.IEnumerable<ItemTag> body, System.Threading.CancellationToken cancellationToken)
         {
@@ -9345,7 +10153,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove item tags by id [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> RemoveHubItemTagsAsync(System.Collections.Generic.IEnumerable<string> body)
         {
@@ -9353,7 +10163,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Remove item tags by id [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> RemoveHubItemTagsAsync(System.Collections.Generic.IEnumerable<string> body, System.Threading.CancellationToken cancellationToken)
         {
@@ -9430,7 +10242,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get tags for an item [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagSummary>> GetHubItemTagsAsync(string itemType, string itemId)
         {
@@ -9438,7 +10252,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Get tags for an item [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<TagSummary>> GetHubItemTagsAsync(string itemType, string itemId, System.Threading.CancellationToken cancellationToken)
         {
@@ -9517,7 +10333,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Bulk add/remove tags [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ActionResult> BulkTagOperationAsync(BulkTagOperationRequest body)
         {
@@ -9525,7 +10343,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Bulk add/remove tags [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ActionResult> BulkTagOperationAsync(BulkTagOperationRequest body, System.Threading.CancellationToken cancellationToken)
         {
@@ -9602,7 +10422,9 @@ namespace Certify.Server.Hub.Api
             }
         }
 
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Preview resources matching tag scopes [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task<ScopePreviewResult> PreviewTagScopeAsync(ScopePreviewRequest body)
         {
@@ -9610,7 +10432,9 @@ namespace Certify.Server.Hub.Api
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <returns>OK</returns>
+        /// <summary>
+        /// Preview resources matching tag scopes [Generated]
+        /// </summary>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ScopePreviewResult> PreviewTagScopeAsync(ScopePreviewRequest body, System.Threading.CancellationToken cancellationToken)
         {

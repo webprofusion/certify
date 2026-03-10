@@ -56,7 +56,7 @@ namespace Certify.Management
             return new ActionResult<ManagedInstanceInfo>("Added", true, item);
         }
 
-        public async Task<ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item)
+        public async Task<ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item, bool isHeartBeatInfo)
         {
             if (id != item.Id)
             {
@@ -74,16 +74,19 @@ namespace Certify.Management
                 existing.ClientVersion = item.ClientVersion;
 
                 existing.Title = item.Title;
-                // Preserve existing custom title for regular instance heartbeats where CustomTitle is omitted (null).
-                // Apply updates when explicitly provided by hub admin operations (including clear via empty string).
-                if (item.CustomTitle != null)
+                if (!isHeartBeatInfo)
                 {
-                    existing.CustomTitle = string.IsNullOrWhiteSpace(item.CustomTitle) ? null : item.CustomTitle.Trim();
-                }
+                    // Preserve existing custom title for regular instance heartbeats where CustomTitle is omitted (null).
+                    // Apply updates when explicitly provided by hub admin operations (including clear via empty string).
+                    if (item.CustomTitle != null)
+                    {
+                        existing.CustomTitle = string.IsNullOrWhiteSpace(item.CustomTitle) ? null : item.CustomTitle.Trim();
+                    }
 
-                if (item.Description != null)
-                {
-                    existing.Description = string.IsNullOrWhiteSpace(item.Description) ? null : item.Description.Trim();
+                    if (item.Description != null)
+                    {
+                        existing.Description = string.IsNullOrWhiteSpace(item.Description) ? null : item.Description.Trim();
+                    }
                 }
 
                 existing.DateLastReported = item.DateLastReported;
