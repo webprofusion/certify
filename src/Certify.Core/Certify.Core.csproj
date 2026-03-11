@@ -52,6 +52,7 @@
         <ProjectReference Include="..\Certify.Locales\Certify.Locales.csproj" />
         <ProjectReference Include="..\Certify.Models\Certify.Models.csproj" />
         <ProjectReference Include="..\Certify.Providers\ACME\Anvil\Certify.Providers.ACME.Anvil.csproj" />
+        <ProjectReference Include="..\Certify.Server\Certify.Server.Hub.Api.Client\Certify.Server.Hub.Api.Client.csproj" />
         <ProjectReference Include="..\Certify.Shared.Extensions\Certify.Shared.Extensions.csproj" />
         <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
