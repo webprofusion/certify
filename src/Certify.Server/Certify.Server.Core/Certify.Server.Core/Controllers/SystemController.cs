@@ -124,5 +124,9 @@ namespace Certify.Service.Controllers
 
         [HttpGet, Route("hub/info")]
         public async Task<HubInfo> GetHubInfo() => await _certifyManager.GetHubInfo();
+
+        [HttpGet, Route("hub/subscribable")]
+        public async Task<List<Models.Hub.ManagedCertificateSummary>> GetHubSubscribableManagedCertificates()
+            => await _certifyManager.GetHubSubscribableManagedCertificates();
     }
 }

@@ -73,9 +73,40 @@ namespace Certify.Models.Hub
         public const string NotificationManagedItemRequestProgress = "NotificationManagedItemRequestProgress";
 
         /// <summary>
+        /// Command sent to an instance to indicate an externally sourced certificate has changed and should be refreshed.
+        /// </summary>
+        public const string PushExternalManagedCertificateUpdate = "PushExternalManagedCertificateUpdate";
+
+        /// <summary>
+        /// Notification from an instance to request the hub trigger an external managed certificate push update.
+        /// </summary>
+        public const string NotificationRequestExternalManagedCertificateUpdate = "NotificationRequestExternalManagedCertificateUpdate";
+
+        /// <summary>
         /// Caller instance needs to authenticate before proceeding, they should reacquire a valid auth token and reconnect
         /// </summary>
         public const string NotificationAuthenticationRequired = "NotificationAuthenticationRequired";
+    }
+
+    public class ExternalManagedCertificateUpdate
+    {
+        public string? ManagedCertificateId { get; set; }
+        public string? SourceVersion { get; set; }
+
+        /// <summary>
+        /// Base64-encoded PFX certificate bytes, included only when the management hub has
+        /// authorised this instance to receive the certificate via push (i.e. it is a verified
+        /// push subscriber for the source instance/certificate pair).  When present the receiving
+        /// instance should use this data directly and skip the normal HTTP pull fetch.
+        /// </summary>
+        public string? PfxData { get; set; }
+    }
+
+    public class ExternalManagedCertificateRequest
+    {
+        public string? TargetManagedCertificateId { get; set; }
+        public string? SourceInstanceId { get; set; }
+        public string? SourceManagedCertificateId { get; set; }
     }
 
     /// <summary>

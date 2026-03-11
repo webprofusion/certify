@@ -18,7 +18,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://127.0.0.2:9695",
-        "CERTIFY_SERVICE_AUTH_MODE": "windows"
+        "CERTIFY_SERVICE_AUTH_MODE": "windows",
+        "CERTIFY_APPDATA_PATH": "C:\\ProgramData\\CertifyDebugDesktop"
         //"CERTIFY_UPGRADE_SETTINGS": "true"
       }
     },

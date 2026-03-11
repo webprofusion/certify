@@ -14,6 +14,11 @@ namespace Certify.Server.Hub.Api.Controllers
     {
 
         /// <summary>
+        /// Special auth context used internally for operations where the requesting user may not be authorized to query system state
+        /// </summary>
+        internal AuthContext SystemAuthContext = new AuthContext { UserId = "system" };
+
+        /// <summary>
         /// Check resource action access for the current user
         /// </summary>
         /// <param name="internalApiClient"></param>
@@ -123,7 +128,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
                     var jwt = new Hub.Api.Services.JwtService(_config);
-                    var claimsIdentity = jwt.ClaimsIdentityFromTokenAsync(authToken, validateTokenLifetime:true).Result;
+                    var claimsIdentity = jwt.ClaimsIdentityFromTokenAsync(authToken, validateTokenLifetime: true).Result;
                     var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
 
                     var authContext = new AuthContext { Token = authToken, UserId = userId };

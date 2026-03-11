@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
@@ -112,6 +113,9 @@ namespace Certify.Management
         ///  Config info/preferences such as log level, challenge service config, powershell execution policy etc
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
+        private readonly SemaphoreSlim _hubApiClientLock = new(1, 1);
+        private HttpClient? _hubApiHttpClient;
+        private Certify.Server.Hub.Api.Client? _hubApiClient;
 
         private System.Timers.Timer _initTimer;
         private System.Timers.Timer _heartbeatTimer;
@@ -601,6 +605,8 @@ namespace Certify.Management
         private void Cleanup()
         {
             ManagedCertificateLog.DisposeLoggers();
+            _hubApiHttpClient?.Dispose();
+            _hubApiClientLock.Dispose();
             if (_tc != null)
             {
                 _tc.Dispose();

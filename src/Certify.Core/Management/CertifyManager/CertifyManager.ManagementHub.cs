@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -1053,6 +1053,34 @@ namespace Certify.Management
             {
                 _serviceLog.Information("Hub has requested that this instance re-connect");
                 await _managementServerClient.Disconnect();
+            }
+            else if (arg.CommandType == ManagementHubCommands.PushExternalManagedCertificateUpdate)
+            {
+                var update = JsonSerializer.Deserialize<ExternalManagedCertificateUpdate>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);
+
+                if (!string.IsNullOrWhiteSpace(update?.ManagedCertificateId))
+                {
+                    byte[]? pfxData = null;
+
+                    if (!string.IsNullOrWhiteSpace(update.PfxData))
+                    {
+                        try
+                        {
+                            pfxData = Convert.FromBase64String(update.PfxData);
+                        }
+                        catch (Exception ex)
+                        {
+                            _serviceLog?.Warning("PushExternalManagedCertificateUpdate: PFX data could not be decoded for {certId}: {error}; will fall back to pull.", update.ManagedCertificateId, ex.Message);
+                        }
+                    }
+
+                    QueueExternalManagedCertificateUpdate(update.ManagedCertificateId, update.SourceVersion, pfxData);
+                    val = new ActionResult("External managed certificate refresh queued.", true);
+                }
+                else
+                {
+                    val = new ActionResult("External managed certificate update did not include a target managed certificate id.", false);
+                }
             }
 
             return new InstanceCommandResult { CommandId = arg.CommandId, Value = JsonSerializer.Serialize(val), ObjectValue = val };

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,6 +23,9 @@ namespace Certify.Management
     /// </summary>
     public class PowerShellManager
     {
+        private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
+        private const string PowerShellTelemetryOptOutValue = "true";
+
         /// <summary>
         /// Run a PowerShell script, either in-process or by launching a new process.
         /// </summary>
@@ -50,98 +53,108 @@ namespace Certify.Management
             bool launchNewProcess = false
             )
         {
-            // argument check for script file existence and .ps1 extension
-            FileInfo scriptInfo = null;
-            if (scriptContent == null)
-            {
-                scriptInfo = new FileInfo(scriptFile);
-                if (!scriptInfo.Exists)
-                {
-                    throw new ArgumentException($"File '{scriptFile}' does not exist.");
-                }
+            var priorTelemetryOptOut = Environment.GetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar);
+            Environment.SetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar, PowerShellTelemetryOptOutValue);
 
-                if (scriptInfo.Extension.ToLower() != ".ps1")
-                {
-                    throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
-                }
-            }
-
-            if (launchNewProcess)
+            try
             {
-                // spawn new process as the given user
-                return await ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, logonType, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-            }
-            else
-            {
-                // run powershell script in-process, optionally with impersonation
-                try
+                // argument check for script file existence and .ps1 extension
+                FileInfo scriptInfo = null;
+                if (scriptContent == null)
                 {
-                    // create a new runspace to isolate the scripts
-                    using (var runspace = RunspaceFactory.CreateRunspace())
+                    scriptInfo = new FileInfo(scriptFile);
+                    if (!scriptInfo.Exists)
                     {
-                        runspace.Open();
+                        throw new ArgumentException($"File '{scriptFile}' does not exist.");
+                    }
 
-                        // set working directory to the script file's directory
-                        if (scriptInfo != null)
+                    if (scriptInfo.Extension.ToLower() != ".ps1")
+                    {
+                        throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
+                    }
+                }
+
+                if (launchNewProcess)
+                {
+                    // spawn new process as the given user
+                    return await ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, logonType, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                }
+                else
+                {
+                    // run powershell script in-process, optionally with impersonation
+                    try
+                    {
+                        // create a new runspace to isolate the scripts
+                        using (var runspace = RunspaceFactory.CreateRunspace())
                         {
-                            runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
-                        }
+                            runspace.Open();
+
+                            // set working directory to the script file's directory
+                            if (scriptInfo != null)
+                            {
+                                runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                            }
 
                         using (var shell = PowerShell.Create())
-                        {
-                            shell.Runspace = runspace;
-
-                            // running PowerShell under credentials currently only supported for windows
-                            var credentialsProvidedButNotSupported = false;
-
-                            if (credentials?.Any() == true && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                             {
-                                // TODO: warn credentials not supported on this platform
-                                credentialsProvidedButNotSupported = true;
-                            }
+                                shell.Runspace = runspace;
 
-                            if (credentials?.Any() == true && credentialsProvidedButNotSupported == false && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                            {
-                                // run as windows user
-                                UserCredentials windowsCredentials = null;
+                                // running PowerShell under credentials currently only supported for windows
+                                var credentialsProvidedButNotSupported = false;
 
-                                try
+                                if (credentials?.Any() == true && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                                 {
-                                    windowsCredentials = GetWindowsCredentials(credentials);
-                                }
-                                catch
-                                {
-                                    var err = "Command with Windows Credentials requires username and password.";
-
-                                    return new ActionResult(err, false);
+                                    // TODO: warn credentials not supported on this platform
+                                    credentialsProvidedButNotSupported = true;
                                 }
 
-                                var _defaultLogonType = GetLogonType(logonType);
-
-                                ActionResult powerShellResult = null;
-                                using (var userHandle = windowsCredentials.LogonUser(_defaultLogonType))
+                                if (credentials?.Any() == true && credentialsProvidedButNotSupported == false && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                                 {
-                                    WindowsIdentity.RunImpersonated(userHandle, () =>
+                                    // run as windows user
+                                    UserCredentials windowsCredentials = null;
+
+                                    try
                                     {
-                                        powerShellResult = InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                                        windowsCredentials = GetWindowsCredentials(credentials);
+                                    }
+                                    catch
+                                    {
+                                        var err = "Command with Windows Credentials requires username and password.";
 
-                                    });
+                                        return new ActionResult(err, false);
+                                    }
+
+                                    var _defaultLogonType = GetLogonType(logonType);
+
+                                    ActionResult powerShellResult = null;
+                                    using (var userHandle = windowsCredentials.LogonUser(_defaultLogonType))
+                                    {
+                                        WindowsIdentity.RunImpersonated(userHandle, () =>
+                                        {
+                                            powerShellResult = InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+
+                                        });
+                                    }
+
+                                    return powerShellResult;
                                 }
-
-                                return powerShellResult;
-                            }
-                            else
-                            {
-                                // run as current user
-                                return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                                else
+                                {
+                                    // run as current user
+                                    return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
+                    }
                 }
-                catch (Exception ex)
-                {
-                    return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
-                }
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar, priorTelemetryOptOut);
             }
         }
 
@@ -303,6 +316,8 @@ namespace Certify.Management
                 Verb = "RunAs",
                 WorkingDirectory = Path.GetDirectoryName(scriptFile)
             };
+
+            scriptProcessInfo.Environment[PowerShellTelemetryOptOutEnvVar] = PowerShellTelemetryOptOutValue;
 
             // launch process with user credentials set
             if (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"))

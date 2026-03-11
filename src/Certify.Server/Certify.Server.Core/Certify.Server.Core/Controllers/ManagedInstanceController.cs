@@ -38,7 +38,7 @@ namespace Certify.Service.Controllers
         [Route("update")]
         public async Task<Certify.Models.Config.ActionResult> Update(ManagedInstanceInfo item)
         {
-            return await _certifyManager.UpdateHubManagedInstance(item.Id, item);
+            return await _certifyManager.UpdateHubManagedInstance(item.Id, item, false);
         }
 
         [HttpGet]

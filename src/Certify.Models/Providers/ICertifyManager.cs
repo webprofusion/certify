@@ -119,7 +119,7 @@ namespace Certify.Management
         Task<ActionResult> CheckManagementHubConnectionStatus();
 
         Task<Certify.Models.Config.ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item);
-        Task<Certify.Models.Config.ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item);
+        Task<Certify.Models.Config.ActionResult> UpdateHubManagedInstance(string id, ManagedInstanceInfo item, bool isHeartBeatInfo);
         Task<ManagedInstanceInfo> GetHubManagedInstance(string id);
         Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
         Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);
@@ -154,5 +154,7 @@ namespace Certify.Management
         Task<ActionResult> RemovOidcProvider(string id);
 
         Task<HubInfo> GetHubInfo();
+
+        Task<List<ManagedCertificateSummary>> GetHubSubscribableManagedCertificates();
     }
 }

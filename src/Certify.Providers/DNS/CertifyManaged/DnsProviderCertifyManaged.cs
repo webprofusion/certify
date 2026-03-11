@@ -21,6 +21,8 @@ namespace Certify.Providers.DNS.CertifyManaged
 
     public class DnsProviderCertifyManaged : IDnsProvider, IDisposable
     {
+        private static readonly TimeSpan ManagedChallengeApiTimeout = TimeSpan.FromMinutes(20);
+
         public static ChallengeProviderDefinition Definition
         {
             get
@@ -110,7 +112,19 @@ namespace Certify.Providers.DNS.CertifyManaged
 
             req.Content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
 
-            var result = await _client.SendAsync(req);
+            HttpResponseMessage result;
+            try
+            {
+                result = await _client.SendAsync(req);
+            }
+            catch (TaskCanceledException exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"Update failed: Managed Challenge API request timed out after {ManagedChallengeApiTimeout.TotalMinutes:0} minutes. {exp.Message}" };
+            }
+            catch (HttpRequestException exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"Update failed: {exp.Message}" };
+            }
 
             try
             {
@@ -188,7 +202,19 @@ namespace Certify.Providers.DNS.CertifyManaged
 
             req.Content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
 
-            var result = await _client.SendAsync(req);
+            HttpResponseMessage result;
+            try
+            {
+                result = await _client.SendAsync(req);
+            }
+            catch (TaskCanceledException exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: Managed Challenge API request timed out after {ManagedChallengeApiTimeout.TotalMinutes:0} minutes. {exp.Message}" };
+            }
+            catch (HttpRequestException exp)
+            {
+                return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: {exp.Message}" };
+            }
 
             try
             {
@@ -221,6 +247,8 @@ namespace Certify.Providers.DNS.CertifyManaged
 #else
             _client = clientProvider.CreateClient($"Certify/{Definition.Id}");
 #endif
+
+            _client.Timeout = ManagedChallengeApiTimeout;
 
             _serializerSettings = new JsonSerializerSettings
             {

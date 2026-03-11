@@ -251,6 +251,11 @@ namespace Certify.Core.Management.Access
         /// <returns></returns>
         public async Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check)
         {
+            if (contextUserId == "system")
+            {
+                return true;
+            }
+
             // to determine is a principal has access to perform a particular action
             // for each group the principal is part of
 
@@ -701,87 +706,87 @@ namespace Certify.Core.Management.Access
             return await _store.Delete<AssignedAccessToken>(nameof(AssignedAccessToken), id);
         }
 
-                public string GetSHA256Hash(string val)
+        public string GetSHA256Hash(string val)
+        {
+            using (var sha256Hash = SHA256.Create())
+            {
+                var data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(val));
+                var sBuilder = new StringBuilder();
+
+                // Loop through each byte of the hashed data
+                // and format each one as a hexadecimal string.
+                for (var i = 0; i < data.Length; i++)
                 {
-                    using (var sha256Hash = SHA256.Create())
+                    sBuilder.Append(data[i].ToString("x2"));
+                }
+
+                // Return the hexadecimal string.
+                return sBuilder.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Check if resource tags match the required tag scope for access control
+        /// </summary>
+        /// <param name="resourceTags">Tags on the resource being accessed</param>
+        /// <param name="scopedTags">Required tag scopes from the assigned role</param>
+        /// <param name="requireAll">If true, all scopes must match; if false, any scope match is sufficient</param>
+        /// <returns>True if the resource tags satisfy the scope requirements</returns>
+        public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
+        {
+            if (scopedTags == null || scopedTags.Count == 0)
+            {
+                // No tag restrictions - access granted
+                return true;
+            }
+
+            if (resourceTags == null || resourceTags.Count == 0)
+            {
+                // Resource has no tags but scope requires tags - deny access
+                return false;
+            }
+
+            if (requireAll)
+            {
+                // All scopes must match (AND logic)
+                foreach (var scope in scopedTags)
+                {
+                    var hasMatch = false;
+                    foreach (var tag in resourceTags)
                     {
-                        var data = sha256Hash.ComputeHash(Encoding.UTF8.GetBytes(val));
-                        var sBuilder = new StringBuilder();
-
-                        // Loop through each byte of the hashed data
-                        // and format each one as a hexadecimal string.
-                        for (var i = 0; i < data.Length; i++)
+                        if (tag.CategoryKey == scope.CategoryKey &&
+                            (scope.Value == null || tag.Value == scope.Value))
                         {
-                            sBuilder.Append(data[i].ToString("x2"));
+                            hasMatch = true;
+                            break;
                         }
+                    }
 
-                        // Return the hexadecimal string.
-                        return sBuilder.ToString();
+                    if (!hasMatch)
+                    {
+                        return false;
                     }
                 }
 
-                /// <summary>
-                /// Check if resource tags match the required tag scope for access control
-                /// </summary>
-                /// <param name="resourceTags">Tags on the resource being accessed</param>
-                /// <param name="scopedTags">Required tag scopes from the assigned role</param>
-                /// <param name="requireAll">If true, all scopes must match; if false, any scope match is sufficient</param>
-                /// <returns>True if the resource tags satisfy the scope requirements</returns>
-                public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
+                return true;
+            }
+            else
+            {
+                // Any scope match is sufficient (OR logic)
+                foreach (var scope in scopedTags)
                 {
-                    if (scopedTags == null || scopedTags.Count == 0)
+                    foreach (var tag in resourceTags)
                     {
-                        // No tag restrictions - access granted
-                        return true;
-                    }
-
-                    if (resourceTags == null || resourceTags.Count == 0)
-                    {
-                        // Resource has no tags but scope requires tags - deny access
-                                                return false;
-                                    }
-
-                                    if (requireAll)
-                                    {
-                                        // All scopes must match (AND logic)
-                                        foreach (var scope in scopedTags)
-                                        {
-                                            var hasMatch = false;
-                                            foreach (var tag in resourceTags)
-                                            {
-                                                if (tag.CategoryKey == scope.CategoryKey &&
-                                                    (scope.Value == null || tag.Value == scope.Value))
-                                                {
-                                                    hasMatch = true;
-                                                    break;
-                                                }
-                                            }
-
-                                            if (!hasMatch)
-                                            {
-                                                return false;
-                                            }
-                                        }
-
-                                        return true;
-                                    }
-                                    else
-                                    {
-                                        // Any scope match is sufficient (OR logic)
-                                        foreach (var scope in scopedTags)
-                                        {
-                                            foreach (var tag in resourceTags)
-                                            {
-                                                if (tag.CategoryKey == scope.CategoryKey &&
-                                                    (scope.Value == null || tag.Value == scope.Value))
-                                                {
-                                                    return true;
-                                                }
-                                            }
-                                        }
-
-                                        return false;
-                                    }
-                                }
-                            }
+                        if (tag.CategoryKey == scope.CategoryKey &&
+                            (scope.Value == null || tag.Value == scope.Value))
+                        {
+                            return true;
                         }
+                    }
+                }
+
+                return false;
+            }
+        }
+    }
+}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -60,6 +61,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                     if (ItemViewModel.SelectedItem != null)
                     {
+                        ItemViewModel.EnsureExternalSourceConfiguration();
+
                         // if website previously selected, preselect in dropdown
                         if (ItemViewModel.SelectedItem.GroupId == null)
                         {
@@ -85,9 +88,30 @@ namespace Certify.UI.Controls.ManagedCertificate
                         {
                             ItemViewModel.UseAuthorityTokenListView = false;
                         }
+
+                        await AutoLoadHubCertificatesIfRequired();
                     }
                 }
             });
+        }
+
+        private async Task AutoLoadHubCertificatesIfRequired()
+        {
+            var sourceType = ItemViewModel.SelectedItem?.ExternalSource?.SourceType;
+            var isHubSource = string.Equals(sourceType, ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase);
+
+            if (!isHubSource)
+            {
+                ItemViewModel.ClearSubscribableManagedCertificates();
+                return;
+            }
+
+            if (ItemViewModel.IsLoadingSubscribableCertificates || ItemViewModel.SubscribableManagedCertificates.Any())
+            {
+                return;
+            }
+
+            await ItemViewModel.LoadSubscribableManagedCertificates();
         }
 
         private async void Website_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -164,6 +188,41 @@ namespace Certify.UI.Controls.ManagedCertificate
             this.ItemViewModel.UseAuthorityTokenListView = true;
             this.ItemViewModel.SelectedItem.RequestConfig.Challenges.Clear();
             this.ItemViewModel.SelectedItem.RequestConfig.Challenges.Add(new CertRequestChallengeConfig { ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_TKAUTH });
+        }
+
+        private async void ExternalSourceType_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Rebuild the credential list for the newly selected source type
+            ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.ExternalSourceCredentials));
+            ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.SelectedExternalCredential));
+
+            // Clear any previously loaded hub certificates when source type changes
+            ItemViewModel.ClearSubscribableManagedCertificates();
+
+            await AutoLoadHubCertificatesIfRequired();
+        }
+
+        private async void LoadHubCertificates_Click(object sender, RoutedEventArgs e)
+        {
+            await ItemViewModel.LoadSubscribableManagedCertificates();
+        }
+
+        private async void AddExternalSourceCredential_Click(object sender, RoutedEventArgs e)
+        {
+            var cred = new Windows.EditCredential
+            {
+                Owner = Window.GetWindow(this)
+            };
+
+            cred.ShowDialog();
+
+            await AppViewModel.RefreshStoredCredentialsList();
+
+            if (cred.Item?.StorageKey != null)
+            {
+                ItemViewModel.SelectedItem.ExternalSource.CredentialKey = cred.Item.StorageKey;
+                ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.SelectedExternalCredential));
+            }
         }
     }
 }

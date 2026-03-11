@@ -392,5 +392,10 @@ namespace Certify.UI.ViewModel
         {
             return await _certifyClient.TestDataStoreConnection(item);
         }
+
+        public async Task<List<Models.Hub.ManagedCertificateSummary>> GetHubSubscribableManagedCertificates()
+        {
+            return await _certifyClient.GetHubSubscribableManagedCertificates();
+        }
     }
 }

@@ -201,6 +201,11 @@ namespace Certify.Models
         public string? InstanceId { get; set; }
 
         /// <summary>
+        /// Optional subscription configuration when this managed certificate is externally sourced.
+        /// </summary>
+        public ExternalCertificateSubscription? ExternalSource { get; set; }
+
+        /// <summary>
         /// Display name for this item, for easier reference
         /// </summary>
         public string? Name { get; set; }
@@ -606,6 +611,7 @@ namespace Certify.Models
             managedCert.LastAttemptedCA = null;
             managedCert.SourceId = null;
             managedCert.SourceName = null;
+            managedCert.ExternalSource = null;
             managedCert.RenewalFailureCount = 0;
             managedCert.RenewalFailureMessage = null;
 

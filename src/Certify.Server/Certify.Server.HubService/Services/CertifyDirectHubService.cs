@@ -122,6 +122,9 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> RemoveHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Remove(id);
         public Task<HubInfo> GetHubInfo(AuthContext authContext) => _systemController(authContext).GetHubInfo();
 
+        public async Task<List<ManagedCertificateSummary>> GetHubSubscribableManagedCertificates(AuthContext authContext = null)
+            => await _certifyManager.GetHubSubscribableManagedCertificates();
+
         public Task<ActionResult> AddAccount(ContactRegistration contact, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<CertificateRequestResult> BeginCertificateRequest(string managedItemId, bool resumePaused, bool isInteractive, AuthContext? authContext = null) => throw new NotImplementedException();
