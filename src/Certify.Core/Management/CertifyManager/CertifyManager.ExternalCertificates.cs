@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api;
 using Certify.Shared;
 using Certify.Shared.Core.Utils.PKI;
 
@@ -317,6 +318,7 @@ namespace Certify.Management
                 };
             }
 
+            var useHubJoiningCredentials = string.IsNullOrWhiteSpace(sourceConfig.CredentialKey);
             var secret = await GetHubClientSecret(sourceConfig.CredentialKey);
             if (secret == null || string.IsNullOrWhiteSpace(secret.ClientId) || string.IsNullOrWhiteSpace(secret.Secret))
             {
@@ -327,30 +329,68 @@ namespace Certify.Management
                 };
             }
 
-            using var handler = new HttpClientHandler
+            var requestContext = new HubApiRequestContext
             {
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+                ClientId = secret.ClientId,
+                Secret = secret.Secret,
+                HubAssignedInstanceId = useHubJoiningCredentials ? _serverConfig?.HubAssignedInstanceId : null,
+                IfNoneMatch = sourceConfig.LastSourceVersion
             };
 
-            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
+            try
             {
-                handler.ServerCertificateCustomValidationCallback = null;
+                using var response = await UseHubApiClient(
+                    hubApiBase,
+                    requestContext,
+                    (client, ct) => client.DownloadAsync(sourceInstanceId, sourceManagedCertificateId, "pfx", ct),
+                    cancellationToken);
+
+                var certData = await ReadHubApiFileResponse(response, cancellationToken);
+                if (certData.Length == 0)
+                {
+                    return new ExternalCertificateFetchResult
+                    {
+                        IsSuccess = false,
+                        Message = "ManagementHub source returned an empty certificate payload."
+                    };
+                }
+
+                var sourceVersion = GetHubApiHeaderValue(response, "ETag");
+                sourceVersion ??= Convert.ToHexString(SHA256.HashData(certData)).ToLowerInvariant();
+
+                if (!string.IsNullOrWhiteSpace(pushedSourceVersion)
+                    && !string.IsNullOrWhiteSpace(sourceVersion)
+                    && string.Equals(pushedSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ExternalCertificateFetchResult
+                    {
+                        IsSuccess = true,
+                        HasUpdate = false,
+                        SourceVersion = sourceVersion
+                    };
+                }
+
+                if (!string.IsNullOrWhiteSpace(sourceConfig.LastSourceVersion)
+                    && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
+                {
+                    return new ExternalCertificateFetchResult
+                    {
+                        IsSuccess = true,
+                        HasUpdate = false,
+                        SourceVersion = sourceVersion
+                    };
+                }
+
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = true,
+                    HasUpdate = true,
+                    SourceVersion = sourceVersion,
+                    CertificateData = certData
+                };
             }
-
-            using var httpClient = new HttpClient(handler);
-            var request = new HttpRequestMessage(HttpMethod.Get, $"{hubApiBase}/api/v1/certificate/{sourceInstanceId}/download/{sourceManagedCertificateId}/pfx");
-
-            request.Headers.Add("X-Client-ID", secret.ClientId);
-            request.Headers.Add("X-Client-Secret", secret.Secret);
-
-            if (!string.IsNullOrWhiteSpace(sourceConfig.LastSourceVersion))
-            {
-                request.Headers.TryAddWithoutValidation("If-None-Match", sourceConfig.LastSourceVersion);
-            }
-
-            var response = await httpClient.SendAsync(request, cancellationToken);
-
-            if (response.StatusCode == HttpStatusCode.NotModified)
+            catch (ApiException ex) when (ex.StatusCode == (int)HttpStatusCode.NotModified)
             {
                 return new ExternalCertificateFetchResult
                 {
@@ -359,61 +399,14 @@ namespace Certify.Management
                     SourceVersion = sourceConfig.LastSourceVersion
                 };
             }
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var detail = await response.Content.ReadAsStringAsync(cancellationToken);
-                return new ExternalCertificateFetchResult
-                {
-                    IsSuccess = false,
-                    Message = $"ManagementHub source returned {(int)response.StatusCode}: {detail}"
-                };
-            }
-
-            var certData = await response.Content.ReadAsByteArrayAsync(cancellationToken);
-            if (certData.Length == 0)
+            catch (ApiException ex)
             {
                 return new ExternalCertificateFetchResult
                 {
                     IsSuccess = false,
-                    Message = "ManagementHub source returned an empty certificate payload."
+                    Message = $"ManagementHub source returned {ex.StatusCode}: {ex.Response}"
                 };
             }
-
-            var sourceVersion = response.Headers.ETag?.Tag?.Replace("\"", string.Empty);
-            sourceVersion ??= Convert.ToHexString(SHA256.HashData(certData)).ToLowerInvariant();
-
-            if (!string.IsNullOrWhiteSpace(pushedSourceVersion)
-                && !string.IsNullOrWhiteSpace(sourceVersion)
-                && string.Equals(pushedSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase)
-                && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
-            {
-                return new ExternalCertificateFetchResult
-                {
-                    IsSuccess = true,
-                    HasUpdate = false,
-                    SourceVersion = sourceVersion
-                };
-            }
-
-            if (!string.IsNullOrWhiteSpace(sourceConfig.LastSourceVersion)
-                && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
-            {
-                return new ExternalCertificateFetchResult
-                {
-                    IsSuccess = true,
-                    HasUpdate = false,
-                    SourceVersion = sourceVersion
-                };
-            }
-
-            return new ExternalCertificateFetchResult
-            {
-                IsSuccess = true,
-                HasUpdate = true,
-                SourceVersion = sourceVersion,
-                CertificateData = certData
-            };
         }
 
         private async Task<ClientSecret?> GetHubClientSecret(string? sourceCredentialKey)
@@ -534,32 +527,25 @@ namespace Certify.Management
 
             try
             {
-                using var handler = new HttpClientHandler
+                var requestContext = new HubApiRequestContext
                 {
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+                    ClientId = secret.ClientId,
+                    Secret = secret.Secret,
+                    HubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId
                 };
 
-                using var httpClient = new HttpClient(handler);
-                var request = new HttpRequestMessage(HttpMethod.Get, $"{hubApiBase}/internal/v1/hub/subscription/available");
-                request.Headers.Add("X-Client-ID", secret.ClientId);
-                request.Headers.Add("X-Client-Secret", secret.Secret);
+                var results = await UseHubApiClient(
+                    hubApiBase,
+                    requestContext,
+                    async (client, ct) => (await client.GetSubscribableManagedCertificatesAsync(ct)).ToList(),
+                    CancellationToken.None);
 
-                if (!string.IsNullOrWhiteSpace(_serverConfig?.HubAssignedInstanceId))
-                {
-                    request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
-                }
-
-                var response = await httpClient.SendAsync(request);
-
-                if (!response.IsSuccessStatusCode)
-                {
-                    var detail = await response.Content.ReadAsStringAsync();
-                    _serviceLog?.Warning("GetHubSubscribableManagedCertificates: hub returned {status}: {detail}", (int)response.StatusCode, detail);
-                    return new();
-                }
-
-                var json = await response.Content.ReadAsStringAsync();
-                return System.Text.Json.JsonSerializer.Deserialize<List<ManagedCertificateSummary>>(json, Certify.Shared.JsonOptions.DefaultJsonSerializerOptions) ?? new();
+                return results;
+            }
+            catch (ApiException ex)
+            {
+                _serviceLog?.Warning("GetHubSubscribableManagedCertificates: hub returned {status}: {detail}", ex.StatusCode, ex.Response);
+                return new();
             }
             catch (Exception ex)
             {
@@ -690,47 +676,8 @@ namespace Certify.Management
                 return result;
             }
 
-            var retrievalMode = sourceConfig.RetrievalMode ?? ExternalCertificateRetrievalModes.Push;
-            if (retrievalMode.Equals(ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase)
-                || retrievalMode.Equals(ExternalCertificateRetrievalModes.Push, StringComparison.OrdinalIgnoreCase))
-            {
-                if (_managementServerClient?.IsConnected() != true)
-                {
-                    result.Message = "Cannot request an external push update because this instance is not connected to the Management Hub.";
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
-                    return result;
-                }
-
-                var updateRequest = new ExternalManagedCertificateRequest
-                {
-                    TargetManagedCertificateId = managedCertificate.Id,
-                    SourceInstanceId = sourceInstanceId,
-                    SourceManagedCertificateId = sourceManagedCertificateId
-                };
-
-                _managementServerClient.SendNotificationToManagementHub(
-                    ManagementHubCommands.NotificationRequestExternalManagedCertificateUpdate,
-                    updateRequest);
-
-                managedCertificate.LastRenewalStatus = RequestState.Running;
-                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = "External certificate update requested from Management Hub. Awaiting push update.";
-                await UpdateManagedCertificate(managedCertificate);
-
-                result.IsSuccess = true;
-                result.Message = managedCertificate.RenewalFailureMessage;
-                ReportProgress(progress, new RequestProgressState(RequestState.Running, result.Message, managedCertificate), logThisEvent: false);
-
-                return result;
-            }
-
-            if (string.IsNullOrWhiteSpace(sourceConfig.CredentialKey))
-            {
-                result.Message = "Pull mode requires a Management Hub certificate consumer credential.";
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
-                return result;
-            }
-
+            // Manual requests should explicitly ask the Management Hub for the latest exportable PFX
+            // instead of depending on the timing of an asynchronous push update.
             var fetchResult = await FetchFromManagementHub(managedCertificate, sourceConfig, pushedSourceVersion: null, CancellationToken.None);
             sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
 

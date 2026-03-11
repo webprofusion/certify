@@ -58,7 +58,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (!accessCheck.IsSuccess)
             {
-                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+                accessCheck = await CheckManagedInstanceSubscriptionDownloadAuthorized(managedCertId);
+                if (!accessCheck.IsSuccess)
+                {
+                    return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+                }
             }
 
             // default to PFX output
@@ -122,6 +126,52 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 return Problem(detail: exportResult.Message, statusCode: (int)HttpStatusCode.BadRequest);
             }
+        }
+
+        private async Task<Certify.Models.Config.ActionResult> CheckManagedInstanceSubscriptionDownloadAuthorized(string managedCertId)
+        {
+            var accessToken = GetAccessTokenFromRequest();
+            if (accessToken == null)
+            {
+                return new Certify.Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
+            }
+
+            var joiningAccessCheck = await IsAccessTokenAuthorized(_client, accessToken, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
+            if (!joiningAccessCheck.IsSuccess)
+            {
+                return joiningAccessCheck;
+            }
+
+            var requestingInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString();
+            if (string.IsNullOrWhiteSpace(requestingInstanceId))
+            {
+                return new Certify.Models.Config.ActionResult("X-Certify-HubAssignedId header is required.", false);
+            }
+
+            var allKnownInstances = await _client.GetHubManagedInstances(SystemAuthContext);
+            var matchingInstance = allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
+
+            if (matchingInstance == null || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
+            {
+                return new Certify.Models.Config.ActionResult("Managed instance is not registered with a linked security principal.", false);
+            }
+
+            var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, managedCertId, SystemAuthContext);
+
+            var certAccessCheck = new AccessCheck
+            {
+                SecurityPrincipalId = matchingInstance.SecurityPrincipalId,
+                ResourceType = ResourceTypes.Certificate,
+                ResourceActionId = StandardResourceActions.CertificateDownload,
+                Identifier = managedCertId,
+                ResourceTags = tags?.ToList()
+            };
+
+            var isAuthorized = await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new AuthContext { UserId = matchingInstance.SecurityPrincipalId });
+
+            return isAuthorized
+                ? new Certify.Models.Config.ActionResult("Authorized as managed instance subscription consumer", true)
+                : new Certify.Models.Config.ActionResult("Managed instance is not permitted to download this subscribed certificate.", false);
         }
 
         [HttpGet]
