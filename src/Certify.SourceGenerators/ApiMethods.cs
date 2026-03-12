@@ -350,6 +350,34 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "BeginManagedChallenge",
+                    OperationMethod = HttpPost,
+                    Comment = "Begin a managed challenge and return an operation id for polling",
+                    PublicAPIController = null, // skip public controller implementation
+                    ServiceAPIRoute = "managedchallenge/requestbegin",
+                    ReturnType = nameof(ManagedChallengeOperation),
+                    Params = new Dictionary<string, string>
+                    {
+                        { "request", nameof(ManagedChallengeRequest) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeRequest)]
+                },
+                new()
+                {
+                    OperationName = "GetManagedChallengeOperation",
+                    OperationMethod = HttpGet,
+                    Comment = "Get the status of a previously started managed challenge",
+                    PublicAPIController = null, // skip public controller implementation
+                    ServiceAPIRoute = "managedchallenge/requeststatus/{operationId}",
+                    ReturnType = nameof(ManagedChallengeOperation),
+                    Params = new Dictionary<string, string>
+                    {
+                        { "operationId", "string" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeRequest)]
+                },
+                new()
+                {
                     OperationName = "CleanupManagedChallenge",
                     OperationMethod = HttpPost,
                     Comment = "Perform cleanup for a previously managed challenge (DNS challenge delegation etc)",

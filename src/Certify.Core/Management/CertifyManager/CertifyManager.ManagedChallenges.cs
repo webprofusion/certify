@@ -229,14 +229,61 @@ namespace Certify.Management
             }
         }
 
+        private static ManagedChallengeRequest CloneManagedChallengeRequest(ManagedChallengeRequest request)
+        {
+            return new ManagedChallengeRequest
+            {
+                ChallengeType = request.ChallengeType,
+                Identifier = request.Identifier,
+                ResponseKey = request.ResponseKey,
+                ResponseValue = request.ResponseValue,
+                AuthKey = request.AuthKey,
+                AuthSecret = request.AuthSecret,
+                DateTimePerformed = request.DateTimePerformed,
+                ManagedCertId = request.ManagedCertId
+            };
+        }
+
         /// <summary>
         /// maintain a set of changed challenge requests that we need to ensure get cleaned up later
         /// </summary>
         private ConcurrentDictionary<string, ManagedChallengeRequest> _managedChallengesPendingCleanup = [];
 
-        public async Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
+        private ConcurrentDictionary<string, ManagedChallengeOperation> _managedChallengeOperations = [];
+
+        public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request)
         {
-            return await PerformManagedChallengeRequest(request, tagScopes: null);
+            return BeginManagedChallengeRequest(request, tagScopes: null);
+        }
+
+        public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(
+            ManagedChallengeRequest request,
+            ICollection<TagScope>? tagScopes,
+            bool requireAllTags = false)
+        {
+            CleanupExpiredManagedChallengeOperations();
+
+            var operation = new ManagedChallengeOperation
+            {
+                Request = CloneManagedChallengeRequest(request)
+            };
+
+            _managedChallengeOperations[operation.Id] = operation;
+
+            _ = RunManagedChallengeOperation(operation.Id, tagScopes, requireAllTags);
+
+            return Task.FromResult(operation);
+        }
+
+        public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId)
+        {
+            _managedChallengeOperations.TryGetValue(operationId, out var operation);
+            return Task.FromResult(operation);
+        }
+
+        public Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
+        {
+            return ExecuteManagedChallengeRequest(request, tagScopes: null);
         }
 
         /// <summary>
@@ -246,7 +293,59 @@ namespace Certify.Management
         /// <param name="tagScopes">Tag scopes the caller is authorized for. If null, no tag filtering applied.</param>
         /// <param name="requireAllTags">If true, challenge must match ALL tag scopes</param>
         /// <returns>Result of the challenge operation</returns>
-        public async Task<ActionResult> PerformManagedChallengeRequest(
+        public Task<ActionResult> PerformManagedChallengeRequest(
+            ManagedChallengeRequest request,
+            ICollection<TagScope>? tagScopes,
+            bool requireAllTags = false)
+        {
+            return ExecuteManagedChallengeRequest(request, tagScopes, requireAllTags);
+        }
+
+        private async Task RunManagedChallengeOperation(string operationId, ICollection<TagScope>? tagScopes, bool requireAllTags)
+        {
+            if (!_managedChallengeOperations.TryGetValue(operationId, out var operation))
+            {
+                return;
+            }
+
+            try
+            {
+                operation.Status = ManagedChallengeOperationStates.Running;
+                operation.DateStarted = DateTimeOffset.UtcNow;
+                operation.DateLastUpdated = operation.DateStarted.Value;
+
+                var result = await ExecuteManagedChallengeRequest(operation.Request, tagScopes, requireAllTags);
+
+                operation.Result = result;
+                operation.Status = result.IsSuccess ? ManagedChallengeOperationStates.Succeeded : ManagedChallengeOperationStates.Failed;
+                operation.DateCompleted = DateTimeOffset.UtcNow;
+                operation.DateLastUpdated = operation.DateCompleted.Value;
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Managed Challenge operation failed: {exp}");
+
+                operation.Result = new ActionResult { IsSuccess = false, Message = $"Managed challenge operation failed: {exp.Message}" };
+                operation.Status = ManagedChallengeOperationStates.Failed;
+                operation.DateCompleted = DateTimeOffset.UtcNow;
+                operation.DateLastUpdated = operation.DateCompleted.Value;
+            }
+        }
+
+        private void CleanupExpiredManagedChallengeOperations()
+        {
+            var cutoff = DateTimeOffset.UtcNow.AddHours(-12);
+
+            foreach (var kvp in _managedChallengeOperations)
+            {
+                if (kvp.Value.IsCompleted && kvp.Value.DateLastUpdated < cutoff)
+                {
+                    _managedChallengeOperations.TryRemove(kvp.Key, out _);
+                }
+            }
+        }
+
+        private async Task<ActionResult> ExecuteManagedChallengeRequest(
             ManagedChallengeRequest request,
             ICollection<TagScope>? tagScopes,
             bool requireAllTags = false)

@@ -114,6 +114,8 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> CleanupManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(request);
         public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => _managedChallengeController(authContext).Delete(id);
         public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(request);
+        public Task<ManagedChallengeOperation> BeginManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _certifyManager.BeginManagedChallengeRequest(request);
+        public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId, AuthContext authContext) => _certifyManager.GetManagedChallengeOperation(operationId);
 
         public Task<ManagedInstanceInfo> GetHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Get(id);
         public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);

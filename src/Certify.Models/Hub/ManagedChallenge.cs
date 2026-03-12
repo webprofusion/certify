@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Certify.Models.Config;
 
 namespace Certify.Models.Hub
 {
@@ -56,5 +57,28 @@ namespace Certify.Models.Hub
 
         public DateTimeOffset? DateTimePerformed { get; set; }
         public string? ManagedCertId { get; set; }
+    }
+
+    public static class ManagedChallengeOperationStates
+    {
+        public const string Pending = "pending";
+        public const string Running = "running";
+        public const string Succeeded = "succeeded";
+        public const string Failed = "failed";
+    }
+
+    public class ManagedChallengeOperation
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Status { get; set; } = ManagedChallengeOperationStates.Pending;
+        public ManagedChallengeRequest Request { get; set; } = new ManagedChallengeRequest();
+        public ActionResult? Result { get; set; }
+        public DateTimeOffset DateCreated { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset DateLastUpdated { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset? DateStarted { get; set; }
+        public DateTimeOffset? DateCompleted { get; set; }
+
+        public bool IsCompleted => Status == ManagedChallengeOperationStates.Succeeded || Status == ManagedChallengeOperationStates.Failed;
+        public bool IsSuccess => Status == ManagedChallengeOperationStates.Succeeded;
     }
 }

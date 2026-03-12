@@ -49,6 +49,29 @@ namespace Certify.Service.Controllers
             return result;
         }
 
+        [HttpPost, Route("requestbegin")]
+        public async Task<ManagedChallengeOperation> BeginChallengeResponse(ManagedChallengeRequest request)
+        {
+            DebugLog();
+
+            return await _certifyManager.BeginManagedChallengeRequest(request);
+        }
+
+        [HttpGet, Route("requeststatus/{id}")]
+        public async Task<ActionResult<ManagedChallengeOperation>> GetChallengeResponseOperation(string id)
+        {
+            DebugLog();
+
+            var result = await _certifyManager.GetManagedChallengeOperation(id);
+
+            if (result == null)
+            {
+                return NotFound();
+            }
+
+            return result;
+        }
+
         [HttpPost, Route("cleanup")]
         public async Task<Models.Config.ActionResult> CleanupChallengeResponse(ManagedChallengeRequest request)
         {

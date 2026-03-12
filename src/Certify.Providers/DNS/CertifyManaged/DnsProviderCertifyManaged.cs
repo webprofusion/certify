@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Certify.Models;
@@ -22,6 +24,7 @@ namespace Certify.Providers.DNS.CertifyManaged
     public class DnsProviderCertifyManaged : IDnsProvider, IDisposable
     {
         private static readonly TimeSpan ManagedChallengeApiTimeout = TimeSpan.FromMinutes(20);
+        private static readonly TimeSpan ManagedChallengeOperationPollInterval = TimeSpan.FromSeconds(5);
 
         public static ChallengeProviderDefinition Definition
         {
@@ -79,6 +82,8 @@ namespace Certify.Providers.DNS.CertifyManaged
 
         private Uri _apiBaseUri { get; set; }
 
+        private string _hubAssignedInstanceId;
+
         public async Task<ActionResult> Test()
         {
             // TODO: dummy request to test API connection
@@ -92,13 +97,57 @@ namespace Certify.Providers.DNS.CertifyManaged
                 return new ActionResult { IsSuccess = false, Message = "Managed Challenge API URL not specified and default Management Hub URI not set. Cannot perform managed challenge." };
             }
 
-            var apiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/request");
-            var req = new HttpRequestMessage(HttpMethod.Post, apiUri);
+            var update = CreateManagedChallengeRequest(request);
+            var asyncApiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/requestbegin");
 
+            using (var asyncRequest = CreateApiRequest(asyncApiUri, update))
+            {
+                HttpResponseMessage result;
+                try
+                {
+                    result = await _client.SendAsync(asyncRequest);
+                }
+                catch (TaskCanceledException exp)
+                {
+                    return CreateTimeoutFailureResult("Update", exp);
+                }
+                catch (HttpRequestException exp)
+                {
+                    return CreateTransportFailureResult("Update", exp);
+                }
+
+                using (result)
+                {
+                    if (ShouldFallbackToSync(result.StatusCode))
+                    {
+                        var syncApiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/request");
+                        return await SendManagedChallengeRequest(update, syncApiUri, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
+                    }
+
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        return await CreateApiFailureResult("Update", result, asyncApiUri);
+                    }
+
+                    var responseJson = await result.Content.ReadAsStringAsync();
+                    var operation = JsonConvert.DeserializeObject<ManagedChallengeOperation>(responseJson);
+
+                    if (operation == null || string.IsNullOrWhiteSpace(operation.Id))
+                    {
+                        return new ActionResult { IsSuccess = false, Message = "Update failed: Managed Challenge API did not return a valid operation id." };
+                    }
+
+                    return await PollManagedChallengeOperation(operation.Id, "Update", $"Updated: {request.RecordName} :: {request.RecordValue}");
+                }
+            }
+        }
+
+        private ManagedChallengeRequest CreateManagedChallengeRequest(DnsRecord request)
+        {
             var authKey = _credentials["authkey"];
             var authSecret = _credentials["authsecret"];
 
-            var update = new ManagedChallengeRequest
+            return new ManagedChallengeRequest
             {
                 ChallengeType = "dns-01",
                 Identifier = request.TargetDomainName,
@@ -107,72 +156,161 @@ namespace Certify.Providers.DNS.CertifyManaged
                 AuthKey = authKey,
                 AuthSecret = authSecret
             };
+        }
 
+        private HttpRequestMessage CreateApiRequest(Uri apiUri, ManagedChallengeRequest update)
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, apiUri);
             var json = JsonConvert.SerializeObject(update, _serializerSettings);
-
             req.Content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
 
-            HttpResponseMessage result;
-            try
+            if (!string.IsNullOrWhiteSpace(_hubAssignedInstanceId))
             {
-                result = await _client.SendAsync(req);
-            }
-            catch (TaskCanceledException exp)
-            {
-                return new ActionResult { IsSuccess = false, Message = $"Update failed: Managed Challenge API request timed out after {ManagedChallengeApiTimeout.TotalMinutes:0} minutes. {exp.Message}" };
-            }
-            catch (HttpRequestException exp)
-            {
-                return new ActionResult { IsSuccess = false, Message = $"Update failed: {exp.Message}" };
+                req.Headers.Add("X-Certify-HubAssignedId", _hubAssignedInstanceId);
             }
 
-            try
+            return req;
+        }
+
+        private static bool ShouldFallbackToSync(HttpStatusCode statusCode)
+        {
+            return statusCode == HttpStatusCode.NotFound || statusCode == HttpStatusCode.MethodNotAllowed || statusCode == HttpStatusCode.NotImplemented;
+        }
+
+        private ActionResult CreateTimeoutFailureResult(string action, TaskCanceledException exp)
+        {
+            return new ActionResult { IsSuccess = false, Message = $"{action} failed: Managed Challenge API request timed out after {ManagedChallengeApiTimeout.TotalMinutes:0} minutes. {exp.Message}" };
+        }
+
+        private ActionResult CreateTransportFailureResult(string action, HttpRequestException exp)
+        {
+            return new ActionResult { IsSuccess = false, Message = $"{action} failed: {exp.Message}" };
+        }
+
+        private async Task<ActionResult> SendManagedChallengeRequest(ManagedChallengeRequest update, Uri apiUri, string action, string successMessage)
+        {
+            using (var req = CreateApiRequest(apiUri, update))
             {
-                if (result.IsSuccessStatusCode)
+                HttpResponseMessage result;
+                try
                 {
+                    result = await _client.SendAsync(req);
+                }
+                catch (TaskCanceledException exp)
+                {
+                    return CreateTimeoutFailureResult(action, exp);
+                }
+                catch (HttpRequestException exp)
+                {
+                    return CreateTransportFailureResult(action, exp);
+                }
+
+                using (result)
+                {
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        return await CreateApiFailureResult(action, result, apiUri);
+                    }
+
                     var responseJson = await result.Content.ReadAsStringAsync();
                     var updateResult = JsonConvert.DeserializeObject<ActionResult>(responseJson);
-
-                    return new ActionResult { IsSuccess = true, Message = $"Updated: {request.RecordName} :: {request.RecordValue}" };
+                    return updateResult ?? new ActionResult { IsSuccess = true, Message = successMessage };
                 }
-                else
-                {
-                    var responseJson = await result.Content.ReadAsStringAsync();
+            }
+        }
 
-                    // Try to parse as ActionResult first (if API returns structured error)
+        private async Task<ActionResult> PollManagedChallengeOperation(string operationId, string action, string successMessage)
+        {
+            while (true)
+            {
+                var operationUri = new Uri(_apiBaseUri, $"/api/v1/managedchallenge/requeststatus/{Uri.EscapeDataString(operationId)}");
+
+                using (var request = new HttpRequestMessage(HttpMethod.Get, operationUri))
+                {
+                    if (!string.IsNullOrWhiteSpace(_hubAssignedInstanceId))
+                    {
+                        request.Headers.Add("X-Certify-HubAssignedId", _hubAssignedInstanceId);
+                    }
+
+                    HttpResponseMessage result;
                     try
                     {
-                        var errorResult = JsonConvert.DeserializeObject<ProblemDetails>(responseJson);
-                        if (errorResult != null && !string.IsNullOrWhiteSpace(errorResult.Detail))
-                        {
-                            return new ActionResult
-                            {
-                                IsSuccess = false,
-                                Message = $"Update failed [{result.StatusCode}]: {errorResult.Detail}"
-                            };
-                        }
+                        result = await _client.SendAsync(request);
                     }
-                    catch
+                    catch (TaskCanceledException exp)
                     {
-                        // If JSON parsing fails, fall back to raw response
+                        return CreateTimeoutFailureResult(action, exp);
+                    }
+                    catch (HttpRequestException exp)
+                    {
+                        return CreateTransportFailureResult(action, exp);
                     }
 
-                    // Fallback to including raw response content
-                    var errorMessage = string.IsNullOrWhiteSpace(responseJson)
-                        ? "No additional error details available"
-                        : responseJson;
+                    using (result)
+                    {
+                        if (result.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            return new ActionResult { IsSuccess = false, Message = $"{action} failed: Managed challenge operation '{operationId}' was not found." };
+                        }
 
+                        if (!result.IsSuccessStatusCode)
+                        {
+                            return await CreateApiFailureResult($"{action} status", result, operationUri);
+                        }
+
+                        var responseJson = await result.Content.ReadAsStringAsync();
+                        var operation = JsonConvert.DeserializeObject<ManagedChallengeOperation>(responseJson);
+
+                        if (operation == null)
+                        {
+                            return new ActionResult { IsSuccess = false, Message = $"{action} failed: Managed Challenge API returned an invalid operation status response." };
+                        }
+
+                        if (!operation.IsCompleted)
+                        {
+                            await Task.Delay(ManagedChallengeOperationPollInterval);
+                            continue;
+                        }
+
+                        return operation.Result ?? new ActionResult
+                        {
+                            IsSuccess = operation.IsSuccess,
+                            Message = operation.IsSuccess ? successMessage : $"{action} failed: Managed challenge operation completed without a result."
+                        };
+                    }
+                }
+            }
+        }
+
+        private async Task<ActionResult> CreateApiFailureResult(string action, HttpResponseMessage result, Uri apiUri)
+        {
+            var responseJson = await result.Content.ReadAsStringAsync();
+
+            try
+            {
+                var errorResult = JsonConvert.DeserializeObject<ProblemDetails>(responseJson);
+                if (errorResult != null && !string.IsNullOrWhiteSpace(errorResult.Detail))
+                {
                     return new ActionResult
                     {
                         IsSuccess = false,
-                        Message = $"Update failed [{result.StatusCode}]: {errorMessage}. Check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge."
+                        Message = $"{action} failed [{result.StatusCode}]: {errorResult.Detail}"
                     };
                 }
             }
-            catch (Exception exp)
+            catch
             {
-                return new ActionResult { IsSuccess = false, Message = $"Update failed: {exp.Message}" };
             }
+
+            var errorMessage = string.IsNullOrWhiteSpace(responseJson)
+                ? "No additional error details available"
+                : responseJson;
+
+            return new ActionResult
+            {
+                IsSuccess = false,
+                Message = $"{action} failed [{result.StatusCode}]: {errorMessage}. Check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge."
+            };
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -183,57 +321,8 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
 
             var apiUri = new Uri(_apiBaseUri, "/api/v1/managedchallenge/cleanup");
-            var req = new HttpRequestMessage(HttpMethod.Post, apiUri);
-
-            var authKey = _credentials["authkey"];
-            var authSecret = _credentials["authsecret"];
-
-            var update = new ManagedChallengeRequest
-            {
-                ChallengeType = "dns-01",
-                Identifier = request.TargetDomainName,
-                ResponseKey = request.RecordName,
-                ResponseValue = request.RecordValue,
-                AuthKey = authKey,
-                AuthSecret = authSecret
-            };
-
-            var json = JsonConvert.SerializeObject(update, _serializerSettings);
-
-            req.Content = new StringContent(json, System.Text.UnicodeEncoding.UTF8, "application/json");
-
-            HttpResponseMessage result;
-            try
-            {
-                result = await _client.SendAsync(req);
-            }
-            catch (TaskCanceledException exp)
-            {
-                return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: Managed Challenge API request timed out after {ManagedChallengeApiTimeout.TotalMinutes:0} minutes. {exp.Message}" };
-            }
-            catch (HttpRequestException exp)
-            {
-                return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: {exp.Message}" };
-            }
-
-            try
-            {
-                if (result.IsSuccessStatusCode)
-                {
-                    var responseJson = await result.Content.ReadAsStringAsync();
-                    var updateResult = JsonConvert.DeserializeObject<ActionResult>(responseJson);
-
-                    return new ActionResult { IsSuccess = true, Message = $"Cleanup: {request.RecordName} :: {request.RecordValue}" };
-                }
-                else
-                {
-                    return new ActionResult { IsSuccess = false, Message = $"Cleanup failed [{result.StatusCode}] : check API URL is valid [{apiUri}], auth credentials are correct and authorised for a matching managed challenge." };
-                }
-            }
-            catch (Exception exp)
-            {
-                return new ActionResult { IsSuccess = false, Message = $"Cleanup failed: {exp.Message}" };
-            }
+            var update = CreateManagedChallengeRequest(request);
+            return await SendManagedChallengeRequest(update, apiUri, "Cleanup", $"Cleanup: {request.RecordName} :: {request.RecordValue}");
         }
 
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
@@ -265,14 +354,17 @@ namespace Certify.Providers.DNS.CertifyManaged
                 }
             }
 
-            if (_credentials == null || _credentials.Count == 0)
+            if (parameters?.TryGetValue("hubassignedinstanceid", out var hubAssignedInstanceId) == true
+                && !string.IsNullOrWhiteSpace(hubAssignedInstanceId))
             {
-                _log?.Error("Certify Managed Challenge DNS Provider could not be created: credentials missing or not set for managed challenge API.");
-                return false;
+                _hubAssignedInstanceId = hubAssignedInstanceId;
             }
+
+            var credentialsRequired = true;
 
             if (_parameters.TryGetValue("api", out var apiBase) && !string.IsNullOrWhiteSpace(apiBase))
             {
+                // use specific API base URL if provided
                 _apiBaseUri = new System.Uri(apiBase);
 
                 if (!_apiBaseUri.ToString().EndsWith("/"))
@@ -284,6 +376,7 @@ namespace Certify.Providers.DNS.CertifyManaged
             }
             else
             {
+                // use hub api URL from service config if not provided in parameters
                 var svcConfig = ServiceConfigManager.GetAppServiceConfig();
                 var mgmtHubAPI = svcConfig?.ManagementServerHubAPI;
 
@@ -302,6 +395,18 @@ namespace Certify.Providers.DNS.CertifyManaged
                     _log?.Error("Certify Managed Challenge DNS Provider could not be created: managed challenge API URL not set.");
                     return false;
                 }
+
+                if (!(_credentials?.Any() == true))
+                {
+                    // no credentials supplied, use hub joining credentials if available and assume managed instance is authorized for managed challenges
+
+                }
+            }
+
+            if (credentialsRequired && (_credentials == null || _credentials.Count == 0))
+            {
+                _log?.Error("Certify Managed Challenge DNS Provider could not be created: credentials missing or not set for managed challenge API.");
+                return false;
             }
 
             return await Task.FromResult(true);
@@ -312,7 +417,8 @@ namespace Certify.Providers.DNS.CertifyManaged
             return Task.FromResult(new List<DnsZone>());
         }
 
-        public void Dispose() { 
+        public void Dispose()
+        {
             _client?.Dispose();
         }
     }

@@ -118,7 +118,7 @@ namespace Certify.Management
                 new TagCategory { CategoryKey = "environment", DisplayName = "Environment", Description = "Deployment environment (Production, Staging, Development, etc.)", ColorHint = "#4CAF50", IsSingleValue = true, SortOrder = 1, IsSystemCategory = true },
                 new TagCategory { CategoryKey = "application", DisplayName = "Application", Description = "Application or service name", ColorHint = "#2196F3", IsSingleValue = false, SortOrder = 2, IsSystemCategory = true },
                 new TagCategory { CategoryKey = "department", DisplayName = "Department", Description = "Business unit or team ownership", ColorHint = "#9C27B0", IsSingleValue = false, SortOrder = 3, IsSystemCategory = true },
-                new TagCategory { CategoryKey = "criticality", DisplayName = "Criticality", Description = "Business criticality level (e.g. Critical, High, Medium, Low)", ColorHint = "#F44336", IsSingleValue = true, SortOrder = 4, IsSystemCategory = true },
+                new TagCategory { CategoryKey = "criticality", DisplayName = "Criticality", Description = "Business criticality level (e.g. Critical, High, Medium, Low)", ColorHint = "#450017", IsSingleValue = true, SortOrder = 4, IsSystemCategory = true },
                 new TagCategory { CategoryKey = "region", DisplayName = "Region", Description = "Geographic location or data center region", ColorHint = "#FF9800", IsSingleValue = false, SortOrder = 5, IsSystemCategory = true },
                 new TagCategory { CategoryKey = "organization", DisplayName = "Organization", Description = "Customer or tenant organization (when managing multiple companies)", ColorHint = "#00BCD4", IsSingleValue = true, SortOrder = 6, IsSystemCategory = true }
             };

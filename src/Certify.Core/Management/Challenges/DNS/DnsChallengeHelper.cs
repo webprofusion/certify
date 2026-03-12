@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
+using Certify.Shared;
+using Certify.SharedUtils;
 using Newtonsoft.Json;
 
 namespace Certify.Core.Management.Challenges
@@ -92,6 +96,8 @@ namespace Certify.Core.Management.Challenges
 
     public class DnsChallengeHelper
     {
+        private const string CertifyManagedDnsProviderId = "DNS01.API.CertifyManaged";
+
         private readonly IdnMapping _idnMapping = new IdnMapping();
         private readonly ICredentialsManager _credentialsManager;
         public DnsChallengeHelper(ICredentialsManager credentialsManager)
@@ -191,6 +197,122 @@ namespace Certify.Core.Management.Challenges
             return dnsAPIProvider;
         }
 
+        private async Task<Dictionary<string, string>> ApplyDefaultManagedChallengeHubCredentials(string challengeProvider, Dictionary<string, string> credentials, Dictionary<string, string> parameters, ILog log)
+        {
+            credentials ??= new Dictionary<string, string>();
+
+            if (challengeProvider != CertifyManagedDnsProviderId)
+            {
+                return credentials;
+            }
+
+            if (credentials.TryGetValue("authkey", out var authKey) && !string.IsNullOrWhiteSpace(authKey)
+                && credentials.TryGetValue("authsecret", out var authSecret) && !string.IsNullOrWhiteSpace(authSecret))
+            {
+                return credentials;
+            }
+
+            var serviceConfig = ServiceConfigManager.GetAppServiceConfig();
+            var currentHubApi = serviceConfig?.ManagementServerHubAPI?.Trim().TrimEnd('/');
+
+            if (string.IsNullOrWhiteSpace(currentHubApi))
+            {
+                return credentials;
+            }
+
+            var requestedHubApi = parameters != null && parameters.TryGetValue("api", out var apiValue)
+                ? apiValue?.Trim().TrimEnd('/')
+                : null;
+
+            if (!string.IsNullOrWhiteSpace(requestedHubApi)
+                && !string.Equals(requestedHubApi, currentHubApi, StringComparison.OrdinalIgnoreCase))
+            {
+                return credentials;
+            }
+
+            ClientSecret? joiningSecret = null;
+
+            var envClientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID");
+            var envClientSecret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET");
+            if (!string.IsNullOrWhiteSpace(envClientId) && !string.IsNullOrWhiteSpace(envClientSecret))
+            {
+                joiningSecret = new ClientSecret
+                {
+                    ClientId = envClientId,
+                    Secret = envClientSecret
+                };
+            }
+
+            if (joiningSecret == null)
+            {
+                try
+                {
+                    var storedSecret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+                    if (!string.IsNullOrWhiteSpace(storedSecret))
+                    {
+                        joiningSecret = System.Text.Json.JsonSerializer.Deserialize<ClientSecret>(storedSecret, JsonOptions.DefaultJsonSerializerOptions);
+                    }
+                }
+                catch (Exception exp)
+                {
+                    log?.Error(exp, "Failed to resolve default Management Hub joining credentials for managed DNS challenge.");
+                }
+            }
+
+            if (joiningSecret == null || string.IsNullOrWhiteSpace(joiningSecret.ClientId) || string.IsNullOrWhiteSpace(joiningSecret.Secret))
+            {
+                return credentials;
+            }
+
+            credentials["authkey"] = joiningSecret.ClientId;
+            credentials["authsecret"] = joiningSecret.Secret;
+
+            if (!string.IsNullOrWhiteSpace(serviceConfig?.HubAssignedInstanceId))
+            {
+                parameters ??= new Dictionary<string, string>();
+                parameters["hubassignedinstanceid"] = serviceConfig.HubAssignedInstanceId;
+            }
+
+            log?.Information("DNS: Using default Management Hub joining credentials for Certify Managed Challenge API on the current hub.");
+
+            return credentials;
+        }
+
+        private static string RedactCredentialValues(string message, Dictionary<string, string> credentials)
+        {
+            if (string.IsNullOrWhiteSpace(message) || credentials == null || credentials.Count == 0)
+            {
+                return message ?? string.Empty;
+            }
+
+            var redacted = message;
+
+            foreach (var credential in credentials)
+            {
+                if (!string.IsNullOrWhiteSpace(credential.Value))
+                {
+                    redacted = redacted.Replace(credential.Value, "[redacted]");
+                }
+            }
+
+            return redacted;
+        }
+
+        private DnsChallengeHelperResult CreateSafeFailureResult(string failureMsg, Dictionary<string, string> credentials)
+        {
+            return new DnsChallengeHelperResult(failureMsg: RedactCredentialValues(failureMsg, credentials));
+        }
+
+        private ActionResult SanitizeResultMessage(ActionResult result, Dictionary<string, string> credentials)
+        {
+            if (result != null)
+            {
+                result.Message = RedactCredentialValues(result.Message, credentials);
+            }
+
+            return result;
+        }
+
         public async Task<DnsChallengeHelperResult> CompleteDNSChallenge(ILog log, ManagedCertificate managedcertificate, CertIdentifierItem domain, string txtRecordName, string txtRecordValue, bool isTestMode)
         {
             // for a given managed site configuration, attempt to complete the required challenge by
@@ -224,6 +346,8 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
+            credentials = await ApplyDefaultManagedChallengeHubCredentials(challengeConfig.ChallengeProvider, credentials, parameters, log);
+
             try
             {
                 dnsAPIProvider = await GetDnsProvider(log, challengeConfig.ChallengeProvider, credentials, parameters);
@@ -234,7 +358,7 @@ namespace Certify.Core.Management.Challenges
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp}");
+                return CreateSafeFailureResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp}", credentials);
             }
 
             if (dnsAPIProvider == null)
@@ -277,6 +401,7 @@ namespace Certify.Core.Management.Challenges
                     ZoneId = zoneId
                 });
 
+                result = SanitizeResultMessage(result, credentials);
                 result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
 
                 var isAwaitingUser = false;
@@ -295,7 +420,7 @@ namespace Certify.Core.Management.Challenges
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}");
+                return CreateSafeFailureResult($"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}", credentials);
             }
         }
 
@@ -410,6 +535,8 @@ namespace Certify.Core.Management.Challenges
                 }
             }
 
+            credentials = await ApplyDefaultManagedChallengeHubCredentials(challengeConfig.ChallengeProvider, credentials, parameters, log);
+
             try
             {
                 dnsAPIProvider = await GetDnsProvider(log, challengeConfig.ChallengeProvider, credentials, parameters);
@@ -420,7 +547,7 @@ namespace Certify.Core.Management.Challenges
             }
             catch (Exception exp)
             {
-                return new DnsChallengeHelperResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp.ToString()}");
+                return CreateSafeFailureResult($"DNS Challenge API Provider could not be created. Check all required credentials are set. {exp}", credentials);
             }
 
             if (dnsAPIProvider == null)
@@ -465,6 +592,7 @@ namespace Certify.Core.Management.Challenges
                         ZoneId = zoneId
                     });
 
+                    result = SanitizeResultMessage(result, credentials);
                     result.Message = $"{dnsAPIProvider.ProviderTitle} :: {result.Message}";
 
                     return new DnsChallengeHelperResult
@@ -476,7 +604,7 @@ namespace Certify.Core.Management.Challenges
                 }
                 catch (Exception exp)
                 {
-                    return new DnsChallengeHelperResult(failureMsg: $"Failed [{dnsAPIProvider.ProviderTitle}]: {exp.Message}");
+                    return CreateSafeFailureResult($"Failed [{dnsAPIProvider.ProviderTitle}]: {exp}", credentials);
                 }
             }
             else

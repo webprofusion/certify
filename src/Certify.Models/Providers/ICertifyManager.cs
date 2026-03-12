@@ -105,6 +105,9 @@ namespace Certify.Management
         Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
         Task<ActionResult> DeleteManagedChallenge(string id);
+        Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
+        Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
