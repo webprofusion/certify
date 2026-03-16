@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -83,6 +84,7 @@ namespace Certify.Providers.DNS.CertifyManaged
         private Uri _apiBaseUri { get; set; }
 
         private string _hubAssignedInstanceId;
+        private string _hubRequestAuthSecret;
 
         public async Task<ActionResult> Test()
         {
@@ -166,10 +168,36 @@ namespace Certify.Providers.DNS.CertifyManaged
 
             if (!string.IsNullOrWhiteSpace(_hubAssignedInstanceId))
             {
-                req.Headers.Add("X-Certify-HubAssignedId", _hubAssignedInstanceId);
+                req.Headers.Add(ManagedInstanceRequestAuth.HubAssignedIdHeaderName, _hubAssignedInstanceId);
+                ApplyManagedInstanceRequestAuth(req, json);
             }
 
             return req;
+        }
+
+        private void ApplyManagedInstanceRequestAuth(HttpRequestMessage request, string requestBody = null)
+        {
+            if (string.IsNullOrWhiteSpace(_hubAssignedInstanceId) || string.IsNullOrWhiteSpace(_hubRequestAuthSecret))
+            {
+                return;
+            }
+
+            var timestamp = DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture);
+            var bodyBytes = string.IsNullOrEmpty(requestBody) ? Array.Empty<byte>() : System.Text.Encoding.UTF8.GetBytes(requestBody);
+            var bodyHash = ManagedInstanceRequestAuth.ComputeBodyHash(bodyBytes);
+            var requestPathAndQuery = request.RequestUri?.PathAndQuery ?? "/";
+            var signature = ManagedInstanceRequestAuth.ComputeSignatureFromSecret(
+                _hubRequestAuthSecret,
+                _hubAssignedInstanceId,
+                timestamp,
+                request.Method.Method,
+                requestPathAndQuery,
+                bodyHash);
+
+            request.Headers.Remove(ManagedInstanceRequestAuth.TimestampHeaderName);
+            request.Headers.Remove(ManagedInstanceRequestAuth.SignatureHeaderName);
+            request.Headers.Add(ManagedInstanceRequestAuth.TimestampHeaderName, timestamp);
+            request.Headers.Add(ManagedInstanceRequestAuth.SignatureHeaderName, signature);
         }
 
         private static bool ShouldFallbackToSync(HttpStatusCode statusCode)
@@ -229,7 +257,8 @@ namespace Certify.Providers.DNS.CertifyManaged
                 {
                     if (!string.IsNullOrWhiteSpace(_hubAssignedInstanceId))
                     {
-                        request.Headers.Add("X-Certify-HubAssignedId", _hubAssignedInstanceId);
+                        request.Headers.Add(ManagedInstanceRequestAuth.HubAssignedIdHeaderName, _hubAssignedInstanceId);
+                        ApplyManagedInstanceRequestAuth(request);
                     }
 
                     HttpResponseMessage result;
@@ -358,6 +387,12 @@ namespace Certify.Providers.DNS.CertifyManaged
                 && !string.IsNullOrWhiteSpace(hubAssignedInstanceId))
             {
                 _hubAssignedInstanceId = hubAssignedInstanceId;
+            }
+
+            if (parameters?.TryGetValue("hubrequestauthsecret", out var hubRequestAuthSecret) == true
+                && !string.IsNullOrWhiteSpace(hubRequestAuthSecret))
+            {
+                _hubRequestAuthSecret = hubRequestAuthSecret;
             }
 
             var credentialsRequired = true;

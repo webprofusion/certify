@@ -21,6 +21,11 @@
         /// </summary>
         public string JoiningToken { get; set; } = default!;
 
+        /// <summary>
+        /// Per-instance request authentication secret issued during join/rejoin for privileged instance-authenticated requests.
+        /// </summary>
+        public string RequestAuthSecret { get; set; } = string.Empty;
+
         public bool RejoinRequired { get; set; } = false;
 
         /// <summary>

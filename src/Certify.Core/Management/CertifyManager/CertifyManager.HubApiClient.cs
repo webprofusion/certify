@@ -14,7 +14,9 @@ namespace Certify.Management
             public required string ClientId { get; init; }
             public required string Secret { get; init; }
             public string? HubAssignedInstanceId { get; init; }
+            public string? RequestAuthSecret { get; init; }
             public string? IfNoneMatch { get; init; }
+            public string? TraceInstanceName { get; init; }
         }
 
         private Certify.Server.Hub.Api.Client GetHubApiClient(string hubApiBase)
@@ -61,9 +63,13 @@ namespace Certify.Management
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-Secret");
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-HubAssignedId");
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("If-None-Match");
+                _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-Trace-InstanceName");
 
                 _hubApiHttpClient.DefaultRequestHeaders.Add("X-Client-ID", requestContext.ClientId);
                 _hubApiHttpClient.DefaultRequestHeaders.Add("X-Client-Secret", requestContext.Secret);
+
+                client.ManagedInstanceRequestAuthInstanceId = requestContext.HubAssignedInstanceId;
+                client.ManagedInstanceRequestAuthSecret = requestContext.RequestAuthSecret;
 
                 if (!string.IsNullOrWhiteSpace(requestContext.HubAssignedInstanceId))
                 {
@@ -75,16 +81,28 @@ namespace Certify.Management
                     _hubApiHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("If-None-Match", requestContext.IfNoneMatch);
                 }
 
+                if (!string.IsNullOrWhiteSpace(requestContext.TraceInstanceName))
+                {
+                    _hubApiHttpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-Certify-Trace-InstanceName", requestContext.TraceInstanceName);
+                }
+
                 return await action(client, cancellationToken);
             }
             finally
             {
+                if (_hubApiClient != null)
+                {
+                    _hubApiClient.ManagedInstanceRequestAuthInstanceId = null;
+                    _hubApiClient.ManagedInstanceRequestAuthSecret = null;
+                }
+
                 if (_hubApiHttpClient != null)
                 {
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-ID");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-Secret");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-HubAssignedId");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("If-None-Match");
+                    _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-Trace-InstanceName");
                 }
 
                 _hubApiClientLock.Release();

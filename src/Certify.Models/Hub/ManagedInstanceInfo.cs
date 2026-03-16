@@ -39,6 +39,12 @@ namespace Certify.Models.Hub
         public string ConnectionStatus { get; set; } = string.Empty;
         public bool IsAuthenticated { get; set; }
 
+        /// <summary>
+        /// Base64-encoded SHA-256 hash of the per-instance request authentication secret.
+        /// The hash value is used as the derived HMAC key for privileged instance-authenticated hub requests.
+        /// </summary>
+        public string RequestAuthSecretHash { get; set; } = string.Empty;
+
         public LicenseCheckResult License { get; set; } = new LicenseCheckResult();
 
         public StatusSummary? Summary { get; set; }

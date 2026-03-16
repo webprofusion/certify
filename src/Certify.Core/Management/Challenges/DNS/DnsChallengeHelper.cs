@@ -271,6 +271,19 @@ namespace Certify.Core.Management.Challenges
             {
                 parameters ??= new Dictionary<string, string>();
                 parameters["hubassignedinstanceid"] = serviceConfig.HubAssignedInstanceId;
+
+                try
+                {
+                    var requestAuthSecret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubRequestAuthSecretCredId);
+                    if (!string.IsNullOrWhiteSpace(requestAuthSecret))
+                    {
+                        parameters["hubrequestauthsecret"] = requestAuthSecret;
+                    }
+                }
+                catch (Exception exp)
+                {
+                    log?.Error(exp, "Failed to resolve Management Hub request auth secret for managed DNS challenge.");
+                }
             }
 
             log?.Information("DNS: Using default Management Hub joining credentials for Certify Managed Challenge API on the current hub.");

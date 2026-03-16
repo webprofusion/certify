@@ -356,6 +356,8 @@ app.UseCors((p) =>
     .AllowAnyHeader();
 });
 
+app.UseMiddleware<ManagedInstanceRequestAuthBodyHashMiddleware>();
+
 app.UseAuthentication();
 app.UseAuthorization();
 

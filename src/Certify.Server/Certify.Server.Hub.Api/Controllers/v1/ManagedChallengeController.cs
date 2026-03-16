@@ -305,8 +305,18 @@ namespace Certify.Server.Hub.Api.Controllers
                 };
             }
 
-            var allKnownInstances = await _client.GetHubManagedInstances(SystemAuthContext);
-            var matchingInstance = allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
+            var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
+            if (!instanceAuth.IsSuccess)
+            {
+                return new ManagedChallengeAuthorizationResult
+                {
+                    WasEvaluated = true,
+                    StatusCode = instanceAuth.StatusCode,
+                    Message = instanceAuth.Message
+                };
+            }
+
+            var matchingInstance = instanceAuth.ManagedInstance;
 
             if (matchingInstance == null || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
             {

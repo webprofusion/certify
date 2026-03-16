@@ -33,8 +33,14 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: "X-Certify-HubAssignedId header is required.", statusCode: StatusCodes.Status400BadRequest);
             }
 
+            var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
+            if (!instanceAuth.IsSuccess)
+            {
+                return Problem(detail: instanceAuth.Message, statusCode: instanceAuth.StatusCode);
+            }
+
             var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
-            var matchingInstance = allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
+            var matchingInstance = instanceAuth.ManagedInstance ?? allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
 
             var results = await CheckSubscribableManagedCertsForInstance(matchingInstance, allKnownInstances);
 
@@ -147,6 +153,5 @@ namespace Certify.Server.Hub.Api.Controllers
 
             return results;
         }
-
     }
 }

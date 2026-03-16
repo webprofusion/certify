@@ -93,6 +93,11 @@ namespace Certify.Management
 
                 existing.License = item.License;
 
+                if (!string.IsNullOrWhiteSpace(item.RequestAuthSecretHash))
+                {
+                    existing.RequestAuthSecretHash = item.RequestAuthSecretHash;
+                }
+
                 if (existing.DateRegistered == DateTimeOffset.MinValue)
                 {
                     existing.DateRegistered = DateTimeOffset.UtcNow;

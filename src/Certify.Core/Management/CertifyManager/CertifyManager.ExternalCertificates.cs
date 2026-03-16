@@ -334,6 +334,7 @@ namespace Certify.Management
                 ClientId = secret.ClientId,
                 Secret = secret.Secret,
                 HubAssignedInstanceId = useHubJoiningCredentials ? _serverConfig?.HubAssignedInstanceId : null,
+                RequestAuthSecret = useHubJoiningCredentials ? await GetManagementHubRequestAuthSecret() : null,
                 IfNoneMatch = sourceConfig.LastSourceVersion
             };
 
@@ -531,7 +532,8 @@ namespace Certify.Management
                 {
                     ClientId = secret.ClientId,
                     Secret = secret.Secret,
-                    HubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId
+                    HubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId,
+                    RequestAuthSecret = await GetManagementHubRequestAuthSecret()
                 };
 
                 var results = await UseHubApiClient(

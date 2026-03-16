@@ -148,8 +148,13 @@ namespace Certify.Server.Hub.Api.Controllers
                 return new Certify.Models.Config.ActionResult("X-Certify-HubAssignedId header is required.", false);
             }
 
-            var allKnownInstances = await _client.GetHubManagedInstances(SystemAuthContext);
-            var matchingInstance = allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
+            var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
+            if (!instanceAuth.IsSuccess)
+            {
+                return new Certify.Models.Config.ActionResult(instanceAuth.Message, false);
+            }
+
+            var matchingInstance = instanceAuth.ManagedInstance;
 
             if (matchingInstance == null || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
             {

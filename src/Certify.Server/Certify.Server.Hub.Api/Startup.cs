@@ -13,6 +13,7 @@ using Certify.SharedUtils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 
@@ -234,6 +235,7 @@ namespace Certify.Server.Hub.Api
             services.AddSingleton(typeof(Certify.Client.ICertifyInternalApiClient), internalServiceClient);
 
             services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
+            services.TryAddTransient<ManagedInstanceRequestAuthValidator>();
 
             // we create a new instance of the management API for each request
             services.AddTransient<ManagementAPI>();
@@ -282,6 +284,8 @@ namespace Certify.Server.Hub.Api
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<ManagedInstanceRequestAuthBodyHashMiddleware>();
 
             app.UseRouting();
             app.UseCors((p) =>

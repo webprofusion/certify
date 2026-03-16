@@ -13,6 +13,7 @@ using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Server.Hub.Api;
 using Certify.Shared;
 using Certify.Shared.Core.Utils;
 using Certify.SharedUtils;
@@ -28,7 +29,9 @@ namespace Certify.Management
         private bool _isMgtmHubBackend = false;
 
         private ClientSecret _mgmtHubJoiningSecret;
+        private string? _mgmtHubRequestAuthSecret;
         public const string MgmtHubJoiningCredId = "_ManagementHubJoiningKey";
+        public const string MgmtHubRequestAuthSecretCredId = "_ManagementHubRequestAuthSecret";
 
         public async Task<ActionResult> CheckManagementHubConnectionStatus()
         {
@@ -59,6 +62,48 @@ namespace Certify.Management
             _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
             SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
         }
+
+        private async Task StoreManagementHubRequestAuthSecret(string? requestAuthSecret)
+        {
+            if (string.IsNullOrWhiteSpace(requestAuthSecret))
+            {
+                return;
+            }
+
+            _mgmtHubRequestAuthSecret = requestAuthSecret;
+
+            await _credentialsManager.Update(new StoredCredential
+            {
+                StorageKey = MgmtHubRequestAuthSecretCredId,
+                ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
+                Title = "Management Hub Request Auth Secret",
+                Secret = requestAuthSecret
+            });
+        }
+
+        private async Task<string?> GetManagementHubRequestAuthSecret()
+        {
+            if (!string.IsNullOrWhiteSpace(_mgmtHubRequestAuthSecret))
+            {
+                return _mgmtHubRequestAuthSecret;
+            }
+
+            try
+            {
+                var secret = await _credentialsManager.GetUnlockedCredential(MgmtHubRequestAuthSecretCredId);
+                if (!string.IsNullOrWhiteSpace(secret))
+                {
+                    _mgmtHubRequestAuthSecret = secret;
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Error retrieving management hub request auth secret from credentials store.");
+            }
+
+            return _mgmtHubRequestAuthSecret;
+        }
+
         public async Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret)
         {
             var hubConnectionAuthToken = string.Empty;
@@ -127,6 +172,8 @@ namespace Certify.Management
                     Secret = JsonSerializer.Serialize(clientSecret)
                 });
 
+                await StoreManagementHubRequestAuthSecret(joiningCredentialsCheck.Result.RequestAuthSecret);
+
                 try
                 {
                     await EnsureMgmtHubConnection(hubConnectionAuthToken);
@@ -163,20 +210,6 @@ namespace Certify.Management
         /// <returns>Returns an action result indicating the success of the connection attempt and any relevant hub information.</returns>
         public async Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false)
         {
-            var handler = new HttpClientHandler()
-            {
-                ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) =>
-                {
-                    // Allow all certificates (including untrusted ones)
-                    return true;
-                }
-            };
-
-            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
-            {
-                handler.ServerCertificateCustomValidationCallback = null;
-            }
-
             _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
 
             if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && registerInstance == false)
@@ -189,20 +222,7 @@ namespace Certify.Management
 
             _serviceLog.Debug("Checking credentials via Management Hub {url}", endpoint);
 
-            using var httpClient = new System.Net.Http.HttpClient(handler);
-
-            var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, endpoint);
-            request.Headers.Add("X-Client-ID", clientSecret.ClientId);
-            request.Headers.Add("X-Client-Secret", clientSecret.Secret);
-
-            request.Headers.Add("X-Certify-Trace-InstanceName", GetManagedInstanceInfo().Title);
-
-            if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
-            {
-                // include assigned id whenever available so the hub can reuse existing registration
-                request.Headers.Add("X-Certify-HubAssignedId", _serverConfig.HubAssignedInstanceId);
-            }
-            else if (!registerInstance)
+            if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && !registerInstance)
             {
                 // if we are not registering, we should have an assigned id to check against
                 return new ActionResult<HubJoiningInfo>("Hub Assigned Instance ID is required when rejoining the hub.", isSuccess: false);
@@ -210,61 +230,46 @@ namespace Certify.Management
 
             try
             {
-                var response = await httpClient.SendAsync(request);
-
-                if (response.IsSuccessStatusCode)
+                var requestContext = new HubApiRequestContext
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    var hubInfo = JsonSerializer.Deserialize<HubJoiningInfo>(json, JsonOptions.DefaultJsonSerializerOptions);
-                    return new ActionResult<HubJoiningInfo>("Connected to Management Hub.", isSuccess: true, hubInfo);
-                }
-                else
-                {
-                    var content = await response.Content.ReadAsStringAsync();
+                    ClientId = clientSecret.ClientId,
+                    Secret = clientSecret.Secret,
+                    HubAssignedInstanceId = _serverConfig.HubAssignedInstanceId,
+                    TraceInstanceName = GetManagedInstanceInfo().Title
+                };
 
-                    if (response.Content.Headers.ContentType?.MediaType == "application/problem+json")
-                    {
-                        try
-                        {
-                            var problemDetails = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ProblemDetails>();
+                var hubInfo = await UseHubApiClient(
+                    url,
+                    requestContext,
+                    (client, ct) => registerInstance ? client.RegisterAsync(ct) : client.CheckJoiningAsync(false, ct),
+                    default);
 
-                            var result = new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {problemDetails.Title} - {problemDetails.Detail}", isSuccess: false);
-                            if (problemDetails.Type.EndsWith("/hub-unknown-instance-id"))
-                            {
-                                result.Result = new HubJoiningInfo
-                                {
-                                    Message = "The provided Hub Assigned Instance ID is not recognized by the Management Hub. It may be incorrect or associated with a different hub.",
-                                    RejoinRequired = true
-                                };
-                            }
-
-                            return result;
-                        }
-                        catch (System.Text.Json.JsonException)
-                        {
-                            _serviceLog.Debug("Failed to parse problem+json response from hub.");
-                        }
-                    }
-
-                    if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    {
-                        return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). {content} - Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}. {response}", isSuccess: false);
-                    }
-                    else
-                    {
-                        return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);
-                    }
-                }
+                return new ActionResult<HubJoiningInfo>("Connected to Management Hub.", isSuccess: true, hubInfo);
             }
             catch (TaskCanceledException)
             {
                 return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Timeout trying to connect to hub, service may unavailable. {endpoint}", isSuccess: false);
             }
-            catch (HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
+            catch (ApiException apiEx)
+            {
+                var problemResult = TryCreateHubProblemResult(endpoint, clientSecret, apiEx);
+                if (problemResult != null)
+                {
+                    return problemResult;
+                }
+
+                if (apiEx.StatusCode == (int)System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub (Unauthorized). {apiEx.Response} - Check credentials {endpoint} {clientSecret.ClientId} {clientSecret.Secret} {_serverConfig.HubAssignedInstanceId}.", isSuccess: false);
+                }
+
+                return new ActionResult<HubJoiningInfo>("Could not connect to Management Hub. Check URL.", isSuccess: false);
+            }
+            catch (System.Net.Http.HttpRequestException httpEx) when (httpEx.InnerException is System.Net.Sockets.SocketException socketEx && socketEx.ErrorCode == 111)
             {
                 return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Connection refused (port may not be open or service not running). {endpoint}", isSuccess: false);
             }
-            catch (HttpRequestException httpEx)
+            catch (System.Net.Http.HttpRequestException httpEx)
             {
                 return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. Network error: {httpEx.Message}", isSuccess: false);
             }
@@ -272,6 +277,41 @@ namespace Certify.Management
             {
                 return new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {exp}", isSuccess: false);
             }
+        }
+
+        private ActionResult<HubJoiningInfo>? TryCreateHubProblemResult(string endpoint, ClientSecret clientSecret, ApiException apiEx)
+        {
+            if (string.IsNullOrWhiteSpace(apiEx.Response))
+            {
+                return null;
+            }
+
+            try
+            {
+                var problemDetails = JsonSerializer.Deserialize<Microsoft.AspNetCore.Mvc.ProblemDetails>(apiEx.Response, JsonOptions.DefaultJsonSerializerOptions);
+                if (problemDetails == null)
+                {
+                    return null;
+                }
+
+                var result = new ActionResult<HubJoiningInfo>($"Could not connect to Management Hub. {problemDetails.Title} - {problemDetails.Detail}", isSuccess: false);
+                if (problemDetails.Type?.EndsWith("/hub-unknown-instance-id", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    result.Result = new HubJoiningInfo
+                    {
+                        Message = "The provided Hub Assigned Instance ID is not recognized by the Management Hub. It may be incorrect or associated with a different hub.",
+                        RejoinRequired = true
+                    };
+                }
+
+                return result;
+            }
+            catch (JsonException)
+            {
+                _serviceLog.Debug("Failed to parse problem+json response from hub for {endpoint}.");
+            }
+
+            return null;
         }
 
         public void EnableManagementHubBackend(bool isDirectHubBackend)
@@ -422,6 +462,8 @@ namespace Certify.Management
                         if (check.IsSuccess)
                         {
                             hubConnectionAuthToken = check.Result.JoiningToken;
+
+                            await StoreManagementHubRequestAuthSecret(check.Result.RequestAuthSecret);
 
                             if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && !string.IsNullOrWhiteSpace(check.Result.HubAssignedInstanceId))
                             {

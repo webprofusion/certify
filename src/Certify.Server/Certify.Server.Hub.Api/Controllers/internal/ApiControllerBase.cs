@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -92,6 +93,15 @@ namespace Certify.Server.Hub.Api.Controllers
                 };
             }
         }
+
+        internal async Task<ManagedInstanceRequestAuthValidationResult> ValidateManagedInstanceRequestAuthAsync()
+        {
+            var validator = HttpContext.RequestServices.GetService<ManagedInstanceRequestAuthValidator>()
+                ?? ActivatorUtilities.CreateInstance<ManagedInstanceRequestAuthValidator>(HttpContext.RequestServices);
+
+            return await validator.ValidateAsync(Request, HttpContext.RequestAborted);
+        }
+
         /// <summary>
         /// Get the corresponding auth context to pass to the backend service
         /// </summary>
