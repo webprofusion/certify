@@ -8,10 +8,10 @@
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
         <PackageReference Include="Microsoft.ApplicationInsights" Version="2.23.0" />
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Bcl.Cryptography" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Bcl.Cryptography" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -20,7 +20,7 @@
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="System.Security.AccessControl" Version="6.0.1" />
         <PackageReference Include="System.Security.Cryptography.Cng" Version="5.0.0" />
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.3" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.5" />
 
         <PackageReference Include="Arsoft.Tools.Net" Version="3.6.1" Condition="'$(TargetFramework)' != 'netstandard2.0'" />
 

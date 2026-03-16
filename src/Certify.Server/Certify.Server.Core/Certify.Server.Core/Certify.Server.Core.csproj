@@ -9,20 +9,20 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
-        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.3" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.3" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.5" />
         <PackageReference Include="Polly" Version="8.6.6" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="10.0.5" />
         <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="10.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.3" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.3" />
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.3" />
-        <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.3" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Certificate" Version="10.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.5" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.5" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.5" />
 
         <!-- only include OpenAPI in debug build -->
-        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+        <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
 
     </ItemGroup>
     <ItemGroup>
