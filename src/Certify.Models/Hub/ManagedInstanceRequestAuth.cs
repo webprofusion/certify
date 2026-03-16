@@ -8,6 +8,7 @@ namespace Certify.Models.Hub
     public static class ManagedInstanceRequestAuth
     {
         public const string HubAssignedIdHeaderName = "X-Certify-HubAssignedId";
+        public const string InstanceVersionHeaderName = "X-Certify-InstanceVersion";
         public const string TimestampHeaderName = "X-Certify-Timestamp";
         public const string SignatureHeaderName = "X-Certify-Signature";
 

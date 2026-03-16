@@ -34,7 +34,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                 return new ChallengeProviderDefinition
                 {
                     Id = "DNS01.API.CertifyManaged",
-                    Title = "Certify Managed Challenge API",
+                    Title = "Certify Hub Managed Challenge API",
                     Description = "Performs challenge responses via the Certify Management Hub API.",
                     HelpUrl = "https://docs.certifytheweb.com/",
                     PropagationDelaySeconds = 60,

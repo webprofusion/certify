@@ -14,6 +14,7 @@ namespace Certify.Management
             public required string ClientId { get; init; }
             public required string Secret { get; init; }
             public string? HubAssignedInstanceId { get; init; }
+            public string? InstanceVersion { get; init; }
             public string? RequestAuthSecret { get; init; }
             public string? IfNoneMatch { get; init; }
             public string? TraceInstanceName { get; init; }
@@ -62,6 +63,7 @@ namespace Certify.Management
                 _hubApiHttpClient!.DefaultRequestHeaders.Remove("X-Client-ID");
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-Secret");
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-HubAssignedId");
+                _hubApiHttpClient.DefaultRequestHeaders.Remove(Models.Hub.ManagedInstanceRequestAuth.InstanceVersionHeaderName);
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("If-None-Match");
                 _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-Trace-InstanceName");
 
@@ -74,6 +76,11 @@ namespace Certify.Management
                 if (!string.IsNullOrWhiteSpace(requestContext.HubAssignedInstanceId))
                 {
                     _hubApiHttpClient.DefaultRequestHeaders.Add("X-Certify-HubAssignedId", requestContext.HubAssignedInstanceId);
+                }
+
+                if (!string.IsNullOrWhiteSpace(requestContext.InstanceVersion))
+                {
+                    _hubApiHttpClient.DefaultRequestHeaders.TryAddWithoutValidation(Models.Hub.ManagedInstanceRequestAuth.InstanceVersionHeaderName, requestContext.InstanceVersion);
                 }
 
                 if (!string.IsNullOrWhiteSpace(requestContext.IfNoneMatch))
@@ -101,6 +108,7 @@ namespace Certify.Management
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-ID");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Client-Secret");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-HubAssignedId");
+                    _hubApiHttpClient.DefaultRequestHeaders.Remove(Models.Hub.ManagedInstanceRequestAuth.InstanceVersionHeaderName);
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("If-None-Match");
                     _hubApiHttpClient.DefaultRequestHeaders.Remove("X-Certify-Trace-InstanceName");
                 }

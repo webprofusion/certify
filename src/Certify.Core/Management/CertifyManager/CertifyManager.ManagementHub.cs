@@ -235,6 +235,7 @@ namespace Certify.Management
                     ClientId = clientSecret.ClientId,
                     Secret = clientSecret.Secret,
                     HubAssignedInstanceId = _serverConfig.HubAssignedInstanceId,
+                    InstanceVersion = Util.GetAppVersion().ToString(),
                     TraceInstanceName = GetManagedInstanceInfo().Title
                 };
 

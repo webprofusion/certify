@@ -177,6 +177,8 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString(); ;
             var instanceTitle = Request.Headers["X-Certify-Trace-InstanceName"].ToString();
+            var instanceVersion = Request.Headers[ManagedInstanceRequestAuth.InstanceVersionHeaderName].ToString();
+            var supportsRequestAuthSecrets = !string.IsNullOrWhiteSpace(instanceVersion);
             var isKnownInstance = false;
             string? requestAuthSecret = null;
             string? requestAuthSecretHash = null;
@@ -195,8 +197,11 @@ namespace Certify.Server.Hub.Api.Controllers
                         return Problem(detail: "Invalid hub assigned instance id format", statusCode: (int)HttpStatusCode.Unauthorized, type: "https://api.certifytheweb.com/problemtype/hub-unknown-instance-id");
                     }
 
-                    requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
-                    requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
+                    if (supportsRequestAuthSecrets)
+                    {
+                        requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
+                        requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
+                    }
 
                     var newInstance = new ManagedInstanceInfo
                     {
@@ -207,7 +212,7 @@ namespace Certify.Server.Hub.Api.Controllers
                         ConnectionStatus = ConnectionStatus.Disconnected,
                         IsAuthenticated = false,
                         Title = instanceTitle,
-                        RequestAuthSecretHash = requestAuthSecretHash
+                        RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
                     };
 
                     var addResult = await _client.AddHubManagedInstance(newInstance, CurrentAuthContext);
@@ -220,7 +225,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
-                    if (string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash))
+                    if (supportsRequestAuthSecrets && string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash))
                     {
                         requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
                         requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
@@ -234,8 +239,11 @@ namespace Certify.Server.Hub.Api.Controllers
             else if (register == true)
             {
                 // no assigned id provided, assign new one 
-                requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
-                requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
+                if (supportsRequestAuthSecrets)
+                {
+                    requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
+                    requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
+                }
 
                 var instanceInfo = new ManagedInstanceInfo
                 {
@@ -243,7 +251,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     DateLastReported = DateTimeOffset.UtcNow,
                     ConnectionStatus = ConnectionStatus.Disconnected,
                     IsAuthenticated = false,
-                    RequestAuthSecretHash = requestAuthSecretHash
+                    RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
                 };
                 var r = await _client.AddHubManagedInstance(instanceInfo, CurrentAuthContext);
                 hubAssignedInstanceId = r.Result!.InstanceId;
