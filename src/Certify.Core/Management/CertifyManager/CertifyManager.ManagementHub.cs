@@ -112,12 +112,18 @@ namespace Certify.Management
             _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
 
             ActionResult<HubJoiningInfo> joiningCredentialsCheck = null;
+            var hasStoredRequestAuthSecret = !string.IsNullOrWhiteSpace(await GetManagementHubRequestAuthSecret());
 
             if (!string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId))
             {
                 _serviceLog.Information("Hub already joined, will reconnect.");
                 // when have already joined a hub, first check if we are rejoining the same hub by just verifying the credentials
-                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: false);
+                if (!hasStoredRequestAuthSecret)
+                {
+                    _serviceLog.Information("Management hub request auth secret is missing locally. Requesting secret reissue during hub rejoin.");
+                }
+
+                joiningCredentialsCheck = await CheckManagementHubCredentials(url, clientSecret, registerInstance: false, reissueRequestAuthSecret: !hasStoredRequestAuthSecret);
 
                 if (!joiningCredentialsCheck.IsSuccess && joiningCredentialsCheck.Result?.RejoinRequired == true)
                 {
@@ -208,7 +214,7 @@ namespace Certify.Management
         /// <param name="clientSecret">Contains the credentials required for authenticating the connection to the Management Hub.</param>
         /// <param name="registerInstance">Indicates whether to register the current instance with the Management Hub during the check.</param>
         /// <returns>Returns an action result indicating the success of the connection attempt and any relevant hub information.</returns>
-        public async Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false)
+        public async Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false, bool reissueRequestAuthSecret = false)
         {
             _serverConfig.HubAssignedInstanceId = HubInstanceIdentityManager.GetHubAssignedInstanceId(_serverConfig.HubAssignedInstanceId);
 
@@ -242,7 +248,7 @@ namespace Certify.Management
                 var hubInfo = await UseHubApiClient(
                     url,
                     requestContext,
-                    (client, ct) => registerInstance ? client.RegisterAsync(ct) : client.CheckJoiningAsync(false, ct),
+                    (client, ct) => registerInstance ? client.RegisterAsync(ct) : client.CheckJoiningAsync(false, reissueRequestAuthSecret, ct),
                     default);
 
                 return new ActionResult<HubJoiningInfo>("Connected to Management Hub.", isSuccess: true, hubInfo);

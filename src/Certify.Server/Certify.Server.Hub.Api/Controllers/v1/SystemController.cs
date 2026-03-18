@@ -163,7 +163,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubJoiningInfo))]
-        public async Task<IActionResult> CheckJoining(bool? register = false)
+        public async Task<IActionResult> CheckJoining(bool? register = false, bool? reissueRequestAuthSecret = false)
         {
 
             // auth based on client id and client secret
@@ -180,6 +180,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var instanceVersion = Request.Headers[ManagedInstanceRequestAuth.InstanceVersionHeaderName].ToString();
             var supportsRequestAuthSecrets = !string.IsNullOrWhiteSpace(instanceVersion);
             var isKnownInstance = false;
+            var requestAuthSecretReissued = false;
             string? requestAuthSecret = null;
             string? requestAuthSecretHash = null;
 
@@ -225,12 +226,14 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
-                    if (supportsRequestAuthSecrets && string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash))
+                    if (supportsRequestAuthSecrets
+                        && (string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash) || reissueRequestAuthSecret == true))
                     {
                         requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
                         requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
                         instanceInfo.RequestAuthSecretHash = requestAuthSecretHash;
                         await _client.UpdateHubManagedInstance(instanceInfo, SystemAuthContext);
+                        requestAuthSecretReissued = true;
                     }
 
                     isKnownInstance = true;
@@ -273,7 +276,9 @@ namespace Certify.Server.Hub.Api.Controllers
 
             joiningInfo.HubEndpoint = "api/internal/managementhub";
             joiningInfo.IsKnownInstance = isKnownInstance;
-            joiningInfo.Message = isKnownInstance ? "Joining OK. Existing instance registration reused." : "Joining OK. New instance registration created.";
+            joiningInfo.Message = requestAuthSecretReissued
+                ? "Joining OK. Existing instance registration reused and request auth secret reissued."
+                : isKnownInstance ? "Joining OK. Existing instance registration reused." : "Joining OK. New instance registration created.";
 
             var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
             var jwtService = new Hub.Api.Services.JwtService(_config);

@@ -113,7 +113,7 @@ namespace Certify.Management
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
         Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret);
-        Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false);
+        Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false, bool reissueRequestAuthSecret = false);
 
         Task<InstanceCommandResult> PerformHubCommandWithResult(InstanceCommandRequest arg);
         void SetDirectManagementClient(IManagementServerClient client);

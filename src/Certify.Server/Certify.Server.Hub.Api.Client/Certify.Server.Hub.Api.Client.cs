@@ -8693,9 +8693,9 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>Returns an IActionResult indicating the success or failure of the access check.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register)
+        public virtual System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register, bool? reissueRequestAuthSecret)
         {
-            return CheckJoiningAsync(register, System.Threading.CancellationToken.None);
+            return CheckJoiningAsync(register, reissueRequestAuthSecret, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -8704,7 +8704,7 @@ namespace Certify.Server.Hub.Api
         /// </summary>
         /// <returns>Returns an IActionResult indicating the success or failure of the access check.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<HubJoiningInfo> CheckJoiningAsync(bool? register, bool? reissueRequestAuthSecret, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -8723,6 +8723,10 @@ namespace Certify.Server.Hub.Api
                     if (register != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("register")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(register, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (reissueRequestAuthSecret != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("reissueRequestAuthSecret")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(reissueRequestAuthSecret, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     urlBuilder_.Length--;
 
