@@ -79,11 +79,13 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task ValidateAsync_RejectsStaleTimestamp()
         {
+            var secret = ManagedInstanceRequestAuth.GenerateSecret();
+            var secretHash = ManagedInstanceRequestAuth.DeriveSecretHash(secret);
             var requestBody = "{\"value\":1}";
             var bodyHash = ManagedInstanceRequestAuth.ComputeBodyHash(Encoding.UTF8.GetBytes(requestBody));
             var timestamp = DateTimeOffset.UtcNow.AddMinutes(-10).ToString("O", CultureInfo.InvariantCulture);
             var signature = ManagedInstanceRequestAuth.ComputeSignatureFromSecret(
-                ManagedInstanceRequestAuth.GenerateSecret(),
+                secret,
                 "instance-1",
                 timestamp,
                 "POST",
@@ -91,6 +93,15 @@ namespace Certify.Core.Tests.Unit
                 bodyHash);
 
             var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetHubManagedInstance("instance-1", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ManagedInstanceInfo
+                {
+                    Id = "instance-1",
+                    InstanceId = "instance-1",
+                    RequestAuthSecretHash = secretHash,
+                    SecurityPrincipalId = "sp-1"
+                });
+
             var validator = new ManagedInstanceRequestAuthValidator(client.Object, NullLogger<ManagedInstanceRequestAuthValidator>.Instance);
             var context = CreateRequestContext("/api/v1/managedchallenge/request", requestBody, timestamp, signature, bodyHash);
 

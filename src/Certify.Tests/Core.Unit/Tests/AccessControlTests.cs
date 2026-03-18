@@ -1278,6 +1278,199 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task TestTagScopedCertificateConsumerRoleOnlyAuthorizesMatchingTaggedCertificates()
+        {
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload), bypassIntegrityCheck: true);
+
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            var taggedConsumerRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.CertificateConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                {
+                    new TagScope { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            await access.AddAssignedRole(contextUserId, taggedConsumerRole, bypassIntegrityCheck: true);
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.Certificate,
+                ResourceActionId = StandardResourceActions.CertificateDownload,
+                ScopedAssignedRoles = new List<string> { taggedConsumerRole.Id },
+                ResourceTags = new List<TagSummary>
+                {
+                    new TagSummary { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "User should have access to certificates tagged with environment:Development");
+
+            check.ResourceTags = new List<TagSummary>
+            {
+                new TagSummary { CategoryKey = "environment", Value = "Production" }
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "User should not have access to certificates tagged with environment:Production");
+
+            check.ResourceTags = new List<TagSummary>();
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "User should not have access to untagged certificates when the assigned consumer role is tag-scoped");
+        }
+
+        [TestMethod]
+        public async Task TestTagScopedCertificateConsumerRoleIsNotBypassedByUnrelatedUnscopedRole()
+        {
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.CertificateDownload), bypassIntegrityCheck: true);
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagementHubInstancesList), bypassIntegrityCheck: true);
+
+            var consumerPolicy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer);
+            _ = await access.AddResourcePolicy(contextUserId, consumerPolicy, bypassIntegrityCheck: true);
+
+            var readerPolicy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagementHubReader);
+            _ = await access.AddResourcePolicy(contextUserId, readerPolicy, bypassIntegrityCheck: true);
+
+            var certificateConsumerRole = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id);
+            await access.AddRole(contextUserId, certificateConsumerRole, bypassIntegrityCheck: true);
+
+            var hubViewerRole = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.HubViewer.Id);
+            await access.AddRole(contextUserId, hubViewerRole, bypassIntegrityCheck: true);
+
+            var taggedConsumerRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.CertificateConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                {
+                    new TagScope { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            var unrelatedUnscopedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.HubViewer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, taggedConsumerRole, bypassIntegrityCheck: true);
+            await access.AddAssignedRole(contextUserId, unrelatedUnscopedRole, bypassIntegrityCheck: true);
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.Certificate,
+                ResourceActionId = StandardResourceActions.CertificateDownload,
+                ResourceTags = new List<TagSummary>
+                {
+                    new TagSummary { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "Matching certificate tags should authorize access via the tag-scoped consumer role");
+
+            check.ResourceTags = new List<TagSummary>
+            {
+                new TagSummary { CategoryKey = "environment", Value = "Production" }
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not bypass tag restrictions for certificate download");
+
+            check.ResourceTags = new List<TagSummary>();
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not grant access to untagged certificates when the consumer role is tag-scoped");
+        }
+
+        [TestMethod]
+        public async Task TestTagScopedManagedChallengeConsumerRoleIsNotBypassedByUnrelatedUnscopedRole()
+        {
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagementHubInstancesList), bypassIntegrityCheck: true);
+
+            var challengeConsumerPolicy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedChallengeConsumer);
+            _ = await access.AddResourcePolicy(contextUserId, challengeConsumerPolicy, bypassIntegrityCheck: true);
+
+            var readerPolicy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagementHubReader);
+            _ = await access.AddResourcePolicy(contextUserId, readerPolicy, bypassIntegrityCheck: true);
+
+            var managedChallengeConsumerRole = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id);
+            await access.AddRole(contextUserId, managedChallengeConsumerRole, bypassIntegrityCheck: true);
+
+            var hubViewerRole = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.HubViewer.Id);
+            await access.AddRole(contextUserId, hubViewerRole, bypassIntegrityCheck: true);
+
+            var taggedChallengeConsumerRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags = new List<TagScope>
+                {
+                    new TagScope { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            var unrelatedUnscopedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.HubViewer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, taggedChallengeConsumerRole, bypassIntegrityCheck: true);
+            await access.AddAssignedRole(contextUserId, unrelatedUnscopedRole, bypassIntegrityCheck: true);
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedChallenge,
+                ResourceActionId = StandardResourceActions.ManagedChallengeRequest,
+                ResourceTags = new List<TagSummary>
+                {
+                    new TagSummary { CategoryKey = "environment", Value = "Development" }
+                }
+            };
+
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsTrue(isAuthorised, "Matching managed challenge tags should authorize access via the tag-scoped consumer role");
+
+            check.ResourceTags = new List<TagSummary>
+            {
+                new TagSummary { CategoryKey = "environment", Value = "Production" }
+            };
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not bypass tag restrictions for managed challenge access");
+
+            check.ResourceTags = new List<TagSummary>();
+
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not grant access to untagged managed challenges when the consumer role is tag-scoped");
+        }
+
+        [TestMethod]
         public async Task TestApiTokenWithTagScopedRole()
         {
             // Test that API tokens respect tag scopes on their assigned roles

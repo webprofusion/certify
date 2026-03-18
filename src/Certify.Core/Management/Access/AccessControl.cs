@@ -281,12 +281,17 @@ namespace Certify.Core.Management.Access
             }
 
             // get all role definitions included in the principals assigned roles 
-            var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
+            var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id)).ToList();
 
-            var spSpecificAssignedRoles = spAssignedRoles.Where(a => spAssignedRoleDefinitions.Any(r => r.Id == a.RoleId)).ToList();
+            // narrow role definitions and assignments to only those which can grant the requested action
+            var roleDefinitionsGrantingAction = spAssignedRoleDefinitions
+                .Where(r => r.Policies.Any(policyId => allPolicies.Any(p => p.Id == policyId && p.ResourceActions.Contains(check.ResourceActionId))))
+                .ToList();
 
-            // get all resource policies included in the principals assigned roles
-            var spAssignedPolicies = allPolicies.Where(r => spAssignedRoleDefinitions.Any(p => p.Policies.Contains(r.Id)));
+            var spSpecificAssignedRoles = spAssignedRoles.Where(a => roleDefinitionsGrantingAction.Any(r => r.Id == a.RoleId)).ToList();
+
+            // get all resource policies included in the principals assigned roles for the requested action
+            var spAssignedPolicies = allPolicies.Where(r => roleDefinitionsGrantingAction.Any(p => p.Policies.Contains(r.Id)));
 
             // check an assigned policy allows the required resource action
             if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(check.ResourceActionId)))
