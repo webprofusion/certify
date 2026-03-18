@@ -361,9 +361,30 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendMsg, $"Deleted item {result.Value}");
 
-                    _stateProvider.DeleteCachedManagedInstanceItem(instanceId, result.Value);
+                    string managedItemId;
+                    try
+                    {
+                        // normalize the id by deserializing it, in case it was serialized as a string with quotes etc
+                        managedItemId = System.Text.Json.JsonSerializer.Deserialize<string>(result.Value, JsonOptions.DefaultJsonSerializerOptions)
+                            ?? result.Value;
+                    }
+                    catch
+                    {
+                        managedItemId = result.Value.Trim().Trim('"');
+                    }
+
+                    await _uiStatusHub.Clients.All.SendAsync(
+                        StatusHubMessages.SendMsg,
+                        ManagementHubCommands.NotificationRemovedManagedItem,
+                        System.Text.Json.JsonSerializer.Serialize(new
+                        {
+                            InstanceId = instanceId,
+                            ManagedItemId = managedItemId,
+                            Action = "deleted"
+                        }));
+
+                    _stateProvider.DeleteCachedManagedInstanceItem(instanceId, managedItemId);
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRequestExternalManagedCertificateUpdate && result.Value != null)
                 {
