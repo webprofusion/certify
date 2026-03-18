@@ -329,14 +329,11 @@ namespace Certify.Management
                 };
             }
 
-            var requestContext = new HubApiRequestContext
-            {
-                ClientId = secret.ClientId,
-                Secret = secret.Secret,
-                HubAssignedInstanceId = useHubJoiningCredentials ? _serverConfig?.HubAssignedInstanceId : null,
-                RequestAuthSecret = useHubJoiningCredentials ? await GetManagementHubRequestAuthSecret() : null,
-                IfNoneMatch = sourceConfig.LastSourceVersion
-            };
+            var requestContext = await CreateManagementHubRequestContext(
+                hubApiBase,
+                secret,
+                useHubJoiningCredentials,
+                sourceConfig.LastSourceVersion);
 
             try
             {
@@ -528,13 +525,11 @@ namespace Certify.Management
 
             try
             {
-                var requestContext = new HubApiRequestContext
-                {
-                    ClientId = secret.ClientId,
-                    Secret = secret.Secret,
-                    HubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId,
-                    RequestAuthSecret = await GetManagementHubRequestAuthSecret()
-                };
+                var requestContext = await CreateManagementHubRequestContext(
+                    hubApiBase,
+                    secret,
+                    useHubJoiningCredentials: true,
+                    ifNoneMatch: null);
 
                 var results = await UseHubApiClient(
                     hubApiBase,
@@ -578,6 +573,55 @@ namespace Certify.Management
                 _serviceLog?.Error(ex, "Failed to write external certificate asset for {name} [{id}]", item.Name, item.Id);
                 return null;
             }
+        }
+
+        private async Task<HubApiRequestContext> CreateManagementHubRequestContext(string hubApiBase, ClientSecret secret, bool useHubJoiningCredentials, string? ifNoneMatch)
+        {
+            var hubAssignedInstanceId = useHubJoiningCredentials ? _serverConfig?.HubAssignedInstanceId : null;
+            var requestAuthSecret = useHubJoiningCredentials ? await GetManagementHubRequestAuthSecret() : null;
+
+            if (useHubJoiningCredentials
+                && !string.IsNullOrWhiteSpace(hubAssignedInstanceId)
+                && string.IsNullOrWhiteSpace(requestAuthSecret))
+            {
+                try
+                {
+                    var joinCheck = await CheckManagementHubCredentials(hubApiBase, secret);
+                    if (joinCheck.IsSuccess && joinCheck.Result != null)
+                    {
+                        if (!string.IsNullOrWhiteSpace(joinCheck.Result.HubAssignedInstanceId)
+                            && joinCheck.Result.HubAssignedInstanceId != _serverConfig?.HubAssignedInstanceId)
+                        {
+                            SetHubAssignedInstanceId(joinCheck.Result.HubAssignedInstanceId);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(joinCheck.Result.RequestAuthSecret))
+                        {
+                            await StoreManagementHubRequestAuthSecret(joinCheck.Result.RequestAuthSecret);
+                            requestAuthSecret = joinCheck.Result.RequestAuthSecret;
+                        }
+
+                        hubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId ?? joinCheck.Result.HubAssignedInstanceId;
+                    }
+                    else
+                    {
+                        _serviceLog?.Warning("CreateManagementHubRequestContext: unable to refresh request auth secret before calling {hubApiBase}: {message}", hubApiBase, joinCheck.Message);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _serviceLog?.Warning("CreateManagementHubRequestContext: failed to refresh request auth secret before calling {hubApiBase}: {message}", hubApiBase, ex.Message);
+                }
+            }
+
+            return new HubApiRequestContext
+            {
+                ClientId = secret.ClientId,
+                Secret = secret.Secret,
+                HubAssignedInstanceId = hubAssignedInstanceId,
+                RequestAuthSecret = requestAuthSecret,
+                IfNoneMatch = ifNoneMatch
+            };
         }
 
         private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason)

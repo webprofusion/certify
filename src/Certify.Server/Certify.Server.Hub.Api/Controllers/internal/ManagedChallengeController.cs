@@ -111,6 +111,86 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
+        /// Get managed challenges a specific security principal can use, based on assigned roles and tag restrictions.
+        /// </summary>
+        /// <param name="id">The security principal ID</param>
+        /// <returns>List of accessible managed challenge summaries</returns>
+        [HttpGet]
+        [Route("available/securityprincipal/{id}")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ICollection<ManagedChallengeSummary>))]
+        public async Task<IActionResult> GetSubscribableManagedChallengesBySecurityPrincipal(string id)
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess));
+            if (!accessCheck.IsSuccess)
+            {
+                accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeList));
+                if (!accessCheck.IsSuccess)
+                {
+                    return Problem(detail: accessCheck.Message, statusCode: StatusCodes.Status401Unauthorized);
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return new OkObjectResult(new List<ManagedChallengeSummary>());
+            }
+
+            var challenges = await _client.GetManagedChallenges(SystemAuthContext);
+
+            var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, SystemAuthContext);
+            var tagsByChallengeId = allChallengeTags?.GroupBy(t => t.TaggedItemId)
+                .ToDictionary(g => g.Key, g => g.ToList()) ?? new Dictionary<string, List<ItemTag>>();
+
+            var categories = await _client.GetTagCategories(SystemAuthContext);
+            var categoriesByKey = categories?.ToDictionary(c => c.CategoryKey, c => c) ?? new Dictionary<string, TagCategory>();
+
+            var summaries = new List<ManagedChallengeSummary>();
+
+            foreach (var challenge in challenges)
+            {
+                tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags);
+                var challengeTags = itemTags ?? new List<ItemTag>();
+
+                var tagSummaries = challengeTags.Select(t =>
+                {
+                    categoriesByKey.TryGetValue(t.CategoryKey, out var category);
+                    return new TagSummary
+                    {
+                        CategoryKey = t.CategoryKey,
+                        CategoryDisplayName = category?.DisplayName ?? t.CategoryKey,
+                        Value = t.Value,
+                        ColorHint = category?.ColorHint
+                    };
+                }).ToList();
+
+                var challengeAccessCheck = new AccessCheck
+                {
+                    SecurityPrincipalId = id,
+                    ResourceType = ResourceTypes.ManagedChallenge,
+                    ResourceActionId = StandardResourceActions.ManagedChallengeRequest,
+                    Identifier = challenge.Id,
+                    ResourceTags = tagSummaries
+                };
+
+                if (!await _client.CheckSecurityPrincipalHasAccess(challengeAccessCheck, new AuthContext { UserId = id }))
+                {
+                    continue;
+                }
+
+                summaries.Add(new ManagedChallengeSummary
+                {
+                    Id = challenge.Id,
+                    Title = challenge.Title,
+                    ChallengeConfig = challenge.ChallengeConfig,
+                    Tags = tagSummaries
+                });
+            }
+
+            return new OkObjectResult(summaries);
+        }
+
+        /// <summary>
         /// Get tags for a specific managed challenge
         /// </summary>
         /// <param name="id">The managed challenge ID</param>
