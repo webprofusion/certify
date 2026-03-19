@@ -47,7 +47,6 @@
                 </StackPanel>
             </StackPanel>
 
-
             <StackPanel x:Name="RenewalFailed" Visibility="Collapsed">
 
                 <StackPanel Orientation="Horizontal">
@@ -280,6 +279,31 @@
                     </Button>
                 </StackPanel>
 
+            </StackPanel>
+
+            <StackPanel x:Name="ExternalSyncInfo" Margin="0,16,0,0" Visibility="Collapsed">
+                <TextBlock Style="{StaticResource Subheading}" Text="External Sync" />
+                <StackPanel Orientation="Horizontal">
+                    <Label
+                        Width="160"
+                        Content="Remote Item:"
+                        FontWeight="Bold" />
+                    <Label Content="{Binding SelectedItem.ExternalSource.SourceItemName}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label
+                        Width="160"
+                        Content="Sync Status:"
+                        FontWeight="Bold" />
+                    <Label Content="{Binding SelectedItem.ExternalSource.CurrentSyncStatus}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label
+                        Width="160"
+                        Content="Last Poll:"
+                        FontWeight="Bold" />
+                    <Label Content="{Binding SelectedItem.ExternalSource.DateLastPoll, Converter={StaticResource NullDateFormatter}}" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

@@ -24,6 +24,8 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             AppViewModel.PropertyChanged -= AppViewModel_PropertyChanged;
             AppViewModel.PropertyChanged += AppViewModel_PropertyChanged;
+
+            UpdateStatusSections();
         }
 
         private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -32,42 +34,58 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (e.PropertyName == "SelectedItem")
                 {
-                    if (ItemViewModel.SelectedItem != null)
-                    {
-                        if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
-                        {
-                            RenewalSuccess.Visibility = Visibility.Visible;
-                            RenewalFailed.Visibility = Visibility.Collapsed;
-                            RenewalPaused.Visibility = Visibility.Collapsed;
-                        }
-                        else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
-                        {
-                            RenewalSuccess.Visibility = Visibility.Collapsed;
-                            RenewalFailed.Visibility = Visibility.Collapsed;
-                            RenewalPaused.Visibility = Visibility.Visible;
-                        }
-                        else if (
-                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
-                          ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
-                          )
-                        {
-                            RenewalSuccess.Visibility = Visibility.Collapsed;
-                            RenewalFailed.Visibility = Visibility.Visible;
-                            RenewalPaused.Visibility = Visibility.Collapsed;
-                        }
-
-                        if (!string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
-                        {
-                            // hide log option if from external source
-                            OpenLogFile.Visibility = Visibility.Hidden;
-                        }
-                        else
-                        {
-                            OpenLogFile.Visibility = Visibility.Visible;
-                        }
-                    }
+                    UpdateStatusSections();
                 }
             });
+        }
+
+        private void UpdateStatusSections()
+        {
+            if (ItemViewModel.SelectedItem == null)
+            {
+                RenewalSuccess.Visibility = Visibility.Collapsed;
+                RenewalFailed.Visibility = Visibility.Collapsed;
+                RenewalPaused.Visibility = Visibility.Collapsed;
+                ExternalSyncInfo.Visibility = Visibility.Collapsed;
+                return;
+            }
+
+            if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.OK)
+            {
+                RenewalSuccess.Visibility = Visibility.Visible;
+                RenewalFailed.Visibility = Visibility.Collapsed;
+                RenewalPaused.Visibility = Visibility.Collapsed;
+            }
+            else if (ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.AwaitingUser)
+            {
+                RenewalSuccess.Visibility = Visibility.Collapsed;
+                RenewalFailed.Visibility = Visibility.Collapsed;
+                RenewalPaused.Visibility = Visibility.Visible;
+            }
+            else if (
+              ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Error ||
+              ItemViewModel.SelectedItem.Health == Models.ManagedCertificateHealth.Warning
+              )
+            {
+                RenewalSuccess.Visibility = Visibility.Collapsed;
+                RenewalFailed.Visibility = Visibility.Visible;
+                RenewalPaused.Visibility = Visibility.Collapsed;
+            }
+
+            ExternalSyncInfo.Visibility = ItemViewModel.SelectedItem.ItemType == Models.ManagedCertificateType.SSL_ExternallyManaged
+                && ItemViewModel.SelectedItem.ExternalSource != null
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.SourceId))
+            {
+                // hide log option if from external source
+                OpenLogFile.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                OpenLogFile.Visibility = Visibility.Visible;
+            }
         }
 
         private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)

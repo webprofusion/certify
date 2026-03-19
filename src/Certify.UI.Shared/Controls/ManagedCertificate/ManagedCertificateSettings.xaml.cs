@@ -39,7 +39,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 {
 
                     // show status tab for existing managed certs
-                    var showStatus = ItemViewModel.SelectedItem?.Id != null && ItemViewModel.SelectedItem.DateLastRenewalAttempt != null;
+                    var showStatus = ShouldShowStatusTab();
 
                     if (showStatus)
                     {
@@ -95,6 +95,32 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
             });
+        }
+
+        private bool ShouldShowStatusTab()
+        {
+            var item = ItemViewModel.SelectedItem;
+            if (item?.Id == null)
+            {
+                return false;
+            }
+
+            if (item.DateLastRenewalAttempt != null)
+            {
+                return true;
+            }
+
+            var externalSource = item.ExternalSource;
+            if (item.ItemType != ManagedCertificateType.SSL_ExternallyManaged || externalSource == null)
+            {
+                return false;
+            }
+
+            return externalSource.DateLastPoll != null
+                || !string.IsNullOrWhiteSpace(externalSource.LastSourceVersion)
+                || !string.IsNullOrWhiteSpace(externalSource.LastError)
+                || !string.IsNullOrWhiteSpace(externalSource.PendingSourceVersion)
+                || !string.IsNullOrWhiteSpace(externalSource.PendingCertificatePath);
         }
 
         private void ShowValidationError(string msg)

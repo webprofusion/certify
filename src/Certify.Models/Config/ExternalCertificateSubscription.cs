@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace Certify.Models
 {
@@ -50,6 +51,11 @@ namespace Certify.Models
         public string? CredentialKey { get; set; }
 
         /// <summary>
+        /// Last known display name of the remote source item.
+        /// </summary>
+        public string? SourceItemName { get; set; }
+
+        /// <summary>
         /// Poll interval in minutes for pull-capable sources.
         /// </summary>
         public int PollIntervalMinutes { get; set; } = 30;
@@ -78,5 +84,25 @@ namespace Certify.Models
         /// Last source error (if any).
         /// </summary>
         public string? LastError { get; set; }
+
+        [JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string RemoteNameOrReferenceDisplay => !string.IsNullOrWhiteSpace(SourceItemName)
+            ? SourceItemName
+            : !string.IsNullOrWhiteSpace(ExternalReference)
+                ? ExternalReference
+                : "-";
+
+        [JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string CurrentSyncStatus => !string.IsNullOrWhiteSpace(LastError)
+            ? "Source Error"
+            : !string.IsNullOrWhiteSpace(PendingCertificatePath) || !string.IsNullOrWhiteSpace(PendingSourceVersion)
+                ? "Pending Deployment"
+                : DateLastPoll.HasValue
+                    ? !string.IsNullOrWhiteSpace(LastSourceVersion)
+                        ? "In Sync"
+                        : "Checked"
+                    : "Awaiting First Sync";
     }
 }

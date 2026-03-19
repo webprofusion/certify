@@ -78,10 +78,10 @@
                             <StackPanel Margin="0,4,0,0" Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal">
                                     <Label Width="200" Content="External Reference" />
-                                    <TextBox
+                                    <TextBlock
                                         Width="360"
-                                        Controls:TextBoxHelper.Watermark="Hub: {instanceId}/{managedCertId} or Key Vault: {secret}/{version}"
-                                        Text="{Binding SelectedItem.ExternalSource.ExternalReference, UpdateSourceTrigger=PropertyChanged}" />
+                                        VerticalAlignment="Center"
+                                        Text="{Binding SelectedItem.ExternalSource.ExternalReference}" />
                                 </StackPanel>
 
                                 <StackPanel Margin="200,4,0,0" Orientation="Horizontal">
@@ -168,11 +168,6 @@
                             </StackPanel>
 
                             <TextBlock Margin="0,16,0,0" FontWeight="SemiBold" Text="Sync Status" />
-
-                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
-                                <Label Width="200" Content="Last Poll" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding SelectedItem.ExternalSource.DateLastPoll}" />
-                            </StackPanel>
 
                             <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                 <Label Width="200" Content="Last Source Version" />

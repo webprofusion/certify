@@ -32,6 +32,7 @@ namespace Certify.UI.ViewModel
         {
 
             EnsureExternalSourceConfiguration();
+            SyncSelectedExternalSourceDisplayInfo();
 
             // check for invalid primary domains (from previous RadioButton in DataGrid UI bug)
             if (SelectedItem?.DomainOptions.Count(d => d.IsPrimaryDomain) > 1)
@@ -423,6 +424,7 @@ namespace Certify.UI.ViewModel
                 if (value != null && SelectedItem?.ExternalSource != null)
                 {
                     SelectedItem.ExternalSource.ExternalReference = $"{value.InstanceId}/{value.Id}";
+                    SelectedItem.ExternalSource.SourceItemName = value.Title;
                     SelectedItem.IsChanged = true;
                     RaisePropertyChangedEvent(nameof(SelectedItem));
                 }
@@ -446,10 +448,43 @@ namespace Certify.UI.ViewModel
                 SubscribableManagedCertificates.Add(item);
             }
 
+            SyncSelectedExternalSourceDisplayInfo();
+
             IsLoadingSubscribableCertificates = false;
             RaisePropertyChangedEvent(nameof(IsLoadingSubscribableCertificates));
             RaisePropertyChangedEvent(nameof(SubscribableManagedCertificates));
             RaisePropertyChangedEvent(nameof(ShowNoSubscribableManagedCertificatesIndicator));
+        }
+
+        private void SyncSelectedExternalSourceDisplayInfo()
+        {
+            if (SelectedItem?.ExternalSource == null)
+            {
+                _selectedSubscribableCertificate = null;
+                return;
+            }
+
+            if (!string.Equals(SelectedItem.ExternalSource.SourceType, ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase))
+            {
+                _selectedSubscribableCertificate = null;
+                return;
+            }
+
+            var externalReference = SelectedItem.ExternalSource.ExternalReference;
+            if (string.IsNullOrWhiteSpace(externalReference))
+            {
+                _selectedSubscribableCertificate = null;
+                return;
+            }
+
+            _selectedSubscribableCertificate = SubscribableManagedCertificates.FirstOrDefault(i =>
+                string.Equals($"{i.InstanceId}/{i.Id}", externalReference, StringComparison.OrdinalIgnoreCase));
+
+            if (_selectedSubscribableCertificate != null)
+            {
+                SelectedItem.ExternalSource.SourceItemName = _selectedSubscribableCertificate.Title;
+                RaisePropertyChangedEvent(nameof(SelectedItem));
+            }
         }
 
         public void ClearSubscribableManagedCertificates(bool resetLoadAttemptState = true)
