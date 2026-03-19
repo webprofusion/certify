@@ -1,11 +1,10 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
@@ -280,13 +279,78 @@ namespace Certify.Management
             return sourceConfig.DateLastPoll.Value <= DateTimeOffset.UtcNow.AddMinutes(-pollIntervalMinutes);
         }
 
-        private async Task<ExternalCertificateFetchResult> FetchExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken)
+        private async Task<List<StatusMessage>> TestExternalSubscriptionAccess(Certify.Models.Providers.ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null)
+        {
+            var results = new List<StatusMessage>();
+
+            var sourceConfig = managedCertificate.ExternalSource;
+            if (sourceConfig == null || sourceConfig.IsEnabled != true)
+            {
+                results.Add(new StatusMessage
+                {
+                    IsOK = false,
+                    Message = "External subscription is not enabled for this managed certificate."
+                });
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, "External subscription test failed", managedCertificate, isPreviewMode: true));
+                return results;
+            }
+
+            log?.Information("Testing download access for external certificate subscription {managedItem}", managedCertificate);
+
+            var fetchResult = await FetchExternalCertificateAsset(managedCertificate, sourceConfig, pushedSourceVersion: null, CancellationToken.None, ignoreCurrentVersion: true);
+
+            if (!fetchResult.IsSuccess)
+            {
+                results.Add(new StatusMessage
+                {
+                    IsOK = false,
+                    Message = fetchResult.Message ?? "Failed to access the configured external certificate source."
+                });
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, "External subscription test failed", managedCertificate, isPreviewMode: true));
+                return results;
+            }
+
+            var remoteItem = sourceConfig.SourceItemName.AsNullWhenBlank() ?? sourceConfig.ExternalReference.AsNullWhenBlank() ?? "selected certificate";
+            var sourceType = sourceConfig.SourceType.AsNullWhenBlank() ?? "external source";
+
+            results.Add(new StatusMessage
+            {
+                IsOK = true,
+                Message = $"Verified download access to '{remoteItem}' via {sourceType}. No certificate changes were applied."
+            });
+
+            if (!string.IsNullOrWhiteSpace(fetchResult.SourceVersion))
+            {
+                results.Add(new StatusMessage
+                {
+                    IsOK = true,
+                    Message = $"Source version: {fetchResult.SourceVersion}"
+                });
+            }
+
+            if (fetchResult.CertificateData?.Length > 0)
+            {
+                results.Add(new StatusMessage
+                {
+                    IsOK = true,
+                    Message = $"Downloaded {fetchResult.CertificateData.Length} bytes for validation only."
+                });
+            }
+
+            ReportProgress(progress, new RequestProgressState(RequestState.Success, "External subscription test completed", managedCertificate, isPreviewMode: true));
+
+            return results;
+        }
+
+        private async Task<ExternalCertificateFetchResult> FetchExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
         {
             var sourceType = sourceConfig.SourceType?.Trim() ?? string.Empty;
 
             if (sourceType.Equals(ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase))
             {
-                return await FetchFromManagementHub(item, sourceConfig, pushedSourceVersion, cancellationToken);
+                return await FetchFromManagementHub(item, sourceConfig, pushedSourceVersion, cancellationToken, ignoreCurrentVersion);
             }
 
             return new ExternalCertificateFetchResult
@@ -296,7 +360,7 @@ namespace Certify.Management
             };
         }
 
-        private async Task<ExternalCertificateFetchResult> FetchFromManagementHub(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken)
+        private async Task<ExternalCertificateFetchResult> FetchFromManagementHub(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
         {
             if (!TryParseHubReference(sourceConfig.ExternalReference, out var sourceInstanceId, out var sourceManagedCertificateId))
             {
@@ -334,7 +398,7 @@ namespace Certify.Management
                 hubApiBase,
                 secret,
                 useHubJoiningCredentials,
-                sourceConfig.LastSourceVersion);
+                ignoreCurrentVersion ? null : sourceConfig.LastSourceVersion);
 
             try
             {

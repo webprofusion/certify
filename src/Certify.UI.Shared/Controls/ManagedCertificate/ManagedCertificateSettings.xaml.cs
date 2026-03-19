@@ -268,13 +268,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 return;
             }
 
-            var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
-
-            if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !string.IsNullOrEmpty(ItemViewModel.SelectedItem.ServerSiteId) && !AppViewModel.IsIISAvailable)
-            {
-                MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            else if (challengeConfig.ChallengeType != null)
+            if (ItemViewModel.IsExternalManagedCertificateItem)
             {
                 ItemViewModel.IsTestInProgress = true;
                 Button_TestChallenge.IsEnabled = false;
@@ -299,6 +293,41 @@ namespace Certify.UI.Controls.ManagedCertificate
                 //TODO: just use viewmodel to determine if test button should be enabled
                 Button_TestChallenge.IsEnabled = true;
                 ItemViewModel.IsTestInProgress = false;
+            }
+            else
+            {
+                var challengeConfig = ItemViewModel.SelectedItem.GetChallengeConfig(null);
+
+                if (challengeConfig.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_HTTP && !string.IsNullOrEmpty(ItemViewModel.SelectedItem.ServerSiteId) && !AppViewModel.IsIISAvailable)
+                {
+                    MessageBox.Show(SR.ManagedCertificateSettings_CannotChallengeWithoutIIS, SR.ChallengeError, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                else if (challengeConfig.ChallengeType != null)
+                {
+                    ItemViewModel.IsTestInProgress = true;
+                    Button_TestChallenge.IsEnabled = false;
+
+                    ItemViewModel.ConfigCheckResults = new System.Collections.ObjectModel.ObservableCollection<StatusMessage> {
+                        new StatusMessage{IsOK=true, Message="Testing in progress.."}
+                    };
+
+                    AppViewModel.ClearRequestProgressResults();
+
+                    ShowTestResultsUI();
+
+                    // begin listening for progress info
+                    AppViewModel.TrackProgress(ItemViewModel.SelectedItem);
+
+                    var results = await ItemViewModel.TestChallengeResponse(ItemViewModel.SelectedItem);
+                    ItemViewModel.ConfigCheckResults =
+                        new System.Collections.ObjectModel.ObservableCollection<StatusMessage>(results);
+
+                    ItemViewModel.RaisePropertyChangedEvent(nameof(ItemViewModel.ConfigCheckResults));
+
+                    //TODO: just use viewmodel to determine if test button should be enabled
+                    Button_TestChallenge.IsEnabled = true;
+                    ItemViewModel.IsTestInProgress = false;
+                }
             }
         }
 

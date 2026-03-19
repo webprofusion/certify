@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -532,6 +532,11 @@ namespace Certify.Management
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
+            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            {
+                return await TestExternalSubscriptionAccess(log, managedCertificate, progress);
+            }
+
             var results = new List<StatusMessage>();
 
             if (managedCertificate.RequestConfig.AuthorityTokens?.Any() == true)
