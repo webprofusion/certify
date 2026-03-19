@@ -35,6 +35,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Certify.CLI\Certify.CLI.csproj" />
+        <ProjectReference Include="..\..\Certify.Server\Certify.Server.Hub.Api\Certify.Server.Hub.Api.csproj" />
         <ProjectReference Include="..\..\Certify.Server\Certify.Server.Core\Certify.Server.Core\Certify.Server.Core.csproj" />
     </ItemGroup>
 </Project>

@@ -165,9 +165,10 @@ namespace Certify.Management
 
             if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
             {
+                var hadSourceError = !string.IsNullOrWhiteSpace(sourceConfig.LastError);
                 sourceConfig.LastError = null;
 
-                if (hasPushUpdate)
+                if (hasPushUpdate || hadSourceError)
                 {
                     await UpdateManagedCertificate(item);
                 }
