@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -839,17 +839,23 @@ namespace Certify.Management
             {
                 result.Message = sourceConfig.LastError;
                 result.IsSuccess = false;
+
+                managedCertificate.LastRenewalStatus = RequestState.Error;
+                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
+                managedCertificate.RenewalFailureMessage = result.Message;
+                await UpdateManagedCertificate(managedCertificate);
+
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
             managedCertificate.LastRenewalStatus = RequestState.Success;
-            managedCertificate.RenewalFailureMessage = "External certificate pulled from Management Hub and deployment completed.";
+            managedCertificate.RenewalFailureMessage = "";
             await UpdateManagedCertificate(managedCertificate);
 
             result.IsSuccess = true;
-            result.Message = managedCertificate.RenewalFailureMessage;
+            result.Message = "External certificate pulled from Management Hub and deployment completed.";
 
             ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate), logThisEvent: false);
 
