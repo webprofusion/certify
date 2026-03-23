@@ -685,8 +685,8 @@ namespace Certify.UI.ViewModel
 
         public IEnumerable<string> ExternalSourceTypes => new[]
         {
-            ExternalCertificateSourceTypes.ManagementHub,
-            ExternalCertificateSourceTypes.SecretsStore
+            ExternalCertificateSourceTypes.ManagementHub
+            //ExternalCertificateSourceTypes.SecretsStore
         };
 
         public IEnumerable<string> ExternalRetrievalModes => new[]
