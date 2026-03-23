@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
+using Certify.Models.Hub;
 using Certify.Models.Providers;
 
 namespace Certify.Management
@@ -36,6 +38,11 @@ namespace Certify.Management
 
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
+
+            if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            {
+                return await GenerateExternalSubscriptionPreview(item, serverProvider, certifyManager, allTaskProviders);
+            }
 
             var identifiers = item.GetCertificateIdentifiers();
 
@@ -261,140 +268,9 @@ namespace Certify.Management
                 });
                 stepIndex++;
 
-                // deployment & binding steps
+                stepIndex = await AddDeploymentPreview(steps, item, serverProvider, certifyManager, stepIndex);
 
-                var deploymentDescription = new StringBuilder();
-                var deploymentStep = new ActionStep
-                {
-                    Title = $"{stepIndex}. Deployment",
-                    Category = "Deployment",
-                    Description = ""
-                };
-
-                if (
-                    item.RequestConfig.DeploymentSiteOption == DeploymentOption.Auto ||
-                    item.RequestConfig.DeploymentSiteOption == DeploymentOption.AllSites ||
-                    item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite
-                )
-                {
-                    // deploying to single or multiple Site
-
-                    if (serverProvider == null)
-                    {
-                        deploymentDescription.AppendLine($"* Target instance has no supported targets for auto-deployment (e.g. IIS). Deployment Tasks may still apply.");
-                    }
-                    else
-                    {
-
-                        if (item.RequestConfig.DeploymentBindingMatchHostname)
-                        {
-                            deploymentDescription.AppendLine(
-                                "* Deploy to hostname bindings matching certificate domains.");
-                        }
-
-                        if (item.RequestConfig.DeploymentBindingBlankHostname)
-                        {
-                            deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
-                        }
-
-                        if (item.RequestConfig.DeploymentBindingReplacePrevious)
-                        {
-                            deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
-                        }
-
-                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
-                        {
-                            deploymentDescription.AppendLine("* Add or Update https bindings as required");
-                        }
-
-                        if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
-                        {
-                            deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
-                        }
-
-                        if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
-                        {
-                            if (!string.IsNullOrEmpty(item.ServerSiteId))
-                            {
-                                try
-                                {
-                                    var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
-                                    deploymentDescription.AppendLine($"## Deploying to Site" + newLine + newLine +
-                                                             $"`{siteInfo.Name}`" + newLine);
-                                }
-                                catch (Exception exp)
-                                {
-                                    deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            deploymentDescription.AppendLine($"## Deploying to all matching sites:");
-                        }
-                    }
-
-                    // add deployment sub-steps (if any)
-                    var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
-                    if (bindingRequest.Actions?.Any(b => b.Category == "CertificateStorage") == true)
-                    {
-                        var defaultValue = "Unknown Storage";
-                        deploymentDescription.AppendLine(bindingRequest.Actions.First(b => b.Category == "CertificateStorage")?.Description.WithDefault(defaultValue) ?? defaultValue);
-                    }
-                    else
-                    {
-                        deploymentDescription.AppendLine("**Certificate will not be added to the machine certificate store**");
-
-                        deploymentStep.Substeps = new List<ActionStep>
-                        {
-                            new ActionStep {Description = newLine + "**Certificate will not be added to the machine certificate store**"}
-                        };
-                    }
-
-                    if (!bindingRequest.Actions?.Any(b => b.Category.StartsWith("Deployment")) == true)
-                    {
-                        deploymentStep.Substeps = new List<ActionStep>
-                        {
-                            new ActionStep {Description = newLine + "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
-                        };
-                    }
-                    else
-                    {
-                        deploymentStep.Substeps = bindingRequest.Actions.Where(b => b.Category.StartsWith("Deployment")).ToList();
-
-                        deploymentDescription.AppendLine("\n Action | Site | Binding ");
-                        deploymentDescription.Append(" ------ | ---- | ------- ");
-                    }
-                }
-                else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
-                {
-                    deploymentDescription.AppendLine("* The certificate will be saved to the local machines Certificate Store only (Personal/My Store)");
-                }
-                else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
-                {
-                    deploymentDescription.AppendLine("* The certificate will be saved to local storage.");
-                }
-
-                deploymentStep.Description = deploymentDescription.ToString();
-
-                steps.Add(deploymentStep);
-                stepIndex++;
-
-                // post request deployment tasks
-                if (item.PostRequestTasks?.Any() == true)
-                {
-
-                    var substeps = item.PostRequestTasks.Select(t => new ActionStep { Key = t.Id, Title = $"{t.TaskName} ({allTaskProviders.FirstOrDefault(p => p.Id == t.TaskTypeId)?.Title})", Description = t.Description });
-
-                    steps.Add(new ActionStep
-                    {
-                        Title = $"{stepIndex}. Post-Request (Deployment) Tasks",
-                        Category = "PostRequestTasks",
-                        Description = $"Execute {substeps.Count()} Post-Request Tasks",
-                        Substeps = substeps.ToList()
-                    });
-                    stepIndex++;
-                }
+                stepIndex = AddPostRequestTaskPreview(steps, item, allTaskProviders, stepIndex);
 
                 stepIndex = steps.Count;
             }
@@ -408,6 +284,289 @@ namespace Certify.Management
             }
 
             return steps;
+        }
+
+        private async Task<List<ActionStep>> GenerateExternalSubscriptionPreview(
+            ManagedCertificate item,
+            ITargetWebServer serverProvider,
+            ICertifyManager certifyManager,
+            IEnumerable<Certify.Models.Config.DeploymentProviderDefinition> allTaskProviders)
+        {
+            var steps = new List<ActionStep>();
+            var stepIndex = 1;
+
+            var source = item.ExternalSource;
+            if (source == null || source.IsEnabled != true)
+            {
+                steps.Add(new ActionStep
+                {
+                    Title = "External subscription not configured",
+                    Description = "This managed certificate is set to use an external subscription, but the subscription is not currently enabled or configured."
+                });
+
+                return steps;
+            }
+
+            var summary = new StringBuilder();
+            summary.AppendLine("This managed certificate uses an external certificate subscription.");
+            summary.AppendLine("A local renewal request preview will not be performed for this item.");
+            summary.AppendLine();
+
+            var summaryRows = new List<KeyValuePair<string, string>>();
+            var remoteSummary = await ResolveRemoteManagedCertificateSummary(certifyManager, source);
+            var remoteTitle = remoteSummary?.Title.AsNullWhenBlank()
+                              ?? source.SourceItemName.AsNullWhenBlank()
+                              ?? source.ExternalReference.AsNullWhenBlank()
+                              ?? "(Not selected)";
+
+            summaryRows.Add(new KeyValuePair<string, string>("Remote Item", remoteTitle));
+            summaryRows.Add(new KeyValuePair<string, string>("Source Type", source.SourceType.AsNullWhenBlank() ?? "Unknown"));
+            summaryRows.Add(new KeyValuePair<string, string>("Retrieval Mode", source.RetrievalMode.AsNullWhenBlank() ?? ExternalCertificateRetrievalModes.Pull));
+
+            if (!string.IsNullOrWhiteSpace(source.ExternalReference))
+            {
+                summaryRows.Add(new KeyValuePair<string, string>("Reference", $"`{source.ExternalReference}`"));
+            }
+
+            if (remoteSummary != null)
+            {
+                if (!string.IsNullOrWhiteSpace(remoteSummary.InstanceTitle))
+                {
+                    summaryRows.Add(new KeyValuePair<string, string>("Remote Instance", remoteSummary.InstanceTitle));
+                }
+
+                if (!string.IsNullOrWhiteSpace(remoteSummary.Status))
+                {
+                    summaryRows.Add(new KeyValuePair<string, string>("Remote Status", remoteSummary.Status));
+                }
+
+                if (remoteSummary.DateExpiry.HasValue)
+                {
+                    summaryRows.Add(new KeyValuePair<string, string>("Remote Expiry", remoteSummary.DateExpiry.Value.ToString("u")));
+                }
+
+                AppendMarkdownTable(summary, summaryRows);
+
+                if (remoteSummary.Identifiers?.Any() == true)
+                {
+                    summary.AppendLine();
+                    summary.AppendLine("The remote certificate summary currently includes the following identifiers:");
+
+                    foreach (var identifier in remoteSummary.Identifiers)
+                    {
+                        summary.AppendLine($"* {identifier.Value} [{identifier.IdentifierType}]");
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(remoteSummary.Comments))
+                {
+                    summary.AppendLine();
+                    summary.AppendLine($"**Remote Notes:** {remoteSummary.Comments}");
+                }
+            }
+            else
+            {
+                AppendMarkdownTable(summary, summaryRows);
+                summary.AppendLine();
+                summary.AppendLine("The remote item summary is not currently available, so the preview will use the saved subscription details.");
+            }
+
+            steps.Add(new ActionStep
+            {
+                Title = "Summary",
+                Description = summary.ToString()
+            });
+
+            summary.AppendLine();
+            summary.AppendLine("On sync, Certify will check the configured external source for the selected remote certificate.");
+            summary.AppendLine("If an updated certificate is available, it will be downloaded and staged for local deployment.");
+            summary.AppendLine("No ACME order, challenge validation, or local certificate renewal request is performed for this workflow.");
+
+            if (source.PollIntervalMinutes > 0
+                && !string.Equals(source.RetrievalMode, ExternalCertificateRetrievalModes.Push, StringComparison.OrdinalIgnoreCase))
+            {
+                summary.AppendLine($"The source will be polled every **{source.PollIntervalMinutes}** minutes when polling is applicable.");
+            }
+
+            if (!string.IsNullOrWhiteSpace(source.PendingSourceVersion) || !string.IsNullOrWhiteSpace(source.PendingCertificatePath))
+            {
+                summary.AppendLine("A pending external certificate update is currently recorded and may wait for the next applicable maintenance window before deployment.");
+            }
+
+            stepIndex = await AddDeploymentPreview(steps, item, serverProvider, certifyManager, stepIndex);
+
+            AddPostRequestTaskPreview(steps, item, allTaskProviders, stepIndex);
+
+            return steps;
+        }
+
+        private async Task<ManagedCertificateSummary?> ResolveRemoteManagedCertificateSummary(ICertifyManager certifyManager, ExternalCertificateSubscription source)
+        {
+            if (!string.Equals(source.SourceType, ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase)
+                || string.IsNullOrWhiteSpace(source.ExternalReference))
+            {
+                return null;
+            }
+
+            var summaryItems = await certifyManager.GetHubSubscribableManagedCertificates();
+
+            return summaryItems.FirstOrDefault(i => string.Equals($"{i.InstanceId}/{i.Id}", source.ExternalReference, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private async Task<int> AddDeploymentPreview(List<ActionStep> steps, ManagedCertificate item, ITargetWebServer? serverProvider, ICertifyManager certifyManager, int stepIndex)
+        {
+            var newLine = "\r\n";
+            var deploymentDescription = new StringBuilder();
+            var deploymentStep = new ActionStep
+            {
+                Title = $"{stepIndex}. Deployment",
+                Category = "Deployment",
+                Description = ""
+            };
+
+            if (
+                item.RequestConfig.DeploymentSiteOption == DeploymentOption.Auto ||
+                item.RequestConfig.DeploymentSiteOption == DeploymentOption.AllSites ||
+                item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite
+            )
+            {
+                if (serverProvider == null)
+                {
+                    deploymentDescription.AppendLine("* Target instance has no supported targets for auto-deployment (e.g. IIS). Deployment Tasks may still apply.");
+                }
+                else
+                {
+                    if (item.RequestConfig.DeploymentBindingMatchHostname)
+                    {
+                        deploymentDescription.AppendLine("* Deploy to hostname bindings matching certificate domains.");
+                    }
+
+                    if (item.RequestConfig.DeploymentBindingBlankHostname)
+                    {
+                        deploymentDescription.AppendLine("* Deploy to bindings with blank hostname.");
+                    }
+
+                    if (item.RequestConfig.DeploymentBindingReplacePrevious)
+                    {
+                        deploymentDescription.AppendLine("* Deploy to bindings with previous certificate.");
+                    }
+
+                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.AddOrUpdate)
+                    {
+                        deploymentDescription.AppendLine("* Add or Update https bindings as required");
+                    }
+
+                    if (item.RequestConfig.DeploymentBindingOption == DeploymentBindingOption.UpdateOnly)
+                    {
+                        deploymentDescription.AppendLine("* Update https bindings as required (no auto-created https bindings)");
+                    }
+
+                    if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
+                    {
+                        if (!string.IsNullOrEmpty(item.ServerSiteId))
+                        {
+                            try
+                            {
+                                var siteInfo = await serverProvider.GetSiteById(item.ServerSiteId);
+                                deploymentDescription.AppendLine($"## Deploying to Site{newLine}{newLine}`{siteInfo.Name}`{newLine}");
+                            }
+                            catch (Exception exp)
+                            {
+                                deploymentDescription.AppendLine($"Error: **cannot identify selected site.** {exp.Message} ");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        deploymentDescription.AppendLine("## Deploying to all matching sites:");
+                    }
+                }
+
+                var bindingRequest = await certifyManager.DeployCertificate(item, null, true);
+                if (bindingRequest.Actions?.Any(b => b.Category == "CertificateStorage") == true)
+                {
+                    var defaultValue = "Unknown Storage";
+                    deploymentDescription.AppendLine(bindingRequest.Actions.First(b => b.Category == "CertificateStorage")?.Description.WithDefault(defaultValue) ?? defaultValue);
+                }
+                else
+                {
+                    deploymentDescription.AppendLine("**Certificate will not be added to the machine certificate store**");
+
+                    deploymentStep.Substeps = new List<ActionStep>
+                    {
+                        new ActionStep {Description = newLine + "**Certificate will not be added to the machine certificate store**"}
+                    };
+                }
+
+                if (!bindingRequest.Actions?.Any(b => b.Category.StartsWith("Deployment")) == true)
+                {
+                    deploymentStep.Substeps = new List<ActionStep>
+                    {
+                        new ActionStep {Description = newLine + "**There are no matching targets to deploy to. Certificate will be stored but currently no bindings will be updated.**"}
+                    };
+                }
+                else
+                {
+                    deploymentStep.Substeps = bindingRequest.Actions.Where(b => b.Category.StartsWith("Deployment")).ToList();
+
+                    deploymentDescription.AppendLine("\n Action | Site | Binding ");
+                    deploymentDescription.Append(" ------ | ---- | ------- ");
+                }
+            }
+            else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.DeploymentStoreOnly)
+            {
+                deploymentDescription.AppendLine("* The certificate will be saved to the local machines Certificate Store only (Personal/My Store)");
+            }
+            else if (item.RequestConfig.DeploymentSiteOption == DeploymentOption.NoDeployment)
+            {
+                deploymentDescription.AppendLine("* The certificate will be saved to local storage.");
+            }
+
+            deploymentStep.Description = deploymentDescription.ToString();
+
+            steps.Add(deploymentStep);
+
+            return stepIndex + 1;
+        }
+
+        private int AddPostRequestTaskPreview(List<ActionStep> steps, ManagedCertificate item, IEnumerable<Certify.Models.Config.DeploymentProviderDefinition> allTaskProviders, int stepIndex)
+        {
+            if (item.PostRequestTasks?.Any() != true)
+            {
+                return stepIndex;
+            }
+
+            var substeps = item.PostRequestTasks.Select(t => new ActionStep { Key = t.Id, Title = $"{t.TaskName} ({allTaskProviders.FirstOrDefault(p => p.Id == t.TaskTypeId)?.Title})", Description = t.Description });
+
+            steps.Add(new ActionStep
+            {
+                Title = $"{stepIndex}. Post-Request (Deployment) Tasks",
+                Category = "PostRequestTasks",
+                Description = $"Execute {substeps.Count()} Post-Request Tasks",
+                Substeps = substeps.ToList()
+            });
+
+            return stepIndex + 1;
+        }
+
+        private static void AppendMarkdownTable(StringBuilder summary, IEnumerable<KeyValuePair<string, string>> rows)
+        {
+            summary.AppendLine("| Item | Value |");
+            summary.AppendLine("| --- | --- |");
+
+            foreach (var row in rows.Where(r => !string.IsNullOrWhiteSpace(r.Value)))
+            {
+                summary.AppendLine($"| {EscapeMarkdownTableCell(row.Key)} | {EscapeMarkdownTableCell(row.Value)} |");
+            }
+        }
+
+        private static string EscapeMarkdownTableCell(string value)
+        {
+            return value
+                .Replace("\r\n", "<br />")
+                .Replace("\n", "<br />")
+                .Replace("\r", "<br />")
+                .Replace("|", "\\|");
         }
 
         /// <summary>

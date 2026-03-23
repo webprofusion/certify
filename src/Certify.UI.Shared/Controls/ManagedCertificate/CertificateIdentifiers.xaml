@@ -105,9 +105,7 @@
                                             <DataTemplate>
                                                 <StackPanel Orientation="Vertical">
                                                     <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                                    <TextBlock
-                                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                        Text="{Binding InstanceTitle}" />
+                                                    <TextBlock Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Text="{Binding InstanceTitle}" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
@@ -167,7 +165,10 @@
                                     SelectedItem="{Binding SelectedItem.ExternalSource.PollIntervalMinutes, UpdateSourceTrigger=PropertyChanged}" />
                             </StackPanel>
 
-                            <TextBlock Margin="0,16,0,0" FontWeight="SemiBold" Text="Sync Status" />
+                            <TextBlock
+                                Margin="0,16,0,0"
+                                FontWeight="SemiBold"
+                                Text="Sync Status" />
 
                             <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                 <Label Width="200" Content="Last Source Version" />
@@ -176,7 +177,10 @@
 
                             <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                 <Label Width="200" Content="Last Source Error" />
-                                <TextBlock VerticalAlignment="Center" Text="{Binding SelectedItem.ExternalSource.LastError}" TextWrapping="Wrap" />
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    Text="{Binding SelectedItem.ExternalSource.LastError}"
+                                    TextWrapping="Wrap" />
                             </StackPanel>
                         </StackPanel>
                     </DockPanel>
@@ -499,7 +503,8 @@
                 MinWidth="100"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Authorization"
-                IsSelected="False">
+                IsSelected="False"
+                Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                 <managedcertificate:IdentifierAuthorization />
             </TabItem>
 
@@ -507,7 +512,8 @@
                 MinWidth="100"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
-                IsSelected="False">
+                IsSelected="False"
+                Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                 <managedcertificate:AdvancedOptions />
             </TabItem>
         </TabControl>
