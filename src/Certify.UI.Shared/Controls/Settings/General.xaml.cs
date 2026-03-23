@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
+using Certify.Shared;
+using Certify.SharedUtils;
 using Certify.UI.Shared;
 
 namespace Certify.UI.Controls.Settings
@@ -16,8 +18,13 @@ namespace Certify.UI.Controls.Settings
         {
             public Certify.UI.ViewModel.AppViewModel MainViewModel => ViewModel.AppViewModel.Current;
             public Models.Preferences Prefs => MainViewModel.Preferences;
+            public ServiceConfig ServiceConfig { get; set; } = new ServiceConfig();
 
             public bool SettingsInitialised { get; set; }
+
+            public string[] LogLevels { get; } = ["information", "verbose", "debug"];
+
+            public string[] PowershellExecutionPolicies { get; } = ["Bypass", "RemoteSigned", "Unrestricted", "AllSigned", "Restricted"];
 
             public KeyValuePair<string, string>[] KeyTypeList = new KeyValuePair<string, string>[] {
                 new KeyValuePair<string,string>("ECDSA256", "ECDSA 256" ),
@@ -123,6 +130,7 @@ namespace Certify.UI.Controls.Settings
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
             CultureSelector.SelectedValue = EditModel.MainViewModel.UISettings?.PreferredUICulture ?? "en-US";
+            EditModel.ServiceConfig = EditModel.MainViewModel.GetAppServiceConfig() ?? new ServiceConfig();
 
             RefreshRewalIntervalLimits();
 
@@ -312,6 +320,13 @@ namespace Certify.UI.Controls.Settings
                 Owner = Window.GetWindow(this)
             };
             d.ShowDialog();
+        }
+
+        private void ApplyServiceConfig_Click(object sender, RoutedEventArgs e)
+        {
+
+            ServiceConfigManager.StoreUpdatedAppServiceConfig(EditModel.ServiceConfig);
+            MessageBox.Show("Service configuration saved. Restart the background service for changes to take effect.", "Service Config Updated", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

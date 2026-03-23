@@ -290,6 +290,54 @@
 
                         </DockPanel>
 
+                        <DockPanel LastChildFill="False">
+                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Service Config</TextBlock>
+                            <TextBlock
+                                Margin="4,0,0,0"
+                                DockPanel.Dock="Top"
+                                Style="{StaticResource Instructions}">
+                                Configure local background service behavior. Restart the service after applying changes.
+                            </TextBlock>
+
+                            <StackPanel
+                                Margin="0,4"
+                                DockPanel.Dock="Top"
+                                Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Width="180" Content="Log Level" />
+                                    <ComboBox
+                                        Width="180"
+                                        ItemsSource="{Binding LogLevels}"
+                                        SelectedItem="{Binding ServiceConfig.LogLevel}" />
+                                </StackPanel>
+
+                                <TextBlock
+                                    Margin="184,0,0,4"
+                                    Style="{StaticResource Instructions}"
+                                    Text="Determines the detail level of log entries." />
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Width="180" Content="PowerShell Execution Policy" />
+                                    <ComboBox
+                                        Width="180"
+                                        ItemsSource="{Binding PowershellExecutionPolicies}"
+                                        SelectedItem="{Binding ServiceConfig.PowershellExecutionPolicy}" />
+                                </StackPanel>
+
+                                <TextBlock
+                                    Margin="184,0,0,4"
+                                    Style="{StaticResource Instructions}"
+                                    Text="The PowerShell execution policy used when running scripts during certificate tasks." />
+
+                                <Button
+                                    Width="140"
+                                    Margin="184,8,0,0"
+                                    HorizontalAlignment="Left"
+                                    Click="ApplyServiceConfig_Click"
+                                    Content="Apply Service Config" />
+                            </StackPanel>
+                        </DockPanel>
+
                     </StackPanel>
                 </TabItem>
 
