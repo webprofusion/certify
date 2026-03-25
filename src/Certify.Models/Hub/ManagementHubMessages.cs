@@ -92,14 +92,6 @@ namespace Certify.Models.Hub
     {
         public string? ManagedCertificateId { get; set; }
         public string? SourceVersion { get; set; }
-
-        /// <summary>
-        /// Base64-encoded PFX certificate bytes, included only when the management hub has
-        /// authorised this instance to receive the certificate via push (i.e. it is a verified
-        /// push subscriber for the source instance/certificate pair).  When present the receiving
-        /// instance should use this data directly and skip the normal HTTP pull fetch.
-        /// </summary>
-        public string? PfxData { get; set; }
     }
 
     public class ExternalManagedCertificateRequest

@@ -963,7 +963,7 @@ namespace Certify.UI.ViewModel
 
             if (string.IsNullOrWhiteSpace(SelectedItem.ExternalSource.RetrievalMode))
             {
-                SelectedItem.ExternalSource.RetrievalMode = ExternalCertificateRetrievalModes.Pull;
+                SelectedItem.ExternalSource.RetrievalMode = ExternalCertificateRetrievalModes.Auto;
             }
 
             if (SelectedItem.ExternalSource.PollIntervalMinutes <= 0)

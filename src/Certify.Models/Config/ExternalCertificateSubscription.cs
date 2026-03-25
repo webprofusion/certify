@@ -13,7 +13,7 @@ namespace Certify.Models
     {
         public const string Pull = "Pull";
         public const string Push = "Push";
-        public const string Auto = "PullAndPush";
+        public const string Auto = "Auto";
     }
 
     public class ExternalCertificateSubscription
@@ -71,7 +71,7 @@ namespace Certify.Models
         public string? LastSourceVersion { get; set; }
 
         /// <summary>
-        /// Latest pending source version marker (if waiting for maintenance window).
+        /// Latest known source version marker awaiting user-requested retrieval or deployment.
         /// </summary>
         public string? PendingSourceVersion { get; set; }
 
@@ -97,12 +97,14 @@ namespace Certify.Models
         [System.Text.Json.Serialization.JsonIgnore]
         public string CurrentSyncStatus => !string.IsNullOrWhiteSpace(LastError)
             ? "Source Error"
-            : !string.IsNullOrWhiteSpace(PendingCertificatePath) || !string.IsNullOrWhiteSpace(PendingSourceVersion)
+            : !string.IsNullOrWhiteSpace(PendingCertificatePath)
                 ? "Pending Deployment"
+                : !string.IsNullOrWhiteSpace(PendingSourceVersion)
+                    ? "Update Available"
                 : DateLastPoll.HasValue
-                    ? !string.IsNullOrWhiteSpace(LastSourceVersion)
-                        ? "In Sync"
-                        : "Checked"
-                    : "Awaiting First Sync";
+                        ? !string.IsNullOrWhiteSpace(LastSourceVersion)
+                            ? "In Sync"
+                            : "Checked"
+                        : "Awaiting First Sync";
     }
 }

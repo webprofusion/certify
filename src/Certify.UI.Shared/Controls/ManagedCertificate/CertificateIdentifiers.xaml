@@ -75,6 +75,14 @@
                                     SelectionChanged="ExternalSourceType_SelectionChanged" />
                             </StackPanel>
 
+                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+                                <Label Width="200" Content="Retrieval Mode" />
+                                <ComboBox
+                                    Width="240"
+                                    ItemsSource="{Binding ExternalRetrievalModes}"
+                                    SelectedItem="{Binding SelectedItem.ExternalSource.RetrievalMode, UpdateSourceTrigger=PropertyChanged}" />
+                            </StackPanel>
+
                             <StackPanel Margin="0,4,0,0" Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal">
                                     <Label Width="200" Content="External Reference" />

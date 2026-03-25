@@ -1109,22 +1109,7 @@ namespace Certify.Management
 
                 if (!string.IsNullOrWhiteSpace(update?.ManagedCertificateId))
                 {
-                    byte[]? pfxData = null;
-
-                    if (!string.IsNullOrWhiteSpace(update.PfxData))
-                    {
-                        try
-                        {
-                            pfxData = Convert.FromBase64String(update.PfxData);
-                        }
-                        catch (Exception ex)
-                        {
-                            _serviceLog?.Warning("PushExternalManagedCertificateUpdate: PFX data could not be decoded for {certId}: {error}; will fall back to pull.", update.ManagedCertificateId, ex.Message);
-                        }
-                    }
-
-                    QueueExternalManagedCertificateUpdate(update.ManagedCertificateId, update.SourceVersion, pfxData);
-                    val = new ActionResult("External managed certificate refresh queued.", true);
+                    val = await MarkExternalManagedCertificateUpdateAvailable(update.ManagedCertificateId, update.SourceVersion);
                 }
                 else
                 {

@@ -464,6 +464,9 @@ namespace Certify.Management
             // perform frequent tasks such as checking for due renewals
             await PerformRenewalTasks(CancellationToken.None);
 
+            // process external subscription polls, pending deployments, and queued push notifications
+            await PerformExternalCertificateSubscriptionTasks(CancellationToken.None);
+
             // perform managhed challenge cleanup tasks (if any)
             _ = PerformManagedChallengeCleanup();
 

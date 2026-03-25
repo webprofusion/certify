@@ -193,6 +193,35 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(isRenewalRequired.IsRenewalDue, "Renewal should not be required due to scheduled date in future");
         }
 
+        [TestMethod, Description("Ensure external subscription update notifications can queue the next renewal batch via DateNextScheduledRenewalAttempt")]
+        public void TestExternalSubscriptionUpdateQueuesNextRenewalBatch()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-1),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-1),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    IsEnabled = true,
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                    PendingSourceVersion = "source-version-1"
+                },
+                DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddMinutes(-1)
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "External subscription update should be queued for the next renewal batch.");
+            Assert.AreEqual("Certificate scheduled renewal is now due.", renewalDueCheck.Reason);
+        }
+
         [TestMethod, Description("Ensure a site with unknown date for last renewal should require renewal")]
         public void TestCheckAutoRenewalPeriodUnknownLastRenewal()
         {

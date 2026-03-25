@@ -347,12 +347,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     var updatedManagedCertificate = System.Text.Json.JsonSerializer.Deserialize<ManagedCertificate>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
                     if (updatedManagedCertificate != null)
                     {
+                        var previousManagedCertificate = GetCachedManagedCertificate(instanceId, updatedManagedCertificate.Id);
+
                         await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, updatedManagedCertificate);
 
                         _stateProvider.UpdateCachedManagedInstanceItem(instanceId, updatedManagedCertificate);
 
-                        // TODO: is this the right place to publish udpates to subscribers? This will update them even if the PFX hasn't changed
-                        // await NotifyExternalSubscribersOfManagedItemUpdate(instanceId, updatedManagedCertificate);
+                        if (HasManagedCertificateVersionChanged(previousManagedCertificate, updatedManagedCertificate))
+                        {
+                            await NotifyExternalSubscribersOfManagedItemUpdate(instanceId, updatedManagedCertificate);
+                        }
                     }
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
@@ -403,19 +407,10 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
-            var pfxBytes = await TryFetchSourcePfxForPush(request.SourceInstanceId, request.SourceManagedCertificateId);
-            if (pfxBytes == null)
-            {
-                _logger?.LogWarning(
-                    "HandleExternalManagedCertificateRequest: Could not fetch PFX for {certId} from {instanceId}; push will proceed without embedded data.",
-                    request.SourceManagedCertificateId, request.SourceInstanceId);
-            }
-
             var payload = new ExternalManagedCertificateUpdate
             {
                 ManagedCertificateId = request.TargetManagedCertificateId,
-                SourceVersion = null,
-                PfxData = pfxBytes != null ? Convert.ToBase64String(pfxBytes) : null
+                SourceVersion = null
             };
 
             var command = new InstanceCommandRequest(ManagementHubCommands.PushExternalManagedCertificateUpdate)
@@ -431,95 +426,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 request.TargetManagedCertificateId,
                 request.SourceInstanceId,
                 request.SourceManagedCertificateId);
-        }
-
-        /// <summary>
-        /// Attempts to export the current PFX for <paramref name="sourceManagedCertificateId"/> from
-        /// <paramref name="sourceInstanceId"/>.  For the local instance the export is performed
-        /// directly; for remote instances an <c>ExportCertificate</c> command is issued over SignalR
-        /// and the result is awaited.  Returns <c>null</c> on failure so callers can fall back gracefully.
-        /// </summary>
-        private async Task<byte[]?> TryFetchSourcePfxForPush(string sourceInstanceId, string sourceManagedCertificateId)
-        {
-            InstanceCommandResult? cmdResult;
-
-            var exportArgs = new KeyValuePair<string, string>[]
-            {
-                new("managedCertId", sourceManagedCertificateId),
-                new("format", "pfx"),
-                new("strictExport", "false")
-            };
-
-            if (_hasLocalInstance && sourceInstanceId == _localInstanceId)
-            {
-                // Execute the export command directly against the local certify manager
-                var localCmd = new InstanceCommandRequest(ManagementHubCommands.ExportCertificate)
-                {
-                    Value = System.Text.Json.JsonSerializer.Serialize(exportArgs)
-                };
-
-                cmdResult = await _certifyManager!.PerformHubCommandWithResult(localCmd);
-            }
-            else
-            {
-                // Remote instance — send ExportCertificate command and await the response
-                var connectionId = _stateProvider.GetConnectionIdForInstance(sourceInstanceId);
-                if (string.IsNullOrWhiteSpace(connectionId))
-                {
-                    _logger?.LogWarning("TryFetchSourcePfxForPush: No active connection found for source instance {instanceId}", sourceInstanceId);
-                    return null;
-                }
-
-                var remoteCmd = new InstanceCommandRequest(ManagementHubCommands.ExportCertificate)
-                {
-                    Value = System.Text.Json.JsonSerializer.Serialize(exportArgs),
-                    IsResultAwaited = true
-                };
-
-                _stateProvider.AddAwaitedCommandRequest(remoteCmd);
-
-                try
-                {
-                    await Clients.Client(connectionId).SendCommandRequest(remoteCmd);
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "TryFetchSourcePfxForPush: Failed to send ExportCertificate command to {instanceId}", sourceInstanceId);
-                    _stateProvider.RemoveAwaitedCommandRequest(remoteCmd.CommandId);
-                    return null;
-                }
-
-                cmdResult = await _stateProvider.ConsumeAwaitedCommandResult(remoteCmd);
-                if (cmdResult == null)
-                {
-                    _logger?.LogWarning("TryFetchSourcePfxForPush: Timed out waiting for ExportCertificate result from {instanceId}", sourceInstanceId);
-                    return null;
-                }
-            }
-
-            if (cmdResult?.Value == null)
-            {
-                _logger?.LogWarning("TryFetchSourcePfxForPush: No result value returned for ExportCertificate from {instanceId}", sourceInstanceId);
-                return null;
-            }
-
-            try
-            {
-                var exportResult = System.Text.Json.JsonSerializer.Deserialize<ActionResult<byte[]?>>(cmdResult.Value, JsonOptions.DefaultJsonSerializerOptions);
-
-                if (exportResult?.IsSuccess == true && exportResult.Result != null)
-                {
-                    return exportResult.Result;
-                }
-
-                _logger?.LogWarning("TryFetchSourcePfxForPush: ExportCertificate from {instanceId} was not successful: {msg}", sourceInstanceId, exportResult?.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "TryFetchSourcePfxForPush: Failed to deserialize ExportCertificate result from {instanceId}", sourceInstanceId);
-            }
-
-            return null;
         }
 
         private async Task NotifyExternalSubscribersOfManagedItemUpdate(string sourceInstanceId, ManagedCertificate updatedManagedCertificate)
@@ -538,25 +444,12 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
-            // Fetch the PFX once from the source.  The hub authorises this because each target has
-            // already been verified as a configured push subscriber for this specific source cert.
-            // If the fetch fails the push still proceeds without embedded data and the subscriber
-            // falls back to the normal HTTP pull.
-            var pfxBytes = await TryFetchSourcePfxForPush(sourceInstanceId, updatedManagedCertificate.Id);
-            if (pfxBytes == null)
-            {
-                _logger?.LogWarning(
-                    "NotifyExternalSubscribersOfManagedItemUpdate: Could not fetch PFX for {certId} from {instanceId}; push will proceed without embedded data.",
-                    updatedManagedCertificate.Id, sourceInstanceId);
-            }
-
             foreach (var target in targets)
             {
                 var payload = new ExternalManagedCertificateUpdate
                 {
                     ManagedCertificateId = target.TargetManagedCertificateId,
-                    SourceVersion = sourceVersion,
-                    PfxData = pfxBytes != null ? Convert.ToBase64String(pfxBytes) : null
+                    SourceVersion = sourceVersion
                 };
 
                 var command = new InstanceCommandRequest(ManagementHubCommands.PushExternalManagedCertificateUpdate)
@@ -574,6 +467,41 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     _logger?.LogWarning(ex, "Failed to queue external certificate push update for target {targetInstanceId} item {targetItemId} from source {sourceInstanceId}/{sourceItemId}.", target.TargetInstanceId, target.TargetManagedCertificateId, sourceInstanceId, updatedManagedCertificate.Id);
                 }
             }
+        }
+
+        internal static bool HasManagedCertificateVersionChanged(ManagedCertificate? previousManagedCertificate, ManagedCertificate updatedManagedCertificate)
+        {
+            if (updatedManagedCertificate == null || string.IsNullOrWhiteSpace(updatedManagedCertificate.Id))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(updatedManagedCertificate.CertificateThumbprintHash))
+            {
+                return !string.Equals(previousManagedCertificate?.CertificateThumbprintHash, updatedManagedCertificate.CertificateThumbprintHash, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (updatedManagedCertificate.DateRenewed.HasValue)
+            {
+                return previousManagedCertificate?.DateRenewed != updatedManagedCertificate.DateRenewed;
+            }
+
+            return false;
+        }
+
+        private ManagedCertificate? GetCachedManagedCertificate(string instanceId, string? managedCertificateId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId) || string.IsNullOrWhiteSpace(managedCertificateId))
+            {
+                return null;
+            }
+
+            if (_stateProvider.GetManagedInstanceItems().TryGetValue(instanceId, out var instanceItems))
+            {
+                return instanceItems.Items?.FirstOrDefault(i => string.Equals(i.Id, managedCertificateId, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return null;
         }
 
         internal static List<(string TargetInstanceId, string TargetManagedCertificateId)> GetExternalPushSubscriptionTargets(
