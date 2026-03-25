@@ -288,11 +288,13 @@ namespace Certify.Providers.DNS.Cloudflare
 
             try
             {
+                var recordValue = request.RecordType?.ToLower() == "txt" ? NormalizeTXTValue(request.RecordValue) : request.RecordValue;
+
                 // check existing before creating new
                 try
                 {
                     var records = await GetDnsRecords(request.ZoneId);
-                    if (records.Any(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower() && r.Content == request.RecordValue))
+                    if (records.Any(r => r.Name == request.RecordName && r.Type.ToLower() == request.RecordType.ToLower() && r.Content == recordValue))
                     {
                         return new ActionResult("Record with required value exists, OK", true);
                     }
