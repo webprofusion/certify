@@ -207,7 +207,7 @@ namespace Certify.Providers.DNS.OVH
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp}" };
+                return new ActionResult { IsSuccess = false, Message = $"Test Failed: {exp}" };
             }
         }
     }

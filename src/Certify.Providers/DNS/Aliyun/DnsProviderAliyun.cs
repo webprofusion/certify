@@ -117,7 +117,7 @@ namespace Certify.Providers.DNS.Aliyun
             {
                 return new ActionResult
                 {
-                    IsSuccess = true,
+                    IsSuccess = false,
                     Message = $"Test Failed: {exp.Message}"
                 };
             }

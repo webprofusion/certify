@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -321,7 +321,7 @@ namespace Certify.Providers.DNS.DnsMadeEasy
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Test Failed: {exp.Message}" };
             }
         }
 

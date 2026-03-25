@@ -146,7 +146,7 @@ namespace Certify.Providers.DNS.Cloudflare
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Dns API Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Dns API Test Failed: {exp.Message}" };
             }
         }
 

@@ -89,7 +89,7 @@ namespace Certify.Providers.DNS.Azure
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Test Failed: {exp.Message}" };
             }
         }
 

@@ -114,7 +114,7 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Test Failed: {exp.Message}" };
             }
         }
 
@@ -299,7 +299,8 @@ namespace Certify.Providers.DNS.SimpleDNSPlus
             return await Task.FromResult(true);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _client?.Dispose();
         }
     }
