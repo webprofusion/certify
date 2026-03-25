@@ -18,6 +18,7 @@ namespace Certify.Providers.DNS.AWSRoute53
 
     public class DnsProviderAWSRoute53 : IDnsProvider
     {
+        private const int MaxTxtValuesPerRecord = 8;
         private AmazonRoute53Client _route53Client;
         private ILog _log;
 
@@ -76,7 +77,7 @@ namespace Certify.Providers.DNS.AWSRoute53
             }
             catch (Exception exp)
             {
-                return new ActionResult { IsSuccess = true, Message = $"Test Failed: {exp.Message}" };
+                return new ActionResult { IsSuccess = false, Message = $"Test Failed: {exp.Message}" };
             }
         }
 
@@ -146,6 +147,18 @@ namespace Certify.Providers.DNS.AWSRoute53
             return true;
         }
 
+        private static bool IsMatchingTxtRecord(ResourceRecordSet recordSet, string recordName)
+        {
+            return recordSet != null
+                && recordSet.Type == RRType.TXT
+                && string.Equals(recordSet.Name?.TrimEnd('.'), recordName?.TrimEnd('.'), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string QuoteTxtValue(string value)
+        {
+            return $"\"{value}\"";
+        }
+
         public async Task<ActionResult> CreateRecord(DnsRecord request)
         {
             // https://docs.aws.amazon.com/sdk-for-net/v2/developer-guide/route53-apis-intro.html
@@ -165,19 +178,30 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                     );
 
-                var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => (string.Equals(r.Name, request.RecordName, StringComparison.OrdinalIgnoreCase) || string.Equals(r.Name, request.RecordName + ".")) && r.Type.Value.ToUpper() == "TXT");
+                var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => IsMatchingTxtRecord(r, request.RecordName));
+                var quotedRecordValue = QuoteTxtValue(request.RecordValue);
 
                 if (targetRecordSet != null)
                 {
-                    if (targetRecordSet.ResourceRecords.Any(t => t.Value == "\"" + request.RecordValue + "\""))
+                    if (targetRecordSet.ResourceRecords?.Any(t => string.Equals(t.Value, quotedRecordValue, StringComparison.Ordinal)) == true)
                     {
                         return new ActionResult { IsSuccess = true, Message = $"Dns Record already exists with required value. Skipping." };
                     }
                     else
                     {
-                        targetRecordSet.ResourceRecords.Add(
-                              new ResourceRecord { Value = "\"" + request.RecordValue + "\"" }
-                            );
+                        var updatedResourceRecords = targetRecordSet.ResourceRecords?
+                            .Where(r => r != null && !string.IsNullOrWhiteSpace(r.Value))
+                            .ToList() ?? new List<ResourceRecord>();
+
+                        if (updatedResourceRecords.Count >= MaxTxtValuesPerRecord)
+                        {
+                            updatedResourceRecords = updatedResourceRecords
+                                .Skip(updatedResourceRecords.Count - (MaxTxtValuesPerRecord - 1))
+                                .ToList();
+                        }
+
+                        updatedResourceRecords.Add(new ResourceRecord { Value = quotedRecordValue });
+                        targetRecordSet.ResourceRecords = updatedResourceRecords;
                     }
                 }
                 else
@@ -189,7 +213,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                         Type = RRType.TXT,
                         ResourceRecords = new List<ResourceRecord>
                         {
-                          new ResourceRecord { Value =  "\""+request.RecordValue+"\""}
+                          new ResourceRecord { Value = quotedRecordValue }
                         }
                     };
                 }
@@ -231,63 +255,49 @@ namespace Certify.Providers.DNS.AWSRoute53
                     }
                 );
 
-                var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => (r.Name == request.RecordName || r.Name == request.RecordName + ".") && r.Type.Value == "TXT");
+                var targetRecordSet = response?.ResourceRecordSets?.FirstOrDefault(r => IsMatchingTxtRecord(r, request.RecordName));
+                var quotedRecordValue = QuoteTxtValue(request.RecordValue);
 
                 if (targetRecordSet != null)
                 {
                     _log?.Information($"Route53 :: Delete Record : Fetched TXT record set OK {targetRecordSet.Name} ");
 
-                    // within reason, patch the record set to remove the record we want to remove instead of deleting all entries with the same name
-                    // we limit this approach because other things can update the same recordset and cause it to grow beyond reasonable limits
-
                     var snapshot = targetRecordSet.ResourceRecords.ToList();
+                    var preservedResourceRecords = targetRecordSet.ResourceRecords
+                        .Where(r => !string.Equals(r.Value, quotedRecordValue, StringComparison.Ordinal))
+                        .ToList();
 
-                    if (targetRecordSet.ResourceRecords.Count > 0 && targetRecordSet.ResourceRecords.Count < 10)
+                    if (preservedResourceRecords.Count == snapshot.Count)
                     {
-
-                        // reduce record set ones we want to keep
-                        var preservedResourceRecords = targetRecordSet.ResourceRecords.Where(r => r.Value != "\"" + request.RecordValue + "\"").ToList();
-
-                        if (preservedResourceRecords.Count == 0)
-                        {
-                            // no records left, delete the record set
-                            try
-                            {
-                                targetRecordSet.ResourceRecords = snapshot;
-                                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
-                                return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
-                            }
-                            catch (AmazonRoute53Exception exp)
-                            {
-                                return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
-                            }
-                        }
-                        else
-                        {
-                            targetRecordSet.ResourceRecords = preservedResourceRecords;
-
-                            try
-                            {
-                                var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
-                                return new ActionResult { IsSuccess = true, Message = $"Dns Record Removed: {request.RecordName}" };
-                            }
-                            catch (AmazonRoute53Exception exp)
-                            {
-                                return new ActionResult { IsSuccess = false, Message = $"Dns Record Remove failed: {request.RecordName} - {exp.Message}" };
-                            }
-                        }
+                        return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete skipped (value does not exist): {request.RecordName}" };
                     }
-                    else
+
+                    if (preservedResourceRecords.Count == 0)
                     {
+                        // no records left, delete the record set
                         try
                         {
+                            targetRecordSet.ResourceRecords = snapshot;
                             var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.DELETE);
-
                             return new ActionResult { IsSuccess = true, Message = $"Dns Record Delete completed: {request.RecordName}" };
                         }
                         catch (AmazonRoute53Exception exp)
                         {
                             return new ActionResult { IsSuccess = false, Message = $"Dns Record Delete failed: {request.RecordName} - {exp.Message}" };
+                        }
+                    }
+                    else
+                    {
+                        targetRecordSet.ResourceRecords = preservedResourceRecords;
+
+                        try
+                        {
+                            var result = await ApplyDnsChange(zone, targetRecordSet, ChangeAction.UPSERT);
+                            return new ActionResult { IsSuccess = true, Message = $"Dns Record Removed: {request.RecordName}" };
+                        }
+                        catch (AmazonRoute53Exception exp)
+                        {
+                            return new ActionResult { IsSuccess = false, Message = $"Dns Record Remove failed: {request.RecordName} - {exp.Message}" };
                         }
                     }
                 }
