@@ -41,6 +41,7 @@
                     MinWidth="140"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Title}"
+                     Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}"
                     IsSelected="true">
                     <!--  Certificate Authority Preference  -->
                     <DockPanel Margin="16,0,8,8" DockPanel.Dock="Top">
@@ -115,6 +116,7 @@
                     MinWidth="100"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Signing &amp; Security"
+                      Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}"
                     IsSelected="False">
 
                     <!--  CSR Options  -->

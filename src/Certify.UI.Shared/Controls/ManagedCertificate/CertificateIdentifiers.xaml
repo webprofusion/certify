@@ -520,8 +520,7 @@
                 MinWidth="100"
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
-                IsSelected="False"
-                Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                IsSelected="False">
                 <managedcertificate:AdvancedOptions />
             </TabItem>
         </TabControl>
