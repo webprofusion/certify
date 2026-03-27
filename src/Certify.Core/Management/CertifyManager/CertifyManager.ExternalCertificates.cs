@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,7 +69,7 @@ namespace Certify.Management
 
                     try
                     {
-                        await ProcessExternalManagedCertificate(item, cancellationToken);
+                        await ProcessExternalManagedCertificate(item, isInteractive: false, cancellationToken);
                     }
                     catch (Exception ex)
                     {
@@ -82,7 +83,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<ActionResult> ProcessExternalManagedCertificate(ManagedCertificate candidate, CancellationToken cancellationToken)
+        private async Task<ActionResult> ProcessExternalManagedCertificate(ManagedCertificate candidate, bool isInteractive, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(candidate.Id))
             {
@@ -107,7 +108,7 @@ namespace Certify.Management
                 return new ActionResult("Source polling not enabled", false);
             }
 
-            if (!ShouldPollSource(sourceConfig))
+            if (!isInteractive && !ShouldPollSource(sourceConfig))
             {
                 return new ActionResult("Source polling not applicable [ShouldPollSource] ", false);
             }
@@ -127,7 +128,7 @@ namespace Certify.Management
                 return new ActionResult(fetchResult.Message, false);
             }
 
-            if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
+            if ((!isInteractive && !fetchResult.HasUpdate) || fetchResult.CertificateData == null)
             {
                 sourceConfig.LastError = null;
 
@@ -429,7 +430,8 @@ namespace Certify.Management
                     {
                         IsSuccess = true,
                         HasUpdate = false,
-                        SourceVersion = sourceVersion
+                        SourceVersion = sourceVersion,
+                        CertificateData = certData
                     };
                 }
 
@@ -440,7 +442,8 @@ namespace Certify.Management
                     {
                         IsSuccess = true,
                         HasUpdate = false,
-                        SourceVersion = sourceVersion
+                        SourceVersion = sourceVersion,
+                        CertificateData = certData
                     };
                 }
 
@@ -524,22 +527,6 @@ namespace Certify.Management
             }
 
             return null;
-        }
-
-        private static (string SecretName, string? Version) ParseKeyVaultReference(string reference)
-        {
-            var parts = reference.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0)
-            {
-                return (string.Empty, null);
-            }
-
-            if (parts.Length == 1)
-            {
-                return (parts[0], null);
-            }
-
-            return (parts[0], parts[1]);
         }
 
         private static bool TryParseHubReference(string? reference, out string instanceId, out string managedCertificateId)
@@ -747,6 +734,14 @@ namespace Certify.Management
 
                 item.ARICertificateId = CertUtils.GetARICertIdBase64(certInfo);
 
+                // Populate domain/IP identifiers from the certificate's SAN extension so that
+                // BindingDeploymentManager can match server hostname bindings correctly.
+                var certIdentifiers = ExtractIdentifiersFromCertificate(certInfo);
+                if (certIdentifiers.Count > 0)
+                {
+                    item.ApplySourceIdentifiers(certIdentifiers);
+                }
+
                 certInfo.Dispose();
                 return true;
             }
@@ -755,6 +750,41 @@ namespace Certify.Management
                 _serviceLog?.Error(ex, "Failed to validate or parse external certificate asset for {name} [{id}]", item.Name, item.Id);
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Extracts DNS and IP identifiers from an X.509 certificate's Subject Alternative Name
+        /// extension, falling back to the Subject CN when no SAN DNS names are present.
+        /// </summary>
+        private static List<CertIdentifierItem> ExtractIdentifiersFromCertificate(X509Certificate2 cert)
+        {
+            var identifiers = new List<CertIdentifierItem>();
+
+            var sanExt = cert.Extensions.OfType<X509SubjectAlternativeNameExtension>().FirstOrDefault();
+            if (sanExt != null)
+            {
+                foreach (var dns in sanExt.EnumerateDnsNames())
+                {
+                    identifiers.Add(new CertIdentifierItem(CertIdentifierType.Dns, dns));
+                }
+
+                foreach (var ip in sanExt.EnumerateIPAddresses())
+                {
+                    identifiers.Add(new CertIdentifierItem(CertIdentifierType.Ip, ip.ToString()));
+                }
+            }
+
+            // Fallback: use CN when no SAN DNS names were found
+            if (!identifiers.Any(i => i.IdentifierType == CertIdentifierType.Dns))
+            {
+                var cn = cert.GetNameInfo(X509NameType.DnsName, false);
+                if (!string.IsNullOrWhiteSpace(cn))
+                {
+                    identifiers.Insert(0, new CertIdentifierItem(CertIdentifierType.Dns, cn));
+                }
+            }
+
+            return identifiers;
         }
 
         private async Task<CertificateRequestResult> PerformExternalManagedCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress)
@@ -816,11 +846,11 @@ namespace Certify.Management
 
                 managedCertificate.LastRenewalStatus = RequestState.Success;
                 managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = "No updated certificate was available from Management Hub.";
+                managedCertificate.RenewalFailureMessage = "";
                 await UpdateManagedCertificate(managedCertificate);
 
                 result.IsSuccess = true;
-                result.Message = managedCertificate.RenewalFailureMessage;
+                result.Message = "No updated certificate was available from Management Hub.";
                 ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }

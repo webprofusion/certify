@@ -424,6 +424,44 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// Populates RequestConfig domain/IP identifiers from an external source identifier list
+        /// (e.g. from a ManagedCertificateSummary or a parsed X.509 SAN extension).
+        /// Used before binding deployment for externally-managed certificates so that
+        /// BindingDeploymentManager can match server hostname bindings correctly.
+        /// </summary>
+        public void ApplySourceIdentifiers(IEnumerable<CertIdentifierItem> identifiers)
+        {
+            var list = identifiers?.ToList() ?? new List<CertIdentifierItem>();
+            if (!list.Any())
+            {
+                return;
+            }
+
+            var dnsValues = list
+                .Where(i => i.IdentifierType == CertIdentifierType.Dns && !string.IsNullOrWhiteSpace(i.Value))
+                .Select(i => i.Value)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            var ipValues = list
+                .Where(i => i.IdentifierType == CertIdentifierType.Ip && !string.IsNullOrWhiteSpace(i.Value))
+                .Select(i => i.Value)
+                .Distinct()
+                .ToArray();
+
+            if (dnsValues.Length > 0)
+            {
+                RequestConfig.PrimaryDomain = dnsValues[0];
+                RequestConfig.SubjectAlternativeNames = dnsValues;
+            }
+
+            if (ipValues.Length > 0)
+            {
+                RequestConfig.SubjectIPAddresses = ipValues;
+            }
+        }
+
+        /// <summary>
         /// Get distinct list of certificate domains/hostnames for this managed cert
         /// </summary>
         /// <returns></returns>

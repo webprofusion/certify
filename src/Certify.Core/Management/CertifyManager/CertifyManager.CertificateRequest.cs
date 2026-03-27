@@ -380,14 +380,11 @@ namespace Certify.Management
 
                     if (managedCertificate.ExternalSource?.IsEnabled == true)
                     {
-                        // attempt out external request. If source is unavailbale request should fail
+                        // attempt ouR external request. If source is unavailable request should fail
                         requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
                         if (requestResult.IsSuccess)
                         {
-                            // wait for result
-                            await Task.Delay(5000);
-
-                            // wait for any other subscription tasks to complete
+                            // wait for any other running subscription tasks to complete
                             while (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
                             {
                                 await Task.Delay(1000);
@@ -395,7 +392,7 @@ namespace Certify.Management
 
                             try
                             {
-                                await ProcessExternalManagedCertificate(managedCertificate, CancellationToken.None);
+                                await ProcessExternalManagedCertificate(managedCertificate, isInteractive, CancellationToken.None);
                             }
                             finally
                             {

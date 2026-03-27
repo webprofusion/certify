@@ -393,6 +393,15 @@ namespace Certify.Management
                 summary.AppendLine("A pending external certificate update is currently recorded and may wait for the next applicable maintenance window before deployment.");
             }
 
+            // Enrich the item with source identifiers so that BindingDeploymentManager can match
+            // server hostname bindings when generating the deployment preview. For real deployment
+            // the same enrichment is applied from the parsed PFX in ApplyExternalCertificateMetadata.
+            var sourceIdentifiers = remoteSummary?.Identifiers?.ToList();
+            if (sourceIdentifiers?.Any() == true)
+            {
+                item.ApplySourceIdentifiers(sourceIdentifiers);
+            }
+
             stepIndex = await AddDeploymentPreview(steps, item, serverProvider, certifyManager, stepIndex);
 
             AddPostRequestTaskPreview(steps, item, allTaskProviders, stepIndex);
