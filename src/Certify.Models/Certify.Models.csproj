@@ -27,7 +27,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
 
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="PropertyChanged.Fody" Version="4.1.0">

@@ -60,7 +60,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="GitHubActionsTestLogger" Version="3.0.1" />
+        <PackageReference Include="GitHubActionsTestLogger" Version="3.0.2" />
         <PackageReference Include="MedallionShell" Version="1.6.2" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
         <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.5.2" />

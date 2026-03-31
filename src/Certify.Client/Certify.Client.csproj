@@ -11,7 +11,7 @@
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.5" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.5" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="Polly" Version="8.6.6" />
 
