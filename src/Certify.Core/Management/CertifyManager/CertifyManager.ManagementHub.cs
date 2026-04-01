@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -30,8 +30,6 @@ namespace Certify.Management
 
         private ClientSecret _mgmtHubJoiningSecret;
         private string? _mgmtHubRequestAuthSecret;
-        public const string MgmtHubJoiningCredId = "_ManagementHubJoiningKey";
-        public const string MgmtHubRequestAuthSecretCredId = "_ManagementHubRequestAuthSecret";
 
         public async Task<ActionResult> CheckManagementHubConnectionStatus()
         {
@@ -74,7 +72,7 @@ namespace Certify.Management
 
             await _credentialsManager.Update(new StoredCredential
             {
-                StorageKey = MgmtHubRequestAuthSecretCredId,
+                StorageKey = Certify.Models.Hub.HubSharedConstants.MgmtHubRequestAuthSecretCredId,
                 ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
                 Title = "Management Hub Request Auth Secret",
                 Secret = requestAuthSecret
@@ -90,7 +88,7 @@ namespace Certify.Management
 
             try
             {
-                var secret = await _credentialsManager.GetUnlockedCredential(MgmtHubRequestAuthSecretCredId);
+                var secret = await _credentialsManager.GetUnlockedCredential(HubSharedConstants.MgmtHubRequestAuthSecretCredId);
                 if (!string.IsNullOrWhiteSpace(secret))
                 {
                     _mgmtHubRequestAuthSecret = secret;
@@ -172,7 +170,7 @@ namespace Certify.Management
 
                 await _credentialsManager.Update(new StoredCredential
                 {
-                    StorageKey = MgmtHubJoiningCredId,
+                    StorageKey = HubSharedConstants.MgmtHubJoiningCredId,
                     ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
                     Title = "Management Hub Joining Key",
                     Secret = JsonSerializer.Serialize(clientSecret)
@@ -434,7 +432,7 @@ namespace Certify.Management
                             {
                                 try
                                 {
-                                    var secret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+                                    var secret = await _credentialsManager.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
 
                                     if (secret != null)
                                     {

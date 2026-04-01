@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Management;
 using Certify.Models;
@@ -247,7 +246,7 @@ namespace Certify.Core.Management.Challenges
             {
                 try
                 {
-                    var storedSecret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubJoiningCredId);
+                    var storedSecret = await _credentialsManager.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
                     if (!string.IsNullOrWhiteSpace(storedSecret))
                     {
                         joiningSecret = System.Text.Json.JsonSerializer.Deserialize<ClientSecret>(storedSecret, JsonOptions.DefaultJsonSerializerOptions);
@@ -274,7 +273,7 @@ namespace Certify.Core.Management.Challenges
 
                 try
                 {
-                    var requestAuthSecret = await _credentialsManager.GetUnlockedCredential(CertifyManager.MgmtHubRequestAuthSecretCredId);
+                    var requestAuthSecret = await _credentialsManager.GetUnlockedCredential(HubSharedConstants.MgmtHubRequestAuthSecretCredId);
                     if (!string.IsNullOrWhiteSpace(requestAuthSecret))
                     {
                         parameters["hubrequestauthsecret"] = requestAuthSecret;

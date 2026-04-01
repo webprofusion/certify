@@ -7,5 +7,6 @@
 #else
         public const string APPDATASUBFOLDER = "certify";
 #endif
+
     }
 }

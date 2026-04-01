@@ -772,7 +772,7 @@ namespace Certify.Models.Hub
 
             // if we don't have a stored credential as a client secret for the managed instance to join it's own hub, create one
             // direct instances don't really need this, but remote backends do so they can join back to their own hub.
-            var existingJoiningKey = await creds.GetUnlockedCredential("_ManagementHubJoiningKey");
+            var existingJoiningKey = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
             if (existingJoiningKey == null)
             {
                 var assignedTokens = await access.GetAssignedAccessTokens(contextUserId: adminSpId);

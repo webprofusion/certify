@@ -502,7 +502,7 @@ namespace Certify.Management
 
             try
             {
-                var secret = await _credentialsManager.GetUnlockedCredential(MgmtHubJoiningCredId);
+                var secret = await _credentialsManager.GetUnlockedCredential(Certify.Models.Hub.HubSharedConstants.MgmtHubJoiningCredId);
                 if (!string.IsNullOrWhiteSpace(secret))
                 {
                     return JsonSerializer.Deserialize<ClientSecret>(secret, JsonOptions.DefaultJsonSerializerOptions);
