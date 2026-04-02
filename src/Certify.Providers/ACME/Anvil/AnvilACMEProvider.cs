@@ -1584,7 +1584,9 @@ namespace Certify.Providers.ACME.Anvil
                 csrKey = KeyFactory.NewKey(keyAlg, rsaKeySize);
             }
 
-            var certFriendlyName = $"{config.PrimaryDomain} [Certify] ";
+            var certDisplayIdentifier = !string.IsNullOrWhiteSpace(config.PrimaryDomain) ? config.PrimaryDomain : config.GetCertificateIdentifiers()?.FirstOrDefault(i => !string.IsNullOrWhiteSpace(i.Value))?.Value;
+
+            var certFriendlyName = $"{certDisplayIdentifier} [Certify] ";
 
             // generate cert
             CertificateChain certificateChain = null;
