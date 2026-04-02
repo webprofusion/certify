@@ -104,18 +104,6 @@ namespace Certify.Server.Hub.Api.Services
         /// 
         private async Task SendCommandWithNoResult(string instanceId, InstanceCommandRequest cmd, bool isOptionallyAwaited = false)
         {
-            var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
-
-            if (connectionId == null)
-            {
-                throw new Exception("Instance connection info not known, cannot send commands to instance.");
-            }
-
-            if (isOptionallyAwaited)
-            {
-                _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
-            }
-
             if (_certifyManager != null && instanceId == _mgmtStateProvider.GetManagementHubInstanceId())
             {
                 // send directly to in-process instance
@@ -123,6 +111,18 @@ namespace Certify.Server.Hub.Api.Services
             }
             else
             {
+                var connectionId = _mgmtStateProvider.GetConnectionIdForInstance(instanceId);
+
+                if (connectionId == null)
+                {
+                    throw new Exception("Instance connection info not known, cannot send commands to instance.");
+                }
+
+                if (isOptionallyAwaited)
+                {
+                    _mgmtStateProvider.AddAwaitedCommandRequest(cmd);
+                }
+
                 await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
             }
         }
@@ -805,6 +805,82 @@ namespace Certify.Server.Hub.Api.Services
             var update = await PerformInstanceCommandTaskWithResult<ManagedInstanceInfo>(instanceId, args, ManagementHubCommands.GetInstanceInfo);
 
             return update;
+        }
+
+        public async Task<ActionResult> RegisterManagedInstanceWithDashboard(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (_certifyManager == null)
+            {
+                return new ActionResult("Management hub instance is unavailable.", false);
+            }
+
+            var result = await _certifyManager.RegisterManagedInstanceWithDashboard(instanceId);
+
+            if (!result.IsSuccess)
+            {
+                return result;
+            }
+
+            await QueueManagedInstanceStatusReportsForDashboard(instanceId);
+
+            var updateSettingsResult = await UpdateManagedInstanceDashboardRegistration(instanceId, true, currentAuthContext);
+
+            if (updateSettingsResult?.IsSuccess != true)
+            {
+                return new ActionResult("Dashboard registration completed, but enabling dashboard reporting on the instance failed.", false);
+            }
+
+            return result;
+        }
+
+        public async Task<ActionResult> RemoveManagedInstanceFromDashboard(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (_certifyManager == null)
+            {
+                return new ActionResult("Management hub instance is unavailable.", false);
+            }
+
+            var result = await _certifyManager.RemoveManagedInstanceFromDashboard(instanceId);
+
+            if (!result.IsSuccess)
+            {
+                return result;
+            }
+
+            var updateSettingsResult = await UpdateManagedInstanceDashboardRegistration(instanceId, false, currentAuthContext);
+
+            if (updateSettingsResult?.IsSuccess != true)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = "Managed instance removed from the dashboard, but disabling dashboard reporting on the instance failed. Reconnect the instance and remove it again if it reappears."
+                };
+            }
+
+            return new ActionResult("Managed instance removed from the dashboard.", true);
+        }
+
+        private async Task QueueManagedInstanceStatusReportsForDashboard(string instanceId)
+        {
+            await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.QueueAllStatusReports));
+        }
+
+        private async Task<ActionResult?> UpdateManagedInstanceDashboardRegistration(string instanceId, bool isDashboardEnabled, AuthContext? currentAuthContext)
+        {
+            var prefs = await GetServiceCoreSettings(instanceId, currentAuthContext);
+
+            if (prefs == null)
+            {
+                return null;
+            }
+
+            prefs.IsInstanceRegistered = isDashboardEnabled;
+            prefs.ConfigDataStoreConnectionId ??= "(default)";
+            prefs.FeatureFlags ??= [];
+
+            return await UpdateServiceCoreSettings(instanceId, prefs, currentAuthContext);
         }
 
         public async Task<ActionResult?> ActivateManagedLicense(string instanceId, string licenseId, AuthContext? currentAuthContext)

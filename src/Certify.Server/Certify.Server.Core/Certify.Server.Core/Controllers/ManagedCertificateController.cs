@@ -236,6 +236,20 @@ namespace Certify.Service.Controllers
             return await _certifyManager.ResetManagedItemStatus(managedItemId);
         }
 
+        [HttpPost, Route("statusreports/queueall")]
+        public async Task<Certify.Models.Config.ActionResult> QueueAllStatusReports()
+        {
+            DebugLog();
+
+            await _certifyManager.QueueAllManagedCertificateStatusReports();
+
+            return new Certify.Models.Config.ActionResult
+            {
+                IsSuccess = true,
+                Message = "Queued all managed certificate status reports."
+            };
+        }
+
         [HttpGet, Route("reapply/{managedItemId}/{isPreviewOnly}/{includeDeploymentTasks}")]
         public async Task<CertificateRequestResult> RedeployCertificate(string managedItemId, bool isPreviewOnly, bool includeDeploymentTasks)
         {

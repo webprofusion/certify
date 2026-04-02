@@ -68,6 +68,7 @@ namespace Certify.Client
         Task<ManagedCertificate> GetManagedCertificate(string managedItemId, AuthContext authContext = null);
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site, AuthContext authContext = null);
         Task<bool> DeleteManagedCertificate(string managedItemId, AuthContext authContext = null);
+        Task<Certify.Models.Config.ActionResult> QueueAllStatusReports(AuthContext authContext = null);
         Task<StatusMessage> RevokeManageSiteCertificate(string managedItemId, AuthContext authContext = null);
         Task<List<CertificateRequestResult>> BeginAutoRenewal(RenewalSettings settings, AuthContext authContext = null);
         Task<List<CertificateRequestResult>> RedeployManagedCertificates(bool isPreviewOnly, bool includeDeploymentTasks, AuthContext authContext = null);

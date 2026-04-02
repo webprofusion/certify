@@ -288,7 +288,7 @@
                             <Button
                                 x:Name="ViewDashboard"
                                 Width="180"
-                                Margin="0,0,0,0"
+                                Margin="0,0,16,0"
                                 HorizontalAlignment="Left"
                                 Click="ViewDashboard_Click"
                                 Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
@@ -301,6 +301,23 @@
                                         Foreground="#FF6BB039"
                                         Icon="Leaf" />
                                     <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
+                                </StackPanel>
+                            </Button>
+                            <Button
+                                x:Name="RemoveFromDashboard"
+                                Width="200"
+                                HorizontalAlignment="Left"
+                                Click="RemoveFromDashboard_Click"
+                                Visibility="{Binding Preferences.IsInstanceRegistered, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome
+                                        Height="16"
+                                        Margin="0"
+                                        HorizontalAlignment="Left"
+                                        VerticalAlignment="Center"
+                                        Foreground="IndianRed"
+                                        Icon="MinusCircle" />
+                                    <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center">Remove from Dashboard</TextBlock>
                                 </StackPanel>
                             </Button>
                         </StackPanel>

@@ -13,6 +13,11 @@ namespace Certify.Models.Hub
         public string InstanceId { get; set; } = string.Empty;
 
         /// <summary>
+        /// Internal instance identifier reported by the managed instance from CoreAppSettings.InstanceId.
+        /// </summary>
+        public string InternalInstanceId { get; set; } = string.Empty;
+
+        /// <summary>
         /// Linked security principal id used for access control checks.
         /// </summary>
         public string SecurityPrincipalId { get; set; } = string.Empty;
@@ -38,6 +43,11 @@ namespace Certify.Models.Hub
 
         public string ConnectionStatus { get; set; } = string.Empty;
         public bool IsAuthenticated { get; set; }
+
+        /// <summary>
+        /// Indicates whether dashboard reporting is enabled for this instance.
+        /// </summary>
+        public bool IsDashboardEnabled { get; set; }
 
         /// <summary>
         /// Base64-encoded SHA-256 hash of the per-instance request authentication secret.

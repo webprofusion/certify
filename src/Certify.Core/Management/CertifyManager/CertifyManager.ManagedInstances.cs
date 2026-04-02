@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Shared;
 
 namespace Certify.Management
 {
@@ -93,6 +95,13 @@ namespace Certify.Management
 
                 existing.License = item.License;
 
+                if (!string.IsNullOrWhiteSpace(item.InternalInstanceId))
+                {
+                    existing.InternalInstanceId = item.InternalInstanceId;
+                }
+
+                existing.IsDashboardEnabled = item.IsDashboardEnabled;
+
                 if (!string.IsNullOrWhiteSpace(item.RequestAuthSecretHash))
                 {
                     existing.RequestAuthSecretHash = item.RequestAuthSecretHash;
@@ -155,6 +164,172 @@ namespace Certify.Management
             else
             {
                 return new ActionResult("Not found", false);
+            }
+        }
+
+        public async Task<ActionResult> RegisterManagedInstanceWithDashboard(string instanceId)
+        {
+            var credentialResult = await GetDashboardRegistrationCredentials();
+
+            if (!credentialResult.IsSuccess || credentialResult.Result == null)
+            {
+                return new ActionResult(credentialResult.Message, false);
+            }
+
+            var username = credentialResult.Result["username"];
+            var password = credentialResult.Result["password"];
+
+            var instanceInfo = await GetHubManagedInstance(instanceId);
+            if (!string.IsNullOrWhiteSpace(instanceInfo.InternalInstanceId))
+            {
+                var registration = await CreateDashboardRegistration(instanceInfo);
+
+                if (registration == null || instanceInfo == null)
+                {
+                    return new ActionResult("Managed instance not found.", false);
+                }
+
+                var registrationSucceeded = await _dashboardClient.RegisterInstance(registration, username, password, createAccount: false);
+
+                if (!registrationSucceeded)
+                {
+                    return new ActionResult("Dashboard registration could not be completed. Check that the stored dashboard account credentials are correct and that the hub can reach the Certify The Web API.", false);
+                }
+
+                var updateResult = await UpdateManagedInstanceDashboardState(instanceInfo, true);
+
+                if (!updateResult.IsSuccess)
+                {
+                    return new ActionResult("Dashboard registration completed, but the managed instance status could not be updated in the hub.", false);
+                }
+
+                return new ActionResult("Managed instance added to the dashboard.", true);
+            }
+            else
+            {
+                return new ActionResult("Managed instance could not be added (invalid internal instance Id).", false);
+            }
+        }
+
+        public async Task<ActionResult> RemoveManagedInstanceFromDashboard(string instanceId)
+        {
+            var instanceInfo = await GetHubManagedInstance(instanceId);
+            if (!string.IsNullOrWhiteSpace(instanceInfo.InternalInstanceId))
+            {
+                var credentialResult = await GetDashboardRegistrationCredentials();
+
+                if (!credentialResult.IsSuccess || credentialResult.Result == null)
+                {
+                    return new ActionResult(credentialResult.Message, false);
+                }
+
+                var username = credentialResult.Result["username"];
+                var password = credentialResult.Result["password"];
+
+                var registration = new RegisteredInstance
+                {
+                    InstanceId = instanceInfo.InternalInstanceId
+                };
+
+                var removalSucceeded = await _dashboardClient.RemoveInstance(registration, username, password);
+
+                if (!removalSucceeded)
+                {
+                    if (instanceInfo != null)
+                    {
+                        var localUpdateResult = await UpdateManagedInstanceDashboardState(instanceInfo, false);
+
+                        if (localUpdateResult.IsSuccess)
+                        {
+                            return new ActionResult
+                            {
+                                IsSuccess = true,
+                                IsWarning = true,
+                                Message = "Managed instance was not present on the dashboard, but dashboard status has been cleared in the hub."
+                            };
+                        }
+                    }
+
+                    return new ActionResult("Dashboard removal could not be completed. Check that the stored dashboard account credentials are correct and that the hub can reach the Certify The Web API.", false);
+                }
+
+                if (instanceInfo == null)
+                {
+                    return new ActionResult
+                    {
+                        IsSuccess = true,
+                        IsWarning = true,
+                        Message = "Managed instance removed from the dashboard, but the hub could not refresh the stored managed instance state."
+                    };
+                }
+
+                var updateResult = await UpdateManagedInstanceDashboardState(instanceInfo, false);
+
+                if (!updateResult.IsSuccess)
+                {
+                    return new ActionResult
+                    {
+                        IsSuccess = true,
+                        IsWarning = true,
+                        Message = "Managed instance removed from the dashboard, but the hub could not update the stored managed instance state."
+                    };
+                }
+
+                return new ActionResult("Managed instance removed from the dashboard.", true);
+            }
+            else
+            {
+                return new ActionResult("Managed instance could not be removed (invalid internal instance Id).", false);
+            }
+        }
+
+        private async Task<RegisteredInstance?> CreateDashboardRegistration(ManagedInstanceInfo instanceInfo)
+        {
+            var registrationSource = instanceInfo;
+
+            return new RegisteredInstance
+            {
+                InstanceId = instanceInfo.InternalInstanceId,
+                MachineName = registrationSource.DisplayTitle,
+                OS = string.IsNullOrWhiteSpace(registrationSource.OSVersion) ? registrationSource.OS : $"{registrationSource.OS} {registrationSource.OSVersion}",
+                AppVersion = registrationSource.ClientVersion,
+                AppName = registrationSource.ClientName
+            };
+        }
+
+        private async Task<ActionResult> UpdateManagedInstanceDashboardState(ManagedInstanceInfo instanceInfo, bool isDashboardEnabled)
+        {
+            instanceInfo.IsDashboardEnabled = isDashboardEnabled;
+            return await UpdateHubManagedInstance(instanceInfo.Id, instanceInfo, false);
+        }
+
+        private async Task<ActionResult<Dictionary<string, string>>> GetDashboardRegistrationCredentials()
+        {
+            try
+            {
+                var dashboardCredentialJson = await _credentialsManager.GetUnlockedCredential(HubSharedConstants.DashboardRegistrationCredentialStorageKey);
+
+                if (string.IsNullOrWhiteSpace(dashboardCredentialJson))
+                {
+                    return new ActionResult<Dictionary<string, string>>("Dashboard registration credentials required", false);
+                }
+
+                var dashboardCredentials = JsonSerializer.Deserialize<Dictionary<string, string>>(dashboardCredentialJson, Shared.JsonOptions.DefaultJsonSerializerOptions);
+
+                if (dashboardCredentials == null
+                    || !dashboardCredentials.TryGetValue("username", out var username)
+                    || !dashboardCredentials.TryGetValue("password", out var password)
+                    || string.IsNullOrWhiteSpace(username)
+                    || string.IsNullOrWhiteSpace(password))
+                {
+                    return new ActionResult<Dictionary<string, string>>("The dashboard registration credential is incomplete. Update the hub dashboard account credentials and try again.", false);
+                }
+
+                return new ActionResult<Dictionary<string, string>>("OK", true, dashboardCredentials);
+            }
+            catch
+            {
+                return new ActionResult<Dictionary<string, string>>("The dashboard registration credential could not be read from the internal credentials store.", false);
             }
         }
 

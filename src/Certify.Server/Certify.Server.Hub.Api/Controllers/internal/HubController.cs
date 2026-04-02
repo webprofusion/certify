@@ -266,6 +266,11 @@ namespace Certify.Server.Hub.Api.Controllers
                     knownInstance.License = connected.License;
                     knownInstance.IsAuthenticated = true;
 
+                    if (!string.IsNullOrWhiteSpace(connected.InternalInstanceId))
+                    {
+                        knownInstance.InternalInstanceId = connected.InternalInstanceId;
+                    }
+
                     // Copy db values to in-memory connected instance representation
                     connected.DateRegistered = knownInstance.DateRegistered;
                     connected.Tags = knownInstance.Tags;

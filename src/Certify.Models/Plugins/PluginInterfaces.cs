@@ -46,6 +46,8 @@ namespace Certify.Models.Plugins
 
         Task<bool> RegisterInstance(RegisteredInstance instance, string email, string pwd, bool createAccount);
 
+        Task<bool> RemoveInstance(RegisteredInstance instance, string email, string pwd);
+
         Task<bool> ReportUserActionRequiredAsync(ItemActionRequired actionRequired);
     }
 

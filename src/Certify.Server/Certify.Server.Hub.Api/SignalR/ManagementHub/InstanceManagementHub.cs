@@ -656,11 +656,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     storedInstance.DateLastReported = instanceInfo.DateLastReported;
                     storedInstance.License = instanceInfo.License;
 
+                    if (!string.IsNullOrWhiteSpace(instanceInfo.InternalInstanceId))
+                    {
+                        storedInstance.InternalInstanceId = instanceInfo.InternalInstanceId;
+                    }
+
                     await _backendClient?.UpdateHubManagedInstance(storedInstance, null);
                 }
                 else
                 {
-                    await _backendClient?.UpdateHubManagedInstance(instanceInfo, null);
+                    await _backendClient?.AddHubManagedInstance(instanceInfo, null);
                 }
 
                 // if we don't yet have any managed items for this instance, ask for them

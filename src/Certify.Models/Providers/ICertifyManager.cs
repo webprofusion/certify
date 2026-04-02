@@ -45,6 +45,7 @@ namespace Certify.Management
         Task<Certify.Models.Reporting.StatusSummary> GetManagedCertificateSummary(ManagedCertificateFilter? filter = null);
         Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate site);
         Task<ActionResult> DeleteManagedCertificate(string id);
+        Task QueueAllManagedCertificateStatusReports();
         Task<ImportExportPackage> PerformExport(ExportRequest exportRequest);
         Task<List<ActionStep>> PerformImport(ImportRequest importRequest);
         Task<List<SimpleAuthorizationChallengeItem>> GetCurrentChallengeResponses(string challengeType, string? key = null);
@@ -126,6 +127,8 @@ namespace Certify.Management
         Task<ManagedInstanceInfo> GetHubManagedInstance(string id);
         Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances();
         Task<Certify.Models.Config.ActionResult> RemoveHubManagedInstance(string id);
+        Task<Certify.Models.Config.ActionResult> RegisterManagedInstanceWithDashboard(string instanceId);
+        Task<Certify.Models.Config.ActionResult> RemoveManagedInstanceFromDashboard(string instanceId);
 
         // Tags
         Task<ICollection<TagCategory>> GetTagCategories();

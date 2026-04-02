@@ -62,6 +62,7 @@ namespace Certify.Models.Hub
 
         public const string ApplyLicense = "ActivateManagedLicense";
         public const string DeactivateLicense = "DeactivateManagedLicense";
+        public const string QueueAllStatusReports = "QueueAllStatusReports";
 
         public const string Reconnect = "Reconnect";
 

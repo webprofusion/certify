@@ -120,5 +120,25 @@ namespace Certify.Providers.Internal
                 return false;
             }
         }
+
+        public async Task<bool> RemoveInstance(RegisteredInstance instance, string email, string pwd)
+        {
+            try
+            {
+                var response = await PostAsync("status/remove", new
+                {
+                    Instance = instance,
+                    Email = email,
+                    Password = pwd,
+                    CreateAccount = false
+                });
+
+                return response.IsSuccessStatusCode;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Plugins;
 using Certify.Providers.Internal;
 using PropertyChanged;
@@ -38,11 +39,22 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <returns></returns>
         internal async Task SetInstanceRegisteredOnDashboard()
+            => await SetInstanceRegisteredOnDashboard(true);
+
+        /// <summary>
+        /// Update preference to indicate whether this app install is registered to the reporting dashboard.
+        /// </summary>
+        internal async Task SetInstanceRegisteredOnDashboard(bool isRegistered)
         {
             var prefs = await GetPreferences();
-            prefs.IsInstanceRegistered = true;
+            prefs.IsInstanceRegistered = isRegistered;
             await SetPreferences(prefs);
             Preferences = prefs;
+        }
+
+        internal async Task<ActionResult> QueueAllDashboardStatusReports()
+        {
+            return await _certifyClient.QueueAllStatusReports();
         }
 
         /// <summary>

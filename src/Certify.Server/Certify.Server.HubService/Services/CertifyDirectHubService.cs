@@ -233,6 +233,7 @@ namespace Certify.Server.HubService.Services
         public Task<ICollection<ItemTag>> GetItemsByTagScopes(ICollection<TagScope> scopes, string itemType = null, bool requireAll = false, string instanceId = null, AuthContext authContext = null) => _certifyManager.GetItemsByTagScopes(scopes, itemType, requireAll, instanceId);
         public Task<ActionResultConfig> BulkTagOperation(BulkTagOperationRequest request, AuthContext authContext = null) => _tagController(authContext).BulkTagOperation(request);
         public Task<ScopePreviewResult> PreviewTagScope(ScopePreviewRequest request, AuthContext authContext = null) => _tagController(authContext).PreviewTagScope(request);
+        public Task<ActionResultConfig> QueueAllStatusReports(AuthContext authContext = null) => throw new NotImplementedException();
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

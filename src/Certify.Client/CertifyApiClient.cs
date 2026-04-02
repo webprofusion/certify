@@ -572,6 +572,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<bool>(await response.Content.ReadAsStringAsync());
         }
 
+        public async Task<Certify.Models.Config.ActionResult> QueueAllStatusReports(AuthContext authContext = null)
+        {
+            var response = await PostAsync("managedcertificates/statusreports/queueall", null, authContext);
+            return JsonConvert.DeserializeObject<Certify.Models.Config.ActionResult>(await response.Content.ReadAsStringAsync());
+        }
+
         public async Task<ManagedCertificate> ResetManagedCertificateStatus(string managedItemId, AuthContext authContext = null)
         {
             var result = await FetchAsync($"managedcertificates/reset/{managedItemId}", authContext);

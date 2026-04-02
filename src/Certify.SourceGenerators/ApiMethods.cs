@@ -295,6 +295,30 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "RegisterManagedInstanceWithDashboard",
+                    OperationMethod = HttpPost,
+                    Comment = "Register a managed instance with the Certify The Web dashboard",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/dashboard/register",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
+                    OperationName = "RemoveManagedInstanceFromDashboard",
+                    OperationMethod = HttpPost,
+                    Comment = "Remove a managed instance from the Certify The Web dashboard",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/dashboard/remove",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
                     OperationName = "GetManagedChallenges",
                     OperationMethod = HttpGet,
                     Comment = "Get list of available managed challenges (DNS challenge delegation etc)",

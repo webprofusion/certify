@@ -28,6 +28,12 @@ namespace Certify.UI.Controls
             d.ShowDialog();
         }
 
+        private void RemoveFromDashboard_Click(object sender, RoutedEventArgs e)
+        {
+            var d = new Windows.AddToDashboard { Owner = Window.GetWindow(this), IsRemovalMode = true };
+            d.ShowDialog();
+        }
+
         private void ViewDashboard_Click(object sender, RoutedEventArgs e) => Utils.Helpers.LaunchBrowser("https://dash.certifytheweb.com/");
 
         private void QuickStart_Click(object sender, RoutedEventArgs e)

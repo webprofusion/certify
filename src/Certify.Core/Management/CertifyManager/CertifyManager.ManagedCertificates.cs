@@ -366,29 +366,15 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task ReportManagedCertificateStatus(ManagedCertificate managedCertificate, bool removeReport = false)
         {
-
-            var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
-
-            // remove anything we don't want to report to the dashboard
-
-            reportedCert.RequestConfig.CustomCSR = null;
-            reportedCert.RequestConfig.CustomPrivateKey = null;
-
-            reportedCert.RequestConfig.Challenges
-                .Where(c => c.ChallengeProvider == "DNS01.API.CertifyDns")
-                .Select(s => s.Parameters
-                    .Where(p => p.Key == "credentials_json").Select(p => p.Value = null));
-
-            var report = new Models.Shared.RenewalStatusReport
-            {
-                InstanceId = CoreAppSettings.Current.InstanceId,
-                MachineName = Environment.MachineName,
-                PrimaryContactEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email,
-                ManagedSite = reportedCert,
-                AppName = _isMgtmHubBackend ? "Certify Management Hub" : "Certify Certificate Manager",
-                AppVersion = Util.GetAppVersion().ToString(),
-                IsRemoved = removeReport
-            };
+            var accountEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email;
+            var report = await CreateRenewalStatusReport(
+                managedCertificate,
+                CoreAppSettings.Current.InstanceId,
+                Environment.MachineName,
+                _isMgtmHubBackend ? "Certify Management Hub" : "Certify Certificate Manager",
+                Util.GetAppVersion().ToString(),
+                accountEmail,
+                removeReport);
 
             if (!_useStatusReportQueue)
             {
@@ -398,6 +384,57 @@ namespace Certify.Management
             {
                 _statusReportQueue.AddOrUpdate(managedCertificate.Id, report, (k, v) => report);
             }
+        }
+
+        public async Task QueueAllManagedCertificateStatusReports()
+        {
+            if (_dashboardClient == null || CoreAppSettings.Current.EnableStatusReporting == false)
+            {
+                return;
+            }
+
+            var managedCertificates = await GetManagedCertificates(new ManagedCertificateFilter
+            {
+                IncludeExternal = !_isMgtmHubBackend && CoreAppSettings.Current.EnableExternalCertManagers,
+                MaxResults = -1
+            });
+
+            foreach (var managedCertificate in managedCertificates.Where(c => c != null && !string.IsNullOrWhiteSpace(c.Id)))
+            {
+                await ReportManagedCertificateStatus(managedCertificate);
+            }
+        }
+
+        private async Task<RenewalStatusReport> CreateRenewalStatusReport(ManagedCertificate managedCertificate, string instanceId, string machineName, string appName, string appVersion, string? primaryContactEmail, bool removeReport = false)
+        {
+            var reportedCert = Newtonsoft.Json.JsonConvert.DeserializeObject<ManagedCertificate>(Newtonsoft.Json.JsonConvert.SerializeObject(managedCertificate));
+
+            if (reportedCert?.RequestConfig != null)
+            {
+                // remove anything we don't want to report to the dashboard
+                reportedCert.RequestConfig.CustomCSR = null;
+                reportedCert.RequestConfig.CustomPrivateKey = null;
+
+                if (reportedCert.RequestConfig.Challenges != null)
+                {
+                    reportedCert.RequestConfig.Challenges
+                        .Where(c => c.ChallengeProvider == "DNS01.API.CertifyDns")
+                        .Select(s => s.Parameters
+                            .Where(p => p.Key == "credentials_json").Select(p => p.Value = null));
+                }
+            }
+
+            return new Models.Shared.RenewalStatusReport
+            {
+                InstanceId = instanceId,
+                MachineName = machineName,
+                PrimaryContactEmail = primaryContactEmail,
+                ManagedSite = reportedCert,
+                AppName = appName,
+                AppVersion = appVersion,
+                DateReported = DateTime.UtcNow,
+                IsRemoved = removeReport
+            };
         }
 
         private async Task SendStatusReport(RenewalStatusReport report)

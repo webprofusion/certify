@@ -21,7 +21,7 @@
     </Controls:MetroWindow.LayoutTransform>
     <StackPanel Margin="16" Orientation="Vertical">
 
-        <TextBlock Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+        <TextBlock x:Name="IntroText" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
         <StackPanel>
             <Label
                 Grid.Row="1"

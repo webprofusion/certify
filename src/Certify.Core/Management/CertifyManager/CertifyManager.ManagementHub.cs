@@ -1,8 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Certify.Client;
@@ -575,12 +573,14 @@ namespace Certify.Management
             {
                 Id = _serverConfig.HubAssignedInstanceId,
                 InstanceId = _serverConfig.HubAssignedInstanceId,
+                InternalInstanceId = CoreAppSettings.Current.InstanceId,
                 Title = $"{Environment.MachineName}",
                 OS = EnvironmentUtil.GetFriendlyOSName(detailed: false),
                 OSVersion = EnvironmentUtil.GetOSVersion(),
                 ClientVersion = Util.GetAppVersion().ToString(),
                 ClientName = _isMgtmHubBackend ? "Certify Management Hub" : ConfigResources.AppName,
-                License = _cachedLicenseCheck
+                License = _cachedLicenseCheck,
+                IsDashboardEnabled = CoreAppSettings.Current.IsInstanceRegistered
             };
         }
 
@@ -689,6 +689,11 @@ namespace Certify.Management
             {
                 var s = await GetManagedCertificateSummary(new ManagedCertificateFilter { });
                 val = s;
+            }
+            else if (arg.CommandType == ManagementHubCommands.QueueAllStatusReports)
+            {
+                await QueueAllManagedCertificateStatusReports();
+                val = true;
             }
             else if (arg.CommandType == ManagementHubCommands.GetManagedItemLog)
             {
@@ -854,7 +859,7 @@ namespace Certify.Management
                 var itemArg = args.FirstOrDefault(a => a.Key == "storageKey");
                 var key = itemArg.Value;
                 var cred = await _credentialsManager.GetCredential(key);
-                if (cred.AllowUnlock)
+                if (cred?.AllowUnlock == true)
                 {
                     var unlockedCredValue = await _credentialsManager.GetUnlockedCredential(key);
                     if (unlockedCredValue != null)
@@ -979,6 +984,7 @@ namespace Certify.Management
                     prefs.EnableStatusReporting = update.EnableStatusReporting;
                     prefs.EnableValidationProxyAPI = update.EnableValidationProxyAPI;
                     prefs.EnableHttpChallengeServer = update.EnableHttpChallengeServer;
+                    prefs.IsInstanceRegistered = update.IsInstanceRegistered;
 
                     prefs.NtpServer = update.NtpServer;
                     prefs.RenewalIntervalDays = update.RenewalIntervalDays;
