@@ -120,24 +120,31 @@ namespace Certify.Client
 
         private void PerformRequestedCommand(InstanceCommandRequest cmd)
         {
-            Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
-
-            var task = OnGetCommandResult?.Invoke(cmd);
-
-            if (task != null)
+            if (_connection.State == HubConnectionState.Connected)
             {
-                if (cmd.CommandType != ManagementHubCommands.Reconnect)
-                {
-                    task.Result.IsCommandResponse = true;
-                    task.Result.CommandType = cmd.CommandType;
-                    task.Result.CommandId = cmd.CommandId;
+                Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
 
-                    _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
-                }
-                else
+                var task = OnGetCommandResult?.Invoke(cmd);
+
+                if (task != null)
                 {
-                    task.Wait();
+                    if (cmd.CommandType != ManagementHubCommands.Reconnect)
+                    {
+                        task.Result.IsCommandResponse = true;
+                        task.Result.CommandType = cmd.CommandType;
+                        task.Result.CommandId = cmd.CommandId;
+
+                        _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
+                    }
+                    else
+                    {
+                        task.Wait();
+                    }
                 }
+            }
+            else
+            {
+                Log($"[ManagementServerClient.PerformRequestedCommand] Not Connected [{_connection?.State}], cannot send command. {cmd.CommandId} {cmd.CommandType}");
             }
         }
 
