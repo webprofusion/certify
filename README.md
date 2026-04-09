@@ -1,6 +1,6 @@
 # Certify The Web - ACME Certificate Manager UI for Windows
 
-ACME enabled Certificate Manager, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a certificate. The system now includes the Certify Management Hub which is a cross-platform and self hosted administrative UI.
+ACME enabled Certificate Manager, powered by [Let's Encrypt](https://letsencrypt.org/) and other ACME certificate authorities. This app makes it easy to automatically request, install and continuously renew free certificates for Windows/IIS or for any other services which requires a certificate. The system now includes the [Certify Management Hub](https://docs.certifytheweb.com/docs/hub/) which is a cross-platform and self hosted administrative UI.
 
 - Home page for downloads, info and support : [https://certifytheweb.com/](https://certifytheweb.com/)
 - Documentation: [https://docs.certifytheweb.com](https://docs.certifytheweb.com)
