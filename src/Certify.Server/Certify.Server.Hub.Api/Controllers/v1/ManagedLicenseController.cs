@@ -13,7 +13,7 @@ namespace Certify.Server.Hub.Api.Controllers
     /// <param name="logger"></param>
     /// <param name="client"></param>
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("internal/v1/[controller]")]
     public partial class ManagedLicenseController(ILogger<ManagedLicenseController> logger, ICertifyInternalApiClient client, ManagementAPI mgmtAPI) : ApiControllerBase
     {
         private readonly ILogger<ManagedLicenseController> _logger = logger;

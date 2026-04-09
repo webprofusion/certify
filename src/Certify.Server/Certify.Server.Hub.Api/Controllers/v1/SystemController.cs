@@ -13,7 +13,7 @@ namespace Certify.Server.Hub.Api.Controllers
     /// Provides general system level information (version etc)
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("internal/v1/[controller]")]
     public partial class SystemController : ApiControllerBase
     {
 
@@ -42,7 +42,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("version")]
+        [Route("/api/v1/system/version")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(VersionInfo))]
         public async Task<IActionResult> GetSystemVersion()
         {
@@ -56,7 +56,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("health")]
+        [Route("api/v1/system/health")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubHealth))]
         public async Task<IActionResult> GetHealth()
         {

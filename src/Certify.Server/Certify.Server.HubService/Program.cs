@@ -9,14 +9,13 @@ using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
+using Certify.Server.HubService.Extensions;
 using Certify.Server.HubService.Services;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -146,104 +145,7 @@ builder.Services
     .PersistKeysToFileSystem(new DirectoryInfo(appDataPath));
 
 // configure OpenAPI
-builder.Services.AddOpenApi("v1", options =>
-{
-    options.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
-
-    // Add document information
-    var info = new OpenApiInfo
-    {
-        Title = "Certify Management Hub API",
-        Version = "v1",
-        Description = "The Certify Management Hub API provides a certificate services API for use in UI, devops, CI/CD, middleware etc. See certifytheweb.com for more details."
-    };
-
-    options.AddDocumentTransformer((document, context, cancellationToken) =>
-    {
-        document.Info = info;
-
-        // Add security schemes - JWT Bearer OR API Key authentication (not both)
-        document.Components ??= new OpenApiComponents();
-        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
-
-        // JWT Bearer authentication scheme
-        document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
-        {
-            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-            Name = "Authorization",
-            In = ParameterLocation.Header,
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT"
-        };
-
-        // API Key authentication scheme (Client ID + Secret)
-        document.Components.SecuritySchemes["ApiKey"] = new OpenApiSecurityScheme
-        {
-            Description = "API Key authentication using X-Client-ID and X-Client-Secret headers",
-            Type = SecuritySchemeType.ApiKey,
-            In = ParameterLocation.Header,
-            Name = "X-Client-ID"
-        };
-
-        // Define security requirements - use either Bearer OR ApiKey (not both)
-        document.Security = new List<OpenApiSecurityRequirement>
-        {
-            // Option 1: JWT Bearer token
-            new() {
-                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
-            },
-            // Option 2: API Key (Client ID + Secret)
-            new() {
-                 [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
-            }
-        };
-
-        return Task.CompletedTask;
-    });
-
-    // Add operation customization for XML comments
-    options.AddOperationTransformer((operation, context, cancellationToken) =>
-    {
-        // Use the actual method names as the generated operation id
-        if (context.Description.ActionDescriptor.RouteValues.TryGetValue("action", out var action))
-        {
-            operation.OperationId = action;
-        }
-
-        // Ensure each operation has the security requirements from the document level
-        // This will show both authentication options in Scalar/Swagger UI
-        if (operation.Security == null || operation.Security.Count == 0)
-        {
-            operation.Security = new List<OpenApiSecurityRequirement>
-            {
-                // Option 1: JWT Bearer token
-                new() {
-                [new OpenApiSecuritySchemeReference("Bearer")] = []
-            },
-                // Option 2: API Key (Client ID + Secret)
-             new() {
-                [new OpenApiSecuritySchemeReference("ApiKey")] = []
-            },
-            };
-        }
-
-        return Task.CompletedTask;
-    });
-
-    // Add schema transformer for FileContentResult
-    options.AddSchemaTransformer((schema, context, cancellationToken) =>
-    {
-        if (context.JsonTypeInfo.Type == typeof(FileContentResult))
-        {
-            schema.Type = JsonSchemaType.String;
-            schema.Format = "binary";
-        }
-
-        return Task.CompletedTask;
-    });
-
-});
+builder.Services.AddConfiguredOpenApiDocuments();
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -380,7 +282,10 @@ app.MapScalarApiReference("/api/docs/", options =>
                     .WithTitle("Certify Management Hub API")
                     .WithTheme(ScalarTheme.Solarized)
                     .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
-                    .WithOpenApiRoutePattern("/openapi/v1.json");
+                    .WithOpenApiRoutePattern("/openapi/{documentName}.json")
+                    .AddDocument("v1", "Internal and Public APIs", isDefault: true)
+                    .AddDocument("v1-public", "Public API (/api)")
+                    .AddDocument("v1-internal", "Internal Only API (/internal)");
 
 });
 

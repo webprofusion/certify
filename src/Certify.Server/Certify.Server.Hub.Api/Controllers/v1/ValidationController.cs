@@ -10,7 +10,7 @@ namespace Certify.Server.Hub.Api.Controllers
     /// Provides operations related to identifier validation challenges (proof of domain control etc)
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("internal/v1/[controller]")]
     public partial class ValidationController : ApiControllerBase
     {
 

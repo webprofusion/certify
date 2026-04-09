@@ -16,7 +16,7 @@ namespace Certify.Server.Hub.Api.Controllers
     /// Provides managed certificate related operations
     /// </summary>
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("internal/v1/[controller]")]
     public partial class CertificateController : ApiControllerBase
     {
 
@@ -49,7 +49,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="format">pfx = PKCS#12 archive, pem_key = private key only, pem encoded, pem_fullchain = end-entity + intermediates chain, pem_fullchain_key = chain plus key, pem_fullchain_root = chain plus root, pem_fullchain_root_key = chain plus root and key </param>
         /// <returns>The certificate file in the chosen format</returns>
         [HttpGet]
-        [Route("{instanceId}/download/{managedCertId}/{format?}")]
+        [Route("/api/v1/certificate/{instanceId}/download/{managedCertId}/{format?}")]
         [AllowAnonymous]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
