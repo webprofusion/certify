@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -63,7 +63,7 @@ else
 var builder = WebApplication.CreateBuilder(args);
 
 // load optional config but ignore errors if it doesn't exist or is invalid, otherwise service will fail to start
-if (hubSettings != null && File.Exists(hubSettings))
+if (File.Exists(hubSettings))
 {
     try
     {
@@ -164,18 +164,16 @@ builder.Services.AddSingleton<AcmeServerConfig>(acmeServerState);
 builder.Services.AddAcmeServices();
 
 // Register proxy provider and HTTP client provider
-builder.Services.AddSingleton<Certify.Shared.Net.IProxyProvider>(sp =>
-{
-    return new Certify.Shared.Net.ProxyProvider(() =>
+builder.Services.AddSingleton<Certify.Shared.Net.IProxyProvider>(_ =>
+    new Certify.Shared.Net.ProxyProvider(() =>
     {
         // For Hub Service, default to environment proxy
         return new Certify.Models.Preferences
-        {
+    {
             ProxyMode = Certify.Models.ProxyMode.Environment,
             ProxyEnabled = true
         };
-    });
-});
+    }));
 
 builder.Services.AddSingleton<Certify.Models.Providers.IHttpClientProvider, Certify.Shared.Net.HttpClientProvider>();
 
@@ -210,7 +208,7 @@ if (app.Environment.IsDevelopment())
         SystemStatusCategories.HUB_API,
         SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
         title: "Development Mode",
-        description: $"Hub API is in Development mode."
+        description: "Hub API is in Development mode."
     );
 }
 else
@@ -219,7 +217,7 @@ else
         SystemStatusCategories.HUB_API,
         SystemStatusKeys.HUB_API_STARTUP_ENVIRONMENT,
         title: "Production Mode",
-        description: $"Hub API is in Production mode."
+        description: "Hub API is in Production mode."
     );
 }
 
@@ -304,7 +302,7 @@ AddSystemStatusItem(
     SystemStatusCategories.HUB_API,
     SystemStatusKeys.HUB_API_STARTUP_APIDOCS,
     title: "API Docs UI enabled",
-    description: $"Hub API docs available at /api/docs"
+    description: "Hub API docs available at /api/docs"
 );
 
 // configure initialization of UI status hub, backend management hub etc
@@ -312,21 +310,8 @@ AddSystemStatusItem(
 var statusHubContext = app.Services.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
 var instanceManagementHubContext = app.Services.GetRequiredService<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
 
-if (statusHubContext == null)
-{
-    throw new Exception("Status Hub not registered");
-}
-
-if (instanceManagementHubContext == null)
-{
-    throw new Exception("Instance Management Hub not registered");
-}
-
 // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
 var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
-
-// wire up internal service to our hub
-var managementServerClient = app.Services.GetService<DirectManagementServerClient>();
 
 var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
 
