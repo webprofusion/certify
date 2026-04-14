@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Scalar.AspNetCore;
 using Serilog;
 
@@ -116,6 +117,10 @@ builder.Services
     .AddTokenAuthentication(builder.Configuration)
     .AddAuthorization()
     .AddControllers()
+    .AddJsonOptions(o =>
+    {
+        o.JsonSerializerOptions.WriteIndented = true;
+    })
     .ConfigureApplicationPartManager((apm) =>
     {
         // remove service core assembly part, as controllers from this assembly are not needed in the hub API
@@ -128,6 +133,7 @@ builder.Services
 
 builder.Services
     .AddRouting(r => r.LowercaseUrls = true)
+    .AddProblemDetails()
     .AddResponseCompression(opts =>
      {
          opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -181,6 +187,8 @@ builder.Services.AddTransient(typeof(ICertifyInternalApiClient), typeof(CertifyD
 // setup server core
 builder.Services.AddSingleton<IInstanceManagementStateProvider, InstanceManagementStateProvider>();
 
+builder.Services.TryAddTransient<ManagedInstanceRequestAuthValidator>();
+
 builder.Services.AddTransient<ManagementAPI>();
 
 // used to directly talk back to the management server process instead of connecting back via SignalR
@@ -214,6 +222,9 @@ else
         description: $"Hub API is in Production mode."
     );
 }
+
+app.UseExceptionHandler();
+app.UseStatusCodePages();
 
 app.MapDefaultEndpoints();
 
