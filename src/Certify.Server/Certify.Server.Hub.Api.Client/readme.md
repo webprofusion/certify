@@ -1,5 +1,9 @@
 ﻿# Certify.Server.Hub.Api.Client
 
-This is a an example C# client for the public API of Certify Server. The Client is currently generated using NSwagStudio (start public API in debug then run the tool to generate the updated client).
+Generated C# client for the public Hub API hosted by **Certify.Server.HubService**.
 
-This client can optionally be used by API tests and is used by the Blazor WASM UI.
+## Notes
+
+- The client is generated from the Hub API surface exposed by HubService.
+- It is used by the Blazor WebAssembly UI and can also be used by tests or other managed clients.
+- When refreshing the generated client, run HubService in development and regenerate from its published OpenAPI surface.

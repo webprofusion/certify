@@ -1,86 +1,56 @@
-﻿# Get List of Managed Certificates available
+﻿# Certify Management Hub API Notes
 
-`curl https://localhost:44331/api/v1/certificate`
+The Hub API is hosted by **Certify.Server.HubService**.
 
-```
-[
- {
-    "id": "ba05f0ef-f43b-46d3-9227-a4e8e1b864aa:7",
-    "title": "www.dependencymanager.com",
-    "domains": [
-      "dependencymanager.com"
-    ],
-    "primaryDomain": "dependencymanager.com",
-    "dateRenewed": "2020-06-03T09:48:18.1771936+08:00",
-    "dateExpiry": "2020-12-01T06:59:00+08:00",
-    "status": null
-  },
-  {
-    "id": "1f5abdee-61e1-4516-9b92-70bd2d08567e:",
-    "title": "acme-test.dependencymanager.com",
-    "domains": [
-      "acme-test.dependencymanager.com",
-      "acme-test2.dependencymanager.com",
-      "acme-test3.dependencymanager.com",
-      "acme-test4.dependencymanager.com"
-    ],
-    "primaryDomain": "acme-test.dependencymanager.com",
-    "dateRenewed": "2020-06-02T04:04:30.6779826Z",
-    "dateExpiry": "2020-08-31T03:04:29Z",
-    "status": null
-  }
-]
-```
+`Certify.Server.Hub.Api` contains the API controllers, middleware, SignalR hubs, and related contracts used by HubService. It is not intended to be run as an independently hosted service.
 
+## Example Requests
 
-# Get certificate as PFX
-`curl https://localhost:44331/api/v1/certificate/ba05f0ef-f43b-46d3-9227-a4e8e1b864aa:7/download/pfx`
+### Get system version
 
-# Get unlocked stored credential as a JSON key-value dictionary (if permitted for token role)
-`curl https://localhost:44331/api/v1/credential/1eb2c3d4`
+`curl https://localhost:44361/api/v1/system/version`
 
-# Get http-01 challenges waiting to be answered
+### Get health status
 
-`curl https://localhost:44331/api/v1/validation/http-01`
+`curl https://localhost:44361/api/v1/system/health`
 
-# Get specific http-01 challenge waiting to be answered, by key
+### Get list of managed certificates
 
-`curl https://localhost:44331/api/v1/validation/http-01/abcd1345`
+`curl https://localhost:44361/api/v1/certificate`
 
-Any http listener on the domain host can then respond with content of challenge at url: `http://<domain>/.well-known/acme-challenge/abcd1345`
+### Get certificate as PFX
 
-e.g.  `https://certify.devops.projectbids.co.uk/api/v1/validation/http-01/abcd1345`
+`curl https://localhost:44361/api/v1/certificate/{instanceId}/download/{managedCertId}/pfx`
 
+### Get unlocked stored credential as JSON (if permitted for token role)
 
-# Get system version (heartbeat)
-`curl https://localhost:44331/api/v1/system/version`
+`curl https://localhost:44361/api/v1/credential/{instanceId}/{storageKey}`
 
-# Check token
-`curl https://localhost:44331/api/v1/auth/status`
+### Get waiting http-01 challenges
 
-# Get new token
-`curl https://localhost:44331/api/v1/auth/token`
+`curl https://localhost:44361/api/v1/validation/http-01`
 
-```
-curl https://localhost:44331/api/v1/auth/status -H "Accept: application/json"  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIxMjM0NSIsIm5iZiI6MTU5MTY5ODQwOSwiZXhwIjoxNTkxNzg0ODA5LCJpYXQiOjE1OTE2OTg0MDl9.As92l3EHGAMGkrhfXzCLSpUFRpEAyMTwmpMp16-XjhY"
+### Check token
 
-```
+`curl https://localhost:44361/api/v1/auth/status`
 
-Architecture
------------------
+### Get new token
 
-## Internal Service 
-Runs by default on `localhost:9696`. 
+`curl https://localhost:44361/api/v1/auth/token`
 
-Expected clients: Desktop UI (WPF), Certify CLI, Certify Server API.
+## Hosting Model
 
-The internal service provides the internal certificate management system. The API it exposes is not intended for general use and can change entirely between system updates.
+- **HubService** is the only runtime host for the public Hub API.
+- **Hub API** is the API assembly/library loaded by HubService.
+- **Server Core** remains integrated in-process within HubService for the primary managed instance.
 
-## Certify Server API 
-This service provides a general API for use by custom clients. It must be configured to connect to internal service and may be optionally hosted on same instance as primary service.
+## Expected Clients
 
-Expected clients: any (including Certify Server App UI).
+- Blazor management UI
+- WPF hybrid desktop host for the Blazor UI
+- CLI or custom clients calling the HubService-hosted public API
 
-## API Security
-Exposing either service on the actual public internet should be strictly avoided (there are no external security assurances). Only the Certify Server API is for general client consumption and it should remain internal to an organisation.
+## Security
+
+The Hub API is intended for controlled internal or organizational use. It should not be exposed directly to the public internet without appropriate network controls and deployment hardening.
 
