@@ -204,6 +204,15 @@
                                         SelectedValue="{Binding Prefs.DefaultKeyType}"
                                         SelectedValuePath="Key" />
                                 </StackPanel>
+
+                                <Label Content="Common Name (CN) Handling" />
+                                <StackPanel Margin="8,0,0,0">
+                                    <ComboBox
+                                        x:Name="CsrCommonNameModeSelectorControl"
+                                        DisplayMemberPath="Value"
+                                        SelectedValuePath="Key"
+                                        SelectionChanged="SettingsUpdated" />
+                                </StackPanel>
                             </StackPanel>
 
                             <!--  Cert Cleanup Options  -->

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Certify.Core.Management;
 using Certify.Locales;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Providers;
 using Certify.Models.Shared;
 
@@ -1003,11 +1004,27 @@ namespace Certify.Management
                 }
 
                 var pfxPwd = await GetPfxPassword(managedCertificate);
+                var originalIncludeCN = managedCertificate.RequestConfig.IncludeCN;
+                var instanceCsrCommonNameMode = CoreAppSettings.Current.CsrCommonNameMode ?? CsrCommonNameModes.IncludeInCsr;
 
-                var certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log,
-                    managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain,
-                    CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs,
-                    caRequiresCN: (certAuthority?.RequiresCN == true));
+                if (instanceCsrCommonNameMode == CsrCommonNameModes.IncludeInCsr)
+                {
+                    managedCertificate.RequestConfig.IncludeCN = true;
+                }
+
+                ProcessStepResult certRequestResult;
+
+                try
+                {
+                    certRequestResult = await _acmeClientProvider.CompleteCertificateRequest(log,
+                        managedCertificate, pendingOrder.OrderUri, pfxPwd, preferredChain,
+                        CoreAppSettings.Current.DefaultKeyType, useModernPFXBuildAlgs: CoreAppSettings.Current.UseModernPFXAlgs,
+                        caRequiresCN: (certAuthority?.RequiresCN == true));
+                }
+                finally
+                {
+                    managedCertificate.RequestConfig.IncludeCN = originalIncludeCN;
+                }
 
                 if (certRequestResult.IsSuccess)
                 {

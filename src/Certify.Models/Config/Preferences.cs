@@ -61,6 +61,19 @@ namespace Certify.Models
         public const string PercentageLifetime = "PercentageLifetime";
     }
 
+    public static class CsrCommonNameModes
+    {
+        /// <summary>
+        /// Always include the Common Name in generated CSRs for this instance.
+        /// </summary>
+        public const string IncludeInCsr = "IncludeInCsr";
+
+        /// <summary>
+        /// Use the per-managed-certificate IncludeCN option to decide whether the Common Name is included.
+        /// </summary>
+        public const string Optional = "Optional";
+    }
+
     /// <summary>
     /// Note the settings specified here are mapped to CoreAppSettings
     /// </summary>
@@ -143,6 +156,11 @@ namespace Certify.Models
         /// If set, defines the default key type used for private keys
         /// </summary>
         public string? DefaultKeyType { get; set; }
+
+        /// <summary>
+        /// Defines how Common Name (CN) should be handled for generated CSRs.
+        /// </summary>
+        public string? CsrCommonNameMode { get; set; } = CsrCommonNameModes.IncludeInCsr;
 
         public bool EnableParallelRenewals { get; set; }
 

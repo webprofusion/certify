@@ -35,6 +35,7 @@ namespace Certify.Management
             EnableAutomaticCAFailover = true;
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
+            CsrCommonNameMode = CsrCommonNameModes.IncludeInCsr;
             NtpServer = "pool.ntp.org";
             CertificateManagers = new List<CertificateManagerPreference>();
         }
@@ -166,6 +167,11 @@ namespace Certify.Management
         public string DefaultKeyType { get; set; }
 
         /// <summary>
+        /// Defines how Common Name (CN) should be handled for generated CSRs.
+        /// </summary>
+        public string CsrCommonNameMode { get; set; }
+
+        /// <summary>
         /// If true, renewal tasks in batch will run simultaneously
         /// </summary>
         public bool EnableParallelRenewals { get; set; }
@@ -249,6 +255,7 @@ namespace Certify.Management
             CoreAppSettings.Current.ConfigDataStoreConnectionId = prefs.ConfigDataStoreConnectionId;
 
             CoreAppSettings.Current.DefaultKeyType = prefs.DefaultKeyType;
+            CoreAppSettings.Current.CsrCommonNameMode = prefs.CsrCommonNameMode ?? CsrCommonNameModes.IncludeInCsr;
 
             CoreAppSettings.Current.EnableParallelRenewals = prefs.EnableParallelRenewals;
 
@@ -297,6 +304,7 @@ namespace Certify.Management
                 EnableExternalCertManagers = CoreAppSettings.Current.EnableExternalCertManagers,
                 ConfigDataStoreConnectionId = CoreAppSettings.Current.ConfigDataStoreConnectionId,
                 DefaultKeyType = CoreAppSettings.Current.DefaultKeyType,
+                CsrCommonNameMode = CoreAppSettings.Current.CsrCommonNameMode,
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
                 DisableARIChecks = CoreAppSettings.Current.DisableARIChecks,
                 DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval,

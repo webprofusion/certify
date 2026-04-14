@@ -34,6 +34,11 @@ namespace Certify.UI.Controls.Settings
                 new KeyValuePair<string,string>("RS256_3072", "RSA256 3072" ),
                 new KeyValuePair<string,string>("RS256_4096", "RSA256 4096" )
             };
+
+            public KeyValuePair<string, string>[] CsrCommonNameModeList = new KeyValuePair<string, string>[] {
+                new KeyValuePair<string,string>(CsrCommonNameModes.IncludeInCsr, "Include CN in CSR (default)"),
+                new KeyValuePair<string,string>(CsrCommonNameModes.Optional, "Optional")
+            };
         }
 
         public class MaintenanceWindowViewModel
@@ -43,6 +48,8 @@ namespace Certify.UI.Controls.Settings
         }
 
         public Model EditModel { get; set; } = new Model();
+
+        private ComboBox? CsrCommonNameModeSelector => FindName("CsrCommonNameModeSelectorControl") as ComboBox;
 
         public General()
         {
@@ -118,6 +125,10 @@ namespace Certify.UI.Controls.Settings
             }
 
             DefaultKeyType.ItemsSource = EditModel.KeyTypeList;
+            if (CsrCommonNameModeSelector != null)
+            {
+                CsrCommonNameModeSelector.ItemsSource = EditModel.CsrCommonNameModeList;
+            }
 
             if (string.IsNullOrEmpty(EditModel.Prefs.DefaultKeyType))
             {
@@ -126,6 +137,21 @@ namespace Certify.UI.Controls.Settings
             else
             {
                 DefaultKeyType.SelectedValue = EditModel.Prefs.DefaultKeyType;
+            }
+
+            if (string.IsNullOrEmpty(EditModel.Prefs.CsrCommonNameMode))
+            {
+                if (CsrCommonNameModeSelector != null)
+                {
+                    CsrCommonNameModeSelector.SelectedValue = CsrCommonNameModes.IncludeInCsr;
+                }
+            }
+            else
+            {
+                if (CsrCommonNameModeSelector != null)
+                {
+                    CsrCommonNameModeSelector.SelectedValue = EditModel.Prefs.CsrCommonNameMode;
+                }
             }
 
             ThemeSelector.SelectedValue = EditModel.MainViewModel.UISettings?.UITheme ?? EditModel.MainViewModel.DefaultUITheme;
@@ -200,6 +226,8 @@ namespace Certify.UI.Controls.Settings
                     DeprecationWarning.Visibility = Visibility.Visible;
                     RefreshRewalIntervalLimits();
                 }
+
+                EditModel.Prefs.CsrCommonNameMode = CsrCommonNameModeSelector?.SelectedValue?.ToString() ?? CsrCommonNameModes.IncludeInCsr;
 
                 // save settings
                 await EditModel.MainViewModel.SavePreferences();
