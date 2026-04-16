@@ -17,7 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="Markdig" Version="1.1.2" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.6" />
         <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.17.0" />
         <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.17.0" />
     </ItemGroup>

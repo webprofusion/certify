@@ -62,7 +62,7 @@
         </PackageReference>
         <PackageReference Include="GitHubActionsTestLogger" Version="3.0.3" />
         <PackageReference Include="MedallionShell" Version="1.6.2" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.6" />
         <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.6.2" />
         
         <PackageReference Include="Moq" Version="4.20.72" />
@@ -73,7 +73,7 @@
         <PackageReference Include="MSTest" Version="4.2.1" />
         
         <PackageReference Include="Polly" Version="8.6.6" />
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.5" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.6" />
 
         <PackageReference Include="Npgsql" Version="10.0.2" />
     </ItemGroup>
