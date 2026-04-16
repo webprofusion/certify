@@ -132,7 +132,7 @@
                                 IsChecked="{Binding SelectedItem.RequestConfig.RequireOcspMustStaple}" />
                             <CheckBox
                                 Margin="8,8,0,8"
-                                Content="Include CN in generated CSR (used only when instance Common Name handling is set to Optional Per Managed Certificate)"
+                                Content="Include CN in generated CSR"
                                 IsChecked="{Binding SelectedItem.RequestConfig.IncludeCN}" />
 
                             <TextBlock Style="{StaticResource Instructions}">You can optionally use a custom CSR:</TextBlock>
