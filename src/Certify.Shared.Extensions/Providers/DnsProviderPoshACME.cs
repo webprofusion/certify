@@ -1009,8 +1009,11 @@ namespace Certify.Core.Management.Challenges.DNS
                 PropagationDelaySeconds = DefaultPropagationDelay,
                 ProviderParameters =
                 [
-                    new() { Key = "PowerDNSApiHost", Name = "API Host", IsRequired = true, IsCredential = false, Description="e.g. pdns.example.com" },
+                    new() { Key = "PowerDNSApiHost", Name = "API Host", IsRequired = true, IsCredential = false, Description="e.g. pdns.example.com (no http:// etc)" },
                     new() { Key = "PowerDNSApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new() { Key = "PowerDNSUseTLS", Name = "Use TLS", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsCredential = false, Description = "Enable when using an HTTPS reverse proxy in front of PowerDNS." },
+                    new() { Key = "PowerDNSPort", Name = "API Port", IsRequired = false, Value = "8081", IsCredential = false, Description = "Optional port override. Use 443 when connecting via HTTPS reverse proxy." },
+                    new() { Key = "PowerDNSServerName", Name = "Server Name", IsRequired = false, Value = "localhost", IsCredential = false, Description = "Optional PowerDNS server name path segment. Default is localhost." },
                     _defaultPropagationDelayParam
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
