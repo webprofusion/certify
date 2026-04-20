@@ -907,6 +907,30 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "GetSystemLogFiles",
+                    OperationMethod = HttpGet,
+                    Comment = "Get recent system log files for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/logs",
+                    ReturnType = $"ICollection<{nameof(SystemLogFileInfo)}>",
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemLogList)]
+                },
+                new()
+                {
+                    OperationName = "GetSystemLog",
+                    OperationMethod = HttpGet,
+                    Comment = "Get system log content for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/logs/content/{logName}/{maxLines?}",
+                    ReturnType = "ICollection<string>",
+                    Params = new Dictionary<string, string> { { "instanceId", "string" }, { "logName", "string" }, { "maxLines", "int" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemLogList)]
+                },
+                new()
+                {
                     OperationName = "GetServiceConfig",
                     OperationMethod = HttpGet,
                     Comment = "Get service config for a managed instance",

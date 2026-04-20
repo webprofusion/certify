@@ -1,8 +1,10 @@
 ﻿using System.Net;
+using System.Text;
 using System.Security.Claims;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -138,6 +140,18 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             return new OkObjectResult(result);
+        }
+
+        [HttpGet]
+        [Route("/api/v1/{instanceId}/system/logs/download/{logName}")]
+        [AuthorizedApi]
+        [ProducesResponseType(typeof(FileContentResult), 200)]
+        public async Task<IActionResult> DownloadSystemLog(string instanceId, string logName)
+        {
+            var log = await _mgmtAPI.GetSystemLog(instanceId, logName, -1, CurrentAuthContext);
+            var content = string.Join("\r\n", log);
+
+            return new FileContentResult(Encoding.UTF8.GetBytes(content), "text/plain") { FileDownloadName = logName };
         }
 
         /// <summary>

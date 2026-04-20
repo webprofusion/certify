@@ -3,13 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Core.Management.Challenges;
 using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Models.Plugins;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
@@ -622,13 +623,48 @@ namespace Certify.Management
         /// <param name="type"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
+        public Task<ICollection<SystemLogFileInfo>> GetServiceLogFiles(int maxFiles = 20)
+        {
+            var logPath = EnvironmentUtil.EnsuredAppDataPath("logs");
+
+            if (!Directory.Exists(logPath))
+            {
+                return Task.FromResult<ICollection<SystemLogFileInfo>>([]);
+            }
+
+            var files = Directory
+                .EnumerateFiles(logPath, "*.log", SearchOption.TopDirectoryOnly)
+                .Select(path => new FileInfo(path))
+                .OrderByDescending(f => f.LastWriteTimeUtc)
+                .Take(maxFiles)
+                .Select(f => new SystemLogFileInfo
+                {
+                    Name = f.Name,
+                    LogType = f.Name,
+                    Size = f.Length,
+                    DateModified = new DateTimeOffset(f.LastWriteTimeUtc, TimeSpan.Zero)
+                })
+                .ToList();
+
+            return Task.FromResult<ICollection<SystemLogFileInfo>>(files);
+        }
+
         public async Task<string[]> GetServiceLog(string type, int limit)
         {
             string logPath = null;
+            var logsDir = EnvironmentUtil.EnsuredAppDataPath("logs");
 
             if (type == "session")
             {
-                logPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "session.log");
+                logPath = Path.Combine(logsDir, "session.log");
+            }
+            else if (!string.IsNullOrWhiteSpace(type))
+            {
+                var candidatePath = Path.GetFullPath(Path.Combine(logsDir, type));
+                if (candidatePath.StartsWith(logsDir, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(candidatePath))
+                {
+                    logPath = candidatePath;
+                }
             }
 
             if (logPath != null && System.IO.File.Exists(logPath))

@@ -703,6 +703,18 @@ namespace Certify.Management
 
                 val = await GetItemLog(managedCertIdArg.Value, int.Parse(limit.Value));
             }
+            else if (arg.CommandType == ManagementHubCommands.GetSystemLogFiles)
+            {
+                val = await GetServiceLogFiles();
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetSystemLog)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var logNameArg = args.FirstOrDefault(a => a.Key == "logName");
+                var limit = args.FirstOrDefault(a => a.Key == "limit");
+
+                val = await GetServiceLog(logNameArg.Value, int.Parse(limit.Value));
+            }
             else if (arg.CommandType == ManagementHubCommands.GetManagedItemRenewalPreview)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);

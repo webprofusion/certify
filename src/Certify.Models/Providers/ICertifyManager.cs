@@ -85,6 +85,7 @@ namespace Certify.Management
         Task<DeploymentProviderDefinition> GetDeploymentProviderDefinition(string id, DeploymentTaskConfig config);
         Task<LogItem[]> GetItemLog(string id, int limit = 1000);
 
+        Task<ICollection<SystemLogFileInfo>> GetServiceLogFiles(int maxFiles = 20);
         Task<string[]> GetServiceLog(string logType, int limit = 10000);
         ICredentialsManager GetCredentialsManager();
         IManagedItemStore GetManagedItemStore();

@@ -732,6 +732,26 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.GetSystemStatusItems);
         }
 
+        public async Task<ICollection<SystemLogFileInfo>> GetSystemLogFiles(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                     new("instanceId", instanceId)
+                 };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<SystemLogFileInfo>>(instanceId, args, ManagementHubCommands.GetSystemLogFiles) ?? [];
+        }
+
+        public async Task<string[]> GetSystemLog(string instanceId, string logName, int maxLines, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                     new("instanceId", instanceId),
+                     new("logName", logName),
+                     new("limit", maxLines.ToString())
+                 };
+
+            return await PerformInstanceCommandTaskWithResult<string[]>(instanceId, args, ManagementHubCommands.GetSystemLog) ?? [];
+        }
+
         /// <summary>
         /// Retrieves the service configuration for the specified instance.
         /// </summary>

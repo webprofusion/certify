@@ -171,6 +171,7 @@ namespace Certify.Models.Hub
         public const string SystemGeneralAction = "system_general_action";
 
         public const string SystemStatusList = "system_status_list_action";
+        public const string SystemLogList = "system_log_list_action";
         public const string SystemServiceConfigList = "system_serviceconfig_list_action";
         public const string SystemCoreSettingsList = "system_coresettings_list_action";
         public const string SystemServiceConfigUpdate = "system_serviceconfig_update_action";
@@ -325,6 +326,7 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagementHubInstanceImport, "Import system configuration", ResourceTypes.ManagedInstance),
 
                 new(StandardResourceActions.SystemStatusList, "List system status", ResourceTypes.System),
+                new(StandardResourceActions.SystemLogList, "List and download system logs", ResourceTypes.System),
                 new(StandardResourceActions.SystemServiceConfigList, "List system service configuration", ResourceTypes.System),
                 new(StandardResourceActions.SystemCoreSettingsList, "List system core settings", ResourceTypes.System),
                 new(StandardResourceActions.SystemServiceConfigUpdate, "Update system service configuration", ResourceTypes.System),
@@ -515,6 +517,7 @@ namespace Certify.Models.Hub
                         StandardResourceActions.ManagementHubInstanceUpdate,
                         StandardResourceActions.ManagementHubInstanceDelete,
                         StandardResourceActions.SystemStatusList,
+                        StandardResourceActions.SystemLogList,
                         StandardResourceActions.SystemCoreSettingsList,
                         StandardResourceActions.SystemCoreSettingsUpdate,
                         StandardResourceActions.SystemServiceConfigList,

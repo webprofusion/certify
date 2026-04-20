@@ -55,6 +55,8 @@ namespace Certify.Models.Hub
         public const string PerformExport = "PerformExport";
 
         public const string GetSystemStatusItems = "GetSystemStatusItems";
+        public const string GetSystemLogFiles = "GetSystemLogFiles";
+        public const string GetSystemLog = "GetSystemLog";
         public const string GetServiceConfig = "GetServiceConfig";
         public const string GetServiceCoreSettings = "GetServiceCoreSettings";
         public const string UpdateServiceConfig = "UpdateServiceConfig";
