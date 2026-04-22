@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using Certify.Client;
 using Certify.Models;
 using Certify.Models.Config;
@@ -206,6 +207,16 @@ namespace Certify.Server.Hub.Api.Services
         public async Task RefreshInstanceManagedItems(string instanceId, AuthContext? currentAuthContext)
         {
             await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.GetManagedItems), isOptionallyAwaited: true);
+        }
+
+        public ICollection<ManagedInstanceInfo> GetConnectedInstances()
+        {
+            return _mgmtStateProvider.GetConnectedInstances();
+        }
+
+        public ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems()
+        {
+            return _mgmtStateProvider.GetManagedInstanceItems();
         }
 
         /// <summary>

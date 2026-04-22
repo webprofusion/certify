@@ -174,6 +174,12 @@ namespace Certify.Models.Hub
         public string DisplayText => $"{CategoryDisplayName}: {Value}";
     }
 
+    public class Tag
+    {
+        public string CategoryKey { get; set; }
+        public string? Value { get; set; }
+    }
+
     /// <summary>
     /// Result of a scope preview operation
     /// </summary>

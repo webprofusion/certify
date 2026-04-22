@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Models;
@@ -290,6 +290,16 @@ namespace Certify.SourceGenerators
                     Comment = "Get managed instances",
                     ServiceAPIRoute = "managedinstance/list",
                     ReturnType = $"ICollection<{nameof(Models.Hub.ManagedInstanceInfo)}>",
+                    Params = new Dictionary<string, string> { },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
+                },
+                new()
+                {
+                    OperationName = "GetPublicManagedInstances",
+                    OperationMethod = HttpGet,
+                    Comment = "Get managed instance summaries for public API consumers",
+                    PublicAPIController = null, // implemented manually in SystemController to shape response
+                    ReturnType = $"ICollection<{nameof(ManagedInstanceSummary)}>",
                     Params = new Dictionary<string, string> { },
                     RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList)]
                 },

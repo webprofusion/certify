@@ -1,4 +1,4 @@
-﻿using Certify.Client;
+using Certify.Client;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
@@ -234,6 +234,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResultConfig> BulkTagOperation(BulkTagOperationRequest request, AuthContext authContext = null) => _tagController(authContext).BulkTagOperation(request);
         public Task<ScopePreviewResult> PreviewTagScope(ScopePreviewRequest request, AuthContext authContext = null) => _tagController(authContext).PreviewTagScope(request);
         public Task<ActionResultConfig> QueueAllStatusReports(AuthContext authContext = null) => throw new NotImplementedException();
+        public Task<ICollection<ManagedInstanceSummary>> GetPublicManagedInstances(AuthContext authContext) => throw new NotImplementedException();
 #pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
     }

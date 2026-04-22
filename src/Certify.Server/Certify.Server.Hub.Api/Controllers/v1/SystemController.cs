@@ -1,6 +1,6 @@
 ﻿using System.Net;
-using System.Text;
 using System.Security.Claims;
+using System.Text;
 using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -98,6 +98,70 @@ namespace Certify.Server.Hub.Api.Controllers
 #endif
 
             return new OkObjectResult(health);
+        }
+
+        /// <summary>
+        /// Get managed instance summaries for public API consumers.
+        /// </summary>
+        [HttpGet]
+        [Route("/api/v1/hub/instances")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ICollection<ManagedInstanceSummary>))]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetPublicManagedInstances()
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            var instances = await _client.GetHubManagedInstances(CurrentAuthContext);
+            var connectedInstances = _mgmtAPI.GetConnectedInstances();
+            var categories = await _client.GetTagCategories(CurrentAuthContext);
+            var categoriesByKey = categories?.ToDictionary(c => c.CategoryKey, c => c) ?? new Dictionary<string, TagCategory>();
+            var allItemTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedInstance, null, CurrentAuthContext);
+            var tagsByInstanceId = allItemTags?
+                .GroupBy(t => t.TaggedItemId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t =>
+                    {
+                        categoriesByKey.TryGetValue(t.CategoryKey, out var category);
+
+                        return new Tag
+                        {
+                            CategoryKey = t.CategoryKey,
+                            Value = t.Value
+                        };
+                    }).ToList())
+                ?? new Dictionary<string, List<Tag>>();
+
+            var summaries = instances
+                .Select(instance =>
+                {
+                    var connected = connectedInstances.FirstOrDefault(c => c.InstanceId == instance.InstanceId);
+                    var effective = connected ?? instance;
+                    var tags = tagsByInstanceId.TryGetValue(instance.Id, out var instanceTags) ? instanceTags : [];
+
+                    return new ManagedInstanceSummary
+                    {
+                        Id = instance.InstanceId,
+                        DisplayTitle = instance.DisplayTitle,
+                        Description = instance.Description,
+                        OS = effective.OS,
+                        OSVersion = effective.OSVersion,
+                        ClientName = effective.ClientName,
+                        ClientVersion = effective.ClientVersion,
+                        Tags = tags,
+                        DateLastReported = effective.DateLastReported
+                    };
+                })
+                .OrderBy(i => i.DisplayTitle)
+                .ToList();
+
+            return new OkObjectResult(summaries);
         }
 
         /// <summary>
