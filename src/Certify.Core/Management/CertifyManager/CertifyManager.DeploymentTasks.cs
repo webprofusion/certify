@@ -74,7 +74,14 @@ namespace Certify.Management
 
             if (taskList == null || !taskList.Any())
             {
-                return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
+                if (!string.IsNullOrWhiteSpace(taskId))
+                {
+                    return new List<ActionStep> { new ActionStep { HasError = true, Description = $"Task Id {taskId} not present so cannot run. Check confgiuration has been saved before running task." } };
+                }
+                else
+                {
+                    return new List<ActionStep> { new ActionStep { HasError = false, Description = "No matching tasks to perform." } };
+                }
             }
 
             var msg = "[Multiple Tasks]";
