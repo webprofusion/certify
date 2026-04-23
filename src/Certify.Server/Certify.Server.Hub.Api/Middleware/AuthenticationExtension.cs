@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -34,6 +34,24 @@ namespace Certify.Server.Hub.Api.Middleware
             {
                 x.RequireHttpsMetadata = true;
                 x.SaveToken = true;
+
+                x.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+
+                        if (!string.IsNullOrWhiteSpace(accessToken)
+                            && (path.StartsWithSegments("/api/internal/status")
+                                || path.StartsWithSegments("/api/internal/managementhub")))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
 
                 x.TokenValidationParameters = new TokenValidationParameters
                 {
