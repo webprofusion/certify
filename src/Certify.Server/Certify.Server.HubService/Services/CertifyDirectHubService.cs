@@ -1,4 +1,4 @@
-using Certify.Client;
+﻿using Certify.Client;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;

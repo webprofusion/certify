@@ -7,10 +7,8 @@
         public static string TnAuthList { get; } = "TNAuthList";
     }
 
-    public class CertIdentifierItem
+    public class CertIdentifierItem : IdentifierItem
     {
-        public string IdentifierType { get; set; } = CertIdentifierType.Dns;
-        public string Value { get; set; } = string.Empty;
         public bool IsAuthorizationPending { get; set; }
         public string Status { get; set; } = string.Empty;
 
@@ -21,16 +19,30 @@
 
         public CertIdentifierItem() { }
 
-        public CertIdentifierItem(string type, string domain)
-        {
-            IdentifierType = type;
-            Value = domain;
-        }
+        public CertIdentifierItem(string type, string domain) : base(type, domain) { }
 
-        public CertIdentifierItem(string domain)
+        public CertIdentifierItem(string domain) : base(domain) { }
+    }
+
+    public class IdentifierItem
+    {
+        public string IdentifierType { get; set; } = CertIdentifierType.Dns;
+        public string Value { get; set; } = string.Empty;
+        public override string ToString()
+        {
+            return $"{Value}";
+        }
+        public IdentifierItem() { }
+        public IdentifierItem(string domain)
         {
             Value = domain;
             IdentifierType = CertIdentifierType.Dns;
+        }
+
+        public IdentifierItem(string type, string domain)
+        {
+            IdentifierType = type;
+            Value = domain;
         }
     }
 }

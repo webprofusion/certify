@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Certify.Models;
@@ -866,6 +866,20 @@ namespace Certify.SourceGenerators
                         { "taskId", "string" }
                     },
                     RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskExecute)]
+                },
+                new()
+                {
+                    OperationName = "AddManagedCertificate",
+                    OperationMethod = HttpPost,
+                    Comment = "Add or update a managed certificate using a simplified public request model",
+                    UseManagementAPI = true,
+                    PublicAPIController = null, // implemented manually in CertificateController to support custom request mapping
+                    ReturnType = nameof(ManagedCertificateSummary),
+                    Params = new Dictionary<string, string>
+                    {
+                        { "request", nameof(ManagedCertificateAddRequest) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate)]
                 },
                 new()
                 {

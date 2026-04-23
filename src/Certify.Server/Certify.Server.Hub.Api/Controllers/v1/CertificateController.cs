@@ -364,11 +364,100 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Begin the managed certificate request/renewal process for the given managed certificate id (on demand)
+        /// Add a new managed certificate to the given target instance
         /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
+
+        [HttpPost]
+        [Route("/api/v1/certificate")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummary))]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> AddManagedCertificate([FromBody] ManagedCertificateAddRequest request)
+        {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemAdd));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
+            if (request == null)
+            {
+                return Problem(detail: "A request body is required.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            if (string.IsNullOrWhiteSpace(request.InstanceId))
+            {
+                return Problem(detail: "A target instanceId is required.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var targetInstance = await _client.GetHubManagedInstance(request.InstanceId, CurrentAuthContext);
+            if (targetInstance == null)
+            {
+                return Problem(detail: $"Managed instance '{request.InstanceId}' was not found.", statusCode: StatusCodes.Status404NotFound);
+            }
+
+            if (!request.Identifiers?.Any() == true)
+            {
+                return Problem(detail: "At least one domain or IP identifier is required.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            var managedCertificate = new ManagedCertificate
+            {
+                Id = Guid.NewGuid().ToString(),
+                InstanceId = request.InstanceId,
+                IncludeInAutoRenew = true,
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            managedCertificate.InstanceId = request.InstanceId;
+            managedCertificate.ItemType = ManagedCertificateType.SSL_ACME;
+
+            managedCertificate.Name = !string.IsNullOrWhiteSpace(request.Title)
+                ? request.Title.Trim()
+                : managedCertificate.Name.WithDefault(request.Identifiers.FirstOrDefault()?.ToString() ?? "<no title>");
+
+            managedCertificate.RequestConfig ??= new CertRequestConfig();
+            managedCertificate.RequestConfig.PrimaryDomain = request.Identifiers.FirstOrDefault(i => i.IdentifierType == CertIdentifierType.Dns)?.Value?.Trim();
+            managedCertificate.RequestConfig.SubjectAlternativeNames = [.. NormalizeIdentifierValues(request.Identifiers.Where(i => i.IdentifierType == CertIdentifierType.Dns).Select(i => i.Value).ToArray())];
+            managedCertificate.RequestConfig.SubjectIPAddresses = [.. NormalizeIdentifierValues(request.Identifiers.Where(i => i.IdentifierType == CertIdentifierType.Ip).Select(i => i.Value).ToArray())];
+            managedCertificate.RequestConfig.Challenges =
+            [
+                new CertRequestChallengeConfig { ChallengeProvider = "DNS01.API.CertifyManaged", ChallengeType = "dns-01", Parameters = [] },
+            ];
+
+            managedCertificate.UseStagingMode = false;
+
+            // populate domain options with defaults from instance if not set in request
+
+            managedCertificate.DomainOptions = [];
+            foreach (var identifier in request.Identifiers)
+            {
+                var domainOption = new DomainOption
+                {
+                    Type = identifier.IdentifierType,
+                    Domain = identifier.Value,
+                    IsManualEntry = true,
+                    IsSelected = true
+                };
+                managedCertificate.DomainOptions.Add(domainOption);
+            }
+
+            var updated = await _mgmtAPI.UpdateManagedCertificate(request.InstanceId, managedCertificate, CurrentAuthContext);
+            if (updated == null)
+            {
+                return Problem(detail: "The managed certificate could not be created or updated.", statusCode: StatusCodes.Status400BadRequest);
+            }
+
+            if (request.PerformRequest)
+            {
+                await _mgmtAPI.PerformManagedCertificateRequest(request.InstanceId, updated.Id, CurrentAuthContext);
+            }
+
+            return new OkObjectResult(ToManagedCertificateSummary(updated, targetInstance));
+        }
+
         [HttpPost]
         [Route("order")]
         [AuthorizedApi]
@@ -452,6 +541,39 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 return new BadRequestResult();
             }
+        }
+
+        private static List<string> NormalizeIdentifierValues(ICollection<string>? values)
+        {
+            return values?
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
+        }
+
+        private static ManagedCertificateSummary ToManagedCertificateSummary(ManagedCertificate item, ManagedInstanceInfo? instance)
+        {
+            var identifiers = item.GetCertificateIdentifiers();
+
+            return new ManagedCertificateSummary
+            {
+                InstanceId = item.InstanceId ?? string.Empty,
+                InstanceTitle = instance?.DisplayTitle ?? instance?.Title ?? string.Empty,
+                OS = instance?.OS ?? string.Empty,
+                ClientDetails = instance != null ? $"{instance.ClientName} {instance.ClientVersion}".Trim() : string.Empty,
+                Id = item.Id ?? string.Empty,
+                Title = item.Name ?? string.Empty,
+                PrimaryIdentifier = identifiers.FirstOrDefault(p => p.Value == item.RequestConfig.PrimaryDomain) ?? identifiers.FirstOrDefault(),
+                Identifiers = identifiers,
+                DateRenewed = item.DateRenewed,
+                DateExpiry = item.DateExpiry,
+                DateRetrieved = item.DateRetrieved,
+                Status = item.Health.ToString(),
+                Comments = item.Comments ?? string.Empty,
+                HasCertificate = !string.IsNullOrEmpty(item.CertificatePath),
+                IsExternallyManaged = item.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+            };
         }
     }
 }
