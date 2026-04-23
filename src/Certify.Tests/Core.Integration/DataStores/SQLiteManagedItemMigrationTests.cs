@@ -21,17 +21,23 @@ namespace Certify.Core.Tests.DataStores
         {
             var testCert = BuildTestManagedCertificate();
             testCert.Name = "LegacySqliteSchemaBackup_" + Guid.NewGuid().ToString("N");
+            var secondTestCert = BuildTestManagedCertificate();
+            secondTestCert.Name = "LegacySqliteSchemaBackup_" + Guid.NewGuid().ToString("N");
 
             var storageSubfolder = Path.Combine(TEST_PATH, $"SQLiteMigrationBackup_{Guid.NewGuid():N}");
             var appDataPath = EnvironmentUtil.EnsuredAppDataPath(storageSubfolder);
             var dbPath = Path.Combine(appDataPath, $"{SQLiteStoreBase.ITEMMANAGERCONFIG}.db");
             var backupPath = $"{dbPath}.old";
             var legacyJson = JsonConvert.SerializeObject(testCert);
+            var secondLegacyJson = JsonConvert.SerializeObject(secondTestCert);
 
             try
             {
                 await InitializeLegacySqliteSchema(dbPath);
                 await InsertLegacySqliteManagedItem(dbPath, testCert, legacyJson);
+                await InsertLegacySqliteManagedItem(dbPath, secondTestCert, secondLegacyJson);
+
+                var originalRowCount = await GetSqliteManagedItemRowCount(dbPath);
 
                 var legacyColumns = await GetSqliteColumns(dbPath);
                 Assert.IsTrue(legacyColumns.Contains("json"), "Legacy sqlite schema should start with json column only.");
@@ -51,6 +57,7 @@ namespace Certify.Core.Tests.DataStores
                 Assert.IsTrue(migratedColumns.Contains("itemtype"), "Migrated sqlite schema should include itemtype column.");
                 Assert.IsTrue(migratedColumns.Contains("itemvalue"), "Migrated sqlite schema should include itemvalue column.");
                 Assert.IsFalse(migratedColumns.Contains("json"), "Migrated sqlite schema should no longer expose json column.");
+                Assert.AreEqual(originalRowCount, await GetSqliteManagedItemRowCount(dbPath), "Migrated sqlite schema should preserve the original row count.");
 
                 var backupColumns = await GetSqliteColumns(backupPath);
                 Assert.IsTrue(backupColumns.Contains("json"), "Permanent backup should preserve the legacy json column.");
@@ -165,6 +172,15 @@ namespace Certify.Core.Tests.DataStores
             cmd.Parameters.Add(new SqliteParameter("@id", id));
 
             return (string)await cmd.ExecuteScalarAsync();
+        }
+
+        private static async Task<long> GetSqliteManagedItemRowCount(string dbPath)
+        {
+            await using var conn = new SqliteConnection($"Data Source={dbPath}");
+            await conn.OpenAsync();
+            await using var cmd = new SqliteCommand("SELECT COUNT(1) FROM manageditem", conn);
+
+            return Convert.ToInt64(await cmd.ExecuteScalarAsync());
         }
     }
 }
