@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Runspaces;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
@@ -19,12 +20,20 @@ namespace Certify.Management
 {
     /// <summary>
     /// PowerShell script execution manager. 
-    /// Manage the execution of PowerShell scripts, either in-process or by launching a new process.
+        /// Manage the execution of PowerShell scripts, either in-process or by launching a new process.
+        /// When launching a separate process, script parameters are marshalled via a temporary encoded payload file
+        /// so secrets are not exposed on the process command line.
     /// </summary>
     public class PowerShellManager
     {
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
+
+        private sealed class PowerShellProcessPayload
+        {
+            public object Result { get; set; }
+            public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Run a PowerShell script, either in-process or by launching a new process.
@@ -58,6 +67,19 @@ namespace Certify.Management
 
             try
             {
+                if (credentials?.Any() == true)
+                {
+                    if (!HasCredentialValue(credentials, "username") || !HasCredentialValue(credentials, "password"))
+                    {
+                        return new ActionResult("Command with Windows Credentials requires username and password.", false);
+                    }
+
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        return new ActionResult("Command with Windows Credentials is only supported on Windows.", false);
+                    }
+                }
+
                 // argument check for script file existence and .ps1 extension
                 FileInfo scriptInfo = null;
                 if (scriptContent == null)
@@ -158,6 +180,11 @@ namespace Certify.Management
             }
         }
 
+        private static bool HasCredentialValue(Dictionary<string, string> credentials, string key)
+        {
+            return credentials.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value);
+        }
+
         private static LogonType GetLogonType(string logonType)
         {
             return logonType?.ToLower() switch
@@ -222,11 +249,11 @@ namespace Certify.Management
                 return new ActionResult("Script content is not yet supported when used with launch as new process.", false);
             }
 
-            var resultObj = parameters?.Where(p => p.Key == "result" && p.Value != null).FirstOrDefault().Value;
-            var resultJson = resultObj != null ? Newtonsoft.Json.JsonConvert.SerializeObject(resultObj) : null;
+            var resultObj = result ?? parameters?.Where(p => p.Key == "result" && p.Value != null).FirstOrDefault().Value;
+            var payloadParameters = BuildProcessPayloadParameters(parameters, autoConvertBoolean);
 
-            var resultsJsonTempPath = string.Empty;
-            var resultsJsonExported = false;
+            string payloadTempPath = null;
+            string wrapperScriptTempPath = null;
 
             var appBasePath = AppContext.BaseDirectory;
 
@@ -234,34 +261,46 @@ namespace Certify.Management
             var wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
+            var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials) : null;
 
             if (isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // The impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it. They will also need to be able to read the users supplied target script (not addressed here).
-                // If the Results object is also being used we write that to a temp file and set the ACL to allow read by the impersonating user.
 
                 try
                 {
-                    var username = GetWindowsCredentialsUsername(credentials);
-
-                    var wrapperTempPath = Path.GetTempPath();
                     var wrapperTempFilePath = Path.GetTempFileName();
                     wrapperScriptPath = Path.ChangeExtension(wrapperTempFilePath, ".ps1");
+                    wrapperScriptTempPath = wrapperScriptPath;
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
-                    await ApplyFileACL(wrapperScriptPath, username);
-
-                    resultsJsonTempPath = Path.GetTempFileName();
-                    File.WriteAllText(resultsJsonTempPath, resultJson);
-                    await ApplyFileACL(resultsJsonTempPath, username);
-
-                    resultsJsonExported = true;
+                    await EnsureSecureTempFileAccess(wrapperScriptPath, executingUsername, allowExecute: true);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    var err = "A command with Windows Credentials requires a correct username and password. Check credentials.";
+                    var err = $"Failed to prepare the secure PowerShell wrapper for alternate credentials. {ex.Message}";
 
                     return new ActionResult(err, false);
                 }
+            }
+
+            try
+            {
+                if (resultObj != null || payloadParameters.Any())
+                {
+                    var payload = new PowerShellProcessPayload
+                    {
+                        Result = resultObj,
+                        Parameters = payloadParameters
+                    };
+
+                    payloadTempPath = CreateSecureTempFilePath(".dat");
+                    File.WriteAllText(payloadTempPath, EncodePayload(payload), new UTF8Encoding(false));
+                    await EnsureSecureTempFileAccess(payloadTempPath, executingUsername);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ActionResult($"Failed to prepare the secure PowerShell handoff payload. {ex.Message}", false);
             }
 
             var arguments = $" -File \"{wrapperScriptPath}\"";
@@ -278,30 +317,9 @@ namespace Certify.Management
 
             arguments += $" -scriptFile \"{scriptFile}\"";
 
-            if (parameters?.Any() == true)
+            if (!string.IsNullOrWhiteSpace(payloadTempPath))
             {
-                foreach (var p in parameters)
-                {
-                    if (p.Key == "result" && p.Value != null)
-                    {
-                        if (!resultsJsonExported)
-                        {   // if results file not already exported for the impersonated user export now
-
-                            // "result" is reserved parameter name for the ManagedCertificate object
-                            var json = Newtonsoft.Json.JsonConvert.SerializeObject(p.Value);
-
-                            resultsJsonTempPath = Path.GetTempFileName();
-                            File.WriteAllText(resultsJsonTempPath, json);
-                            resultsJsonExported = true;
-                        }
-
-                        arguments += $" -resultJsonFile \"{resultsJsonTempPath}\"";
-                    }
-                    else
-                    {
-                        arguments = arguments += $" -{p.Key}{(p.Value != null ? " " + p.Value : "")}";
-                    }
-                }
+                arguments += $" -payloadFile \"{payloadTempPath}\"";
             }
 
             var scriptProcessInfo = new ProcessStartInfo()
@@ -349,7 +367,7 @@ namespace Certify.Management
 
                     scriptProcessInfo.Password = sPwd;
 
-                    _log.AppendLine($"Launching Process {commandExe} as User: {domain}\\{username}");
+                    _log.AppendLine($"Launching Process {commandExe} using alternate Windows credentials.");
                 }
                 else
                 {
@@ -399,10 +417,29 @@ namespace Certify.Management
 
                 if (!process.HasExited)
                 {
-                    //process still running, kill task
-                    process.CloseMainWindow();
+                    // process still running, attempt graceful termination then force kill if required
+                    try
+                    {
+                        process.CloseMainWindow();
+                    }
+                    catch
+                    {
+                    }
 
-                    _log.AppendLine("Warning: Script ran but took too long to exit and was closed.");
+                    try
+                    {
+                        if (!process.WaitForExit(5000))
+                        {
+                            process.Kill();
+                            process.WaitForExit(5000);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.AppendLine($"Warning: Timed out PowerShell process could not be terminated cleanly. {ex.Message}");
+                    }
+
+                    _log.AppendLine("Warning: Script ran but took too long to exit and was terminated.");
                     return new ActionResult { IsSuccess = false, Message = _log.ToString() };
                 }
                 else if (process.ExitCode != 0)
@@ -426,29 +463,132 @@ namespace Certify.Management
             finally
             {
 
-                // cleanup temp json
-                if (resultsJsonTempPath != null)
+                if (!string.IsNullOrWhiteSpace(payloadTempPath))
                 {
                     try
                     {
-                        File.Delete(resultsJsonTempPath);
+                        File.Delete(payloadTempPath);
                     }
                     catch
                     {
-                        _log.AppendLine("Running Powershell As New Process: Could not delete temp results file.");
+                        _log.AppendLine("Running Powershell As New Process: Could not delete secure payload file.");
+                    }
+                }
+
+                if (!string.IsNullOrWhiteSpace(wrapperScriptTempPath))
+                {
+                    try
+                    {
+                        File.Delete(wrapperScriptTempPath);
+                    }
+                    catch
+                    {
+                        _log.AppendLine("Running Powershell As New Process: Could not delete temp wrapper script.");
                     }
                 }
             }
         }
 
-        private static async Task<bool> ApplyFileACL(string filePath, string fullUsername)
+        private static Dictionary<string, object> BuildProcessPayloadParameters(Dictionary<string, object> parameters, bool autoConvertBoolean)
+        {
+            var payloadParameters = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+            if (parameters == null)
+            {
+                return payloadParameters;
+            }
+
+            foreach (var parameter in parameters)
+            {
+                if (parameter.Key.Equals("result", StringComparison.OrdinalIgnoreCase)
+                    || parameter.Key.Equals("executionpolicy", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                var value = parameter.Value;
+
+                if (autoConvertBoolean && value is string stringValue)
+                {
+                    if (stringValue.Equals("true", StringComparison.OrdinalIgnoreCase))
+                    {
+                        value = true;
+                    }
+                    else if (stringValue.Equals("false", StringComparison.OrdinalIgnoreCase))
+                    {
+                        value = false;
+                    }
+                }
+
+                payloadParameters[parameter.Key] = value;
+            }
+
+            return payloadParameters;
+        }
+
+        private static string CreateSecureTempFilePath(string extension)
+        {
+            return Path.Combine(Path.GetTempPath(), $"certify-powershell-{Guid.NewGuid():N}{extension}");
+        }
+
+        private static string EncodePayload(PowerShellProcessPayload payload)
+        {
+            var payloadJson = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(payloadJson));
+        }
+
+        private static async Task EnsureSecureTempFileAccess(string filePath, string fullUsername, bool allowExecute = false)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (!string.IsNullOrWhiteSpace(fullUsername) && !await ApplyFileACL(filePath, fullUsername, allowExecute))
+                {
+                    throw new InvalidOperationException($"Could not apply secure access controls to '{filePath}'.");
+                }
+            }
+            else
+            {
+                TrySetRestrictedUnixFileMode(filePath, allowExecute);
+            }
+        }
+
+        private static bool TrySetRestrictedUnixFileMode(string filePath, bool allowExecute)
+        {
+            try
+            {
+                var setUnixFileModeMethod = typeof(File).GetMethods(BindingFlags.Public | BindingFlags.Static)
+                    .FirstOrDefault(m => m.Name == "SetUnixFileMode" && m.GetParameters().Length == 2 && m.GetParameters()[0].ParameterType == typeof(string));
+
+                if (setUnixFileModeMethod == null)
+                {
+                    return false;
+                }
+
+                var unixFileModeType = setUnixFileModeMethod.GetParameters()[1].ParameterType;
+                var modeNames = allowExecute
+                    ? "UserRead, UserWrite, UserExecute"
+                    : "UserRead, UserWrite";
+                var mode = Enum.Parse(unixFileModeType, modeNames);
+
+                setUnixFileModeMethod.Invoke(null, new[] { filePath, mode });
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static async Task<bool> ApplyFileACL(string filePath, string fullUsername, bool allowExecute = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 var fileInfo = new FileInfo(filePath);
                 var accessControl = fileInfo.GetAccessControl();
 
-                accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, AccessControlType.Allow));
+                var fileRights = allowExecute ? FileSystemRights.ReadAndExecute : FileSystemRights.Read;
+                accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, fileRights, AccessControlType.Allow));
 
                 try
                 {
@@ -595,6 +735,18 @@ namespace Certify.Management
                         output.AppendLine($"Timeout waiting for powershell to complete ({currentWait}s)");
                         errors.Add($"Script did not complete in the required time. ({maxWait}s)");
                         timeoutOccurred = true;
+                    }
+                }
+
+                if (timeoutOccurred)
+                {
+                    try
+                    {
+                        shell.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        output.AppendLine($"Warning: Failed to stop timed out powershell task cleanly. {ex.Message}");
                     }
                 }
 

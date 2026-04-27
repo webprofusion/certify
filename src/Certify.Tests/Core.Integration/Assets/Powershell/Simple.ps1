@@ -1,7 +1,7 @@
 
 # Logs results to the given path (modify as required)
 
-param($result)  
+param($result, $message, [bool]$flag)  
 $logfile = "TestPSOutput.txt"
 $logdir = "C:\Temp\Certify\TestOutput\"
 $logpath = $logdir+$logfile
@@ -17,4 +17,6 @@ $date = Get-Date
 Add-Content $logpath ("-------------------------------------------------");
 Add-Content $logpath ("Script Run Date: " + $date)
 Add-Content $logpath ($result | ConvertTo-Json)
+Add-Content $logpath ("Message: " + $message)
+Add-Content $logpath ("Flag: " + $flag)
 
