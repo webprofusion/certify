@@ -361,7 +361,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationManagedItemRequestProgress && result.Value != null)
                 {
-                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions));
+                    var progressState = System.Text.Json.JsonSerializer.Deserialize<RequestProgressState>(result.Value, JsonOptions.DefaultJsonSerializerOptions);
+                    if (progressState?.ManagedCertificate != null)
+                    {
+                        progressState.ManagedCertificate.InstanceId = instanceId;
+                    }
+
+                    await _uiStatusHub.Clients.All.SendAsync(StatusHubMessages.SendProgressStateMsg, progressState);
                 }
                 else if (result.CommandType == ManagementHubCommands.NotificationRemovedManagedItem && result.Value != null)
                 {
