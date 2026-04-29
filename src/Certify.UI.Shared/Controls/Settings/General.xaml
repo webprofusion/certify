@@ -450,6 +450,7 @@
                                 SmallChange="0.1"
                                 Maximum="2"
                                 Minimum="1"
+                                MaxDecimalPlaces="1"
                                 Value="{Binding MainViewModel.UIScaleFactor}" />
 
                         </StackPanel>
