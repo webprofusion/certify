@@ -10,6 +10,9 @@
     Width="522"
     Height="276"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterOwner"
@@ -18,97 +21,108 @@
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
 
-    <DockPanel
-        Margin="8,0,0,0"
-        DataContext="{Binding Model}"
-        LastChildFill="False">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel
+            Margin="8,0,0,0"
+            DataContext="{Binding Model}"
+            LastChildFill="False">
 
-        <TextBlock
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="Before adding a data store you must create or restore a compatible database schema on the database server. See the documentation site for more details." /><LineBreak /><Run /></TextBlock>
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                Content="Title" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
+            <TextBlock
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                PlaceholderText="e.g. A display name, e.g. SQL Server on SRV01 etc "
-                Text="{Binding Item.Title}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Content="Data Store Type" />
-            <ComboBox
-                x:Name="ProviderTypes"
-                MinWidth="200"
-                VerticalAlignment="Top"
-                DisplayMemberPath="Title"
-                ItemsSource="{Binding DataStoreProviders}"
-                SelectedValue="{Binding Item.TypeId, Mode=TwoWay}"
-                SelectedValuePath="ProviderCategoryId" />
-        </StackPanel>
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                TextWrapping="Wrap"><Run Text="Before adding a data store you must create or restore a compatible database schema on the database server. See the documentation site for more details." /><LineBreak /><Run /></TextBlock>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    Content="Title" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="e.g. A display name, e.g. SQL Server on SRV01 etc "
+                    Text="{Binding Item.Title}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="Data Store Type" />
+                <ComboBox
+                    x:Name="ProviderTypes"
+                    MinWidth="200"
+                    VerticalAlignment="Top"
+                    DisplayMemberPath="Title"
+                    ItemsSource="{Binding DataStoreProviders}"
+                    SelectedValue="{Binding Item.TypeId, Mode=TwoWay}"
+                    SelectedValuePath="ProviderCategoryId" />
+            </StackPanel>
 
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                Content="Connection String" />
-            <ui:TextBox
-                Width="300"
-                Height="42"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="e.g. a database connection string"
-                Text="{Binding Item.ConnectionConfig}"
-                TextWrapping="Wrap"
-                VerticalScrollBarVisibility="Auto" />
-        </StackPanel>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    Content="Connection String" />
+                <ui:TextBox
+                    Width="300"
+                    Height="42"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="e.g. a database connection string"
+                    Text="{Binding Item.ConnectionConfig}"
+                    TextWrapping="Wrap"
+                    VerticalScrollBarVisibility="Auto" />
+            </StackPanel>
 
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Bottom"
-            Orientation="Horizontal">
-            <Button
-                x:Name="Save"
-                Width="100"
-                Margin="12,0,0,0"
-                Click="Save_Click"
-                Content="{x:Static res:SR.Save}" />
-            <Button
-                x:Name="Test"
-                Width="100"
-                Margin="12,0,0,0"
-                Click="Test_Click"
-                Content="{x:Static res:SR.Test}" />
-            <Button
-                x:Name="Cancel"
-                Width="100"
-                Margin="170,0,0,0"
-                Click="Cancel_Click"
-                Content="{x:Static res:SR.Cancel}" />
-        </StackPanel>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    x:Name="Save"
+                    Width="100"
+                    Margin="12,0,0,0"
+                    Click="Save_Click"
+                    Content="{x:Static res:SR.Save}" />
+                <Button
+                    x:Name="Test"
+                    Width="100"
+                    Margin="12,0,0,0"
+                    Click="Test_Click"
+                    Content="{x:Static res:SR.Test}" />
+                <Button
+                    x:Name="Cancel"
+                    Width="100"
+                    Margin="170,0,0,0"
+                    Click="Cancel_Click"
+                    Content="{x:Static res:SR.Cancel}" />
+            </StackPanel>
 
-    </DockPanel>
+        </DockPanel>
 
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

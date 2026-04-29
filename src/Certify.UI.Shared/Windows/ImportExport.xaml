@@ -10,113 +10,127 @@
     Width="800"
     Height="740"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
 
-    <DockPanel Margin="16" LastChildFill="true">
-        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-            <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Import/Export Settings</TextBlock>
-            <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">"{x:Static properties:SR.Settings_Export_Intro}"</TextBlock>
-            <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">To import or export, you should specify a password to use for encryption/decryption:</TextBlock>
-            <PasswordBox
-                x:Name="txtSecret"
-                Width="200"
-                HorizontalAlignment="Left"
-                 />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel Margin="16" LastChildFill="true">
+            <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Import/Export Settings</TextBlock>
+                <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">"{x:Static properties:SR.Settings_Export_Intro}"</TextBlock>
+                <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">To import or export, you should specify a password to use for encryption/decryption:</TextBlock>
+                <PasswordBox
+                    x:Name="txtSecret"
+                    Width="200"
+                    HorizontalAlignment="Left"
+                     />
 
-        </StackPanel>
+            </StackPanel>
 
-        <TabControl
-            x:Name="GeneralSettingsTab"
-            Height="auto"
-            Margin="0,8,0,0"
-            HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Stretch"
-            DockPanel.Dock="Top"
-            TabStripPlacement="Top">
-            <TabItem
-                Height="32"
-                MinWidth="140"
-                Header="Export Settings"
-                IsSelected="true">
-                <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Export a settings bundle including managed certificate settings, certificate files and encrypted credentials.</TextBlock>
-                    <Button
-                        x:Name="Export"
-                        Width="120"
-                        HorizontalAlignment="Left"
-                        Click="Export_Click"
-                        DockPanel.Dock="Top">
-                        Export..
-                    </Button>
-                </StackPanel>
-            </TabItem>
-            <TabItem
-                Height="32"
-                MinWidth="140"
-                Header="Import Settings">
-                <StackPanel Margin="0,16,0,0" Orientation="Vertical">
-                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
-                    <CheckBox
-                        x:Name="OverwriteExisting"
-                        Margin="0,4,4,4"
-                        Content="Overwrite Existing"
-                        DockPanel.Dock="Top" />
-                    <CheckBox
-                        x:Name="IncludeDeployment"
-                        Margin="0,4,4,4"
-                        Content="Include Standard Certificate Storage and Auto Deployment"
-                        DockPanel.Dock="Top"
-                        IsChecked="True" />
-                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+            <TabControl
+                x:Name="GeneralSettingsTab"
+                Height="auto"
+                Margin="0,8,0,0"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                DockPanel.Dock="Top"
+                TabStripPlacement="Top">
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Header="Export Settings"
+                    IsSelected="true">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Export a settings bundle including managed certificate settings, certificate files and encrypted credentials.</TextBlock>
                         <Button
-                            x:Name="Import"
+                            x:Name="Export"
                             Width="120"
                             HorizontalAlignment="Left"
-                            Click="Import_Click"
+                            Click="Export_Click"
                             DockPanel.Dock="Top">
-                            Preview Import..
-                        </Button>
-
-
-                        <Button
-                            x:Name="CompleteImport"
-                            Width="120"
-                            Margin="16,0,0,0"
-                            HorizontalAlignment="Left"
-                            Click="CompleteImport_Click"
-                            DockPanel.Dock="Bottom"
-                            Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                            Complete Import
+                            Export..
                         </Button>
                     </StackPanel>
-
-                    <ProgressBar
-                        Width="250"
-                        Height="32"
-                        Margin="4"
-                        HorizontalAlignment="Left"
-                        DockPanel.Dock="Top"
-                        IsIndeterminate="True"
-                        Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
-
-                    <DockPanel
-                        DockPanel.Dock="Top"
-                        LastChildFill="False"
-                        Visibility="{Binding IsPreviewReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-
-
-                        <WebBrowser
-                            x:Name="MarkdownView"
-                            Margin="0,16,0,0"
+                </TabItem>
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Header="Import Settings">
+                    <StackPanel Margin="0,16,0,0" Orientation="Vertical">
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
+                        <CheckBox
+                            x:Name="OverwriteExisting"
+                            Margin="0,4,4,4"
+                            Content="Overwrite Existing"
                             DockPanel.Dock="Top" />
+                        <CheckBox
+                            x:Name="IncludeDeployment"
+                            Margin="0,4,4,4"
+                            Content="Include Standard Certificate Storage and Auto Deployment"
+                            DockPanel.Dock="Top"
+                            IsChecked="True" />
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <Button
+                                x:Name="Import"
+                                Width="120"
+                                HorizontalAlignment="Left"
+                                Click="Import_Click"
+                                DockPanel.Dock="Top">
+                                Preview Import..
+                            </Button>
 
-                    </DockPanel>
 
-                </StackPanel>
-            </TabItem>
-        </TabControl>
+                            <Button
+                                x:Name="CompleteImport"
+                                Width="120"
+                                Margin="16,0,0,0"
+                                HorizontalAlignment="Left"
+                                Click="CompleteImport_Click"
+                                DockPanel.Dock="Bottom"
+                                Visibility="{Binding IsImportReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                                Complete Import
+                            </Button>
+                        </StackPanel>
+
+                        <ProgressBar
+                            Width="250"
+                            Height="32"
+                            Margin="4"
+                            HorizontalAlignment="Left"
+                            DockPanel.Dock="Top"
+                            IsIndeterminate="True"
+                            Visibility="{Binding InProgress, Converter={StaticResource ResourceKey=BoolToVisConverter}}" />
+
+                        <DockPanel
+                            DockPanel.Dock="Top"
+                            LastChildFill="False"
+                            Visibility="{Binding IsPreviewReady, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
 
-    </DockPanel>
+                            <WebBrowser
+                                x:Name="MarkdownView"
+                                Margin="0,16,0,0"
+                                DockPanel.Dock="Top" />
+
+                        </DockPanel>
+
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+
+
+        </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

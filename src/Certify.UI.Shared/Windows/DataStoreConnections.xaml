@@ -12,194 +12,208 @@
     Width="450"
     Height="390"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    WindowBackdropType="Mica"
+    ExtendsContentIntoTitleBar="True"
     Closing="MetroWindow_Closing"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
 
 
-    <DockPanel Margin="8" LastChildFill="False">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel Margin="8" LastChildFill="False">
 
-        <TextBlock
-            DockPanel.Dock="Top"
-            Style="{StaticResource SubheadingWithMargin}"
-            Text="Manage Data Stores" />
-        <TextBlock
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            Text="The system can be connected to one data store at a time and you can select the default store here. You can also manage connections for data stores and migrate data between them. " />
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
             <TextBlock
-                Margin="0,0,4,4"
-                FontWeight="SemiBold"
-                Text="Current Data Store:" />
-            <TextBlock FontWeight="SemiBold" Text="{Binding Path=DefaultStore.Title}" />
-        </StackPanel>
-        <TabControl
-            x:Name="GeneralSettingsTab"
-            Height="auto"
-            Margin="0,0,0,0"
-            HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Stretch"
-            DockPanel.Dock="Top"
-            TabStripPlacement="Top">
-            <TabItem
-                Height="32"
-                MinWidth="140"
-                Header="Managed Data Stores"
-                IsSelected="true">
-                <DockPanel Margin="8" LastChildFill="False">
-                    <StackPanel DockPanel.Dock="Top">
-                        <Button Click="AddConnection_Click">Add Data Store</Button>
-                    </StackPanel>
+                DockPanel.Dock="Top"
+                Style="{StaticResource SubheadingWithMargin}"
+                Text="Manage Data Stores" />
+            <TextBlock
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                Text="The system can be connected to one data store at a time and you can select the default store here. You can also manage connections for data stores and migrate data between them. " />
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <TextBlock
+                    Margin="0,0,4,4"
+                    FontWeight="SemiBold"
+                    Text="Current Data Store:" />
+                <TextBlock FontWeight="SemiBold" Text="{Binding Path=DefaultStore.Title}" />
+            </StackPanel>
+            <TabControl
+                x:Name="GeneralSettingsTab"
+                Height="auto"
+                Margin="0,0,0,0"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                DockPanel.Dock="Top"
+                TabStripPlacement="Top">
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Header="Managed Data Stores"
+                    IsSelected="true">
+                    <DockPanel Margin="8" LastChildFill="False">
+                        <StackPanel DockPanel.Dock="Top">
+                            <Button Click="AddConnection_Click">Add Data Store</Button>
+                        </StackPanel>
 
-                    <ScrollViewer HorizontalAlignment="Stretch" DockPanel.Dock="Top">
-                        <ItemsControl x:Name="ConnectionList" Margin="0,16,0,0">
+                        <ScrollViewer HorizontalAlignment="Stretch" DockPanel.Dock="Top">
+                            <ItemsControl x:Name="ConnectionList" Margin="0,16,0,0">
 
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
 
-                                    <Border Margin="4" Padding="4">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="BorderBrush" Value="Transparent" />
-                                                <Setter Property="BorderThickness" Value="1" />
-                                                <Setter Property="CornerRadius" Value="3" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsDefault}" Value="True">
-                                                        <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
-                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <DockPanel>
-                                        <Button
-                                            Height="28"
-                                            Margin="0,0,8,0"
-                                            VerticalAlignment="Center"
-                                            Click="Connect_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Left"
+                                        <Border Margin="4" Padding="4">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="BorderBrush" Value="Transparent" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Setter Property="CornerRadius" Value="3" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsDefault}" Value="True">
+                                                            <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}" />
+                                                            <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <DockPanel>
+                                            <Button
+                                                Height="28"
+                                                Margin="0,0,8,0"
+                                                VerticalAlignment="Center"
+                                                Click="Connect_Click"
+                                                CommandParameter="{Binding}"
+                                                DockPanel.Dock="Left"
                                             
-                                            ToolTip="Select this Data Store">
-                                            <StackPanel Orientation="Horizontal">
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    Icon="Database" />
+                                                ToolTip="Select this Data Store">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <fa:ImageAwesome
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Icon="Database" />
+
+                                                </StackPanel>
+                                            </Button>
+                                            <Button
+                                                Height="28"
+                                                VerticalAlignment="Top"
+                                                Click="Edit_Click"
+                                                CommandParameter="{Binding}"
+                                                DockPanel.Dock="Right">
+                                                <StackPanel Orientation="Horizontal">
+
+                                                    <fa:ImageAwesome
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Bottom"
+                                                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
+                                                        Icon="Edit" />
+
+                                                </StackPanel>
+                                            </Button>
+
+                                            <StackPanel DockPanel.Dock="Left">
+                                                <TextBlock FontWeight="SemiBold" Text="{Binding Path=Title}" />
+
+                                                <StackPanel Orientation="Vertical">
+                                                    <TextBlock
+                                                        DockPanel.Dock="Left"
+                                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                        Text="{Binding Path=TypeId}"
+                                                        TextWrapping="WrapWithOverflow" />
+                                                </StackPanel>
 
                                             </StackPanel>
-                                        </Button>
-                                        <Button
-                                            Height="28"
-                                            VerticalAlignment="Top"
-                                            Click="Edit_Click"
-                                            CommandParameter="{Binding}"
-                                            DockPanel.Dock="Right">
-                                            <StackPanel Orientation="Horizontal">
+                                            </DockPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </TabItem>
+                <TabItem
+                    Height="32"
+                    MinWidth="140"
+                    Header="Migrate Data"
+                    IsSelected="true">
+                    <DockPanel Margin="8" LastChildFill="False">
+                        <StackPanel
+                            Margin="0,8"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="60" Content="Source" />
+                            <ComboBox
+                                x:Name="SourceList"
+                                DisplayMemberPath="Title"
+                                SelectedValue="{Binding MigrationSourceId}"
+                                SelectedValuePath="Id" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,8"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Label Width="60" Content="Target" />
+                            <ComboBox
+                                x:Name="TargetList"
+                                DisplayMemberPath="Title"
+                                SelectedValue="{Binding MigrationTargetId}"
+                                SelectedValuePath="Id" />
+                        </StackPanel>
+                        <StackPanel
+                            Margin="0,8"
+                            DockPanel.Dock="Top"
+                            Orientation="Horizontal">
+                            <Button
+                                Width="160"
+                                Margin="60,0,0,0"
+                                Click="CopyData_Click">
+                                <StackPanel Orientation="Horizontal">
 
-                                                <fa:ImageAwesome
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Bottom"
-                                                    Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                                                    Icon="Edit" />
+                                    <Label>Copy Data to Target</Label>
+                                    <fa:ImageAwesome
+                                        Width="16"
+                                        Margin="4,0,0,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
+                                        Icon="Database" />
 
-                                            </StackPanel>
-                                        </Button>
+                                </StackPanel>
 
-                                        <StackPanel DockPanel.Dock="Left">
-                                            <TextBlock FontWeight="SemiBold" Text="{Binding Path=Title}" />
+                            </Button>
 
-                                            <StackPanel Orientation="Vertical">
-                                                <TextBlock
-                                                    DockPanel.Dock="Left"
-                                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                                    Text="{Binding Path=TypeId}"
-                                                    TextWrapping="WrapWithOverflow" />
-                                            </StackPanel>
+                        </StackPanel>
 
-                                        </StackPanel>
-                                        </DockPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </DockPanel>
-            </TabItem>
-            <TabItem
-                Height="32"
-                MinWidth="140"
-                Header="Migrate Data"
-                IsSelected="true">
-                <DockPanel Margin="8" LastChildFill="False">
-                    <StackPanel
-                        Margin="0,8"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="60" Content="Source" />
-                        <ComboBox
-                            x:Name="SourceList"
-                            DisplayMemberPath="Title"
-                            SelectedValue="{Binding MigrationSourceId}"
-                            SelectedValuePath="Id" />
-                    </StackPanel>
-                    <StackPanel
-                        Margin="0,8"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Label Width="60" Content="Target" />
-                        <ComboBox
-                            x:Name="TargetList"
-                            DisplayMemberPath="Title"
-                            SelectedValue="{Binding MigrationTargetId}"
-                            SelectedValuePath="Id" />
-                    </StackPanel>
-                    <StackPanel
-                        Margin="0,8"
-                        DockPanel.Dock="Top"
-                        Orientation="Horizontal">
-                        <Button
-                            Width="160"
-                            Margin="60,0,0,0"
-                            Click="CopyData_Click">
-                            <StackPanel Orientation="Horizontal">
+                    </DockPanel>
+                </TabItem>
+            </TabControl>
+            <DockPanel
+                DockPanel.Dock="Bottom"
+                LastChildFill="False"
+                Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
-                                <Label>Copy Data to Target</Label>
-                                <fa:ImageAwesome
-                                    Width="16"
-                                    Margin="4,0,0,0"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center"
-                                    Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                                    Icon="Database" />
-
-                            </StackPanel>
-
-                        </Button>
-
-                    </StackPanel>
-
-                </DockPanel>
-            </TabItem>
-        </TabControl>
-        <DockPanel
-            DockPanel.Dock="Bottom"
-            LastChildFill="False"
-            Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-
-            <ProgressBar
-                Width="200"
-                Height="24"
-                HorizontalAlignment="Stretch"
-                DockPanel.Dock="Left"
-                IsIndeterminate="True" />
-            <Button
-                Width="80"
-                Click="Cancel_Click"
-                DockPanel.Dock="Right">
-                Cancel
-            </Button>
+                <ProgressBar
+                    Width="200"
+                    Height="24"
+                    HorizontalAlignment="Stretch"
+                    DockPanel.Dock="Left"
+                    IsIndeterminate="True" />
+                <Button
+                    Width="80"
+                    Click="Cancel_Click"
+                    DockPanel.Dock="Right">
+                    Cancel
+                </Button>
+            </DockPanel>
         </DockPanel>
-    </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

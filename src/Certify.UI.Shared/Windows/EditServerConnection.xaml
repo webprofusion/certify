@@ -12,6 +12,9 @@
     Width="540"
     Height="320"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
@@ -20,113 +23,124 @@
     </ui:FluentWindow.LayoutTransform>
 
 
-    <DockPanel Margin="8,0,0,0" LastChildFill="False">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel Margin="8,0,0,0" LastChildFill="False">
 
 
 
-        <TextBlock
-            Width="472"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="By default a service API will be bound to localhost:9696. Additional service configuration is required for remote connection (bound IP, enabling https, firewall rules etc)." /><LineBreak /><Run /></TextBlock>
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                Content="Connection Name" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
+            <TextBlock
+                Width="472"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Top"
-                PlaceholderText="e.g. Primary Server, WEB01 etc "
-                Text="{Binding Item.DisplayName}"
-                TextWrapping="Wrap" />
-        </StackPanel>
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}"
+                TextWrapping="Wrap"><Run Text="By default a service API will be bound to localhost:9696. Additional service configuration is required for remote connection (bound IP, enabling https, firewall rules etc)." /><LineBreak /><Run /></TextBlock>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    Content="Connection Name" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="e.g. Primary Server, WEB01 etc "
+                    Text="{Binding Item.DisplayName}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
 
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                Content="Hostname or IP" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Text="{Binding Item.Host}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-
-
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top"
-                Content="Port" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="e.g. 9696"
-                Text="{Binding Item.Port}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top"
-                Content="Use Https" />
-            <CheckBox IsChecked="{Binding Item.UseHTTPS}" />
-        </StackPanel>
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top"
-                Content="Allow Untrusted TLS" />
-            <CheckBox IsChecked="{Binding Item.AllowUntrusted}" />
-        </StackPanel>
-
-        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="0,0,8,0"
-                VerticalAlignment="Top"
-                Content="Use as Default" />
-            <CheckBox IsChecked="{Binding Item.IsDefault}" />
-        </StackPanel>
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    Content="Hostname or IP" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Text="{Binding Item.Host}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
 
 
-        <StackPanel
-            Margin="0,0,0,8"
-            DockPanel.Dock="Bottom"
-            Orientation="Horizontal">
-            <Button
-                x:Name="Save"
-                Width="100"
-                Margin="12,0,0,0"
-                Click="Save_Click"
-                Content="{x:Static res:SR.Save}" />
-            <Button
-                x:Name="Cancel"
-                Width="100"
-                Margin="280,0,0,0"
-                Click="Cancel_Click"
-                Content="{x:Static res:SR.Cancel}" />
-        </StackPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Top"
+                    Content="Port" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="e.g. 9696"
+                    Text="{Binding Item.Port}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Top"
+                    Content="Use Https" />
+                <CheckBox IsChecked="{Binding Item.UseHTTPS}" />
+            </StackPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Top"
+                    Content="Allow Untrusted TLS" />
+                <CheckBox IsChecked="{Binding Item.AllowUntrusted}" />
+            </StackPanel>
 
-    </DockPanel>
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="0,0,8,0"
+                    VerticalAlignment="Top"
+                    Content="Use as Default" />
+                <CheckBox IsChecked="{Binding Item.IsDefault}" />
+            </StackPanel>
 
+
+            <StackPanel
+                Margin="0,0,0,8"
+                DockPanel.Dock="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    x:Name="Save"
+                    Width="100"
+                    Margin="12,0,0,0"
+                    Click="Save_Click"
+                    Content="{x:Static res:SR.Save}" />
+                <Button
+                    x:Name="Cancel"
+                    Width="100"
+                    Margin="280,0,0,0"
+                    Click="Cancel_Click"
+                    Content="{x:Static res:SR.Cancel}" />
+            </StackPanel>
+
+        </DockPanel>
+
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

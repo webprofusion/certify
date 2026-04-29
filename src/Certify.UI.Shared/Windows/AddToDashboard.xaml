@@ -11,56 +11,70 @@
     Width="430"
     Height="288"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
-    <StackPanel Margin="16" Orientation="Vertical">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <StackPanel Margin="16" Orientation="Vertical">
 
-        <TextBlock x:Name="IntroText" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
-        <StackPanel>
-            <Label
-                Grid.Row="1"
-                Grid.Column="0"
-                HorizontalAlignment="Left"
-                Content="{x:Static res:SR.RegistrationEmailAddress}" />
-            <ui:TextBox
-                x:Name="EmailAddress"
-                Grid.Row="1"
-                Grid.Column="1"
-                VerticalAlignment="Bottom"
-                Text=""
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel>
-            <Label
-                Grid.Row="2"
-                Grid.Column="0"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                Content="{x:Static res:SR.Password}" />
-            <PasswordBox
-                x:Name="Password"
-                Grid.Row="2"
-                Grid.Column="1" />
-        </StackPanel>
+            <TextBlock x:Name="IntroText" Style="{StaticResource Instructions}"><Run Text="{x:Static res:SR.Dashboard_AddIntro}" /></TextBlock>
+            <StackPanel>
+                <Label
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    HorizontalAlignment="Left"
+                    Content="{x:Static res:SR.RegistrationEmailAddress}" />
+                <ui:TextBox
+                    x:Name="EmailAddress"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    VerticalAlignment="Bottom"
+                    Text=""
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel>
+                <Label
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    Content="{x:Static res:SR.Password}" />
+                <PasswordBox
+                    x:Name="Password"
+                    Grid.Row="2"
+                    Grid.Column="1" />
+            </StackPanel>
 
-        <StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <Button
-                    x:Name="ValidateKey"
-                    MinWidth="60"
-                    Margin="0,0,8,0"
-                    Click="ValidateKey_Click"
-                    Content="{x:Static res:SR.OK}" />
-                <Button
-                    x:Name="Cancel"
-                    HorizontalAlignment="Right"
-                    Click="Cancel_Click"
-                    Content="{x:Static res:SR.Cancel}" />
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Button
+                        x:Name="ValidateKey"
+                        MinWidth="60"
+                        Margin="0,0,8,0"
+                        Click="ValidateKey_Click"
+                        Content="{x:Static res:SR.OK}" />
+                    <Button
+                        x:Name="Cancel"
+                        HorizontalAlignment="Right"
+                        Click="Cancel_Click"
+                        Content="{x:Static res:SR.Cancel}" />
+                </StackPanel>
             </StackPanel>
         </StackPanel>
-    </StackPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

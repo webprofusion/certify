@@ -13,61 +13,75 @@
     MinWidth="300"
     MinHeight="300"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
-    <Grid Margin="0,0,2,6.8">
-        <ui:TextBox
-            x:Name="Comment"
-            Height="111"
-            Margin="13,78,9.8,0"
-            VerticalAlignment="Top"
-            AcceptsReturn="True"
-            AcceptsTab="True"
-            Text=""
-            TextWrapping="Wrap"
-            VerticalScrollBarVisibility="Auto" />
-        <TextBlock
-            x:Name="Prompt"
-            Margin="13,9,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            FontWeight="Bold"
-            TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Tip}" /></TextBlock>
-        <TextBlock
-            Margin="13,58,15.2,0"
-            VerticalAlignment="Top"
-            TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Quest}" /></TextBlock>
-        <Button
-            x:Name="Submit"
-            Width="78"
-            Margin="0,268,9.8,0"
-            HorizontalAlignment="Right"
-            VerticalAlignment="Top"
-            Click="Submit_Click"
-            Content="{x:Static res:SR.Send}" />
-        <Button
-            x:Name="Cancel"
-            Width="75"
-            Margin="10,268,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Click="Cancel_Click"
-            Content="{x:Static res:SR.Cancel}" />
-        <TextBlock
-            Width="268"
-            Margin="13,202,0,0"
-            HorizontalAlignment="Left"
-            VerticalAlignment="Top"
-            Text="{x:Static res:SR.Send_Feedback_Email}"
-            TextWrapping="Wrap" />
-        <ui:TextBox
-            x:Name="EmailAddress"
-            Height="10"
-            Margin="13,223,9.8,0"
-            VerticalAlignment="Top"
-            TextWrapping="Wrap" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <Grid Margin="0,0,2,6.8">
+            <ui:TextBox
+                x:Name="Comment"
+                Height="111"
+                Margin="13,78,9.8,0"
+                VerticalAlignment="Top"
+                AcceptsReturn="True"
+                AcceptsTab="True"
+                Text=""
+                TextWrapping="Wrap"
+                VerticalScrollBarVisibility="Auto" />
+            <TextBlock
+                x:Name="Prompt"
+                Margin="13,9,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                FontWeight="Bold"
+                TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Tip}" /></TextBlock>
+            <TextBlock
+                Margin="13,58,15.2,0"
+                VerticalAlignment="Top"
+                TextWrapping="Wrap"><Run Text="{x:Static res:SR.Send_Feedback_Quest}" /></TextBlock>
+            <Button
+                x:Name="Submit"
+                Width="78"
+                Margin="0,268,9.8,0"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Click="Submit_Click"
+                Content="{x:Static res:SR.Send}" />
+            <Button
+                x:Name="Cancel"
+                Width="75"
+                Margin="10,268,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Click="Cancel_Click"
+                Content="{x:Static res:SR.Cancel}" />
+            <TextBlock
+                Width="268"
+                Margin="13,202,0,0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                Text="{x:Static res:SR.Send_Feedback_Email}"
+                TextWrapping="Wrap" />
+            <ui:TextBox
+                x:Name="EmailAddress"
+                Height="10"
+                Margin="13,223,9.8,0"
+                VerticalAlignment="Top"
+                TextWrapping="Wrap" />
+        </Grid>
+        </ContentControl>
     </Grid>
 </ui:FluentWindow>

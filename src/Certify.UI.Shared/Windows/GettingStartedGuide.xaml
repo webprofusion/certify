@@ -14,9 +14,23 @@
     MinWidth="300"
     MinHeight="300"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
-    <DockPanel>
-        <Controls1:QuickStart />
-    </DockPanel>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel>
+            <Controls1:QuickStart />
+        </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

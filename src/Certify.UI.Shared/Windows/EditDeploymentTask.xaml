@@ -11,39 +11,53 @@
     Width="500"
     Height="460"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
-    <DockPanel LastChildFill="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel LastChildFill="True">
 
 
-        <DockPanel Margin="0,0,24,16" DockPanel.Dock="Bottom">
-            <Button
-                x:Name="Cancel"
-                Width="75"
-                Margin="16,0,0,0"
-                HorizontalAlignment="Right"
+            <DockPanel Margin="0,0,24,16" DockPanel.Dock="Bottom">
+                <Button
+                    x:Name="Cancel"
+                    Width="75"
+                    Margin="16,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="Cancel_Click"
+                    Content="Cancel"
+                    DockPanel.Dock="Right" />
+                <Button
+                    x:Name="Save"
+                    Width="77"
+                    Margin="16,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Click="Save_Click"
+                    Content="OK"
+                    DockPanel.Dock="Right" />
+            </DockPanel>
+            <ManagedCertificate:DeploymentTask
+                x:Name="DeploymentTaskEditor"
+                Margin="8,0,0,0"
                 VerticalAlignment="Top"
-                Click="Cancel_Click"
-                Content="Cancel"
-                DockPanel.Dock="Right" />
-            <Button
-                x:Name="Save"
-                Width="77"
-                Margin="16,0,0,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Click="Save_Click"
-                Content="OK"
-                DockPanel.Dock="Right" />
+                DockPanel.Dock="Top" />
         </DockPanel>
-        <ManagedCertificate:DeploymentTask
-            x:Name="DeploymentTaskEditor"
-            Margin="8,0,0,0"
-            VerticalAlignment="Top"
-            DockPanel.Dock="Top" />
-    </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

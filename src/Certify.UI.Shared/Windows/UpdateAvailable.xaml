@@ -15,63 +15,77 @@
     MinWidth="300"
     MinHeight="300"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    WindowBackdropType="Mica"
+    ExtendsContentIntoTitleBar="True"
     IsVisibleChanged="UserControl_IsVisibleChanged"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
-    <DockPanel Margin="16,16,16,16" LastChildFill="False">
-        <TextBlock
-            x:Name="UpdateMessage"
-            DockPanel.Dock="Top"
-            Style="{StaticResource SubheadingWithMargin}">
-            New Update Available
-        </TextBlock>
-        <TextBlock
-            x:Name="CurrentVersionInfo"
-            DockPanel.Dock="Top"
-            Style="{StaticResource Instructions}">
-            Current installed version:
-        </TextBlock>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel Margin="16,16,16,16" LastChildFill="False">
+            <TextBlock
+                x:Name="UpdateMessage"
+                DockPanel.Dock="Top"
+                Style="{StaticResource SubheadingWithMargin}">
+                New Update Available
+            </TextBlock>
+            <TextBlock
+                x:Name="CurrentVersionInfo"
+                DockPanel.Dock="Top"
+                Style="{StaticResource Instructions}">
+                Current installed version:
+            </TextBlock>
 
-        <WebBrowser
-            x:Name="MarkdownView"
-            Height="260"
-            DockPanel.Dock="Top" />
+            <WebBrowser
+                x:Name="MarkdownView"
+                Height="260"
+                DockPanel.Dock="Top" />
 
-        <DockPanel
-            Height="32"
-            DockPanel.Dock="Bottom"
-            LastChildFill="False">
-            <Button
-                x:Name="Proceed"
-                Click="Proceed_Click"
-                DockPanel.Dock="Right"
-                ToolTip="Download now. You will be prompted to confirm installation after the download completes.">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                        Icon="Download" />
-                    <TextBlock Margin="8,0,0,0">Download</TextBlock>
-                </StackPanel>
-            </Button>
-            <Button
-                x:Name="Cancel"
-                Click="Cancel_Click"
-                DockPanel.Dock="Left"
-                ToolTip="Cancel">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
-                        Icon="ArrowCircleLeft" />
-                    <TextBlock Margin="8,0,0,0">Later</TextBlock>
-                </StackPanel>
-            </Button>
+            <DockPanel
+                Height="32"
+                DockPanel.Dock="Bottom"
+                LastChildFill="False">
+                <Button
+                    x:Name="Proceed"
+                    Click="Proceed_Click"
+                    DockPanel.Dock="Right"
+                    ToolTip="Download now. You will be prompted to confirm installation after the download completes.">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                            Icon="Download" />
+                        <TextBlock Margin="8,0,0,0">Download</TextBlock>
+                    </StackPanel>
+                </Button>
+                <Button
+                    x:Name="Cancel"
+                    Click="Cancel_Click"
+                    DockPanel.Dock="Left"
+                    ToolTip="Cancel">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
+                            Icon="ArrowCircleLeft" />
+                        <TextBlock Margin="8,0,0,0">Later</TextBlock>
+                    </StackPanel>
+                </Button>
+            </DockPanel>
         </DockPanel>
-    </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

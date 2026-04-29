@@ -19,6 +19,9 @@
     d:DataContext="{d:DesignInstance Type=local:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    WindowBackdropType="Mica"
+    ExtendsContentIntoTitleBar="True"
     Closing="MetroWindow_Closing"
     Loaded="Window_Loaded"
     mc:Ignorable="d">
@@ -30,234 +33,245 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="48" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-
-        <Grid.LayoutTransform>
-            <ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
-        </Grid.LayoutTransform>
-
-        <!--  Degraded Mode Banner  -->
-        <Border
+        <ui:TitleBar
             Grid.Row="0"
-            Padding="12,8"
-            Background="#D32F2F"
-            Visibility="{Binding IsInDegradedMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-            <DockPanel>
-                <Button
-                    Margin="8,0,0,0"
-                    Padding="12,4"
-                    Click="Button_AttemptReconnection"
-                    DockPanel.Dock="Right"
-                    IsEnabled="{Binding IsReconnecting, Converter={StaticResource ResourceKey=InvBoolConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome
-                            Height="12"
-                            Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                            Icon="Refresh"
-                            Spin="{Binding IsReconnecting}" />
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid.LayoutTransform>
+                <ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+            </Grid.LayoutTransform>
+
+            <!--  Degraded Mode Banner  -->
+            <Border
+                Grid.Row="0"
+                Padding="12,8"
+                Background="#D32F2F"
+                Visibility="{Binding IsInDegradedMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <DockPanel>
+                    <Button
+                        Margin="8,0,0,0"
+                        Padding="12,4"
+                        Click="Button_AttemptReconnection"
+                        DockPanel.Dock="Right"
+                        IsEnabled="{Binding IsReconnecting, Converter={StaticResource ResourceKey=InvBoolConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                Height="12"
+                                Foreground="{StaticResource AccentFillColorDefaultBrush}"
+                                Icon="Refresh"
+                                Spin="{Binding IsReconnecting}" />
+                            <TextBlock
+                                Margin="6,0,0,0"
+                                VerticalAlignment="Center"
+                                Text="Reconnect" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock
-                            Margin="6,0,0,0"
-                            VerticalAlignment="Center"
-                            Text="Reconnect" />
+                            FontWeight="Bold"
+                            Foreground="White"
+                            Text="Service Running in Degraded Mode" />
+                        <TextBlock
+                            Foreground="#FFFFFFCC"
+                            Text="{Binding DegradedModeMessage}"
+                            TextTrimming="CharacterEllipsis" />
                     </StackPanel>
-                </Button>
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock
-                        FontWeight="Bold"
-                        Foreground="White"
-                        Text="Service Running in Degraded Mode" />
-                    <TextBlock
-                        Foreground="#FFFFFFCC"
-                        Text="{Binding DegradedModeMessage}"
-                        TextTrimming="CharacterEllipsis" />
-                </StackPanel>
-            </DockPanel>
-        </Border>
-
-        <DockPanel
-            Grid.Row="1"
-            Margin="8,8,8,0"
-            VerticalAlignment="Top">
-
-            <Button
-                Height="32"
-                Margin="0,0,0,5"
-                AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
-                Click="Button_NewCertificate"
-                DockPanel.Dock="Left"
-                IsEnabled="{Binding IsServiceAvailable}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                        Icon="PlusCircle" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
-                </StackPanel>
-            </Button>
-            <Button
-                Height="32"
-                Margin="8,0,0,5"
-                AutomationProperties.Name="{x:Static res:SR.Renew_All}"
-                Click="Button_RenewAll"
-                DockPanel.Dock="Left"
-                IsEnabled="{Binding IsServiceAvailable}">
-                <StackPanel Orientation="Horizontal">
-                    <fa:ImageAwesome
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                        Icon="Refresh" />
-                    <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
-                </StackPanel>
-            </Button>
-
-            <StackPanel
-                DockPanel.Dock="Left"
-                Orientation="Horizontal"
-                Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-                <Button
-                    x:Name="ButtonUpdateAvailable"
-                    Height="32"
-                    Margin="8,0,0,5"
-                    AutomationProperties.Name="{x:Static res:SR.Update_Available}"
-                    Background="{DynamicResource AccentFillColorDefaultBrush}"
-                    Click="ButtonUpdateAvailable_Click"
-                    FontWeight="DemiBold"
-                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}">
-
-                    <StackPanel Orientation="Horizontal">
-                        <fa:ImageAwesome
-                            Name="UpdateIcon"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
-                            Icon="Download" />
-                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
-                    </StackPanel>
-                </Button>
-            </StackPanel>
-
-            <StackPanel
-                Margin="24,0,0,0"
-                DockPanel.Dock="Left"
-                Orientation="Horizontal"
-                Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
-
-                <fa:ImageAwesome
-                    x:Name="ConnectingService"
-                    Height="12                                      "
-                    Margin="4,0,0,0"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
-                    Icon="Refresh"
-                    Spin="True"
-                    SpinDuration="1"
-                    Visibility="Visible" />
-                <TextBlock
-                    Margin="8,0,0,0"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
-            </StackPanel>
+                </DockPanel>
+            </Border>
 
             <DockPanel
-                Height="32"
-                Margin="32,0,16,0"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                DockPanel.Dock="Right"
-                Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='SERVER_CONNECTIONS', Path=Preferences}">
+                Grid.Row="1"
+                Margin="8,8,8,0"
+                VerticalAlignment="Top">
 
                 <Button
-                    x:Name="Connect"
-                    Margin="8,0,0,0"
-                    AutomationProperties.Name="Connect"
-                    Click="Connect_Click"
-                    DockPanel.Dock="Right">
+                    Height="32"
+                    Margin="0,0,0,5"
+                    AutomationProperties.Name="{x:Static res:SR.New_Certificate}"
+                    Click="Button_NewCertificate"
+                    DockPanel.Dock="Left"
+                    IsEnabled="{Binding IsServiceAvailable}">
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Foreground="{StaticResource AccentFillColorDefaultBrush}"
-                            Icon="Plug" />
-
+                            Icon="PlusCircle" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.New_Certificate}" /></TextBlock>
                     </StackPanel>
                 </Button>
-                <TextBlock
-                    Margin="4,0,0,0"
-                    DockPanel.Dock="top"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="{Binding ConnectionState}" />
-                <TextBlock
-                    Margin="4,0,0,0"
+                <Button
+                    Height="32"
+                    Margin="8,0,0,5"
+                    AutomationProperties.Name="{x:Static res:SR.Renew_All}"
+                    Click="Button_RenewAll"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                    Text="{Binding ConnectionTitle}" />
+                    IsEnabled="{Binding IsServiceAvailable}">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Foreground="{StaticResource AccentFillColorDefaultBrush}"
+                            Icon="Refresh" />
+                        <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Renew_All}" /></TextBlock>
+                    </StackPanel>
+                </Button>
 
+                <StackPanel
+                    DockPanel.Dock="Left"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsUpdateAvailable, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                    <Button
+                        x:Name="ButtonUpdateAvailable"
+                        Height="32"
+                        Margin="8,0,0,5"
+                        AutomationProperties.Name="{x:Static res:SR.Update_Available}"
+                        Background="{DynamicResource AccentFillColorDefaultBrush}"
+                        Click="ButtonUpdateAvailable_Click"
+                        FontWeight="DemiBold"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}">
+
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                Name="UpdateIcon"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
+                                Icon="Download" />
+                            <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel
+                    Margin="24,0,0,0"
+                    DockPanel.Dock="Left"
+                    Orientation="Horizontal"
+                    Visibility="{Binding IsLoading, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+
+                    <fa:ImageAwesome
+                        x:Name="ConnectingService"
+                        Height="12                                      "
+                        Margin="4,0,0,0"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Icon="Refresh"
+                        Spin="True"
+                        SpinDuration="1"
+                        Visibility="Visible" />
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
+                </StackPanel>
+
+                <DockPanel
+                    Height="32"
+                    Margin="32,0,16,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    DockPanel.Dock="Right"
+                    Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='SERVER_CONNECTIONS', Path=Preferences}">
+
+                    <Button
+                        x:Name="Connect"
+                        Margin="8,0,0,0"
+                        AutomationProperties.Name="Connect"
+                        Click="Connect_Click"
+                        DockPanel.Dock="Right">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource AccentFillColorDefaultBrush}"
+                                Icon="Plug" />
+
+                        </StackPanel>
+                    </Button>
+                    <TextBlock
+                        Margin="4,0,0,0"
+                        DockPanel.Dock="top"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding ConnectionState}" />
+                    <TextBlock
+                        Margin="4,0,0,0"
+                        DockPanel.Dock="Left"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                        Text="{Binding ConnectionTitle}" />
+
+
+                </DockPanel>
 
             </DockPanel>
 
-        </DockPanel>
+            <TabControl
+                x:Name="MainTabControl"
+                Grid.Row="2"
+                Width="auto"
+                Height="auto"
+                Margin="8,8,8,8"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                VerticalContentAlignment="Stretch"
+                SelectedIndex="{Binding MainUITabIndex}">
 
-        <TabControl
-            x:Name="MainTabControl"
-            Grid.Row="2"
-            Width="auto"
-            Height="auto"
-            Margin="8,8,8,8"
-            HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Stretch"
-            SelectedIndex="{Binding MainUITabIndex}">
+                <TabItem
+                    MinWidth="100"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Header="{x:Static res:SR.Managed_Certificates}"
+                    IsSelected="True">
+                    <CustomControls:ManagedCertificates
+                        Width="Auto"
+                        Height="Auto"
+                        OnDuplicate="ManagedCertificates_OnDuplicate" />
+                </TabItem>
+                <TabItem
+                    MinWidth="80"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Header="{x:Static res:SR.In_Progress}"
+                    IsEnabled="{Binding IsServiceAvailable}">
+                    <CustomControls:ProgressMonitor />
+                </TabItem>
+                <TabItem
+                    MinWidth="60"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Header="{x:Static res:SR.Settings}"
+                    IsEnabled="{Binding IsServiceAvailable}">
+                    <SettingsControls:General Height="Auto" />
+                </TabItem>
+                <TabItem
+                    MinWidth="80"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    Header="{x:Static res:SR.About}">
+                    <CustomControls:AboutControl Width="Auto" Height="Auto" />
+                </TabItem>
+            </TabControl>
 
-            <TabItem
-                MinWidth="100"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                Header="{x:Static res:SR.Managed_Certificates}"
-                IsSelected="True">
-                <CustomControls:ManagedCertificates
-                    Width="Auto"
-                    Height="Auto"
-                    OnDuplicate="ManagedCertificates_OnDuplicate" />
-            </TabItem>
-            <TabItem
-                MinWidth="80"
-                HorizontalAlignment="Left"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                Header="{x:Static res:SR.In_Progress}"
-                IsEnabled="{Binding IsServiceAvailable}">
-                <CustomControls:ProgressMonitor />
-            </TabItem>
-            <TabItem
-                MinWidth="60"
-                HorizontalAlignment="Left"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                Header="{x:Static res:SR.Settings}"
-                IsEnabled="{Binding IsServiceAvailable}">
-                <SettingsControls:General Height="Auto" />
-            </TabItem>
-            <TabItem
-                MinWidth="80"
-                HorizontalContentAlignment="Stretch"
-                VerticalContentAlignment="Stretch"
-                Header="{x:Static res:SR.About}">
-                <CustomControls:AboutControl Width="Auto" Height="Auto" />
-            </TabItem>
-        </TabControl>
-
-        <Grid Panel.ZIndex="10" HorizontalAlignment="Right" VerticalAlignment="Stretch">
-            <Grid.LayoutTransform>
-                <ScaleTransform x:Name="FlyoutScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
-            </Grid.LayoutTransform>
-            <ui:Flyout
-                Name="MainFlyout"
-                Width="300"
-                Placement="Right"
-                />
+            <Grid Panel.ZIndex="10" HorizontalAlignment="Right" VerticalAlignment="Stretch">
+                <Grid.LayoutTransform>
+                    <ScaleTransform x:Name="FlyoutScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
+                </Grid.LayoutTransform>
+                <ui:Flyout
+                    Name="MainFlyout"
+                    Width="300"
+                    Placement="Right"
+                    />
+            </Grid>
         </Grid>
+        </ContentControl>
     </Grid>
 </ui:FluentWindow>

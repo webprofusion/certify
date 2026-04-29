@@ -12,6 +12,9 @@
     Width="421.946"
     Height="255.15"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
@@ -20,103 +23,114 @@
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
 
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
 
-            <Grid>
-                <TextBlock Margin="10,10,-10,-11" TextWrapping="WrapWithOverflow"><Run>You can purchase a license key by registering at:</Run><LineBreak /> <Hyperlink NavigateUri="https://certifytheweb.com/register?src=app.enterkey" RequestNavigate="Hyperlink_RequestNavigate">https://certifytheweb.com/register</Hyperlink></TextBlock>
-                <Button
-                    x:Name="ValidateKey"
-                    Width="112"
-                    Margin="229,181,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Click="ValidateKey_Click"
-                    Content="{x:Static res:SR.ValidateKey}" />
-                <Label
-                    Margin="11,54,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Content="{x:Static res:SR.RegistrationEmailAddress}" />
-                <ui:TextBox
-                    x:Name="EmailAddress"
-                    Width="306"
-                    Height="23"
-                    Margin="34,79,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Text=""
-                    TextWrapping="Wrap" />
-                <Label
-                    Width="108"
-                    Height="26"
-                    Margin="11,110,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Content="{x:Static res:SR.LicenseKey}" />
-                <ui:TextBox
-                    x:Name="LicenseKey"
-                    Width="306"
-                    Height="23"
-                    Margin="34,141,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Text=""
-                    TextWrapping="Wrap" />
-                <Button
-                    x:Name="Cancel"
-                    Width="75"
-                    Margin="35,181,0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Click="Cancel_Click"
-                    Content="{x:Static res:SR.Cancel}" />
-            </Grid>
+                <Grid>
+                    <TextBlock Margin="10,10,-10,-11" TextWrapping="WrapWithOverflow"><Run>You can purchase a license key by registering at:</Run><LineBreak /> <Hyperlink NavigateUri="https://certifytheweb.com/register?src=app.enterkey" RequestNavigate="Hyperlink_RequestNavigate">https://certifytheweb.com/register</Hyperlink></TextBlock>
+                    <Button
+                        x:Name="ValidateKey"
+                        Width="112"
+                        Margin="229,181,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Click="ValidateKey_Click"
+                        Content="{x:Static res:SR.ValidateKey}" />
+                    <Label
+                        Margin="11,54,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Content="{x:Static res:SR.RegistrationEmailAddress}" />
+                    <ui:TextBox
+                        x:Name="EmailAddress"
+                        Width="306"
+                        Height="23"
+                        Margin="34,79,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Text=""
+                        TextWrapping="Wrap" />
+                    <Label
+                        Width="108"
+                        Height="26"
+                        Margin="11,110,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Content="{x:Static res:SR.LicenseKey}" />
+                    <ui:TextBox
+                        x:Name="LicenseKey"
+                        Width="306"
+                        Height="23"
+                        Margin="34,141,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Text=""
+                        TextWrapping="Wrap" />
+                    <Button
+                        x:Name="Cancel"
+                        Width="75"
+                        Margin="35,181,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Click="Cancel_Click"
+                        Content="{x:Static res:SR.Cancel}" />
+                </Grid>
 
-        </StackPanel>
-
-        <DockPanel
-            Margin="8"
-            DockPanel.Dock="Top"
-            LastChildFill="False"
-            Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
-            <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">Your installation is currently using a license key. If you wish to change license key or allocate this license to a different install you can deactivate the license for this install:</TextBlock>
-            <StackPanel
-                Margin="8"
-                DockPanel.Dock="Top"
-                Orientation="Horizontal">
-                <Label
-                    Margin="0,0"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    Content="{x:Static res:SR.RegistrationEmailAddress}" />
-                <ui:TextBox
-                    x:Name="DeactivateEmail"
-                    Width="230"
-                    Height="23"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Top"
-                    TextWrapping="Wrap" />
             </StackPanel>
 
-            <DockPanel Margin="8" DockPanel.Dock="Bottom">
-                <Button
-                    x:Name="DeactivateCancel"
-                    Width="120"
-                    Click="Cancel_Click"
-                    DockPanel.Dock="Left">
-                    Cancel
-                </Button>
-                <Button
-                    x:Name="Deactivate"
-                    HorizontalAlignment="Right"
-                    Click="Deactivate_Click"
-                    DockPanel.Dock="Right">
-                    Deactivate Install
-                </Button>
+            <DockPanel
+                Margin="8"
+                DockPanel.Dock="Top"
+                LastChildFill="False"
+                Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
+                <TextBlock DockPanel.Dock="Top" TextWrapping="Wrap">Your installation is currently using a license key. If you wish to change license key or allocate this license to a different install you can deactivate the license for this install:</TextBlock>
+                <StackPanel
+                    Margin="8"
+                    DockPanel.Dock="Top"
+                    Orientation="Horizontal">
+                    <Label
+                        Margin="0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Content="{x:Static res:SR.RegistrationEmailAddress}" />
+                    <ui:TextBox
+                        x:Name="DeactivateEmail"
+                        Width="230"
+                        Height="23"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <DockPanel Margin="8" DockPanel.Dock="Bottom">
+                    <Button
+                        x:Name="DeactivateCancel"
+                        Width="120"
+                        Click="Cancel_Click"
+                        DockPanel.Dock="Left">
+                        Cancel
+                    </Button>
+                    <Button
+                        x:Name="Deactivate"
+                        HorizontalAlignment="Right"
+                        Click="Deactivate_Click"
+                        DockPanel.Dock="Right">
+                        Deactivate Install
+                    </Button>
+                </DockPanel>
+
             </DockPanel>
 
         </DockPanel>
-
-    </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>

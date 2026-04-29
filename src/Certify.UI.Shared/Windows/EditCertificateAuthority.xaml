@@ -12,149 +12,163 @@
     Width="580"
     Height="430"
     Background="{DynamicResource ApplicationBackgroundBrush}"
+    WindowBackdropType="Mica"
+    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+    ExtendsContentIntoTitleBar="True"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
     </ui:FluentWindow.LayoutTransform>
-    <DockPanel LastChildFill="False">
-        <!--  Certificate Authority Preference  -->
-        <StackPanel
-            Margin="0,8"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label Margin="12,4,4,4" Content="Certificate Authority" />
-            <ComboBox
-                x:Name="CertificateAuthorityList"
-                Width="300"
-                DisplayMemberPath="Title"
-                ItemsSource="{Binding Model.CertificateAuthorities}"
-                SelectedValue="{Binding Model.SelectedCertificateAuthorityId}"
-                SelectedValuePath="Id"
-                SelectionChanged="CertificateAuthorityList_SelectionChanged" />
-        </StackPanel>
-        <!--  Certificate Authority Definition  -->
-
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="Title" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="{x:Static res:SR.EditCertificateAuthority_TitleHelp}"
-                Text="{Binding Model.Item.Title}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="Description" />
-            <ui:TextBox
-                Width="300"
-                Height="48"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="(Optional description)"
-                Text="{Binding Model.Item.Description}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="Production API" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="{x:Static res:SR.EditCertificateAuthority_ProductionDirectoryHelp}"
-                Text="{Binding Model.Item.ProductionAPIEndpoint}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="Staging API" />
-            <ui:TextBox
-                Width="300"
-                Height="23"
-                HorizontalAlignment="Left"
-                VerticalAlignment="Top"
-                PlaceholderText="(Optional Url for the staging/test directory endpoint)"
-                Text="{Binding Model.Item.StagingAPIEndpoint}"
-                TextWrapping="Wrap" />
-        </StackPanel>
-        <StackPanel
-            Margin="0,8,0,0"
-            DockPanel.Dock="Top"
-            Orientation="Horizontal">
-            <Label
-                Width="120"
-                Margin="12,0,0,0"
-                VerticalAlignment="Top"
-                Content="Features" />
-            <StackPanel Orientation="Vertical">
-                <ui:ToggleSwitch Content="Enabled" IsChecked="{Binding Model.Item.IsEnabled}" />
-                <ui:ToggleSwitch Content="Email Address Required" IsChecked="{Binding Model.Item.RequiresEmailAddress}" />
-                <ui:ToggleSwitch Content="Allow Untrusted TLS" IsChecked="{Binding Model.Item.AllowUntrustedTls}" />
-                <ui:ToggleSwitch Content="Allow Internal Hostnames" IsChecked="{Binding Model.Item.AllowInternalHostnames}" />
-                <ui:ToggleSwitch Content="Requires CN (Common Name)" IsChecked="{Binding Model.Item.RequiresCN}" />
-                <ui:ToggleSwitch Content="Requires External Account Binding" IsChecked="{Binding Model.Item.RequiresExternalAccountBinding}" />
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ui:TitleBar
+            Grid.Row="0"
+            Title="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}" />
+        <ContentControl Grid.Row="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <DockPanel LastChildFill="False">
+            <!--  Certificate Authority Preference  -->
+            <StackPanel
+                Margin="0,8"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label Margin="12,4,4,4" Content="Certificate Authority" />
+                <ComboBox
+                    x:Name="CertificateAuthorityList"
+                    Width="300"
+                    DisplayMemberPath="Title"
+                    ItemsSource="{Binding Model.CertificateAuthorities}"
+                    SelectedValue="{Binding Model.SelectedCertificateAuthorityId}"
+                    SelectedValuePath="Id"
+                    SelectionChanged="CertificateAuthorityList_SelectionChanged" />
             </StackPanel>
-        </StackPanel>
+            <!--  Certificate Authority Definition  -->
+
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    Content="Title" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="{x:Static res:SR.EditCertificateAuthority_TitleHelp}"
+                    Text="{Binding Model.Item.Title}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    Content="Description" />
+                <ui:TextBox
+                    Width="300"
+                    Height="48"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="(Optional description)"
+                    Text="{Binding Model.Item.Description}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    Content="Production API" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="{x:Static res:SR.EditCertificateAuthority_ProductionDirectoryHelp}"
+                    Text="{Binding Model.Item.ProductionAPIEndpoint}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    Content="Staging API" />
+                <ui:TextBox
+                    Width="300"
+                    Height="23"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top"
+                    PlaceholderText="(Optional Url for the staging/test directory endpoint)"
+                    Text="{Binding Model.Item.StagingAPIEndpoint}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Top"
+                Orientation="Horizontal">
+                <Label
+                    Width="120"
+                    Margin="12,0,0,0"
+                    VerticalAlignment="Top"
+                    Content="Features" />
+                <StackPanel Orientation="Vertical">
+                    <ui:ToggleSwitch Content="Enabled" IsChecked="{Binding Model.Item.IsEnabled}" />
+                    <ui:ToggleSwitch Content="Email Address Required" IsChecked="{Binding Model.Item.RequiresEmailAddress}" />
+                    <ui:ToggleSwitch Content="Allow Untrusted TLS" IsChecked="{Binding Model.Item.AllowUntrustedTls}" />
+                    <ui:ToggleSwitch Content="Allow Internal Hostnames" IsChecked="{Binding Model.Item.AllowInternalHostnames}" />
+                    <ui:ToggleSwitch Content="Requires CN (Common Name)" IsChecked="{Binding Model.Item.RequiresCN}" />
+                    <ui:ToggleSwitch Content="Requires External Account Binding" IsChecked="{Binding Model.Item.RequiresExternalAccountBinding}" />
+                </StackPanel>
+            </StackPanel>
 
 
-        <StackPanel
-            Margin="8"
-            HorizontalAlignment="Right"
-            DockPanel.Dock="Bottom"
-            Orientation="Horizontal">
-            <Button
-                x:Name="Delete"
-                Width="100"
-                Margin="0,0,200,0"
-                Click="Delete_Click"
-                Content="Delete"
-                IsEnabled="{Binding Model.Item.IsCustom}" />
-            <Button
-                x:Name="Save"
-                Width="100"
-                Margin="12,0,0,0"
-                Click="Save_Click"
-                Content="Save"
-                IsEnabled="{Binding Model.Item.IsCustom}" />
-            <Button
-                x:Name="Cancel"
-                Width="100"
-                Margin="16,0,0,0"
-                Click="Cancel_Click"
-                Content="{x:Static res:SR.Cancel}" />
-        </StackPanel>
+            <StackPanel
+                Margin="8"
+                HorizontalAlignment="Right"
+                DockPanel.Dock="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    x:Name="Delete"
+                    Width="100"
+                    Margin="0,0,200,0"
+                    Click="Delete_Click"
+                    Content="Delete"
+                    IsEnabled="{Binding Model.Item.IsCustom}" />
+                <Button
+                    x:Name="Save"
+                    Width="100"
+                    Margin="12,0,0,0"
+                    Click="Save_Click"
+                    Content="Save"
+                    IsEnabled="{Binding Model.Item.IsCustom}" />
+                <Button
+                    x:Name="Cancel"
+                    Width="100"
+                    Margin="16,0,0,0"
+                    Click="Cancel_Click"
+                    Content="{x:Static res:SR.Cancel}" />
+            </StackPanel>
 
-    </DockPanel>
+        </DockPanel>
+        </ContentControl>
+    </Grid>
 </ui:FluentWindow>
