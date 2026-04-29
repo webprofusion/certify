@@ -6,10 +6,6 @@
     <AssemblyName>Plugin.DNS.Cloudflare</AssemblyName>
   </PropertyGroup>
 
-    <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
   </ItemGroup>

@@ -9,11 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-
-    </ItemGroup>
-
-    <ItemGroup>
         <ProjectReference Include="..\..\..\..\..\libs\anvil\src\Certify.ACME.Anvil\Certify.ACME.Anvil.csproj" />
         <ProjectReference Include="..\..\..\Certify.Locales\Certify.Locales.csproj" />
         <ProjectReference Include="..\..\..\Certify.Models\Certify.Models.csproj" />
