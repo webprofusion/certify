@@ -48,26 +48,12 @@ namespace Certify.Models
     public class RequestProgressManagedItem
     {
         public string Id { get; set; } = string.Empty;
+
+        // This is the instance id of the managed certificate in the hub
         public string InstanceId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string FailureMessage { get; set; } = string.Empty;
         public int FailureCount { get; set; }
-        public RequestProgressManagedItem(string? id, string? name, string? failureMessage, int failureCount)
-        {
-            Id = id ?? "";
-            Name = name ?? "";
-            FailureMessage = failureMessage ?? "";
-            FailureCount = failureCount;
-        }
-
-        public RequestProgressManagedItem(string? id, string? instanceId, string? name, string? failureMessage, int failureCount)
-        {
-            Id = id ?? "";
-            InstanceId = instanceId ?? "";
-            Name = name ?? "";
-            FailureMessage = failureMessage ?? "";
-            FailureCount = failureCount;
-        }
     }
 
     public class RequestProgressState : BindableBase
@@ -80,7 +66,15 @@ namespace Certify.Models
         {
             CurrentState = currentState;
             Message = msg;
-            ManagedCertificate = new RequestProgressManagedItem(item.Id, item.InstanceId, item.Name, item.RenewalFailureMessage, item.RenewalFailureCount);
+            ManagedCertificate = new RequestProgressManagedItem
+            {
+                Id = item.Id ?? "",
+                InstanceId = item.InstanceId ?? "",
+                Name = item.Name ?? "",
+                FailureMessage = item.RenewalFailureMessage ?? "",
+                FailureCount = item.RenewalFailureCount
+            };
+
             IsPreviewMode = isPreviewMode;
             IsSkipped = isSkipped;
             MessageCreated = DateTimeOffset.UtcNow;
