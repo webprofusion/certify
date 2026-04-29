@@ -9,13 +9,11 @@
     mc:Ignorable="d">
     <DockPanel MinHeight="300">
 
-        <ui:FlipView
+        <TabControl
             x:Name="QuickStartFlipView"
-            Margin="16"
-            IsBannerEnabled="False"
-            MouseHoverBorderEnabled="False">
+            Margin="16">
 
-            <ui:FlipViewItem>
+            <TabItem Header="Step">
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -36,8 +34,8 @@
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseDomains.png" />
 
                 </DockPanel>
-            </ui:FlipViewItem>
-            <ui:FlipViewItem>
+            </TabItem>
+            <TabItem Header="Step">
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -56,8 +54,8 @@
                         DockPanel.Dock="Top"
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseAuth.png" />
                 </DockPanel>
-            </ui:FlipViewItem>
-            <ui:FlipViewItem>
+            </TabItem>
+            <TabItem Header="Step">
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -76,8 +74,8 @@
                         DockPanel.Dock="Top"
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/PreviewDeployment.png" />
                 </DockPanel>
-            </ui:FlipViewItem>
+            </TabItem>
 
-        </ui:FlipView>
+        </TabControl>
     </DockPanel>
 </UserControl>

@@ -16,8 +16,6 @@
     MinHeight="300"
     Background="{DynamicResource ApplicationBackgroundBrush}"
     IsVisibleChanged="UserControl_IsVisibleChanged"
-    ShowMaxRestoreButton="False"
-    ShowMinButton="False"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <ui:FluentWindow.LayoutTransform>

@@ -33,10 +33,10 @@ Fontawesome.WPF:
 	MIT License
 	Copyright (c) 2014-2016 charri
 	https://github.com/charri/Font-Awesome-WPF
-MahApps.Metro: 
+WPF-UI:
 	MIT License
-	Copyright (c) 2016 MahApps 
-	http://mahapps.com/
+	Copyright (c) 2021-2025 Leszek Pomianowski and WPF UI Contributors.
+	https://github.com/lepoco/wpfui
 ARSoft.Tools.Net: 
 	Apache License 2.0
 	Copyright (c) 2010-2017 Alexander Reinert

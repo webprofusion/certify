@@ -223,12 +223,11 @@
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
 
-            <Controls:MetroTabControl
+            <TabControl
                 x:Name="SettingsTab"
                 Margin="8"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
-                Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True"
                 DockPanel.Dock="Top"
                 TabStripPlacement="Right">
 
@@ -295,7 +294,7 @@
                     </TabItem.HeaderTemplate>
                     <managedcertificate:Preview Margin="0,8,0,0" />
                 </TabItem>
-            </Controls:MetroTabControl>
+            </TabControl>
         </DockPanel>
     </DockPanel>
 </UserControl>

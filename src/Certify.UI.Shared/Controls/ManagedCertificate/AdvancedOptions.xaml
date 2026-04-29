@@ -293,7 +293,7 @@
                                 VerticalScrollBarVisibility="Auto">
                                 <ui:TextBox.Text>
                                     <Binding Path="SelectedItem.Comments" UpdateSourceTrigger="PropertyChanged" />
-                                </TextBox.Text>
+                                </ui:TextBox.Text>
                             </ui:TextBox>
 
                         </DockPanel>
@@ -373,7 +373,6 @@
                                 Width="220"
                                 Margin="0,4,0,8"
                                 HorizontalAlignment="Left"
-                                PlaceholderText="Pfx Unlock Password (if applicable)"
                                 PasswordChanged="PFXPassword_PasswordChanged" />
                         </StackPanel>
 

@@ -22,7 +22,7 @@
                 x:Name="txtSecret"
                 Width="200"
                 HorizontalAlignment="Left"
-                PlaceholderText="Password" />
+                 />
 
         </StackPanel>
 
@@ -91,7 +91,7 @@
                         </Button>
                     </StackPanel>
 
-                    <Controls:MetroProgressBar
+                    <ProgressBar
                         Width="250"
                         Height="32"
                         Margin="4"

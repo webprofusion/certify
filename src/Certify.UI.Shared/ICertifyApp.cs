@@ -6,7 +6,6 @@ using ToastNotifications.Lifetime;
 using ToastNotifications.Messages;
 using ToastNotifications.Position;
 using Wpf.Ui.Appearance;
-using Wpf.Ui.Controls;
 
 namespace Certify.UI.Shared
 {
@@ -39,11 +38,11 @@ namespace Certify.UI.Shared
             {
                 if (initialTheme == "Dark")
                 {
-                    ApplicationThemeManager.Apply(ApplicationTheme.Dark, WindowBackdropType.Mica, true);
+                    ApplicationThemeManager.Apply(ApplicationTheme.Dark, Wpf.Ui.Controls.WindowBackdropType.Mica, true);
                 }
                 else
                 {
-                    ApplicationThemeManager.Apply(ApplicationTheme.Light, WindowBackdropType.Mica, true);
+                    ApplicationThemeManager.Apply(ApplicationTheme.Light, Wpf.Ui.Controls.WindowBackdropType.Mica, true);
                 }
 
                 // refresh bindings to force dynamic resources to redraw
@@ -57,12 +56,12 @@ namespace Certify.UI.Shared
 
                 if (theme == ApplicationTheme.Light)
                 {
-                    ApplicationThemeManager.Apply(ApplicationTheme.Dark, WindowBackdropType.Mica, true);
+                    ApplicationThemeManager.Apply(ApplicationTheme.Dark, Wpf.Ui.Controls.WindowBackdropType.Mica, true);
                     themeSelection = "Dark";
                 }
                 else
                 {
-                    ApplicationThemeManager.Apply(ApplicationTheme.Light, WindowBackdropType.Mica, true);
+                    ApplicationThemeManager.Apply(ApplicationTheme.Light, Wpf.Ui.Controls.WindowBackdropType.Mica, true);
                     themeSelection = "Light";
                 }
 

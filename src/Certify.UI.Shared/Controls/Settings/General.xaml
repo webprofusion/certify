@@ -51,7 +51,7 @@
                                     Width="100"
                                     Margin="8,0,0,4"
                                     HorizontalAlignment="Left"
-                                    Interval="1"
+                                    SmallChange="1"
                                     Maximum="60"
                                     Minimum="1"
                                     Value="{Binding Prefs.RenewalIntervalDays}" />
@@ -98,7 +98,7 @@
                                     Width="100"
                                     Margin="4,0,0,0"
                                     HorizontalAlignment="Left"
-                                    Interval="1"
+                                    SmallChange="1"
                                     Maximum="100"
                                     Minimum="0"
                                     Value="{Binding Prefs.MaxRenewalRequests}" />
@@ -447,10 +447,9 @@
                             <ui:NumberBox
                                 x:Name="UIScaling"
                                 Width="100"
-                                Interval="0.1"
+                                SmallChange="0.1"
                                 Maximum="2"
                                 Minimum="1"
-                                NumericInputMode="Decimal"
                                 Value="{Binding MainViewModel.UIScaleFactor}" />
 
                         </StackPanel>

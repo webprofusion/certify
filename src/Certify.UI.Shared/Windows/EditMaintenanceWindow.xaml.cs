@@ -151,7 +151,7 @@ namespace Certify.UI.Windows
             UpdateSchedulePreview();
         }
 
-        private void Time_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        private void Time_ValueChanged(object sender, Wpf.Ui.Controls.NumberBoxValueChangedEventArgs e)
         {
             if (StartHour?.Value == null || StartMinute?.Value == null || EndHour?.Value == null || EndMinute?.Value == null)
             {

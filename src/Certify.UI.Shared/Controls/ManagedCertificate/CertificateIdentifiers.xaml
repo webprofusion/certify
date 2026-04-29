@@ -103,7 +103,6 @@
                                     <ComboBox
                                         x:Name="HubCertificateBrowser"
                                         Width="320"
-                                        PlaceholderText="Browse available hub certificates..."
                                         ItemsSource="{Binding SubscribableManagedCertificates}"
                                         SelectedItem="{Binding SelectedSubscribableCertificate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                         <ComboBox.ItemTemplate>
