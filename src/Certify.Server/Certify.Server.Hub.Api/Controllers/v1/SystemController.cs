@@ -58,7 +58,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("api/v1/system/health")]
+        [Route("/api/v1/system/health")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubHealth))]
         public async Task<IActionResult> GetHealth()
         {
