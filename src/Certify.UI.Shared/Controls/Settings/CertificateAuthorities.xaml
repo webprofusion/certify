@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Certify.UI.Controls.Settings.CertificateAuthorities"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -110,7 +110,7 @@
                                         <fa:ImageAwesome
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                            Foreground="{StaticResource AccentFillColorDefaultBrush}"
                                             Icon="Trash" />
 
                                     </StackPanel>
@@ -127,7 +127,7 @@
                                         <fa:ImageAwesome
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                            Foreground="{StaticResource AccentFillColorDefaultBrush}"
                                             Icon="Edit" />
 
                                     </StackPanel>

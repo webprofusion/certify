@@ -89,11 +89,11 @@ namespace Certify.UI.Utils
             {
                 try
                 {
-                    return (System.Windows.Media.Brush)ViewModel.AppViewModel.Current.GetApplication().Resources["MahApps.Brushes.SystemControlForegroundBaseMediumHigh"];
+                    return (System.Windows.Media.Brush)ViewModel.AppViewModel.Current.GetApplication().Resources["TextFillColorSecondaryBrush"];
                 }
                 catch
                 {
-                    //unit test may not reference MahApps
+                    //unit test may not reference application theme resources
                     return System.Windows.Media.Brushes.Green;
                 }
             }

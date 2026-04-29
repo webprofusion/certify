@@ -156,7 +156,7 @@ namespace Certify.UI.Windows
         {
             if (sender != null)
             {
-                var s = ((MahApps.Metro.Controls.ToggleSwitch)sender);
+                var s = ((Wpf.Ui.Controls.ToggleSwitch)sender);
                 var featureTag = s.Tag.ToString();
 
                 Model.ToggleFeature(featureTag);

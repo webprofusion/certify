@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
-    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
     d:DesignHeight="200"
@@ -20,10 +20,10 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <TextBox
+                <ui:TextBox
                     Width="250"
                     Height="100"
-                    mah:TextBoxHelper.Watermark="{Binding Description}"
+                    PlaceholderText="{Binding Description}"
                     AcceptsReturn="True"
                     KeyUp="OnParameterModified"
                     Text="{Binding Value}"
@@ -38,9 +38,9 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <TextBox
+                <ui:TextBox
                     Width="250"
-                    mah:TextBoxHelper.Watermark="{Binding Description}"
+                    PlaceholderText="{Binding Description}"
                     KeyUp="OnParameterModified"
                     Text="{Binding Value}" />
                 <Button
@@ -135,9 +135,9 @@
             </StackPanel>
             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                 <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_WebsiteRoot}" />
-                <TextBox
+                <ui:TextBox
                     Width="225"
-                    mah:TextBoxHelper.Watermark="(optional, leave blank to auto discover)"
+                    PlaceholderText="(optional, leave blank to auto discover)"
                     Text="{Binding SelectedItem.ChallengeRootPath}" />
                 <Button
                     x:Name="Button_WebRoot"
@@ -282,10 +282,10 @@
             <StackPanel>
                 <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                     <Label Width="160" Content="CNAME Delegation Rule" />
-                    <TextBox
+                    <ui:TextBox
                         x:Name="ChallengeDelegationRule"
                         Width="270"
-                        mah:TextBoxHelper.Watermark="(optional) *.example.com:*.auth.example.org"
+                        PlaceholderText="(optional) *.example.com:*.auth.example.org"
                         Text="{Binding SelectedItem.ChallengeDelegationRule}" />
                 </StackPanel>
                 <StackPanel Margin="160,0,0,0">
@@ -299,10 +299,10 @@
         <StackPanel DockPanel.Dock="Top" Visibility="{Binding HasMultipleChallengeConfigurations, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
             <StackPanel Margin="0,8,0,0" Orientation="Horizontal">
                 <Label Width="160" Content="Domain Match" />
-                <TextBox
+                <ui:TextBox
                     x:Name="DomainMatchText"
                     Width="270"
-                    mah:TextBoxHelper.Watermark="(optional) *.example.com; www.sub.example.com"
+                    PlaceholderText="(optional) *.example.com; www.sub.example.com"
                     Text="{Binding SelectedItem.DomainMatch}" />
             </StackPanel>
             <StackPanel Margin="160,0,0,0">

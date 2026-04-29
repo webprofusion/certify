@@ -1,8 +1,8 @@
-﻿<UserControl
+<UserControl
     x:Class="Certify.UI.Controls.ManagedCertificate.AuthorityTokenList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -45,16 +45,16 @@
             Margin="0,8,8,8"
             DockPanel.Dock="Top"
             Orientation="Vertical">
-            <TextBox
+            <ui:TextBox
                 x:Name="Token"
                 Height="48"
-                Controls:TextBoxHelper.Watermark="Token"
+                PlaceholderText="Token"
                 Text="" />
-            <TextBox
+            <ui:TextBox
                 x:Name="CRL"
                 Width="Auto"
                 Margin="0,8"
-                Controls:TextBoxHelper.Watermark="CRL Distribution Point URL"
+                PlaceholderText="CRL Distribution Point URL"
                 Text="" />
             <Button
                 x:Name="AddToken"
@@ -101,7 +101,7 @@
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
                                         Icon="Trash" />
 
                                 </StackPanel>

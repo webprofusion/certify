@@ -2,7 +2,7 @@
     x:Class="Certify.UI.Controls.ManagedCertificates"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -59,7 +59,7 @@
                         <fa:ImageAwesome
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                            Foreground="{StaticResource AccentFillColorDefaultBrush}"
                             Icon="Plug" />
 
                     </StackPanel>
@@ -71,7 +71,7 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="{Binding ConnectionTitle}" />
             </DockPanel>
             <DockPanel
@@ -79,10 +79,10 @@
                 DockPanel.Dock="Top"
                 LastChildFill="true">
 
-                <TextBox
+                <ui:TextBox
                     Name="txtFilter"
-                    Controls:TextBoxHelper.ClearTextButton="True"
-                    Controls:TextBoxHelper.Watermark="{x:Static res:SR.ManagedCertificates_Filter}"
+                    ClearButtonEnabled="True"
+                    PlaceholderText="{x:Static res:SR.ManagedCertificates_Filter}"
                     AutomationProperties.Name="{x:Static res:SR.ManagedCertificates_Filter}"
                     DockPanel.Dock="Right"
                     PreviewKeyDown="TxtFilter_PreviewKeyDown"
@@ -98,7 +98,7 @@
                 <TextBlock
                     Margin="16,4,16,4"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="Loading..."
                     TextAlignment="Center" />
             </DockPanel>
@@ -106,7 +106,7 @@
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
-                Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                Background="{DynamicResource ControlFillColorDefaultBrush}"
                 DockPanel.Dock="Top"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
@@ -208,7 +208,7 @@
             Width="2"
             Margin="8,0,0,0"
             HorizontalAlignment="Stretch"
-            Background="{StaticResource MahApps.Brushes.Accent4}" />
+            Background="{StaticResource AccentFillColorSecondaryBrush}" />
         <Grid x:Name="MainItemView" Grid.Column="2">
 
             <managedcertificate:ManagedCertificateSettings

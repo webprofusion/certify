@@ -1,8 +1,8 @@
-﻿<Controls:MetroWindow
+<ui:FluentWindow
     x:Class="Certify.UI.Windows.ServerConnections"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
@@ -10,11 +10,9 @@
     Title="Server Connections"
     Width="384"
     Height="500"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
+    Background="{DynamicResource ApplicationBackgroundBrush}"
     Closing="MetroWindow_Closing"
-    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
     <DockPanel Margin="8" LastChildFill="False">
@@ -48,7 +46,7 @@
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
                                         Icon="Plug" />
 
                                 </StackPanel>
@@ -67,7 +65,7 @@
                                     <fa:ImageAwesome
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
-                                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                        Foreground="{StaticResource AccentFillColorDefaultBrush}"
                                         Icon="Edit" />
 
 
@@ -120,4 +118,4 @@
             </Button>
         </DockPanel>
     </DockPanel>
-</Controls:MetroWindow>
+</ui:FluentWindow>

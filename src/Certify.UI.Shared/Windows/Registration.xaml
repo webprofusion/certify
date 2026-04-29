@@ -1,8 +1,8 @@
-<Controls:MetroWindow
+<ui:FluentWindow
     x:Class="Certify.UI.Windows.Registration"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,16 +11,14 @@
     Title="{x:Static res:SR.Registration}"
     Width="421.946"
     Height="255.15"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
+    Background="{DynamicResource ApplicationBackgroundBrush}"
     ResizeMode="NoResize"
-    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
-    <Controls:MetroWindow.LayoutTransform>
+    <ui:FluentWindow.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding MainViewModel.UIScaleFactor}" ScaleY="{Binding MainViewModel.UIScaleFactor}" />
-    </Controls:MetroWindow.LayoutTransform>
+    </ui:FluentWindow.LayoutTransform>
 
     <DockPanel>
         <StackPanel DockPanel.Dock="Top" Visibility="{Binding IsRegistrationMode, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
@@ -40,7 +38,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Content="{x:Static res:SR.RegistrationEmailAddress}" />
-                <TextBox
+                <ui:TextBox
                     x:Name="EmailAddress"
                     Width="306"
                     Height="23"
@@ -56,7 +54,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Content="{x:Static res:SR.LicenseKey}" />
-                <TextBox
+                <ui:TextBox
                     x:Name="LicenseKey"
                     Width="306"
                     Height="23"
@@ -92,7 +90,7 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Top"
                     Content="{x:Static res:SR.RegistrationEmailAddress}" />
-                <TextBox
+                <ui:TextBox
                     x:Name="DeactivateEmail"
                     Width="230"
                     Height="23"
@@ -121,4 +119,4 @@
         </DockPanel>
 
     </DockPanel>
-</Controls:MetroWindow>
+</ui:FluentWindow>

@@ -46,7 +46,7 @@
             SelectionMode="Single">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Control.Background}" />
+                    <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
                 </Style>
             </ListView.ItemContainerStyle>
 
@@ -98,7 +98,7 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBox
+                            <ui:TextBox
                                 Background="Transparent"
                                 BorderThickness="0"
                                 FontWeight="SemiBold"
@@ -114,7 +114,7 @@
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top"
                             FontSize="10"
-                            Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundChromeGray}"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Text="{Binding Message}"
                             TextWrapping="WrapWithOverflow" />
 

@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Models;
 using Certify.UI.Shared;
-using MahApps.Metro.Controls;
+using Wpf.Ui.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -249,7 +249,6 @@ namespace Certify.UI.Controls.ManagedCertificate
             var parentWindow = Window.GetWindow(this);
             var obj = parentWindow.FindName("MainFlyout");
             var flyout = (Flyout)obj;
-            flyout.Header = "Test Progress";
             flyout.Content = new TestProgress();
             flyout.IsOpen = !flyout.IsOpen;
         }

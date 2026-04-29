@@ -1,21 +1,21 @@
-﻿<UserControl
+<UserControl
     x:Class="Certify.UI.Controls.QuickStart"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <DockPanel MinHeight="300">
 
-        <controls:FlipView
+        <ui:FlipView
             x:Name="QuickStartFlipView"
             Margin="16"
             IsBannerEnabled="False"
             MouseHoverBorderEnabled="False">
 
-            <controls:FlipViewItem>
+            <ui:FlipViewItem>
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -36,8 +36,8 @@
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseDomains.png" />
 
                 </DockPanel>
-            </controls:FlipViewItem>
-            <controls:FlipViewItem>
+            </ui:FlipViewItem>
+            <ui:FlipViewItem>
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -56,8 +56,8 @@
                         DockPanel.Dock="Top"
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/ChooseAuth.png" />
                 </DockPanel>
-            </controls:FlipViewItem>
-            <controls:FlipViewItem>
+            </ui:FlipViewItem>
+            <ui:FlipViewItem>
                 <DockPanel Margin="16">
                     <TextBlock
                         DockPanel.Dock="Top"
@@ -76,8 +76,8 @@
                         DockPanel.Dock="Top"
                         Source="/Certify.UI.Shared;component/Assets/Images/QuickStart/PreviewDeployment.png" />
                 </DockPanel>
-            </controls:FlipViewItem>
+            </ui:FlipViewItem>
 
-        </controls:FlipView>
+        </ui:FlipView>
     </DockPanel>
 </UserControl>

@@ -140,8 +140,8 @@
     <PackageReference Include="FontAwesome.WPF">
       <Version>4.7.0.9</Version>
     </PackageReference>
-    <PackageReference Include="MahApps.Metro">
-      <Version>3.0.0-rc0525</Version>
+    <PackageReference Include="WPF-UI">
+      <Version>4.2.1</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights">
       <Version>2.23.0</Version>
