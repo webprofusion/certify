@@ -6,7 +6,7 @@
         <UseWindowsForms>true</UseWindowsForms>
         <!--assembly version specified here to allow WPF to load windows via startupUI without version dependency-->
         <AssemblyVersion>6.0.0.*</AssemblyVersion>
-        <NoWarn>NU1701</NoWarn>
+        <NoWarn>$(NoWarn);NU1701;WPF0001</NoWarn>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
@@ -25,12 +25,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ControlzEx" Version="7.0.4" />
         <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="All" />
         <PackageReference Include="FontAwesome.WPF" Version="4.7.0.9">
             <NoWarn>NU1701</NoWarn>
         </PackageReference>
-        <PackageReference Include="MahApps.Metro" Version="3.0.0-rc0529" />
         <PackageReference Include="Markdig" Version="1.1.3" />
         <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
         <PackageReference Include="PropertyChanged.Fody" Version="4.1.0" />

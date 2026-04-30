@@ -2,19 +2,55 @@
     x:Class="Certify.UI.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=Certify.UI.Shared"
     xmlns:utils="clr-namespace:Certify.UI.Utils;assembly=Certify.UI.Shared"
     StartupUri="pack://application:,,,/Certify.UI.Shared;component/Windows/MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Green.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Dark.Green.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/PresentationFramework.Fluent;component/Themes/Fluent.xaml" />
 
                 <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <Color x:Key="MahApps.Colors.SystemChromeHigh">#FF767676</Color>
+            <Color x:Key="MahApps.Colors.SystemAltLow">#FFEAEAEA</Color>
+
+            <SolidColorBrush x:Key="MahApps.Brushes.Accent" Color="{DynamicResource SystemAccentColor}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.AccentBase" Color="{DynamicResource SystemAccentColor}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Accent2" Color="{DynamicResource SystemAccentColorLight1}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Accent3" Color="{DynamicResource SystemAccentColorLight2}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Accent4" Color="{DynamicResource SystemAccentColorLight3}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Highlight" Color="{DynamicResource SystemAccentColorLight2}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.IdealForeground" Color="White" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Window.Background" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Control.Background" Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled" Color="{DynamicResource {x:Static SystemColors.InactiveBorderColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlBackgroundAltMediumHigh" Color="{DynamicResource {x:Static SystemColors.WindowColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundAltMediumHigh" Color="{DynamicResource {x:Static SystemColors.HighlightTextColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundBaseHigh" Color="{DynamicResource {x:Static SystemColors.ControlTextColorKey}}" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundBaseMediumHigh" Color="{DynamicResource {x:Static SystemColors.ControlTextColorKey}}" Opacity="0.85" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundBaseMedium" Color="{DynamicResource {x:Static SystemColors.ControlTextColorKey}}" Opacity="0.65" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundBaseLow" Color="{DynamicResource {x:Static SystemColors.ControlTextColorKey}}" Opacity="0.35" />
+            <SolidColorBrush x:Key="MahApps.Brushes.SystemControlForegroundChromeGray" Color="#FF767676" />
+            <SolidColorBrush x:Key="MahApps.Brushes.ValidationSummary1" Color="#FFD32F2F" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray" Color="#FF767676" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray1" Color="#FFF3F3F3" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray5" Color="#FF999999" />
+            <SolidColorBrush x:Key="MahApps.Brushes.Gray10" Color="#FF1F1F1F" />
+
+            <Style x:Key="MahApps.Styles.Button" TargetType="Button">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="Normal" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="Padding" Value="8,4" />
+            </Style>
+            <Style x:Key="MahApps.Styles.Button.Reveal" BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="Button" />
+            <Style x:Key="MahApps.Styles.Button.Circle" BasedOn="{StaticResource MahApps.Styles.Button}" TargetType="Button" />
+            <Style x:Key="MahApps.Styles.TextBox" TargetType="TextBox" />
+            <Style x:Key="MahApps.Styles.TextBox.DataGrid.Editing" TargetType="TextBox" />
+            <Style x:Key="MahApps.Styles.ComboBox" TargetType="ComboBox" />
+            <Style x:Key="MahApps.Styles.CheckBox.DataGrid" TargetType="CheckBox" />
+
             <!--  Heading  -->
             <Style x:Key="Subheading" TargetType="TextBlock">
                 <Setter Property="HorizontalAlignment" Value="Left" />
@@ -48,10 +84,6 @@
                 <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
             </Style>
-
-            <!--  brush color overrides (tab items and disabled buttons)  -->
-            <SolidColorBrush x:Key="MahApps.Brushes.Gray" Color="{DynamicResource MahApps.Colors.SystemChromeHigh}" />
-            <SolidColorBrush x:Key="MahApps.Brushes.Control.Disabled" Color="{DynamicResource MahApps.Colors.SystemAltLow}" />
 
             <Style TargetType="controls:NumericUpDown">
                 <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}" />

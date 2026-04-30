@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Windows;
 using Certify.Models.Providers;
-using ControlzEx.Theming;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
 using ToastNotifications.Messages;
@@ -38,11 +37,11 @@ namespace Certify.UI.Shared
             {
                 if (initialTheme == "Dark")
                 {
-                    ThemeManager.Current.ChangeTheme(application, "Dark.Green");
+                    application.ThemeMode = ThemeMode.Dark;
                 }
                 else
                 {
-                    ThemeManager.Current.ChangeTheme(application, "Light.Green");
+                    application.ThemeMode = ThemeMode.Light;
                 }
 
                 // refresh bindings to force dynamic resources to redraw
@@ -51,17 +50,16 @@ namespace Certify.UI.Shared
             }
             else
             {
-                var theme = ThemeManager.Current.DetectTheme();
                 string themeSelection;
 
-                if (theme.BaseColorScheme == "Light")
+                if (application.ThemeMode == ThemeMode.Light)
                 {
-                    ThemeManager.Current.ChangeTheme(application, "Dark.Green");
+                    application.ThemeMode = ThemeMode.Dark;
                     themeSelection = "Dark";
                 }
                 else
                 {
-                    ThemeManager.Current.ChangeTheme(application, "Light.Green");
+                    application.ThemeMode = ThemeMode.Light;
                     themeSelection = "Light";
                 }
 

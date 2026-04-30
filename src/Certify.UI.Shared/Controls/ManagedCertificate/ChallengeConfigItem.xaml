@@ -6,7 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
-    xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+    xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=Certify.UI.Shared"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
     d:DesignHeight="200"
