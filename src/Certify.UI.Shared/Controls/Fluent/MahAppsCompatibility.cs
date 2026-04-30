@@ -240,8 +240,20 @@ namespace MahApps.Metro.Controls
 
         public ToggleSwitch()
         {
-            Checked += (_, _) => IsOn = true;
-            Unchecked += (_, _) => IsOn = false;
+            Checked += (_, _) =>
+            {
+                if (IsOn != true)
+                {
+                    IsOn = true;
+                }
+            };
+            Unchecked += (_, _) =>
+            {
+                if (IsOn != false)
+                {
+                    IsOn = false;
+                }
+            };
         }
 
         public bool? IsOn
@@ -254,7 +266,11 @@ namespace MahApps.Metro.Controls
         {
             if (d is ToggleSwitch toggleSwitch)
             {
-                toggleSwitch.IsChecked = (bool?)e.NewValue;
+                var isOn = (bool?)e.NewValue;
+                if (toggleSwitch.IsChecked != isOn)
+                {
+                    toggleSwitch.IsChecked = isOn;
+                }
             }
         }
     }
