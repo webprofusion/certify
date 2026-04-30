@@ -2,7 +2,7 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.DeploymentTask"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=Certify.UI.Shared"
+    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:fa="http://schemas.fontawesome.io/icons/"

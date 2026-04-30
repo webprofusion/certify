@@ -20,6 +20,12 @@ namespace MahApps.Metro.Controls
         public static readonly DependencyProperty GlowBrushProperty =
             DependencyProperty.Register(nameof(GlowBrush), typeof(Brush), typeof(MetroWindow));
 
+        public static readonly DependencyProperty ShowMaxRestoreButtonProperty =
+            DependencyProperty.Register(nameof(ShowMaxRestoreButton), typeof(bool), typeof(MetroWindow), new PropertyMetadata(true));
+
+        public static readonly DependencyProperty ShowMinButtonProperty =
+            DependencyProperty.Register(nameof(ShowMinButton), typeof(bool), typeof(MetroWindow), new PropertyMetadata(true));
+
         public static readonly DependencyProperty FlyoutsProperty =
             DependencyProperty.Register(nameof(Flyouts), typeof(object), typeof(MetroWindow), new PropertyMetadata(null, OnFlyoutsChanged));
 
@@ -45,6 +51,18 @@ namespace MahApps.Metro.Controls
         {
             get => (Brush)GetValue(GlowBrushProperty);
             set => SetValue(GlowBrushProperty, value);
+        }
+
+        public bool ShowMaxRestoreButton
+        {
+            get => (bool)GetValue(ShowMaxRestoreButtonProperty);
+            set => SetValue(ShowMaxRestoreButtonProperty, value);
+        }
+
+        public bool ShowMinButton
+        {
+            get => (bool)GetValue(ShowMinButtonProperty);
+            set => SetValue(ShowMinButtonProperty, value);
         }
 
         public object Flyouts
@@ -133,6 +151,9 @@ namespace MahApps.Metro.Controls
         public static readonly DependencyProperty IntervalProperty =
             DependencyProperty.Register(nameof(Interval), typeof(double), typeof(NumericUpDown), new PropertyMetadata(1d));
 
+        public static readonly DependencyProperty NumericInputModeProperty =
+            DependencyProperty.Register(nameof(NumericInputMode), typeof(string), typeof(NumericUpDown));
+
         private bool _updatingText;
 
         public NumericUpDown()
@@ -164,6 +185,12 @@ namespace MahApps.Metro.Controls
         {
             get => (double)GetValue(IntervalProperty);
             set => SetValue(IntervalProperty, value);
+        }
+
+        public string NumericInputMode
+        {
+            get => (string)GetValue(NumericInputModeProperty);
+            set => SetValue(NumericInputModeProperty, value);
         }
 
         private static void OnValueChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -312,8 +339,13 @@ namespace MahApps.Metro.Controls
         public static readonly DependencyProperty HeaderFontSizeProperty =
             DependencyProperty.RegisterAttached("HeaderFontSize", typeof(double), typeof(HeaderedControlHelper));
 
+        public static readonly DependencyProperty HeaderBackgroundProperty =
+            DependencyProperty.RegisterAttached("HeaderBackground", typeof(Brush), typeof(HeaderedControlHelper));
+
         public static double GetHeaderFontSize(DependencyObject obj) => (double)obj.GetValue(HeaderFontSizeProperty);
         public static void SetHeaderFontSize(DependencyObject obj, double value) => obj.SetValue(HeaderFontSizeProperty, value);
+        public static Brush GetHeaderBackground(DependencyObject obj) => (Brush)obj.GetValue(HeaderBackgroundProperty);
+        public static void SetHeaderBackground(DependencyObject obj, Brush value) => obj.SetValue(HeaderBackgroundProperty, value);
     }
 
     public static class ScrollViewerHelper

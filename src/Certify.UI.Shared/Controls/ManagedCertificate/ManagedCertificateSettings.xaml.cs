@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Models;
 using Certify.UI.Shared;
+using MahApps.Metro.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
