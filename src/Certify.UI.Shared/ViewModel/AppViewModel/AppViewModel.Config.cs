@@ -25,7 +25,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshCertificateAuthorityList()
         {
-            var list = await _certifyClient.GetCertificateAuthorities();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
+            var list = await client.GetCertificateAuthorities();
 
             CertificateAuthorities.Clear();
 
@@ -77,6 +82,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshAllDataStoreItems()
         {
+            if (!TryGetAvailableCertifyClient(out _))
+            {
+                return;
+            }
+
             await RefreshCertificateAuthorityList();
             await RefreshStoredCredentialsList();
             await RefreshAccountsList();
@@ -85,7 +95,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Cached list of current ACME accounts
         /// </summary>
-        public ObservableCollection<AccountDetails> AccountDetails = new ObservableCollection<AccountDetails>();
+        public ObservableCollection<AccountDetails> AccountDetails = [];
 
         /// <summary>
         /// Refresh cached list of ACME accounts
@@ -93,7 +103,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshAccountsList()
         {
-            var list = await _certifyClient.GetAccounts();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
+            var list = await client.GetAccounts();
 
             AccountDetails.Clear();
 
@@ -180,7 +195,7 @@ namespace Certify.UI.ViewModel
         /// <summary>
         /// Cached collection of stored credentials
         /// </summary>
-        public ObservableCollection<StoredCredential> StoredCredentials { get; set; }
+        public ObservableCollection<StoredCredential> StoredCredentials { get; set; } = [];
 
         /// <summary>
         /// Update a given stored credential via service
@@ -231,7 +246,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshStoredCredentialsList()
         {
-            var list = await _certifyClient.GetCredentials();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
+            var list = await client.GetCredentials();
 
             if (StoredCredentials == null)
             {
@@ -259,7 +279,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshChallengeAPIList()
         {
-            var list = await _certifyClient.GetChallengeAPIList();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
+            var list = await client.GetChallengeAPIList();
             System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 ChallengeAPIProviders = new ObservableCollection<ChallengeProviderDefinition>(list);
@@ -284,7 +309,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task RefreshDeploymentTaskProviderList()
         {
-            var list = await _certifyClient.GetDeploymentProviderList();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
+            var list = await client.GetDeploymentProviderList();
             System.Windows.Application.Current.Dispatcher.Invoke(delegate
             {
                 DeploymentTaskProviders = new ObservableCollection<DeploymentProviderDefinition>(list.OrderBy(l => l.Title));

@@ -24,12 +24,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         internal async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
-            if (_certifyClient == null || !IsServiceAvailable)
+            if (!TryGetAvailableCertifyClient(out var client))
             {
                 return [];
             }
 
-            return await _certifyClient.GetServerSiteList(serverType);
+            return await client.GetServerSiteList(serverType);
         }
 
         /// <summary>
@@ -39,11 +39,22 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<bool> CheckServerAvailability(StandardServerTypes serverType)
         {
-            IsIISAvailable = await _certifyClient.IsServerAvailable(serverType);
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                IsIISAvailable = false;
+                IISVersion = null;
+
+                RaisePropertyChangedEvent(nameof(IISVersion));
+                RaisePropertyChangedEvent(nameof(ShowIISWarning));
+
+                return false;
+            }
+
+            IsIISAvailable = await client.IsServerAvailable(serverType);
 
             if (IsIISAvailable)
             {
-                IISVersion = await _certifyClient.GetServerVersion(serverType);
+                IISVersion = await client.GetServerVersion(serverType);
             }
 
             RaisePropertyChangedEvent(nameof(IISVersion));
@@ -79,7 +90,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         internal async Task<List<DomainOption>> GetServerSiteDomains(StandardServerTypes serverType, string siteId)
         {
-            return await _certifyClient.GetServerSiteDomains(serverType, siteId);
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return [];
+            }
+
+            return await client.GetServerSiteDomains(serverType, siteId);
         }
     }
 }

@@ -109,6 +109,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public virtual async Task RefreshManagedCertificates()
         {
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
             // Reset page index at the start of refresh to ensure we load from page 0
             _filterPageIndex = 0;
             
@@ -122,7 +127,7 @@ namespace Certify.UI.ViewModel
             filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
             filter.Health = string.IsNullOrWhiteSpace(FilterHealth) ? null : FilterHealth;
 
-            var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+            var result = await client.GetManagedCertificateSearchResult(filter);
 
             ManagedCertificates = new ObservableCollection<ManagedCertificate>(result.Results);
             TotalManagedCertificates = result.TotalResults;
@@ -134,6 +139,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task LoadNextManagedCertificatesPage()
         {
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
             // Check if there are more results to load
             if (ManagedCertificates == null || ManagedCertificates.Count >= TotalManagedCertificates)
             {
@@ -149,7 +159,7 @@ namespace Certify.UI.ViewModel
             filter.Keyword = string.IsNullOrWhiteSpace(FilterKeyword) ? null : FilterKeyword;
             filter.Health = string.IsNullOrWhiteSpace(FilterHealth) ? null : FilterHealth;
 
-            var result = await _certifyClient.GetManagedCertificateSearchResult(filter);
+            var result = await client.GetManagedCertificateSearchResult(filter);
 
             if (result?.Results != null && result.Results.Any())
             {
@@ -174,14 +184,14 @@ namespace Certify.UI.ViewModel
 
         public async Task<StatusSummary> GetManagedCertificateSummary()
         {
-            if (!IsServiceAvailable)
+            if (!TryGetAvailableCertifyClient(out var client))
             {
                 return null;
             }
 
             var filter = new ManagedCertificateFilter();
 
-            return await _certifyClient?.GetManagedCertificateSummary(filter);
+            return await client.GetManagedCertificateSummary(filter);
         }
 
         public async Task ManagedCertificatesNextPage()

@@ -337,7 +337,12 @@ namespace Certify.UI.ViewModel
         /// <returns>Returns an action result indicating the success or failure of the credential check.</returns>
         internal async Task<ActionResult> CheckManagementHubCredentials(string managementHubAPIUrl, string clientID, string clientSecret)
         {
-            return await _certifyClient.CheckManagementHubCredentials(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return new ActionResult("Service is not connected.", false);
+            }
+
+            return await client.CheckManagementHubCredentials(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
         }
 
         /// <summary>
@@ -349,12 +354,22 @@ namespace Certify.UI.ViewModel
         /// <returns>Returns an action result indicating the success or failure of the join operation.</returns>
         internal async Task<ActionResult> JoinManagementHub(string managementHubAPIUrl, string clientID, string clientSecret)
         {
-            return await _certifyClient.JoinManagementHub(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return new ActionResult("Service is not connected.", false);
+            }
+
+            return await client.JoinManagementHub(new Models.Hub.HubJoiningClientSecret { Url = managementHubAPIUrl, ClientId = clientID, Secret = clientSecret });
         }
 
         internal async Task<ActionResult> CheckManagementHubConnectionStatus()
         {
-            return await _certifyClient.CheckManagementHubConnectionStatus();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return new ActionResult("Service is not connected.", false);
+            }
+
+            return await client.CheckManagementHubConnectionStatus();
         }
     }
 }

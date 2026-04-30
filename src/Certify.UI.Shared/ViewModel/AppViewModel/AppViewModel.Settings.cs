@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -173,6 +173,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public virtual async Task LoadSettingsAsync()
         {
+            if (!TryGetAvailableCertifyClient(out _))
+            {
+                return;
+            }
+
             Preferences = await GetPreferences();
             if (!IsInDegradedMode)
             {

@@ -31,7 +31,12 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         public async Task<UpdateCheck> CheckForUpdates()
         {
-            return await _certifyClient.CheckForUpdates();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return null;
+            }
+
+            return await client.CheckForUpdates();
         }
 
         /// <summary>

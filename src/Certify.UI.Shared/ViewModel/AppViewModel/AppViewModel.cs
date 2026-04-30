@@ -137,6 +137,13 @@ namespace Certify.UI.ViewModel
         /// </summary>
         internal ICertifyClient _certifyClient;
 
+        protected bool TryGetAvailableCertifyClient(out ICertifyClient client)
+        {
+            client = _certifyClient;
+
+            return client != null && IsServiceAvailable;
+        }
+
         public string CurrentError { get; set; }
         public bool IsError { get; set; }
 
@@ -222,9 +229,14 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public async Task RefreshDataStoreStatus()
         {
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return;
+            }
+
             try
             {
-                DataStoreStatus = await _certifyClient.GetDataStoreStatus();
+                DataStoreStatus = await client.GetDataStoreStatus();
             }
             catch (Exception ex)
             {
@@ -237,6 +249,11 @@ namespace Certify.UI.ViewModel
         /// </summary>
         public async Task<ActionResult> AttemptDataStoreReconnection()
         {
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return new ActionResult("Service is not connected.", false);
+            }
+
             if (IsReconnecting)
             {
                 return new ActionResult("Reconnection already in progress.", false);
@@ -246,7 +263,7 @@ namespace Certify.UI.ViewModel
 
             try
             {
-                var result = await _certifyClient.AttemptDataStoreReconnection();
+                var result = await client.AttemptDataStoreReconnection();
 
                 // Refresh the status regardless of result
                 await RefreshDataStoreStatus();
@@ -266,7 +283,12 @@ namespace Certify.UI.ViewModel
 
         public async Task<List<ActionResult>> PerformServiceDiagnostics()
         {
-            return await _certifyClient.PerformServiceDiagnostics();
+            if (!TryGetAvailableCertifyClient(out var client))
+            {
+                return [];
+            }
+
+            return await client.PerformServiceDiagnostics();
         }
 
         /// <summary>
