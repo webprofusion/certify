@@ -98,7 +98,7 @@ namespace Certify.UI.Controls.Fluent
                 return;
             }
 
-            var currentValue = Value ?? (Minimum > double.MinValue ? Minimum : 0);
+            var currentValue = Value ?? (Minimum != double.MinValue ? Minimum : 0);
             Value = currentValue + (e.Key == Key.Up ? Interval : -Interval);
             e.Handled = true;
         }

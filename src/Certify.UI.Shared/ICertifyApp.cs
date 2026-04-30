@@ -1,6 +1,6 @@
 using System;
 using System.Windows;
-using System.Windows.Media;
+using System.Windows.Threading;
 using Certify.Models.Providers;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
@@ -72,30 +72,16 @@ namespace Certify.UI.Shared
         {
             foreach (Window window in application.Windows)
             {
-                window.InvalidateVisual();
-                InvalidateVisualTree(window);
+                window.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    window.InvalidateVisual();
+                    window.UpdateLayout();
+                }), DispatcherPriority.Background);
             }
 
             // refresh bindings that use converters returning theme brushes
             mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.ManagedCertificates));
             mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.SelectedItem));
-        }
-
-        private static void InvalidateVisualTree(DependencyObject parent)
-        {
-            var childCount = VisualTreeHelper.GetChildrenCount(parent);
-
-            for (var i = 0; i < childCount; i++)
-            {
-                var child = VisualTreeHelper.GetChild(parent, i);
-
-                if (child is UIElement element)
-                {
-                    element.InvalidateVisual();
-                }
-
-                InvalidateVisualTree(child);
-            }
         }
 
         public static Notifier Startup(ILog log, ViewModel.AppViewModel mainViewModel, StartupEventArgs e)
