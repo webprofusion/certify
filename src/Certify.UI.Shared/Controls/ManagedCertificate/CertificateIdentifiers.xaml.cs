@@ -34,7 +34,8 @@ namespace Certify.UI.Controls.ManagedCertificate
                                   };
 
         private async void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        { // Marshal UI updates back to UI thread
+        {
+            // Marshal UI updates back to UI thread
             await Dispatcher.InvokeAsync(async () =>
             {
                 if (e.PropertyName == "SelectedItem")

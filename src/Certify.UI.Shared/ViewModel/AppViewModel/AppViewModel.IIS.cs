@@ -24,6 +24,11 @@ namespace Certify.UI.ViewModel
         /// <returns></returns>
         internal async Task<List<SiteInfo>> GetServerSiteList(StandardServerTypes serverType)
         {
+            if (_certifyClient == null || !IsServiceAvailable)
+            {
+                return [];
+            }
+
             return await _certifyClient.GetServerSiteList(serverType);
         }
 
