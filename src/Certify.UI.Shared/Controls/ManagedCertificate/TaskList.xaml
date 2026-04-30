@@ -94,7 +94,7 @@
                             <TextBlock DockPanel.Dock="Left" Text="{Binding TaskTrigger, Converter={StaticResource TaskTriggerConverter}}" />
                             <TextBlock
                                 DockPanel.Dock="Left"
-                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                 Text="{Binding Description}"
                                 TextWrapping="WrapWithOverflow"
                                 Visibility="Collapsed" />
@@ -129,13 +129,13 @@
 
                                 <TextBlock
                                     Margin="8,0,0,0"
-                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                     Text="{Binding DateLastExecuted, StringFormat=F}" />
                             </StackPanel>
 
                             <TextBlock
                                 MaxHeight="32"
-                                Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                 Text="{Binding LastResult}"
                                 TextTrimming="WordEllipsis"
                                 TextWrapping="WrapWithOverflow" />

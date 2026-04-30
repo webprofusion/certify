@@ -10,7 +10,7 @@
     Title="Data Store Connections"
     Width="450"
     Height="390"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     Closing="Window_Closing"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
@@ -111,7 +111,7 @@
                                             <StackPanel Orientation="Vertical">
                                                 <TextBlock
                                                     DockPanel.Dock="Left"
-                                                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                                     Text="{Binding Path=TypeId}"
                                                     TextWrapping="WrapWithOverflow" />
                                             </StackPanel>

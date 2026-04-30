@@ -10,7 +10,7 @@
     Title="Edit Server Connection"
     Width="540"
     Height="320"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">

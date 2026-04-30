@@ -17,7 +17,7 @@
     MinHeight="400"
     d:DataContext="{d:DesignInstance Type=local:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     Closing="Window_Closing"
     Loaded="Window_Loaded"
     mc:Ignorable="d">
@@ -27,7 +27,7 @@
     </Window.Resources>
 
     <Grid>
-        <Grid>
+        <Grid Background="{DynamicResource LayerFillColorDefaultBrush}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="48" />
@@ -37,6 +37,12 @@
             <Grid.LayoutTransform>
                 <ScaleTransform CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
             </Grid.LayoutTransform>
+
+            <Border
+                Grid.RowSpan="3"
+                Width="4"
+                HorizontalAlignment="Left"
+                Background="{DynamicResource AccentFillColorDefaultBrush}" />
 
         <!--  Degraded Mode Banner  -->
         <Border
@@ -78,7 +84,7 @@
 
         <DockPanel
             Grid.Row="1"
-            Margin="8,8,8,0"
+            Margin="16,12,16,0"
             VerticalAlignment="Top">
 
             <Button
@@ -126,14 +132,14 @@
                     Background="{DynamicResource AccentFillColorDefaultBrush}"
                     Click="ButtonUpdateAvailable_Click"
                     FontWeight="DemiBold"
-                    Foreground="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+                    Foreground="{DynamicResource LayerFillColorDefaultBrush}">
 
                     <StackPanel Orientation="Horizontal">
                         <fa:ImageAwesome
                             Name="UpdateIcon"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
-                            Foreground="{DynamicResource {x:Static SystemColors.HighlightTextBrushKey}}"
+                            Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                             Icon="Download" />
                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static res:SR.Update_Available}" /></TextBlock>
                     </StackPanel>
@@ -150,7 +156,7 @@
                     x:Name="ConnectingService"
                     Height="12                                      "
                     Margin="4,0,0,0"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Icon="Refresh"
                     Spin="True"
                     SpinDuration="1"
@@ -158,7 +164,7 @@
                 <TextBlock
                     Margin="8,0,0,0"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"><Run Text="Loading.." /></TextBlock>
             </StackPanel>
 
             <DockPanel
@@ -187,12 +193,12 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="top"
-                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="{Binding ConnectionState}" />
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="{Binding ConnectionTitle}" />
 
 
@@ -200,12 +206,12 @@
 
         </DockPanel>
 
-        <TabControl
-            x:Name="MainTabControl"
-            Grid.Row="2"
-            Width="auto"
-            Height="auto"
-            Margin="8,8,8,8"
+            <TabControl
+                x:Name="MainTabControl"
+                Grid.Row="2"
+                Width="auto"
+                Height="auto"
+                Margin="16,8,16,16"
             HorizontalAlignment="Stretch"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
@@ -258,7 +264,7 @@
             Padding="8"
             HorizontalAlignment="Right"
             VerticalAlignment="Stretch"
-            Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+            Background="{DynamicResource LayerFillColorDefaultBrush}"
             Header="Flyout"
             Visibility="Collapsed">
             <GroupBox.LayoutTransform>

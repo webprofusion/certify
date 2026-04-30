@@ -9,7 +9,7 @@
     Title="Edit Deployment Task"
     Width="500"
     Height="460"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     ResizeMode="CanResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">

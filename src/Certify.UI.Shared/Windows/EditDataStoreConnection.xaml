@@ -8,7 +8,7 @@
     Title="Edit Data Store Connection"
     Width="522"
     Height="276"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     Loaded="Window_Loaded"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterOwner"

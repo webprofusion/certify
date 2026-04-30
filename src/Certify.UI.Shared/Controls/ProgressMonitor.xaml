@@ -46,7 +46,7 @@
             SelectionMode="Single">
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+                    <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
                 </Style>
             </ListView.ItemContainerStyle>
 
@@ -114,7 +114,7 @@
                             HorizontalAlignment="Stretch"
                             DockPanel.Dock="Top"
                             FontSize="10"
-                            Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                             Text="{Binding Message}"
                             TextWrapping="WrapWithOverflow" />
 

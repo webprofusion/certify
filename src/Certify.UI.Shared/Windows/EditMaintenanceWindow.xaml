@@ -9,7 +9,7 @@
     Title="Edit Maintenance Window"
     Width="600"
     Height="650"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
     BorderThickness="1"
     ResizeMode="NoResize"
@@ -223,8 +223,8 @@
                 <Border
                     Margin="0,8,0,0"
                     Padding="8"
-                    Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
-                    BorderBrush="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
+                    BorderBrush="{DynamicResource TextFillColorSecondaryBrush}"
                     BorderThickness="1">
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold">Schedule Preview:</TextBlock>

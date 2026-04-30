@@ -9,7 +9,7 @@
     Title="Server Connections"
     Width="384"
     Height="500"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     Closing="Window_Closing"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
@@ -77,13 +77,13 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock
                                         DockPanel.Dock="Left"
-                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         Text="{Binding Path=Host}"
                                         TextWrapping="WrapWithOverflow" />
                                     <TextBlock
                                         Margin="4,0,0,0"
                                         DockPanel.Dock="Left"
-                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                         Text="{Binding Path=Port}"
                                         TextWrapping="WrapWithOverflow" />
                                 </StackPanel>

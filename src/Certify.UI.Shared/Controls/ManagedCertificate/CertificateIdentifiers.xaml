@@ -108,7 +108,7 @@
                                             <DataTemplate>
                                                 <StackPanel Orientation="Vertical">
                                                     <TextBlock FontWeight="SemiBold" Text="{Binding Title}" />
-                                                    <TextBlock Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}" Text="{Binding InstanceTitle}" />
+                                                    <TextBlock Foreground="{DynamicResource TextFillColorSecondaryBrush}" Text="{Binding InstanceTitle}" />
                                                 </StackPanel>
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
@@ -403,7 +403,7 @@
                                                             <fa:ImageAwesome
                                                                 Height="12"
                                                                 Margin="0,0,0,0"
-                                                                Foreground="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}"
+                                                                Foreground="{DynamicResource ControlStrokeColorDefaultBrush}"
                                                                 Icon="CircleOutline" />
 
                                                         </Button>

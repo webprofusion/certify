@@ -128,12 +128,12 @@
                 </StackPanel>
                 <Border
                     Margin="0,16,8,8"
-                    Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                    Background="{DynamicResource SolidBackgroundFillColorBaseBrush}"
                     DockPanel.Dock="Top">
                     <TextBlock
                         Margin="8,8,8,8"
                         FontStyle="Italic"
-                        Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                         Text="{Binding SelectedItem.RenewalFailureMessage}"
                         TextWrapping="Wrap" />
                 </Border>
@@ -228,13 +228,13 @@
                 </StackPanel>
                 <Border
                     Margin="0,0,0,0"
-                    Background="{DynamicResource {x:Static SystemColors.ControlBrush}}"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderThickness="1">
 
                     <TextBox
                         Margin="0,8,0,8"
                         Padding="8,8,8,8"
-                        Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                        Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                         IsReadOnly="True"
                         Text="{Binding SelectedItem.RenewalFailureMessage}"
                         TextWrapping="WrapWithOverflow" />
@@ -269,7 +269,7 @@
                                 Margin="0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                Foreground="#FF6BB039"
+                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                 Icon="Database" />
                             <TextBlock
                                 Margin="8,0,0,0"

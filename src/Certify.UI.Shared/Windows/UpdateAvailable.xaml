@@ -13,7 +13,7 @@
     Height="423"
     MinWidth="300"
     MinHeight="300"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     IsVisibleChanged="UserControl_IsVisibleChanged"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">

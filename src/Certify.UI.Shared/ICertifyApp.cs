@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Media;
 using Certify.Models.Providers;
 using ToastNotifications;
 using ToastNotifications.Lifetime;
@@ -44,8 +45,7 @@ namespace Certify.UI.Shared
                     application.ThemeMode = ThemeMode.Light;
                 }
 
-                // refresh bindings to force dynamic resources to redraw
-                mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.ManagedCertificates));
+                RefreshTheme(application, mainViewModel);
                 return initialTheme;
             }
             else
@@ -63,8 +63,38 @@ namespace Certify.UI.Shared
                     themeSelection = "Light";
                 }
 
-                mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.ManagedCertificates));
+                RefreshTheme(application, mainViewModel);
                 return themeSelection;
+            }
+        }
+
+        private static void RefreshTheme(System.Windows.Application application, Certify.UI.ViewModel.AppViewModel mainViewModel)
+        {
+            foreach (Window window in application.Windows)
+            {
+                window.InvalidateVisual();
+                InvalidateVisualTree(window);
+            }
+
+            // refresh bindings that use converters returning theme brushes
+            mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.ManagedCertificates));
+            mainViewModel.RaisePropertyChangedEvent(nameof(mainViewModel.SelectedItem));
+        }
+
+        private static void InvalidateVisualTree(DependencyObject parent)
+        {
+            var childCount = VisualTreeHelper.GetChildrenCount(parent);
+
+            for (var i = 0; i < childCount; i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+
+                if (child is UIElement element)
+                {
+                    element.InvalidateVisual();
+                }
+
+                InvalidateVisualTree(child);
             }
         }
 

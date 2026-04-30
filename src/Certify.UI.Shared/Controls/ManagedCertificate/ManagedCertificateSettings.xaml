@@ -51,7 +51,7 @@
                     Margin="0,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Finish Edit"
-                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderThickness="0"
                     Click="FinishedEditName_Click"
                     DockPanel.Dock="Left"
@@ -70,14 +70,14 @@
                     AutomationProperties.Name="{Binding SelectedItem.Name}"
                     DockPanel.Dock="Left"
                     FontSize="20"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                     Text="{Binding SelectedItem.Name}" />
                 <Button
                     x:Name="EditName"
                     Margin="16,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Edit Name"
-                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                     BorderThickness="0"
                     Click="EditName_Click"
                     DockPanel.Dock="Left"
@@ -93,7 +93,7 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
-                Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                 BorderThickness="0"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
@@ -214,11 +214,14 @@
         </DockPanel>
 
         <!--  managed cert detail tabs  -->
-        <DockPanel
+        <Border
             Margin="8,0,8,0"
-            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+            Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1"
             DockPanel.Dock="Top"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
+            <DockPanel>
 
 
             <TabControl
@@ -293,6 +296,7 @@
                     <managedcertificate:Preview Margin="0,8,0,0" />
                 </TabItem>
             </TabControl>
-        </DockPanel>
+            </DockPanel>
+        </Border>
     </DockPanel>
 </UserControl>

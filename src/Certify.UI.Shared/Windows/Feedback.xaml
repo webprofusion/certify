@@ -11,7 +11,7 @@
     Height="333.8"
     MinWidth="300"
     MinHeight="300"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">
     <Window.LayoutTransform>

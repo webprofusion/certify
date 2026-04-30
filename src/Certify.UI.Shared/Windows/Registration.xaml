@@ -10,7 +10,7 @@
     Title="{x:Static res:SR.Registration}"
     Width="421.946"
     Height="255.15"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">

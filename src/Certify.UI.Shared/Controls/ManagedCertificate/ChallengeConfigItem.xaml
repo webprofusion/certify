@@ -257,7 +257,7 @@
                         x:Name="RefreshingDnsZones"
                         Height="12"
                         Margin="4,0,0,0"
-                        Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+                        Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                         Icon="Refresh"
                         Spin="True"
                         SpinDuration="1"

@@ -11,7 +11,21 @@
 
                 <ResourceDictionary Source="pack://application:,,,/ToastNotifications.Messages;component/Themes/Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <Color x:Key="SystemAccentColor">#FF78B83E</Color>
+            <Color x:Key="SystemAccentColorLight1">#FF8FC75A</Color>
+            <Color x:Key="SystemAccentColorLight2">#FFA8D27A</Color>
+            <Color x:Key="SystemAccentColorLight3">#FFDDEECD</Color>
+            <Color x:Key="SystemAccentColorDark1">#FF5EA02D</Color>
+            <Color x:Key="SystemAccentColorDark2">#FF467D1F</Color>
+            <Color x:Key="SystemAccentColorDark3">#FF315916</Color>
+            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FF78B83E" />
+            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#FF6EAA38" />
+            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#FFDDEECD" />
+            <SolidColorBrush x:Key="AccentFillColorDisabledBrush" Color="#6680B950" />
+            <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFFFF" />
             <SolidColorBrush x:Key="ValidationErrorBrush" Color="#FFD32F2F" />
+            <SolidColorBrush x:Key="WindowTitleColorBrush" Color="#FF78B83E" />
 
             <!--  Heading  -->
             <Style x:Key="Subheading" TargetType="TextBlock">
@@ -19,6 +33,7 @@
                 <Setter Property="FontFamily" Value="Segoe UI Semibold" />
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="Padding" Value="0,0,0,4" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Style>
             <!--  Heading With Top Margin  -->
             <Style x:Key="SubheadingWithMargin" TargetType="TextBlock">
@@ -26,6 +41,7 @@
                 <Setter Property="FontFamily" Value="Segoe UI Semibold" />
                 <Setter Property="FontSize" Value="14" />
                 <Setter Property="Padding" Value="0,8,0,4" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
             </Style>
             <!--  Instruction Text  -->
 
@@ -34,7 +50,7 @@
                 <Setter Property="FontFamily" Value="Segoe UI" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="0,6,0,6" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
 
             </Style>
@@ -43,24 +59,79 @@
                 <Setter Property="FontFamily" Value="Segoe UI" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="Padding" Value="0,2,0,2" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
                 <Setter Property="TextWrapping" Value="WrapWithOverflow" />
             </Style>
 
+            <Style TargetType="Window">
+                <Setter Property="Background" Value="{DynamicResource LayerFillColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+                <Setter Property="TextOptions.TextRenderingMode" Value="ClearType" />
+            </Style>
+
+            <Style TargetType="UserControl">
+                <Setter Property="Background" Value="{DynamicResource LayerFillColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+            </Style>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style TargetType="Label">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="Padding" Value="4,2" />
+            </Style>
+
             <Style TargetType="ComboBox">
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" />
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="Padding" Value="6,3" />
             </Style>
 
             <Style TargetType="TextBox">
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" />
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="Padding" Value="8,4" />
             </Style>
 
             <Style TargetType="Button">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="Normal" />
                 <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="MinHeight" Value="30" />
+                <Setter Property="Padding" Value="10,5" />
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
 
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}" />
+            <Style TargetType="ListView">
+                <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style TargetType="ListViewItem">
+                <Setter Property="Padding" Value="8,6" />
+                <Setter Property="Margin" Value="0,0,0,2" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style TargetType="TabControl">
+                <Setter Property="Background" Value="{DynamicResource LayerFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+            </Style>
+
+            <Style TargetType="TabItem">
+                <Setter Property="Padding" Value="12,7" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
             </Style>
 
             <!--  control templates  -->

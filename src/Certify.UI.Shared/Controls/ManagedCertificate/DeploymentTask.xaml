@@ -128,7 +128,7 @@
                                     <StackPanel HorizontalAlignment="Stretch" Orientation="Horizontal">
                                         <TextBlock
                                             DockPanel.Dock="Left"
-                                            Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                                            Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                             Text="{Binding Description}" />
 
                                         <StackPanel
@@ -392,7 +392,7 @@
                         </StackPanel>
                         <ItemsControl
                             x:Name="DeploymentTaskParams"
-                            BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
+                            BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                             DockPanel.Dock="Top"
                             ItemsSource="{Binding EditableParameters}">
                             <ItemsControl.ItemTemplateSelector>

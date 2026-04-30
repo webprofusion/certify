@@ -34,7 +34,7 @@
                         Margin="0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Foreground="#FF6BB039"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="FolderOpen" />
                     <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="Browse to file" /></TextBlock>
                 </StackPanel>
@@ -65,7 +65,7 @@
                         Margin="0"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
-                        Foreground="#FF6BB039"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="PlusCircle" />
                     <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="Add" /></TextBlock>
                 </StackPanel>

@@ -14,7 +14,7 @@
     Height="487"
     d:DataContext="{d:DesignInstance Type=certifyui:AppViewModelDesign,
                                      IsDesignTimeCreatable=True}"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     Loaded="UserControl_OnLoaded"
     mc:Ignorable="d">
 
@@ -70,7 +70,7 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="{Binding ConnectionTitle}" />
             </DockPanel>
             <DockPanel
@@ -95,7 +95,7 @@
                 <TextBlock
                     Margin="16,4,16,4"
                     DockPanel.Dock="Left"
-                    Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
+                    Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                     Text="Loading..."
                     TextAlignment="Center" />
             </DockPanel>
@@ -103,7 +103,8 @@
             <ListView
                 Name="lvManagedCertificates"
                 AutomationProperties.Name="Managed Certificates List"
-                Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}"
                 DockPanel.Dock="Top"
                 ItemsSource="{Binding ManagedCertificates}"
                 ScrollViewer.CanContentScroll="True"
@@ -136,14 +137,22 @@
                 </ListView.ContextMenu>
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="8,7" />
+                        <Setter Property="Margin" Value="0,0,0,2" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                        <Setter Property="Background" Value="Transparent" />
                         <EventSetter Event="PreviewMouseLeftButtonDown" Handler="ListViewItem_InteractionEvent" />
                         <EventSetter Event="PreviewTouchDown" Handler="ListViewItem_InteractionEvent" />
                         <EventSetter Event="PreviewKeyDown" Handler="ListViewItem_PreviewKeyDown" />
-                        <Style.Resources>
-                            <!--  for non-Aero systems (windows server 2008 r2 and below)  -->
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="Black" />
-                            <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#efefef" />
-                        </Style.Resources>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
                     </Style>
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
@@ -182,13 +191,13 @@
                                             Margin="0,0,0,0"
                                             FontSize="10"
                                             FontWeight="Normal"
-                                            Foreground="DarkGray"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                             Text="Managed by " />
                                         <TextBlock
                                             Margin="0,0,0,0"
                                             FontSize="10"
                                             FontWeight="DemiBold"
-                                            Foreground="DarkGray"
+                                            Foreground="{DynamicResource TextFillColorTertiaryBrush}"
                                             Text="{Binding Path=SourceName}" />
                                     </StackPanel>
                                 </StackPanel>

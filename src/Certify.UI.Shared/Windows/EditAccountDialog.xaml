@@ -9,7 +9,7 @@
     Title="{x:Static res:SR.Account_Edit_SectionTitle}"
     Width="590"
     Height="480"
-    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Background="{DynamicResource LayerFillColorDefaultBrush}"
     ResizeMode="CanResizeWithGrip"
     WindowStartupLocation="CenterOwner"
     mc:Ignorable="d">

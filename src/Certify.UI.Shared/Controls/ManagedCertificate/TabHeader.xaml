@@ -13,7 +13,7 @@
     <DockPanel LastChildFill="True">
         <DockPanel.Style>
             <Style>
-                <Setter Property="DockPanel.Background" Value="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" />
+                <Setter Property="DockPanel.Background" Value="{DynamicResource CardBackgroundFillColorDefaultBrush}" />
                 <Style.Triggers>
                     <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type TabItem}}, Path=(IsSelected)}" Value="true">
                         <Setter Property="DockPanel.Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
@@ -38,11 +38,11 @@
                 FontSize="11">
                 <Label.Style>
                     <Style>
-                        <Setter Property="Label.Foreground" Value="{DynamicResource TextBrush}" />
+                        <Setter Property="Label.Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
                         <Setter Property="Label.FontWeight" Value="SemiBold" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType={x:Type TabItem}}, Path=IsSelected}" Value="true">
-                                <Setter Property="Label.Foreground" Value="{DynamicResource TextBrush}" />
+                                <Setter Property="Label.Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>

@@ -26,13 +26,13 @@
                     Margin="0,0,0,0"
                     FontFamily="Segoe UI"
                     FontSize="30"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                     TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
                 <TextBlock
                     Margin="0,0,0,8"
                     FontFamily="Segoe UI"
                     FontSize="16"
-                    Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
+                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                     Text="Certify Certificate Manager"
                     TextWrapping="Wrap" />
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
@@ -117,7 +117,7 @@
                                 Margin="0"
                                 HorizontalAlignment="Left"
                                 VerticalAlignment="Center"
-                                Foreground="#FF6BB039"
+                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                 Icon="PlayCircle" />
                             <TextBlock Margin="8,0,0,0" HorizontalAlignment="Left"><Run Text="Quick Start Guide" /></TextBlock>
                         </StackPanel>
@@ -278,7 +278,7 @@
                                         Margin="0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Foreground="#FF6BB039"
+                                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                         Icon="PlusCircle" />
                                     <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_AddToDashboard}" /></TextBlock>
                                 </StackPanel>
@@ -296,7 +296,7 @@
                                         Margin="0"
                                         HorizontalAlignment="Left"
                                         VerticalAlignment="Center"
-                                        Foreground="#FF6BB039"
+                                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                         Icon="Leaf" />
                                     <TextBlock Margin="8,0,0,0" HorizontalAlignment="Center"><Run Text="{x:Static res:SR.GettingStarted_ViewDashboard}" /></TextBlock>
                                 </StackPanel>

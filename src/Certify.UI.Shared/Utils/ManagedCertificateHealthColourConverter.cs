@@ -41,7 +41,8 @@ namespace Certify.UI.Utils
             {
                 if (mode == "standard")
                 {
-                    return System.Windows.SystemColors.ControlTextBrush;
+                    return System.Windows.Application.Current?.TryFindResource("TextFillColorPrimaryBrush") as System.Windows.Media.Brush
+                        ?? System.Windows.SystemColors.ControlTextBrush;
                 }
                 else
                 {
