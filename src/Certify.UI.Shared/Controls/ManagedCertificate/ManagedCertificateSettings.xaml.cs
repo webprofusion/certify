@@ -250,7 +250,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             var flyout = (GroupBox)obj;
             flyout.Header = "Test Progress";
             flyout.Content = new TestProgress();
-            flyout.Visibility = flyout.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+            flyout.Visibility = flyout.Visibility != Visibility.Visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async void TestChallenge_Click(object sender, EventArgs e)
