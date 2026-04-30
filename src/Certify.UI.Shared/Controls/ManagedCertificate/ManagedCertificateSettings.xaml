@@ -2,8 +2,6 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.ManagedCertificateSettings"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
-    xmlns:Custom="clr-namespace:MahApps.Metro.Controls"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -43,7 +41,6 @@
                     Height="24"
                     MinWidth="400"
                     Margin="16,0,0,0"
-                    Controls:TextBoxHelper.Watermark="Display Name"
                     DockPanel.Dock="Left"
                     KeyDown="DisplayName_KeyDown"
                     Text="{Binding SelectedItem.Name, UpdateSourceTrigger=PropertyChanged}"
@@ -54,12 +51,12 @@
                     Margin="0,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Finish Edit"
-                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
                     BorderThickness="0"
                     Click="FinishedEditName_Click"
                     DockPanel.Dock="Left"
                     ToolTip="Finish Edit">
-                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="CheckCircleOutline" />
+                    <fa:ImageAwesome Foreground="{DynamicResource AccentFillColorSecondaryBrush}" Icon="CheckCircleOutline" />
                 </Button>
             </StackPanel>
             <StackPanel
@@ -73,19 +70,19 @@
                     AutomationProperties.Name="{Binding SelectedItem.Name}"
                     DockPanel.Dock="Left"
                     FontSize="20"
-                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMediumHigh}"
+                    Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                     Text="{Binding SelectedItem.Name}" />
                 <Button
                     x:Name="EditName"
                     Margin="16,4,8,4"
                     VerticalAlignment="Top"
                     AutomationProperties.Name="Edit Name"
-                    Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                    Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
                     BorderThickness="0"
                     Click="EditName_Click"
                     DockPanel.Dock="Left"
                     ToolTip="Edit Name">
-                    <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent2}" Icon="Edit" />
+                    <fa:ImageAwesome Foreground="{DynamicResource AccentFillColorSecondaryBrush}" Icon="Edit" />
                 </Button>
 
 
@@ -96,14 +93,14 @@
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 AutomationProperties.Name="Dismiss"
-                Background="{DynamicResource MahApps.Brushes.Control.Background}"
+                Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
                 BorderThickness="0"
                 Click="Dismiss_Click"
                 DockPanel.Dock="Right"
                 ToolTip="Dismiss"
                 Visibility="{Binding IsNameEditMode, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
 
-                <fa:ImageAwesome Foreground="{DynamicResource MahApps.Brushes.Accent3}" Icon="AngleDoubleDown" />
+                <fa:ImageAwesome Foreground="{DynamicResource AccentFillColorSecondaryBrush}" Icon="AngleDoubleDown" />
 
             </Button>
         </DockPanel>
@@ -112,7 +109,7 @@
             Margin="16,8"
             HorizontalAlignment="Stretch"
             DockPanel.Dock="Top"
-            Fill="{DynamicResource MahApps.Brushes.Accent4}" />
+            Fill="{DynamicResource AccentFillColorTertiaryBrush}" />
 
         <!--  save/request buttons  -->
         <DockPanel
@@ -132,7 +129,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="Save" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Save}" /></TextBlock>
                 </StackPanel>
@@ -148,7 +145,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="Undo" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.DiscardChanges}" /></TextBlock>
                 </StackPanel>
@@ -163,7 +160,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="Trash" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.Delete}" /></TextBlock>
                 </StackPanel>
@@ -178,7 +175,7 @@
                     <fa:ImageAwesome
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="Play" />
                     <TextBlock Margin="8,0,0,0" VerticalAlignment="Center"><Run Text="{x:Static Resources:SR.ManagedCertificateSettings_RequestCertificate}" /></TextBlock>
                 </StackPanel>
@@ -198,7 +195,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="Refresh"
                         Spin="True"
                         SpinDuration="1"
@@ -207,7 +204,7 @@
                         Height="16"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="CheckCircle"
                         Spin="False"
                         Visibility="{Binding IsTestInProgress, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}" />
@@ -219,26 +216,22 @@
         <!--  managed cert detail tabs  -->
         <DockPanel
             Margin="8,0,8,0"
-            Background="{DynamicResource MahApps.Brushes.Control.Background}"
+            Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}"
             DockPanel.Dock="Top"
             Visibility="{Binding SelectedItem, Converter={StaticResource ResourceKey=NullCollapsedConverter}}">
 
 
-            <Controls:MetroTabControl
+            <TabControl
                 x:Name="SettingsTab"
                 Margin="8"
                 HorizontalContentAlignment="Stretch"
                 VerticalContentAlignment="Stretch"
-                Controls:ScrollViewerHelper.IsHorizontalScrollWheelEnabled="True"
-                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseLow}"
-                Controls:TabControlHelper.Underlined="TabPanel"
                 DockPanel.Dock="Top"
                 TabStripPlacement="Right">
 
                 <TabItem
                     x:Name="TabStatusInfo"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Status">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -252,7 +245,6 @@
                     x:Name="TabDomains"
                     MinWidth="130"
                     Margin="0"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Certificate"
                     IsSelected="True">
                     <TabItem.HeaderTemplate>
@@ -266,7 +258,6 @@
                 <TabItem
                     x:Name="TabDeployment"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Deployment">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -279,7 +270,6 @@
                 <TabItem
                     x:Name="TabTasks"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Tasks">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -294,7 +284,6 @@
                 <TabItem
                     x:Name="TabPreview"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     AutomationProperties.Name="Preview">
                     <TabItem.HeaderTemplate>
                         <DataTemplate>
@@ -303,7 +292,7 @@
                     </TabItem.HeaderTemplate>
                     <managedcertificate:Preview Margin="0,8,0,0" />
                 </TabItem>
-            </Controls:MetroTabControl>
+            </TabControl>
         </DockPanel>
     </DockPanel>
 </UserControl>

@@ -2,7 +2,6 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.CertificateIdentifiers"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -29,12 +28,9 @@
             Height="auto"
             Margin="0,0,0,0"
             HorizontalContentAlignment="Left"
-            VerticalContentAlignment="Stretch"
-            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-            Controls:TabControlHelper.Underlined="TabPanel">
+            VerticalContentAlignment="Stretch">
             <TabItem
                 MinWidth="100"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Identifiers"
                 IsSelected="False">
 
@@ -105,8 +101,7 @@
                                     </StackPanel.Style>
                                     <ComboBox
                                         x:Name="HubCertificateBrowser"
-                                        Width="320"
-                                        Controls:TextBoxHelper.Watermark="Browse available hub certificates..."
+                                        Width="320" ToolTip="Browse available hub certificates..."
                                         ItemsSource="{Binding SubscribableManagedCertificates}"
                                         SelectedItem="{Binding SelectedSubscribableCertificate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                         <ComboBox.ItemTemplate>
@@ -225,7 +220,7 @@
                                             <Setter Property="ToolTip" Value="Site currently has no https bindings" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding HasCertificate}" Value="true">
-                                                    <Setter Property="Foreground" Value="{DynamicResource MahApps.Brushes.Highlight}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
                                                     <Setter Property="FontWeight" Value="SemiBold" />
                                                     <Setter Property="ToolTip" Value="Site already has one or more https bindings" />
                                                 </DataTrigger>
@@ -242,7 +237,7 @@
                                     ToolTip="Refresh Site List">
                                     <fa:ImageAwesome
                                         Height="12"
-                                        Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                         Icon="Refresh"
                                         Spin="{Binding IsSiteListQueryProgress}" />
 
@@ -260,8 +255,7 @@
                                     <Label Width="160" Content="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}" />
                                     <TextBox
                                         x:Name="ManualDomains"
-                                        Width="240"
-                                        Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
+                                        Width="240" ToolTip="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
                                         AutomationProperties.HelpText="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsHelpText}"
                                         AutomationProperties.Name="{x:Static Resources:SR.ManagedCertificateSettings_AddDomainsToCertificate}"
                                         KeyUp="ManualDomains_KeyUp" />
@@ -276,7 +270,7 @@
                                         ToolTip="Add Domains">
                                         <fa:ImageAwesome
                                             Height="12"
-                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                             Icon="Plus" />
 
                                     </Button>
@@ -340,7 +334,7 @@
                                         ToolTip="{x:Static Resources:SR.SelectAll}">
                                         <fa:ImageAwesome
                                             Height="12"
-                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                             Icon="CheckSquare" />
 
                                     </Button>
@@ -354,7 +348,7 @@
                                         ToolTip="{x:Static Resources:SR.ManagedCertificateSettings_SelectNone}">
                                         <fa:ImageAwesome
                                             Height="12"
-                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                             Icon="SquareOutline" />
 
                                     </Button>
@@ -369,7 +363,7 @@
                                         ToolTip="{x:Static Resources:SR.ManagedCertificatesSettings_RefreshDomains}">
                                         <fa:ImageAwesome
                                             Height="12"
-                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                             Icon="Refresh" />
 
                                     </Button>
@@ -405,12 +399,11 @@
                                                             AutomationProperties.Name="Set As Primary Domain"
                                                             BorderThickness="0"
                                                             Click="SetPrimaryDomainOption_Click"
-                                                            Style="{DynamicResource MahApps.Styles.Button.Circle}"
                                                             Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=InvBoolToVisConverter}}">
                                                             <fa:ImageAwesome
                                                                 Height="12"
                                                                 Margin="0,0,0,0"
-                                                                Foreground="{DynamicResource MahApps.Brushes.Control.Disabled}"
+                                                                Foreground="{DynamicResource {x:Static SystemColors.InactiveBorderBrushKey}}"
                                                                 Icon="CircleOutline" />
 
                                                         </Button>
@@ -421,12 +414,11 @@
                                                             AutomationProperties.Name="Selected as Primary Domain"
                                                             BorderThickness="0"
                                                             Click="SetPrimaryDomainOption_Click"
-                                                            Style="{DynamicResource MahApps.Styles.Button.Circle}"
                                                             Visibility="{Binding IsPrimaryDomain, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
                                                             <fa:ImageAwesome
                                                                 Height="12"
                                                                 Margin="0,0,0,0"
-                                                                Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                                                Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                                                 Icon="CheckCircleOutline" />
 
                                                         </Button>
@@ -437,13 +429,10 @@
                                         </DataGridTemplateColumn>
                                         <DataGridCheckBoxColumn
                                             Binding="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
-                                            EditingElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid}"
-                                            ElementStyle="{DynamicResource MahApps.Styles.CheckBox.DataGrid}"
                                             Header="{x:Static Resources:SR.ManagedCertificateSettings_Include}" />
                                         <DataGridTextColumn
                                             MinWidth="200"
                                             Binding="{Binding Domain, UpdateSourceTrigger=PropertyChanged}"
-                                            EditingElementStyle="{StaticResource MahApps.Styles.TextBox.DataGrid.Editing}"
                                             Header="{x:Static Resources:SR.ManagedCertificateSettings_Domain}"
                                             IsReadOnly="True" />
                                         <DataGridTemplateColumn>
@@ -458,7 +447,7 @@
                                                         <fa:ImageAwesome
                                                             Height="12"
                                                             Margin="0,0,0,0"
-                                                            Foreground="{DynamicResource MahApps.Brushes.Accent3}"
+                                                            Foreground="{DynamicResource AccentFillColorSecondaryBrush}"
                                                             Icon="Trash" />
 
                                                     </Button>
@@ -509,7 +498,6 @@
 
             <TabItem
                 MinWidth="100"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Authorization"
                 IsSelected="False"
                 Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
@@ -518,7 +506,6 @@
 
             <TabItem
                 MinWidth="100"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Advanced"
                 IsSelected="False">
                 <managedcertificate:AdvancedOptions />

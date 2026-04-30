@@ -1,18 +1,15 @@
-<Controls:MetroWindow
+<Window
     x:Class="Certify.UI.Windows.ImportExport"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Import or Export Settings"
     Width="800"
     Height="740"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
-    TitleCharacterCasing="Normal"
+    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
     <DockPanel Margin="16" LastChildFill="true">
@@ -23,8 +20,7 @@
             <PasswordBox
                 x:Name="txtSecret"
                 Width="200"
-                HorizontalAlignment="Left"
-                Controls:TextBoxHelper.Watermark="Password" />
+                HorizontalAlignment="Left" ToolTip="Password" />
 
         </StackPanel>
 
@@ -34,14 +30,11 @@
             Margin="0,8,0,0"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
-            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-            Controls:TabControlHelper.Underlined="TabPanel"
             DockPanel.Dock="Top"
             TabStripPlacement="Top">
             <TabItem
                 Height="32"
                 MinWidth="140"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Export Settings"
                 IsSelected="true">
                 <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
@@ -59,7 +52,6 @@
             <TabItem
                 Height="32"
                 MinWidth="140"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Import Settings">
                 <StackPanel Margin="0,16,0,0" Orientation="Vertical">
                     <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">Import a settings bundle exported from another instance of the app.</TextBlock>
@@ -97,7 +89,7 @@
                         </Button>
                     </StackPanel>
 
-                    <Controls:MetroProgressBar
+                    <ProgressBar
                         Width="250"
                         Height="32"
                         Margin="4"
@@ -125,4 +117,4 @@
 
 
     </DockPanel>
-</Controls:MetroWindow>
+</Window>

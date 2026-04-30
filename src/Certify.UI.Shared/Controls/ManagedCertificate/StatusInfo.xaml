@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Certify.UI.Controls.ManagedCertificate.StatusInfo"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -52,13 +52,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Foreground="{DynamicResource ValidationErrorBrush}"
                         Icon="ExclamationTriangle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Foreground="{DynamicResource ValidationErrorBrush}"
                         Style="{StaticResource Subheading}"
                         Text="Renewal Required" />
                 </StackPanel>
@@ -143,13 +143,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource MahApps.Brushes.Accent}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Icon="CheckCircle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource MahApps.Brushes.AccentBase}"
+                        Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                         Style="{StaticResource Subheading}">
                         Certificate Active
                     </TextBlock>
@@ -208,13 +208,13 @@
                 <StackPanel Orientation="Horizontal">
                     <fa:ImageAwesome
                         Height="32"
-                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Foreground="{DynamicResource ValidationErrorBrush}"
                         Icon="PauseCircle" />
 
                     <TextBlock
                         Margin="8,0,0,0"
                         VerticalAlignment="Center"
-                        Foreground="{StaticResource MahApps.Brushes.ValidationSummary1}"
+                        Foreground="{DynamicResource ValidationErrorBrush}"
                         Style="{StaticResource Subheading}"
                         Text="Waiting for User Action" />
                 </StackPanel>
@@ -234,7 +234,7 @@
                     <TextBox
                         Margin="0,8,0,8"
                         Padding="8,8,8,8"
-                        Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseHigh}"
+                        Foreground="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"
                         IsReadOnly="True"
                         Text="{Binding SelectedItem.RenewalFailureMessage}"
                         TextWrapping="WrapWithOverflow" />

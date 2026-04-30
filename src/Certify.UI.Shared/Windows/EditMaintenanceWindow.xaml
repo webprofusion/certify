@@ -1,22 +1,20 @@
-<Controls:MetroWindow
+<Window
     x:Class="Certify.UI.Windows.EditMaintenanceWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
+    xmlns:fluent="clr-namespace:Certify.UI.Controls.Fluent"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Edit Maintenance Window"
     Width="600"
     Height="650"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
-    BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
     BorderThickness="1"
     ResizeMode="NoResize"
     ShowInTaskbar="False"
-    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
     <DockPanel Margin="16">
@@ -41,8 +39,7 @@
                 <TextBlock Style="{StaticResource Subheading}">Name</TextBlock>
                 <TextBox
                     x:Name="WindowName"
-                    Margin="0,4,0,16"
-                    Controls:TextBoxHelper.Watermark="e.g., Nightly Maintenance"
+                    Margin="0,4,0,16" ToolTip="e.g., Nightly Maintenance"
                     Text="{Binding EditWindow.Name, UpdateSourceTrigger=PropertyChanged}" />
 
                 <TextBlock Style="{StaticResource Subheading}">Description</TextBlock>
@@ -50,8 +47,7 @@
                     x:Name="WindowDescription"
                     Height="60"
                     Margin="0,4,0,16"
-                    AcceptsReturn="True"
-                    Controls:TextBoxHelper.Watermark="Optional description of this maintenance window"
+                    AcceptsReturn="True" ToolTip="Optional description of this maintenance window"
                     Text="{Binding EditWindow.Description, UpdateSourceTrigger=PropertyChanged}"
                     VerticalScrollBarVisibility="Auto" />
 
@@ -153,7 +149,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
                     <StackPanel Margin="0,0,16,0">
                         <TextBlock Margin="0,0,0,4">Start Time (24-hour format)</TextBlock>
-                        <Controls:NumericUpDown
+                        <fluent:NumberBox
                             x:Name="StartHour"
                             Width="60"
                             Margin="0,0,4,0"
@@ -164,7 +160,7 @@
                     </StackPanel>
                     <StackPanel Margin="0,0,16,0">
                         <TextBlock Margin="0,0,0,4">:</TextBlock>
-                        <Controls:NumericUpDown
+                        <fluent:NumberBox
                             x:Name="StartMinute"
                             Width="60"
                             Margin="0,0,4,0"
@@ -175,7 +171,7 @@
                     </StackPanel>
                     <StackPanel Margin="16,0,16,0">
                         <TextBlock Margin="0,0,0,4">End Time (24-hour format)</TextBlock>
-                        <Controls:NumericUpDown
+                        <fluent:NumberBox
                             x:Name="EndHour"
                             Width="60"
                             Margin="0,0,4,0"
@@ -186,7 +182,7 @@
                     </StackPanel>
                     <StackPanel>
                         <TextBlock Margin="0,0,0,4">:</TextBlock>
-                        <Controls:NumericUpDown
+                        <fluent:NumberBox
                             x:Name="EndMinute"
                             Width="60"
                             Margin="0,0,4,0"
@@ -201,8 +197,8 @@
                     x:Name="OvernightWarning"
                     Margin="0,8,0,16"
                     Padding="8"
-                    Background="{DynamicResource MahApps.Brushes.Accent4}"
-                    BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
+                    Background="{DynamicResource AccentFillColorTertiaryBrush}"
+                    BorderBrush="{DynamicResource AccentFillColorDefaultBrush}"
                     BorderThickness="1"
                     Visibility="Collapsed">
                     <TextBlock TextWrapping="Wrap">
@@ -227,8 +223,8 @@
                 <Border
                     Margin="0,8,0,0"
                     Padding="8"
-                    Background="{DynamicResource MahApps.Brushes.Gray10}"
-                    BorderBrush="{DynamicResource MahApps.Brushes.Gray5}"
+                    Background="{DynamicResource {x:Static SystemColors.ControlDarkDarkBrushKey}}"
+                    BorderBrush="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                     BorderThickness="1">
                     <StackPanel>
                         <TextBlock FontWeight="SemiBold">Schedule Preview:</TextBlock>
@@ -241,4 +237,4 @@
             </StackPanel>
         </ScrollViewer>
     </DockPanel>
-</Controls:MetroWindow>
+</Window>

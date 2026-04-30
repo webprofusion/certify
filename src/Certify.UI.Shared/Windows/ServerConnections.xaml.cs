@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Shared;
@@ -42,7 +42,7 @@ namespace Certify.UI.Windows
             Close();
         }
 
-        private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             // cancel pending operations (if any)
             _cts.Cancel();

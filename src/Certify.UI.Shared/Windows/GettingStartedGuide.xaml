@@ -1,8 +1,7 @@
-<Controls:MetroWindow
+<Window
     x:Class="Certify.UI.Windows.GettingStartedGuide"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:Controls1="clr-namespace:Certify.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
@@ -13,12 +12,10 @@
     Height="600"
     MinWidth="300"
     MinHeight="300"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
-    TitleCharacterCasing="Normal"
+    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
     <DockPanel>
         <Controls1:QuickStart />
     </DockPanel>
-</Controls:MetroWindow>
+</Window>

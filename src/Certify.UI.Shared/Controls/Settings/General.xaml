@@ -2,7 +2,7 @@
     x:Class="Certify.UI.Controls.Settings.General"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
+    xmlns:fluent="clr-namespace:Certify.UI.Controls.Fluent"
     xmlns:clr="clr-namespace:System;assembly=mscorlib"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -23,14 +23,11 @@
                 Margin="0,0,0,0"
                 HorizontalContentAlignment="Left"
                 VerticalContentAlignment="Stretch"
-                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-                Controls:TabControlHelper.Underlined="TabPanel"
                 DockPanel.Dock="Top"
                 TabStripPlacement="Left">
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="General Settings"
                     IsSelected="true">
                     <StackPanel
@@ -49,7 +46,7 @@
                                     Width="180"
                                     HorizontalAlignment="Left"
                                     Content="Renewal Mode" />
-                                <Controls:NumericUpDown
+                                <fluent:NumberBox
                                     x:Name="RenewalIntervalDays"
                                     Width="100"
                                     Margin="8,0,0,4"
@@ -96,7 +93,7 @@
                                 DockPanel.Dock="Right"
                                 Orientation="Vertical">
                                 <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
-                                <Controls:NumericUpDown
+                                <fluent:NumberBox
                                     x:Name="RenewalMaxRequests"
                                     Width="100"
                                     Margin="4,0,0,0"
@@ -291,8 +288,7 @@
                                 <Label Content="Time Check NTP Server" />
                                 <TextBox
                                     Width="240"
-                                    Margin="4,0"
-                                    Controls:TextBoxHelper.Watermark="e.g. pool.ntp.org or blank to skip check."
+                                    Margin="4,0" ToolTip="e.g. pool.ntp.org or blank to skip check."
                                     Text="{Binding Prefs.NtpServer}" />
                                 <Button Margin="0,0,0,0" Click="SettingsUpdated">Apply</Button>
                             </StackPanel>
@@ -353,7 +349,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Certificate Authorities">
                     <StackPanel Margin="16,0,0,0">
                         <TextBlock Style="{StaticResource Subheading}">Certificate Authority Settings</TextBlock>
@@ -364,7 +359,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Stored Credentials">
                     <StackPanel Margin="16,0,0,0">
                         <TextBlock Style="{StaticResource Subheading}">Stored Credentials</TextBlock>
@@ -376,7 +370,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Maintenance Windows">
                     <StackPanel Margin="16,0,0,0">
                         <TextBlock Style="{StaticResource Subheading}">Maintenance Windows</TextBlock>
@@ -387,7 +380,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Import &amp; Export"
                     IsSelected="false"
                     Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='IMPORT_EXPORT', Path=Prefs}">
@@ -422,7 +414,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="UI Settings"
                     IsSelected="true">
                     <StackPanel Margin="16,0" DockPanel.Dock="Top">
@@ -452,13 +443,12 @@
 
                         <StackPanel Margin="0,4" Orientation="Horizontal">
                             <Label Width="100" Content="Text/UI Size" />
-                            <Controls:NumericUpDown
+                            <fluent:NumberBox
                                 x:Name="UIScaling"
                                 Width="100"
                                 Interval="0.1"
                                 Maximum="2"
                                 Minimum="1"
-                                NumericInputMode="Decimal"
                                 Value="{Binding MainViewModel.UIScaleFactor}" />
 
                         </StackPanel>
@@ -478,7 +468,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Management Hub">
                     <StackPanel Margin="16,0,0,0">
                         <local:ManagementHub />

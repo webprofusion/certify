@@ -2,7 +2,6 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.TaskList"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -50,7 +49,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                     Icon="Play" />
 
                             </StackPanel>
@@ -68,7 +67,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                     Icon="Trash" />
 
                             </StackPanel>
@@ -84,7 +83,7 @@
                                 <fa:ImageAwesome
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                     Icon="Edit" />
 
                             </StackPanel>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -47,7 +47,7 @@ namespace Certify.UI.Windows
 
         }
 
-        private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
             Model.DataStoreProviders = await MainViewModel.GetDataStoreProviders();
         }

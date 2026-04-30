@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -521,7 +521,7 @@ namespace Certify.UI.Windows
             }
         }
 
-        private async void MetroWindow_Closing(object sender, CancelEventArgs e)
+        private async void Window_Closing(object sender, CancelEventArgs e)
         {
             // allow canceling exit to save changes
             if (!await _itemViewModel.ConfirmDiscardUnsavedChanges())

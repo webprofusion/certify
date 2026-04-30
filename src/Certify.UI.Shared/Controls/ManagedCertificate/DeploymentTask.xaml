@@ -2,7 +2,6 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.DeploymentTask"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
@@ -19,8 +18,7 @@
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
                 <TextBox
-                    Width="250"
-                    Controls:TextBoxHelper.Watermark="{Binding Description}"
+                    Width="250" ToolTip="{Binding Description}"
                     KeyUp="ParameterInput_KeyUp"
                     Text="{Binding Value}" />
                 <Button
@@ -118,7 +116,7 @@
                                         <fa:ImageAwesome
                                             HorizontalAlignment="Center"
                                             VerticalAlignment="Center"
-                                            Foreground="{DynamicResource MahApps.Brushes.Accent}"
+                                            Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                             Icon="PlayCircleOutline" />
                                         <TextBlock Margin="8,0,0,0" VerticalAlignment="Center">Select</TextBlock>
                                     </StackPanel>
@@ -179,12 +177,10 @@
                 Margin="8,8,8,8"
                 HorizontalContentAlignment="Left"
                 VerticalContentAlignment="Stretch"
-                Controls:TabControlHelper.Underlined="SelectedTabItem"
                 DockPanel.Dock="Top">
 
                 <TabItem
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="General Settings"
                     IsSelected="True">
 
@@ -242,8 +238,7 @@
                             <TextBox
                                 x:Name="TaskName"
                                 Width="225"
-                                Margin="0,0,8,0"
-                                Controls:TextBoxHelper.Watermark="A unique name for this task"
+                                Margin="0,0,8,0" ToolTip="A unique name for this task"
                                 KeyUp="TaskName_KeyUp"
                                 Text="{Binding SelectedItem.TaskName, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
@@ -260,8 +255,7 @@
                                 x:Name="TaskDescription"
                                 Width="225"
                                 Height="48"
-                                Margin="0,0,8,0"
-                                Controls:TextBoxHelper.Watermark="Optionally describe this task."
+                                Margin="0,0,8,0" ToolTip="Optionally describe this task."
                                 AcceptsReturn="True"
                                 Text="{Binding SelectedItem.Description, UpdateSourceTrigger=PropertyChanged}"
                                 TextWrapping="Wrap"
@@ -337,7 +331,6 @@
                 </TabItem>
                 <TabItem
                     Width="auto"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Task Parameters">
 
                     <DockPanel Margin="8,0,0,0" LastChildFill="False">
@@ -373,8 +366,7 @@
                             <TextBox
                                 x:Name="TargetHost"
                                 Width="225"
-                                Margin="0,0,8,0"
-                                Controls:TextBoxHelper.Watermark="(optional, blank for local) IP or hostname to connect to"
+                                Margin="0,0,8,0" ToolTip="(optional, blank for local) IP or hostname to connect to"
                                 Text="{Binding SelectedItem.TargetHost, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
 

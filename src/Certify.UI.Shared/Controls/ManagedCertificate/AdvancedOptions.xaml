@@ -2,7 +2,6 @@
     x:Class="Certify.UI.Controls.ManagedCertificate.AdvancedOptions"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:Resources="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     xmlns:certifyui="clr-namespace:Certify.UI"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -32,14 +31,11 @@
                 Margin="0,0,0,0"
                 HorizontalContentAlignment="Left"
                 VerticalContentAlignment="Stretch"
-                Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-                Controls:TabControlHelper.Underlined="TabPanel"
                 DockPanel.Dock="Top"
                 TabStripPlacement="Left">
                 <TabItem
                     Height="32"
                     MinWidth="140"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Title}"
                     IsSelected="true"
                     Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
@@ -89,8 +85,7 @@
 
                         <TextBox
                             Width="200"
-                            HorizontalAlignment="left"
-                            Controls:TextBoxHelper.Watermark="e.g. DST Root CA X3"
+                            HorizontalAlignment="left" ToolTip="e.g. DST Root CA X3"
                             DockPanel.Dock="Top"
                             Text="{Binding SelectedItem.RequestConfig.PreferredChain}" />
                         <TextBlock
@@ -104,8 +99,7 @@
                         </TextBlock>
                         <TextBox
                             Width="200"
-                            HorizontalAlignment="left"
-                            Controls:TextBoxHelper.Watermark="e.g. classic"
+                            HorizontalAlignment="left" ToolTip="e.g. classic"
                             DockPanel.Dock="Top"
                             Text="{Binding SelectedItem.RequestConfig.AcmeProfile}" />
                     </DockPanel>
@@ -114,7 +108,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Signing &amp; Security"
                     IsSelected="False"
                     Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
@@ -258,8 +251,7 @@
                             <TextBox
                                 Width="180"
                                 Margin="8,0,4,0"
-                                HorizontalAlignment="left"
-                                Controls:TextBoxHelper.Watermark="e.g. 0.5 or 30. Blank for none."
+                                HorizontalAlignment="left" ToolTip="e.g. 0.5 or 30. Blank for none."
                                 InputScope="Number"
                                 Text="{Binding SelectedItem.RequestConfig.PreferredExpiryDays, Converter={StaticResource NullValueConverter}}" />
 
@@ -274,7 +266,6 @@
                 <TabItem
                     Height="32"
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="General Options"
                     IsSelected="false">
                     <!--  General Options  -->
@@ -291,8 +282,7 @@
                                 Height="38"
                                 MinWidth="300"
                                 MaxWidth="600"
-                                HorizontalAlignment="Left"
-                                Controls:TextBoxHelper.Watermark="{x:Static Resources:SR.Comments}"
+                                HorizontalAlignment="Left" ToolTip="{x:Static Resources:SR.Comments}"
                                 AcceptsReturn="True"
                                 DockPanel.Dock="Top"
                                 VerticalScrollBarVisibility="Auto">
@@ -349,7 +339,6 @@
 
                 <TabItem
                     MinWidth="100"
-                    Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Actions"
                     IsSelected="False">
                     <!--  Actions  -->
@@ -378,8 +367,7 @@
                                 x:Name="PFXPassword"
                                 Width="220"
                                 Margin="0,4,0,8"
-                                HorizontalAlignment="Left"
-                                Controls:TextBoxHelper.Watermark="Pfx Unlock Password (if applicable)"
+                                HorizontalAlignment="Left" ToolTip="Pfx Unlock Password (if applicable)"
                                 PasswordChanged="PFXPassword_PasswordChanged" />
                         </StackPanel>
 
@@ -424,7 +412,7 @@
                                     BorderThickness="2"
                                     Content="{x:Static Resources:SR.ManagedCertificateSettings_CertificateRevokeWarning}"
                                     FontWeight="Bold"
-                                    Foreground="{DynamicResource MahApps.Brushes.IdealForeground}" />
+                                    Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}" />
                             </Border>
                         </StackPanel>
 

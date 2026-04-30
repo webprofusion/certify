@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using Certify.Locales;
 using Certify.Models;
 using Certify.UI.Shared;
-using MahApps.Metro.Controls;
 
 namespace Certify.UI.Controls.ManagedCertificate
 {
@@ -248,10 +247,10 @@ namespace Certify.UI.Controls.ManagedCertificate
         {
             var parentWindow = Window.GetWindow(this);
             var obj = parentWindow.FindName("MainFlyout");
-            var flyout = (Flyout)obj;
+            var flyout = (GroupBox)obj;
             flyout.Header = "Test Progress";
             flyout.Content = new TestProgress();
-            flyout.IsOpen = !flyout.IsOpen;
+            flyout.Visibility = flyout.Visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private async void TestChallenge_Click(object sender, EventArgs e)

@@ -41,9 +41,7 @@ namespace Certify.UI.Utils
             {
                 if (mode == "standard")
                 {
-                    return (System.Windows.Media.Brush)
-                        ViewModel.AppViewModel.Current.GetApplication()
-                        .Resources["MahApps.Brushes.SystemControlForegroundBaseHigh"];
+                    return System.Windows.SystemColors.ControlTextBrush;
                 }
                 else
                 {

@@ -1,8 +1,7 @@
-<Controls:MetroWindow
+<Window
     x:Class="Certify.UI.Windows.EditDeploymentTask"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:ManagedCertificate="clr-namespace:Certify.UI.Controls.ManagedCertificate"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
@@ -10,15 +9,13 @@
     Title="Edit Deployment Task"
     Width="500"
     Height="460"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
+    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
     ResizeMode="CanResize"
-    TitleCharacterCasing="Normal"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
-    <Controls:MetroWindow.LayoutTransform>
+    <Window.LayoutTransform>
         <ScaleTransform x:Name="ApplicationScaleTransform" CenterX="0" CenterY="0" ScaleX="{Binding UIScaleFactor}" ScaleY="{Binding UIScaleFactor}" />
-    </Controls:MetroWindow.LayoutTransform>
+    </Window.LayoutTransform>
     <DockPanel LastChildFill="True">
 
 
@@ -48,4 +45,4 @@
             VerticalAlignment="Top"
             DockPanel.Dock="Top" />
     </DockPanel>
-</Controls:MetroWindow>
+</Window>

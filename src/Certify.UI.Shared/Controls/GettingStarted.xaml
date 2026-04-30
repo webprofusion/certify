@@ -2,7 +2,6 @@
     x:Class="Certify.UI.Controls.GettingStarted"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Custom="clr-namespace:MahApps.Metro.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Controls"
@@ -27,13 +26,13 @@
                     Margin="0,0,0,0"
                     FontFamily="Segoe UI"
                     FontSize="30"
-                    Foreground="{DynamicResource MahApps.Brushes.Gray1}"
+                    Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
                     TextWrapping="Wrap"><Run FontWeight="Bold" Text="Certify" /><Run Text=" the web" /></TextBlock>
                 <TextBlock
                     Margin="0,0,0,8"
                     FontFamily="Segoe UI"
                     FontSize="16"
-                    Foreground="{DynamicResource MahApps.Brushes.Gray1}"
+                    Foreground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}"
                     Text="Certify Certificate Manager"
                     TextWrapping="Wrap" />
                 <TextBlock Style="{StaticResource Instructions}" TextWrapping="Wrap">
@@ -47,7 +46,6 @@
                 <GroupBox
                     x:Name="CommunityEdition"
                     Margin="0,16,0,0"
-                    Custom:HeaderedControlHelper.HeaderBackground="{StaticResource ErrorColorBrush}"
                     BorderThickness="0"
                     Header="License Not Activated"
                     Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
@@ -72,7 +70,7 @@
                         VerticalAlignment="Top"
                         FontSize="12"
                         FontWeight="Bold"
-                        Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                         Text="Your license key has expired. Some features will be reduced or unavailable. Please Sign In to https://certifytheweb.com and renew your license key, then re-open the app."
                         TextWrapping="Wrap" />
 
@@ -153,7 +151,7 @@
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
                         FontSize="12"
-                        Foreground="{StaticResource MahApps.Brushes.IdealForeground}"
+                        Foreground="{DynamicResource TextOnAccentFillColorPrimaryBrush}"
                         Text="{Binding SystemDiagnosticError}"
                         TextWrapping="Wrap" />
 

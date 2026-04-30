@@ -1,8 +1,7 @@
-<Controls:MetroWindow
+<Window
     x:Class="Certify.UI.Windows.DataStoreConnections"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:MahApps.Metro.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:fa="http://schemas.fontawesome.io/icons/"
     xmlns:local="clr-namespace:Certify.UI.Windows"
@@ -11,11 +10,9 @@
     Title="Data Store Connections"
     Width="450"
     Height="390"
-    Background="{DynamicResource MahApps.Brushes.Window.Background}"
-    Closing="MetroWindow_Closing"
-    TitleCharacterCasing="Normal"
+    Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+    Closing="Window_Closing"
     WindowStartupLocation="CenterOwner"
-    WindowTransitionsEnabled="False"
     mc:Ignorable="d">
 
 
@@ -42,14 +39,11 @@
             Margin="0,0,0,0"
             HorizontalContentAlignment="Left"
             VerticalContentAlignment="Stretch"
-            Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
-            Controls:TabControlHelper.Underlined="TabPanel"
             DockPanel.Dock="Top"
             TabStripPlacement="Top">
             <TabItem
                 Height="32"
                 MinWidth="140"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Managed Data Stores"
                 IsSelected="true">
                 <DockPanel Margin="8" LastChildFill="False">
@@ -71,8 +65,8 @@
                                                 <Setter Property="CornerRadius" Value="3" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsDefault}" Value="True">
-                                                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent4}" />
-                                                        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                                                        <Setter Property="Background" Value="{DynamicResource AccentFillColorTertiaryBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -85,7 +79,6 @@
                                             Click="Connect_Click"
                                             CommandParameter="{Binding}"
                                             DockPanel.Dock="Left"
-                                            Style="{DynamicResource MahApps.Styles.Button.Reveal}"
                                             ToolTip="Select this Data Store">
                                             <StackPanel Orientation="Horizontal">
                                                 <fa:ImageAwesome
@@ -106,7 +99,7 @@
                                                 <fa:ImageAwesome
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Bottom"
-                                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                                     Icon="Edit" />
 
                                             </StackPanel>
@@ -135,7 +128,6 @@
             <TabItem
                 Height="32"
                 MinWidth="140"
-                Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Migrate Data"
                 IsSelected="true">
                 <DockPanel Margin="8" LastChildFill="False">
@@ -177,7 +169,7 @@
                                     Margin="4,0,0,0"
                                     HorizontalAlignment="Center"
                                     VerticalAlignment="Center"
-                                    Foreground="{StaticResource MahApps.Brushes.Accent}"
+                                    Foreground="{DynamicResource AccentFillColorDefaultBrush}"
                                     Icon="Database" />
 
                             </StackPanel>
@@ -208,4 +200,4 @@
             </Button>
         </DockPanel>
     </DockPanel>
-</Controls:MetroWindow>
+</Window>
