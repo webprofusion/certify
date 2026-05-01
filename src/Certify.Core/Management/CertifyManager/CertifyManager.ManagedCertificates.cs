@@ -319,18 +319,11 @@ namespace Certify.Management
             }
             else
             {
-                if (failureCount > managedCertificate.RenewalFailureCount)
-                {
-                    managedCertificate.RenewalFailureCount = ((int)failureCount) + 1;
-                }
-                else
-                {
-                    managedCertificate.RenewalFailureCount++;
-                }
+                IncrementManagedCertificateRenewalFailureCount(managedCertificate, failureCount);
 
                 managedCertificate.RenewalFailureMessage = msg;
 
-                managedCertificate.LastRenewalStatus = RequestState.Error;
+                managedCertificate.LastRenewalStatus = status;
             }
 
             try
@@ -355,6 +348,18 @@ namespace Certify.Management
             }
 
             ReportManagedItemUpdateToMgmtHub(managedCertificate);
+        }
+
+        private void IncrementManagedCertificateRenewalFailureCount(ManagedCertificate managedCertificate, int? failureCount = null)
+        {
+            if (failureCount > managedCertificate.RenewalFailureCount)
+            {
+                managedCertificate.RenewalFailureCount = ((int)failureCount) + 1;
+            }
+            else
+            {
+                managedCertificate.RenewalFailureCount++;
+            }
         }
 
         private ConcurrentDictionary<string, RenewalStatusReport> _statusReportQueue { get; set; } = new ConcurrentDictionary<string, RenewalStatusReport>();

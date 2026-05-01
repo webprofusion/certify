@@ -121,6 +121,7 @@ namespace Certify.Management
             if (!fetchResult.IsSuccess)
             {
                 sourceConfig.LastError = fetchResult.Message;
+                IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = fetchResult.Message;
 
@@ -141,6 +142,7 @@ namespace Certify.Management
             if (assetPath == null)
             {
                 sourceConfig.LastError = "External certificate update was detected but could not be written to local storage.";
+                IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = sourceConfig.LastError;
                 await UpdateManagedCertificate(item);
@@ -472,6 +474,14 @@ namespace Certify.Management
                     Message = $"ManagementHub source returned {ex.StatusCode}: {ex.Response}"
                 };
             }
+            catch (System.Net.Http.HttpRequestException ex)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = $"Could not connection to management hub to fetch updated certificate ({hubApiBase}) check hub is available and connectivity is allowed."
+                };
+            }
         }
 
         private async Task<ClientSecret?> GetHubClientSecret(string? sourceCredentialKey)
@@ -681,6 +691,7 @@ namespace Certify.Management
             if (!metadataApplied)
             {
                 sourceConfig.LastError = "External certificate update could not be validated as deployable PFX data.";
+                IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = sourceConfig.LastError;
                 await UpdateManagedCertificate(item);
@@ -699,6 +710,7 @@ namespace Certify.Management
             if (!deployResult.IsSuccess)
             {
                 sourceConfig.LastError = deployResult.Message;
+                IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = deployResult.Message;
 
@@ -824,6 +836,7 @@ namespace Certify.Management
             if (!fetchResult.IsSuccess)
             {
                 sourceConfig.LastError = fetchResult.Message;
+                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
                 managedCertificate.LastRenewalStatus = RequestState.Error;
                 managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
                 managedCertificate.RenewalFailureMessage = fetchResult.Message;
@@ -860,6 +873,7 @@ namespace Certify.Management
             {
                 result.Message = "External certificate update was detected but could not be written to local storage.";
                 sourceConfig.LastError = result.Message;
+                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
                 managedCertificate.LastRenewalStatus = RequestState.Error;
                 managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
                 managedCertificate.RenewalFailureMessage = result.Message;
@@ -875,6 +889,7 @@ namespace Certify.Management
                 result.Message = sourceConfig.LastError;
                 result.IsSuccess = false;
 
+                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
                 managedCertificate.LastRenewalStatus = RequestState.Error;
                 managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
                 managedCertificate.RenewalFailureMessage = result.Message;
