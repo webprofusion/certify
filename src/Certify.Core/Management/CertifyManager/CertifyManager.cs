@@ -223,7 +223,10 @@ namespace Certify.Management
                         if (pr != null)
                         {
                             pr.Init(_serviceLog);
-                            _serverProviders.Add(pr);
+                            if (await pr.IsAvailable())
+                            {
+                                _serverProviders.Add(pr);
+                            }
                         }
                     }
                 }
