@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.AccessControl;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,16 +19,39 @@ using SimpleImpersonation;
 
 namespace Certify.Management
 {
+    public enum PowerShellExecutionMode
+    {
+        CompatibilityMode,
+        ModernMode,
+        SystemPowerShellProcess
+    }
+
+    public class PowerShellScriptSettings
+    {
+        public string PowerShellExecutionPolicy { get; set; }
+        public CertificateRequestResult Result { get; set; }
+        public string ScriptFile { get; set; }
+        public Dictionary<string, object> Parameters { get; set; }
+        public string ScriptContent { get; set; }
+        public Dictionary<string, string> Credentials { get; set; }
+        public string LogonType { get; set; }
+        public string[] IgnoredCommandExceptions { get; set; }
+        public int TimeoutMinutes { get; set; } = 5;
+        public bool LaunchNewProcess { get; set; }
+        public PowerShellExecutionMode ExecutionMode { get; set; } = PowerShellExecutionMode.CompatibilityMode;
+    }
+
     /// <summary>
     /// PowerShell script execution manager. 
-        /// Manage the execution of PowerShell scripts, either in-process or by launching a new process.
-        /// When launching a separate process, script parameters are marshalled via a temporary encoded payload file
-        /// so secrets are not exposed on the process command line.
+    /// Manage the execution of PowerShell scripts, either in-process or by launching a new process.
+    /// When launching a separate process, script parameters are marshalled via a temporary encoded payload file
+    /// so secrets are not exposed on the process command line.
     /// </summary>
     public class PowerShellManager
     {
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
+        private const string PowerShellPayloadSecretEnvVar = "CERTIFY_POWERSHELL_PAYLOAD_SECRET";
 
         private sealed class PowerShellProcessPayload
         {
@@ -38,141 +62,74 @@ namespace Certify.Management
         /// <summary>
         /// Run a PowerShell script, either in-process or by launching a new process.
         /// </summary>
-        /// <param name="powershellExecutionPolicy">Unrestricted etc, see https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies?view=powershell-7.3</param>
-        /// <param name="result">Result object to pass to the script</param>
-        /// <param name="scriptFile">Path to the script file</param>
-        /// <param name="parameters">Parameters to pass to the script</param>
-        /// <param name="scriptContent">Content of the script</param>
-        /// <param name="credentials">Credentials to use for running the script</param>
-        /// <param name="logonType">Logon type to use for running the script</param>
-        /// <param name="ignoredCommandExceptions">Commands to ignore exceptions for</param>
-        /// <param name="timeoutMinutes">Timeout in minutes</param>
-        /// <param name="launchNewProcess">Launch a new process</param>
+        /// <param name="settings">Settings for the PowerShell script execution.</param>
         /// <returns>ActionResult</returns>
-        public static async Task<ActionResult> RunScript(
-            string powershellExecutionPolicy,
-            CertificateRequestResult result = null,
-            string scriptFile = null,
-            Dictionary<string, object> parameters = null,
-            string scriptContent = null,
-            Dictionary<string, string> credentials = null,
-            string logonType = null,
-            string[] ignoredCommandExceptions = null,
-            int timeoutMinutes = 5,
-            bool launchNewProcess = false
-            )
+        public static async Task<ActionResult> RunScript(PowerShellScriptSettings settings)
         {
+            ArgumentNullException.ThrowIfNull(settings);
+
             var priorTelemetryOptOut = Environment.GetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar);
             Environment.SetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar, PowerShellTelemetryOptOutValue);
 
             try
             {
-                if (credentials?.Any() == true)
+                if (settings.Credentials?.Any() == true)
                 {
-                    if (!HasCredentialValue(credentials, "username") || !HasCredentialValue(credentials, "password"))
+                    if (!HasCredentialValue(settings.Credentials, "username") || !HasCredentialValue(settings.Credentials, "password"))
                     {
-                        return new ActionResult("Command with Windows Credentials requires username and password.", false);
-                    }
-
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        return new ActionResult("Command with Windows Credentials is only supported on Windows.", false);
+                        return new ActionResult("Commands credentials require a username and password.", false);
                     }
                 }
 
                 // argument check for script file existence and .ps1 extension
                 FileInfo scriptInfo = null;
-                if (scriptContent == null)
+                if (settings.ScriptContent == null)
                 {
-                    scriptInfo = new FileInfo(scriptFile);
+                    scriptInfo = new FileInfo(settings.ScriptFile);
                     if (!scriptInfo.Exists)
                     {
-                        throw new ArgumentException($"File '{scriptFile}' does not exist.");
+                        throw new ArgumentException($"File '{settings.ScriptFile}' does not exist.");
                     }
 
                     if (scriptInfo.Extension.ToLower() != ".ps1")
                     {
-                        throw new ArgumentException($"File '{scriptFile}' is not a powershell script.");
+                        throw new ArgumentException($"File '{settings.ScriptFile}' is not a powershell script.");
                     }
                 }
 
-                if (launchNewProcess)
+                var executionMode = settings.ExecutionMode;
+
+                if (settings.LaunchNewProcess)
                 {
-                    // spawn new process as the given user
-                    return await ExecutePowershellAsProcess(result, powershellExecutionPolicy, scriptFile, parameters, credentials, logonType, scriptContent, null, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
+                    executionMode = PowerShellExecutionMode.SystemPowerShellProcess;
                 }
-                else
+
+                var executionModeMessage = settings.LaunchNewProcess
+                    ? $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Launch New Process is enabled)."
+                    : $"PowerShell Execution Mode: {executionMode}.";
+
+                if (executionMode == PowerShellExecutionMode.SystemPowerShellProcess || executionMode == PowerShellExecutionMode.CompatibilityMode)
                 {
-                    // run powershell script in-process, optionally with impersonation
-                    try
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        // create a new runspace to isolate the scripts
-                        using (var runspace = RunspaceFactory.CreateRunspace())
-                        {
-                            runspace.Open();
-
-                            // set working directory to the script file's directory
-                            if (scriptInfo != null)
-                            {
-                                runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
-                            }
-
-                        using (var shell = PowerShell.Create())
-                            {
-                                shell.Runspace = runspace;
-
-                                // running PowerShell under credentials currently only supported for windows
-                                var credentialsProvidedButNotSupported = false;
-
-                                if (credentials?.Any() == true && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                                {
-                                    // TODO: warn credentials not supported on this platform
-                                    credentialsProvidedButNotSupported = true;
-                                }
-
-                                if (credentials?.Any() == true && credentialsProvidedButNotSupported == false && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                                {
-                                    // run as windows user
-                                    UserCredentials windowsCredentials = null;
-
-                                    try
-                                    {
-                                        windowsCredentials = GetWindowsCredentials(credentials);
-                                    }
-                                    catch
-                                    {
-                                        var err = "Command with Windows Credentials requires username and password.";
-
-                                        return new ActionResult(err, false);
-                                    }
-
-                                    var _defaultLogonType = GetLogonType(logonType);
-
-                                    ActionResult powerShellResult = null;
-                                    using (var userHandle = windowsCredentials.LogonUser(_defaultLogonType))
-                                    {
-                                        WindowsIdentity.RunImpersonated(userHandle, () =>
-                                        {
-                                            powerShellResult = InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-
-                                        });
-                                    }
-
-                                    return powerShellResult;
-                                }
-                                else
-                                {
-                                    // run as current user
-                                    return InvokePowershell(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes);
-                                }
-                            }
-                        }
+                        // spawn new process as the given user
+                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        return await Task.FromResult(new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false));
+
+                        executionMode = PowerShellExecutionMode.ModernMode;
+                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, using in-process PowerShell on this platform).";
                     }
                 }
+
+                if (executionMode == PowerShellExecutionMode.ModernMode)
+                {
+
+                    return RunScriptInPowerShellCore(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage);
+                }
+
+                return new ActionResult($"Unknown PowerShell execution mode: {executionMode}", false);
             }
             finally
             {
@@ -198,17 +155,86 @@ namespace Certify.Management
             };
         }
 
-        /// <summary>
-        /// Get the path to the pwoershell exe, optionally using a preferred path first
-        /// </summary>
-        /// <param name="powershellPathPreference"></param>
-        /// <returns></returns>
-        private static string GetPowershellExePath(string powershellPathPreference)
+        private static ActionResult RunScriptInPowerShellCore(string powershellExecutionPolicy, CertificateRequestResult result, string scriptFile, Dictionary<string, object> parameters, string scriptContent, Dictionary<string, string> credentials, string logonType, string[] ignoredCommandExceptions, int timeoutMinutes, FileInfo scriptInfo, string executionModeMessage)
         {
-            var searchPaths = new List<string>() {
-                "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
-                "/usr/bin/pwsh"
+            try
+            {
+                using var runspace = RunspaceFactory.CreateRunspace();
+                runspace.Open();
+
+                if (scriptInfo != null)
+                {
+                    runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
+                }
+
+                using (var shell = PowerShell.Create())
+                {
+                    shell.Runspace = runspace;
+
+                    if (credentials?.Any() == true && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        UserCredentials windowsCredentials = null;
+
+                        try
+                        {
+                            windowsCredentials = GetWindowsCredentials(credentials);
+                        }
+                        catch
+                        {
+                            return new ActionResult("Command with Windows Credentials requires username and password.", false);
+                        }
+
+                        ActionResult powerShellResult = null;
+                        using (var userHandle = windowsCredentials.LogonUser(GetLogonType(logonType)))
+                        {
+                            WindowsIdentity.RunImpersonated(userHandle, () =>
+                            {
+                                powerShellResult = InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
+                            });
+                        }
+
+                        return powerShellResult;
+                    }
+
+                    return InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                return new ActionResult($"Error - {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}", false);
+            }
+        }
+
+        /// <summary>
+        /// Get the path to the powershell exe for the requested mode, optionally using a preferred path first.
+        /// </summary>
+        private static string GetPowershellExePath(PowerShellExecutionMode executionMode, string powershellPathPreference = null)
+        {
+            var searchPaths = executionMode switch
+            {
+                PowerShellExecutionMode.CompatibilityMode =>
+                [
+                    "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                    "powershell.exe"
+                ],
+                PowerShellExecutionMode.ModernMode => new List<string>
+                {
+                    "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
+                    "/usr/local/bin/pwsh",
+                    "/opt/homebrew/bin/pwsh",
+                    "/usr/bin/pwsh",
+                    "pwsh"
+                },
+                _ =>
+                [
+                    "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
+                    "/usr/local/bin/pwsh",
+                    "/opt/homebrew/bin/pwsh",
+                    "/usr/bin/pwsh",
+                    "pwsh",
+                    "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                    "powershell.exe"
+                ]
             };
 
             if (!string.IsNullOrWhiteSpace(powershellPathPreference))
@@ -225,60 +251,150 @@ namespace Certify.Management
                 {
                     return filePath;
                 }
+
+                if (Path.GetFileName(filePath) == filePath)
+                {
+                    var pathExe = ResolveExecutableFromPath(filePath);
+                    if (!string.IsNullOrWhiteSpace(pathExe))
+                    {
+                        return pathExe;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static string ResolveExecutableFromPath(string executableName)
+        {
+            var path = Environment.GetEnvironmentVariable("PATH");
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return null;
+            }
+
+            foreach (var pathEntry in path.Split(Path.PathSeparator))
+            {
+                if (string.IsNullOrWhiteSpace(pathEntry))
+                {
+                    continue;
+                }
+
+                var candidate = Path.Combine(pathEntry, executableName);
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
             }
 
             return null;
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null)
+        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemPowerShellProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var _log = new StringBuilder();
 
-            var commandExe = GetPowershellExePath(powershellPathPreference);
+            var commandExe = GetPowershellExePath(executionMode, powershellPathPreference);
 
             if (commandExe == null)
             {
                 return new ActionResult("Failed to locate powershell executable. Cannot launch as new process.", false);
             }
 
-            if (!string.IsNullOrEmpty(scriptContent))
-            {
-                // script content would need to be run from a file, for that we need to run encrypted script content otherwise credentials would appear in temp file
-                return new ActionResult("Script content is not yet supported when used with launch as new process.", false);
-            }
+            _log.AppendLine(executionModeMessage ?? $"PowerShell Execution Mode: {executionMode}.");
+            _log.AppendLine($"PowerShell Executable: {commandExe}");
 
             var resultObj = result ?? parameters?.Where(p => p.Key == "result" && p.Value != null).FirstOrDefault().Value;
             var payloadParameters = BuildProcessPayloadParameters(parameters, autoConvertBoolean);
+            var useWrapperScript = resultObj != null || payloadParameters.Any();
 
             string payloadTempPath = null;
+            string payloadSecret = null;
             string wrapperScriptTempPath = null;
+            string scriptContentTempPath = null;
+            string tempDirectoryPath = null;
+
+            void CleanupTempFiles()
+            {
+                DeleteTempFile(payloadTempPath, _log, "secure payload file");
+                DeleteTempFile(wrapperScriptTempPath, _log, "temp wrapper script");
+                DeleteTempFile(scriptContentTempPath, _log, "temp script content file");
+                DeleteTempDirectory(tempDirectoryPath, _log);
+            }
 
             var appBasePath = AppContext.BaseDirectory;
 
-            var wrapperScriptPath = Path.Combine(new string[] { appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1" });
+            var wrapperScriptPath = Path.Combine([appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1"]);
             var wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
-            var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials) : null;
+            var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true) : null;
 
-            if (isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            try
             {
-                // The impersonating user must be able to read the script wrapper so that the process starting under their credentials can call it. They will also need to be able to read the users supplied target script (not addressed here).
+                tempDirectoryPath = await CreateSecureTempDirectory(executingUsername);
+            }
+            catch (Exception ex)
+            {
+                return new ActionResult($"Failed to prepare secure temporary PowerShell handoff directory. {ex.Message}", false);
+            }
+
+            if (!string.IsNullOrEmpty(scriptContent) && !useWrapperScript)
+            {
+                try
+                {
+                    scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                    File.WriteAllText(scriptContentTempPath, scriptContent, new UTF8Encoding(false));
+                    scriptFile = scriptContentTempPath;
+                }
+                catch (Exception ex)
+                {
+                    CleanupTempFiles();
+                    return new ActionResult($"Failed to prepare secure temporary PowerShell script content. {ex.Message}", false);
+                }
+            }
+
+            if (useWrapperScript && !string.IsNullOrEmpty(scriptContent))
+            {
+                try
+                {
+                    wrapperScriptSourceText = BuildScriptContentWrapper(wrapperScriptSourceText, scriptContent);
+                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                    wrapperScriptTempPath = wrapperScriptPath;
+                    File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText, new UTF8Encoding(false));
+                }
+                catch (Exception ex)
+                {
+                    var err = $"Failed to prepare the secure PowerShell script content wrapper. {ex.Message}";
+
+                    CleanupTempFiles();
+                    return new ActionResult(err, false);
+                }
+            }
+            else if (useWrapperScript && isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // The impersonating user must be able to read the script wrapper and target script so that the process starting under their credentials can call them.
 
                 try
                 {
-                    var wrapperTempFilePath = Path.GetTempFileName();
-                    wrapperScriptPath = Path.ChangeExtension(wrapperTempFilePath, ".ps1");
+                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
                     wrapperScriptTempPath = wrapperScriptPath;
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
-                    await EnsureSecureTempFileAccess(wrapperScriptPath, executingUsername, allowExecute: true);
+
+                    if (!string.IsNullOrWhiteSpace(scriptFile))
+                    {
+                        scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                        File.WriteAllBytes(scriptContentTempPath, File.ReadAllBytes(scriptFile));
+                        scriptFile = scriptContentTempPath;
+                    }
                 }
                 catch (Exception ex)
                 {
                     var err = $"Failed to prepare the secure PowerShell wrapper for alternate credentials. {ex.Message}";
 
+                    CleanupTempFiles();
                     return new ActionResult(err, false);
                 }
             }
@@ -293,17 +409,18 @@ namespace Certify.Management
                         Parameters = payloadParameters
                     };
 
-                    payloadTempPath = CreateSecureTempFilePath(".dat");
-                    File.WriteAllText(payloadTempPath, EncodePayload(payload), new UTF8Encoding(false));
-                    await EnsureSecureTempFileAccess(payloadTempPath, executingUsername);
+                    payloadSecret = CreatePayloadSecret();
+                    payloadTempPath = await CreateSecureTempFile(tempDirectoryPath, ".dat", executingUsername);
+                    File.WriteAllText(payloadTempPath, EncodePayload(payload, payloadSecret), new UTF8Encoding(false));
                 }
             }
             catch (Exception ex)
             {
+                CleanupTempFiles();
                 return new ActionResult($"Failed to prepare the secure PowerShell handoff payload. {ex.Message}", false);
             }
 
-            var arguments = $" -File \"{wrapperScriptPath}\"";
+            var arguments = useWrapperScript ? $" -Command \"& '{wrapperScriptPath}'\"" : $" -File \"{scriptFile}\"";
 
             if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
             {
@@ -315,7 +432,15 @@ namespace Certify.Management
                 arguments = $"-ExecutionPolicy {executionPolicy} {arguments}";
             }
 
-            arguments += $" -scriptFile \"{scriptFile}\"";
+            if (isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                arguments = $"-NoProfile {arguments}";
+            }
+
+            if (useWrapperScript && !string.IsNullOrWhiteSpace(scriptFile))
+            {
+                arguments += $" -scriptFile \"{scriptFile}\"";
+            }
 
             if (!string.IsNullOrWhiteSpace(payloadTempPath))
             {
@@ -332,10 +457,21 @@ namespace Certify.Management
                 FileName = commandExe,
                 Arguments = arguments,
                 Verb = "RunAs",
-                WorkingDirectory = Path.GetDirectoryName(scriptFile)
+                WorkingDirectory = Path.GetDirectoryName(wrapperScriptPath ?? scriptFile) ?? AppContext.BaseDirectory
             };
 
             scriptProcessInfo.Environment[PowerShellTelemetryOptOutEnvVar] = PowerShellTelemetryOptOutValue;
+
+            if (isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrWhiteSpace(tempDirectoryPath))
+            {
+                scriptProcessInfo.Environment["TEMP"] = tempDirectoryPath;
+                scriptProcessInfo.Environment["TMP"] = tempDirectoryPath;
+            }
+
+            if (!string.IsNullOrWhiteSpace(payloadTempPath))
+            {
+                scriptProcessInfo.Environment[PowerShellPayloadSecretEnvVar] = payloadSecret;
+            }
 
             // launch process with user credentials set
             if (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"))
@@ -405,7 +541,10 @@ namespace Certify.Management
                     process.BeginOutputReadLine();
                     process.BeginErrorReadLine();
 
-                    process.WaitForExit((timeoutMinutes * 60) * 1000);
+                    if (process.WaitForExit((timeoutMinutes * 60) * 1000))
+                    {
+                        process.WaitForExit();
+                    }
                 }
                 catch (Exception exp)
                 {
@@ -462,30 +601,60 @@ namespace Certify.Management
             }
             finally
             {
+                CleanupTempFiles();
+            }
+        }
 
-                if (!string.IsNullOrWhiteSpace(payloadTempPath))
-                {
-                    try
-                    {
-                        File.Delete(payloadTempPath);
-                    }
-                    catch
-                    {
-                        _log.AppendLine("Running Powershell As New Process: Could not delete secure payload file.");
-                    }
-                }
+        private static string BuildScriptContentWrapper(string wrapperScriptSourceText, string scriptContent)
+        {
+            const string wrappedScriptInvocation = "& $scriptFile @wrappedArguments";
 
-                if (!string.IsNullOrWhiteSpace(wrapperScriptTempPath))
-                {
-                    try
-                    {
-                        File.Delete(wrapperScriptTempPath);
-                    }
-                    catch
-                    {
-                        _log.AppendLine("Running Powershell As New Process: Could not delete temp wrapper script.");
-                    }
-                }
+            if (string.IsNullOrWhiteSpace(wrapperScriptSourceText))
+            {
+                throw new InvalidOperationException("PowerShell wrapper script template is missing the wrapped script invocation.");
+            }
+
+            var embeddedScriptInvocation = $"$__certifyScriptContent = {{{Environment.NewLine}{scriptContent}{Environment.NewLine}}}{Environment.NewLine}& $__certifyScriptContent @wrappedArguments";
+
+            if (wrapperScriptSourceText.Contains(wrappedScriptInvocation, StringComparison.Ordinal))
+            {
+                return wrapperScriptSourceText.Replace(wrappedScriptInvocation, embeddedScriptInvocation, StringComparison.Ordinal);
+            }
+
+            throw new InvalidOperationException("PowerShell wrapper script template is missing the wrapped script invocation.");
+        }
+
+        private static void DeleteTempFile(string tempFilePath, StringBuilder log, string description)
+        {
+            if (string.IsNullOrWhiteSpace(tempFilePath))
+            {
+                return;
+            }
+
+            try
+            {
+                File.Delete(tempFilePath);
+            }
+            catch
+            {
+                log.AppendLine($"Running Powershell As New Process: Could not delete {description}.");
+            }
+        }
+
+        private static void DeleteTempDirectory(string tempDirectoryPath, StringBuilder log)
+        {
+            if (string.IsNullOrWhiteSpace(tempDirectoryPath))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.Delete(tempDirectoryPath, recursive: false);
+            }
+            catch
+            {
+                log.AppendLine("Running Powershell As New Process: Could not delete temp handoff directory.");
             }
         }
 
@@ -526,29 +695,134 @@ namespace Certify.Management
             return payloadParameters;
         }
 
-        private static string CreateSecureTempFilePath(string extension)
+        private static bool IsManagerOnlyParameter(string parameterName)
         {
-            return Path.Combine(Path.GetTempPath(), $"certify-powershell-{Guid.NewGuid():N}{extension}");
+            return parameterName.Equals("result", StringComparison.OrdinalIgnoreCase)
+                || parameterName.Equals("executionpolicy", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static string EncodePayload(PowerShellProcessPayload payload)
+        private static async Task<string> CreateSecureTempDirectory(string fullUsername = null)
+        {
+            var baseTempPath = GetPowerShellHandoffTempBasePath(fullUsername);
+            Directory.CreateDirectory(baseTempPath);
+
+            var directoryPath = Path.Combine(baseTempPath, $"certify-powershell-{Guid.NewGuid():N}");
+
+            Directory.CreateDirectory(directoryPath);
+
+            await EnsureSecureTempDirectoryAccess(directoryPath, fullUsername);
+
+            return directoryPath;
+        }
+
+        private static string GetPowerShellHandoffTempBasePath(string fullUsername)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !string.IsNullOrWhiteSpace(fullUsername))
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Certify", "Temp");
+            }
+
+            return Path.GetTempPath();
+        }
+
+        private static async Task<string> CreateSecureTempFile(string directoryPath, string extension, string fullUsername = null, bool allowExecute = false)
+        {
+            var filePath = Path.Combine(directoryPath, $"certify-powershell-{Guid.NewGuid():N}{extension}");
+
+            using (File.Create(filePath))
+            {
+            }
+
+            await EnsureSecureTempFileAccess(filePath, fullUsername, allowExecute);
+
+            return filePath;
+        }
+
+        private static async Task EnsureSecureTempDirectoryAccess(string directoryPath, string fullUsername)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (!await ApplyDirectoryACL(directoryPath, fullUsername))
+                {
+                    throw new InvalidOperationException($"Could not apply secure access controls to '{directoryPath}'.");
+                }
+            }
+            else
+            {
+                if (!TrySetRestrictedUnixFileMode(directoryPath, allowExecute: true))
+                {
+                    throw new InvalidOperationException($"Could not apply secure directory mode to '{directoryPath}'.");
+                }
+            }
+        }
+
+        private static string CreatePayloadSecret()
+        {
+            var secret = new byte[32];
+            RandomNumberGenerator.Fill(secret);
+
+            return Convert.ToBase64String(secret);
+        }
+
+        private static string EncodePayload(PowerShellProcessPayload payload, string payloadSecret)
         {
             var payloadJson = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
-            return Convert.ToBase64String(Encoding.UTF8.GetBytes(payloadJson));
+            var plainText = Encoding.UTF8.GetBytes(payloadJson);
+            var masterKey = Convert.FromBase64String(payloadSecret);
+
+            using var hmac = new HMACSHA256(masterKey);
+            var encryptionKey = hmac.ComputeHash(Encoding.UTF8.GetBytes("Certify.PowerShell.Payload.Encryption"));
+            var authenticationKey = hmac.ComputeHash(Encoding.UTF8.GetBytes("Certify.PowerShell.Payload.Authentication"));
+
+            using var aes = Aes.Create();
+            aes.Key = encryptionKey;
+            aes.GenerateIV();
+
+            byte[] cipherText;
+            using (var encryptor = aes.CreateEncryptor())
+            {
+                cipherText = encryptor.TransformFinalBlock(plainText, 0, plainText.Length);
+            }
+
+            var version = Encoding.ASCII.GetBytes("CPS1");
+            var authenticatedData = CombineBytes(version, aes.IV, cipherText);
+
+            using var payloadHmac = new HMACSHA256(authenticationKey);
+            var signature = payloadHmac.ComputeHash(authenticatedData);
+
+            return Convert.ToBase64String(CombineBytes(authenticatedData, signature));
+        }
+
+        private static byte[] CombineBytes(params byte[][] values)
+        {
+            var length = values.Sum(v => v.Length);
+            var output = new byte[length];
+            var offset = 0;
+
+            foreach (var value in values)
+            {
+                Buffer.BlockCopy(value, 0, output, offset, value.Length);
+                offset += value.Length;
+            }
+
+            return output;
         }
 
         private static async Task EnsureSecureTempFileAccess(string filePath, string fullUsername, bool allowExecute = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (!string.IsNullOrWhiteSpace(fullUsername) && !await ApplyFileACL(filePath, fullUsername, allowExecute))
+                if (!await ApplyFileACL(filePath, fullUsername, allowExecute))
                 {
                     throw new InvalidOperationException($"Could not apply secure access controls to '{filePath}'.");
                 }
             }
             else
             {
-                TrySetRestrictedUnixFileMode(filePath, allowExecute);
+                if (!TrySetRestrictedUnixFileMode(filePath, allowExecute))
+                {
+                    throw new InvalidOperationException($"Could not apply secure file mode to '{filePath}'.");
+                }
             }
         }
 
@@ -570,7 +844,7 @@ namespace Certify.Management
                     : "UserRead, UserWrite";
                 var mode = Enum.Parse(unixFileModeType, modeNames);
 
-                setUnixFileModeMethod.Invoke(null, new[] { filePath, mode });
+                setUnixFileModeMethod.Invoke(null, [filePath, mode]);
 
                 return true;
             }
@@ -584,14 +858,30 @@ namespace Certify.Management
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var fileInfo = new FileInfo(filePath);
-                var accessControl = fileInfo.GetAccessControl();
-
-                var fileRights = allowExecute ? FileSystemRights.ReadAndExecute : FileSystemRights.Read;
-                accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, fileRights, AccessControlType.Allow));
-
                 try
                 {
+                    var fileInfo = new FileInfo(filePath);
+                    var accessControl = new FileSecurity();
+                    var currentIdentity = WindowsIdentity.GetCurrent();
+                    var currentUser = currentIdentity.User;
+
+                    if (currentUser == null)
+                    {
+                        return false;
+                    }
+
+                    accessControl.SetOwner(currentUser);
+                    accessControl.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                    accessControl.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, AccessControlType.Allow));
+                    accessControl.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
+                    accessControl.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
+
+                    if (!string.IsNullOrWhiteSpace(fullUsername))
+                    {
+                        var fileRights = allowExecute ? FileSystemRights.ReadAndExecute : FileSystemRights.Read;
+                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, fileRights, AccessControlType.Allow));
+                    }
+
                     fileInfo.SetAccessControl(accessControl);
                     return true;
                 }
@@ -606,7 +896,48 @@ namespace Certify.Management
             }
         }
 
-        private static ActionResult InvokePowershell(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5)
+        private static async Task<bool> ApplyDirectoryACL(string directoryPath, string fullUsername)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                try
+                {
+                    var directoryInfo = new DirectoryInfo(directoryPath);
+                    var accessControl = new DirectorySecurity();
+                    var currentIdentity = WindowsIdentity.GetCurrent();
+                    var currentUser = currentIdentity.User;
+
+                    if (currentUser == null)
+                    {
+                        return false;
+                    }
+
+                    accessControl.SetOwner(currentUser);
+                    accessControl.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
+                    accessControl.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                    accessControl.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                    accessControl.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+
+                    if (!string.IsNullOrWhiteSpace(fullUsername))
+                    {
+                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                    }
+
+                    directoryInfo.SetAccessControl(accessControl);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return await Task.FromResult(false);
+            }
+        }
+
+        private static ActionResult InvokePowershellCore(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string executionModeMessage = null)
         {
             // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
 
@@ -626,6 +957,8 @@ namespace Certify.Management
                             .AddParameter("Scope", "Process")
                             .AddParameter("Force")
                             .Invoke();
+
+                    shell.Commands.Clear();
                 }
             }
 
@@ -650,6 +983,11 @@ namespace Certify.Management
             {
                 foreach (var a in parameters)
                 {
+                    if (IsManagerOnlyParameter(a.Key))
+                    {
+                        continue;
+                    }
+
                     var val = a.Value;
                     if (autoConvertBoolean)
                     {
@@ -672,6 +1010,9 @@ namespace Certify.Management
 
             // accumulate output
             var output = new StringBuilder();
+
+            output.AppendLine(executionModeMessage ?? $"PowerShell Execution Mode: {PowerShellExecutionMode.ModernMode}.");
+            output.AppendLine($"PowerShell Host: {System.Management.Automation.PSVersionInfo.PSEdition} {System.Management.Automation.PSVersionInfo.PSVersion}");
 
             // capture errors
 
@@ -758,7 +1099,7 @@ namespace Certify.Management
                         output.Append($"Powershell Task Completed.");
                     }
                 }
-                catch (System.Management.Automation.RuntimeException ex)
+                catch (RuntimeException ex)
                 {
                     errors.Add($"{ex.ErrorRecord} {ex.ErrorRecord.ScriptStackTrace}");
                 }
@@ -821,9 +1162,14 @@ namespace Certify.Management
 
             if (includeAutoLocalDomain)
             {
+                if (username.StartsWith(@".\", StringComparison.Ordinal))
+                {
+                    return $"{Environment.MachineName}\\{username.Substring(2)}";
+                }
+
                 if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
                 {
-                    domain = ".";
+                    domain = Environment.MachineName;
                 }
             }
 

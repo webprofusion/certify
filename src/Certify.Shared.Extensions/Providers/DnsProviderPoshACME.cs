@@ -1495,7 +1495,14 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(_scriptExecutionPolicy, parameters: objParams, scriptContent: scriptContent, ignoredCommandExceptions: ignoredCommandExceptions);
+            return await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = _scriptExecutionPolicy,
+                Parameters = objParams,
+                ScriptContent = scriptContent,
+                IgnoredCommandExceptions = ignoredCommandExceptions,
+                ExecutionMode = PowerShellExecutionMode.ModernMode
+            });
         }
 
         public async Task<ActionResult> DeleteRecord(DnsRecord request)
@@ -1504,7 +1511,14 @@ namespace Certify.Core.Management.Challenges.DNS
 
             var objParams = _parameters.ToDictionary(p => p.Key, p => p.Value as object);
 
-            return await PowerShellManager.RunScript(_scriptExecutionPolicy, parameters: objParams, scriptContent: scriptContent, ignoredCommandExceptions: ignoredCommandExceptions);
+            return await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = _scriptExecutionPolicy,
+                Parameters = objParams,
+                ScriptContent = scriptContent,
+                IgnoredCommandExceptions = ignoredCommandExceptions,
+                ExecutionMode = PowerShellExecutionMode.ModernMode
+            });
         }
 
         Task<List<DnsZone>> IDnsProvider.GetZones() => Task.FromResult(new List<DnsZone>());
