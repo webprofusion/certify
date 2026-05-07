@@ -42,8 +42,7 @@ END";
                     return;
                 }
 
-                PostgresContainer = new PostgreSqlBuilder()
-                    .WithName("certify-postgres-test")
+                PostgresContainer = new PostgreSqlBuilder("certify-postgres-test")
                     .WithImage("postgres:16-alpine")
                     .WithDatabase("certify")
                     .WithUsername("certify")
@@ -54,8 +53,7 @@ END";
                 PostgresConnectionString = PostgresContainer.GetConnectionString();
                 await EnsurePostgresSchema(PostgresConnectionString);
 
-                SqlServerContainer = new MsSqlBuilder()
-                    .WithName("certify-sqlserver-test")
+                SqlServerContainer = new MsSqlBuilder("certify-sqlserver-test")
                     .Build();
 
                 await SqlServerContainer.StartAsync();
