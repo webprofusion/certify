@@ -72,6 +72,11 @@ namespace Certify.Management
                 }
             }
 
+            if (!string.IsNullOrWhiteSpace(taskId))
+            {
+                forceTaskExecution = true;
+            }
+
             if (taskList == null || !taskList.Any())
             {
                 if (!string.IsNullOrWhiteSpace(taskId))
@@ -247,7 +252,7 @@ namespace Certify.Management
                     if (!shouldRunCurrentTask)
                     {
                         shouldRunCurrentTask = true;
-                        taskTriggerReason = $"Task is being has been forced to run. Normal status would be [{taskTriggerReason}]";
+                        taskTriggerReason = $"Task has been forced to run. Normal status would be [{taskTriggerReason}]";
                     }
                 }
 
