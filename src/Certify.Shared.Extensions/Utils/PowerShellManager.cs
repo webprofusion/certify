@@ -12,6 +12,7 @@ using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -24,6 +25,13 @@ namespace Certify.Management
         CompatibilityMode,
         ModernMode,
         SystemPowerShellProcess
+    }
+
+    public enum PowerShellImpersonationMode
+    {
+        Default,
+        Limited,
+        Full
     }
 
     public class PowerShellScriptSettings
@@ -39,6 +47,8 @@ namespace Certify.Management
         public int TimeoutMinutes { get; set; } = 5;
         public bool LaunchNewProcess { get; set; }
         public PowerShellExecutionMode ExecutionMode { get; set; } = PowerShellExecutionMode.CompatibilityMode;
+        public PowerShellImpersonationMode ImpersonationMode { get; set; } = PowerShellImpersonationMode.Default;
+        public bool LoadUserProfile { get; set; }
     }
 
     /// <summary>
@@ -47,7 +57,7 @@ namespace Certify.Management
     /// When launching a separate process, script parameters are marshalled via a temporary encoded payload file
     /// so secrets are not exposed on the process command line.
     /// </summary>
-    public class PowerShellManager
+    public partial class PowerShellManager
     {
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
@@ -108,12 +118,26 @@ namespace Certify.Management
                     ? $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Launch New Process is enabled)."
                     : $"PowerShell Execution Mode: {executionMode}.";
 
+                if (settings.ImpersonationMode == PowerShellImpersonationMode.Full)
+                {
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        return new ActionResult("PowerShell Full Impersonation is only supported on Windows.", false);
+                    }
+
+                    if (executionMode == PowerShellExecutionMode.ModernMode)
+                    {
+                        executionMode = PowerShellExecutionMode.SystemPowerShellProcess;
+                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Full Impersonation requires a new Windows process).";
+                    }
+                }
+
                 if (executionMode == PowerShellExecutionMode.SystemPowerShellProcess || executionMode == PowerShellExecutionMode.CompatibilityMode)
                 {
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         // spawn new process as the given user
-                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage);
+                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: settings.LoadUserProfile);
                     }
                     else
                     {
@@ -291,7 +315,7 @@ namespace Certify.Management
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemPowerShellProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null)
+        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemPowerShellProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var _log = new StringBuilder();
@@ -331,10 +355,11 @@ namespace Certify.Management
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
             var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true) : null;
+            var allowCredentialWriteAccess = isUsingCredentials && impersonationMode == PowerShellImpersonationMode.Full;
 
             try
             {
-                tempDirectoryPath = await CreateSecureTempDirectory(executingUsername);
+                tempDirectoryPath = await CreateSecureTempDirectory(executingUsername, allowCredentialWriteAccess);
             }
             catch (Exception ex)
             {
@@ -345,7 +370,7 @@ namespace Certify.Management
             {
                 try
                 {
-                    scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                    scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     File.WriteAllText(scriptContentTempPath, scriptContent, new UTF8Encoding(false));
                     scriptFile = scriptContentTempPath;
                 }
@@ -361,7 +386,7 @@ namespace Certify.Management
                 try
                 {
                     wrapperScriptSourceText = BuildScriptContentWrapper(wrapperScriptSourceText, scriptContent);
-                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     wrapperScriptTempPath = wrapperScriptPath;
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText, new UTF8Encoding(false));
                 }
@@ -379,13 +404,13 @@ namespace Certify.Management
 
                 try
                 {
-                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                    wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     wrapperScriptTempPath = wrapperScriptPath;
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
 
                     if (!string.IsNullOrWhiteSpace(scriptFile))
                     {
-                        scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true);
+                        scriptContentTempPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                         File.WriteAllBytes(scriptContentTempPath, File.ReadAllBytes(scriptFile));
                         scriptFile = scriptContentTempPath;
                     }
@@ -410,7 +435,7 @@ namespace Certify.Management
                     };
 
                     payloadSecret = CreatePayloadSecret();
-                    payloadTempPath = await CreateSecureTempFile(tempDirectoryPath, ".dat", executingUsername);
+                    payloadTempPath = await CreateSecureTempFile(tempDirectoryPath, ".dat", executingUsername, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     File.WriteAllText(payloadTempPath, EncodePayload(payload, payloadSecret), new UTF8Encoding(false));
                 }
             }
@@ -471,6 +496,33 @@ namespace Certify.Management
             if (!string.IsNullOrWhiteSpace(payloadTempPath))
             {
                 scriptProcessInfo.Environment[PowerShellPayloadSecretEnvVar] = payloadSecret;
+            }
+
+            if (impersonationMode == PowerShellImpersonationMode.Full)
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    CleanupTempFiles();
+                    return new ActionResult("PowerShell Full Impersonation is only supported on Windows.", false);
+                }
+
+                if (!isUsingCredentials)
+                {
+                    CleanupTempFiles();
+                    return new ActionResult("PowerShell Full Impersonation requires username and password credentials.", false);
+                }
+
+                _log.AppendLine($"Launching Process {commandExe} using full Windows impersonation as {executingUsername}.");
+                if (loadUserProfile)
+                {
+                    _log.AppendLine("PowerShell Full Impersonation: loading user profile and environment.");
+                }
+                else
+                {
+                    _log.AppendLine("PowerShell Full Impersonation: user profile loading is disabled.");
+                }
+
+                return RunProcessWithFullImpersonation(scriptProcessInfo, credentials, logonType, loadUserProfile, timeoutMinutes, _log, CleanupTempFiles);
             }
 
             // launch process with user credentials set
@@ -701,7 +753,7 @@ namespace Certify.Management
                 || parameterName.Equals("executionpolicy", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static async Task<string> CreateSecureTempDirectory(string fullUsername = null)
+        private static async Task<string> CreateSecureTempDirectory(string fullUsername = null, bool allowCredentialWriteAccess = false)
         {
             var baseTempPath = GetPowerShellHandoffTempBasePath(fullUsername);
             Directory.CreateDirectory(baseTempPath);
@@ -710,7 +762,7 @@ namespace Certify.Management
 
             Directory.CreateDirectory(directoryPath);
 
-            await EnsureSecureTempDirectoryAccess(directoryPath, fullUsername);
+            await EnsureSecureTempDirectoryAccess(directoryPath, fullUsername, allowCredentialWriteAccess);
 
             return directoryPath;
         }
@@ -725,7 +777,7 @@ namespace Certify.Management
             return Path.GetTempPath();
         }
 
-        private static async Task<string> CreateSecureTempFile(string directoryPath, string extension, string fullUsername = null, bool allowExecute = false)
+        private static async Task<string> CreateSecureTempFile(string directoryPath, string extension, string fullUsername = null, bool allowExecute = false, bool allowCredentialWriteAccess = false)
         {
             var filePath = Path.Combine(directoryPath, $"certify-powershell-{Guid.NewGuid():N}{extension}");
 
@@ -733,16 +785,16 @@ namespace Certify.Management
             {
             }
 
-            await EnsureSecureTempFileAccess(filePath, fullUsername, allowExecute);
+            await EnsureSecureTempFileAccess(filePath, fullUsername, allowExecute, allowCredentialWriteAccess);
 
             return filePath;
         }
 
-        private static async Task EnsureSecureTempDirectoryAccess(string directoryPath, string fullUsername)
+        private static async Task EnsureSecureTempDirectoryAccess(string directoryPath, string fullUsername, bool allowCredentialWriteAccess = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (!await ApplyDirectoryACL(directoryPath, fullUsername))
+                if (!await ApplyDirectoryACL(directoryPath, fullUsername, allowCredentialWriteAccess))
                 {
                     throw new InvalidOperationException($"Could not apply secure access controls to '{directoryPath}'.");
                 }
@@ -808,11 +860,11 @@ namespace Certify.Management
             return output;
         }
 
-        private static async Task EnsureSecureTempFileAccess(string filePath, string fullUsername, bool allowExecute = false)
+        private static async Task EnsureSecureTempFileAccess(string filePath, string fullUsername, bool allowExecute = false, bool allowCredentialWriteAccess = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (!await ApplyFileACL(filePath, fullUsername, allowExecute))
+                if (!await ApplyFileACL(filePath, fullUsername, allowExecute, allowCredentialWriteAccess))
                 {
                     throw new InvalidOperationException($"Could not apply secure access controls to '{filePath}'.");
                 }
@@ -854,7 +906,7 @@ namespace Certify.Management
             }
         }
 
-        private static async Task<bool> ApplyFileACL(string filePath, string fullUsername, bool allowExecute = false)
+        private static async Task<bool> ApplyFileACL(string filePath, string fullUsername, bool allowExecute = false, bool allowCredentialWriteAccess = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -878,7 +930,7 @@ namespace Certify.Management
 
                     if (!string.IsNullOrWhiteSpace(fullUsername))
                     {
-                        var fileRights = allowExecute ? FileSystemRights.ReadAndExecute : FileSystemRights.Read;
+                        var fileRights = allowCredentialWriteAccess ? FileSystemRights.Modify : allowExecute ? FileSystemRights.ReadAndExecute : FileSystemRights.Read;
                         accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, fileRights, AccessControlType.Allow));
                     }
 
@@ -896,7 +948,7 @@ namespace Certify.Management
             }
         }
 
-        private static async Task<bool> ApplyDirectoryACL(string directoryPath, string fullUsername)
+        private static async Task<bool> ApplyDirectoryACL(string directoryPath, string fullUsername, bool allowCredentialWriteAccess = false)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -920,7 +972,8 @@ namespace Certify.Management
 
                     if (!string.IsNullOrWhiteSpace(fullUsername))
                     {
-                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, FileSystemRights.ReadAndExecute, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                        var directoryRights = allowCredentialWriteAccess ? FileSystemRights.Modify : FileSystemRights.ReadAndExecute;
+                        accessControl.AddAccessRule(new FileSystemAccessRule(fullUsername, directoryRights, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
                     }
 
                     directoryInfo.SetAccessControl(accessControl);

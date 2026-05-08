@@ -267,6 +267,42 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "Flag: True");
         }
 
+        [TestMethod, Description("Full impersonation process mode runs script content with parameters as a different local user")]
+        [TestCategory("RequiresLocalUser")]
+        public async Task TestFullImpersonationProcessModeRunsScriptContentWithParametersAsDifferentLocalUser()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("PowerShell Full Impersonation is only supported on Windows.");
+            }
+
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "param($message, [bool]$flag); $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name; Write-Output $identity; Write-Output \"Message: $message\"; Write-Output \"Flag: $flag\"",
+                ExecutionMode = PowerShellExecutionMode.SystemPowerShellProcess,
+                LaunchNewProcess = true,
+                ImpersonationMode = PowerShellImpersonationMode.Full,
+                LoadUserProfile = true,
+                Parameters = new Dictionary<string, object>
+                {
+                    ["message"] = "full-impersonation-payload-message",
+                    ["flag"] = "true"
+                },
+                Credentials = new Dictionary<string, string>
+                {
+                    ["username"] = "testuser",
+                    ["password"] = "testing123"
+                }
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message.ToLowerInvariant(), "testuser");
+            StringAssert.Contains(result.Message, "Message: full-impersonation-payload-message");
+            StringAssert.Contains(result.Message, "Flag: True");
+            StringAssert.Contains(result.Message, "PowerShell Full Impersonation: user logon token acquired.");
+        }
+
         [TestMethod, Description("Modern mode runs script content")]
         public async Task TestModernModeRunsScriptContent()
         {
