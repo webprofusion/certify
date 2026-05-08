@@ -49,7 +49,7 @@ namespace Certify.UI.Controls.Settings
 
         public Model EditModel { get; set; } = new Model();
 
-        private ComboBox? CsrCommonNameModeSelector => FindName("CsrCommonNameModeSelectorControl") as ComboBox;
+        private ComboBox? CsrCommonNameModeSelector => CsrCommonNameModeSelectorControl;
 
         public General()
         {

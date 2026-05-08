@@ -33,332 +33,361 @@
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="General Settings"
                     IsSelected="true">
-                    <StackPanel
+                    <TabControl
                         Margin="16,0,0,0"
-                        DockPanel.Dock="Top"
-                        Orientation="Vertical">
-                        <TextBlock Style="{StaticResource Subheading}">Renewal Settings</TextBlock>
-
-                        <DockPanel>
-
+                        Controls:TabControlHelper.UnderlineBrush="{DynamicResource MahApps.Brushes.Accent4}"
+                        Controls:TabControlHelper.Underlined="TabPanel"
+                        TabStripPlacement="Top">
+                        <TabItem
+                            Height="32"
+                            MinWidth="140"
+                            Controls:HeaderedControlHelper.HeaderFontSize="12"
+                            Header="Renewal Settings"
+                            IsSelected="true">
                             <StackPanel
-                                Margin="0,0,0,0"
-                                DockPanel.Dock="Left"
-                                Orientation="Vertical">
-                                <Label
-                                    Width="180"
-                                    HorizontalAlignment="Left"
-                                    Content="Renewal Mode" />
-                                <Controls:NumericUpDown
-                                    x:Name="RenewalIntervalDays"
-                                    Width="100"
-                                    Margin="8,0,0,4"
-                                    HorizontalAlignment="Left"
-                                    Interval="1"
-                                    Maximum="60"
-                                    Minimum="1"
-                                    Value="{Binding Prefs.RenewalIntervalDays}" />
-                                <RadioButton
-                                    x:Name="RenewalIntervalMode_PercentageLifetime"
-                                    Margin="8,0,0,4"
-                                    Checked="SettingsUpdated"
-                                    Content="Percentage of Elapsed Lifetime (Recommended)"
-                                    GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated" />
-                                <RadioButton
-                                    x:Name="RenewalIntervalMode_DaysAfterLastRenewal"
-                                    Margin="8,0,0,4"
-                                    Checked="SettingsUpdated"
-                                    Content="Days After Last Renewal (Deprecated)"
-                                    GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated"
-                                    Visibility="Collapsed" />
-                                <RadioButton
-                                    x:Name="RenewalIntervalMode_DaysBeforeExpiry"
-                                    Margin="8,0,0,4"
-                                    Checked="SettingsUpdated"
-                                    Content="Days Before Expiry (Deprecated)"
-                                    GroupName="RenewalIntervalMode"
-                                    Unchecked="SettingsUpdated"
-                                    Visibility="Collapsed" />
-                                <TextBlock
-                                    x:Name="DeprecationWarning"
-                                    Margin="8,8,0,4"
-                                    Foreground="Orange"
-                                    Text="This renewal mode is deprecated. Switch to Percentage of Elapsed Lifetime for better compatibility with varying certificate lifetimes."
-                                    TextWrapping="Wrap"
-                                    Visibility="Collapsed" />
-                            </StackPanel>
-
-                            <StackPanel
-                                Width="348"
-                                Margin="0,0"
-                                DockPanel.Dock="Right"
-                                Orientation="Vertical">
-                                <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
-                                <Controls:NumericUpDown
-                                    x:Name="RenewalMaxRequests"
-                                    Width="100"
-                                    Margin="4,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Interval="1"
-                                    Maximum="100"
-                                    Minimum="0"
-                                    Value="{Binding Prefs.MaxRenewalRequests}" />
-                            </StackPanel>
-                        </DockPanel>
-
-                        <DockPanel Margin="0,16,0,0" LastChildFill="False">
-                            <TextBlock
-                                Margin="0,0,0,8"
-                                DockPanel.Dock="Top"
-                                Style="{StaticResource Subheading}">
-                                Other Settings
-                            </TextBlock>
-                            <StackPanel
-                                Width="348"
-                                Margin="4,0,32,0"
-                                DockPanel.Dock="Left"
-                                Orientation="Vertical">
-
-                                <CheckBox
-                                    x:Name="IgnoreStoppedSites"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
-                                    IsChecked="{Binding Prefs.IgnoreStoppedSites}" />
-
-                                <CheckBox
-                                    x:Name="EnableProxyAPICheckbox"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
-                                    IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
-
-                                <CheckBox
-                                    x:Name="EnableDNSValidationChecks"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_EnableDnsValidation}"
-                                    IsChecked="{Binding Prefs.EnableDNSValidationChecks}" />
-
-                                <CheckBox
-                                    x:Name="EnableHttpChallengeServer"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
-                                    IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
-
-
-
-                                <CheckBox
-                                    x:Name="EnableParallelRenewals"
-                                    Margin="0,4,0,0"
-                                    Content="Enable Parallel Renewals"
-                                    IsChecked="{Binding Prefs.EnableParallelRenewals}" />
-                                <CheckBox
-                                    x:Name="EnableExternalPlugins"
-                                    Margin="0,4,0,0"
-                                    Click="EnableExternalPlugins_Click"
-                                    Content="Enable Custom Plugin Loading"
-                                    IsChecked="{Binding Prefs.IncludeExternalPlugins}" />
-
-                                <CheckBox
-                                    x:Name="EnableStatusReporting"
-                                    Margin="0,4,0,0"
-                                    Content="{x:Static res:SR.Settings_EnableStatusReporting}"
-                                    IsChecked="{Binding Prefs.EnableStatusReporting}" />
-                                <CheckBox
-                                    x:Name="EnableExternalCertManagers"
-                                    Margin="0,4,0,0"
-                                    Content="Enable Results From External Certificate Managers"
-                                    IsChecked="{Binding Prefs.EnableExternalCertManagers}" />
-                                <CheckBox
-                                    x:Name="UseModernPFXAlgs"
-                                    Margin="0,4,0,0"
-                                    Content="Enable Modern PFX Alg (OpenSSL 3.0+ compatibility etc)"
-                                    IsChecked="{Binding Prefs.UseModernPFXAlgs}" />
-                                <CheckBox
-                                    x:Name="DisableARIChecks"
-                                    Margin="0,4,0,0"
-                                    Content="Disable ACME ARI (don't use renewal dates suggested by CA)"
-                                    IsChecked="{Binding Prefs.DisableARIChecks}" />
-
-                                <Label Content="Default ACME Retry Interval (seconds)" />
-                                <Controls:NumericUpDown
-                                    x:Name="DefaultACMERetryInterval"
-                                    Width="100"
-                                    Margin="4,0,0,0"
-                                    HorizontalAlignment="Left"
-                                    Interval="1"
-                                    Maximum="120"
-                                    Minimum="0"
-                                    Value="{Binding Prefs.DefaultACMERetryInterval}" />
-
-                            </StackPanel>
-
-                            <!--  Cert Store Options  -->
-                            <StackPanel
-                                Margin="0,0,32,0"
-                                DockPanel.Dock="Left"
-                                Orientation="Vertical">
-                                <Label Content="Certificate Store " />
-                                <StackPanel Margin="8,0,8,0">
-                                    <ComboBox x:Name="CertStoreSelector" SelectionChanged="SettingsUpdated">
-                                        <ComboBoxItem Name="My">Default (My)</ComboBoxItem>
-                                        <ComboBoxItem Name="WebHosting">Web Hosting</ComboBoxItem>
-                                    </ComboBox>
-
-                                </StackPanel>
-
-                                <Label Content="Default Private Key Type" />
-                                <StackPanel Margin="8,0,0,0">
-                                    <ComboBox
-                                        x:Name="DefaultKeyType"
-                                        DisplayMemberPath="Value"
-                                        SelectedValue="{Binding Prefs.DefaultKeyType}"
-                                        SelectedValuePath="Key" />
-                                </StackPanel>
-
-                                <Label Content="Common Name (CN) Handling" />
-                                <StackPanel Margin="8,0,0,0">
-                                    <ComboBox
-                                        x:Name="CsrCommonNameModeSelectorControl"
-                                        DisplayMemberPath="Value"
-                                        SelectedValuePath="Key"
-                                        SelectionChanged="SettingsUpdated" />
-                                </StackPanel>
-                            </StackPanel>
-
-                            <!--  Cert Cleanup Options  -->
-                            <StackPanel
-                                Margin="0,0,0,0"
-                                DockPanel.Dock="Left"
-                                Orientation="Vertical">
-                                <Label Content="Certificate Store Cleanup" />
-                                <StackPanel Margin="0,0,0,0">
-                                    <RadioButton
-                                        x:Name="CertCleanup_None"
-                                        Margin="8,0,0,4"
-                                        Checked="SettingsUpdated"
-                                        Content="None"
-                                        GroupName="CertCleanupMode"
-                                        Unchecked="SettingsUpdated" />
-                                    <RadioButton
-                                        x:Name="CertCleanup_AfterExpiry"
-                                        Margin="8,0,0,4"
-                                        Checked="SettingsUpdated"
-                                        Content="After Expiry"
-                                        GroupName="CertCleanupMode"
-                                        Unchecked="SettingsUpdated" />
-                                    <RadioButton
-                                        x:Name="CertCleanup_AfterRenewal"
-                                        Margin="8,0,0,4"
-                                        Checked="SettingsUpdated"
-                                        Content="After Renewal"
-                                        GroupName="CertCleanupMode"
-                                        Unchecked="SettingsUpdated" />
-
-                                    <RadioButton
-                                        x:Name="CertCleanup_FullCleanup"
-                                        Margin="8,0,0,4"
-                                        Checked="SettingsUpdated"
-                                        Content="Daily Full Cleanup"
-                                        GroupName="CertCleanupMode"
-                                        Unchecked="SettingsUpdated" />
-
-                                </StackPanel>
-                            </StackPanel>
-
-                        </DockPanel>
-                        <DockPanel LastChildFill="False" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='DATA_STORES', Path=Prefs}">
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Data Store</TextBlock>
-                            <TextBlock
-                                Margin="4,0,0,0"
-                                DockPanel.Dock="Top"
-                                Style="{StaticResource Instructions}">
-                                By default the system stores configuration in a local set of SQLite databases. Alternative data stores such as PostgreSQL and SQL Server can be configured to support larger installations.
-                            </TextBlock>
-
-                            <StackPanel
-                                Margin="0,4"
-                                DockPanel.Dock="Top"
-                                Orientation="Horizontal">
-
-                                <Button Margin="0,0,0,0" Click="EditDataStores">Manage Data Store</Button>
-                            </StackPanel>
-
-                        </DockPanel>
-
-                        <DockPanel LastChildFill="False">
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Diagnostics</TextBlock>
-                            <TextBlock
-                                Margin="4,0,0,0"
-                                DockPanel.Dock="Top"
-                                Style="{StaticResource Instructions}">
-                                On startup the app runs basic diagnostic checks such as system drive disk space and system time, to help ensure the system keeps running normally:
-                            </TextBlock>
-
-                            <StackPanel
-                                Margin="0,4"
-                                DockPanel.Dock="Top"
-                                Orientation="Horizontal">
-                                <Label Content="Time Check NTP Server" />
-                                <TextBox
-                                    Width="240"
-                                    Margin="4,0"
-                                    Controls:TextBoxHelper.Watermark="e.g. pool.ntp.org or blank to skip check."
-                                    Text="{Binding Prefs.NtpServer}" />
-                                <Button Margin="0,0,0,0" Click="SettingsUpdated">Apply</Button>
-                            </StackPanel>
-
-                        </DockPanel>
-
-                        <DockPanel LastChildFill="False">
-                            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Service Config</TextBlock>
-                            <TextBlock
-                                Margin="4,0,0,0"
-                                DockPanel.Dock="Top"
-                                Style="{StaticResource Instructions}">
-                                Configure local background service behavior. Restart the service after applying changes.
-                            </TextBlock>
-
-                            <StackPanel
-                                Margin="0,4"
+                                Margin="8"
                                 DockPanel.Dock="Top"
                                 Orientation="Vertical">
-                                <StackPanel Orientation="Horizontal">
-                                    <Label Width="180" Content="Log Level" />
-                                    <ComboBox
-                                        Width="180"
-                                        ItemsSource="{Binding LogLevels}"
-                                        SelectedItem="{Binding ServiceConfig.LogLevel}" />
-                                </StackPanel>
 
-                                <TextBlock
-                                    Margin="184,0,0,4"
-                                    Style="{StaticResource Instructions}"
-                                    Text="Determines the detail level of log entries." />
 
-                                <StackPanel Orientation="Horizontal">
-                                    <Label Width="180" Content="PowerShell Execution Policy" />
-                                    <ComboBox
-                                        Width="180"
-                                        ItemsSource="{Binding PowershellExecutionPolicies}"
-                                        SelectedItem="{Binding ServiceConfig.PowershellExecutionPolicy}" />
-                                </StackPanel>
+                                <DockPanel>
 
-                                <TextBlock
-                                    Margin="184,0,0,4"
-                                    Style="{StaticResource Instructions}"
-                                    Text="The PowerShell execution policy used when running scripts during certificate tasks." />
+                                    <StackPanel
+                                        Margin="0,0,0,0"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Vertical">
+                                        <Label
+                                            Width="180"
+                                            HorizontalAlignment="Left"
+                                            Content="Renewal Interval" />
+                                        <Controls:NumericUpDown
+                                            x:Name="RenewalIntervalDays"
+                                            Width="100"
+                                            Margin="8,0,8,8"
+                                            HorizontalAlignment="Left"
+                                            Interval="1"
+                                            Maximum="60"
+                                            Minimum="1"
+                                            Value="{Binding Prefs.RenewalIntervalDays}" />
 
-                                <Button
-                                    Width="140"
-                                    Margin="184,8,0,0"
-                                    HorizontalAlignment="Left"
-                                    Click="ApplyServiceConfig_Click"
-                                    Content="Apply Service Config" />
+
+                                        <RadioButton
+                                            x:Name="RenewalIntervalMode_PercentageLifetime"
+                                            Margin="8,0,0,4"
+                                            Checked="SettingsUpdated"
+                                            Content="Percentage of Elapsed Lifetime (Recommended)"
+                                            GroupName="RenewalIntervalMode"
+                                            Unchecked="SettingsUpdated" />
+                                        <RadioButton
+                                            x:Name="RenewalIntervalMode_DaysAfterLastRenewal"
+                                            Margin="8,0,0,4"
+                                            Checked="SettingsUpdated"
+                                            Content="Days After Last Renewal (Deprecated)"
+                                            GroupName="RenewalIntervalMode"
+                                            Unchecked="SettingsUpdated"
+                                            Visibility="Collapsed" />
+                                        <RadioButton
+                                            x:Name="RenewalIntervalMode_DaysBeforeExpiry"
+                                            Margin="8,0,0,4"
+                                            Checked="SettingsUpdated"
+                                            Content="Days Before Expiry (Deprecated)"
+                                            GroupName="RenewalIntervalMode"
+                                            Unchecked="SettingsUpdated"
+                                            Visibility="Collapsed" />
+                                        <TextBlock
+                                            x:Name="DeprecationWarning"
+                                            Margin="8,8,0,4"
+                                            Foreground="Orange"
+                                            Text="This renewal mode is deprecated. Switch to Percentage of Elapsed Lifetime for better compatibility with varying certificate lifetimes."
+                                            TextWrapping="Wrap"
+                                            Visibility="Collapsed" />
+                                    </StackPanel>
+
+
+                                </DockPanel>
+
+                                <DockPanel Margin="0,16,0,0" LastChildFill="False">
+                                    <TextBlock
+                                        Margin="0,0,0,8"
+                                        DockPanel.Dock="Top"
+                                        Style="{StaticResource Subheading}">
+                                        Certificate Defaults
+                                    </TextBlock>
+
+
+
+                                    <StackPanel
+                                        Margin="0,0,0,0"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Vertical">
+                                        <Label Content="Certificate Store " />
+                                        <StackPanel Margin="8,0,8,0">
+                                            <ComboBox x:Name="CertStoreSelector" SelectionChanged="SettingsUpdated">
+                                                <ComboBoxItem Name="My">Default (My)</ComboBoxItem>
+                                                <ComboBoxItem Name="WebHosting">Web Hosting</ComboBoxItem>
+                                            </ComboBox>
+
+                                        </StackPanel>
+
+                                        <Label Content="Default Private Key Type" />
+                                        <StackPanel Margin="8,0,0,0">
+                                            <ComboBox
+                                                x:Name="DefaultKeyType"
+                                                DisplayMemberPath="Value"
+                                                SelectedValue="{Binding Prefs.DefaultKeyType}"
+                                                SelectedValuePath="Key" />
+                                        </StackPanel>
+
+                                        <Label Content="Common Name (CN) Handling" />
+                                        <StackPanel Margin="8,0,0,0">
+                                            <ComboBox
+                                                x:Name="CsrCommonNameModeSelectorControl"
+                                                DisplayMemberPath="Value"
+                                                SelectedValuePath="Key"
+                                                SelectionChanged="SettingsUpdated" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                                        <StackPanel Margin="0,8,0,0" Orientation="Vertical">
+                                            <Label Content="Certificate Store Cleanup" />
+                                            <StackPanel Margin="0,0,0,0">
+                                                <RadioButton
+                                                    x:Name="CertCleanup_None"
+                                                    Margin="8,0,0,4"
+                                                    Checked="SettingsUpdated"
+                                                    Content="None"
+                                                    GroupName="CertCleanupMode"
+                                                    Unchecked="SettingsUpdated" />
+                                                <RadioButton
+                                                    x:Name="CertCleanup_AfterExpiry"
+                                                    Margin="8,0,0,4"
+                                                    Checked="SettingsUpdated"
+                                                    Content="After Expiry"
+                                                    GroupName="CertCleanupMode"
+                                                    Unchecked="SettingsUpdated" />
+                                                <RadioButton
+                                                    x:Name="CertCleanup_AfterRenewal"
+                                                    Margin="8,0,0,4"
+                                                    Checked="SettingsUpdated"
+                                                    Content="After Renewal"
+                                                    GroupName="CertCleanupMode"
+                                                    Unchecked="SettingsUpdated" />
+
+                                                <RadioButton
+                                                    x:Name="CertCleanup_FullCleanup"
+                                                    Margin="8,0,0,4"
+                                                    Checked="SettingsUpdated"
+                                                    Content="Daily Full Cleanup"
+                                                    GroupName="CertCleanupMode"
+                                                    Unchecked="SettingsUpdated" />
+
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <StackPanel Margin="64,8,0,0" Orientation="Vertical">
+                                            <Label Content="Other" />
+                                            <StackPanel Margin="16,0,0,0">
+                                                <CheckBox
+                                                    x:Name="IgnoreStoppedSites"
+                                                    Margin="0,4,0,0"
+                                                    Content="{x:Static res:SR.Settings_IgnoreStoppedSites}"
+                                                    IsChecked="{Binding Prefs.IgnoreStoppedSites}" />
+                                                <CheckBox
+                                                    x:Name="EnableParallelRenewals"
+                                                    Margin="0,4,0,0"
+                                                    Content="Enable Parallel Renewals"
+                                                    IsChecked="{Binding Prefs.EnableParallelRenewals}" />
+                                                <CheckBox
+                                                    x:Name="EnableStatusReporting"
+                                                    Margin="0,4,0,0"
+                                                    Content="{x:Static res:SR.Settings_EnableStatusReporting}"
+                                                    IsChecked="{Binding Prefs.EnableStatusReporting}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
                             </StackPanel>
-                        </DockPanel>
+                        </TabItem>
 
-                    </StackPanel>
+                        <TabItem
+                            Height="32"
+                            MinWidth="140"
+                            Controls:HeaderedControlHelper.HeaderFontSize="12"
+                            Header="Advanced Settings">
+                            <StackPanel
+                                Margin="8"
+                                DockPanel.Dock="Top"
+                                Orientation="Vertical">
+                                <TextBlock Style="{StaticResource Subheading}">Advanced Settings</TextBlock>
+
+                                <DockPanel Margin="0,8,0,0" LastChildFill="False">
+                                    <StackPanel
+                                        Margin="4,0,32,0"
+                                        DockPanel.Dock="Left"
+                                        Orientation="Vertical">
+                                        <CheckBox
+                                            x:Name="EnableProxyAPICheckbox"
+                                            Margin="0,4,0,0"
+                                            Content="{x:Static res:SR.Settings_EnableProxyApiForDomainConfig}"
+                                            IsChecked="{Binding Prefs.EnableValidationProxyAPI}" />
+
+                                        <CheckBox
+                                            x:Name="EnableDNSValidationChecks"
+                                            Margin="0,4,0,0"
+                                            Content="{x:Static res:SR.Settings_EnableDnsValidation}"
+                                            IsChecked="{Binding Prefs.EnableDNSValidationChecks}" />
+
+                                        <CheckBox
+                                            x:Name="EnableHttpChallengeServer"
+                                            Margin="0,4,0,0"
+                                            Content="{x:Static res:SR.Settings_EnableHttpChallengeServer}"
+                                            IsChecked="{Binding Prefs.EnableHttpChallengeServer}" />
+
+                                        <CheckBox
+                                            x:Name="EnableExternalPlugins"
+                                            Margin="0,4,0,0"
+                                            Click="EnableExternalPlugins_Click"
+                                            Content="Enable Custom Plugin Loading"
+                                            IsChecked="{Binding Prefs.IncludeExternalPlugins}" />
+
+                                        <CheckBox
+                                            x:Name="EnableExternalCertManagers"
+                                            Margin="0,4,0,0"
+                                            Content="Enable Results From External Certificate Managers"
+                                            IsChecked="{Binding Prefs.EnableExternalCertManagers}" />
+                                        <CheckBox
+                                            x:Name="UseModernPFXAlgs"
+                                            Margin="0,4,0,0"
+                                            Content="Enable Modern PFX Alg (OpenSSL 3.0+ compatibility etc)"
+                                            IsChecked="{Binding Prefs.UseModernPFXAlgs}" />
+                                        <CheckBox
+                                            x:Name="DisableARIChecks"
+                                            Margin="0,4,0,0"
+                                            Content="Disable ACME ARI (don't use renewal dates suggested by CA)"
+                                            IsChecked="{Binding Prefs.DisableARIChecks}" />
+
+
+                                    </StackPanel>
+                                    <StackPanel
+                                        Margin="0,8"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Vertical">
+                                        <Label Content="Default ACME Retry Interval (seconds)" />
+                                        <Controls:NumericUpDown
+                                            x:Name="DefaultACMERetryInterval"
+                                            Width="100"
+                                            Margin="4,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            Interval="1"
+                                            Maximum="120"
+                                            Minimum="0"
+                                            Value="{Binding Prefs.DefaultACMERetryInterval}" />
+                                        <Label HorizontalAlignment="Left" Content="{x:Static res:SR.Settings_AutoRenewalRequestLimit}" />
+                                        <Controls:NumericUpDown
+                                            x:Name="RenewalMaxRequests"
+                                            Width="100"
+                                            Margin="4,0,0,0"
+                                            HorizontalAlignment="Left"
+                                            Interval="1"
+                                            Maximum="100"
+                                            Minimum="0"
+                                            Value="{Binding Prefs.MaxRenewalRequests}" />
+                                    </StackPanel>
+                                </DockPanel>
+
+                                <DockPanel LastChildFill="False" Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='DATA_STORES', Path=Prefs}">
+                                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Data Store</TextBlock>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        DockPanel.Dock="Top"
+                                        Style="{StaticResource Instructions}">
+                                        By default the system stores configuration in a local set of SQLite databases. Alternative data stores such as PostgreSQL and SQL Server can be configured to support larger installations.
+                                    </TextBlock>
+
+                                    <StackPanel
+                                        Margin="0,4"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Horizontal">
+
+                                        <Button Margin="0,0,0,0" Click="EditDataStores">Manage Data Store</Button>
+                                    </StackPanel>
+
+                                </DockPanel>
+
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Diagnostics</TextBlock>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        DockPanel.Dock="Top"
+                                        Style="{StaticResource Instructions}">
+                                        On startup the app runs basic diagnostic checks such as system drive disk space and system time, to help ensure the system keeps running normally:
+                                    </TextBlock>
+
+                                    <StackPanel
+                                        Margin="0,4"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Horizontal">
+                                        <Label Content="Time Check NTP Server" />
+                                        <TextBox
+                                            Width="240"
+                                            Margin="4,0"
+                                            Controls:TextBoxHelper.Watermark="e.g. pool.ntp.org or blank to skip check."
+                                            Text="{Binding Prefs.NtpServer}" />
+                                        <Button Margin="0,0,0,0" Click="SettingsUpdated">Apply</Button>
+                                    </StackPanel>
+
+                                </DockPanel>
+
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock DockPanel.Dock="Top" Style="{StaticResource SubheadingWithMargin}">Service Config</TextBlock>
+                                    <TextBlock
+                                        Margin="4,0,0,0"
+                                        DockPanel.Dock="Top"
+                                        Style="{StaticResource Instructions}">
+                                        Configure local background service behavior. Restart the service after applying changes.
+                                    </TextBlock>
+
+                                    <StackPanel
+                                        Margin="0,4"
+                                        DockPanel.Dock="Top"
+                                        Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Width="180" Content="Log Level" />
+                                            <ComboBox
+                                                Width="180"
+                                                ItemsSource="{Binding LogLevels}"
+                                                SelectedItem="{Binding ServiceConfig.LogLevel}" />
+                                        </StackPanel>
+
+                                        <TextBlock
+                                            Margin="184,0,0,4"
+                                            Style="{StaticResource Instructions}"
+                                            Text="Determines the detail level of log entries." />
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <Label Width="180" Content="PowerShell Execution Policy" />
+                                            <ComboBox
+                                                Width="180"
+                                                ItemsSource="{Binding PowershellExecutionPolicies}"
+                                                SelectedItem="{Binding ServiceConfig.PowershellExecutionPolicy}" />
+                                        </StackPanel>
+
+                                        <TextBlock
+                                            Margin="184,0,0,4"
+                                            Style="{StaticResource Instructions}"
+                                            Text="The PowerShell execution policy used when running scripts during certificate tasks." />
+
+                                        <Button
+                                            Width="140"
+                                            Margin="184,8,0,0"
+                                            HorizontalAlignment="Left"
+                                            Click="ApplyServiceConfig_Click"
+                                            Content="Apply Service Config" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </StackPanel>
+                        </TabItem>
+                    </TabControl>
                 </TabItem>
 
                 <TabItem
@@ -434,8 +463,7 @@
                     Height="32"
                     MinWidth="140"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
-                    Header="UI Settings"
-                    IsSelected="true">
+                    Header="UI Settings">
                     <StackPanel Margin="16,0" DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource Subheading}">User Interface Settings</TextBlock>
 
