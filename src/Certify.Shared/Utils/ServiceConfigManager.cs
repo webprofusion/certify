@@ -55,7 +55,7 @@ namespace Certify.SharedUtils
                 else
                 {
                     serviceConfig.ConfigStatus = ConfigStatus.New;
-                    System.Console.WriteLine($"ServiceConfigManager: No service config found at {serviceConfigFile}");
+                    StoreUpdatedAppServiceConfig(serviceConfig);
                 }
             }
             catch (UnauthorizedAccessException uaExp)
