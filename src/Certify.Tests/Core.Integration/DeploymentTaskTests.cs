@@ -119,6 +119,48 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod, TestCategory("Tasks")]
+        public async Task TestRunPostTasksWithSuccessTrigger()
+        {
+
+            var managedCertificate = GetMockManagedCertificate("PostDeploymentTaskSuccess", testSiteDomain);
+            managedCertificate.LastRenewalStatus = RequestState.Success;
+
+            managedCertificate.PreRequestTasks = null;
+
+            managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
+                                                                            GetMockTaskConfig("Post Task 1 (on success)", triggerType: TaskTriggerType.ON_SUCCESS),
+                                                                            GetMockTaskConfig("Post Task 2 (on fail)", triggerType: TaskTriggerType.ON_ERROR),
+                                                                            GetMockTaskConfig("Post Task 3 (any status)", triggerType: TaskTriggerType.ANY_STATUS)
+                                                                        };
+
+            try
+            {
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
+
+                Assert.IsTrue(result.IsSuccess, "Primary request should be successful");
+
+                var postRequestSteps = result
+                    .Actions.Find(s => s.Key == "PostRequestTasks")
+                    .Substeps;
+
+                var successStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[0].Id);
+                Assert.IsFalse(successStep.HasError, "On-success post-request task should run after primary request succeeds");
+                Assert.IsFalse(successStep.HasWarning, "On-success post-request task should not be skipped after primary request succeeds");
+
+                var errorStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[1].Id);
+                Assert.IsTrue(errorStep.HasWarning, "On-error post-request task should be skipped after primary request succeeds");
+
+                var anyStatusStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[2].Id);
+                Assert.IsFalse(anyStatusStep.HasError, "Any-status post-request task should run after primary request succeeds");
+                Assert.IsFalse(anyStatusStep.HasWarning, "Any-status post-request task should not be skipped after primary request succeeds");
+            }
+            finally
+            {
+                await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+            }
+        }
+
+        [TestMethod, TestCategory("Tasks")]
         public async Task TestRunPreAndPostTasksWithFailTrigger()
         {
 
@@ -128,7 +170,8 @@ namespace Certify.Core.Tests
 
             managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
                                                                             GetMockTaskConfig("Post Task 1 (on success)", triggerType: TaskTriggerType.ON_SUCCESS),
-                                                                            GetMockTaskConfig("Post Task 2 (on fail)", triggerType: TaskTriggerType.ON_ERROR)
+                                                                            GetMockTaskConfig("Post Task 2 (on fail)", triggerType: TaskTriggerType.ON_ERROR),
+                                                                            GetMockTaskConfig("Post Task 3 (any status)", triggerType: TaskTriggerType.ANY_STATUS)
                                                                         };
 
             try
@@ -151,6 +194,13 @@ namespace Certify.Core.Tests
                     .Substeps.Find(s => s.Key == expectedSkipStepKey);
 
                 Assert.IsTrue(skippedStep.HasWarning, "Skipped step should have warning");
+
+                var anyStatusStep = result
+                    .Actions.Find(s => s.Key == "PostRequestTasks")
+                    .Substeps.Find(s => s.Key == managedCertificate.PostRequestTasks[2].Id);
+
+                Assert.IsFalse(anyStatusStep.HasError, "Any-status post-request task should run after primary request fails");
+                Assert.IsFalse(anyStatusStep.HasWarning, "Any-status post-request task should not be skipped after primary request fails");
             }
             finally
             {
@@ -185,6 +235,48 @@ namespace Certify.Core.Tests
                     .Substeps.Find(s => s.Key == expectedFailureTaskStepKey);
 
                 Assert.IsTrue(skippedStep.HasWarning, "Skipped step should have warning");
+            }
+            finally
+            {
+                await certifyManager.DeleteManagedCertificate(managedCertificate.Id);
+            }
+        }
+
+        [TestMethod, TestCategory("Tasks")]
+        public async Task TestRunPostTasksOnErrorOrAnyStatusWhenPrimaryRequestAborts()
+        {
+            var managedCertificate = GetMockManagedCertificate("PostDeploymentTask4", testSiteDomain);
+
+            managedCertificate.PreRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
+                                                                            GetMockTaskConfig("Pre Task 1", shouldError:true)
+                                                                        };
+
+            managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig> {
+                                                                            GetMockTaskConfig("Post Task 1 (on success)", triggerType: TaskTriggerType.ON_SUCCESS),
+                                                                            GetMockTaskConfig("Post Task 2 (on fail)", triggerType: TaskTriggerType.ON_ERROR),
+                                                                            GetMockTaskConfig("Post Task 3 (any status)", triggerType: TaskTriggerType.ANY_STATUS)
+                                                                        };
+
+            try
+            {
+                var result = await certifyManager.PerformCertificateRequest(_log, managedCertificate, skipRequest: true);
+
+                Assert.IsTrue(result.Abort, "Primary request should abort after a failed pre-request task");
+
+                var postRequestSteps = result
+                    .Actions.Find(s => s.Key == "PostRequestTasks")
+                    .Substeps;
+
+                var successStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[0].Id);
+                Assert.IsTrue(successStep.HasWarning, "On-success post-request task should be skipped after primary request aborts");
+
+                var errorStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[1].Id);
+                Assert.IsFalse(errorStep.HasError, "On-error post-request task should run after primary request aborts");
+                Assert.IsFalse(errorStep.HasWarning, "On-error post-request task should not be skipped after primary request aborts");
+
+                var anyStatusStep = postRequestSteps.Find(s => s.Key == managedCertificate.PostRequestTasks[2].Id);
+                Assert.IsFalse(anyStatusStep.HasError, "Any-status post-request task should run after primary request aborts");
+                Assert.IsFalse(anyStatusStep.HasWarning, "Any-status post-request task should not be skipped after primary request aborts");
             }
             finally
             {

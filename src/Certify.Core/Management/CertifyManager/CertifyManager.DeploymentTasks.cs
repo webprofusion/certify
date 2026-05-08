@@ -175,6 +175,8 @@ namespace Certify.Management
 
             foreach (var task in deploymentTasks)
             {
+                var primaryRequestSucceeded = result != null && !result.Abort && result.IsSuccess;
+
                 if (previousActionStep != null && (previousActionStep.HasError && !task.TaskConfig.RunIfLastStepFailed))
                 {
                     shouldRunCurrentTask = false;
@@ -195,7 +197,7 @@ namespace Certify.Management
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_SUCCESS)
                     {
-                        if (result != null && (!result.Abort && result.IsSuccess))
+                        if (primaryRequestSucceeded)
                         {
                             shouldRunCurrentTask = true;
                             taskTriggerReason = "Task is enabled and primary request was successful.";
@@ -208,7 +210,7 @@ namespace Certify.Management
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
                     {
-                        if (result != null && (!result.Abort && result.IsSuccess))
+                        if (primaryRequestSucceeded)
                         {
                             shouldRunCurrentTask = false;
                             taskTriggerReason = "Task is enabled but will not run because primary request was successful.";
