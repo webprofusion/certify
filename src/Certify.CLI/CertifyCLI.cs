@@ -104,8 +104,8 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("Usage: certify <command> \n");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
-            System.Console.WriteLine("certify deploy \"<ManagedCertName>\" \"<TaskName>\" : run a specific deployment task for the given managed certificate");
-            System.Console.WriteLine("certify list : list managed certificates and current running/not running status in IIS");
+            System.Console.WriteLine("certify deploy \"<managedcert id>\" \"<task id>\" : run a specific deployment task for the given managed certificate");
+            System.Console.WriteLine("certify list : list managed certificates");
             System.Console.WriteLine("certify diag : check existing ssl bindings and managed certificate integrity");
             System.Console.WriteLine("certify importcsv : import managed certificates from a CSV file.");
             System.Console.WriteLine("certify add <managed cert id or new> <domain1;domain2> : add domains to a managed cert using the default validation, use --perform-request to immediately attempt cert request");
@@ -118,6 +118,10 @@ namespace Certify.CLI
             System.Console.WriteLine("certify credential store <unique storage key GUID> <title> <type id> <secret> : for advanced automation use, stores or updates a stored credential");
             System.Console.WriteLine("certify credential list : list current stored credential summary information");
             System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");
+            System.Console.WriteLine("certify deactivate <email address> : deactivate your Certify The Web install");
+            System.Console.WriteLine("certify license check : check license status");
+            System.Console.WriteLine("certify license activate <email address> <key> : activate your Certify The Web install using your license key");
+            System.Console.WriteLine("certify license deactivate <email address> : deactivate your Certify The Web install");
             System.Console.WriteLine("certify hub join <url of mgmt hub API> <client id> <client secret>> : join instance to a management hub");
             System.Console.WriteLine("certify backup export <directory or full filename> <encryption secret> : export a backup file (auto-named if a directory) using the given secret password for encryption.");
             System.Console.WriteLine("certify backup import preview <full filename> <encryption secret> : import a backup file using the given secret password for encryption. 'preview' is optional and is used to test a backup without importing anything.");
