@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Certify.Models;
@@ -40,7 +41,6 @@ namespace Certify.UI.Controls.Settings
 
             internal void ToggleFeature(string feature, bool isEnabled)
             {
-
                 var appModel = ViewModel.AppViewModel.Current;
                 var featureList = ViewModel.AppViewModel.Current.Preferences.FeatureFlags ?? new string[] { };
 
@@ -63,7 +63,17 @@ namespace Certify.UI.Controls.Settings
                 }
 
                 // note: pref changes are saved by the property change listener in General settings
+                RaisePropertyChangedEvent(null);
 
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                SavePreferences();
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+            }
+
+            private async Task SavePreferences()
+            {
+                await ViewModel.AppViewModel.Current.SavePreferences();
             }
         }
 

@@ -44,7 +44,7 @@
                         DockPanel.Dock="Top"
                         Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <StackPanel Orientation="Horizontal">
-                            <Label Width="200" Content="Use External Subscription" />
+                            <Label Width="200" Content="Use Certificate Subscription" />
                             <CheckBox
                                 VerticalAlignment="Center"
                                 IsChecked="{Binding IsExternalSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"

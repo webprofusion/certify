@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -31,9 +31,6 @@ namespace Certify.UI.ViewModel
             FeatureFlags.EXTERNAL_CERT_MANAGERS,
             FeatureFlags.PRIVKEY_PWD,
             FeatureFlags.IMPORT_EXPORT,
-#if DEBUG
-            FeatureFlags.SERVER_CONNECTIONS,
-#endif
             FeatureFlags.CA_FAILOVER,
             FeatureFlags.CA_EDITOR
         };
