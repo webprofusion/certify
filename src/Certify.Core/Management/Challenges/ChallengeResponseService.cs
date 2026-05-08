@@ -456,7 +456,7 @@ namespace Certify.Core.Management.Challenges
             {
                 // Our website root path is unknown. Log as warning. This is ok if http challenge server is running but will fail if we had to fallback to filesystem validation
 
-                var msg = $"The website root path for {managedCertificate.Name} could not be determined. Fileysystem based http validation will not be possible.";
+                var msg = $"The website root path for {managedCertificate.Name} could not be determined. Filesystem based http validation will not be possible.";
                 log.Warning(msg);
                 performFilesystemBasedValidation = false;
             }
