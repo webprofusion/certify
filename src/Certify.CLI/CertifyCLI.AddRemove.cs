@@ -57,7 +57,7 @@ namespace Certify.CLI
                     if (jsonArgIndex != -1)
                     {
 
-                        if (args.Length + 1 >= jsonArgIndex + 1)
+                        if (args.Length > jsonArgIndex + 1)
                         {
                             var pathArg = args[jsonArgIndex + 1];
 

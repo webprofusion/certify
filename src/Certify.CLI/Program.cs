@@ -205,6 +205,21 @@ namespace Certify.CLI
                     await p.ListACMEAccounts();
                 }
 
+                if (command == "ca" && args.Contains("list"))
+                {
+                    await p.ListCertificateAuthorities();
+                }
+
+                if (command == "ca" && args.Contains("setpreferred"))
+                {
+                    await p.SetPreferredCertificateAuthority(args);
+                }
+
+                if (command == "settings")
+                {
+                    p.ShowSettings();
+                }
+
                 if (command == "credential" && args.Contains("store"))
                 {
                     await p.UpdateStoredCredential(args);
@@ -243,7 +258,18 @@ namespace Certify.CLI
             }
             //syntax: certify httpchallenge keys=CONTROLKEY,CHECKKEY
 
-            var keys = args[1].Replace("keys=", "").Split(',');
+            if (!args[1].StartsWith("keys=", StringComparison.OrdinalIgnoreCase))
+            {
+                System.Console.WriteLine("Error: keys argument required e.g. certify httpchallenge keys=CONTROLKEY,CHECKKEY");
+                return -1;
+            }
+
+            var keys = args[1].Substring("keys=".Length).Split(',');
+            if (keys.Length < 2 || string.IsNullOrWhiteSpace(keys[0]) || string.IsNullOrWhiteSpace(keys[1]))
+            {
+                System.Console.WriteLine("Error: control key and check key are required e.g. certify httpchallenge keys=CONTROLKEY,CHECKKEY");
+                return -1;
+            }
 
             // start an http challenge server
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();

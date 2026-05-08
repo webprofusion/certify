@@ -85,7 +85,7 @@ namespace Certify.CLI
             }
 
             //go through list of items configured for auto renew, perform renewal and report the result
-            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { AwaitResults = awaitResults, Mode = renewalMode, IsPreviewMode = isPreviewMode, TargetManagedCertificates = targetItemIds.Any() ? targetItemIds : null });
+            var results = await _certifyClient.BeginAutoRenewal(new RenewalSettings { AwaitResults = awaitResults, Mode = renewalMode, IsPreviewMode = isPreviewMode, TargetManagedCertificates = targetItemIds });
 
             if (awaitResults)
             {

@@ -5,6 +5,7 @@ using Certify.Management;
 using Certify.Models;
 using Certify.Models.Plugins;
 using Certify.Providers.Internal;
+using Newtonsoft.Json;
 
 namespace Certify.CLI
 {
@@ -92,6 +93,12 @@ namespace Certify.CLI
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        internal void ShowSettings()
+        {
+            var output = JsonConvert.SerializeObject(_prefs, Formatting.Indented);
+            System.Console.WriteLine(output);
+        }
+
         internal void ShowHelp()
         {
             Console.ForegroundColor = ConsoleColor.White;
@@ -105,6 +112,9 @@ namespace Certify.CLI
             System.Console.WriteLine("certify remove <managed cert id> <domain1;domain2> : remove domains from managed cert, use --perform-request to immediately attempt cert request");
             System.Console.WriteLine("certify acmeaccount add  <ACME CA ID> <your contact email> <optional EAB key id> <optional EAB Key> : add a new ACME account");
             System.Console.WriteLine("certify acmeaccount list : list registered acme accounts");
+            System.Console.WriteLine("certify ca list : list available certificate authorities");
+            System.Console.WriteLine("certify ca setpreferred <CA ID|any> : set the preferred certificate authority, or use 'any' to clear the preference");
+            System.Console.WriteLine("certify settings : show current instance settings");
             System.Console.WriteLine("certify credential store <unique storage key GUID> <title> <type id> <secret> : for advanced automation use, stores or updates a stored credential");
             System.Console.WriteLine("certify credential list : list current stored credential summary information");
             System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");

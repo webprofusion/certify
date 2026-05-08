@@ -11,6 +11,12 @@ namespace Certify.CLI
     {
         public async Task PerformBackupExport(string[] args)
         {
+            if (args.Length < 4)
+            {
+                Console.WriteLine("Not enough arguments. Usage: certify backup export <directory or full filename> <encryption secret>");
+                return;
+            }
+
             var filename = args[args.Length - 2];
             var secret = args[args.Length - 1];
 
@@ -40,6 +46,12 @@ namespace Certify.CLI
 
         public async Task PerformBackupImport(string[] args)
         {
+            if (args.Length < 4)
+            {
+                Console.WriteLine("Not enough arguments. Usage: certify backup import preview <full filename> <encryption secret>");
+                return;
+            }
+
             var filename = args[args.Length - 2];
             var secret = args[args.Length - 1];
 

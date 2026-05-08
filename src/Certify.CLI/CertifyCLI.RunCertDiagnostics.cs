@@ -76,7 +76,7 @@ namespace Certify.CLI
                     if (autoFix)
                     {
 
-                        site.ServerSiteId = stripNonNumericFromString(site.ServerSiteId);
+                        site.ServerSiteId = stripNonNumericFromString(site.ServerSiteId ?? string.Empty);
                         site.GroupId = site.ServerSiteId;
                         //update managed site
                         Console.WriteLine("\t Auto fixing managed cert ServerSiteID: " + site.Name);
