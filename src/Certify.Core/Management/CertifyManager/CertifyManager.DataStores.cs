@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -752,7 +752,7 @@ namespace Certify.Management
                     }
                     catch
                     {
-                        results.Add(new ActionStep("Failed to Save Data Stores Config", "The data store configuration coudl not be saved to disk", true));
+                        results.Add(new ActionStep("Failed to Save Data Stores Config", "The data store configuration could not be saved to disk", true));
                     }
                 }
             }

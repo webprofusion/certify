@@ -466,7 +466,7 @@ namespace Certify.Core.Management.Challenges
                         // if rule source domain matches our domain identifier, apply this rule
                         if (identifier == ruleSourceDomain || (ruleSourceDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", ""))))
                         {
-                            // if wildcard rule matches on both sides, substitute record name value, e.g.  _acme-challenge.www.[test.com] becomes _acme-challenge.www.[auth.exmaple.com]
+                            // if wildcard rule matches on both sides, substitute record name value, e.g.  _acme-challenge.www.[test.com] becomes _acme-challenge.www.[auth.example.com]
 
                             if (ruleTargetDomain.StartsWith("*.") && identifier.EndsWith(ruleSourceDomain.Replace("*.", "")))
                             {
