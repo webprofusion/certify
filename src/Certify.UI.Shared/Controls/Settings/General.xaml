@@ -180,6 +180,17 @@
                                     Content="Disable ACME ARI (don't use renewal dates suggested by CA)"
                                     IsChecked="{Binding Prefs.DisableARIChecks}" />
 
+                                <Label Content="Default ACME Retry Interval (seconds)" />
+                                <Controls:NumericUpDown
+                                    x:Name="DefaultACMERetryInterval"
+                                    Width="100"
+                                    Margin="4,0,0,0"
+                                    HorizontalAlignment="Left"
+                                    Interval="1"
+                                    Maximum="120"
+                                    Minimum="0"
+                                    Value="{Binding Prefs.DefaultACMERetryInterval}" />
+
                             </StackPanel>
 
                             <!--  Cert Store Options  -->
