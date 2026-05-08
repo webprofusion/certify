@@ -954,8 +954,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select identifiers from existing hostname bindings on an website or add them
-        /// manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab..
+        ///   Looks up a localized string similar to Select identifiers from existing hostname bindings on an website or add them manually. You can then select Request Certificate above or modify options as required. To specify a custom CSR see the Advanced tab..
         /// </summary>
         public static string ManagedCertificateSettings_DomainsIntro {
             get {

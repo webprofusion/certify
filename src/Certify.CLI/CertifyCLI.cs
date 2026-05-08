@@ -117,8 +117,6 @@ namespace Certify.CLI
             System.Console.WriteLine("certify settings : show current instance settings");
             System.Console.WriteLine("certify credential store <unique storage key GUID> <title> <type id> <secret> : for advanced automation use, stores or updates a stored credential");
             System.Console.WriteLine("certify credential list : list current stored credential summary information");
-            System.Console.WriteLine("certify activate <email address> <key> : activate your Certify The Web install using your license key");
-            System.Console.WriteLine("certify deactivate <email address> : deactivate your Certify The Web install");
             System.Console.WriteLine("certify license check : check license status");
             System.Console.WriteLine("certify license activate <email address> <key> : activate your Certify The Web install using your license key");
             System.Console.WriteLine("certify license deactivate <email address> : deactivate your Certify The Web install");
