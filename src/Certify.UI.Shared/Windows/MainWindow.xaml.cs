@@ -91,31 +91,29 @@ namespace Certify.UI.Windows
                 }
             }
 
-            // check user has registered a contact with ACME CA first
-            if (EnsureContactRegistered())
+            PromptForAcmeAccountIfFirstManagedCertificate();
+
+            //present new managed item (certificate request) UI
+            //select tab Managed Items
+            _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
+
+            _appViewModel.SelectedItem = null; // deselect site list item
+
+            if (original != null)
             {
-                //present new managed item (certificate request) UI
-                //select tab Managed Items
-                _appViewModel.MainUITabIndex = (int)PrimaryUITabs.ManagedCertificates;
+                // start new from duplicate
+                var duplicate = original.CopyAsTemplate(preserveAttributes: true);
+                duplicate.Id = null;
 
-                _appViewModel.SelectedItem = null; // deselect site list item
+                _appViewModel.SelectedItem = duplicate;
+            }
+            else
+            {
+                // start new
+                _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
 
-                if (original != null)
-                {
-                    // start new from duplicate
-                    var duplicate = original.CopyAsTemplate(preserveAttributes: true);
-                    duplicate.Id = null;
-
-                    _appViewModel.SelectedItem = duplicate;
-                }
-                else
-                {
-                    // start new
-                    _appViewModel.SelectedItem = new Certify.Models.ManagedCertificate();
-
-                    //default to auto deploy for new managed certs
-                    _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
-                }
+                //default to auto deploy for new managed certs
+                _appViewModel.SelectedItem.RequestConfig.DeploymentSiteOption = Models.DeploymentOption.Auto;
             }
         }
 
@@ -424,21 +422,20 @@ namespace Certify.UI.Windows
             }
         }
 
-        private bool EnsureContactRegistered()
+        private void PromptForAcmeAccountIfFirstManagedCertificate()
         {
-            if (!_appViewModel.HasRegisteredContacts)
+            if (!_appViewModel.HasRegisteredContacts && _appViewModel.NumManagedCerts == 0)
             {
-                //start by registering
-                MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert);
-                var d = new Windows.EditAccountDialog
+                if (MessageBox.Show(SR.MainWindow_GetStartGuideWithNewCert, ConfigResources.AppName, MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
                 {
-                    Owner = Window.GetWindow(this)
-                };
+                    var d = new Windows.EditAccountDialog
+                    {
+                        Owner = Window.GetWindow(this)
+                    };
 
-                d.ShowDialog();
+                    d.ShowDialog();
+                }
             }
-
-            return _appViewModel.HasRegisteredContacts;
         }
 
         private void InitTelemetry()
