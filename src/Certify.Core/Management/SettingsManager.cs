@@ -181,6 +181,11 @@ namespace Certify.Management
         /// </summary>
         public int DefaultACMERetryInterval { get; set; }
 
+        /// <summary>
+        /// If true, Windows certificate store deployment will also add included intermediate certificates to the Local Machine CA store
+        /// </summary>
+        public bool StoreCertificateIntermediates { get; set; }
+
         public bool EnableIssuerCache { get; set; }
 
         /// <summary>
@@ -261,6 +266,8 @@ namespace Certify.Management
 
             CoreAppSettings.Current.DefaultACMERetryInterval = prefs.DefaultACMERetryInterval;
 
+            CoreAppSettings.Current.StoreCertificateIntermediates = prefs.StoreCertificateIntermediates;
+
             CoreAppSettings.Current.DisableARIChecks = prefs.DisableARIChecks;
 
             CoreAppSettings.Current.EnableIssuerCache = prefs.EnableIssuerCache;
@@ -308,6 +315,7 @@ namespace Certify.Management
                 EnableParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
                 DisableARIChecks = CoreAppSettings.Current.DisableARIChecks,
                 DefaultACMERetryInterval = CoreAppSettings.Current.DefaultACMERetryInterval,
+                StoreCertificateIntermediates = CoreAppSettings.Current.StoreCertificateIntermediates,
                 CertificateManagers = CoreAppSettings.Current.CertificateManagers,
                 MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows,
                 DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId

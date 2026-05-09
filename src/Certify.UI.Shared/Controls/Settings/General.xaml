@@ -265,6 +265,11 @@
                                             Margin="0,4,0,0"
                                             Content="Disable ACME ARI (don't use renewal dates suggested by CA)"
                                             IsChecked="{Binding Prefs.DisableARIChecks}" />
+                                        <CheckBox
+                                            x:Name="StoreCertificateIntermediates"
+                                            Margin="0,4,0,0"
+                                            Content="Ensure Storage of Certificate Intermediates in Windows CA store"
+                                            IsChecked="{Binding Prefs.StoreCertificateIntermediates}" />
 
 
                                     </StackPanel>

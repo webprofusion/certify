@@ -1094,7 +1094,8 @@ namespace Certify.Management
                             primaryCertFilePath,
                             pfxPwd,
                             isPreviewOnly: false,
-                            CoreAppSettings.Current.DefaultCertificateStore
+                            CoreAppSettings.Current.DefaultCertificateStore,
+                            CoreAppSettings.Current.StoreCertificateIntermediates
                         );
 
                     log?.Debug("Performing post request cleanup as required");
@@ -1567,7 +1568,8 @@ namespace Certify.Management
                     pfxPath,
                     pfxPwd,
                     isPreviewOnly: isPreviewOnly,
-                    CoreAppSettings.Current.DefaultCertificateStore
+                    CoreAppSettings.Current.DefaultCertificateStore,
+                    CoreAppSettings.Current.StoreCertificateIntermediates
                 );
 
             result.Actions = actions;

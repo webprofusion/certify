@@ -88,7 +88,8 @@ namespace Certify.Providers.DeploymentTasks.Core
                         enableRetryBehaviour: _enableCertDoubleImportBehaviour,
                         storeName: certStoreName,
                         customFriendlyName: friendlyName,
-                        certPwd
+                        pwd: certPwd,
+                        storeIntermediates: CoreAppSettings.Current.StoreCertificateIntermediates
                        );
 
                     if (storedCert != null)

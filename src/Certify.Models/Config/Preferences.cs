@@ -170,6 +170,11 @@ namespace Certify.Models
         public int DefaultACMERetryInterval { get; set; }
 
         /// <summary>
+        /// If true, Windows certificate store deployment will also add included intermediate certificates to the Local Machine CA store
+        /// </summary>
+        public bool StoreCertificateIntermediates { get; set; }
+
+        /// <summary>
         /// If true, system CA roots etc are loaded during chain build to help validate chain
         /// </summary>
         public bool EnableIssuerCache { get; set; }

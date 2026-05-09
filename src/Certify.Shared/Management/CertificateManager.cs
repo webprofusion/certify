@@ -414,7 +414,8 @@ namespace Certify.Management
                 bool enableRetryBehaviour = true,
                 string storeName = DEFAULT_STORE_NAME,
                 string customFriendlyName = null,
-                string pwd = ""
+                string pwd = "",
+                bool storeIntermediates = false
             )
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
@@ -482,7 +483,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName, pwd: pwd);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName, pwd: pwd, storeIntermediates: storeIntermediates);
                 }
             }
 
@@ -498,6 +499,11 @@ namespace Certify.Management
                 }
                 else
                 {
+                    if (storeIntermediates)
+                    {
+                        StoreCertificateIntermediatesFromPfx(pfxFile, pwd, storedCert.Thumbprint);
+                    }
+
                     return storedCert;
                 }
             }
@@ -585,6 +591,110 @@ namespace Certify.Management
             }
 
             return certificate;
+        }
+
+        public static List<X509Certificate2> GetIntermediateCertificatesFromPfx(string pfxFile, string pwd, string endEntityThumbprint)
+        {
+            var results = new List<X509Certificate2>();
+            var aliases = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var pkcs12Store = new Pkcs12StoreBuilder().Build();
+
+            using (var stream = File.OpenRead(pfxFile))
+            {
+                pkcs12Store.Load(stream, pwd?.ToCharArray() ?? []);
+            }
+
+            foreach (string alias in pkcs12Store.Aliases)
+            {
+                if (!pkcs12Store.IsKeyEntry(alias))
+                {
+                    continue;
+                }
+
+                var chain = pkcs12Store.GetCertificateChain(alias);
+                if (chain == null)
+                {
+                    continue;
+                }
+
+                foreach (var entry in chain)
+                {
+                    var cert = new X509Certificate2(DotNetUtilities.ToX509Certificate(entry.Certificate));
+
+                    if (IsIntermediateCertificate(cert, endEntityThumbprint) && aliases.Add(cert.Thumbprint))
+                    {
+                        results.Add(cert);
+                    }
+                    else
+                    {
+                        cert.Dispose();
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        private static bool IsIntermediateCertificate(X509Certificate2 certificate, string endEntityThumbprint)
+        {
+            if (certificate == null)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(endEntityThumbprint) && string.Equals(certificate.Thumbprint, endEntityThumbprint, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (string.Equals(certificate.Subject, certificate.Issuer, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            foreach (var extension in certificate.Extensions.OfType<X509BasicConstraintsExtension>())
+            {
+                return extension.CertificateAuthority;
+            }
+
+            return false;
+        }
+
+        public static void StoreCertificateIntermediatesFromPfx(string pfxFile, string pwd, string endEntityThumbprint)
+        {
+            if (!IsWindows)
+            {
+                return;
+            }
+
+            var intermediates = GetIntermediateCertificatesFromPfx(pfxFile, pwd, endEntityThumbprint);
+            if (!intermediates.Any())
+            {
+                return;
+            }
+
+            using (var store = GetStore(CA_STORE_NAME, useMachineStore: true))
+            {
+                OpenStoreForReadWrite(store, CA_STORE_NAME);
+
+                foreach (var certificate in intermediates)
+                {
+                    try
+                    {
+                        var existing = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+                        if (existing.Count == 0)
+                        {
+                            store.Add(certificate);
+                        }
+                    }
+                    finally
+                    {
+                        certificate.Dispose();
+                    }
+                }
+
+                store.Close();
+            }
         }
 
         public static void RemoveCertificate(X509Certificate2 certificate, string storeName = DEFAULT_STORE_NAME)

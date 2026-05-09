@@ -1001,6 +1001,7 @@ namespace Certify.Management
                     prefs.NtpServer = update.NtpServer;
                     prefs.RenewalIntervalDays = update.RenewalIntervalDays;
                     prefs.RenewalIntervalMode = update.RenewalIntervalMode;
+                    prefs.StoreCertificateIntermediates = update.StoreCertificateIntermediates;
                     prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
 
                     prefs.CertificateManagers = update.CertificateManagers;
