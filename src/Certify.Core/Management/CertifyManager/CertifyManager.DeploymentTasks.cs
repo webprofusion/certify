@@ -115,6 +115,31 @@ namespace Certify.Management
         /// <param name="taskList"></param>
         /// <param name="forceTaskExecute"></param>
         /// <returns></returns>
+        private static bool ShouldContinueAfterPreviousTaskFailure(TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
+        {
+            if (taskTrigger == TaskTriggerType.ON_TASK_ERROR)
+            {
+                return true;
+            }
+
+            if (!primaryRequestSucceeded)
+            {
+                return taskTrigger == TaskTriggerType.ANY_STATUS || taskTrigger == TaskTriggerType.ON_ERROR;
+            }
+
+            return false;
+        }
+
+        private static bool ShouldSkipTaskBecausePreviousTaskFailed(bool previousTaskFailed, bool runIfLastStepFailed, TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
+        {
+            if (!previousTaskFailed || runIfLastStepFailed)
+            {
+                return false;
+            }
+
+            return !ShouldContinueAfterPreviousTaskFailure(taskTrigger, primaryRequestSucceeded);
+        }
+
         private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false)
         {
             if (taskList == null || !taskList.Any())
@@ -172,12 +197,11 @@ namespace Certify.Management
             ActionStep previousActionStep = null;
             var shouldRunCurrentTask = true;
             var taskTriggerReason = "Task will run for any status";
+            var primaryRequestSucceeded = result != null && !result.Abort && result.IsSuccess;
 
             foreach (var task in deploymentTasks)
             {
-                var primaryRequestSucceeded = result != null && !result.Abort && result.IsSuccess;
-
-                if (previousActionStep != null && (previousActionStep.HasError && !task.TaskConfig.RunIfLastStepFailed))
+                if (ShouldSkipTaskBecausePreviousTaskFailed(previousActionStep?.HasError == true, task.TaskConfig.RunIfLastStepFailed, task.TaskConfig.TaskTrigger, primaryRequestSucceeded))
                 {
                     shouldRunCurrentTask = false;
                     taskTriggerReason = "Task will not run because previous task failed.";
