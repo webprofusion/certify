@@ -22,6 +22,7 @@
         <Content Include="Assets\CSS\markdown.css">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+        <EmbeddedResource Include="..\Certify.Shared.Extensions\THIRD_PARTY_LICENSES.txt" LogicalName="Certify.UI.Shared.THIRD_PARTY_LICENSES.txt" />
     </ItemGroup>
 
     <ItemGroup>

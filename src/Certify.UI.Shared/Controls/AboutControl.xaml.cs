@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -50,9 +52,11 @@ namespace Certify.UI.Controls
                 creditLibs.Text = SR.About_LanguageTranslator + SR.LanguageAuthor + Environment.NewLine + Environment.NewLine;
             }
 
-            if (System.IO.File.Exists("THIRD_PARTY_LICENSES.txt"))
+            using var licenseStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Certify.UI.Shared.THIRD_PARTY_LICENSES.txt");
+            if (licenseStream != null)
             {
-                creditLibs.Text += System.IO.File.ReadAllText("THIRD_PARTY_LICENSES.txt");
+                using var reader = new StreamReader(licenseStream);
+                creditLibs.Text += reader.ReadToEnd();
             }
         }
 
