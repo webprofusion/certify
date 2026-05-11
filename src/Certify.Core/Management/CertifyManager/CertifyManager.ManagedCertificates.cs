@@ -350,6 +350,36 @@ namespace Certify.Management
             ReportManagedItemUpdateToMgmtHub(managedCertificate);
         }
 
+        private Task RecordPrimaryRequestSuccess(ManagedCertificate managedCertificate, string msg = null)
+        {
+            return UpdateManagedCertificateStatus(managedCertificate, RequestState.Success, msg);
+        }
+
+        private Task RecordPrimaryRequestFailure(ManagedCertificate managedCertificate, string msg, int? failureCount = null, RequestState status = RequestState.Error)
+        {
+            return UpdateManagedCertificateStatus(managedCertificate, status, msg, failureCount);
+        }
+
+        private Task RecordDeploymentFailure(ManagedCertificate managedCertificate, string msg, int? failureCount = null)
+        {
+            return UpdateManagedCertificateStatus(managedCertificate, RequestState.Warning, msg, failureCount);
+        }
+
+        private Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg)
+        {
+            var status = managedCertificate.RenewalFailureCount >= LifetimeHealthThresholds.FailureWarning
+                ? RequestState.Error
+                : RequestState.Warning;
+
+            return RecordSubscriptionNoUpdate(managedCertificate, msg, status);
+        }
+
+        private async Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg, RequestState status)
+        {
+            await UpdateManagedCertificateStatus(managedCertificate, status, msg);
+            return status;
+        }
+
         private void IncrementManagedCertificateRenewalFailureCount(ManagedCertificate managedCertificate, int? failureCount = null)
         {
             if (failureCount > managedCertificate.RenewalFailureCount)

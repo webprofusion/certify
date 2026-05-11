@@ -484,6 +484,7 @@ namespace Certify.Management
 
                         var msg = $"Deployment Tasks did not complete successfully.";
                         requestResult.Message = msg;
+                        await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
                     }
                 }
 
@@ -1632,6 +1633,11 @@ namespace Certify.Management
 
                         var msg = $"Deployment Tasks did not complete successfully.";
                         result.Message = msg;
+
+                        if (!isPreviewOnly)
+                        {
+                            await RecordDeploymentFailure(managedCertificate, msg);
+                        }
                     }
                 }
             }

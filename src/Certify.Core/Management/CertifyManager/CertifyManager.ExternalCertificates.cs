@@ -29,6 +29,12 @@ namespace Certify.Management
             public string? Message { get; set; }
         }
 
+        private class ExternalCertificateValidationResult
+        {
+            public bool IsValid { get; set; }
+            public string? Message { get; set; }
+        }
+
         private int _isExternalSubscriptionTaskRunning = 0;
 
         private async Task PerformExternalCertificateSubscriptionTasks(CancellationToken cancellationToken)
@@ -121,32 +127,36 @@ namespace Certify.Management
             if (!fetchResult.IsSuccess)
             {
                 sourceConfig.LastError = fetchResult.Message;
-                IncrementManagedCertificateRenewalFailureCount(item);
-                item.LastRenewalStatus = RequestState.Warning;
-                item.RenewalFailureMessage = fetchResult.Message;
 
-                await UpdateManagedCertificate(item);
+                await RecordPrimaryRequestFailure(item, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
                 return new ActionResult(fetchResult.Message, false);
             }
 
             if ((!isInteractive && !fetchResult.HasUpdate) || fetchResult.CertificateData == null)
             {
-                sourceConfig.LastError = null;
+                var message = "No updated certificate was available from Management Hub.";
+                var noUpdateStatus = await RecordSubscriptionNoUpdate(item, message);
 
+                sourceConfig.LastError = noUpdateStatus == RequestState.Error ? message : null;
                 await UpdateManagedCertificate(item);
 
-                return new ActionResult("No change to source certificate or no data received", false);
+                return new ActionResult(message, false);
             }
 
             var assetPath = await StoreExternalCertificateAsset(item, fetchResult.CertificateData);
             if (assetPath == null)
             {
                 sourceConfig.LastError = "External certificate update was detected but could not be written to local storage.";
-                IncrementManagedCertificateRenewalFailureCount(item);
-                item.LastRenewalStatus = RequestState.Warning;
-                item.RenewalFailureMessage = sourceConfig.LastError;
-                await UpdateManagedCertificate(item);
+                await RecordPrimaryRequestFailure(item, sourceConfig.LastError);
                 return new ActionResult(sourceConfig.LastError, false);
+            }
+
+            var validationResult = await ValidateExternalCertificateAsset(item, assetPath);
+            if (!validationResult.IsValid)
+            {
+                sourceConfig.LastError = validationResult.Message;
+                await RecordPrimaryRequestFailure(item, validationResult.Message ?? "External certificate update failed validation.");
+                return new ActionResult(validationResult.Message, false);
             }
 
             var maintenanceWindowCheck = GetMaintenanceWindowStatus(item);
@@ -685,6 +695,49 @@ namespace Certify.Management
             };
         }
 
+        private async Task<ExternalCertificateValidationResult> ValidateExternalCertificateAsset(ManagedCertificate item, string assetPath)
+        {
+            try
+            {
+                var certPwd = await GetPfxPassword(item);
+                using var certInfo = CertificateManager.LoadCertificate(assetPath, certPwd, throwOnError: true);
+
+                var dateStart = new DateTimeOffset(certInfo.NotBefore);
+                var dateExpiry = new DateTimeOffset(certInfo.NotAfter);
+                var lifetime = new Lifetime(dateStart, dateExpiry);
+                var percentageElapsed = lifetime.GetPercentageElapsed(DateTimeOffset.UtcNow);
+
+                if (dateExpiry <= DateTimeOffset.UtcNow)
+                {
+                    return new ExternalCertificateValidationResult
+                    {
+                        IsValid = false,
+                        Message = $"External certificate from Management Hub has expired ({dateExpiry:u}) and will not be deployed."
+                    };
+                }
+
+                if (percentageElapsed >= LifetimeHealthThresholds.PercentageDanger)
+                {
+                    return new ExternalCertificateValidationResult
+                    {
+                        IsValid = false,
+                        Message = $"External certificate from Management Hub has exceeded {LifetimeHealthThresholds.PercentageDanger}% of its lifetime and will not be deployed."
+                    };
+                }
+
+                return new ExternalCertificateValidationResult { IsValid = true };
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "Failed to validate external certificate asset lifetime for {name} [{id}]", item.Name, item.Id);
+                return new ExternalCertificateValidationResult
+                {
+                    IsValid = false,
+                    Message = "External certificate update could not be validated as deployable PFX data."
+                };
+            }
+        }
+
         private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason)
         {
             var metadataApplied = await ApplyExternalCertificateMetadata(item, assetPath);
@@ -836,35 +889,28 @@ namespace Certify.Management
             if (!fetchResult.IsSuccess)
             {
                 sourceConfig.LastError = fetchResult.Message;
-                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
-                managedCertificate.LastRenewalStatus = RequestState.Error;
-                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = fetchResult.Message;
-
-                await UpdateManagedCertificate(managedCertificate);
 
                 result.Message = fetchResult.Message ?? "Failed to retrieve certificate from Management Hub.";
+                await RecordPrimaryRequestFailure(managedCertificate, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
             if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
             {
-                sourceConfig.LastError = null;
+                result.Message = "No updated certificate was available from Management Hub.";
+                var noUpdateStatus = await RecordSubscriptionNoUpdate(managedCertificate, result.Message);
 
                 if (string.IsNullOrWhiteSpace(sourceConfig.PendingCertificatePath))
                 {
                     sourceConfig.PendingSourceVersion = null;
                 }
 
-                managedCertificate.LastRenewalStatus = RequestState.Success;
-                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = "";
+                sourceConfig.LastError = noUpdateStatus == RequestState.Error ? result.Message : null;
                 await UpdateManagedCertificate(managedCertificate);
 
-                result.IsSuccess = true;
-                result.Message = "No updated certificate was available from Management Hub.";
-                ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate), logThisEvent: false);
+                result.IsSuccess = false;
+                ReportProgress(progress, new RequestProgressState(noUpdateStatus, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
@@ -873,11 +919,17 @@ namespace Certify.Management
             {
                 result.Message = "External certificate update was detected but could not be written to local storage.";
                 sourceConfig.LastError = result.Message;
-                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
-                managedCertificate.LastRenewalStatus = RequestState.Error;
-                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = result.Message;
-                await UpdateManagedCertificate(managedCertificate);
+                await RecordPrimaryRequestFailure(managedCertificate, result.Message);
+                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
+                return result;
+            }
+
+            var validationResult = await ValidateExternalCertificateAsset(managedCertificate, assetPath);
+            if (!validationResult.IsValid)
+            {
+                result.Message = validationResult.Message;
+                sourceConfig.LastError = result.Message;
+                await RecordPrimaryRequestFailure(managedCertificate, result.Message ?? "External certificate update failed validation.");
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
@@ -889,23 +941,15 @@ namespace Certify.Management
                 result.Message = sourceConfig.LastError;
                 result.IsSuccess = false;
 
-                IncrementManagedCertificateRenewalFailureCount(managedCertificate);
-                managedCertificate.LastRenewalStatus = RequestState.Error;
-                managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-                managedCertificate.RenewalFailureMessage = result.Message;
-                await UpdateManagedCertificate(managedCertificate);
+                await RecordDeploymentFailure(managedCertificate, result.Message);
 
-                ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
+                ReportProgress(progress, new RequestProgressState(RequestState.Warning, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
-            managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
-            managedCertificate.LastRenewalStatus = RequestState.Success;
-            managedCertificate.RenewalFailureMessage = "";
-            await UpdateManagedCertificate(managedCertificate);
-
             result.IsSuccess = true;
             result.Message = "External certificate pulled from Management Hub and deployment completed.";
+            await RecordPrimaryRequestSuccess(managedCertificate, result.Message);
 
             ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate), logThisEvent: false);
 
