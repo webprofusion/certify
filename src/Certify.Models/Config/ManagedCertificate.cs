@@ -117,6 +117,12 @@ namespace Certify.Models
         public long TotalResults { get; set; }
     }
 
+    public class RequestStageStatus
+    {
+        public RequestState? Status { get; set; }
+        public string? Message { get; set; }
+    }
+
     public class ManagedCertificate : BindableBase
     {
         public ManagedCertificate()
@@ -250,9 +256,19 @@ namespace Certify.Models
         public DateTimeOffset? DateRetrieved { get; set; }
 
         /// <summary>
-        /// Status of most recent renewal attempt
+        /// Overall summary status of most recent renewal and deployment attempt
         /// </summary>
         public RequestState? LastRenewalStatus { get; set; }
+
+        /// <summary>
+        /// Status of the most recent primary certificate request before deployment stages.
+        /// </summary>
+        public RequestStageStatus? LastPrimaryRequest { get; set; }
+
+        /// <summary>
+        /// Status of the most recent standard binding/store deployment stage.
+        /// </summary>
+        public RequestStageStatus? LastBindingDeployment { get; set; }
 
         /// <summary>
         /// ID of last attempted CA, used to decide if we should attempt failover to another CA
@@ -652,6 +668,8 @@ namespace Certify.Models
             managedCert.ExternalSource = null;
             managedCert.RenewalFailureCount = 0;
             managedCert.RenewalFailureMessage = null;
+            managedCert.LastPrimaryRequest = null;
+            managedCert.LastBindingDeployment = null;
 
             managedCert.LastRenewalStatus = null;
             managedCert.CurrentOrderUri = null;

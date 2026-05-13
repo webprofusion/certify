@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Certify.Management;
 using Certify.Models;
@@ -147,6 +148,106 @@ namespace Certify.Tests.Core.Unit.Tests
             {
                 CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
             }
+        }
+
+        [TestMethod, Description("Manual deployment rerun should treat a completed certificate request as successful even if a deployment task later failed")]
+        public void TestDeploymentTaskRerunUsesCertificateRequestSuccessWhenDeploymentPreviouslyFailed()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error },
+                LastRenewalStatus = RequestState.Error,
+                DateRenewed = DateTimeOffset.UtcNow,
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(30),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
+
+            Assert.IsTrue(result, "Manual task reruns should not be blocked when certificate issuance succeeded and only deployment failed.");
+        }
+
+        [TestMethod, Description("Manual deployment rerun should treat an explicit primary request success as authoritative")]
+        public void TestDeploymentTaskRerunUsesExplicitPrimaryRequestSuccess()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success },
+                LastRenewalStatus = RequestState.Error,
+                DateRenewed = null,
+                CertificateThumbprintHash = null,
+                CertificatePath = null
+            };
+
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
+
+            Assert.IsTrue(result, "Explicit primary request success should allow manual deployment reruns even without relying on fallback certificate state.");
+        }
+
+        [TestMethod, Description("Manual deployment rerun should remain blocked when there is no evidence of a successful certificate request")]
+        public void TestDeploymentTaskRerunStaysBlockedWithoutSuccessfulCertificateRequest()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error },
+                LastRenewalStatus = RequestState.Error,
+                DateRenewed = null,
+                CertificateThumbprintHash = null,
+                CertificatePath = null
+            };
+
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
+
+            Assert.IsFalse(result, "Manual task reruns should remain blocked when the last certificate request did not complete successfully.");
+        }
+
+        [TestMethod, Description("Manual deployment rerun should remain blocked when the last primary request failed and the existing certificate is expired")]
+        public void TestDeploymentTaskRerunStaysBlockedWhenFallbackCertificateExpired()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error },
+                LastRenewalStatus = RequestState.Error,
+                DateStart = DateTimeOffset.UtcNow.AddDays(-90),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-90),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(-1),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
+
+            Assert.IsFalse(result, "Manual task reruns should not rely on fallback certificate state once the available certificate is expired.");
+        }
+
+        [TestMethod, Description("Applying certificate request result changes should clone primary request status instead of sharing mutable state")]
+        public void TestCertificateRequestResultApplyChangesClonesPrimaryRequest()
+        {
+            var target = new CertificateRequestResult(new ManagedCertificate());
+            var source = new CertificateRequestResult(new ManagedCertificate())
+            {
+                PrimaryRequest = new RequestStageStatus
+                {
+                    Status = RequestState.Success,
+                    Message = "Primary request succeeded"
+                }
+            };
+
+            target.ApplyChanges(source);
+            source.PrimaryRequest.Status = RequestState.Error;
+            source.PrimaryRequest.Message = "Mutated";
+
+            Assert.IsNotNull(target.PrimaryRequest, "Primary request status should be copied during ApplyChanges.");
+            Assert.AreEqual(RequestState.Success, target.PrimaryRequest.Status, "Primary request status should be cloned rather than aliased.");
+            Assert.AreEqual("Primary request succeeded", target.PrimaryRequest.Message, "Primary request message should be cloned rather than aliased.");
+        }
+
+        private static bool InvokeWasLastCertificateRequestSuccessful(ManagedCertificate managedCertificate)
+        {
+            var method = typeof(CertifyManager).GetMethod("WasLastCertificatePrimaryRequestSuccessful", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find deployment task success inference method.");
+
+            return (bool)method.Invoke(null, [managedCertificate]);
         }
     }
 }

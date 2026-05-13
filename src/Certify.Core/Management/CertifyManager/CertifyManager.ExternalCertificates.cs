@@ -107,6 +107,7 @@ namespace Certify.Management
             }
 
             var sourceConfig = item.ExternalSource;
+            ClearPrimaryAndBindingRequestStatus(item);
 
             if (await TryDeployPendingExternalCertificate(item, sourceConfig, cancellationToken))
             {
@@ -132,6 +133,7 @@ namespace Certify.Management
             {
                 sourceConfig.LastError = fetchResult.Message;
                 LogMessage(item.Id, $"External certificate subscription pull failed: {fetchResult.Message}", LogItemType.GeneralError);
+                SetPrimaryRequestStatus(item, null, RequestState.Error, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
 
                 await RecordPrimaryRequestFailure(item, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
                 return new ActionResult(fetchResult.Message, false);
@@ -142,6 +144,7 @@ namespace Certify.Management
                 var message = "No updated certificate was available from Management Hub.";
                 var noUpdateStatus = await RecordSubscriptionNoUpdate(item, message);
                 LogMessage(item.Id, $"External certificate subscription pull completed with no update. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}. Recorded status: {noUpdateStatus}; failure count: {item.RenewalFailureCount}.", noUpdateStatus == RequestState.Error ? LogItemType.GeneralError : LogItemType.CertificateRequestAttentionRequired);
+                SetPrimaryRequestStatus(item, null, noUpdateStatus, message);
 
                 sourceConfig.LastError = noUpdateStatus == RequestState.Error ? message : null;
                 await UpdateManagedCertificate(item);
@@ -156,6 +159,7 @@ namespace Certify.Management
             {
                 sourceConfig.LastError = "External certificate update was detected but could not be written to local storage.";
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
+                SetPrimaryRequestStatus(item, null, RequestState.Error, sourceConfig.LastError);
                 await RecordPrimaryRequestFailure(item, sourceConfig.LastError);
                 return new ActionResult(sourceConfig.LastError, false);
             }
@@ -165,11 +169,13 @@ namespace Certify.Management
             {
                 sourceConfig.LastError = validationResult.Message;
                 LogMessage(item.Id, $"External certificate update rejected: {validationResult.Message}", LogItemType.GeneralError);
+                SetPrimaryRequestStatus(item, null, RequestState.Error, validationResult.Message ?? "External certificate update failed validation.");
                 await RecordPrimaryRequestFailure(item, validationResult.Message ?? "External certificate update failed validation.");
                 return new ActionResult(validationResult.Message, false);
             }
 
             LogMessage(item.Id, $"External certificate asset validated. Thumbprint: {validationResult.Thumbprint}; valid until {validationResult.DateExpiry:u}; lifetime elapsed: {validationResult.PercentageElapsed}%.");
+            SetPrimaryRequestStatus(item, null, RequestState.Success, "External certificate pulled from Management Hub.");
 
             var maintenanceWindowCheck = GetMaintenanceWindowStatus(item);
             if (!maintenanceWindowCheck.IsWithinWindow)
@@ -178,6 +184,7 @@ namespace Certify.Management
                 sourceConfig.PendingSourceVersion = fetchResult.SourceVersion;
                 sourceConfig.LastError = null;
 
+                SetBindingDeploymentStatus(item, RequestState.Warning, $"External certificate update deferred: {maintenanceWindowCheck.Reason}");
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = $"External certificate update deferred: {maintenanceWindowCheck.Reason}";
 
@@ -787,6 +794,7 @@ namespace Certify.Management
             {
                 sourceConfig.LastError = "External certificate update could not be validated as deployable PFX data.";
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
+                SetBindingDeploymentStatus(item, RequestState.Error, sourceConfig.LastError);
                 IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = sourceConfig.LastError;
@@ -807,6 +815,7 @@ namespace Certify.Management
             {
                 sourceConfig.LastError = deployResult.Message;
                 LogMessage(item.Id, $"External certificate deployment failed after certificate metadata was applied: {deployResult.Message}", LogItemType.CertificateRequestAttentionRequired);
+                SetBindingDeploymentStatus(item, RequestState.Error, deployResult.Message);
                 IncrementManagedCertificateRenewalFailureCount(item);
                 item.LastRenewalStatus = RequestState.Warning;
                 item.RenewalFailureMessage = deployResult.Message;
@@ -817,7 +826,9 @@ namespace Certify.Management
             }
             else
             {
-                LogMessage(item.Id, $"External certificate deployment completed successfully. Source version: {FormatSourceVersion(sourceVersion)}.", LogItemType.CertificateRequestSuccessful);
+                var successMessage = $"External certificate deployment completed successfully. Source version: {FormatSourceVersion(sourceVersion)}.";
+                SetBindingDeploymentStatus(item, RequestState.Success, successMessage);
+                LogMessage(item.Id, successMessage, LogItemType.CertificateRequestSuccessful);
                 return new ActionResult("DeployExternalCertificateAsset:OK", true);
             }
         }
@@ -905,10 +916,12 @@ namespace Certify.Management
             };
 
             var sourceConfig = managedCertificate.ExternalSource;
+            ClearPrimaryAndBindingRequestStatus(managedCertificate);
             if (sourceConfig == null || sourceConfig.IsEnabled != true)
             {
                 result.Message = "External subscription is not enabled for this managed certificate.";
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
@@ -919,6 +932,7 @@ namespace Certify.Management
             {
                 result.Message = $"Manual request is not currently supported for external source type '{sourceConfig.SourceType}'.";
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
@@ -927,6 +941,7 @@ namespace Certify.Management
             {
                 result.Message = "Managed Hub external reference must be in format '{instanceId}/{managedCertId}'.";
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
@@ -943,6 +958,7 @@ namespace Certify.Management
 
                 result.Message = fetchResult.Message ?? "Failed to retrieve certificate from Management Hub.";
                 LogMessage(managedCertificate.Id, $"External certificate subscription request failed: {result.Message}", LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 await RecordPrimaryRequestFailure(managedCertificate, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
@@ -953,6 +969,7 @@ namespace Certify.Management
                 result.Message = "No updated certificate was available from Management Hub.";
                 var noUpdateStatus = await RecordSubscriptionNoUpdate(managedCertificate, result.Message);
                 LogMessage(managedCertificate.Id, $"External certificate subscription request completed with no update. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}. Recorded status: {noUpdateStatus}; failure count: {managedCertificate.RenewalFailureCount}.", noUpdateStatus == RequestState.Error ? LogItemType.GeneralError : LogItemType.CertificateRequestAttentionRequired);
+                SetPrimaryRequestStatus(managedCertificate, result, noUpdateStatus, result.Message);
 
                 if (string.IsNullOrWhiteSpace(sourceConfig.PendingCertificatePath))
                 {
@@ -975,6 +992,7 @@ namespace Certify.Management
                 result.Message = "External certificate update was detected but could not be written to local storage.";
                 sourceConfig.LastError = result.Message;
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 await RecordPrimaryRequestFailure(managedCertificate, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
@@ -986,12 +1004,14 @@ namespace Certify.Management
                 result.Message = validationResult.Message;
                 sourceConfig.LastError = result.Message;
                 LogMessage(managedCertificate.Id, $"External certificate update rejected: {result.Message}", LogItemType.GeneralError);
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message ?? "External certificate update failed validation.");
                 await RecordPrimaryRequestFailure(managedCertificate, result.Message ?? "External certificate update failed validation.");
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
             LogMessage(managedCertificate.Id, $"External certificate asset validated. Thumbprint: {validationResult.Thumbprint}; valid until {validationResult.DateExpiry:u}; lifetime elapsed: {validationResult.PercentageElapsed}%.");
+            SetPrimaryRequestStatus(managedCertificate, result, RequestState.Success, "External certificate pulled from Management Hub.");
 
             await DeployExternalCertificateAsset(managedCertificate, sourceConfig, assetPath, fetchResult.SourceVersion, "Manual external subscription request");
 
@@ -1010,6 +1030,7 @@ namespace Certify.Management
             result.IsSuccess = true;
             result.Message = "External certificate pulled from Management Hub and deployment completed.";
             LogMessage(managedCertificate.Id, result.Message, LogItemType.CertificateRequestSuccessful);
+            SetBindingDeploymentStatus(managedCertificate, RequestState.Success, result.Message);
             await RecordPrimaryRequestSuccess(managedCertificate, result.Message);
 
             ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate), logThisEvent: false);

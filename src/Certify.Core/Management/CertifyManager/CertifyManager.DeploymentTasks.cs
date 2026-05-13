@@ -98,11 +98,50 @@ namespace Certify.Management
 
             LogMessage(managedCert.Id, $"---- Performing Task [On-Demand or Manual Execution] :: {msg} ----");
 
-            var result = await PerformTaskList(log, isPreviewOnly, skipDeferredTasks, new CertificateRequestResult(managedCert, isSuccess: managedCert.LastRenewalStatus == RequestState.Success ? true : false, ""), taskList, forceTaskExecution);
+            var manualTaskPrimaryRequestSucceeded = WasLastCertificatePrimaryRequestSuccessful(managedCert);
+            var result = await PerformTaskList(
+                log,
+                isPreviewOnly,
+                skipDeferredTasks,
+                new CertificateRequestResult(managedCert, isSuccess: manualTaskPrimaryRequestSucceeded, "")
+                {
+                    PrimaryRequest = new RequestStageStatus
+                    {
+                        Status = manualTaskPrimaryRequestSucceeded ? RequestState.Success : RequestState.Error
+                    }
+                },
+                taskList,
+                forceTaskExecution,
+                evaluateAgainstPrimaryRequestStatus: true
+            );
 
             await UpdateManagedCertificate(managedCert);
 
             return result;
+        }
+
+        /// <summary>
+        /// Prefer the explicit recorded primary request status, but fall back to the currently available certificate
+        /// state for older items or manual deployment reruns where a usable unexpired certificate still exists.
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns></returns>
+        private static bool WasLastCertificatePrimaryRequestSuccessful(ManagedCertificate managedCert)
+        {
+            if (managedCert.LastPrimaryRequest?.Status == RequestState.Success)
+            {
+                return true;
+            }
+
+            if (managedCert.DateExpiry.HasValue
+                && managedCert.DateExpiry > DateTimeOffset.UtcNow
+                && (!string.IsNullOrWhiteSpace(managedCert.CertificateThumbprintHash)
+                    || !string.IsNullOrWhiteSpace(managedCert.CertificatePath)))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -140,7 +179,7 @@ namespace Certify.Management
             return !ShouldContinueAfterPreviousTaskFailure(taskTrigger, primaryRequestSucceeded);
         }
 
-        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false)
+        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false, bool evaluateAgainstPrimaryRequestStatus = true)
         {
             if (taskList == null || !taskList.Any())
             {
@@ -197,7 +236,7 @@ namespace Certify.Management
             ActionStep previousActionStep = null;
             var shouldRunCurrentTask = true;
             var taskTriggerReason = "Task will run for any status";
-            var primaryRequestSucceeded = result != null && !result.Abort && result.IsSuccess;
+            var primaryRequestSucceeded = !evaluateAgainstPrimaryRequestStatus || result?.PrimaryRequest?.Status == RequestState.Success;
 
             foreach (var task in deploymentTasks)
             {

@@ -28,6 +28,13 @@ namespace Certify.Models
         {
             Message = update.Message;
             IsSuccess = update.IsSuccess;
+            PrimaryRequest = update.PrimaryRequest == null
+                ? null
+                : new RequestStageStatus
+                {
+                    Status = update.PrimaryRequest.Status,
+                    Message = update.PrimaryRequest.Message
+                };
             ManagedItem = update.ManagedItem;
             Result = update.Result;
             Abort = update.Abort;
@@ -40,6 +47,7 @@ namespace Certify.Models
 
         public ManagedCertificate? ManagedItem { get; set; }
         public bool IsSuccess { get; set; }
+        public RequestStageStatus? PrimaryRequest { get; set; }
         public bool Abort { get; set; }
         public string? Message { get; set; }
         public object? Result { get; set; }

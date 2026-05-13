@@ -566,6 +566,8 @@ namespace Certify.Management
                 {
                     item.RenewalFailureCount = 0;
                     item.RenewalFailureMessage = null;
+                    item.LastPrimaryRequest = null;
+                    item.LastBindingDeployment = null;
                     item.LastAttemptedCA = null;
                     item.CurrentOrderUri = null;
                     item.ARICertificateId = null;

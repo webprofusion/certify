@@ -273,6 +273,7 @@ namespace Certify.Management
 
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
             var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
+            ClearPrimaryAndBindingRequestStatus(managedCertificate);
 
             try
             {
@@ -283,7 +284,7 @@ namespace Certify.Management
 
                     log.Information($"Performing Pre-Request Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PreRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PreRequestTasks, evaluateAgainstPrimaryRequestStatus: false);
 
                     // log results
                     var preRequestTasks = new ActionStep
@@ -310,6 +311,7 @@ namespace Certify.Management
                         var msg = $"Request was aborted due to failed Pre-Request Task.";
 
                         requestResult.Message = msg;
+                        SetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Error, msg);
                     }
                 }
 
@@ -365,11 +367,13 @@ namespace Certify.Management
                         {
                             requestResult.Message = $"Certificate Request Skipped (on demand, marked as failed): {managedCertificate.Name}";
                             requestResult.IsSuccess = false;
+                            SetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Error, requestResult.Message);
                         }
                         else
                         {
                             requestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
                             requestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
+                            SetPrimaryRequestStatus(managedCertificate, requestResult, requestResult.IsSuccess ? RequestState.Success : RequestState.Skipped, requestResult.Message);
                         }
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate));
@@ -438,14 +442,17 @@ namespace Certify.Management
             {
                 requestResult.ManagedItem = managedCertificate;
 
-                // if request is not awaiting user and there are any post requests tasks, run them now
+                // if request is not paused and there are any post-request tasks, evaluate each task trigger now
+                var postRequestTasksRan = false;
+
                 if (!isExternalSubscriptionRequest && managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
 
                     // run applicable deployment tasks (whether success or failed), powershell
                     log?.Information($"Performing Post-Request (Deployment) Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks, evaluateAgainstPrimaryRequestStatus: true);
+                    postRequestTasksRan = true;
 
                     // log results
                     var postRequestTasks = new ActionStep
@@ -482,7 +489,7 @@ namespace Certify.Management
                     {
                         requestResult.IsSuccess = false;
 
-                        var msg = $"Deployment Tasks did not complete successfully.";
+                        var msg = GetDeploymentTaskFailureMessage(managedCertificate);
                         requestResult.Message = msg;
                         await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
                     }
@@ -490,17 +497,12 @@ namespace Certify.Management
 
                 if (!isExternalSubscriptionRequest)
                 {
-                    // final state is either paused, success or error
-                    var finalState = managedCertificate.Health == ManagedCertificateHealth.AwaitingUser ?
-                         RequestState.Paused :
-                         (requestResult.IsSuccess ? RequestState.Success : RequestState.Error);
+                    var finalState = ResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan);
+                    requestResult.Message = ResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan);
+
+                    requestResult.IsSuccess = finalState == RequestState.Success;
 
                     ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate), logThisEvent: false);
-
-                    if (string.IsNullOrEmpty(requestResult.Message) && !string.IsNullOrEmpty(managedCertificate.RenewalFailureMessage))
-                    {
-                        requestResult.Message = managedCertificate.RenewalFailureMessage;
-                    }
 
                     await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
                 }
@@ -617,6 +619,7 @@ namespace Certify.Management
                 result.IsSuccess = false;
                 result.Abort = true;
                 result.Message = pendingOrder.FailureMessage;
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                 return result;
             }
@@ -631,6 +634,7 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Abort = true;
                     result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
 
@@ -663,6 +667,8 @@ namespace Certify.Management
                         new RequestProgressState(RequestState.Paused, instructions, managedCertificate),
                         logThisEvent: true
                     );
+
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Paused, instructions);
 
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Paused, instructions);
 
@@ -698,6 +704,7 @@ namespace Certify.Management
                     result.IsSuccess = false;
                     result.Abort = true;
                     result.Message = $"{authorizations.FirstOrDefault(a => a.IsFailure)?.AuthorizationError}";
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                     log?.Error(result.Message);
 
@@ -764,6 +771,135 @@ namespace Certify.Management
             }
         }
 
+        private static bool IsPrimaryCertificateRequestSuccessful(ManagedCertificate managedCertificate, CertificateRequestResult result = null)
+        {
+            if (result?.PrimaryRequest?.Status == RequestState.Success)
+            {
+                return true;
+            }
+
+            if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Success)
+            {
+                return true;
+            }
+
+            return managedCertificate.DateRenewed.HasValue
+                && (!string.IsNullOrWhiteSpace(managedCertificate.CertificateThumbprintHash)
+                    || !string.IsNullOrWhiteSpace(managedCertificate.CertificatePath));
+        }
+
+        private static void SetPrimaryRequestStatus(ManagedCertificate managedCertificate, CertificateRequestResult result, RequestState status, string message)
+        {
+            if (result != null)
+            {
+                result.PrimaryRequest ??= new RequestStageStatus();
+                result.PrimaryRequest.Status = status;
+                result.PrimaryRequest.Message = message;
+            }
+
+            managedCertificate.LastPrimaryRequest ??= new RequestStageStatus();
+            managedCertificate.LastPrimaryRequest.Status = status;
+            managedCertificate.LastPrimaryRequest.Message = message;
+        }
+
+        private static void ClearPrimaryAndBindingRequestStatus(ManagedCertificate managedCertificate)
+        {
+            managedCertificate.LastPrimaryRequest = null;
+            managedCertificate.LastBindingDeployment = null;
+        }
+
+        private static void SetBindingDeploymentStatus(ManagedCertificate managedCertificate, RequestState status, string message)
+        {
+            managedCertificate.LastBindingDeployment ??= new RequestStageStatus();
+            managedCertificate.LastBindingDeployment.Status = status;
+            managedCertificate.LastBindingDeployment.Message = message;
+        }
+
+        private static RequestState ResolveOverallRenewalStatus(ManagedCertificate managedCertificate, CertificateRequestResult result, bool postRequestTasksRan)
+        {
+            if (managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
+            {
+                return RequestState.Paused;
+            }
+
+            if (!IsPrimaryCertificateRequestSuccessful(managedCertificate, result))
+            {
+                return RequestState.Error;
+            }
+
+            if (managedCertificate.LastBindingDeployment?.Status == RequestState.Error)
+            {
+                return RequestState.Error;
+            }
+
+            if (postRequestTasksRan && HasFailedDeploymentTasks(managedCertificate))
+            {
+                return RequestState.Error;
+            }
+
+            return RequestState.Success;
+        }
+
+        private static bool HasFailedDeploymentTasks(ManagedCertificate managedCertificate)
+        {
+            return managedCertificate.PostRequestTasks?.Any(t => t.LastRunStatus == RequestState.Error) == true;
+        }
+
+        private static string GetDeploymentTaskFailureMessage(ManagedCertificate managedCertificate)
+        {
+            var failedTasks = managedCertificate.PostRequestTasks?.Where(t => t.LastRunStatus == RequestState.Error).ToList() ?? [];
+
+            if (!failedTasks.Any())
+            {
+                return string.Empty;
+            }
+
+            if (failedTasks.Count == 1)
+            {
+                var task = failedTasks.First();
+                return string.IsNullOrWhiteSpace(task.LastResult) ? $"Deployment Task failed: {task.TaskName}" : task.LastResult;
+            }
+
+            return $"Deployment Tasks failed: {string.Join(", ", failedTasks.Select(t => t.TaskName))}";
+        }
+
+        private static string ResolveOverallRenewalMessage(ManagedCertificate managedCertificate, CertificateRequestResult result, RequestState finalState, bool postRequestTasksRan)
+        {
+            if (finalState == RequestState.Success)
+            {
+                return string.IsNullOrWhiteSpace(result.Message) ? "Renewal completed OK." : result.Message;
+            }
+
+            if (finalState == RequestState.Paused)
+            {
+                return string.IsNullOrWhiteSpace(result.Message) ? managedCertificate.RenewalFailureMessage : result.Message;
+            }
+
+            if (!IsPrimaryCertificateRequestSuccessful(managedCertificate, result))
+            {
+                return managedCertificate.LastPrimaryRequest?.Message.AsNullWhenBlank()
+                    ?? result.PrimaryRequest?.Message.AsNullWhenBlank()
+                    ?? result.Message.AsNullWhenBlank()
+                    ?? managedCertificate.RenewalFailureMessage;
+            }
+
+            if (managedCertificate.LastBindingDeployment?.Status == RequestState.Error)
+            {
+                return managedCertificate.LastBindingDeployment?.Message.AsNullWhenBlank()
+                    ?? result.Message.AsNullWhenBlank()
+                    ?? managedCertificate.RenewalFailureMessage;
+            }
+
+            if (postRequestTasksRan && HasFailedDeploymentTasks(managedCertificate))
+            {
+                return GetDeploymentTaskFailureMessage(managedCertificate).AsNullWhenBlank()
+                    ?? result.Message.AsNullWhenBlank()
+                    ?? managedCertificate.RenewalFailureMessage;
+            }
+
+            return result.Message.AsNullWhenBlank() ?? managedCertificate.RenewalFailureMessage;
+        }
+
         /// <summary>
         /// Resume processing the current order for a managed certificate, submitting challenges and verifying status. Authorization challenge responses must have been prepared first.
         /// </summary>
@@ -792,8 +928,7 @@ namespace Certify.Management
                 {
                     result.IsSuccess = false;
                     result.Message = pendingOrder.FailureMessage;
-
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                     return result;
                 }
@@ -889,8 +1024,6 @@ namespace Certify.Management
 
                                                 ReportProgress(progress, new RequestProgressState(RequestState.Error, failureSummaryMessage, managedCertificate));
 
-                                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, failureSummaryMessage);
-
                                                 validationFailed = true;
                                             }
                                             else
@@ -902,8 +1035,6 @@ namespace Certify.Management
                                         {
                                             failureSummaryMessage = submissionStatus.Message;
                                             ReportProgress(progress, new RequestProgressState(RequestState.Error, submissionStatus.Message, managedCertificate));
-
-                                            await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, submissionStatus.Message);
                                             validationFailed = true;
                                         }
                                     }
@@ -1077,6 +1208,8 @@ namespace Certify.Management
                         log?.Error("Failed to parse certificate: {exp}", exp);
                     }
 
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Success, "New certificate received OK.");
+
                     // Install certificate into certificate store and bind to matching sites on server
                     var deploymentManager = new BindingDeploymentManager();
 
@@ -1104,8 +1237,6 @@ namespace Certify.Management
                     if (!actions.Any(a => a.HasError))
                     {
 
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
-
                         result.IsSuccess = true;
 
                         // depending on the deployment type the final result will vary
@@ -1126,6 +1257,8 @@ namespace Certify.Management
                             // certificate deployment was completed, log success
                             log?.Information(CoreSR.CertifyManager_CompleteRequestAndUpdateBinding);
                         }
+
+                        SetBindingDeploymentStatus(managedCertificate, RequestState.Success, result.Message);
 
                         ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate, false));
 
@@ -1196,9 +1329,9 @@ namespace Certify.Management
 
                         result.Message = msg;
 
-                        log?.Error(result.Message);
+                        SetBindingDeploymentStatus(managedCertificate, RequestState.Error, result.Message);
 
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
+                        log?.Error(result.Message);
                     }
                 }
                 else
@@ -1208,10 +1341,9 @@ namespace Certify.Management
                     // certificate request failed
                     result.IsSuccess = false;
                     result.Message = $"The certificate order failed to complete. {certRequestResult.ErrorMessage ?? ""}";
+                    SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                     log?.Error(result.Message);
-
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                     ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 }
@@ -1223,10 +1355,9 @@ namespace Certify.Management
                 //failed to validate all identifiers
                 result.IsSuccess = false;
                 result.Message = string.Format(CoreSR.CertifyManager_ValidationForChallengeNotSuccess, (failureSummaryMessage ?? ""));
+                SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
 
                 log?.Error(result.Message);
-
-                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
             }
@@ -1410,8 +1541,6 @@ namespace Certify.Management
                                 result.Message = $"Could not complete automated challenge response using managed challenge: {challengeResponseResult.Message}";
 
                                 ReportProgress(progress, new RequestProgressState(RequestState.Error, challengeResponseResult.Message, managedCertificate) { Result = result }, logThisEvent: true);
-
-                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
                             }
 
                             return;
@@ -1460,8 +1589,6 @@ namespace Certify.Management
                                 }
 
                                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate) { Result = result }, logThisEvent: false);
-
-                                await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
 
                                 return;
                             }
@@ -1603,7 +1730,7 @@ namespace Certify.Management
                     // run applicable deployment tasks (whether success or failed), powershell
                     LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks);
+                    var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks, evaluateAgainstPrimaryRequestStatus: true);
 
                     // log results
                     var postRequestTasks = new ActionStep
