@@ -31,7 +31,8 @@ namespace Certify.Management
     {
         Default,
         Limited,
-        Full
+        Full,
+        FullWithProfile
     }
 
     public class PowerShellScriptSettings
@@ -62,6 +63,16 @@ namespace Certify.Management
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
         private const string PowerShellPayloadSecretEnvVar = "CERTIFY_POWERSHELL_PAYLOAD_SECRET";
+
+        private static bool UsesFullImpersonation(PowerShellImpersonationMode impersonationMode)
+        {
+            return impersonationMode == PowerShellImpersonationMode.Full || impersonationMode == PowerShellImpersonationMode.FullWithProfile;
+        }
+
+        private static bool ShouldLoadUserProfile(PowerShellImpersonationMode impersonationMode)
+        {
+            return impersonationMode == PowerShellImpersonationMode.FullWithProfile;
+        }
 
         private sealed class PowerShellProcessPayload
         {
@@ -118,7 +129,7 @@ namespace Certify.Management
                     ? $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Launch New Process is enabled)."
                     : $"PowerShell Execution Mode: {executionMode}.";
 
-                if (settings.ImpersonationMode == PowerShellImpersonationMode.Full)
+                if (UsesFullImpersonation(settings.ImpersonationMode))
                 {
                     if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
@@ -137,7 +148,7 @@ namespace Certify.Management
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         // spawn new process as the given user
-                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: settings.LoadUserProfile);
+                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: ShouldLoadUserProfile(settings.ImpersonationMode));
                     }
                     else
                     {
@@ -355,7 +366,7 @@ namespace Certify.Management
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
             var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true) : null;
-            var allowCredentialWriteAccess = isUsingCredentials && impersonationMode == PowerShellImpersonationMode.Full;
+            var allowCredentialWriteAccess = isUsingCredentials && UsesFullImpersonation(impersonationMode);
 
             try
             {
@@ -498,7 +509,7 @@ namespace Certify.Management
                 scriptProcessInfo.Environment[PowerShellPayloadSecretEnvVar] = payloadSecret;
             }
 
-            if (impersonationMode == PowerShellImpersonationMode.Full)
+            if (UsesFullImpersonation(impersonationMode))
             {
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {

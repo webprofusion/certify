@@ -267,9 +267,9 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "Flag: True");
         }
 
-        [TestMethod, Description("Full impersonation process mode runs script content with parameters as a different local user")]
+        [TestMethod, Description("Full impersonation with profile process mode runs script content with parameters as a different local user")]
         [TestCategory("RequiresLocalUser")]
-        public async Task TestFullImpersonationProcessModeRunsScriptContentWithParametersAsDifferentLocalUser()
+        public async Task TestFullImpersonationWithProfileProcessModeRunsScriptContentWithParametersAsDifferentLocalUser()
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -282,8 +282,7 @@ namespace Certify.Core.Tests
                 ScriptContent = "param($message, [bool]$flag); $identity = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name; Write-Output $identity; Write-Output \"Message: $message\"; Write-Output \"Flag: $flag\"",
                 ExecutionMode = PowerShellExecutionMode.SystemPowerShellProcess,
                 LaunchNewProcess = true,
-                ImpersonationMode = PowerShellImpersonationMode.Full,
-                LoadUserProfile = true,
+                ImpersonationMode = PowerShellImpersonationMode.FullWithProfile,
                 Parameters = new Dictionary<string, object>
                 {
                     ["message"] = "full-impersonation-payload-message",
