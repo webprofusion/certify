@@ -350,7 +350,7 @@ namespace Certify.UI.Windows
                 }
                 else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
                 {
-                    var evaluating = MessageBox.Show(this, "You are currently using the Community Edition of this app intended for personal use or evaluation. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+                    var evaluating = MessageBox.Show(this, "You are currently using the Community Edition of this app intended for personal use or evaluation. Are you still just evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
 
                     if (evaluating == MessageBoxResult.No)
                     {

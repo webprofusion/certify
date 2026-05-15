@@ -43,6 +43,10 @@
         <ProjectReference Include="..\Certify.Shared\Certify.Shared.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <InternalsVisibleTo Include="Certify.Tests.DeploymentTasks" />
+    </ItemGroup>
+
 
     <ItemGroup>
         <None Update="Assets\public_suffix_list.dat">
