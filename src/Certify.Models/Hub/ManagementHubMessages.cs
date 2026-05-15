@@ -44,6 +44,7 @@ namespace Certify.Models.Hub
         public const string GetDnsZones = "GetDnsZones";
 
         public const string GetDeploymentProviders = "GetDeploymentProviders";
+        public const string GetDeploymentProviderDefinition = "GetDeploymentProviderDefinition";
         public const string ExecuteDeploymentTask = "ExecuteDeploymentTask";
 
         public const string GetTargetServiceTypes = "GetTargetServiceTypes";

@@ -752,6 +752,23 @@ namespace Certify.SourceGenerators
                     RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskListProviders)]
                 },
                 new()
+                {
+                    OperationName = "GetDeploymentProviderDefinition",
+                    OperationMethod = HttpPost,
+                    Comment = "Get Deployment Task Provider Definition",
+                    UseManagementAPI = true,
+                    PublicAPIController = "DeploymentTask",
+                    PublicAPIRoute = "{instanceId}/{id}",
+                    ReturnType = nameof(Certify.Models.Config.DeploymentProviderDefinition),
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "id", "string" },
+                        { "config", GetFormattedTypeName(typeof(Certify.Config.DeploymentTaskConfig)) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.DeploymentTask, StandardResourceActions.DeploymentTaskListProviders)]
+                },
+                new()
                  {
                      OperationName = "GetTargetIPAddresses",
                      OperationMethod = HttpGet,

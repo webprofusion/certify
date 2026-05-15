@@ -464,6 +464,24 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
+        /// Retrieves a deployment provider definition from the target instance, including dynamic parameters.
+        /// </summary>
+        /// <param name="instanceId">The target instance identifier.</param>
+        /// <param name="id">The deployment provider identifier.</param>
+        /// <param name="config">The current deployment task configuration.</param>
+        /// <param name="currentAuthContext">The current authentication context.</param>
+        /// <returns>A <see cref="DeploymentProviderDefinition"/> if found; otherwise, null.</returns>
+        public async Task<DeploymentProviderDefinition?> GetDeploymentProviderDefinition(string instanceId, string id, Certify.Config.DeploymentTaskConfig config, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                        new("instanceId", instanceId),
+                        new("id", id),
+                        new("config", JsonSerializer.Serialize(config))
+                    };
+            return await PerformInstanceCommandTaskWithResult<DeploymentProviderDefinition>(instanceId, args, ManagementHubCommands.GetDeploymentProviderDefinition);
+        }
+
+        /// <summary>
         /// Executes a deployment task for the specified managed certificate on the target instance.
         /// </summary>
         /// <param name="instanceId">The target instance identifier.</param>

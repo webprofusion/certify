@@ -908,6 +908,17 @@ namespace Certify.Management
             {
                 val = await GetDeploymentProviders();
             }
+            else if (arg.CommandType == ManagementHubCommands.GetDeploymentProviderDefinition)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var idArg = args.FirstOrDefault(a => a.Key == "id");
+                var configArg = args.FirstOrDefault(a => a.Key == "config");
+                var config = string.IsNullOrWhiteSpace(configArg.Value)
+                    ? null
+                    : JsonSerializer.Deserialize<Certify.Config.DeploymentTaskConfig>(configArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+
+                val = await GetDeploymentProviderDefinition(idArg.Value, config);
+            }
             else if (arg.CommandType == ManagementHubCommands.ExecuteDeploymentTask)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
