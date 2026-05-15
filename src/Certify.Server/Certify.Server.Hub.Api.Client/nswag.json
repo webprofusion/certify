@@ -48,6 +48,7 @@
       "includedOperationIds": [],
       "excludedOperationIds": [],
       "additionalNamespaceUsages": [
+        "Certify.Config",
         "Certify.Models",
         "Certify.Models.Shared",
         "Certify.Models.Reporting",
