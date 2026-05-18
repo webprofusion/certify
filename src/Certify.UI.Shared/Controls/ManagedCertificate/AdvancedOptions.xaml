@@ -348,6 +348,7 @@
 
 
                 <TabItem
+                    Height="32"
                     MinWidth="100"
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="Actions"
@@ -364,23 +365,6 @@
                                 Style="{StaticResource Instructions}"
                                 Text="{x:Static Resources:SR.ManagedCertificateSettings_ExportTip}" />
 
-                        </StackPanel>
-                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
-                            <Button
-                                x:Name="OpenCertificateFile"
-                                Width="220"
-                                Margin="0,4,0,0"
-                                HorizontalAlignment="Left"
-                                Click="OpenCertificateFile_Click"
-                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
-
-                            <PasswordBox
-                                x:Name="PFXPassword"
-                                Width="220"
-                                Margin="0,4,0,8"
-                                HorizontalAlignment="Left"
-                                Controls:TextBoxHelper.Watermark="Pfx Unlock Password (if applicable)"
-                                PasswordChanged="PFXPassword_PasswordChanged" />
                         </StackPanel>
 
 
@@ -460,21 +444,37 @@
                                 Perform Challenge Cleanup
                             </Button>
                         </StackPanel>
+                    </DockPanel>
+                </TabItem>
+                <TabItem
+                    Height="32"
+                    MinWidth="100"
+                    Controls:HeaderedControlHelper.HeaderFontSize="12"
+                    Header="Details"
+                    IsSelected="False">
+                    <DockPanel Margin="16,0,0,0" LastChildFill="False">
 
-                        <StackPanel DockPanel.Dock="Top">
-                            <TextBlock
-                                Margin="0,8,32,0"
-                                HorizontalAlignment="Left"
-                                Style="{StaticResource Instructions}"
-                                Text="Managed Certificate Reference Id:" />
-                            <TextBox
+                        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Details</TextBlock>
+
+                        <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
+                            <Button
+                                x:Name="OpenCertificateFile"
                                 MaxWidth="500"
                                 Margin="0,8,0,0"
                                 HorizontalAlignment="Left"
-                                IsReadOnly="True"
-                                Text="{Binding SelectedItem.Id}"
-                                TextWrapping="Wrap" />
+                                Click="OpenCertificateFile_Click"
+                                Content="{x:Static Resources:SR.ManagedCertificateSettings_ViewCertificate}" />
+
+                            <PasswordBox
+                                x:Name="PFXPassword"
+                                MaxWidth="500"
+                                Margin="0,4,0,8"
+                                HorizontalAlignment="Left"
+                                Controls:TextBoxHelper.Watermark="Pfx Unlock Password (if applicable)"
+                                PasswordChanged="PFXPassword_PasswordChanged" />
                         </StackPanel>
+
+
 
                         <StackPanel DockPanel.Dock="Top">
                             <TextBlock
@@ -492,6 +492,23 @@
                                 Text="{Binding SelectedItem.CertificatePath, TargetNullValue={x:Static Resources:SR.ManagedCertificateSettings_CertificatePathEmpty}}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
+
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="Current Certificate Thumbprint (SHA1):" />
+                            <TextBox
+                                x:Name="CertThumbprint"
+                                MaxWidth="500"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                IsReadOnly="True"
+                                Text="{Binding SelectedItem.CertificateThumbprintHash}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+
                         <StackPanel DockPanel.Dock="Top">
                             <TextBlock
                                 Margin="0,8,32,0"
@@ -508,8 +525,20 @@
                                 Text="{Binding SelectedItem.CurrentOrderUri}"
                                 TextWrapping="Wrap" />
                         </StackPanel>
-
-
+                        <StackPanel DockPanel.Dock="Top">
+                            <TextBlock
+                                Margin="0,8,32,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource Instructions}"
+                                Text="Managed Certificate Reference Id:" />
+                            <TextBox
+                                MaxWidth="500"
+                                Margin="0,8,0,0"
+                                HorizontalAlignment="Left"
+                                IsReadOnly="True"
+                                Text="{Binding SelectedItem.Id}"
+                                TextWrapping="Wrap" />
+                        </StackPanel>
 
                     </DockPanel>
                 </TabItem>
