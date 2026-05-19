@@ -547,16 +547,16 @@ namespace Certify.UI.ViewModel
         {
             if (SelectedItem != null)
             {
-                var updatedOK = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
+                var update = await _appViewModel.AddOrUpdateManagedCertificate(SelectedItem);
 
-                if (updatedOK && SelectedItem != null)
+                if (update != null && SelectedItem != null)
                 {
-                    SelectedItem.IsChanged = false;
+                    SelectedItem = update;
                 }
 
                 RaiseSelectedItemChanges();
 
-                return updatedOK;
+                return update != null;
             }
             else
             {

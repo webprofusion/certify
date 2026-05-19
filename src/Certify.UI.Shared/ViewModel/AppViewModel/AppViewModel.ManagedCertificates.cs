@@ -232,7 +232,7 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public async Task<bool> AddOrUpdateManagedCertificate(ManagedCertificate item)
+        public async Task<ManagedCertificate> AddOrUpdateManagedCertificate(ManagedCertificate item)
         {
             // get existing
 
@@ -256,7 +256,7 @@ namespace Certify.UI.ViewModel
             await UpdatedCachedManagedCertificate(updatedManagedCertificate);
 
             RaisePropertyChangedEvent(nameof(ManagedCertificates));
-            return true;
+            return updatedManagedCertificate;
         }
 
         /// <summary>
