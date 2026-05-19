@@ -243,5 +243,24 @@ namespace Certify.Tests.UI.Integration
             Assert.IsFalse(result.IsValid, result.Message);
 
         }
+
+        [TestMethod]
+        public void DeleteManagedCertificateBlockingUsesSourceIdOwnership()
+        {
+            var locallyOwnedExternalSubscription = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                SourceId = null
+            };
+
+            var externallyManagedCertificate = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                SourceId = "certbot"
+            };
+
+            Assert.IsFalse(AppViewModel.IsDeleteBlockedForManagedCertificate(locallyOwnedExternalSubscription));
+            Assert.IsTrue(AppViewModel.IsDeleteBlockedForManagedCertificate(externallyManagedCertificate));
+        }
     }
 }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -116,7 +116,7 @@ namespace Certify.UI.ViewModel
 
             // Reset page index at the start of refresh to ensure we load from page 0
             _filterPageIndex = 0;
-            
+
             var filter = new ManagedCertificateFilter();
 
             // include external managed certs if enabled
@@ -264,12 +264,17 @@ namespace Certify.UI.ViewModel
         /// </summary>
         /// <param name="selectedItem"></param>
         /// <returns></returns>
+        public static bool IsDeleteBlockedForManagedCertificate(ManagedCertificate managedCertificate)
+        {
+            return managedCertificate != null && !string.IsNullOrWhiteSpace(managedCertificate.SourceId);
+        }
+
         public async Task<bool> DeleteManagedCertificate(ManagedCertificate selectedItem)
         {
             var existing = ManagedCertificates.FirstOrDefault(s => s.Id == selectedItem.Id);
             if (existing != null)
             {
-                if (existing.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+                if (IsDeleteBlockedForManagedCertificate(existing))
                 {
                     MessageBox.Show("This item is externally managed and cannot be deleted by this app.");
 
