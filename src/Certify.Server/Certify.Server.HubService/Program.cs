@@ -188,6 +188,7 @@ builder.Services.AddSingleton<IInstanceManagementStateProvider, InstanceManageme
 builder.Services.TryAddTransient<ManagedInstanceRequestAuthValidator>();
 
 builder.Services.AddTransient<ManagementAPI>();
+builder.Services.AddSingleton<ExternalSubscriberNotificationService>();
 
 // used to directly talk back to the management server process instead of connecting back via SignalR
 builder.Services.AddTransient<IInstanceManagementHub, InstanceManagementHub>();
@@ -308,7 +309,7 @@ AddSystemStatusItem(
 // configure initialization of UI status hub, backend management hub etc
 
 var statusHubContext = app.Services.GetRequiredService<IHubContext<UserInterfaceStatusHub>>();
-var instanceManagementHubContext = app.Services.GetRequiredService<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+var externalSubscriberNotificationService = app.Services.GetRequiredService<ExternalSubscriberNotificationService>();
 
 // setup signalr message forwarding, message received from internal service will be resent to our connected clients via our own SignalR hub
 var statusReporting = new UserInterfaceStatusHubReporting(statusHubContext);
@@ -330,178 +331,6 @@ certifyManager.SetStatusReporting(statusReporting);
 
 var hubStateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
 
-bool HasManagedCertificateVersionChanged(ManagedCertificate? previousManagedCertificate, ManagedCertificate updatedManagedCertificate)
-{
-    if (updatedManagedCertificate == null || string.IsNullOrWhiteSpace(updatedManagedCertificate.Id))
-    {
-        return false;
-    }
-
-    if (!string.IsNullOrWhiteSpace(updatedManagedCertificate.CertificateThumbprintHash))
-    {
-        return !string.Equals(previousManagedCertificate?.CertificateThumbprintHash, updatedManagedCertificate.CertificateThumbprintHash, StringComparison.OrdinalIgnoreCase);
-    }
-
-    if (updatedManagedCertificate.DateRenewed.HasValue)
-    {
-        return previousManagedCertificate?.DateRenewed != updatedManagedCertificate.DateRenewed;
-    }
-
-    return false;
-}
-
-bool TryParseHubReference(string? reference, out string instanceId, out string managedCertificateId)
-{
-    instanceId = string.Empty;
-    managedCertificateId = string.Empty;
-
-    if (string.IsNullOrWhiteSpace(reference))
-    {
-        return false;
-    }
-
-    var normalized = reference.Trim().Replace(':', '/');
-    var parts = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-    if (parts.Length < 2)
-    {
-        return false;
-    }
-
-    instanceId = parts[0];
-    managedCertificateId = parts[1];
-
-    return !string.IsNullOrWhiteSpace(instanceId) && !string.IsNullOrWhiteSpace(managedCertificateId);
-}
-
-bool IsPushSubscriberForSource(ManagedCertificate managedCertificate, string sourceInstanceId, string sourceManagedCertificateId)
-{
-    var source = managedCertificate.ExternalSource;
-
-    if (string.IsNullOrWhiteSpace(source?.ExternalReference))
-    {
-        return false;
-    }
-
-    if (!string.Equals(source.SourceType, ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase))
-    {
-        return false;
-    }
-
-    var retrievalMode = source.RetrievalMode ?? ExternalCertificateRetrievalModes.Pull;
-    var isPushMode = string.Equals(retrievalMode, ExternalCertificateRetrievalModes.Push, StringComparison.OrdinalIgnoreCase)
-        || string.Equals(retrievalMode, ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase);
-
-    if (!isPushMode)
-    {
-        return false;
-    }
-
-    return TryParseHubReference(source.ExternalReference, out var referencedInstanceId, out var referencedManagedCertificateId)
-        && string.Equals(referencedInstanceId, sourceInstanceId, StringComparison.OrdinalIgnoreCase)
-        && string.Equals(referencedManagedCertificateId, sourceManagedCertificateId, StringComparison.OrdinalIgnoreCase);
-}
-
-List<(string TargetInstanceId, string TargetManagedCertificateId)> GetExternalPushSubscriptionTargets(string sourceInstanceId, ManagedCertificate updatedManagedCertificate)
-{
-    var targets = new List<(string TargetInstanceId, string TargetManagedCertificateId)>();
-    var managedItemsByInstance = hubStateProvider.GetManagedInstanceItems();
-
-    if (string.IsNullOrWhiteSpace(sourceInstanceId)
-        || string.IsNullOrWhiteSpace(updatedManagedCertificate.Id))
-    {
-        return targets;
-    }
-
-    foreach (var instanceItems in managedItemsByInstance)
-    {
-        var targetInstanceId = instanceItems.Key;
-        var items = instanceItems.Value?.Items;
-
-        if (items == null || items.Count == 0)
-        {
-            continue;
-        }
-
-        foreach (var item in items)
-        {
-            if (!IsPushSubscriberForSource(item, sourceInstanceId, updatedManagedCertificate.Id))
-            {
-                continue;
-            }
-
-            if (targetInstanceId == sourceInstanceId && item.Id == updatedManagedCertificate.Id)
-            {
-                continue;
-            }
-
-            if (!string.IsNullOrWhiteSpace(item.Id))
-            {
-                targets.Add((targetInstanceId, item.Id));
-            }
-        }
-    }
-
-    return targets;
-}
-
-async Task NotifyExternalSubscribersOfManagedItemUpdateAsync(ManagedCertificate updatedManagedCertificate)
-{
-    try
-    {
-        if (string.IsNullOrWhiteSpace(updatedManagedCertificate.InstanceId) || string.IsNullOrWhiteSpace(updatedManagedCertificate.Id))
-        {
-            return;
-        }
-
-        var sourceVersion = updatedManagedCertificate.DateRenewed?.UtcDateTime.Ticks.ToString();
-        var targets = GetExternalPushSubscriptionTargets(updatedManagedCertificate.InstanceId, updatedManagedCertificate);
-
-        foreach (var target in targets)
-        {
-            var payload = new Certify.Models.Hub.ExternalManagedCertificateUpdate
-            {
-                ManagedCertificateId = target.TargetManagedCertificateId,
-                SourceVersion = sourceVersion
-            };
-
-            var command = new Certify.Models.Hub.InstanceCommandRequest(Certify.Models.Hub.ManagementHubCommands.PushExternalManagedCertificateUpdate)
-            {
-                Value = System.Text.Json.JsonSerializer.Serialize(payload)
-            };
-
-            try
-            {
-                if (target.TargetInstanceId == hubStateProvider.GetManagementHubInstanceId())
-                {
-                    await certifyManager.PerformHubCommandWithResult(command);
-                }
-                else
-                {
-                    var connectionId = hubStateProvider.GetConnectionIdForInstance(target.TargetInstanceId);
-                    if (string.IsNullOrWhiteSpace(connectionId))
-                    {
-                        app.Logger.LogWarning("Failed to queue external certificate push update for target {targetInstanceId} item {targetItemId}; no active connection exists.", target.TargetInstanceId, target.TargetManagedCertificateId);
-                        continue;
-                    }
-
-                    await instanceManagementHubContext.Clients.Client(connectionId).SendCommandRequest(command);
-                }
-
-                app.Logger.LogInformation("Queued external certificate push update for target {targetInstanceId} item {targetItemId} from source {sourceInstanceId}/{sourceItemId}.", target.TargetInstanceId, target.TargetManagedCertificateId, updatedManagedCertificate.InstanceId, updatedManagedCertificate.Id);
-            }
-            catch (Exception ex)
-            {
-                app.Logger.LogWarning(ex, "Failed to queue external certificate push update for target {targetInstanceId} item {targetItemId} from source {sourceInstanceId}/{sourceItemId}.", target.TargetInstanceId, target.TargetManagedCertificateId, updatedManagedCertificate.InstanceId, updatedManagedCertificate.Id);
-            }
-        }
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogWarning(ex, "NotifyExternalSubscribersOfManagedItemUpdateAsync failed for local managed item {sourceItemId}.", updatedManagedCertificate.Id);
-    }
-}
-
 // inform the management hub of our assigned backend instance id, so we can tell when we are interacting with the mgmt hub vs a normal instance
 hubStateProvider.SetManagementHubInstanceId(certifyManager.GetManagedInstanceInfo().InstanceId);
 
@@ -520,9 +349,9 @@ statusReporting.OnManagedCertificateUpdated += (ManagedCertificate item) =>
 
         hubStateProvider.UpdateCachedManagedInstanceItem(item.InstanceId, item);
 
-        if (HasManagedCertificateVersionChanged(previousManagedCertificate, item))
+        if (externalSubscriberNotificationService.HasManagedCertificateVersionChanged(previousManagedCertificate, item))
         {
-            _ = NotifyExternalSubscribersOfManagedItemUpdateAsync(item);
+            _ = externalSubscriberNotificationService.NotifyExternalSubscribersOfManagedItemUpdateAsync(item);
         }
     }
 };
