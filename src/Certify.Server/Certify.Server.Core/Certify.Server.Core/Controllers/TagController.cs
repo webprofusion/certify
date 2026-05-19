@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿#nullable enable
+using System.Collections.Concurrent;
 using Certify.Management;
 using Certify.Models.Hub;
 using Microsoft.AspNetCore.Mvc;
