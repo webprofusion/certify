@@ -43,7 +43,7 @@ namespace Certify.Tests.Server.Core.Unit
                 {
                     Items =
                     [
-                        CreateSubscriber("target-cert-3", "source-instance/source-cert", ExternalCertificateRetrievalModes.Push, isEnabled: false),
+                        CreateSubscriber("target-cert-3", "source-instance/source-cert", ExternalCertificateRetrievalModes.Push),
                         CreateSubscriber("target-cert-4", "source-instance/source-cert", ExternalCertificateRetrievalModes.Push, sourceType: ExternalCertificateSourceTypes.SecretsStore),
                         CreateSubscriber("target-cert-5", "invalid-reference", ExternalCertificateRetrievalModes.Push)
                     ]
@@ -52,9 +52,9 @@ namespace Certify.Tests.Server.Core.Unit
 
             var targets = InvokeGetExternalPushSubscriptionTargets("source-instance", sourceManagedCertificate, managedItemsByInstance);
 
-            Assert.AreEqual(2, targets.Count);
+            Assert.AreEqual(3, targets.Count);
             CollectionAssert.AreEquivalent(
-                new[] { ("target-instance-1", "target-cert-1"), ("target-instance-1", "target-cert-2") },
+                new[] { ("target-instance-1", "target-cert-1"), ("target-instance-1", "target-cert-2"), ("target-instance-2", "target-cert-3") },
                 targets);
         }
 
@@ -87,7 +87,6 @@ namespace Certify.Tests.Server.Core.Unit
             string managedCertificateId,
             string externalReference,
             string retrievalMode,
-            bool isEnabled = true,
             string? sourceType = null)
         {
             return new ManagedCertificate
@@ -95,7 +94,6 @@ namespace Certify.Tests.Server.Core.Unit
                 Id = managedCertificateId,
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = isEnabled,
                     SourceType = sourceType ?? ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = retrievalMode,
                     ExternalReference = externalReference

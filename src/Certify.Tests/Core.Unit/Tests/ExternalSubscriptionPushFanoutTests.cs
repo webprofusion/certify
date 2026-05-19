@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using Certify.Management;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -25,7 +27,6 @@ namespace Certify.Core.Tests.Unit
                 Id = "subscriber-cert",
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = true,
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = ExternalCertificateRetrievalModes.Auto,
                     ExternalReference = "source-instance/source-cert"
@@ -37,7 +38,6 @@ namespace Certify.Core.Tests.Unit
                 Id = "non-subscriber-cert",
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = true,
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = ExternalCertificateRetrievalModes.Pull,
                     ExternalReference = "source-instance/source-cert"
@@ -75,7 +75,6 @@ namespace Certify.Core.Tests.Unit
                 Id = "subscriber-cert",
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = true,
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = ExternalCertificateRetrievalModes.Push,
                     ExternalReference = "source-instance/source-cert"
@@ -112,7 +111,6 @@ namespace Certify.Core.Tests.Unit
                 Id = "source-cert",
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = true,
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = ExternalCertificateRetrievalModes.Push,
                     ExternalReference = "source-instance/source-cert"
@@ -192,6 +190,67 @@ namespace Certify.Core.Tests.Unit
             };
 
             Assert.IsFalse(InstanceManagementHub.HasManagedCertificateVersionChanged(previous, updated));
+        }
+
+        [TestMethod]
+        public void ShouldPollSource_ReturnsFalse_WhenSubscriptionRetryIsOnHoldAfterRepeatedFailures()
+        {
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-35),
+                DateStart = now.AddDays(-35),
+                DateExpiry = now.AddDays(55),
+                DateLastRenewalAttempt = now.AddMinutes(-10),
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureCount = 5
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PollIntervalMinutes = 5,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsFalse(CertifyManager.IsAutomaticSubscriptionRetryDue(item, now));
+            Assert.IsFalse(CertifyManager.ShouldPollSource(item, source, now));
+        }
+
+        [TestMethod]
+        public void ShouldPollSource_ReturnsFalse_WhenScheduledRetryIsDueButRenewalBackoffIsStillActive()
+        {
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-1),
+                DateStart = now.AddDays(-1),
+                DateExpiry = now.AddDays(89),
+                DateLastRenewalAttempt = now.AddMinutes(-10),
+                DateNextScheduledRenewalAttempt = now.AddMinutes(-1),
+                LastRenewalStatus = RequestState.Warning,
+                RenewalFailureCount = 5
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PollIntervalMinutes = 5,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsFalse(CertifyManager.IsAutomaticSubscriptionRetryDue(item, now));
+            Assert.IsFalse(CertifyManager.ShouldPollSource(item, source, now));
         }
     }
 }

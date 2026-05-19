@@ -383,9 +383,9 @@ namespace Certify.Management
                 if (isExternalSubscriptionRequest)
                 {
 
-                    if (managedCertificate.ExternalSource?.IsEnabled == true)
+                    if (!string.IsNullOrWhiteSpace(managedCertificate.ExternalSource?.ExternalReference))
                     {
-                        // attempt ouR external request. If source is unavailable request should fail
+                        // attempt our external request. If source is unavailable request should fail
                         requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
                         if (requestResult.IsSuccess)
                         {

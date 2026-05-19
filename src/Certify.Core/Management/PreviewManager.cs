@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 
@@ -296,12 +295,12 @@ namespace Certify.Management
             var stepIndex = 1;
 
             var source = item.ExternalSource;
-            if (source == null || source.IsEnabled != true)
+            if (string.IsNullOrEmpty(source?.ExternalReference))
             {
                 steps.Add(new ActionStep
                 {
                     Title = "External subscription not configured",
-                    Description = "This managed certificate is set to use an external subscription, but the subscription is not currently enabled or configured."
+                    Description = "This managed certificate is set to use an external subscription, but the subscription is not currently configured."
                 });
 
                 return steps;

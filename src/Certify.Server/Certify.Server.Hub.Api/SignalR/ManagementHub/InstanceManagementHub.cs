@@ -2,7 +2,6 @@
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Providers;
@@ -576,7 +575,12 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         private static bool IsPushSubscriberForSource(ManagedCertificate managedCertificate, string sourceInstanceId, string sourceManagedCertificateId)
         {
             var source = managedCertificate.ExternalSource;
-            if (source?.IsEnabled != true)
+            if (source == null)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(source.ExternalReference))
             {
                 return false;
             }

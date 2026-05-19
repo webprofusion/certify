@@ -208,7 +208,6 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
                 ExternalSource = new ExternalCertificateSubscription
                 {
-                    IsEnabled = true,
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
                     RetrievalMode = ExternalCertificateRetrievalModes.Auto,
                     PendingSourceVersion = "source-version-1"

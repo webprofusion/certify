@@ -64,11 +64,6 @@
 
                         <StackPanel Margin="0,0,0,0" Orientation="Vertical">
                             <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
-                                <Label Width="200" Content="Subscription Enabled" />
-                                <CheckBox IsChecked="{Binding SelectedItem.ExternalSource.IsEnabled, UpdateSourceTrigger=PropertyChanged}" />
-                            </StackPanel>
-
-                            <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                 <Label Width="200" Content="Source Type" />
                                 <ComboBox
                                     Width="240"

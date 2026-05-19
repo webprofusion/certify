@@ -19,11 +19,6 @@ namespace Certify.Models
     public class ExternalCertificateSubscription
     {
         /// <summary>
-        /// If false, this subscription is ignored.
-        /// </summary>
-        public bool IsEnabled { get; set; } = true;
-
-        /// <summary>
         /// Source type, e.g. ManagementHub or AzureKeyVault.
         /// </summary>
         public string? SourceType { get; set; } = ExternalCertificateSourceTypes.ManagementHub;

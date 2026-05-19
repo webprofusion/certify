@@ -264,11 +264,10 @@ namespace Certify.Tests.UI.Integration
         }
 
         [TestMethod]
-        public void ExternalSubscriptionDefaultsToManagementHubAndEnabledForNewItem()
+        public void ExternalSubscriptionDefaultsToManagementHubForNewItem()
         {
             var defaultSubscription = new ExternalCertificateSubscription();
             Assert.AreEqual(ExternalCertificateSourceTypes.ManagementHub, defaultSubscription.SourceType);
-            Assert.IsTrue(defaultSubscription.IsEnabled);
 
             var model = new ManagedCertificateViewModel();
 
@@ -279,7 +278,6 @@ namespace Certify.Tests.UI.Integration
                 ExternalSource = new ExternalCertificateSubscription
                 {
                     SourceType = null,
-                    IsEnabled = false,
                     RetrievalMode = null,
                     PollIntervalMinutes = 0
                 }
@@ -289,7 +287,6 @@ namespace Certify.Tests.UI.Integration
 
             Assert.IsNotNull(model.SelectedItem.ExternalSource);
             Assert.AreEqual(ExternalCertificateSourceTypes.ManagementHub, model.SelectedItem.ExternalSource.SourceType);
-            Assert.IsTrue(model.SelectedItem.ExternalSource.IsEnabled);
             Assert.AreEqual(ExternalCertificateRetrievalModes.Auto, model.SelectedItem.ExternalSource.RetrievalMode);
             Assert.AreEqual(30, model.SelectedItem.ExternalSource.PollIntervalMinutes);
         }

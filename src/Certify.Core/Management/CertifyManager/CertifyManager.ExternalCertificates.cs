@@ -60,8 +60,8 @@ namespace Certify.Management
                 var targetItems = allItems
                     .Where(i =>
                         i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
-                        && i.ExternalSource?.IsEnabled == true
-                        && !string.IsNullOrWhiteSpace(i.ExternalSource.SourceType)
+                        && !string.IsNullOrWhiteSpace(i.ExternalSource?.ExternalReference)
+                        && !string.IsNullOrWhiteSpace(i.ExternalSource?.SourceType)
                         )
                     .ToList();
 
@@ -101,9 +101,9 @@ namespace Certify.Management
             }
 
             var item = await _itemManager.GetById(candidate.Id);
-            if (item?.ExternalSource == null || item.ExternalSource.IsEnabled != true)
+            if (item?.ExternalSource == null)
             {
-                return new ActionResult("Managed cert external source not enabled", false);
+                return new ActionResult("Managed cert external source not configured", false);
             }
 
             var sourceConfig = item.ExternalSource;
@@ -119,7 +119,7 @@ namespace Certify.Management
                 return new ActionResult("Source polling not enabled", false);
             }
 
-            if (!isInteractive && !ShouldPollSource(sourceConfig))
+            if (!isInteractive && !ShouldPollSource(item, sourceConfig))
             {
                 return new ActionResult("Source polling not applicable [ShouldPollSource] ", false);
             }
@@ -206,9 +206,9 @@ namespace Certify.Management
             }
 
             var item = await _itemManager.GetById(managedCertificateId);
-            if (item?.ExternalSource == null || item.ExternalSource.IsEnabled != true)
+            if (item?.ExternalSource == null)
             {
-                return new ActionResult("Managed cert external source not enabled", false);
+                return new ActionResult("Managed cert external source not configured", false);
             }
 
             var sourceConfig = item.ExternalSource;
@@ -293,9 +293,16 @@ namespace Certify.Management
                    || mode.Equals(ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool ShouldPollSource(ExternalCertificateSubscription sourceConfig)
+        internal static bool ShouldPollSource(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, DateTimeOffset? checkDate = null)
         {
             if (!IsPullModeEnabled(sourceConfig))
+            {
+                return false;
+            }
+
+            var now = checkDate ?? DateTimeOffset.UtcNow;
+
+            if (!IsAutomaticSubscriptionRetryDue(item, now))
             {
                 return false;
             }
@@ -307,7 +314,16 @@ namespace Certify.Management
                 return true;
             }
 
-            return sourceConfig.DateLastPoll.Value <= DateTimeOffset.UtcNow.AddMinutes(-pollIntervalMinutes);
+            return sourceConfig.DateLastPoll.Value <= now.AddMinutes(-pollIntervalMinutes);
+        }
+
+        internal static bool IsAutomaticSubscriptionRetryDue(ManagedCertificate item, DateTimeOffset? checkDate = null)
+        {
+            var now = checkDate ?? DateTimeOffset.UtcNow;
+            var renewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
+            var renewalCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, CoreAppSettings.Current.RenewalIntervalDays, renewalIntervalMode, testDateTime: now);
+
+            return renewalCheck?.IsRenewalDue == true && !renewalCheck.IsRenewalOnHold;
         }
 
         private async Task<List<StatusMessage>> TestExternalSubscriptionAccess(Certify.Models.Providers.ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null)
@@ -315,12 +331,12 @@ namespace Certify.Management
             var results = new List<StatusMessage>();
 
             var sourceConfig = managedCertificate.ExternalSource;
-            if (sourceConfig == null || sourceConfig.IsEnabled != true)
+            if (sourceConfig == null)
             {
                 results.Add(new StatusMessage
                 {
                     IsOK = false,
-                    Message = "External subscription is not enabled for this managed certificate."
+                    Message = "External subscription is not configured for this managed certificate."
                 });
 
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, "External subscription test failed", managedCertificate, isPreviewMode: true));
@@ -917,9 +933,9 @@ namespace Certify.Management
 
             var sourceConfig = managedCertificate.ExternalSource;
             ClearPrimaryAndBindingRequestStatus(managedCertificate);
-            if (sourceConfig == null || sourceConfig.IsEnabled != true)
+            if (sourceConfig == null)
             {
-                result.Message = "External subscription is not enabled for this managed certificate.";
+                result.Message = "External subscription is not configured for this managed certificate.";
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                 SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);

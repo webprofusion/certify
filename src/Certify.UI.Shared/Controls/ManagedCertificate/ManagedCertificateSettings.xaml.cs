@@ -208,7 +208,7 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 // if recently renewed (and not external), confirm user really wants to renew
                 var lifetimeElapsed = ItemViewModel.SelectedItem.GetPercentageLifetimeElapsed(DateTimeOffset.UtcNow);
-                if ((ItemViewModel.SelectedItem.ExternalSource?.IsEnabled != true) && (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && lifetimeElapsed < 1))
+                if ((ItemViewModel.SelectedItem.ItemType != ManagedCertificateType.SSL_ExternallyManaged) && (ItemViewModel.SelectedItem.LastRenewalStatus == RequestState.Success && lifetimeElapsed < 1))
                 {
                     // cert was recently renewed. confirm user intent
                     var msg = "This managed certificate was recently renewed. Are you sure you wish to request it again now? \r\n\r\nThe Certificate Authority may impose rate limits on the number of duplicate certificates which can be issued, so requesting duplicate certificates should be avoided.";

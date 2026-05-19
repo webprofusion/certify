@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -169,7 +169,7 @@ builder.Services.AddSingleton<Certify.Shared.Net.IProxyProvider>(_ =>
     {
         // For Hub Service, default to environment proxy
         return new Certify.Models.Preferences
-    {
+        {
             ProxyMode = Certify.Models.ProxyMode.Environment,
             ProxyEnabled = true
         };
@@ -377,7 +377,8 @@ bool TryParseHubReference(string? reference, out string instanceId, out string m
 bool IsPushSubscriberForSource(ManagedCertificate managedCertificate, string sourceInstanceId, string sourceManagedCertificateId)
 {
     var source = managedCertificate.ExternalSource;
-    if (source?.IsEnabled != true)
+
+    if (string.IsNullOrWhiteSpace(source?.ExternalReference))
     {
         return false;
     }

@@ -663,10 +663,6 @@ namespace Certify.UI.ViewModel
                     EnsureExternalSourceConfiguration();
                     UseAuthorityTokenListView = false;
                 }
-                else if (SelectedItem.ExternalSource != null)
-                {
-                    SelectedItem.ExternalSource.IsEnabled = false;
-                }
 
                 SelectedItem.IsChanged = true;
 
@@ -971,11 +967,6 @@ namespace Certify.UI.ViewModel
                 SelectedItem.ExternalSource.SourceType = ExternalCertificateSourceTypes.ManagementHub;
             }
 
-            if (SelectedItem.Id == null)
-            {
-                SelectedItem.ExternalSource.IsEnabled = true;
-            }
-
             if (SelectedItem.ExternalSource.PollIntervalMinutes <= 0)
             {
                 SelectedItem.ExternalSource.PollIntervalMinutes = 30;
@@ -993,17 +984,14 @@ namespace Certify.UI.ViewModel
                 return new ValidationResult(false, "External source settings are not available.", "EXTERNAL_SOURCE_MISSING");
             }
 
-            if (source.IsEnabled)
+            if (string.IsNullOrWhiteSpace(source.SourceType))
             {
-                if (string.IsNullOrWhiteSpace(source.SourceType))
-                {
-                    return new ValidationResult(false, "Source Type is required when external subscription is enabled.", "EXTERNAL_SOURCE_TYPE_REQUIRED");
-                }
+                return new ValidationResult(false, "Source Type is required when external subscription is configured.", "EXTERNAL_SOURCE_TYPE_REQUIRED");
+            }
 
-                if (string.IsNullOrWhiteSpace(source.ExternalReference))
-                {
-                    return new ValidationResult(false, "Source Certificate is required when external subscription is enabled.", "EXTERNAL_SOURCE_REFERENCE_REQUIRED");
-                }
+            if (string.IsNullOrWhiteSpace(source.ExternalReference))
+            {
+                return new ValidationResult(false, "Source Certificate is required when external subscription is configured.", "EXTERNAL_SOURCE_REFERENCE_REQUIRED");
             }
 
             if (source.PollIntervalMinutes <= 0)
