@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Import or Export Settings"
     Width="800"
     Height="740"
@@ -18,7 +19,10 @@
     <DockPanel Margin="16" LastChildFill="true">
         <StackPanel DockPanel.Dock="Top" Orientation="Vertical">
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Subheading}">Import/Export Settings</TextBlock>
-            <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">"{x:Static properties:SR.Settings_Export_Intro}"</TextBlock>
+            <TextBlock
+                HorizontalAlignment="Left"
+                Style="{StaticResource Instructions}"
+                Text="{x:Static res:SR.Settings_Export_Intro}" />
             <TextBlock HorizontalAlignment="Left" Style="{StaticResource Instructions}">To import or export, you should specify a password to use for encryption/decryption:</TextBlock>
             <PasswordBox
                 x:Name="txtSecret"
