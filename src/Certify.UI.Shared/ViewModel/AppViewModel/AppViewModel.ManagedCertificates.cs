@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -236,7 +236,13 @@ namespace Certify.UI.ViewModel
         {
             // get existing
 
-            var existing = await _certifyClient.GetManagedCertificate(item.Id);
+            ManagedCertificate existing = null;
+
+            if (!string.IsNullOrWhiteSpace(item?.Id))
+            {
+                existing = await _certifyClient.GetManagedCertificate(item.Id);
+            }
+
             if (existing != null && existing.CertificateAuthorityId != item.CertificateAuthorityId)
             {
                 // invalidate current order uri if CA has changed
