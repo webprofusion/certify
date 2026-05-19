@@ -39,28 +39,30 @@
                 IsSelected="False">
 
                 <DockPanel LastChildFill="True">
-                    <DockPanel
-                        Margin="8,0,8,8"
+                    <StackPanel
+                        Margin="8,4,32,0"
+                        HorizontalAlignment="Left"
                         DockPanel.Dock="Top"
+                        Orientation="Horizontal"
                         Visibility="{Binding IsEditable, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
-                        <StackPanel Orientation="Horizontal">
-                            <Label Width="200" Content="Use Certificate Subscription" />
-                            <CheckBox
-                                VerticalAlignment="Center"
-                                IsChecked="{Binding IsExternalSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"
-                                ToolTip="Switch this managed certificate to use an external source subscription instead of ACME request/authorization settings." />
-                        </StackPanel>
-                    </DockPanel>
+
+                        <Controls:ToggleSwitch
+                            Content="Use Certificate Subscription"
+                            IsOn="{Binding IsExternalSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"
+                            ToolTip="Switch this managed certificate to use an external source subscription instead of ACME request/authorization settings." />
+
+
+                    </StackPanel>
 
                     <DockPanel
-                        Margin="8,0,8,8"
+                        Margin="8,0,0,0"
                         DockPanel.Dock="Top"
                         Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                            Configure how this externally managed certificate is synchronized from its source.
+                            Configure how this externally managed certificate is synchronized from its source:
                         </TextBlock>
 
-                        <StackPanel Margin="0,12,0,0" Orientation="Vertical">
+                        <StackPanel Margin="0,0,0,0" Orientation="Vertical">
                             <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
                                 <Label Width="200" Content="Subscription Enabled" />
                                 <CheckBox IsChecked="{Binding SelectedItem.ExternalSource.IsEnabled, UpdateSourceTrigger=PropertyChanged}" />
@@ -86,15 +88,10 @@
                             </StackPanel>
 
                             <StackPanel Margin="0,4,0,0" Orientation="Vertical">
-                                <StackPanel Orientation="Horizontal">
-                                    <Label Width="200" Content="Source Certificate" />
-                                    <TextBlock
-                                        Width="360"
-                                        VerticalAlignment="Center"
-                                        Text="{Binding SelectedItem.ExternalSource.ExternalReference}" />
-                                </StackPanel>
 
-                                <StackPanel Margin="200,4,0,0" Orientation="Horizontal">
+
+                                <StackPanel Margin="0,4,0,0" Orientation="Horizontal">
+
                                     <StackPanel.Style>
                                         <Style TargetType="StackPanel">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -105,6 +102,8 @@
                                             </Style.Triggers>
                                         </Style>
                                     </StackPanel.Style>
+
+                                    <Label Width="200" Content="Source Certificate" />
                                     <ComboBox
                                         x:Name="HubCertificateBrowser"
                                         Width="320"
@@ -123,7 +122,7 @@
                                     <Button
                                         Margin="4,0,0,0"
                                         Click="LoadHubCertificates_Click"
-                                        Content="Load"
+                                        Content="Refresh"
                                         IsEnabled="{Binding IsLoadingSubscribableCertificates, Converter={StaticResource ResourceKey=InvBoolConverter}}" />
                                 </StackPanel>
 

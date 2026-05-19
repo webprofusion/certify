@@ -142,6 +142,14 @@ namespace Certify.Models
 #endif
         }
 
+        public void NormalizeExternalSourceSettings()
+        {
+            if (ItemType != ManagedCertificateType.SSL_ExternallyManaged)
+            {
+                ExternalSource = null;
+            }
+        }
+
         /// <summary>
         /// If set, managed item is from an external source
         /// </summary>

@@ -275,6 +275,8 @@ namespace Certify.Management
             // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
             managedCert = MigrateManagedCertificateSettings(managedCert);
 
+            managedCert.NormalizeExternalSourceSettings();
+
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
 

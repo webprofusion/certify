@@ -293,5 +293,23 @@ namespace Certify.Tests.UI.Integration
             Assert.AreEqual(ExternalCertificateRetrievalModes.Auto, model.SelectedItem.ExternalSource.RetrievalMode);
             Assert.AreEqual(30, model.SelectedItem.ExternalSource.PollIntervalMinutes);
         }
+
+        [TestMethod]
+        public void NonExternalManagedCertificateClearsExternalSubscriptionSettings()
+        {
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ACME,
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    ExternalReference = "instance/cert"
+                }
+            };
+
+            item.NormalizeExternalSourceSettings();
+
+            Assert.IsNull(item.ExternalSource);
+        }
     }
 }
