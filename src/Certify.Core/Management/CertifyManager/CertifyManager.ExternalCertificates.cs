@@ -398,7 +398,7 @@ namespace Certify.Management
                 return new ExternalCertificateFetchResult
                 {
                     IsSuccess = false,
-                    Message = "ManagementHub external reference must be in format '{instanceId}/{managedCertId}'."
+                    Message = "Management Hub source certificate must be in format '{instanceId}/{managedCertId}'."
                 };
             }
 
@@ -939,7 +939,7 @@ namespace Certify.Management
 
             if (!TryParseHubReference(sourceConfig.ExternalReference, out var sourceInstanceId, out var sourceManagedCertificateId))
             {
-                result.Message = "Managed Hub external reference must be in format '{instanceId}/{managedCertId}'.";
+                result.Message = "Managed Hub source certificate must be in format '{instanceId}/{managedCertId}'.";
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                 SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);

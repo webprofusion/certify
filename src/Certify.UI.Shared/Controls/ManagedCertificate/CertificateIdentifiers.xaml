@@ -70,8 +70,10 @@
                                 <Label Width="200" Content="Source Type" />
                                 <ComboBox
                                     Width="240"
+                                    DisplayMemberPath="Value"
                                     ItemsSource="{Binding ExternalSourceTypes}"
-                                    SelectedItem="{Binding SelectedItem.ExternalSource.SourceType, UpdateSourceTrigger=PropertyChanged}"
+                                    SelectedValue="{Binding SelectedItem.ExternalSource.SourceType, UpdateSourceTrigger=PropertyChanged}"
+                                    SelectedValuePath="Key"
                                     SelectionChanged="ExternalSourceType_SelectionChanged" />
                             </StackPanel>
 
@@ -85,7 +87,7 @@
 
                             <StackPanel Margin="0,4,0,0" Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal">
-                                    <Label Width="200" Content="External Reference" />
+                                    <Label Width="200" Content="Source Certificate" />
                                     <TextBlock
                                         Width="360"
                                         VerticalAlignment="Center"

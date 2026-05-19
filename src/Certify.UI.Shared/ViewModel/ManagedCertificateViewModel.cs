@@ -683,10 +683,10 @@ namespace Certify.UI.ViewModel
         [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
         public bool ShowAuthorityTokenEditor => !IsExternalManagedCertificateItem && UseAuthorityTokenListView;
 
-        public IEnumerable<string> ExternalSourceTypes => new[]
+        public IEnumerable<KeyValuePair<string, string>> ExternalSourceTypes => new[]
         {
-            ExternalCertificateSourceTypes.ManagementHub
-            //ExternalCertificateSourceTypes.SecretsStore
+            new KeyValuePair<string, string>(ExternalCertificateSourceTypes.ManagementHub, "Management Hub")
+            //new KeyValuePair<string, string>(ExternalCertificateSourceTypes.SecretsStore, "Secrets Store")
         };
 
         public IEnumerable<string> ExternalRetrievalModes => new[]
@@ -966,6 +966,16 @@ namespace Certify.UI.ViewModel
                 SelectedItem.ExternalSource.RetrievalMode = ExternalCertificateRetrievalModes.Auto;
             }
 
+            if (string.IsNullOrWhiteSpace(SelectedItem.ExternalSource.SourceType))
+            {
+                SelectedItem.ExternalSource.SourceType = ExternalCertificateSourceTypes.ManagementHub;
+            }
+
+            if (SelectedItem.Id == null)
+            {
+                SelectedItem.ExternalSource.IsEnabled = true;
+            }
+
             if (SelectedItem.ExternalSource.PollIntervalMinutes <= 0)
             {
                 SelectedItem.ExternalSource.PollIntervalMinutes = 30;
@@ -992,7 +1002,7 @@ namespace Certify.UI.ViewModel
 
                 if (string.IsNullOrWhiteSpace(source.ExternalReference))
                 {
-                    return new ValidationResult(false, "External Reference is required when external subscription is enabled.", "EXTERNAL_SOURCE_REFERENCE_REQUIRED");
+                    return new ValidationResult(false, "Source Certificate is required when external subscription is enabled.", "EXTERNAL_SOURCE_REFERENCE_REQUIRED");
                 }
             }
 

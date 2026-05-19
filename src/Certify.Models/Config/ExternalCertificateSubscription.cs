@@ -26,7 +26,7 @@ namespace Certify.Models
         /// <summary>
         /// Source type, e.g. ManagementHub or AzureKeyVault.
         /// </summary>
-        public string? SourceType { get; set; }
+        public string? SourceType { get; set; } = ExternalCertificateSourceTypes.ManagementHub;
 
         /// <summary>
         /// Retrieval mode: Pull, Push, or PullAndPush.
