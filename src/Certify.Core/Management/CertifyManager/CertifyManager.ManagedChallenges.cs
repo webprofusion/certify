@@ -404,7 +404,22 @@ namespace Certify.Management
                 }
 
                 // apply propagation delay
-                await Task.Delay(dnsResult.PropagationSeconds * 1000);
+                var propagationSeconds = dnsResult.PropagationSeconds;
+                if (propagationSeconds > 0)
+                {
+                    var propagationDelayMilliseconds = Math.Min((long)propagationSeconds * 1000L, int.MaxValue);
+
+                    if (propagationDelayMilliseconds != (long)propagationSeconds * 1000L)
+                    {
+                        log?.Warning($"Managed challenge propagation delay of {propagationSeconds} seconds exceeds the supported delay range. Using the maximum supported wait instead.");
+                    }
+
+                    await Task.Delay((int)propagationDelayMilliseconds);
+                }
+                else if (propagationSeconds < 0)
+                {
+                    log?.Warning($"Managed challenge provider returned an invalid propagation delay of {propagationSeconds} seconds. Skipping propagation wait.");
+                }
 
                 request.DateTimePerformed = DateTimeOffset.UtcNow;
                 _managedChallengesPendingCleanup.TryAdd($"{request.ResponseKey}:{request.ResponseValue}", request);
