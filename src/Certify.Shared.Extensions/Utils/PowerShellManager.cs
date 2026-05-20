@@ -16,21 +16,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.SharedUtils;
 using SimpleImpersonation;
 
 namespace Certify.Management
 {
     public enum PowerShellExecutionMode
     {
-        CompatibilityMode,
-        ModernMode,
-        SystemPowerShellProcess
+        Automatic,
+        InProcess,
+        SystemProcess
     }
 
     public enum PowerShellImpersonationMode
     {
         Default,
-        Limited,
         Full,
         FullWithProfile
     }
@@ -47,7 +47,7 @@ namespace Certify.Management
         public string[] IgnoredCommandExceptions { get; set; }
         public int TimeoutMinutes { get; set; } = 5;
         public bool LaunchNewProcess { get; set; }
-        public PowerShellExecutionMode ExecutionMode { get; set; } = PowerShellExecutionMode.CompatibilityMode;
+        public PowerShellExecutionMode ExecutionMode { get; set; } = PowerShellManager.GetDefaultExecutionMode();
         public PowerShellImpersonationMode ImpersonationMode { get; set; } = PowerShellImpersonationMode.Default;
         public bool LoadUserProfile { get; set; }
     }
@@ -63,6 +63,23 @@ namespace Certify.Management
         private const string PowerShellTelemetryOptOutEnvVar = "POWERSHELL_TELEMETRY_OPTOUT";
         private const string PowerShellTelemetryOptOutValue = "true";
         private const string PowerShellPayloadSecretEnvVar = "CERTIFY_POWERSHELL_PAYLOAD_SECRET";
+
+        public static PowerShellExecutionMode GetDefaultExecutionMode()
+        {
+            return PowerShellExecutionMode.Automatic;
+        }
+
+        public static bool TryParseExecutionMode(string? value, out PowerShellExecutionMode executionMode)
+        {
+            executionMode = GetDefaultExecutionMode();
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            return Enum.TryParse(value.Trim(), ignoreCase: true, out executionMode);
+        }
 
         private static bool UsesFullImpersonation(PowerShellImpersonationMode impersonationMode)
         {
@@ -118,50 +135,24 @@ namespace Certify.Management
                     }
                 }
 
-                var executionMode = settings.ExecutionMode;
-
-                if (settings.LaunchNewProcess)
-                {
-                    executionMode = PowerShellExecutionMode.SystemPowerShellProcess;
-                }
-
-                var executionModeMessage = settings.LaunchNewProcess
-                    ? $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Launch New Process is enabled)."
-                    : $"PowerShell Execution Mode: {executionMode}.";
-
                 if (UsesFullImpersonation(settings.ImpersonationMode))
                 {
                     if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
                         return new ActionResult("PowerShell Full Impersonation is only supported on Windows.", false);
                     }
-
-                    if (executionMode == PowerShellExecutionMode.ModernMode)
-                    {
-                        executionMode = PowerShellExecutionMode.SystemPowerShellProcess;
-                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, overridden because Full Impersonation requires a new Windows process).";
-                    }
                 }
 
-                if (executionMode == PowerShellExecutionMode.SystemPowerShellProcess || executionMode == PowerShellExecutionMode.CompatibilityMode)
-                {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        // spawn new process as the given user
-                        return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: ShouldLoadUserProfile(settings.ImpersonationMode));
-                    }
-                    else
-                    {
+                var executionMode = ResolveExecutionMode(settings, out var executionModeMessage);
 
-                        executionMode = PowerShellExecutionMode.ModernMode;
-                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {settings.ExecutionMode}, using in-process PowerShell on this platform).";
-                    }
+                if (executionMode == PowerShellExecutionMode.SystemProcess)
+                {
+                    return await ExecutePowershellAsProcess(settings.Result, settings.PowerShellExecutionPolicy, settings.ScriptFile, settings.Parameters, settings.Credentials, settings.LogonType, settings.ScriptContent, executionMode: executionMode, ignoredCommandExceptions: settings.IgnoredCommandExceptions, timeoutMinutes: settings.TimeoutMinutes, executionModeMessage: executionModeMessage, impersonationMode: settings.ImpersonationMode, loadUserProfile: ShouldLoadUserProfile(settings.ImpersonationMode));
                 }
 
-                if (executionMode == PowerShellExecutionMode.ModernMode)
+                if (executionMode == PowerShellExecutionMode.InProcess)
                 {
-
-                    return RunScriptInPowerShellCore(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage);
+                    return await Task.FromResult(RunScriptInProcess(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage));
                 }
 
                 return new ActionResult($"Unknown PowerShell execution mode: {executionMode}", false);
@@ -170,6 +161,46 @@ namespace Certify.Management
             {
                 Environment.SetEnvironmentVariable(PowerShellTelemetryOptOutEnvVar, priorTelemetryOptOut);
             }
+        }
+
+        private static PowerShellExecutionMode ResolveExecutionMode(PowerShellScriptSettings settings, out string executionModeMessage)
+        {
+            var selectedExecutionMode = settings.ExecutionMode;
+            var executionMode = selectedExecutionMode;
+
+            if (UsesFullImpersonation(settings.ImpersonationMode) && executionMode != PowerShellExecutionMode.SystemProcess)
+            {
+                executionMode = PowerShellExecutionMode.SystemProcess;
+                executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {selectedExecutionMode}, overridden because Full Impersonation requires a new process).";
+                return executionMode;
+            }
+
+            if (selectedExecutionMode == PowerShellExecutionMode.Automatic)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    if (settings.Credentials?.Any() == true)
+                    {
+                        executionMode = PowerShellExecutionMode.InProcess;
+                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {selectedExecutionMode}, using in-process PowerShell for Windows credential impersonation compatibility).";
+                    }
+                    else
+                    {
+                        executionMode = PowerShellExecutionMode.SystemProcess;
+                        executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {selectedExecutionMode}, using system PowerShell process on Windows by default).";
+                    }
+                }
+                else
+                {
+                    executionMode = PowerShellExecutionMode.InProcess;
+                    executionModeMessage = $"PowerShell Execution Mode: {executionMode} (selected {selectedExecutionMode}, using in-process PowerShell on this platform by default).";
+                }
+
+                return executionMode;
+            }
+
+            executionModeMessage = $"PowerShell Execution Mode: {executionMode}.";
+            return executionMode;
         }
 
         private static bool HasCredentialValue(Dictionary<string, string> credentials, string key)
@@ -190,7 +221,7 @@ namespace Certify.Management
             };
         }
 
-        private static ActionResult RunScriptInPowerShellCore(string powershellExecutionPolicy, CertificateRequestResult result, string scriptFile, Dictionary<string, object> parameters, string scriptContent, Dictionary<string, string> credentials, string logonType, string[] ignoredCommandExceptions, int timeoutMinutes, FileInfo scriptInfo, string executionModeMessage)
+        private static ActionResult RunScriptInProcess(string powershellExecutionPolicy, CertificateRequestResult result, string scriptFile, Dictionary<string, object> parameters, string scriptContent, Dictionary<string, string> credentials, string logonType, string[] ignoredCommandExceptions, int timeoutMinutes, FileInfo scriptInfo, string executionModeMessage)
         {
             try
             {
@@ -243,45 +274,22 @@ namespace Certify.Management
         /// <summary>
         /// Get the path to the powershell exe for the requested mode, optionally using a preferred path first.
         /// </summary>
-        private static string GetPowershellExePath(PowerShellExecutionMode executionMode, string powershellPathPreference = null)
+        private static string GetPowershellExePath(string powershellPathPreference = null)
         {
-            var searchPaths = executionMode switch
-            {
-                PowerShellExecutionMode.CompatibilityMode =>
-                [
-                    "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                    "powershell.exe"
-                ],
-                PowerShellExecutionMode.ModernMode => new List<string>
-                {
-                    "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
-                    "/usr/local/bin/pwsh",
-                    "/opt/homebrew/bin/pwsh",
-                    "/usr/bin/pwsh",
-                    "pwsh"
-                },
-                _ =>
-                [
-                    "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
-                    "/usr/local/bin/pwsh",
-                    "/opt/homebrew/bin/pwsh",
-                    "/usr/bin/pwsh",
-                    "pwsh",
-                    "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
-                    "powershell.exe"
-                ]
-            };
+            var searchPaths = new List<string>();
 
             if (!string.IsNullOrWhiteSpace(powershellPathPreference))
             {
-                searchPaths.Insert(0, powershellPathPreference);
+                searchPaths.Add(powershellPathPreference);
             }
+
+            searchPaths.AddRange(GetConfiguredPowerShellSearchPaths());
 
             // if powershell exe path supplied, use that (with expansion) and check exe exists
             // otherwise detect powershell exe location
-            foreach (var exePath in searchPaths)
+            foreach (var exePath in searchPaths.Where(p => !string.IsNullOrWhiteSpace(p)).Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var filePath = Environment.ExpandEnvironmentVariables(exePath);
+                var filePath = Environment.ExpandEnvironmentVariables(exePath.Trim());
                 if (File.Exists(filePath))
                 {
                     return filePath;
@@ -298,6 +306,79 @@ namespace Certify.Management
             }
 
             return null;
+        }
+
+        private static List<string> GetConfiguredPowerShellSearchPaths()
+        {
+            var searchPaths = new List<string>();
+            var serviceConfig = GetServiceConfigSafe();
+
+            if (serviceConfig?.CustomPowerShellPaths?.Any() == true)
+            {
+                searchPaths.AddRange(serviceConfig.CustomPowerShellPaths.Where(p => !string.IsNullOrWhiteSpace(p)).Select(p => p.Trim()));
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                if (serviceConfig?.PreferModernPwshOnWindows == true)
+                {
+                    searchPaths.AddRange(GetModernWindowsPowerShellSearchPaths());
+                    searchPaths.AddRange(GetWindowsPowerShellSearchPaths());
+                }
+                else
+                {
+                    searchPaths.AddRange(GetWindowsPowerShellSearchPaths());
+                    searchPaths.AddRange(GetModernWindowsPowerShellSearchPaths());
+                }
+            }
+            else
+            {
+                searchPaths.AddRange(GetModernNonWindowsPowerShellSearchPaths());
+            }
+
+            return searchPaths;
+        }
+
+        private static Certify.Shared.ServiceConfig GetServiceConfigSafe()
+        {
+            try
+            {
+                return ServiceConfigManager.GetAppServiceConfig();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static IEnumerable<string> GetWindowsPowerShellSearchPaths()
+        {
+            return
+            [
+                "%WINDIR%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+                "powershell.exe"
+            ];
+        }
+
+        private static IEnumerable<string> GetModernWindowsPowerShellSearchPaths()
+        {
+            return
+            [
+                "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
+                "pwsh.exe",
+                "pwsh"
+            ];
+        }
+
+        private static IEnumerable<string> GetModernNonWindowsPowerShellSearchPaths()
+        {
+            return
+            [
+                "/usr/local/bin/pwsh",
+                "/opt/homebrew/bin/pwsh",
+                "/usr/bin/pwsh",
+                "pwsh"
+            ];
         }
 
         private static string ResolveExecutableFromPath(string executableName)
@@ -326,12 +407,12 @@ namespace Certify.Management
         }
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemPowerShellProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false)
+        private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var _log = new StringBuilder();
 
-            var commandExe = GetPowershellExePath(executionMode, powershellPathPreference);
+            var commandExe = GetPowershellExePath(powershellPathPreference);
 
             if (commandExe == null)
             {
@@ -1075,7 +1156,7 @@ namespace Certify.Management
             // accumulate output
             var output = new StringBuilder();
 
-            output.AppendLine(executionModeMessage ?? $"PowerShell Execution Mode: {PowerShellExecutionMode.ModernMode}.");
+            output.AppendLine(executionModeMessage ?? $"PowerShell Execution Mode: {PowerShellExecutionMode.InProcess}.");
             output.AppendLine($"PowerShell Host: {System.Management.Automation.PSVersionInfo.PSEdition} {System.Management.Automation.PSVersionInfo.PSVersion}");
 
             // capture errors

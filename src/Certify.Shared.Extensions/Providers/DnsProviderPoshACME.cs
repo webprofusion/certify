@@ -1501,7 +1501,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Parameters = objParams,
                 ScriptContent = scriptContent,
                 IgnoredCommandExceptions = ignoredCommandExceptions,
-                ExecutionMode = PowerShellExecutionMode.ModernMode
+                ExecutionMode = PowerShellExecutionMode.InProcess
             });
         }
 
@@ -1517,7 +1517,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 Parameters = objParams,
                 ScriptContent = scriptContent,
                 IgnoredCommandExceptions = ignoredCommandExceptions,
-                ExecutionMode = PowerShellExecutionMode.ModernMode
+                ExecutionMode = PowerShellExecutionMode.InProcess
             });
         }
 

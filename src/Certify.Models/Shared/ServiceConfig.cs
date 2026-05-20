@@ -21,6 +21,10 @@ namespace Certify.Shared
 
         public string PowershellExecutionPolicy { get; set; } = "Unrestricted";
 
+        public bool PreferModernPwshOnWindows { get; set; }
+
+        public string[] CustomPowerShellPaths { get; set; } = [];
+
         /// <summary>
         /// windows;jwt;
         /// </summary>

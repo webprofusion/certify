@@ -1050,6 +1050,8 @@ namespace Certify.Management
                 {
                     _serverConfig.LogLevel = configVal.LogLevel;
                     _serverConfig.PowershellExecutionPolicy = configVal.PowershellExecutionPolicy;
+                    _serverConfig.PreferModernPwshOnWindows = configVal.PreferModernPwshOnWindows;
+                    _serverConfig.CustomPowerShellPaths = configVal.CustomPowerShellPaths ?? [];
 
                     _serverConfig.ManagementServerHubAPI = configVal.ManagementServerHubAPI;
                     _serverConfig.ManagementServerHubEndpoint = configVal.ManagementServerHubEndpoint;
