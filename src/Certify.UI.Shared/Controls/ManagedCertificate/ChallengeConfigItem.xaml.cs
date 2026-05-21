@@ -104,14 +104,15 @@ namespace Certify.UI.Controls.ManagedCertificate
             if (previousSelection != null && previousSelection != challengeProviderType)
             {
                 EditModel.SelectedItem.Parameters.Clear();
+                EditModel.SelectedItem.ChallengeCredentialKey = null;
+                EditModel.DnsZones.Clear();
+                EditModel.ShowZoneLookup = false;
+                DnsZoneList.SelectedValue = null;
             }
 
             EditModel.SelectedItem.ChallengeProvider = challengeProviderType;
 
-            // Do we still need to reset the credential key here?
-            //EditModel.SelectedItem.ChallengeCredentialKey = null;
-
-            await EditModel.RefreshAllOptions(StoredCredentialList);
+            await EditModel.RefreshAllOptions(StoredCredentialList, preserveExistingParameterValues: previousSelection == challengeProviderType);
 
             if (challengeProviderType == "DNS01.Manual")
             {
@@ -251,6 +252,12 @@ namespace Certify.UI.Controls.ManagedCertificate
                         await SetChallengeProvider("DNS01.API.CertifyDns");
                     }));
                 }
+            }
+            else
+            {
+                EditModel.DnsZones.Clear();
+                EditModel.ShowZoneLookup = false;
+                DnsZoneList.SelectedValue = null;
             }
         }
 

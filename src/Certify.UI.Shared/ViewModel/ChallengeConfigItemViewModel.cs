@@ -141,10 +141,10 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        internal async Task RefreshAllOptions(ComboBox storedCredentialsList)
+        internal async Task RefreshAllOptions(ComboBox storedCredentialsList, bool preserveExistingParameterValues = true)
         {
 
-            RefreshParameters();
+            RefreshParameters(preserveExistingParameterValues);
 
             var currentIsChanged = ParentManagedCertificate.IsChanged;
             await RefreshCredentialOptions(storedCredentialsList);
@@ -216,12 +216,18 @@ namespace Certify.UI.ViewModel
             ParentManagedCertificate.ResetIsChanged(currentIsChanged);
         }
 
-        private void RefreshParameters()
+        private void RefreshParameters(bool preserveExistingValues = true)
         {
             if (SelectedItem.Parameters == null)
             {
                 SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
             }
+
+            var existingValues = preserveExistingValues
+                ? SelectedItem.Parameters.ToDictionary(p => p.Key, p => p.Value)
+                : new Dictionary<string, string>();
+
+            var legacyZoneId = preserveExistingValues ? SelectedItem.ZoneId : null;
 
             var definition = _appViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == SelectedItem.ChallengeProvider);
 
@@ -243,43 +249,38 @@ namespace Certify.UI.ViewModel
                 }
 
                 // add or update provider parameters (if any) TODO: remove unused params
-                var providerParams = definition.ProviderParameters.Where(p => p.IsCredential == false).ToList();
+                var providerParams = definition.ProviderParameters
+                    .Where(p => p.IsCredential == false)
+                    .Select(p => p.Clone() as ProviderParameter)
+                    .Where(p => p != null)
+                    .Cast<ProviderParameter>()
+                    .ToList();
 
                 if (providerParams.Any(p => p.Key == "zoneid"))
                 {
                     // move zone id to first param in list for benefit of UI layout
                     var z = providerParams.Find(p => p.Key == "zoneid");
-                    providerParams.Remove(z);
-                    providerParams.Insert(0, z);
+                    if (z != null)
+                    {
+                        providerParams.Remove(z);
+                        providerParams.Insert(0, z);
+                    }
                 }
 
                 foreach (var pa in providerParams)
                 {
-                    // if zoneid previously stored, migrate to provider param
-                    if (pa.Key == "zoneid")
+                    if (existingValues.TryGetValue(pa.Key, out var existingValue))
                     {
-#pragma warning disable CS0618 // Type or member is obsolete
-                        if (!string.IsNullOrEmpty(SelectedItem.ZoneId))
-                        {
-                            pa.Value = SelectedItem.ZoneId;
-                            SelectedItem.ZoneId = null;
-                        }
-#pragma warning restore CS0618 // Type or member is obsolete
+                        pa.Value = existingValue;
                     }
-
-                    if (!SelectedItem.Parameters.Any(p => p.Key == pa.Key))
+                    else if (pa.Key == "zoneid" && !string.IsNullOrEmpty(legacyZoneId))
                     {
-                        SelectedItem.Parameters.Add(pa.Clone() as ProviderParameter);
+                        pa.Value = legacyZoneId;
                     }
                 }
 
-                var toRemove = new List<ProviderParameter>();
-
-                toRemove.AddRange(SelectedItem.Parameters.Where(p => !providerParams.Any(pp => pp.Key == p.Key)));
-                foreach (var r in toRemove)
-                {
-                    SelectedItem.Parameters.Remove(r);
-                }
+                SelectedItem.Parameters = new ObservableCollection<ProviderParameter>(providerParams);
+                SelectedItem.ZoneId = null;
             }
             else
             {
