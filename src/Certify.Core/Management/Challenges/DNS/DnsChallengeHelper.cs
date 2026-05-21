@@ -37,7 +37,7 @@ namespace Certify.Core.Management.Challenges
         {
             Id = "DNS01.ManagedChallengeHub",
             Title = "(Use Managed Challenge)",
-            Description = "Use the currently defined Managed Challenges for automated DNS challenge responses.",
+            Description = "Use the currently defined Hub Managed Challenges for automated DNS challenge responses.",
             ProviderParameters = [],
             HelpUrl = "https://docs.certifytheweb.com/",
             PropagationDelaySeconds = 60,

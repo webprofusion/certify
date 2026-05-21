@@ -207,7 +207,11 @@ namespace Certify.Management
 
                 if (_isMgtmHubBackend || _isDirectMgmtHubBackend)
                 {
+                    // for the hub instance use a built in managed DNS provider that can be used for hub managed challenges,
+                    // and remove the Hub managed Challenge API provider that relies on a hub api connection
+                    _pluginManager.DnsProviderProviders.RemoveAll(provider => provider.GetProviders(provider.GetType()).Any(p => p.Id == "DNS01.API.CertifyManaged"));
                     _pluginManager.DnsProviderProviders.Add(new ManagedDnsChallengeAuto());
+
                 }
             }
 
