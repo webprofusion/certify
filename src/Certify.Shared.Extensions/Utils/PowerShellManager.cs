@@ -320,7 +320,7 @@ namespace Certify.Management
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if (serviceConfig?.PreferModernPwshOnWindows == true)
+                if (serviceConfig?.PreferModernPowershell == true)
                 {
                     searchPaths.AddRange(GetModernWindowsPowerShellSearchPaths());
                     searchPaths.AddRange(GetWindowsPowerShellSearchPaths());
