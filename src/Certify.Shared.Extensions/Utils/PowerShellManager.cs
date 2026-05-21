@@ -322,13 +322,13 @@ namespace Certify.Management
             {
                 if (serviceConfig?.PreferModernPowershell == true)
                 {
-                    searchPaths.AddRange(GetModernWindowsPowerShellSearchPaths());
-                    searchPaths.AddRange(GetWindowsPowerShellSearchPaths());
+                    searchPaths.AddRange(GetModernPowerShellSearchPaths());
+                    searchPaths.AddRange(GetClassicPowerShellSearchPaths());
                 }
                 else
                 {
-                    searchPaths.AddRange(GetWindowsPowerShellSearchPaths());
-                    searchPaths.AddRange(GetModernWindowsPowerShellSearchPaths());
+                    searchPaths.AddRange(GetClassicPowerShellSearchPaths());
+                    searchPaths.AddRange(GetModernPowerShellSearchPaths());
                 }
             }
             else
@@ -351,7 +351,7 @@ namespace Certify.Management
             }
         }
 
-        private static IEnumerable<string> GetWindowsPowerShellSearchPaths()
+        private static IEnumerable<string> GetClassicPowerShellSearchPaths()
         {
             return
             [
@@ -360,12 +360,14 @@ namespace Certify.Management
             ];
         }
 
-        private static IEnumerable<string> GetModernWindowsPowerShellSearchPaths()
+        private static IEnumerable<string> GetModernPowerShellSearchPaths()
         {
             return
             [
                 "%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe",
                 "pwsh.exe",
+                "/usr/bin/pwsh",
+                "/snap/bin/pwsh",
                 "pwsh"
             ];
         }
