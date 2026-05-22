@@ -40,7 +40,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                     IsCredentialOptional = true,
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
-                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Description="(leave blank to use current management hub API)" },
+                        new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Description="(leave blank to use currently joined Management Hub)" },
                         new ProviderParameter{ Key="authkey",Name="Client ID", IsRequired=true, IsCredential=true, IsPassword=false,  Description="API Auth Key" },
                         new ProviderParameter{ Key="authsecret",Name="Client Secret", IsRequired=true, IsCredential=true, IsPassword=true,  Description="API Auth Secret" }
                     },

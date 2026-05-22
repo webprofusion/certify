@@ -246,10 +246,16 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (string.IsNullOrEmpty(EditModel.SelectedItem.ChallengeProvider))
                 {
-                    // default dns challenges to certify-dns
+                    var defaultProviderId = GetDefaultDnsChallengeProviderId();
+
+                    if (defaultProviderId == null)
+                    {
+                        return;
+                    }
+
                     await Dispatcher.InvokeAsync(new Action(async () =>
                     {
-                        await SetChallengeProvider("DNS01.API.CertifyDns");
+                        await SetChallengeProvider(defaultProviderId);
                     }));
                 }
             }
@@ -259,6 +265,23 @@ namespace Certify.UI.Controls.ManagedCertificate
                 EditModel.ShowZoneLookup = false;
                 DnsZoneList.SelectedValue = null;
             }
+        }
+
+        private string GetDefaultDnsChallengeProviderId()
+        {
+            var preferredProviderIds = new[] { "DNS01.API.CertifyManaged", "DNS01.API.CertifyDns" };
+
+            foreach (var providerId in preferredProviderIds)
+            {
+                if (EditModel.ChallengeProviders.Any(p => string.Equals(p.Id, providerId, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return providerId;
+                }
+            }
+
+            return EditModel.ChallengeProviders
+                .Select(p => p.Id)
+                .FirstOrDefault();
         }
 
         private void OnParameterModified(object sender, RoutedEventArgs e)
