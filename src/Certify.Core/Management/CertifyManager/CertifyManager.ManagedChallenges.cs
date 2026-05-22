@@ -13,6 +13,16 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
+        private static string CreateManagedChallengeCleanupKey(ManagedChallengeRequest request)
+        {
+            return $"{request.ManagedCertId ?? string.Empty}|{request.Identifier ?? string.Empty}|{request.ResponseKey ?? string.Empty}|{request.ResponseValue ?? string.Empty}|{Guid.NewGuid():N}";
+        }
+
+        private static bool IsManagedChallengeTypeSupported(string? challengeType)
+        {
+            return string.Equals(challengeType, SupportedChallengeTypes.CHALLENGE_TYPE_DNS, StringComparison.OrdinalIgnoreCase);
+        }
+
         public async Task<ICollection<ManagedChallenge>> GetManagedChallenges()
         {
             return await _configStore.GetItems<ManagedChallenge>(nameof(ManagedChallenge));
@@ -138,43 +148,40 @@ namespace Certify.Management
         {
             // find most specific matching challenge for the request - based on ManagedCertificate.GetChallengeConfig
             //TODO: filter based on access
-            var matchedConfig = managedChallenges.FirstOrDefault(c => string.IsNullOrEmpty(c.ChallengeConfig.DomainMatch));
+            var matchedConfig = managedChallenges.FirstOrDefault(c => string.IsNullOrEmpty(c.ChallengeConfig?.DomainMatch));
 
             if (request.Identifier != null && !string.IsNullOrEmpty(request.Identifier))
             {
                 // expand configs into per identifier list
                 var configsPerDomain = new Dictionary<string, ManagedChallenge>();
-                foreach (var managedChallenge in managedChallenges.Where(c => !string.IsNullOrEmpty(c.ChallengeConfig.DomainMatch)))
+                foreach (var managedChallenge in managedChallenges.Where(c => !string.IsNullOrEmpty(c.ChallengeConfig?.DomainMatch)))
                 {
                     var c = managedChallenge.ChallengeConfig;
-                    if (c != null)
+                    if (!string.IsNullOrWhiteSpace(c?.DomainMatch))
                     {
-                        if (c.DomainMatch != null && !string.IsNullOrEmpty(c.DomainMatch))
+                        var normalizedDomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma separators instead of semicolons, convert now.
+
+                        if (!normalizedDomainMatch.Contains(';'))
                         {
-                            c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma separators instead of semicolons, convert now.
+                            var domainMatchKey = normalizedDomainMatch.Trim().ToLowerInvariant();
 
-                            if (!c.DomainMatch.Contains(';'))
+                            // if identifier key is test.com for example we only support one matching config
+                            if (!configsPerDomain.ContainsKey(domainMatchKey))
                             {
-                                var domainMatchKey = c.DomainMatch.Trim();
-
-                                // if identifier key is test.com for example we only support one matching config
-                                if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                {
-                                    configsPerDomain.Add(domainMatchKey, managedChallenge);
-                                }
+                                configsPerDomain.Add(domainMatchKey, managedChallenge);
                             }
-                            else
+                        }
+                        else
+                        {
+                            var domains = normalizedDomainMatch.Split(';');
+                            foreach (var d in domains)
                             {
-                                var domains = c.DomainMatch.Split(';');
-                                foreach (var d in domains)
+                                if (!string.IsNullOrWhiteSpace(d))
                                 {
-                                    if (!string.IsNullOrWhiteSpace(d))
+                                    var domainMatchKey = d.Trim().ToLowerInvariant();
+                                    if (!configsPerDomain.ContainsKey(domainMatchKey))
                                     {
-                                        var domainMatchKey = d.Trim().ToLowerInvariant();
-                                        if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                        {
-                                            configsPerDomain.Add(domainMatchKey, managedChallenge);
-                                        }
+                                        configsPerDomain.Add(domainMatchKey, managedChallenge);
                                     }
                                 }
                             }
@@ -208,7 +215,7 @@ namespace Certify.Management
 
                 foreach (var configDomain in allMatchingConfigKeys)
                 {
-                    if (configDomain.EndsWith(request.Identifier.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
+                    if (identifierKey.EndsWith($".{configDomain}", StringComparison.CurrentCultureIgnoreCase))
                     {
                         // use longest matching identifier (so subdomain.test.com takes priority
                         // over test.com, )
@@ -248,6 +255,8 @@ namespace Certify.Management
         /// maintain a set of changed challenge requests that we need to ensure get cleaned up later
         /// </summary>
         private ConcurrentDictionary<string, ManagedChallengeRequest> _managedChallengesPendingCleanup = [];
+
+        private ConcurrentDictionary<string, byte> _managedChallengesCleanupInProgress = [];
 
         private ConcurrentDictionary<string, ManagedChallengeOperation> _managedChallengeOperations = [];
 
@@ -363,6 +372,15 @@ namespace Certify.Management
             {
                 return new ActionResult { IsSuccess = false, Message = "No matching challenge found" };
             }
+            else if (matchingChallenge.ChallengeConfig == null)
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
+            }
+            else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
+                || !IsManagedChallengeTypeSupported(request.ChallengeType))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed challenge only supports dns-01 requests" };
+            }
             else
             {
                 // perform challenge
@@ -422,7 +440,7 @@ namespace Certify.Management
                 }
 
                 request.DateTimePerformed = DateTimeOffset.UtcNow;
-                _managedChallengesPendingCleanup.TryAdd($"{request.ResponseKey}:{request.ResponseValue}", request);
+                _managedChallengesPendingCleanup[CreateManagedChallengeCleanupKey(request)] = CloneManagedChallengeRequest(request);
 
                 return new ActionResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
             }
@@ -434,13 +452,24 @@ namespace Certify.Management
             {
                 if (managedCertId != null)
                 {
-                    // Process items one by one to avoid race conditions
+                    // Process items one by one and keep failed cleanup entries for retry
                     foreach (var kvp in _managedChallengesPendingCleanup)
                     {
                         if (kvp.Value.ManagedCertId == managedCertId &&
-                            _managedChallengesPendingCleanup.TryRemove(kvp.Key, out var request))
+                            _managedChallengesCleanupInProgress.TryAdd(kvp.Key, 0))
                         {
-                            await CleanupManagedChallengeRequest(request);
+                            try
+                            {
+                                var result = await CleanupManagedChallengeRequest(kvp.Value);
+                                if (result.IsSuccess)
+                                {
+                                    _managedChallengesPendingCleanup.TryRemove(kvp.Key, out _);
+                                }
+                            }
+                            finally
+                            {
+                                _managedChallengesCleanupInProgress.TryRemove(kvp.Key, out _);
+                            }
                         }
                     }
                 }
@@ -450,9 +479,20 @@ namespace Certify.Management
                     foreach (var kvp in _managedChallengesPendingCleanup)
                     {
                         if (kvp.Value.DateTimePerformed < cutoff &&
-                            _managedChallengesPendingCleanup.TryRemove(kvp.Key, out var request))
+                            _managedChallengesCleanupInProgress.TryAdd(kvp.Key, 0))
                         {
-                            await CleanupManagedChallengeRequest(request);
+                            try
+                            {
+                                var result = await CleanupManagedChallengeRequest(kvp.Value);
+                                if (result.IsSuccess)
+                                {
+                                    _managedChallengesPendingCleanup.TryRemove(kvp.Key, out _);
+                                }
+                            }
+                            finally
+                            {
+                                _managedChallengesCleanupInProgress.TryRemove(kvp.Key, out _);
+                            }
                         }
                     }
                 }
@@ -474,6 +514,15 @@ namespace Certify.Management
             if (matchingChallenge == null)
             {
                 return new ActionResult { IsSuccess = false, Message = "No matching challenge found" };
+            }
+            else if (matchingChallenge.ChallengeConfig == null)
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed challenge configuration is incomplete" };
+            }
+            else if (!IsManagedChallengeTypeSupported(matchingChallenge.ChallengeConfig.ChallengeType)
+                || !IsManagedChallengeTypeSupported(request.ChallengeType))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Managed challenge only supports dns-01 requests" };
             }
             else
             {
