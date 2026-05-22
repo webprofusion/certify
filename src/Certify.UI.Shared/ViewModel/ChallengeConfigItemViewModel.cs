@@ -11,6 +11,8 @@ namespace Certify.UI.ViewModel
 {
     public class ChallengeConfigItemViewModel : BindableBase
     {
+        private const string NoCredentialOptionTitle = "(None)";
+
         /// <summary>
         /// Note: this view model has a complex binding relationship with the parent managed certificate view model. 
         /// Work is done in multiple places to ensure the IsChanged property is appropriately set and preserved.
@@ -130,15 +132,35 @@ namespace Certify.UI.ViewModel
             {
                 if (SelectedItem != null && _appViewModel?.StoredCredentials != null)
                 {
-                    return new ObservableCollection<StoredCredential>(
-                      _appViewModel.StoredCredentials?.Where(s => s.ProviderType == SelectedItem.ChallengeProvider)
-                      );
+                    return new ObservableCollection<StoredCredential>(GetCredentialOptions(
+                        _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider)
+                    ));
                 }
                 else
                 {
-                    return [];
+                    return new ObservableCollection<StoredCredential>(GetCredentialOptions([]));
                 }
             }
+        }
+
+        private IEnumerable<StoredCredential> GetCredentialOptions(IEnumerable<StoredCredential> credentials)
+        {
+            yield return new StoredCredential
+            {
+                Title = NoCredentialOptionTitle,
+                StorageKey = null,
+                ProviderType = SelectedItem?.ChallengeProvider
+            };
+
+            foreach (var credential in credentials)
+            {
+                yield return credential;
+            }
+        }
+
+        private bool ShouldAutoSelectMatchingCredential()
+        {
+            return SelectedChallengeProvider?.AutoSelectMatchingCredential != false;
         }
 
         internal async Task RefreshAllOptions(ComboBox storedCredentialsList, bool preserveExistingParameterValues = true)
@@ -185,26 +207,31 @@ namespace Certify.UI.ViewModel
             // filter list of matching credentials
             await _appViewModel.RefreshStoredCredentialsList();
 
-            var credentials = _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider);
+            var credentials = _appViewModel.StoredCredentials.Where(s => s.ProviderType == SelectedItem.ChallengeProvider).ToList();
 
             // updating item source also clears selected value, so this workaround sets it back
             // this is only an issue when you have two or more credentials for one provider
             // this will in turn cause our model to be marked as changed even if it wasn't before (this is why we pause and resume change events in this method)         
-            storedCredentialsList.ItemsSource = credentials;
+            storedCredentialsList.ItemsSource = GetCredentialOptions(credentials).ToList();
 
             if (currentSelectedValue != null && SelectedItem.ChallengeCredentialKey != currentSelectedValue)
             {
                 SelectedItem.ChallengeCredentialKey = currentSelectedValue;
             }
 
-            //select first credential by default
-            if (credentials.Count() > 0)
+            if (!string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey))
             {
                 var selectedCredential = credentials.FirstOrDefault(c => c.StorageKey == SelectedItem.ChallengeCredentialKey);
                 if (selectedCredential == null)
                 {
-                    SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
+                    SelectedItem.ChallengeCredentialKey = null;
                 }
+            }
+
+            // select first credential by default only for providers that opt into auto-selection
+            if (string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey) && credentials.Count > 0 && ShouldAutoSelectMatchingCredential())
+            {
+                SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
             }
 
             if (storedCredentialsList.SelectedValue?.ToString() != SelectedItem.ChallengeCredentialKey)

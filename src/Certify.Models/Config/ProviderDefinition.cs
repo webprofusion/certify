@@ -32,6 +32,8 @@ namespace Certify.Models.Config
 
         public string ProviderCategoryId { get; set; } = string.Empty;
 
+        public bool AutoSelectMatchingCredential { get; set; } = true;
+
         public ProviderDefinition()
         {
             ProviderParameters = new List<ProviderParameter>();
