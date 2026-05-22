@@ -37,7 +37,7 @@ namespace Certify.Providers.DNS.CertifyManaged
                     Title = "Certify Hub Managed Challenge API",
                     Description = "Performs challenge responses via the Certify Management Hub API.",
                     HelpUrl = "https://docs.certifytheweb.com/",
-                    AutoSelectMatchingCredential = false,
+                    IsCredentialOptional = true,
                     PropagationDelaySeconds = 60,
                     ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="api",Name="Management Hub API Url", IsRequired=false, IsCredential=false, IsPassword=false, Description="(leave blank to use current management hub API)" },

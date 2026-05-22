@@ -145,12 +145,15 @@ namespace Certify.UI.ViewModel
 
         private IEnumerable<StoredCredential> GetCredentialOptions(IEnumerable<StoredCredential> credentials)
         {
-            yield return new StoredCredential
+            if (IsCredentialOptional())
             {
-                Title = NoCredentialOptionTitle,
-                StorageKey = null,
-                ProviderType = SelectedItem?.ChallengeProvider
-            };
+                yield return new StoredCredential
+                {
+                    Title = NoCredentialOptionTitle,
+                    StorageKey = null,
+                    ProviderType = SelectedItem?.ChallengeProvider
+                };
+            }
 
             foreach (var credential in credentials)
             {
@@ -158,9 +161,9 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        private bool ShouldAutoSelectMatchingCredential()
+        private bool IsCredentialOptional()
         {
-            return SelectedChallengeProvider?.AutoSelectMatchingCredential != false;
+            return SelectedChallengeProvider?.IsCredentialOptional == true;
         }
 
         internal async Task RefreshAllOptions(ComboBox storedCredentialsList, bool preserveExistingParameterValues = true)
@@ -228,13 +231,16 @@ namespace Certify.UI.ViewModel
                 }
             }
 
-            // select first credential by default only for providers that opt into auto-selection
-            if (string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey) && credentials.Count > 0 && ShouldAutoSelectMatchingCredential())
+            if (string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey) && credentials.Count > 0 && !IsCredentialOptional())
             {
                 SelectedItem.ChallengeCredentialKey = credentials.First().StorageKey;
             }
 
-            if (storedCredentialsList.SelectedValue?.ToString() != SelectedItem.ChallengeCredentialKey)
+            if (string.IsNullOrEmpty(SelectedItem.ChallengeCredentialKey))
+            {
+                storedCredentialsList.SelectedIndex = IsCredentialOptional() ? 0 : -1;
+            }
+            else if (storedCredentialsList.SelectedValue?.ToString() != SelectedItem.ChallengeCredentialKey)
             {
                 storedCredentialsList.SelectedValue = SelectedItem.ChallengeCredentialKey;
             }

@@ -809,6 +809,15 @@ namespace Certify.UI.ViewModel
 
             var result = CertificateEditorService.Validate(SelectedItem, SelectedWebSite, preferredCA, applyAutoConfiguration);
 
+            if (result.IsValid)
+            {
+                var credentialValidationResult = ValidateChallengeCredentialSelection();
+                if (!credentialValidationResult.IsValid)
+                {
+                    return credentialValidationResult;
+                }
+            }
+
             // auto selected name edit mode if vaidation of name fails
             IsNameEditMode = false;
 
@@ -822,6 +831,27 @@ namespace Certify.UI.ViewModel
             }
 
             return result;
+        }
+
+        private ValidationResult ValidateChallengeCredentialSelection()
+        {
+            if (SelectedItem?.RequestConfig?.Challenges?.Any() != true)
+            {
+                return new ValidationResult(true, string.Empty, string.Empty);
+            }
+
+            foreach (var challenge in SelectedItem.RequestConfig.Challenges.Where(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS && !string.IsNullOrWhiteSpace(c.ChallengeProvider)))
+            {
+                var provider = _appViewModel.ChallengeAPIProviders.FirstOrDefault(p => p.Id == challenge.ChallengeProvider);
+                if (provider?.ProviderParameters?.Any(p => p.IsCredential) == true
+                    && !provider.IsCredentialOptional
+                    && string.IsNullOrWhiteSpace(challenge.ChallengeCredentialKey))
+                {
+                    return new ValidationResult(false, $"Authorization challenge response credentials required: {provider.Title}", "REQUIRED_CHALLENGE_CREDENTIAL");
+                }
+            }
+
+            return new ValidationResult(true, string.Empty, string.Empty);
         }
 
         public async Task PopulateManagedCertificateSettings(string siteId)
