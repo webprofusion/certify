@@ -26,6 +26,11 @@ namespace Certify.UI.Controls.ManagedCertificate
             AppViewModel.PropertyChanged += MainViewModel_PropertyChanged;
         }
 
+        public void ResetSelectedTab()
+        {
+            MainTabControl.SelectedIndex = 0;
+        }
+
         private void SetFilter() => CollectionViewSource.GetDefaultView(ItemViewModel.SelectedItem.DomainOptions).Filter = (item) =>
                                   {
                                       var filter = DomainFilter.Text.Trim();

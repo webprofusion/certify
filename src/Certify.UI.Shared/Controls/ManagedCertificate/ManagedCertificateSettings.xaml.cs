@@ -37,18 +37,9 @@ namespace Certify.UI.Controls.ManagedCertificate
             {
                 if (e.PropertyName == "SelectedItem")
                 {
+                    UpdateTabVisibility();
 
-                    // show status tab for existing managed certs
-                    var showStatus = ShouldShowStatusTab();
-
-                    if (showStatus)
-                    {
-                        TabStatusInfo.Visibility = Visibility.Visible;
-                    }
-                    else
-                    {
-                        TabStatusInfo.Visibility = Visibility.Collapsed;
-                    }
+                    var showStatus = TabStatusInfo.Visibility == Visibility.Visible;
 
                     if (_lastSelectedItemId != ItemViewModel.SelectedItem?.Id)
                     {
@@ -56,33 +47,10 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                         _lastSelectedItemId = ItemViewModel.SelectedItem?.Id;
 
-                        if (showStatus)
-                        {
-                            SettingsTab.SelectedItem = TabStatusInfo;
-                        }
-                        else
-                        {
-                            SettingsTab.SelectedItem = TabDomains;
-                        }
+                        SelectFirstVisibleTab();
                     }
 
                     ItemViewModel.RaiseSelectedItemChanges();
-
-                    if (!ItemViewModel.IsEditable)
-                    {
-                        TabDeployment.Visibility = Visibility.Collapsed;
-                        TabDomains.Visibility = Visibility.Collapsed;
-                        TabTasks.Visibility = Visibility.Collapsed;
-                        TabPreview.Visibility = Visibility.Collapsed;
-
-                    }
-                    else
-                    {
-                        TabDeployment.Visibility = Visibility.Visible;
-                        TabDomains.Visibility = Visibility.Visible;
-                        TabTasks.Visibility = Visibility.Visible;
-                        TabPreview.Visibility = Visibility.Visible;
-                    }
 
                     if (ItemViewModel.SelectedItem?.Id == null)
                     {
@@ -95,6 +63,29 @@ namespace Certify.UI.Controls.ManagedCertificate
 
                 }
             });
+        }
+
+        private void UpdateTabVisibility()
+        {
+            TabStatusInfo.Visibility = ShouldShowStatusTab() ? Visibility.Visible : Visibility.Collapsed;
+
+            var editableVisibility = ItemViewModel.IsEditable ? Visibility.Visible : Visibility.Collapsed;
+            TabDeployment.Visibility = editableVisibility;
+            TabDomains.Visibility = editableVisibility;
+            TabTasks.Visibility = editableVisibility;
+            TabPreview.Visibility = editableVisibility;
+        }
+
+        private void SelectFirstVisibleTab()
+        {
+            var firstVisibleTab = SettingsTab.Items
+                .OfType<TabItem>()
+                .FirstOrDefault(t => t.Visibility == Visibility.Visible);
+
+            if (firstVisibleTab != null)
+            {
+                SettingsTab.SelectedItem = firstVisibleTab;
+            }
         }
 
         private bool ShouldShowStatusTab()
@@ -156,6 +147,16 @@ namespace Certify.UI.Controls.ManagedCertificate
                 if (!savedOK)
                 {
                     MessageBox.Show("There was problem saving the changes for this managed certificate. Please review and try again.");
+                }
+                else
+                {
+                    if (TabDomains.Content is CertificateIdentifiers certificateIdentifiersControl)
+                    {
+                        certificateIdentifiersControl.ResetSelectedTab();
+                    }
+
+                    UpdateTabVisibility();
+                    SelectFirstVisibleTab();
                 }
 
                 return savedOK;
