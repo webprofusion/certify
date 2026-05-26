@@ -241,6 +241,69 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("Primary request succeeded", target.PrimaryRequest.Message, "Primary request message should be cloned rather than aliased.");
         }
 
+        [TestMethod, Description("Overall renewal status should not treat a current primary request failure as success just because an older certificate still exists")]
+        public void TestOverallRenewalStatusUsesExplicitCurrentPrimaryRequestFailure()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error },
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-10),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(20),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate)
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "DNS credentials invalid." }
+            };
+
+            var result = InvokeIsPrimaryCertificateRequestSuccessful(managedCertificate, requestResult);
+
+            Assert.IsFalse(result, "A current failed primary request should remain failed even if a previous certificate is still present.");
+        }
+
+        [TestMethod, Description("Overall renewal status should still fall back to existing certificate state when no explicit primary request status exists")]
+        public void TestOverallRenewalStatusFallsBackWhenPrimaryRequestStatusMissing()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = null,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-10),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(20),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate)
+            {
+                PrimaryRequest = null
+            };
+
+            var result = InvokeIsPrimaryCertificateRequestSuccessful(managedCertificate, requestResult);
+
+            Assert.IsTrue(result, "Fallback certificate state should still support older items when no explicit primary request status has been recorded.");
+        }
+
+        [TestMethod, Description("Overall renewal status should not fall back to expired certificate state when no explicit primary request status exists")]
+        public void TestOverallRenewalStatusDoesNotFallbackToExpiredCertificate()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = null,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-90),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(-1),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate)
+            {
+                PrimaryRequest = null
+            };
+
+            var result = InvokeIsPrimaryCertificateRequestSuccessful(managedCertificate, requestResult);
+
+            Assert.IsFalse(result, "Fallback certificate state should only imply success when the existing certificate is still usable.");
+        }
+
         private static bool InvokeWasLastCertificateRequestSuccessful(ManagedCertificate managedCertificate)
         {
             var method = typeof(CertifyManager).GetMethod("WasLastCertificatePrimaryRequestSuccessful", BindingFlags.NonPublic | BindingFlags.Static);
@@ -248,6 +311,15 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(method, "Could not find deployment task success inference method.");
 
             return (bool)method.Invoke(null, [managedCertificate]);
+        }
+
+        private static bool InvokeIsPrimaryCertificateRequestSuccessful(ManagedCertificate managedCertificate, CertificateRequestResult requestResult)
+        {
+            var method = typeof(CertifyManager).GetMethod("IsPrimaryCertificateRequestSuccessful", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find overall renewal primary request success method.");
+
+            return (bool)method.Invoke(null, [managedCertificate, requestResult]);
         }
     }
 }

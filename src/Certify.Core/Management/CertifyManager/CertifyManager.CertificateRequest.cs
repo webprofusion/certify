@@ -771,21 +771,9 @@ namespace Certify.Management
             }
         }
 
-        private static bool IsPrimaryCertificateRequestSuccessful(ManagedCertificate managedCertificate, CertificateRequestResult result = null)
+        private static bool IsPrimaryCertificateRequestSuccessful(CertificateRequestResult result)
         {
-            if (result?.PrimaryRequest?.Status == RequestState.Success)
-            {
-                return true;
-            }
-
-            if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Success)
-            {
-                return true;
-            }
-
-            return managedCertificate.DateRenewed.HasValue
-                && (!string.IsNullOrWhiteSpace(managedCertificate.CertificateThumbprintHash)
-                    || !string.IsNullOrWhiteSpace(managedCertificate.CertificatePath));
+            return result?.PrimaryRequest?.Status == RequestState.Success;
         }
 
         private static void SetPrimaryRequestStatus(ManagedCertificate managedCertificate, CertificateRequestResult result, RequestState status, string message)
@@ -822,7 +810,7 @@ namespace Certify.Management
                 return RequestState.Paused;
             }
 
-            if (!IsPrimaryCertificateRequestSuccessful(managedCertificate, result))
+            if (!IsPrimaryCertificateRequestSuccessful(result))
             {
                 return RequestState.Error;
             }
@@ -875,10 +863,9 @@ namespace Certify.Management
                 return string.IsNullOrWhiteSpace(result.Message) ? managedCertificate.RenewalFailureMessage : result.Message;
             }
 
-            if (!IsPrimaryCertificateRequestSuccessful(managedCertificate, result))
+            if (!IsPrimaryCertificateRequestSuccessful(result))
             {
-                return managedCertificate.LastPrimaryRequest?.Message.AsNullWhenBlank()
-                    ?? result.PrimaryRequest?.Message.AsNullWhenBlank()
+                return result.PrimaryRequest?.Message.AsNullWhenBlank()
                     ?? result.Message.AsNullWhenBlank()
                     ?? managedCertificate.RenewalFailureMessage;
             }
