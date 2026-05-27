@@ -17,11 +17,109 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Primitives;
 using Scalar.AspNetCore;
 using Serilog;
 
 List<ActionStep> _systemStatusItems = [];
 void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false) => _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+
+List<IDisposable> _kestrelCertificateWatchers = [];
+IDisposable? _kestrelCertificateConfigReloadRegistration = null;
+
+void ConfigureKestrelCertificateReloadWatchers(IConfiguration configuration, string configPath, string contentRootPath)
+{
+    // .Net should refresh certificates used by Kestrel when the certificate file changes
+    // but currently it only detects settings file changes
+
+    /*    
+        •	Watches Kestrel certificate files referenced from hubservice.json.
+        •	Supports both:
+        •	Kestrel:Endpoints:*:Certificate:Path
+        •	Kestrel:Certificates:*:Path
+        •	Handles changed, created, deleted, and renamed certificate files.
+        •	Debounces change events.
+        •	Touches hubservice.json to trigger the existing configuration reload path so Kestrel reloads endpoint/certificate configuration.
+        •	Refreshes watchers when hubservice.json itself reloads.
+    */
+    foreach (var watcher in _kestrelCertificateWatchers)
+    {
+        watcher.Dispose();
+    }
+
+    _kestrelCertificateWatchers.Clear();
+
+    if (!File.Exists(configPath))
+    {
+        return;
+    }
+
+    var certificatePaths = configuration
+        .GetSection("Kestrel:Endpoints")
+        .GetChildren()
+        .Select(endpoint => endpoint.GetSection("Certificate")["Path"])
+        .Concat(configuration.GetSection("Kestrel:Certificates").GetChildren().Select(certificate => certificate["Path"]))
+        .Where(path => !string.IsNullOrWhiteSpace(path))
+        .Select(path => Path.GetFullPath(Environment.ExpandEnvironmentVariables(path!), contentRootPath))
+        .Distinct(StringComparer.OrdinalIgnoreCase);
+
+    foreach (var certificatePath in certificatePaths)
+    {
+        var directory = Path.GetDirectoryName(certificatePath);
+        var fileName = Path.GetFileName(certificatePath);
+
+        if (string.IsNullOrWhiteSpace(directory) || string.IsNullOrWhiteSpace(fileName) || !Directory.Exists(directory))
+        {
+            AddSystemStatusItem(
+                SystemStatusCategories.HUB_API,
+                $"kestrel-cert-watch-{certificatePath}",
+                title: "Kestrel HTTPS Certificate Watch",
+                description: $"Certificate file watcher not configured because path directory does not exist: {certificatePath}",
+                hasWarning: true
+            );
+
+            continue;
+        }
+
+        var reloadTimer = new Timer(_ =>
+        {
+            try
+            {
+                // attempt to "touch" the hubservice.json file time so the kestrel reloads the config
+                File.SetLastWriteTimeUtc(configPath, DateTime.UtcNow);
+            }
+            catch
+            {
+                // best effort; configuration reload will occur on the next hubservice.json change
+            }
+        });
+
+        FileSystemEventHandler onChanged = (_, _) => reloadTimer.Change(TimeSpan.FromSeconds(1), Timeout.InfiniteTimeSpan);
+        RenamedEventHandler onRenamed = (_, _) => reloadTimer.Change(TimeSpan.FromSeconds(1), Timeout.InfiniteTimeSpan);
+
+        var watcher = new FileSystemWatcher(directory, fileName)
+        {
+            IncludeSubdirectories = false,
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.CreationTime
+        };
+
+        watcher.Changed += onChanged;
+        watcher.Created += onChanged;
+        watcher.Deleted += onChanged;
+        watcher.Renamed += onRenamed;
+        watcher.EnableRaisingEvents = true;
+
+        _kestrelCertificateWatchers.Add(watcher);
+        _kestrelCertificateWatchers.Add(reloadTimer);
+
+        AddSystemStatusItem(
+            SystemStatusCategories.HUB_API,
+            $"kestrel-cert-watch-{certificatePath}",
+            title: "Kestrel HTTPS Certificate Watch",
+            description: $"Watching Kestrel HTTPS certificate file for reload: {certificatePath}"
+        );
+    }
+}
 
 var hubServiceAssembly = typeof(Certify.Server.HubService.Services.CertifyDirectHubService).Assembly;
 
@@ -68,6 +166,11 @@ if (File.Exists(hubSettings))
     try
     {
         builder.Configuration.AddJsonFile(hubSettings, optional: true, reloadOnChange: true);
+
+        ConfigureKestrelCertificateReloadWatchers(builder.Configuration, hubSettings, builder.Environment.ContentRootPath);
+        _kestrelCertificateConfigReloadRegistration = ChangeToken.OnChange(
+            () => ((IConfiguration)builder.Configuration).GetReloadToken(),
+            () => ConfigureKestrelCertificateReloadWatchers(builder.Configuration, hubSettings, builder.Environment.ContentRootPath));
     }
     catch (Exception ex)
     {
