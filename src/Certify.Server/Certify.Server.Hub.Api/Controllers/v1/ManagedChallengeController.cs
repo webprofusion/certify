@@ -178,6 +178,16 @@ namespace Certify.Server.Hub.Api.Controllers
             var accessToken = GetAccessTokenFromRequestOrManagedChallenge(request);
             if (accessToken != null)
             {
+                ManagedChallengeAuthorizationResult? managedInstanceAuthorization = null;
+                if (request != null && HasManagedInstanceRequestHeader())
+                {
+                    managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, accessToken);
+                    if (managedInstanceAuthorization.IsSuccess)
+                    {
+                        return null;
+                    }
+                }
+
                 var authResult = await IsAccessTokenAuthorized(_client, accessToken, accessCheck);
                 if (authResult.IsSuccess)
                 {
@@ -200,21 +210,12 @@ namespace Certify.Server.Hub.Api.Controllers
                     return null;
                 }
 
-                if (request != null)
+                if (managedInstanceAuthorization?.WasEvaluated == true)
                 {
-                    var managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, accessToken);
-                    if (managedInstanceAuthorization.IsSuccess)
-                    {
-                        return null;
-                    }
-
-                    if (managedInstanceAuthorization.WasEvaluated)
-                    {
-                        return Problem(
-                            detail: managedInstanceAuthorization.Message,
-                            statusCode: managedInstanceAuthorization.StatusCode
-                        );
-                    }
+                    return Problem(
+                        detail: managedInstanceAuthorization.Message,
+                        statusCode: managedInstanceAuthorization.StatusCode
+                    );
                 }
 
                 return Problem(
@@ -244,6 +245,11 @@ namespace Certify.Server.Hub.Api.Controllers
                 detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
                 statusCode: StatusCodes.Status401Unauthorized
             );
+        }
+
+        private bool HasManagedInstanceRequestHeader()
+        {
+            return !string.IsNullOrWhiteSpace(Request.Headers[ManagedInstanceRequestAuth.HubAssignedIdHeaderName].ToString());
         }
 
         private async Task<IActionResult?> AuthorizeManagedChallengeRequestAsync(ManagedChallengeRequest request)
