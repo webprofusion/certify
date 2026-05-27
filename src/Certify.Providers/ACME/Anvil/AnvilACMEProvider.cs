@@ -794,6 +794,8 @@ namespace Certify.Providers.ACME.Anvil
 
                     while (!orderCreated && !orderAttemptAbandoned && remainingAttempts >= 0)
                     {
+                        string ariReplacesCertId = null;
+
                         try
                         {
                             log.Debug($"Creating/retrieving order. Attempts remaining:{remainingAttempts}");
@@ -819,19 +821,7 @@ namespace Certify.Providers.ACME.Anvil
 
                                 // if the CA supports ARI, the last CA is the same one we are attempting and the certificate id appears to have a valid value, provide that in the new order to replace the old cert via ARI
                                 // for safety we also stop trying to provide the replaces ID if we have failed repeatedly for any reason, as the order could be failing due to trying to provide an invalid Replaces ID.
-                                string ariReplacesCertId = null;
-
-                                if (
-                                    caSupportsARI
-                                    && managedCertificate.CertificateCurrentCA == managedCertificate.LastAttemptedCA
-                                    && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId)
-                                    && managedCertificate.ARICertificateId.Contains(".")
-                                    && managedCertificate.RenewalFailureCount == 0
-                                    && !skipAriReplace
-                                )
-                                {
-                                    ariReplacesCertId = managedCertificate.ARICertificateId;
-                                }
+                                ariReplacesCertId = GetAriReplacesCertIdIfApplicable(managedCertificate, caSupportsARI, skipAriReplace);
 
                                 order = await _acme.NewOrder(identifiers: certificateIdentifiers, notAfter: notAfter, ariReplacesCertId: ariReplacesCertId, profile: caSupportsRequestedProfile ? profile : null);
                             }
@@ -847,14 +837,19 @@ namespace Certify.Providers.ACME.Anvil
 
                             lastException = unwrappedException;
 
-                            if (caSupportsARI && !string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId))
+                            if (!string.IsNullOrWhiteSpace(ariReplacesCertId) && !skipAriReplace)
                             {
-                                //likely an ARI replaces conflict, skip ari replace on retry
                                 if (unwrappedException is AcmeRequestException acmeExp)
                                 {
-                                    log?.Warning($"Failed to begin certificate order. Skipped ARI Replace as a precaution: {acmeExp.Error?.Type} :: {acmeExp.Error?.Detail}");
-                                    skipAriReplace = true;
+                                    log?.Warning($"Failed to begin certificate order using ARI replace certificate id. Retrying without ARI Replace as a precaution: {acmeExp.Error?.Type} :: {acmeExp.Error?.Detail}");
                                 }
+                                else
+                                {
+                                    log?.Warning("Failed to begin certificate order using ARI replace certificate id. Retrying without ARI Replace as a precaution.");
+                                }
+
+                                skipAriReplace = true;
+                                abandonRequest = false;
                             }
 
                             if (resumeExistingOrder && managedCertificate.CurrentOrderUri != null)
@@ -1332,6 +1327,46 @@ namespace Certify.Providers.ACME.Anvil
 
                 return new PendingOrder(msg);
             }
+        }
+
+        /// <summary>
+        /// Returns the certid we are replacing if the CA supports ARI, the last attempted CA is the same as the current CA,
+        /// we have a valid cert id for the current cert and we haven't had any renewal failures yet. 
+        /// This is to help ensure we only attempt to use ARI when it's likely to succeed, as some CAs will fail 
+        /// the entire order if you provide an invalid ARI cert id.
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="caSupportsARI"></param>
+        /// <param name="skipAriReplace"></param>
+        /// <returns></returns>
+        private static string GetAriReplacesCertIdIfApplicable(ManagedCertificate managedCertificate, bool caSupportsARI, bool skipAriReplace)
+        {
+            if (!caSupportsARI || skipAriReplace)
+            {
+                return null;
+            }
+
+            if (managedCertificate.CertificateCurrentCA != managedCertificate.LastAttemptedCA)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(managedCertificate.ARICertificateId))
+            {
+                return null;
+            }
+
+            if (!managedCertificate.ARICertificateId.Contains("."))
+            {
+                return null;
+            }
+
+            if (managedCertificate.RenewalFailureCount != 0)
+            {
+                return null;
+            }
+
+            return managedCertificate.ARICertificateId;
         }
 
         /// <summary>
