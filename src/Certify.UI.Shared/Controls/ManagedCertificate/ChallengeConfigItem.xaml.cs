@@ -32,6 +32,11 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private async void ChallengeConfigItem_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
+            if (!AppViewModel.AccountDetails.Any())
+            {
+                await AppViewModel.RefreshAccountsList();
+            }
+
             await EditModel.RefreshAllOptions(StoredCredentialList);
         }
 
@@ -258,6 +263,17 @@ namespace Certify.UI.Controls.ManagedCertificate
                         await SetChallengeProvider(defaultProviderId);
                     }));
                 }
+            }
+            else if ((string)ChallengeTypeList.SelectedValue == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+            {
+                EditModel.SelectedItem.ChallengeProvider = null;
+                EditModel.SelectedItem.ChallengeCredentialKey = null;
+                EditModel.SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                EditModel.DnsZones.Clear();
+                EditModel.ShowZoneLookup = false;
+                DnsZoneList.SelectedValue = null;
+                EditModel.EnsureDefaultDnsPersistAccountSelection();
+                EditModel.RaiseDnsPersistStateChanged();
             }
             else
             {

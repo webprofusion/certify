@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 using System.Windows.Controls;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Models.Shared.Validation;
 
 namespace Certify.UI.ViewModel
 {
     public class ChallengeConfigItemViewModel : BindableBase
     {
         private const string NoCredentialOptionTitle = "(None)";
+
+        private string? _selectedDnsPersistAccountUri;
+        private bool _dnsPersistPolicyWildcard;
+        private DateTime? _dnsPersistUntilDate;
 
         /// <summary>
         /// Note: this view model has a complex binding relationship with the parent managed certificate view model. 
@@ -62,6 +67,21 @@ namespace Certify.UI.ViewModel
                             SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
                         }
                     }
+
+                    if (SelectedItem.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST)
+                    {
+                        SelectedItem.ChallengeProvider = null;
+                        SelectedItem.ChallengeCredentialKey = null;
+                        SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
+                        EnsureDefaultDnsPersistAccountSelection();
+                    }
+
+                    RaiseDnsPersistStateChanged();
+                }
+
+                if (args.PropertyName == nameof(SelectedItem.DomainMatch))
+                {
+                    RaiseDnsPersistStateChanged();
                 }
 
                 if (SelectedItem.IsChanged && !_appViewModel.SelectedItem.IsChanged)
@@ -96,10 +116,73 @@ namespace Certify.UI.ViewModel
                 {
                     return new string[] {
                         SupportedChallengeTypes.CHALLENGE_TYPE_HTTP,
-                        SupportedChallengeTypes.CHALLENGE_TYPE_DNS
+                        SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                        SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST
                     };
                 }
             }
+        }
+
+        public bool IsDnsPersistSelected => SelectedItem?.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST;
+
+        public ObservableCollection<AccountDetails> DnsPersistAccounts => _appViewModel.AccountDetails;
+
+        public bool HasDnsPersistAccounts => DnsPersistAccounts?.Any() == true;
+
+        public string? SelectedDnsPersistAccountUri
+        {
+            get => _selectedDnsPersistAccountUri;
+            set
+            {
+                if (_selectedDnsPersistAccountUri != value)
+                {
+                    _selectedDnsPersistAccountUri = value;
+                    RaiseDnsPersistStateChanged();
+                }
+            }
+        }
+
+        public bool DnsPersistPolicyWildcard
+        {
+            get => _dnsPersistPolicyWildcard;
+            set
+            {
+                if (_dnsPersistPolicyWildcard != value)
+                {
+                    _dnsPersistPolicyWildcard = value;
+                    RaiseDnsPersistStateChanged();
+                }
+            }
+        }
+
+        public DateTime? DnsPersistUntilDate
+        {
+            get => _dnsPersistUntilDate;
+            set
+            {
+                if (_dnsPersistUntilDate != value)
+                {
+                    _dnsPersistUntilDate = value;
+                    RaiseDnsPersistStateChanged();
+                }
+            }
+        }
+
+        public string DnsPersistUntil => DnsPersistUntilDate.HasValue
+            ? new DateTimeOffset(DnsPersistUntilDate.Value.Date, TimeSpan.Zero).ToUnixTimeSeconds().ToString()
+            : string.Empty;
+
+        public string DnsPersistRecordExamplesText => string.Join(Environment.NewLine, GetDnsPersistRecordExamples());
+
+        public IReadOnlyList<string> GetDnsPersistRecordExamples()
+        {
+            return CertificateEditorService.GetDnsPersistExampleRecords(
+                ParentManagedCertificate,
+                SelectedDnsPersistAccountUri,
+                includePolicyWildcard: DnsPersistPolicyWildcard,
+                persistUntil: DnsPersistUntil,
+                issuerDomainName: SelectedDnsPersistAccountUri?.Contains("letsencrypt.org") == true ? "letsencrypt.org" : "ca.example",
+                domainMatchRule: SelectedItem?.DomainMatch);
         }
 
         public bool UsesCredentials { get; set; }
@@ -187,8 +270,11 @@ namespace Certify.UI.ViewModel
                 }
             }
 
+            EnsureDefaultDnsPersistAccountSelection();
+
             RaisePropertyChangedEvent(nameof(SelectedChallengeProvider));
             RaisePropertyChangedEvent(nameof(ProviderParameters));
+            RaiseDnsPersistStateChanged();
 
         }
 
@@ -323,6 +409,53 @@ namespace Certify.UI.ViewModel
                     SelectedItem.Parameters = new ObservableCollection<ProviderParameter>();
                 }
             }
+        }
+
+        public void EnsureDefaultDnsPersistAccountSelection()
+        {
+            if (!HasDnsPersistAccounts)
+            {
+                SelectedDnsPersistAccountUri = null;
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(SelectedDnsPersistAccountUri)
+                && DnsPersistAccounts.Any(a => a.AccountURI == SelectedDnsPersistAccountUri))
+            {
+                return;
+            }
+
+            var defaultCaId = ParentManagedCertificate?.CertificateAuthorityId;
+
+            if (string.IsNullOrWhiteSpace(defaultCaId))
+            {
+                defaultCaId = _appViewModel.Preferences?.DefaultCertificateAuthority;
+            }
+
+            if (string.IsNullOrWhiteSpace(defaultCaId))
+            {
+                defaultCaId = StandardCertAuthorities.LETS_ENCRYPT;
+            }
+
+            var useStagingMode = ParentManagedCertificate?.UseStagingMode ?? false;
+
+            var defaultAccount = DnsPersistAccounts.FirstOrDefault(a =>
+                string.Equals(a.CertificateAuthorityId, defaultCaId, StringComparison.OrdinalIgnoreCase)
+                && a.IsStagingAccount == useStagingMode);
+
+            SelectedDnsPersistAccountUri = defaultAccount?.AccountURI ?? DnsPersistAccounts.FirstOrDefault()?.AccountURI;
+        }
+
+        public void RaiseDnsPersistStateChanged()
+        {
+            RaisePropertyChangedEvent(nameof(IsDnsPersistSelected));
+            RaisePropertyChangedEvent(nameof(DnsPersistAccounts));
+            RaisePropertyChangedEvent(nameof(HasDnsPersistAccounts));
+            RaisePropertyChangedEvent(nameof(SelectedDnsPersistAccountUri));
+            RaisePropertyChangedEvent(nameof(DnsPersistPolicyWildcard));
+            RaisePropertyChangedEvent(nameof(DnsPersistUntilDate));
+            RaisePropertyChangedEvent(nameof(DnsPersistUntil));
+            RaisePropertyChangedEvent(nameof(DnsPersistRecordExamplesText));
         }
     }
 }
