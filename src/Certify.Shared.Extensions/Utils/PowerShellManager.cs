@@ -225,7 +225,9 @@ namespace Certify.Management
         {
             try
             {
-                using var runspace = RunspaceFactory.CreateRunspace();
+                var iss = InitialSessionState.CreateDefault();
+
+                using var runspace = RunspaceFactory.CreateRunspace(iss);
                 runspace.Open();
 
                 if (scriptInfo != null)
@@ -233,35 +235,37 @@ namespace Certify.Management
                     runspace.SessionStateProxy.Path.SetLocation(scriptInfo.DirectoryName);
                 }
 
-                using (var shell = PowerShell.Create())
+                using var shell = PowerShell.Create();
+                shell.Runspace = runspace;
+
+                if (credentials?.Any() == true && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    shell.Runspace = runspace;
+                    // run in-process with impersonation
+                    UserCredentials windowsCredentials = null;
 
-                    if (credentials?.Any() == true && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    try
                     {
-                        UserCredentials windowsCredentials = null;
-
-                        try
-                        {
-                            windowsCredentials = GetWindowsCredentials(credentials);
-                        }
-                        catch
-                        {
-                            return new ActionResult("Command with Windows Credentials requires username and password.", false);
-                        }
-
-                        ActionResult powerShellResult = null;
-                        using (var userHandle = windowsCredentials.LogonUser(GetLogonType(logonType)))
-                        {
-                            WindowsIdentity.RunImpersonated(userHandle, () =>
-                            {
-                                powerShellResult = InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
-                            });
-                        }
-
-                        return powerShellResult;
+                        windowsCredentials = GetWindowsCredentials(credentials);
+                    }
+                    catch
+                    {
+                        return new ActionResult("Command with Windows Credentials requires username and password.", false);
                     }
 
+                    ActionResult powerShellResult = null;
+                    using (var userHandle = windowsCredentials.LogonUser(GetLogonType(logonType)))
+                    {
+                        WindowsIdentity.RunImpersonated(userHandle, () =>
+                        {
+                            powerShellResult = InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
+                        });
+                    }
+
+                    return powerShellResult;
+                }
+                else
+                {
+                    // run in=process without impersonation
                     return InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
                 }
             }

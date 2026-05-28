@@ -259,6 +259,81 @@ namespace Certify.Models.Shared.Validation
             return (domainList, wildcardAdded);
         }
 
+        public static string GetDnsPersistRecordValue(string? accountUri, bool includePolicyWildcard = false, string? persistUntil = null, string issuerDomainName = "ca.example")
+        {
+            var value = $"{issuerDomainName}; accounturi={accountUri ?? string.Empty}";
+
+            if (includePolicyWildcard)
+            {
+                value += "; policy=wildcard";
+            }
+
+            if (!string.IsNullOrWhiteSpace(persistUntil))
+            {
+                value += $"; persistUntil={persistUntil.Trim()}";
+            }
+
+            return value;
+        }
+
+        public static IReadOnlyList<string> GetDnsPersistExampleRecords(ManagedCertificate? managedCertificate, string? accountUri, bool includePolicyWildcard = false, string? persistUntil = null, string issuerDomainName = "ca.example", string? domainMatchRule = null)
+        {
+            var recordValue = GetDnsPersistRecordValue(accountUri, includePolicyWildcard, persistUntil, issuerDomainName);
+
+            return GetDnsPersistExampleDomains(managedCertificate, domainMatchRule)
+                .Select(domain => $"_validation-persist.{domain}. IN TXT \"{recordValue}\"")
+                .ToList();
+        }
+
+        public static IReadOnlyList<string> GetDnsPersistExampleDomains(ManagedCertificate? managedCertificate, string? domainMatchRule = null)
+        {
+            var managedCertificateDomains = managedCertificate?.RequestConfig?
+                .GetCertificateIdentifiers()
+                .Where(i => i.IdentifierType == CertIdentifierType.Dns && !string.IsNullOrWhiteSpace(i.Value))
+                .Select(i => NormalizeDnsPersistExampleDomain(i.Value))
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (managedCertificateDomains?.Any() == true)
+            {
+                return managedCertificateDomains;
+            }
+
+            var matchRuleDomains = (domainMatchRule ?? string.Empty)
+                .Split(new[] { "\r\n", "\n", ";" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(r => r.Trim())
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .Select(NormalizeDnsPersistExampleDomain)
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (matchRuleDomains.Any())
+            {
+                return matchRuleDomains;
+            }
+
+            return new List<string> { "example.com" };
+        }
+
+        public static string NormalizeDnsPersistExampleDomain(string? rule)
+        {
+            if (string.IsNullOrWhiteSpace(rule))
+            {
+                return string.Empty;
+            }
+
+            var normalized = rule.Trim();
+
+            if (normalized.StartsWith("*.", StringComparison.Ordinal))
+            {
+                normalized = normalized.Substring(2);
+            }
+
+            return normalized;
+        }
+
         public static ValidationResult Validate(ManagedCertificate item, SiteInfo? selectedTargetSite, CertificateAuthority? preferredCA, bool applyAutoConfiguration)
         {
             try
@@ -336,7 +411,7 @@ namespace Certify.Models.Shared.Validation
                     if (
                         item.DomainOptions?.Any(d => d.IsSelected && d.Domain != null && d.Domain.StartsWith("*.", StringComparison.InvariantCultureIgnoreCase)) == true
                         &&
-                        item.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS) == false
+                        item.RequestConfig.Challenges?.Any(c => c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS || c.ChallengeType == SupportedChallengeTypes.CHALLENGE_TYPE_DNS_PERSIST) == false
                         )
                     {
                         return new ValidationResult(

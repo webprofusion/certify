@@ -1255,8 +1255,8 @@ namespace Certify.Providers.ACME.Anvil
 
                                     var currentAccountUri = _settings?.AccountUri ?? (await _acme.GetAccountUri())?.ToString();
 
-                                    if (string.IsNullOrWhiteSpace(dnsPersistChallengeStatus.AccountUri)
-                                        || !string.Equals(dnsPersistChallengeStatus.AccountUri, currentAccountUri, StringComparison.Ordinal))
+                                    if (!string.IsNullOrWhiteSpace(dnsPersistChallengeStatus.AccountUri)
+                                        && !string.Equals(dnsPersistChallengeStatus.AccountUri, currentAccountUri, StringComparison.Ordinal))
                                     {
                                         var msg = $"dns-persist-01 challenge accounturi does not match the current ACME account for {authzDomain}.";
                                         log?.Error(msg);
@@ -1269,13 +1269,15 @@ namespace Certify.Providers.ACME.Anvil
                                     // draft-01 adds accounturi to the challenge object. The client validates
                                     // that the CA-provided account URI identifies the current account, then
                                     // uses that exact value in the persistent DNS record.
-                                    var accountUri = dnsPersistChallengeStatus.AccountUri;
+                                    var accountUri = dnsPersistChallengeStatus.AccountUri ?? currentAccountUri;
                                     var persistValue = $"{issuerDomainName}; accounturi={accountUri}";
 
                                     if (authzDomain.StartsWith("*.", StringComparison.Ordinal))
                                     {
                                         persistValue += "; policy=wildcard";
                                     }
+
+                                    log.Information($"dns-persist-01: CA will check for TXT record with name '{persistKey}' with value equivalent to '{persistValue}'");
 
                                     challenges.Add(new AuthorizationChallengeItem
                                     {
