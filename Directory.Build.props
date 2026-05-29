@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
-	    <Version>7.0.19.0</Version>
-        <AssemblyVersion>7.0.19.0</AssemblyVersion>
+	    <Version>7.0.20.0</Version>
+        <AssemblyVersion>7.0.20.0</AssemblyVersion>
 		<Authors>Webprofusion Pty Ltd</Authors>
 		<Company>Webprofusion Pty Ltd</Company>
 		<Product>Certify The Web - Certify Certificate Manager</Product>
