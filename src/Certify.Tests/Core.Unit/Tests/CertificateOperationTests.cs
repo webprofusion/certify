@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.Extensions.Logging;
@@ -273,12 +275,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 CertificateThumbprintHash = "thumbprint"
             };
 
-            var requestResult = new CertificateRequestResult(managedCertificate)
-            {
-                PrimaryRequest = null
-            };
-
-            var result = InvokeIsPrimaryCertificateRequestSuccessful(managedCertificate, requestResult);
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
 
             Assert.IsTrue(result, "Fallback certificate state should still support older items when no explicit primary request status has been recorded.");
         }
@@ -294,14 +291,87 @@ namespace Certify.Tests.Core.Unit.Tests
                 CertificateThumbprintHash = "thumbprint"
             };
 
-            var requestResult = new CertificateRequestResult(managedCertificate)
-            {
-                PrimaryRequest = null
-            };
-
-            var result = InvokeIsPrimaryCertificateRequestSuccessful(managedCertificate, requestResult);
+            var result = InvokeWasLastCertificateRequestSuccessful(managedCertificate);
 
             Assert.IsFalse(result, "Fallback certificate state should only imply success when the existing certificate is still usable.");
+        }
+
+        [TestMethod, Description("Manual deployment task rerun should restore overall renewal status to success when the primary request succeeded and all deployment tasks are now successful")]
+        public void TestOverallRenewalStatusBecomesSuccessWhenFailedTasksAreResolved()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." },
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureMessage = "Deployment Task failed: Upload",
+                PostRequestTasks =
+                [
+                    new DeploymentTaskConfig { TaskName = "Upload", LastRunStatus = RequestState.Success },
+                    new DeploymentTaskConfig { TaskName = "Notify", LastRunStatus = RequestState.Success }
+                ]
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: true, "Certificate issued.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: true);
+            var finalMessage = InvokeResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan: true);
+
+            Assert.AreEqual(RequestState.Success, finalState, "Overall renewal status should be restored to success once all deployment tasks are successful.");
+            Assert.AreEqual("Certificate issued.", finalMessage, "Resolved overall renewal status should return the normal success message.");
+        }
+
+        [TestMethod, Description("Manual deployment task rerun should remain failed when any deployment task is still in an error state")]
+        public void TestOverallRenewalStatusStaysErrorWhenAnyDeploymentTaskStillFails()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." },
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureMessage = "Deployment Task failed: Notify",
+                PostRequestTasks =
+                [
+                    new DeploymentTaskConfig { TaskName = "Upload", LastRunStatus = RequestState.Success },
+                    new DeploymentTaskConfig { TaskName = "Notify", LastRunStatus = RequestState.Error, LastResult = "Notification endpoint unavailable" }
+                ]
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: true, "Certificate issued.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: true);
+            var finalMessage = InvokeResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan: true);
+
+            Assert.AreEqual(RequestState.Error, finalState, "Overall renewal status should remain failed while any deployment task is still failing.");
+            Assert.AreEqual("Notification endpoint unavailable", finalMessage, "Overall renewal message should continue reporting the failing deployment task.");
+        }
+
+        [TestMethod, Description("Manual deployment task rerun should not restore overall renewal status when the primary request itself failed")]
+        public void TestOverallRenewalStatusStaysErrorWhenPrimaryRequestFailedEvenIfTasksNowSucceed()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "DNS validation failed." },
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureMessage = "DNS validation failed.",
+                PostRequestTasks =
+                [
+                    new DeploymentTaskConfig { TaskName = "Upload", LastRunStatus = RequestState.Success }
+                ]
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: false, "DNS validation failed.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "DNS validation failed." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: true);
+
+            Assert.AreEqual(RequestState.Error, finalState, "Overall renewal status should remain failed when the primary request did not succeed.");
         }
 
         private static bool InvokeWasLastCertificateRequestSuccessful(ManagedCertificate managedCertificate)
@@ -319,7 +389,25 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsNotNull(method, "Could not find overall renewal primary request success method.");
 
-            return (bool)method.Invoke(null, [managedCertificate, requestResult]);
+            return (bool)method.Invoke(null, [requestResult]);
+        }
+
+        private static RequestState InvokeResolveOverallRenewalStatus(ManagedCertificate managedCertificate, CertificateRequestResult requestResult, bool postRequestTasksRan)
+        {
+            var method = typeof(CertifyManager).GetMethod("ResolveOverallRenewalStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find overall renewal status resolution method.");
+
+            return (RequestState)method.Invoke(null, [managedCertificate, requestResult, postRequestTasksRan]);
+        }
+
+        private static string InvokeResolveOverallRenewalMessage(ManagedCertificate managedCertificate, CertificateRequestResult requestResult, RequestState finalState, bool postRequestTasksRan)
+        {
+            var method = typeof(CertifyManager).GetMethod("ResolveOverallRenewalMessage", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find overall renewal message resolution method.");
+
+            return (string)method.Invoke(null, [managedCertificate, requestResult, finalState, postRequestTasksRan]);
         }
     }
 }

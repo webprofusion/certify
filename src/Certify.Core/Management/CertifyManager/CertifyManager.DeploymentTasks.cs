@@ -115,7 +115,35 @@ namespace Certify.Management
                 evaluateAgainstPrimaryRequestStatus: true
             );
 
-            await UpdateManagedCertificate(managedCert);
+            var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: manualTaskPrimaryRequestSucceeded, string.Empty)
+            {
+                PrimaryRequest = new RequestStageStatus
+                {
+                    Status = manualTaskPrimaryRequestSucceeded ? RequestState.Success : RequestState.Error,
+                    Message = managedCert.LastPrimaryRequest?.Message
+                },
+                Message = managedCert.LastPrimaryRequest?.Message ?? string.Empty
+            };
+
+            var finalState = ResolveOverallRenewalStatus(managedCert, primaryRequestResult, postRequestTasksRan: managedCert.PostRequestTasks?.Any() == true);
+            var finalMessage = ResolveOverallRenewalMessage(managedCert, primaryRequestResult, finalState, postRequestTasksRan: managedCert.PostRequestTasks?.Any() == true);
+
+            var statusChanged = managedCert.LastRenewalStatus != finalState
+                || !string.Equals(managedCert.RenewalFailureMessage, finalMessage, StringComparison.Ordinal);
+
+            if (statusChanged)
+            {
+                await UpdateManagedCertificateStatus(
+                    managedCert,
+                    finalState,
+                    finalMessage,
+                    incrementFailureCount: false,
+                    updateLastAttempt: false);
+            }
+            else
+            {
+                await UpdateManagedCertificate(managedCert);
+            }
 
             return result;
         }
