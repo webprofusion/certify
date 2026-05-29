@@ -682,7 +682,7 @@ namespace Certify.Management
                             {
                                 await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
                                 {
-                                    InstanceId = managedCertificate.InstanceId,
+                                    InstanceId = CoreAppSettings.Current.InstanceId,
                                     ManagedItemId = managedCertificate.Id,
                                     ItemTitle = managedCertificate.Name,
                                     ActionType = "manualdns",

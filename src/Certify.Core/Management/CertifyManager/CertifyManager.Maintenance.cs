@@ -632,7 +632,7 @@ namespace Certify.Management
                             {
                                 await _dashboardClient.ReportUserActionRequiredAsync(new Models.Shared.ItemActionRequired
                                 {
-                                    InstanceId = null,
+                                    InstanceId = CoreAppSettings.Current.InstanceId,
                                     ManagedItemId = null,
                                     ItemTitle = "Diagnostic Check Failed",
                                     ActionType = "diagnostic:" + d.Result.ToString(),
