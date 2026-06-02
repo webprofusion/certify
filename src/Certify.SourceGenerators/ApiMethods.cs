@@ -329,6 +329,30 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "RejoinManagedInstance",
+                    OperationMethod = HttpPost,
+                    Comment = "Command a managed instance to rejoin the management hub using the latest joining key",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/rejoin",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
+                    OperationName = "RejoinAllManagedInstances",
+                    OperationMethod = HttpPost,
+                    Comment = "Command all connected managed instances to rejoin the management hub using the latest joining key",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/rejoin",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
                     OperationName = "GetManagedChallenges",
                     OperationMethod = HttpGet,
                     Comment = "Get list of available managed challenges (DNS challenge delegation etc)",

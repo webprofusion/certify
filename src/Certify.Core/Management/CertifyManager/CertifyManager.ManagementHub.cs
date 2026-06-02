@@ -77,6 +77,33 @@ namespace Certify.Management
             });
         }
 
+        private async Task ClearManagementHubRequestAuthSecret()
+        {
+            _mgmtHubRequestAuthSecret = null;
+
+            try
+            {
+                await _credentialsManager.Delete(_itemManager, HubSharedConstants.MgmtHubRequestAuthSecretCredId);
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Warning($"Failed to clear management hub request auth secret from credentials store before rejoin: {ex.Message}");
+            }
+        }
+
+        private async Task StoreManagementHubJoiningSecret(ClientSecret clientSecret)
+        {
+            _mgmtHubJoiningSecret = clientSecret;
+
+            await _credentialsManager.Update(new StoredCredential
+            {
+                StorageKey = HubSharedConstants.MgmtHubJoiningCredId,
+                ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
+                Title = "Management Hub Joining Key",
+                Secret = JsonSerializer.Serialize(clientSecret)
+            });
+        }
+
         private async Task<string?> GetManagementHubRequestAuthSecret()
         {
             if (!string.IsNullOrWhiteSpace(_mgmtHubRequestAuthSecret))
@@ -164,15 +191,7 @@ namespace Certify.Management
                 SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
 
                 // store/update clientId and secret
-                _mgmtHubJoiningSecret = clientSecret;
-
-                await _credentialsManager.Update(new StoredCredential
-                {
-                    StorageKey = HubSharedConstants.MgmtHubJoiningCredId,
-                    ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
-                    Title = "Management Hub Joining Key",
-                    Secret = JsonSerializer.Serialize(clientSecret)
-                });
+                await StoreManagementHubJoiningSecret(clientSecret);
 
                 await StoreManagementHubRequestAuthSecret(joiningCredentialsCheck.Result.RequestAuthSecret);
 
@@ -199,6 +218,56 @@ namespace Certify.Management
             {
                 _serviceLog.Information("Hub credentials check failed.");
                 return joiningCredentialsCheck;
+            }
+        }
+
+        private async Task PerformManagementHubRejoin(ManagementHubRejoinRequest rejoinRequest)
+        {
+            try
+            {
+                _serverConfig = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+
+                var url = !string.IsNullOrWhiteSpace(rejoinRequest.JoiningCredential.Url)
+                    ? rejoinRequest.JoiningCredential.Url
+                    : _serverConfig.ManagementServerHubAPI;
+
+                if (string.IsNullOrWhiteSpace(url))
+                {
+                    _serviceLog.Warning("Hub rejoin was requested but no management hub API URL was available.");
+                    return;
+                }
+
+                var joiningSecret = new ClientSecret
+                {
+                    ClientId = rejoinRequest.JoiningCredential.ClientId,
+                    Secret = rejoinRequest.JoiningCredential.Secret
+                };
+
+                await StoreManagementHubJoiningSecret(joiningSecret);
+
+                if (rejoinRequest.ReissueRequestAuthSecret)
+                {
+                    await ClearManagementHubRequestAuthSecret();
+                }
+
+                if (_managementServerClient?.IsConnected() == true)
+                {
+                    await _managementServerClient.Disconnect();
+                }
+
+                var joinResult = await JoinManagementHub(url, joiningSecret);
+                if (joinResult.IsSuccess)
+                {
+                    _serviceLog.Information("Management hub rejoin completed successfully.");
+                }
+                else
+                {
+                    _serviceLog.Warning("Management hub rejoin failed: {message}", joinResult.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Management hub rejoin command failed.");
             }
         }
 
@@ -1132,6 +1201,23 @@ namespace Certify.Management
             {
                 _serviceLog.Information("Hub has requested that this instance re-connect");
                 await _managementServerClient.Disconnect();
+            }
+            else if (arg.CommandType == ManagementHubCommands.RejoinManagementHub)
+            {
+                var rejoinRequest = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);
+
+                if (rejoinRequest == null
+                    || string.IsNullOrWhiteSpace(rejoinRequest.JoiningCredential.ClientId)
+                    || string.IsNullOrWhiteSpace(rejoinRequest.JoiningCredential.Secret))
+                {
+                    val = new ActionResult("Management hub rejoin command did not include a valid joining key.", false);
+                }
+                else
+                {
+                    _serviceLog.Information("Hub has requested that this instance rejoin using an updated joining key.");
+                    _ = Task.Run(async () => await PerformManagementHubRejoin(rejoinRequest));
+                    val = new ActionResult("Management hub rejoin initiated.", true);
+                }
             }
             else if (arg.CommandType == ManagementHubCommands.PushExternalManagedCertificateUpdate)
             {

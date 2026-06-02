@@ -68,6 +68,7 @@ namespace Certify.Models.Hub
         public const string QueueAllStatusReports = "QueueAllStatusReports";
 
         public const string Reconnect = "Reconnect";
+        public const string RejoinManagementHub = "RejoinManagementHub";
 
         /// <summary>
         /// Notification messages are used to send topic specific info ad-hoc back to the mgmt hub
@@ -185,5 +186,11 @@ namespace Certify.Models.Hub
         /// Value of message instance is sending, to be interpreted by the management hub
         /// </summary>
         public string? Value { get; set; }
+    }
+
+    public class ManagementHubRejoinRequest
+    {
+        public HubJoiningClientSecret JoiningCredential { get; set; } = new();
+        public bool ReissueRequestAuthSecret { get; set; } = true;
     }
 }

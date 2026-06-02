@@ -67,6 +67,137 @@ namespace Certify.Server.Hub.Api.Services
             await _mgmtHubContext.Clients.All.SendCommandRequest(new InstanceCommandRequest(ManagementHubCommands.Reconnect));
         }
 
+        public async Task<ActionResult> RejoinManagedInstance(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return new ActionResult("Managed instance id is required.", false);
+            }
+
+            if (string.Equals(instanceId, _mgmtStateProvider.GetManagementHubInstanceId(), StringComparison.Ordinal))
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "The integrated management hub instance cannot be commanded to rejoin from the instances list."
+                };
+            }
+
+            var joiningCredential = await ResolveLatestJoiningCredential(currentAuthContext);
+            if (!joiningCredential.IsSuccess || joiningCredential.Result == null)
+            {
+                return new ActionResult(joiningCredential.Message, false);
+            }
+
+            var connectedInstance = _mgmtStateProvider
+                .GetConnectedInstances()
+                .FirstOrDefault(i => string.Equals(i.InstanceId, instanceId, StringComparison.Ordinal));
+
+            if (connectedInstance == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "Managed instance is not currently connected, so the rejoin command could not be sent."
+                };
+            }
+
+            try
+            {
+                await SendCommandWithNoResult(instanceId, CreateRejoinCommand(joiningCredential.Result));
+
+                return new ActionResult($"Rejoin requested for managed instance '{connectedInstance.DisplayTitle}'.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to dispatch management hub rejoin command to instance {instanceId}.", instanceId);
+                return new ActionResult($"Failed to send rejoin command: {ex.Message}", false);
+            }
+        }
+
+        public async Task<ActionResult> RejoinAllManagedInstances(AuthContext? currentAuthContext)
+        {
+            var joiningCredential = await ResolveLatestJoiningCredential(currentAuthContext);
+            if (!joiningCredential.IsSuccess || joiningCredential.Result == null)
+            {
+                return new ActionResult(joiningCredential.Message, false);
+            }
+
+            var hubInstanceId = _mgmtStateProvider.GetManagementHubInstanceId();
+            var connectedInstances = _mgmtStateProvider
+                .GetConnectedInstances()
+                .Where(i => !string.IsNullOrWhiteSpace(i.InstanceId))
+                .GroupBy(i => i.InstanceId)
+                .Select(g => g.First())
+                .ToList();
+
+            if (!connectedInstances.Any())
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "No connected managed instances are currently available to rejoin."
+                };
+            }
+
+            var dispatched = 0;
+            var skipped = 0;
+            var failed = 0;
+
+            foreach (var instance in connectedInstances)
+            {
+                if (string.Equals(instance.InstanceId, hubInstanceId, StringComparison.Ordinal))
+                {
+                    skipped++;
+                    continue;
+                }
+
+                try
+                {
+                    await SendCommandWithNoResult(instance.InstanceId, CreateRejoinCommand(joiningCredential.Result));
+                    dispatched++;
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    _log.LogError(ex, "Failed to dispatch management hub rejoin command to instance {instanceId}.", instance.InstanceId);
+                }
+            }
+
+            if (dispatched == 0)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = skipped > 0,
+                    Message = skipped > 0
+                        ? "No eligible connected managed instances were available to rejoin after excluding the integrated management hub instance."
+                        : "No managed instances were successfully sent a rejoin command."
+                };
+            }
+
+            var detail = $"Rejoin requested for {dispatched} managed instance{(dispatched == 1 ? string.Empty : "s")}.";
+            if (skipped > 0)
+            {
+                detail += $" Skipped {skipped} integrated management hub instance{(skipped == 1 ? string.Empty : "s")}.";
+            }
+
+            if (failed > 0)
+            {
+                detail += $" Failed to send {failed} command{(failed == 1 ? string.Empty : "s")}.";
+            }
+
+            return new ActionResult
+            {
+                IsSuccess = failed == 0,
+                IsWarning = skipped > 0 || failed > 0,
+                Message = detail
+            };
+        }
+
         /// <summary>
         /// Sends a command request to the target instance and retrieves the command result.
         /// </summary>
@@ -126,6 +257,56 @@ namespace Certify.Server.Hub.Api.Services
 
                 await _mgmtHubContext.Clients.Client(connectionId).SendCommandRequest(cmd);
             }
+        }
+
+        private static InstanceCommandRequest CreateRejoinCommand(HubJoiningClientSecret joiningCredential)
+        {
+            return new InstanceCommandRequest(ManagementHubCommands.RejoinManagementHub)
+            {
+                Value = JsonSerializer.Serialize(new ManagementHubRejoinRequest
+                {
+                    JoiningCredential = new HubJoiningClientSecret
+                    {
+                        Url = joiningCredential.Url,
+                        ClientId = joiningCredential.ClientId,
+                        Secret = joiningCredential.Secret
+                    },
+                    ReissueRequestAuthSecret = true
+                })
+            };
+        }
+
+        private async Task<ActionResult<HubJoiningClientSecret>> ResolveLatestJoiningCredential(AuthContext? currentAuthContext)
+        {
+            if (_certifyManager == null)
+            {
+                return new ActionResult<HubJoiningClientSecret>("Management hub instance is unavailable.", false);
+            }
+
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? "system");
+            var latestToken = assignedTokens
+                .Where(t => string.Equals(t.Title, "Managed Instance Hub Joining Key", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(t => t.AccessTokens ?? [])
+                .Where(t => !string.IsNullOrWhiteSpace(t.ClientId) && !string.IsNullOrWhiteSpace(t.Secret))
+                .Where(t => !t.DateExpiry.HasValue || t.DateExpiry > DateTimeOffset.UtcNow)
+                .Where(t => !t.DateRevoked.HasValue)
+                .OrderByDescending(t => t.DateCreated ?? DateTimeOffset.MinValue)
+                .FirstOrDefault();
+
+            if (latestToken == null)
+            {
+                return new ActionResult<HubJoiningClientSecret>("No active management hub joining key could be resolved.", false);
+            }
+
+            return new ActionResult<HubJoiningClientSecret>(
+                "Latest management hub joining key resolved.",
+                true,
+                new HubJoiningClientSecret
+                {
+                    ClientId = latestToken.ClientId,
+                    Secret = latestToken.Secret
+                });
         }
 
         /// <summary>
