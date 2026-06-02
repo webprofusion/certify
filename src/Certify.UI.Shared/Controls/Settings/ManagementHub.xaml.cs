@@ -62,15 +62,6 @@ namespace Certify.UI.Controls.Settings
             EditModel.ClientID = clientId;
             EditModel.ClientSecret = clientSecret;
 
-            var checkResult = await EditModel.MainViewModel.CheckManagementHubCredentials(managementHubApiUrl, clientId, clientSecret);
-            if (!checkResult.IsSuccess)
-            {
-                EditModel.IsConnected = false;
-                EditModel.StatusMessage = checkResult.Message;
-                MessageBox.Show(checkResult.Message, "Management Hub Validation", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             var result = await EditModel.MainViewModel.JoinManagementHub(managementHubApiUrl, clientId, clientSecret);
 
             EditModel.IsConnected = result.IsSuccess;
