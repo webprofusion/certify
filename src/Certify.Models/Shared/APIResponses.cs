@@ -1,4 +1,4 @@
-﻿namespace Certify.Models.API
+namespace Certify.Models.API
 {
     public static class Config
     {

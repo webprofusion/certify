@@ -269,6 +269,16 @@ namespace Certify.Providers.Internal
     {
         private bool _enableLog;
 
+        private static bool IsHttpCommunicationException(Exception ex)
+        {
+            return ex is HttpRequestException || ex is TaskCanceledException;
+        }
+
+        private static string GetCommunicationFailureMessage(string operation, Exception ex)
+        {
+            return $"There was a problem {operation}. The licensing service could not be reached (https://api.certifytheweb.com): {ex.Message}";
+        }
+
         public LicensingManager()
         {
         }
@@ -355,6 +365,17 @@ namespace Certify.Providers.Internal
                 catch (Exception ex)
                 {
                     Log($"Post to API failed: {ex}");
+
+                    if (IsHttpCommunicationException(ex))
+                    {
+                        return new LicenseCheckResult
+                        {
+                            IsValid = false,
+                            StatusCode = LicenseCheckStatusCode.CommunicationError,
+                            ValidationMessage = GetCommunicationFailureMessage("validating this key", ex)
+                        };
+                    }
+
                     throw;
                 }
             }
@@ -412,21 +433,39 @@ namespace Certify.Providers.Internal
                 Log("Instance: " + JsonConvert.SerializeObject(jsonRequest));
 
                 var data = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync(Models.API.Config.APIBaseURI + "license/install", data);
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var jsonResult = await response.Content.ReadAsStringAsync();
+                    var response = await client.PostAsync(Models.API.Config.APIBaseURI + "license/install", data);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResult = await response.Content.ReadAsStringAsync();
 
-                    Log("Install Response: " + JsonConvert.SerializeObject(jsonRequest));
-                    //validate given license key has not expired
-                    var result = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(jsonResult);
+                        Log("Install Response: " + JsonConvert.SerializeObject(jsonRequest));
+                        //validate given license key has not expired
+                        var result = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(jsonResult);
 
-                    return result;
+                        return result;
+                    }
+                    else
+                    {
+                        Log("Install Response Failed: " + JsonConvert.SerializeObject(response.ToString()));
+                        return new LicenseKeyInstallResult { IsSuccess = false, Message = "There was a problem validating this key. Please ensure you have the latest app version and try again later." };
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    Log("Install Response Failed: " + JsonConvert.SerializeObject(response.ToString()));
-                    return new LicenseKeyInstallResult { IsSuccess = false, Message = "There was a problem validating this key. Please ensure you have the latest app version and try again later." };
+                    Log($"Install API failed: {ex}");
+
+                    if (IsHttpCommunicationException(ex))
+                    {
+                        return new LicenseKeyInstallResult
+                        {
+                            IsSuccess = false,
+                            Message = GetCommunicationFailureMessage("activating this key", ex)
+                        };
+                    }
+
+                    throw;
                 }
             }
         }
@@ -455,11 +494,25 @@ namespace Certify.Providers.Internal
                         });
 
                     var data = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
-                    var response = await client.PostAsync(Models.API.Config.APIBaseURI + "license/uninstall", data);
-                    if (response.IsSuccessStatusCode)
+                    try
                     {
-                        DeleteLicenseKeyInstall(productTypeId, settingsPath);
-                        return true;
+                        var response = await client.PostAsync(Models.API.Config.APIBaseURI + "license/uninstall", data);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            DeleteLicenseKeyInstall(productTypeId, settingsPath);
+                            return true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"Uninstall API failed: {ex}");
+
+                        if (!IsHttpCommunicationException(ex))
+                        {
+                            throw;
+                        }
+
+                        return false;
                     }
                 }
             }

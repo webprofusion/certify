@@ -20,6 +20,11 @@ namespace Registration.Core.Models.Shared
         public const string Invalid = "invalid";
 
         /// <summary>
+        /// Cannot communicate with licensing API
+        /// </summary>
+        public const string CommunicationError = "comms-error";
+
+        /// <summary>
         /// License status not known, possibly due to an error in checking the license
         /// </summary>
         public const string Unknown = "unknown";
