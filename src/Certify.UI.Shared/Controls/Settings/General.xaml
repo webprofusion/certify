@@ -202,7 +202,7 @@
                                                     Margin="0,4,0,0"
                                                     Content="{x:Static res:SR.Settings_EnableStatusReporting}"
                                                     IsChecked="{Binding Prefs.EnableStatusReporting}" />
-                                                <Label Margin="0,8,0,0" Content="Notification Email" />
+                                                <Label Content="Status Notification Email" />
                                                 <TextBox
                                                     Margin="0,0,0,0"
                                                     MinWidth="260"
@@ -223,7 +223,8 @@
                                 Margin="8"
                                 DockPanel.Dock="Top"
                                 Orientation="Vertical">
-                                <TextBlock Style="{StaticResource Subheading}">Advanced Settings</TextBlock>
+                                <TextBlock Style="{StaticResource Subheading}">Advanced Settings
+                                </TextBlock>
 
                                 <DockPanel Margin="0,8,0,0" LastChildFill="False">
                                     <StackPanel
