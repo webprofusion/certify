@@ -618,7 +618,7 @@ namespace Certify.Management
                 var diagnosticResults = await PerformServiceDiagnostics();
                 if (diagnosticResults.Any(d => d.IsSuccess == false))
                 {
-                    var reportingEmail = (await GetAccountDetails(null))?.Email;
+                    var reportingEmail = await GetNotificationEmailAddress();
 
                     foreach (var d in diagnosticResults.Where(di => di.IsSuccess == false && di.Result != null))
                     {

@@ -29,6 +29,7 @@ namespace Certify.Management
             LegacySettingsUpgraded = false;
             EnableCertificateCleanup = true;
             EnableStatusReporting = true;
+            NotificationEmail = null;
             InstanceId = null;
             CertificateAuthorityFallback = null;
             DefaultCertificateAuthority = "letsencrypt.org";
@@ -120,6 +121,12 @@ namespace Certify.Management
         /// to the dashboard service
         /// </summary>
         public bool EnableStatusReporting { get; set; }
+
+        /// <summary>
+        /// Optional per-instance notification email address used for status reports and dashboard notifications.
+        /// If blank, the service falls back to the ACME account email where applicable.
+        /// </summary>
+        public string? NotificationEmail { get; set; }
 
         public CertificateCleanupMode? CertificateCleanupMode { get; set; }
 
@@ -248,6 +255,7 @@ namespace Certify.Management
             }
 
             CoreAppSettings.Current.EnableStatusReporting = prefs.EnableStatusReporting;
+            CoreAppSettings.Current.NotificationEmail = prefs.NotificationEmail;
 
             CoreAppSettings.Current.IncludeExternalPlugins = prefs.IncludeExternalPlugins;
 
@@ -300,6 +308,7 @@ namespace Certify.Management
                 EnableCertificateCleanup = CoreAppSettings.Current.EnableCertificateCleanup,
                 DefaultCertificateStore = CoreAppSettings.Current.DefaultCertificateStore,
                 EnableStatusReporting = CoreAppSettings.Current.EnableStatusReporting,
+                NotificationEmail = CoreAppSettings.Current.NotificationEmail,
                 CertificateCleanupMode = CoreAppSettings.Current.CertificateCleanupMode,
                 DefaultCertificateAuthority = CoreAppSettings.Current.DefaultCertificateAuthority,
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,

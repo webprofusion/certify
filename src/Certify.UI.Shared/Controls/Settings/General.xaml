@@ -202,6 +202,11 @@
                                                     Margin="0,4,0,0"
                                                     Content="{x:Static res:SR.Settings_EnableStatusReporting}"
                                                     IsChecked="{Binding Prefs.EnableStatusReporting}" />
+                                                <Label Margin="0,8,0,0" Content="Notification Email" />
+                                                <TextBox
+                                                    Margin="0,0,0,0"
+                                                    MinWidth="260"
+                                                    Text="{Binding Prefs.NotificationEmail, UpdateSourceTrigger=PropertyChanged}" />
                                             </StackPanel>
                                         </StackPanel>
                                     </StackPanel>

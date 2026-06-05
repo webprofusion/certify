@@ -110,6 +110,12 @@ namespace Certify.Models
         public bool EnableStatusReporting { get; set; } = true;
 
         /// <summary>
+        /// Optional per-instance notification email address used for status reports and dashboard notifications.
+        /// If blank, the service falls back to the ACME account email where applicable.
+        /// </summary>
+        public string? NotificationEmail { get; set; }
+
+        /// <summary>
         /// ID of default CA
         /// </summary>
         public string? DefaultCertificateAuthority { get; set; }

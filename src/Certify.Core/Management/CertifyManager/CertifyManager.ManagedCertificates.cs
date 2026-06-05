@@ -407,9 +407,19 @@ namespace Certify.Management
         /// </summary>
         /// <param name="managedCertificate"></param>
         /// <returns></returns>
+        private async Task<string?> GetNotificationEmailAddress(ManagedCertificate? managedCertificate = null)
+        {
+            if (!string.IsNullOrWhiteSpace(CoreAppSettings.Current.NotificationEmail))
+            {
+                return CoreAppSettings.Current.NotificationEmail;
+            }
+
+            return (await GetAccountDetails(managedCertificate, allowFailover: false, logOnFailure: false))?.Email;
+        }
+
         private async Task ReportManagedCertificateStatus(ManagedCertificate managedCertificate, bool removeReport = false)
         {
-            var accountEmail = (await GetAccountDetails(managedCertificate, allowFailover: false))?.Email;
+            var accountEmail = await GetNotificationEmailAddress(managedCertificate);
             var report = await CreateRenewalStatusReport(
                 managedCertificate,
                 CoreAppSettings.Current.InstanceId,

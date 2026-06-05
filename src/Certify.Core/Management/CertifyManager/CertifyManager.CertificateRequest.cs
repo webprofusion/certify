@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -688,7 +688,7 @@ namespace Certify.Management
                                     ActionType = "manualdns",
                                     InstanceTitle = Environment.MachineName,
                                     Message = instructions,
-                                    NotificationEmail = (await GetAccountDetails(managedCertificate))?.Email,
+                                    NotificationEmail = await GetNotificationEmailAddress(managedCertificate),
                                     AppVersion = Util.GetAppVersion().ToString() + ";" + Environment.OSVersion.ToString()
                                 });
                             }

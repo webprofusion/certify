@@ -105,8 +105,9 @@ namespace Certify.Management
         /// <param name="item">managed certificate to determine account details for</param>
         /// <param name="allowCache">if true, allow use of cached account list</param>
         /// <param name="allowFailover">if true, select a fallback CA account if item has recently failed renewal, if false use same account as last renewal/attempt</param>
+        /// <param name="logOnFailure">if true, log when no matching ACME account can be found</param>
         /// <returns>Account Details or null if there is no matching account</returns>
-        public virtual async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false, bool isResumedOrder = false)
+        public virtual async Task<AccountDetails> GetAccountDetails(ManagedCertificate item, bool allowCache = true, bool allowFailover = false, bool isResumedOrder = false, bool logOnFailure = true)
         {
             if (OverrideAccountDetails != null)
             {
@@ -186,8 +187,12 @@ namespace Certify.Management
 
             if (defaultMatchingAccount == null)
             {
-                var log = ManagedCertificateLog.GetLogger(item.Id, LogLevel.Error);
-                log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode ? "[Staging Mode]" : "[Production]")}");
+                if (logOnFailure)
+                {
+                    var log = ManagedCertificateLog.GetLogger(item.Id, LogLevel.Error);
+                    log?.Error($"Failed to match ACME account for managed certificate. Cannot continue request. :: {item.Name} CA: {currentCA} {(item.UseStagingMode ? "[Staging Mode]" : "[Production]")}");
+                }
+
                 return null;
             }
             else

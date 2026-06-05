@@ -107,7 +107,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             var managerMock = new Mock<CertifyManager>();
 
-            managerMock.Setup(m => m.GetAccountDetails(It.IsAny<ManagedCertificate>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
+            managerMock.Setup(m => m.GetAccountDetails(It.IsAny<ManagedCertificate>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()))
                 .ReturnsAsync(new AccountDetails());
 
             managerMock.Setup(m => m.GetACMEProvider(It.IsAny<ManagedCertificate>(), It.IsAny<AccountDetails>())).ReturnsAsync(mockAcmeProvider.Object);
