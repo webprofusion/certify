@@ -375,16 +375,14 @@ namespace Certify.Management
 
         private Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg)
         {
-            var status = managedCertificate.RenewalFailureCount >= LifetimeHealthThresholds.FailureWarning
-                ? RequestState.Error
-                : RequestState.Warning;
+            var status = RequestState.Success;
 
             return RecordSubscriptionNoUpdate(managedCertificate, msg, status);
         }
 
         private async Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg, RequestState status)
         {
-            await UpdateManagedCertificateStatus(managedCertificate, status, msg);
+            await UpdateManagedCertificateStatus(managedCertificate, status, msg, incrementFailureCount: false);
             return status;
         }
 

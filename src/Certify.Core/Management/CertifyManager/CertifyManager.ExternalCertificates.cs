@@ -315,7 +315,8 @@ namespace Certify.Management
 
             var now = checkDate ?? DateTimeOffset.UtcNow;
 
-            if (!IsAutomaticSubscriptionRetryDue(item, now))
+            if (ShouldRequireRenewalDueForSourcePolling(sourceConfig)
+                && !IsAutomaticSubscriptionRetryDue(item, now))
             {
                 return false;
             }
@@ -328,6 +329,14 @@ namespace Certify.Management
             }
 
             return sourceConfig.DateLastPoll.Value <= now.AddMinutes(-pollIntervalMinutes);
+        }
+
+        private static bool ShouldRequireRenewalDueForSourcePolling(ExternalCertificateSubscription sourceConfig)
+        {
+            // Management Hub subscriptions are expected to receive push update notifications;
+            // polling is only used as fallback when normal renewal scheduling is due.
+            return string.IsNullOrWhiteSpace(sourceConfig.SourceType)
+                || sourceConfig.SourceType.Equals(ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase);
         }
 
         internal static bool IsAutomaticSubscriptionRetryDue(ManagedCertificate item, DateTimeOffset? checkDate = null)
@@ -861,7 +870,7 @@ namespace Certify.Management
             }
             else
             {
-                sourceConfig.PendingSourceVersion = null;
+                ClearExternalManagedCertificateRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastSourceVersion = sourceVersion ?? sourceConfig.LastSourceVersion;
                 sourceConfig.LastError = null;
 
