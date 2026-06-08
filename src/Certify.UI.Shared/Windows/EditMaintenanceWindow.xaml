@@ -20,7 +20,11 @@
     mc:Ignorable="d">
 
     <DockPanel Margin="16">
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+        <StackPanel
+            Margin="0,16,0,0"
+            HorizontalAlignment="Right"
+            DockPanel.Dock="Bottom"
+            Orientation="Horizontal">
             <Button
                 x:Name="Cancel"
                 Width="100"
@@ -36,7 +40,7 @@
             </Button>
         </StackPanel>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" DockPanel.Dock="Top">
+        <ScrollViewer DockPanel.Dock="Top" VerticalScrollBarVisibility="Auto">
             <StackPanel>
                 <TextBlock Style="{StaticResource Subheading}">Name</TextBlock>
                 <TextBox
@@ -50,8 +54,8 @@
                     x:Name="WindowDescription"
                     Height="60"
                     Margin="0,4,0,16"
-                    AcceptsReturn="True"
                     Controls:TextBoxHelper.Watermark="Optional description of this maintenance window"
+                    AcceptsReturn="True"
                     Text="{Binding EditWindow.Description, UpdateSourceTrigger=PropertyChanged}"
                     VerticalScrollBarVisibility="Auto" />
 
@@ -122,7 +126,7 @@
                     </ToggleButton>
                 </WrapPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                <StackPanel Margin="0,0,0,16" Orientation="Horizontal">
                     <Button
                         Width="80"
                         Margin="4"
@@ -150,15 +154,15 @@
                 </StackPanel>
 
                 <TextBlock Style="{StaticResource Subheading}">Time Range</TextBlock>
-                <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                <StackPanel Margin="0,8,0,8" Orientation="Horizontal">
                     <StackPanel Margin="0,0,16,0">
                         <TextBlock Margin="0,0,0,4">Start Time (24-hour format)</TextBlock>
                         <Controls:NumericUpDown
                             x:Name="StartHour"
                             Width="60"
                             Margin="0,0,4,0"
-                            Minimum="0"
                             Maximum="23"
+                            Minimum="0"
                             ValueChanged="Time_ValueChanged" />
                         <TextBlock Margin="0,4,0,0" Text="Hour" />
                     </StackPanel>
@@ -168,8 +172,8 @@
                             x:Name="StartMinute"
                             Width="60"
                             Margin="0,0,4,0"
-                            Minimum="0"
                             Maximum="59"
+                            Minimum="0"
                             ValueChanged="Time_ValueChanged" />
                         <TextBlock Margin="0,4,0,0" Text="Minute" />
                     </StackPanel>
@@ -179,8 +183,8 @@
                             x:Name="EndHour"
                             Width="60"
                             Margin="0,0,4,0"
-                            Minimum="0"
                             Maximum="23"
+                            Minimum="0"
                             ValueChanged="Time_ValueChanged" />
                         <TextBlock Margin="0,4,0,0" Text="Hour" />
                     </StackPanel>
@@ -190,8 +194,8 @@
                             x:Name="EndMinute"
                             Width="60"
                             Margin="0,0,4,0"
-                            Minimum="0"
                             Maximum="59"
+                            Minimum="0"
                             ValueChanged="Time_ValueChanged" />
                         <TextBlock Margin="0,4,0,0" Text="Minute" />
                     </StackPanel>
@@ -215,8 +219,8 @@
                     x:Name="TimeZoneSelector"
                     Margin="0,4,0,16"
                     DisplayMemberPath="DisplayName"
-                    SelectionChanged="TimeZoneSelector_SelectionChanged"
-                    SelectedValuePath="Id" />
+                    SelectedValuePath="Id"
+                    SelectionChanged="TimeZoneSelector_SelectionChanged" />
 
                 <CheckBox
                     x:Name="IsEnabled"
