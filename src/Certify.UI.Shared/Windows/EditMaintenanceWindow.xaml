@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Edit Maintenance Window"
     Width="600"
-    Height="650"
+    Height="702"
     Background="{DynamicResource MahApps.Brushes.Window.Background}"
     BorderBrush="{DynamicResource MahApps.Brushes.Accent}"
     BorderThickness="1"
