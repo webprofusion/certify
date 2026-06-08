@@ -18,6 +18,7 @@ namespace Certify.Models
 
     public class ExternalCertificateSubscription
     {
+
         /// <summary>
         /// Source type, e.g. ManagementHub or AzureKeyVault.
         /// </summary>
@@ -71,11 +72,6 @@ namespace Certify.Models
         public string? PendingSourceVersion { get; set; }
 
         /// <summary>
-        /// Path to pending certificate asset awaiting deployment window.
-        /// </summary>
-        public string? PendingCertificatePath { get; set; }
-
-        /// <summary>
         /// Last source error (if any).
         /// </summary>
         public string? LastError { get; set; }
@@ -92,14 +88,12 @@ namespace Certify.Models
         [System.Text.Json.Serialization.JsonIgnore]
         public string CurrentSyncStatus => !string.IsNullOrWhiteSpace(LastError)
             ? "Source Error"
-            : !string.IsNullOrWhiteSpace(PendingCertificatePath)
-                ? "Pending Deployment"
-                : !string.IsNullOrWhiteSpace(PendingSourceVersion)
-                    ? "Update Available"
+            : !string.IsNullOrWhiteSpace(PendingSourceVersion)
+                ? "Update Available"
                 : DateLastPoll.HasValue
-                        ? !string.IsNullOrWhiteSpace(LastSourceVersion)
-                            ? "In Sync"
-                            : "Checked"
-                        : "Awaiting First Sync";
+                    ? !string.IsNullOrWhiteSpace(LastSourceVersion)
+                        ? "In Sync"
+                        : "Checked"
+                    : "Awaiting First Sync";
     }
 }

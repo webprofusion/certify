@@ -142,18 +142,43 @@ namespace Certify.Management
                     return new List<CertificateRequestResult>();
                 }
 
-                managedCertificateBatch = targetCerts;
+                managedCertificateBatch = [];
 
-                foreach (var item in managedCertificateBatch)
+                foreach (var item in targetCerts)
                 {
+                    var renewalReason = "Renewal requested";
+
+                    if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                    {
+                        if (!CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource))
+                        {
+                            serviceLog?.Information($"Skipping targeted external subscription '{item.Name}' because it is not due and has no pending certificate update.");
+                            continue;
+                        }
+
+                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource)
+                            && !CertifyManager.IsAutomaticSubscriptionRetryDue(item))
+                        {
+                            renewalReason = "Pending external certificate update is awaiting deployment.";
+                        }
+                    }
+
+                    managedCertificateBatch.Add(item);
+
                     var progressTracker = SetupProgressTracker(item, "", progressTrackers, reportProgress);
 
                     renewalTasks.Add(
                     new Task<CertificateRequestResult>(
-                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, "Renewal requested").Result,
+                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
                             TaskCreationOptions.LongRunning
                             )
                     );
+                }
+
+                if (!managedCertificateBatch.Any())
+                {
+                    serviceLog?.Information("No targeted managed certificates required renewal.");
+                    return [];
                 }
             }
             else
@@ -234,6 +259,25 @@ namespace Certify.Management
                                                     // on all mode, everything gets an attempted renewal
                                                     isRenewalRequired = true;
                                                     renewalReason = "Renewal Mode is set to All";
+                                                }
+
+                                                if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                                                {
+                                                    var shouldProcessExternalSubscription = CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource);
+                                                    if (shouldProcessExternalSubscription)
+                                                    {
+                                                        isRenewalRequired = true;
+
+                                                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource) && !renewalDueCheck.IsRenewalDue)
+                                                        {
+                                                            renewalReason = "Pending external certificate update is awaiting deployment.";
+                                                        }
+                                                    }
+                                                    else if (settings.Mode == RenewalMode.All)
+                                                    {
+                                                        isRenewalRequired = false;
+                                                        renewalReason = "External certificate subscription is not due and has no pending certificate update.";
+                                                    }
                                                 }
 
                                                 // if we care about stopped sites being stopped, check if a specific site is selected and if it's running

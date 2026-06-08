@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using Certify.Management;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,6 +55,43 @@ namespace Certify.Core.Tests.Unit
             var targets = InstanceManagementHub.GetExternalPushSubscriptionTargets(sourceInstanceId, sourceManagedCertificate, managedItemsByInstance);
 
             Assert.AreEqual(1, targets.Count, "Expected one push subscriber target.");
+            Assert.AreEqual("target-instance", targets[0].TargetInstanceId);
+            Assert.AreEqual("subscriber-cert", targets[0].TargetManagedCertificateId);
+        }
+
+        [TestMethod]
+        public void GetExternalPushSubscriptionTargets_MatchesSubscribedTarget_ForColonSeparatedReference()
+        {
+            var sourceInstanceId = "source-instance";
+            var sourceManagedCertificate = new ManagedCertificate
+            {
+                Id = "source-cert",
+                DateRenewed = DateTimeOffset.UtcNow
+            };
+
+            var subscriber = new ManagedCertificate
+            {
+                Id = "subscriber-cert",
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    RetrievalMode = ExternalCertificateRetrievalModes.Push,
+                    ExternalReference = "source-instance:source-cert"
+                }
+            };
+
+            var managedItemsByInstance = new ConcurrentDictionary<string, ManagedInstanceItems>
+            {
+                ["target-instance"] = new ManagedInstanceItems
+                {
+                    InstanceId = "target-instance",
+                    Items = [subscriber]
+                }
+            };
+
+            var targets = InstanceManagementHub.GetExternalPushSubscriptionTargets(sourceInstanceId, sourceManagedCertificate, managedItemsByInstance);
+
+            Assert.AreEqual(1, targets.Count, "Expected one push subscriber target for colon-separated hub reference.");
             Assert.AreEqual("target-instance", targets[0].TargetInstanceId);
             Assert.AreEqual("subscriber-cert", targets[0].TargetManagedCertificateId);
         }
@@ -132,7 +168,7 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public void CurrentSyncStatus_ReturnsUpdateAvailable_WhenPendingSourceVersionExistsWithoutPendingAsset()
+        public void CurrentSyncStatus_ReturnsUpdateAvailable_WhenPendingSourceVersionExists()
         {
             var source = new ExternalCertificateSubscription
             {
@@ -143,15 +179,23 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public void CurrentSyncStatus_ReturnsPendingDeployment_WhenPendingAssetExists()
+        public void TryParseManagementHubReference_ReturnsTrue_ForSlashSeparatedReference()
         {
-            var source = new ExternalCertificateSubscription
-            {
-                PendingSourceVersion = "source-version-1",
-                PendingCertificatePath = "c:\\temp\\external-cert.pfx"
-            };
+            var success = ManagedCertificate.TryParseManagementHubReference("source-instance/source-cert", out var instanceId, out var managedCertificateId);
 
-            Assert.AreEqual("Pending Deployment", source.CurrentSyncStatus);
+            Assert.IsTrue(success);
+            Assert.AreEqual("source-instance", instanceId);
+            Assert.AreEqual("source-cert", managedCertificateId);
+        }
+
+        [TestMethod]
+        public void TryParseManagementHubReference_ReturnsTrue_ForColonSeparatedReference()
+        {
+            var success = ManagedCertificate.TryParseManagementHubReference("source-instance:source-cert", out var instanceId, out var managedCertificateId);
+
+            Assert.IsTrue(success);
+            Assert.AreEqual("source-instance", instanceId);
+            Assert.AreEqual("source-cert", managedCertificateId);
         }
 
         [TestMethod]
@@ -251,6 +295,136 @@ namespace Certify.Core.Tests.Unit
 
             Assert.IsFalse(CertifyManager.IsAutomaticSubscriptionRetryDue(item, now));
             Assert.IsFalse(CertifyManager.ShouldPollSource(item, source, now));
+        }
+
+        [TestMethod]
+        public void HasPendingExternalCertificateUpdate_ReturnsTrue_WhenPendingVersionExists()
+        {
+            var source = new ExternalCertificateSubscription
+            {
+                PendingSourceVersion = "source-version-1"
+            };
+
+            Assert.IsTrue(CertifyManager.HasPendingExternalCertificateUpdate(source));
+        }
+
+        [TestMethod]
+        public void HasPendingExternalSourceUpdate_ReturnsTrue_WhenPendingVersionExists()
+        {
+            var source = new ExternalCertificateSubscription
+            {
+                PendingSourceVersion = "source-version-1"
+            };
+
+            Assert.IsTrue(CertifyManager.HasPendingExternalSourceUpdate(source));
+        }
+
+        [TestMethod]
+        public void ShouldUseDefaultPfxPasswordCredential_ReturnsFalse_ForExternalSubscription()
+        {
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    ExternalReference = "source-instance/source-cert"
+                }
+            };
+
+            Assert.IsFalse(CertifyManager.ShouldUseDefaultPfxPasswordCredential(item));
+        }
+
+        [TestMethod]
+        public void ShouldUseDefaultPfxPasswordCredential_ReturnsTrue_ForStandardManagedCertificate()
+        {
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ACME
+            };
+
+            Assert.IsTrue(CertifyManager.ShouldUseDefaultPfxPasswordCredential(item));
+        }
+
+        [TestMethod]
+        public void GetExternalSubscriptionPfxLoadErrorMessage_IncludesPasswordCredentialGuidance()
+        {
+            var message = CertifyManager.GetExternalSubscriptionPfxLoadErrorMessage();
+
+            StringAssert.Contains(message, "deployable PFX data");
+            StringAssert.Contains(message, "different password credential setting");
+        }
+
+        [TestMethod]
+        public void ShouldProcessExternalManagedCertificate_ReturnsFalse_WhenNotDueAndNoPendingUpdate()
+        {
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-5),
+                DateStart = now.AddDays(-5),
+                DateExpiry = now.AddDays(85)
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PollIntervalMinutes = 5,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsFalse(CertifyManager.ShouldProcessExternalManagedCertificate(item, source, now));
+        }
+
+        [TestMethod]
+        public void ShouldProcessExternalManagedCertificate_ReturnsTrue_WhenPendingSourceUpdateExistsEvenIfNotDue()
+        {
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-5),
+                DateStart = now.AddDays(-5),
+                DateExpiry = now.AddDays(85)
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PendingSourceVersion = "source-version-1",
+                DateLastPoll = now
+            };
+
+            Assert.IsTrue(CertifyManager.ShouldProcessExternalManagedCertificate(item, source, now));
+        }
+
+        [TestMethod]
+        public void ClearExternalManagedCertificateRenewalTrigger_ClearsScheduledRenewalAndPendingVersion_WhenNoPendingAssetExists()
+        {
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddMinutes(-1)
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                PendingSourceVersion = "source-version-1"
+            };
+
+            CertifyManager.ClearExternalManagedCertificateRenewalTrigger(item, source, clearPendingSourceVersion: true);
+
+            Assert.IsNull(item.DateNextScheduledRenewalAttempt);
+            Assert.IsNull(source.PendingSourceVersion);
         }
     }
 }

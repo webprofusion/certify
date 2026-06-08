@@ -1045,6 +1045,30 @@ namespace Certify.Models
 
             return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
         }
+
+        public static bool TryParseManagementHubReference(string? reference, out string instanceId, out string managedCertificateId)
+        {
+            instanceId = string.Empty;
+            managedCertificateId = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(reference))
+            {
+                return false;
+            }
+
+            var normalized = reference.Trim().Replace(':', '/');
+            var parts = normalized.Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (parts.Length < 2)
+            {
+                return false;
+            }
+
+            instanceId = parts[0];
+            managedCertificateId = parts[1];
+
+            return !string.IsNullOrWhiteSpace(instanceId) && !string.IsNullOrWhiteSpace(managedCertificateId);
+        }
     }
 }
 

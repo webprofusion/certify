@@ -110,8 +110,7 @@ namespace Certify.UI.Controls.ManagedCertificate
             return externalSource.DateLastPoll != null
                 || !string.IsNullOrWhiteSpace(externalSource.LastSourceVersion)
                 || !string.IsNullOrWhiteSpace(externalSource.LastError)
-                || !string.IsNullOrWhiteSpace(externalSource.PendingSourceVersion)
-                || !string.IsNullOrWhiteSpace(externalSource.PendingCertificatePath);
+                || !string.IsNullOrWhiteSpace(externalSource.PendingSourceVersion);
         }
 
         private void ShowValidationError(string msg)

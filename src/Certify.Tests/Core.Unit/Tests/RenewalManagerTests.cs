@@ -157,18 +157,65 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateExpiry = item.DateExpiry,
                 DateStart = item.DateStart,
                 DateLastRenewalAttempt = item.DateLastRenewalAttempt,
+                DateNextScheduledRenewalAttempt = item.DateNextScheduledRenewalAttempt,
                 LastRenewalStatus = item.LastRenewalStatus,
                 RenewalFailureCount = item.RenewalFailureCount,
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
                 ItemType = item.ItemType,
                 MaintenanceWindowId = item.MaintenanceWindowId,
+                ExternalSource = item.ExternalSource == null
+                    ? null
+                    : new ExternalCertificateSubscription
+                    {
+                        SourceType = item.ExternalSource.SourceType,
+                        RetrievalMode = item.ExternalSource.RetrievalMode,
+                        SourceConnection = item.ExternalSource.SourceConnection,
+                        ExternalReference = item.ExternalSource.ExternalReference,
+                        CredentialKey = item.ExternalSource.CredentialKey,
+                        SourceItemName = item.ExternalSource.SourceItemName,
+                        PollIntervalMinutes = item.ExternalSource.PollIntervalMinutes,
+                        DateLastPoll = item.ExternalSource.DateLastPoll,
+                        LastSourceVersion = item.ExternalSource.LastSourceVersion,
+                        PendingSourceVersion = item.ExternalSource.PendingSourceVersion,
+                        LastError = item.ExternalSource.LastError
+                    },
                 RequestConfig = new CertRequestConfig
                 {
                     PrimaryDomain = item.RequestConfig?.PrimaryDomain ?? "",
                     PerformAutoConfig = item.RequestConfig?.PerformAutoConfig ?? true,
                     PerformAutomatedCertBinding = item.RequestConfig?.PerformAutomatedCertBinding ?? true,
                     Challenges = item.RequestConfig?.Challenges ?? new ObservableCollection<CertRequestChallengeConfig>()
+                }
+            };
+        }
+
+        private ManagedCertificate CreateExternalManagedCertificate(string id, string name, DateTimeOffset? dateRenewed = null, string? pendingSourceVersion = null)
+        {
+            return new ManagedCertificate
+            {
+                Id = id,
+                Name = name,
+                IncludeInAutoRenew = true,
+                UseStagingMode = true,
+                DateRenewed = dateRenewed ?? DateTimeOffset.UtcNow.AddDays(-35),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-90),
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                    ExternalReference = $"instance/{id}",
+                    PollIntervalMinutes = 30,
+                    PendingSourceVersion = pendingSourceVersion
+                },
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = $"{name.ToLower()}.example.com",
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>()
                 }
             };
         }
@@ -284,6 +331,36 @@ namespace Certify.Tests.Core.Unit.Tests
                     },
                     PerformAutoConfig = true,
                     PerformAutomatedCertBinding = true
+                }
+            };
+        }
+
+        private ManagedCertificate CreateExternalManagedCertificate(string id, string name, DateTimeOffset? dateRenewed = null, string pendingSourceVersion = null)
+        {
+            return new ManagedCertificate
+            {
+                Id = id,
+                Name = name,
+                IncludeInAutoRenew = true,
+                UseStagingMode = true,
+                DateRenewed = dateRenewed ?? DateTimeOffset.UtcNow.AddDays(-35),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-90),
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                ExternalSource = new ExternalCertificateSubscription
+                {
+                    SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                    RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                    ExternalReference = $"instance/{id}",
+                    PollIntervalMinutes = 30,
+                    PendingSourceVersion = pendingSourceVersion
+                },
+                RequestConfig = new CertRequestConfig
+                {
+                    PrimaryDomain = $"{name.ToLower()}.example.com",
+                    PerformAutoConfig = true,
+                    PerformAutomatedCertBinding = true,
+                    Challenges = new ObservableCollection<CertRequestChallengeConfig>()
                 }
             };
         }
@@ -430,6 +507,62 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.Contains("cert1", renewedIds, "cert1 should be renewed");
             Assert.Contains("cert3", renewedIds, "cert3 should be renewed");
             Assert.DoesNotContain("cert2", renewedIds, "cert2 should not be renewed");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll excludes targeted external subscriptions that are not due and have no pending update")]
+        public async Task TestPerformRenewAll_SpecificTargets_ExcludesExternalSubscriptionsNotDue()
+        {
+            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+            var normalDue = CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
+
+            await _itemStore.Update(externalNotDue);
+            await _itemStore.Update(normalDue);
+
+            var targetSettings = new RenewalSettings
+            {
+                Mode = RenewalMode.Auto,
+                IsPreviewMode = false,
+                TargetManagedCertificates = new List<string> { "ext-not-due", "cert1" }
+            };
+
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                targetSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            Assert.HasCount(1, results, "Non-due external subscriptions should not be queued as targeted renewals.");
+            Assert.AreEqual("cert1", results[0].ManagedItem.Id, "Only the due standard managed certificate should be processed.");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll includes external subscriptions when a pending update exists")]
+        public async Task TestPerformRenewAll_IncludesExternalSubscriptionsWithPendingUpdate()
+        {
+            var externalPending = CreateExternalManagedCertificate("ext-pending", "ExternalPending", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5), pendingSourceVersion: "source-version-1");
+            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+
+            await _itemStore.Update(externalPending);
+            await _itemStore.Update(externalNotDue);
+
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            Assert.HasCount(1, results, "Only the external subscription with a pending update should be queued.");
+            Assert.AreEqual("ext-pending", results[0].ManagedItem.Id, "Pending external updates should still be processed.");
+            StringAssert.Contains(results[0].Message, "Pending external certificate update", "The renewal reason should indicate the pending external update.");
         }
 
         [TestMethod, Description("Test PerformRenewAll with max renewal requests limit")]

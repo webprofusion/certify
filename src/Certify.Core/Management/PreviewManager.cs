@@ -378,7 +378,7 @@ namespace Certify.Management
 
             summary.AppendLine();
             summary.AppendLine("On sync, Certify will check the configured external source for the selected remote certificate.");
-            summary.AppendLine("If an updated certificate is available, it will be downloaded and staged for local deployment.");
+            summary.AppendLine("If an updated certificate is available, it will be downloaded and used for local deployment.");
             summary.AppendLine("No ACME order, challenge validation, or local certificate renewal request is performed for this workflow.");
 
             if (source.PollIntervalMinutes > 0
@@ -387,9 +387,9 @@ namespace Certify.Management
                 summary.AppendLine($"The source will be polled every **{source.PollIntervalMinutes}** minutes when polling is applicable.");
             }
 
-            if (!string.IsNullOrWhiteSpace(source.PendingSourceVersion) || !string.IsNullOrWhiteSpace(source.PendingCertificatePath))
+            if (!string.IsNullOrWhiteSpace(source.PendingSourceVersion))
             {
-                summary.AppendLine("A pending external certificate update is currently recorded and may wait for the next applicable maintenance window before deployment.");
+                summary.AppendLine("A pending external certificate update is currently recorded and will be fetched from the source during the next applicable renewal attempt.");
             }
 
             // Enrich the item with source identifiers so that BindingDeploymentManager can match

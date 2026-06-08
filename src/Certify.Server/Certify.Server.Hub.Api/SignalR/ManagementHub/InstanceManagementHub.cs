@@ -595,7 +595,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return false;
             }
 
-            return TryParseHubReference(source.ExternalReference, out var referencedInstanceId, out var referencedManagedCertificateId)
+            return ManagedCertificate.TryParseManagementHubReference(source.ExternalReference, out var referencedInstanceId, out var referencedManagedCertificateId)
                 && string.Equals(referencedInstanceId, sourceInstanceId, StringComparison.OrdinalIgnoreCase)
                 && string.Equals(referencedManagedCertificateId, sourceManagedCertificateId, StringComparison.OrdinalIgnoreCase);
         }
@@ -604,30 +604,6 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         {
             return string.Equals(retrievalMode, ExternalCertificateRetrievalModes.Push, StringComparison.OrdinalIgnoreCase)
                 || string.Equals(retrievalMode, ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool TryParseHubReference(string? reference, out string instanceId, out string managedCertificateId)
-        {
-            instanceId = string.Empty;
-            managedCertificateId = string.Empty;
-
-            if (string.IsNullOrWhiteSpace(reference))
-            {
-                return false;
-            }
-
-            var normalized = reference.Trim().Replace(':', '/');
-            var parts = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            if (parts.Length < 2)
-            {
-                return false;
-            }
-
-            instanceId = parts[0];
-            managedCertificateId = parts[1];
-
-            return !string.IsNullOrWhiteSpace(instanceId) && !string.IsNullOrWhiteSpace(managedCertificateId);
         }
 
         private async Task ProcessInstanceInfoResult(InstanceCommandResult result)

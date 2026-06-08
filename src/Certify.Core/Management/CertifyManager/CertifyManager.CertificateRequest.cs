@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -385,28 +385,15 @@ namespace Certify.Management
 
                     if (!string.IsNullOrWhiteSpace(managedCertificate.ExternalSource?.ExternalReference))
                     {
-                        // attempt our external request. If source is unavailable request should fail
-                        requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
-                        if (requestResult.IsSuccess)
+                        // interactive requests explicitly fetch the latest external certificate;
+                        // non-interactive renewals follow the automatic due/pending checks.
+                        if (isInteractive)
                         {
-                            // wait for any other running subscription tasks to complete
-                            while (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
-                            {
-                                await Task.Delay(1000);
-                            }
-
-                            try
-                            {
-                                await ProcessExternalManagedCertificate(managedCertificate, isInteractive, CancellationToken.None);
-                            }
-                            finally
-                            {
-                                Interlocked.Exchange(ref _isExternalSubscriptionTaskRunning, 0);
-                            }
+                            requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
                         }
                         else
                         {
-
+                            requestResult = await PerformAutomaticExternalManagedCertificateRequest(managedCertificate, progress);
                         }
                     }
                     else
@@ -1383,6 +1370,12 @@ namespace Certify.Management
             }
         }
 
+        public static bool ShouldUseDefaultPfxPasswordCredential(ManagedCertificate managedCertificate)
+        {
+            return !(managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                && !string.IsNullOrWhiteSpace(managedCertificate.ExternalSource?.SourceType));
+        }
+
         /// <summary>
         /// Get the decrypted PFX password for a given managed certificate (may be blank or a specific string from a stored credential)
         /// </summary>
@@ -1391,7 +1384,12 @@ namespace Certify.Management
         private async Task<string> GetPfxPassword(ManagedCertificate managedCertificate)
         {
             var pfxPwd = "";
-            var pwdCredentialId = managedCertificate.CertificatePasswordCredentialId?.AsNullWhenBlank() ?? CoreAppSettings.Current.DefaultKeyCredentials?.AsNullWhenBlank() ?? null;
+            var pwdCredentialId = managedCertificate.CertificatePasswordCredentialId?.AsNullWhenBlank();
+
+            if (pwdCredentialId == null && ShouldUseDefaultPfxPasswordCredential(managedCertificate))
+            {
+                pwdCredentialId = CoreAppSettings.Current.DefaultKeyCredentials?.AsNullWhenBlank();
+            }
 
             // if pwd specified for pfx (a default or specific to this managed cert), fetch from credentials store
             if (!string.IsNullOrEmpty(pwdCredentialId))
