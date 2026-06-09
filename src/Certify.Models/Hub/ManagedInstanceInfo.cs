@@ -45,6 +45,13 @@ namespace Certify.Models.Hub
         public bool IsAuthenticated { get; set; }
 
         /// <summary>
+        /// True when this row was created during register/join checks before the instance completed
+        /// full hub connection and reported final metadata (title, client info, internal id).
+        /// Pending rows should be cleared once real instance info is received.
+        /// </summary>
+        public bool IsPendingConnection { get; set; }
+
+        /// <summary>
         /// Indicates whether dashboard reporting is enabled for this instance.
         /// </summary>
         public bool IsDashboardEnabled { get; set; }

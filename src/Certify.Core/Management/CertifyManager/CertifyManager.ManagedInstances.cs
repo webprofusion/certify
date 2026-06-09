@@ -48,11 +48,14 @@ namespace Certify.Management
 
             await _configStore.Add(nameof(ManagedInstanceInfo), item);
 
-            var principalId = await EnsureManagedInstanceSecurityPrincipal(item);
-            if (!string.IsNullOrWhiteSpace(principalId))
+            if (!item.IsPendingConnection)
             {
-                item.SecurityPrincipalId = principalId;
-                await _configStore.Update(nameof(ManagedInstanceInfo), item);
+                var principalId = await EnsureManagedInstanceSecurityPrincipal(item);
+                if (!string.IsNullOrWhiteSpace(principalId))
+                {
+                    item.SecurityPrincipalId = principalId;
+                    await _configStore.Update(nameof(ManagedInstanceInfo), item);
+                }
             }
 
             return new ActionResult<ManagedInstanceInfo>("Added", true, item);
@@ -107,6 +110,8 @@ namespace Certify.Management
                     existing.RequestAuthSecretHash = item.RequestAuthSecretHash;
                 }
 
+                existing.IsPendingConnection = item.IsPendingConnection;
+
                 if (existing.DateRegistered == DateTimeOffset.MinValue)
                 {
                     existing.DateRegistered = DateTimeOffset.UtcNow;
@@ -114,11 +119,14 @@ namespace Certify.Management
 
                 await _configStore.Update(nameof(ManagedInstanceInfo), existing);
 
-                var principalId = await EnsureManagedInstanceSecurityPrincipal(existing);
-                if (!string.IsNullOrWhiteSpace(principalId) && existing.SecurityPrincipalId != principalId)
+                if (!existing.IsPendingConnection)
                 {
-                    existing.SecurityPrincipalId = principalId;
-                    await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+                    var principalId = await EnsureManagedInstanceSecurityPrincipal(existing);
+                    if (!string.IsNullOrWhiteSpace(principalId) && existing.SecurityPrincipalId != principalId)
+                    {
+                        existing.SecurityPrincipalId = principalId;
+                        await _configStore.Update(nameof(ManagedInstanceInfo), existing);
+                    }
                 }
 
                 return new ActionResult("Updated", true);
@@ -137,7 +145,67 @@ namespace Certify.Management
 
         public async Task<ICollection<ManagedInstanceInfo>> GetHubManagedInstances()
         {
-            return await _configStore.GetItems<ManagedInstanceInfo>(nameof(ManagedInstanceInfo));
+            var items = await _configStore.GetItems<ManagedInstanceInfo>(nameof(ManagedInstanceInfo)) ?? [];
+
+            if (items.Count == 0)
+            {
+                return items;
+            }
+
+            var nowUtc = DateTimeOffset.UtcNow;
+            var stalePendingInstances = items
+                .Where(i => IsStalePendingManagedInstance(i, nowUtc))
+                .ToList();
+
+            if (stalePendingInstances.Count == 0)
+            {
+                return items
+                    .Where(i => !i.IsPendingConnection)
+                    .ToList();
+            }
+
+            foreach (var stale in stalePendingInstances)
+            {
+                await _configStore.Delete<ManagedInstanceInfo>(nameof(ManagedInstanceInfo), stale.Id);
+                await RemoveManagedInstanceAccessArtifacts(stale, stale.Id);
+            }
+
+            _serviceLog.Information("Cleaned up {count} stale pending managed instance registrations.", stalePendingInstances.Count);
+
+            var staleIds = stalePendingInstances
+                .Select(s => s.Id)
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            return items
+                .Where(i => !staleIds.Contains(i.Id) && !i.IsPendingConnection)
+                .ToList();
+        }
+
+        private static bool IsStalePendingManagedInstance(ManagedInstanceInfo? instance, DateTimeOffset nowUtc)
+        {
+            if (instance == null || !instance.IsPendingConnection)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(instance.InternalInstanceId)
+                || !string.IsNullOrWhiteSpace(instance.Title)
+                || string.Equals(instance.ConnectionStatus, ConnectionStatus.Connected, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var pendingSince = instance.DateRegistered != default
+                ? instance.DateRegistered
+                : instance.DateLastReported;
+
+            if (pendingSince == default)
+            {
+                return false;
+            }
+
+            return (nowUtc - pendingSince) >= TimeSpan.FromHours(1);
         }
 
         public async Task<ActionResult> RemoveHubManagedInstance(string id)

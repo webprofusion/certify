@@ -291,6 +291,7 @@ namespace Certify.Server.Hub.Api.Controllers
                         ConnectionStatus = ConnectionStatus.Disconnected,
                         IsAuthenticated = false,
                         Title = instanceTitle,
+                        IsPendingConnection = true,
                         RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
                     };
 
@@ -332,6 +333,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     DateLastReported = DateTimeOffset.UtcNow,
                     ConnectionStatus = ConnectionStatus.Disconnected,
                     IsAuthenticated = false,
+                    IsPendingConnection = true,
                     RequestAuthSecretHash = requestAuthSecretHash ?? string.Empty
                 };
                 var r = await _client.AddHubManagedInstance(instanceInfo, CurrentAuthContext);

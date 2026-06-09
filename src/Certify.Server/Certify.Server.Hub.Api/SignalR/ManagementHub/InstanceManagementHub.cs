@@ -613,6 +613,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             if (instanceInfo != null)
             {
                 instanceInfo.DateLastReported = DateTimeOffset.Now;
+                instanceInfo.IsPendingConnection = false;
 
                 // update our stored instance info for this instance while preserving persistent metadata fields
                 var storedInstance = await _backendClient?.GetHubManagedInstance(instanceInfo.InstanceId, null);
@@ -624,6 +625,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     instanceInfo.SecurityPrincipalId = storedInstance.SecurityPrincipalId;
                     instanceInfo.DateRegistered = storedInstance.DateRegistered;
                     instanceInfo.Description = storedInstance.Description;
+                    instanceInfo.IsPendingConnection = false;
                 }
 
                 // update our cached instance info
@@ -646,6 +648,8 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                     {
                         storedInstance.InternalInstanceId = instanceInfo.InternalInstanceId;
                     }
+
+                    storedInstance.IsPendingConnection = false;
 
                     await _backendClient?.UpdateHubManagedInstance(storedInstance, null);
                 }
