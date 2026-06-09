@@ -116,6 +116,15 @@ namespace Certify.Locales {
                 return ResourceManager.GetString("CertifyManager_CertificateInstalledAndBindingUpdated", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Certificate stored for {0}. No SSL bindings were updated..
+        /// </summary>
+        public static string CertifyManager_CertificateStoredNoBindingUpdate {
+            get {
+                return ResourceManager.GetString("CertifyManager_CertificateStoredNoBindingUpdate", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to An error occurred installing the certificate. Certificate file may not be valid: {0}.

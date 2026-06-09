@@ -1701,7 +1701,27 @@ namespace Certify.Management
                 }
 
                 result.IsSuccess = true;
-                result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+
+                var hasBindingDeploymentActions = actions.Any(a =>
+                    (!string.IsNullOrWhiteSpace(a.Category) && a.Category.StartsWith("Deployment.", StringComparison.OrdinalIgnoreCase))
+                    || string.Equals(a.Category, "Deploy.AddOrUpdateBindings", StringComparison.OrdinalIgnoreCase));
+
+                var hasCertificateStorageAction = actions.Any(a =>
+                    string.Equals(a.Category, "CertificateStorage", StringComparison.OrdinalIgnoreCase)
+                    && !a.HasError);
+
+                if (hasBindingDeploymentActions)
+                {
+                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstalledAndBindingUpdated, config.PrimaryDomain);
+                }
+                else if (hasCertificateStorageAction)
+                {
+                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateStoredNoBindingUpdate, config.PrimaryDomain);
+                }
+                else
+                {
+                    result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateCreatedForBinding, config.PrimaryDomain);
+                }
 
                 if (!isPreviewOnly)
                 {

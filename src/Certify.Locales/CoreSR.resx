@@ -148,11 +148,14 @@
   <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
     <value>Certificate installed and SSL bindings updated for {0}</value>
   </data>
+  <data name="CertifyManager_CertificateStoredNoBindingUpdate" xml:space="preserve">
+    <value>Certificate stored for {0}.</value>
+  </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
     <value>An error occurred installing the certificate. Certificate file may not be valid: {0}</value>
   </data>
   <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
-    <value>Certificate created ready for manual binding: {0}</value>
+    <value>Certificate ready for use: {0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
     <value>The ACME CA service did not issue a valid certificate in the time allowed. {0}</value>
