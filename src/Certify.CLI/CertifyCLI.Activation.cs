@@ -33,7 +33,7 @@ namespace Certify.CLI
 
         private bool IsRegistered()
         {
-            if (_licensingManager?.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath()) == true)
+            if (_licensingManager?.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), _prefs.InstanceId ?? string.Empty) == true)
             {
                 return true;
             }
@@ -60,12 +60,12 @@ namespace Certify.CLI
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var registered = _licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath());
+                var registered = _licensingManager.IsInstallRegistered(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), _prefs.InstanceId ?? string.Empty);
 
                 if (registered)
                 {
                     licenseCheckResult.IsLicensed = true;
-                    var isActive = await _licensingManager.IsInstallActive(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath());
+                    var isActive = await _licensingManager.IsInstallActive(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), _prefs.InstanceId ?? string.Empty);
                     if (isActive)
                     {
                         licenseCheckResult.IsValid = true;
@@ -145,7 +145,7 @@ namespace Certify.CLI
             {
                 var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
 
-                var activated = await _licensingManager.IsInstallActive(ProductTypeID, settingsPath);
+                var activated = await _licensingManager.IsInstallActive(ProductTypeID, settingsPath, _prefs.InstanceId ?? string.Empty);
                 if (!activated)
                 {
                     var validationResult = await _licensingManager.Validate(ProductTypeID, email, key);
@@ -162,7 +162,7 @@ namespace Certify.CLI
 
                         if (result.IsSuccess)
                         {
-                            _licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath);
+                            _licensingManager.FinaliseInstall(ProductTypeID, result, settingsPath, _prefs.InstanceId ?? string.Empty);
                         }
 
                         return result;
@@ -237,7 +237,7 @@ namespace Certify.CLI
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var deactivated = await _licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), email, instance);
+                var deactivated = await _licensingManager.DeactivateInstall(ProductTypeID, EnvironmentUtil.EnsuredAppDataPath(), email, instance, _prefs.InstanceId ?? string.Empty);
 
                 return deactivated;
             }

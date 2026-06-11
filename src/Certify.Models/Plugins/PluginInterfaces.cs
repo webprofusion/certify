@@ -18,14 +18,14 @@ namespace Certify.Models.Plugins
 
         Task<LicenseKeyInstallResult> RegisterInstall(int productTypeId, string email, string key, RegisteredInstance instance);
 
-        bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath);
+        bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath, string instanceId);
 
-        bool IsInstallRegistered(int productTypeId, string settingsPath);
-        LicenseCheckResult GetCurrentLicense(int productTypeId, string settingsPath);
+        bool IsInstallRegistered(int productTypeId, string settingsPath, string instanceId);
+        LicenseCheckResult GetCurrentLicense(int productTypeId, string settingsPath, string instanceId);
 
-        Task<bool> IsInstallActive(int productTypeId, string settingsPath);
+        Task<bool> IsInstallActive(int productTypeId, string settingsPath, string instanceId);
 
-        Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance);
+        Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance, string instanceId);
 
         DateTime? GetInstallDate(string settingsPath);
     }

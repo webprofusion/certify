@@ -1154,7 +1154,7 @@ namespace Certify.Management
                 {
                     var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
                     var productType = _isMgtmHubBackend ? 2 : 1; // 1 = ccm or agent, 2 = hub
-                    _licensingManager.FinaliseInstall(productType, activation, settingsPath);
+                    _licensingManager.FinaliseInstall(productType, activation, settingsPath, CoreAppSettings.Current.InstanceId ?? string.Empty);
 
                     await RefreshCachedLicenseCheck();
 
@@ -1179,7 +1179,7 @@ namespace Certify.Management
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
 
-                var deactivated = await _licensingManager.DeactivateInstall(productType, settingsPath, null, i);
+                var deactivated = await _licensingManager.DeactivateInstall(productType, settingsPath, null, i, CoreAppSettings.Current.InstanceId ?? string.Empty);
 
                 if (deactivated)
                 {

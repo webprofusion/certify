@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -470,10 +471,10 @@ namespace Certify.Providers.Internal
             }
         }
 
-        public async Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance)
+        public async Task<bool> DeactivateInstall(int productTypeId, string settingsPath, string email, RegisteredInstance instance, string instanceId)
         {
             Log("Deactivating Install");
-            var install = GetLicenseKeyInstallResult(productTypeId, settingsPath);
+            var install = GetLicenseKeyInstallResult(productTypeId, settingsPath, instanceId);
             if (install != null)
             {
                 instance.MachineName = Environment.MachineName;
@@ -521,13 +522,19 @@ namespace Certify.Providers.Internal
             return false;
         }
 
-        public bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath)
+        public bool FinaliseInstall(int productTypeId, LicenseKeyInstallResult result, string settingsPath, string instanceId)
         {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                Log("Finalising Install Failed: instanceId was not provided");
+                return false;
+            }
+
             var json = JsonConvert.SerializeObject(result);
 
             Log("Finalising Install: " + json);
-            Log("Machine Name: " + Environment.MachineName);
-            var data = StringCipher.Encrypt(json, Environment.MachineName);
+            Log("Instance Id: " + instanceId);
+            var data = StringCipher.Encrypt(json, instanceId);
 
             Log("Cipher: " + data);
 
@@ -564,46 +571,92 @@ namespace Certify.Providers.Internal
             }
         }
 
-        private LicenseKeyInstallResult GetLicenseKeyInstallResult(int productTypeId, string settingsPath)
+        private LicenseKeyInstallResult GetLicenseKeyInstallResult(int productTypeId, string settingsPath, string instanceId)
         {
             var filePath = Path.Combine(settingsPath, "reg_" + productTypeId);
             if (File.Exists(filePath))
             {
+                var keysToTry = new List<string>();
+
+                if (!string.IsNullOrWhiteSpace(instanceId))
+                {
+                    keysToTry.Add(instanceId);
+                }
+
+                if (!string.IsNullOrWhiteSpace(Environment.MachineName)
+                    && !keysToTry.Contains(Environment.MachineName, StringComparer.OrdinalIgnoreCase))
+                {
+                    keysToTry.Add(Environment.MachineName);
+                }
+
+                if (!keysToTry.Any())
+                {
+                    Log("GetLicenseKeyInstallResult: no decryption key available");
+                    return null;
+                }
+
                 try
                 {
                     var data = File.ReadAllText(filePath);
 
-                    var json = StringCipher.Decrypt(data, Environment.MachineName, preferredBlockSize: 128);
-
-                    var licenseResult = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(json);
-
-                    return licenseResult;
-                }
-                catch (Exception)
-                {
-                    try
+                    foreach (var keyToTry in keysToTry)
                     {
-                        // earlier version may have used a block size of 256 which is now unsupported in .net 5 upwards. If this succeeds, re-encrypt for future
-                        var data = File.ReadAllText(filePath);
-
-                        var json = StringCipher.Decrypt(data, Environment.MachineName, preferredBlockSize: 256);
-
-                        var licenseResult = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(json);
-
-                        if (licenseResult != null)
+                        try
                         {
-                            // migrate encrypted file to supported block size
-                            FinaliseInstall(productTypeId, licenseResult, settingsPath);
+                            var json = StringCipher.Decrypt(data, keyToTry, preferredBlockSize: 128);
+                            var licenseResult = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(json);
+
+                            if (licenseResult != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(instanceId)
+                                    && !string.Equals(keyToTry, instanceId, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    FinaliseInstall(productTypeId, licenseResult, settingsPath, instanceId);
+                                }
+
+                                return licenseResult;
+                            }
+                        }
+                        catch
+                        {
+                            // try legacy block size fallback
                         }
 
-                        return licenseResult;
+                        try
+                        {
+                            // earlier version may have used a block size of 256 which is now unsupported in .net 5 upwards.
+                            var json = StringCipher.Decrypt(data, keyToTry, preferredBlockSize: 256);
+                            var licenseResult = JsonConvert.DeserializeObject<LicenseKeyInstallResult>(json);
 
-                    }
-                    catch (Exception exp)
-                    {
-                        Log("GetLicenseKeyInstallResult: " + exp.ToString());
+                            if (licenseResult != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(instanceId)
+                                    && !string.Equals(keyToTry, instanceId, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // migrate encrypted file to instance-id key and supported block size
+                                    FinaliseInstall(productTypeId, licenseResult, settingsPath, instanceId);
+                                }
+                                else if (string.Equals(keyToTry, instanceId, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // migrate encrypted file to supported block size
+                                    FinaliseInstall(productTypeId, licenseResult, settingsPath, instanceId);
+                                }
+
+                                return licenseResult;
+                            }
+                        }
+                        catch
+                        {
+                            // continue with next key
+                        }
                     }
 
+                    Log("GetLicenseKeyInstallResult: unable to decrypt license file with available keys");
+                    return null;
+                }
+                catch (Exception exp)
+                {
+                    Log("GetLicenseKeyInstallResult: " + exp.ToString());
                     return null;
                 }
             }
@@ -614,9 +667,9 @@ namespace Certify.Providers.Internal
             }
         }
 
-        public bool IsInstallRegistered(int productTypeId, string settingsPath)
+        public bool IsInstallRegistered(int productTypeId, string settingsPath, string instanceId)
         {
-            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath);
+            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath, instanceId);
             if (result?.IsSuccess == true)
             {
                 return true;
@@ -638,10 +691,10 @@ namespace Certify.Providers.Internal
             return fileInfo?.CreationTime;
         }
 
-        public async Task<bool> IsInstallActive(int productTypeId, string settingsPath)
+        public async Task<bool> IsInstallActive(int productTypeId, string settingsPath, string instanceId)
         {
 
-            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath);
+            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath, instanceId);
             if (result != null)
             {
 
@@ -678,10 +731,10 @@ namespace Certify.Providers.Internal
             }
         }
 
-        public LicenseCheckResult GetCurrentLicense(int productTypeId, string settingsPath)
+        public LicenseCheckResult GetCurrentLicense(int productTypeId, string settingsPath, string instanceId)
         {
 
-            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath);
+            var result = GetLicenseKeyInstallResult(productTypeId, settingsPath, instanceId);
             if (result?.IsSuccess == true)
             {
                 return new LicenseCheckResult { IsValid = result.IsSuccess, StatusCode = LicenseCheckStatusCode.Licensed, ManagedLicenseId = result.ManagedLicenceId };

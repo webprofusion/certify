@@ -69,7 +69,7 @@ namespace Certify.UI.ViewModel
         public async Task<bool> CheckLicenseIsActive()
         {
 
-            if (_licensingManager != null && !await _licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.EnsuredAppDataPath()))
+            if (_licensingManager != null && !await _licensingManager.IsInstallActive(ProductTypeId, EnvironmentUtil.EnsuredAppDataPath(), Preferences?.InstanceId ?? string.Empty))
             {
                 return false;
             }

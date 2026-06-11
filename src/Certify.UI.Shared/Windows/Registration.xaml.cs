@@ -73,7 +73,7 @@ namespace Certify.UI.Windows
                         if (installRegistration.IsSuccess)
                         {
                             var settingsPath = EnvironmentUtil.EnsuredAppDataPath();
-                            if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath))
+                            if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath, ViewModel.AppViewModel.Current.Preferences.InstanceId ?? string.Empty))
                             {
                                 ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
                                 MessageBox.Show(installRegistration.Message);
@@ -149,7 +149,7 @@ namespace Certify.UI.Windows
                     InstanceId = ViewModel.AppViewModel.Current.Preferences.InstanceId,
                     AppVersion = Management.Util.GetAppVersion().ToString()
                 };
-                var resultOK = await licensingManager.DeactivateInstall(productTypeId, EnvironmentUtil.EnsuredAppDataPath(), email, instance);
+                var resultOK = await licensingManager.DeactivateInstall(productTypeId, EnvironmentUtil.EnsuredAppDataPath(), email, instance, ViewModel.AppViewModel.Current.Preferences.InstanceId ?? string.Empty);
 
                 Mouse.OverrideCursor = Cursors.Arrow;
 

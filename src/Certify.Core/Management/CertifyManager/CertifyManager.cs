@@ -362,11 +362,11 @@ namespace Certify.Management
                     var productType = _isMgtmHubBackend ? 2 : 1; // 1 = ccm or agent, 2 = hub
 
                     // check local license config is valid
-                    _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(productType, EnvironmentUtil.EnsuredAppDataPath());
+                    _cachedLicenseCheck = _licensingManager?.GetCurrentLicense(productType, EnvironmentUtil.EnsuredAppDataPath(), CoreAppSettings.Current.InstanceId ?? string.Empty);
                     if (_cachedLicenseCheck.IsValid)
                     {
                         // check remote license state is valid
-                        if (await _licensingManager?.IsInstallActive(productType, EnvironmentUtil.EnsuredAppDataPath()) == false)
+                        if (await _licensingManager?.IsInstallActive(productType, EnvironmentUtil.EnsuredAppDataPath(), CoreAppSettings.Current.InstanceId ?? string.Empty) == false)
                         {
                             _cachedLicenseCheck.StatusCode = LicenseCheckStatusCode.Invalid;
                             _cachedLicenseCheck.IsValid = false;
