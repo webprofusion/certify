@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Certify.Management;
+using Certify.Models.CertificateAuthorities;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
@@ -43,6 +44,7 @@ namespace Certify.Core.Management.Challenges
             ILog log,
             ITargetWebServer serverManager,
             ManagedCertificate managedCertificate,
+            CertificateAuthority preferredCA,
             bool isPreviewMode,
             bool enableDnsChecks,
             bool performCleanupOnly,
@@ -56,7 +58,7 @@ namespace Certify.Core.Management.Challenges
 
             if (!performCleanupOnly)
             {
-                var validationResult = CertificateEditorService.Validate(managedCertificate, null, null, false);
+                var validationResult = CertificateEditorService.Validate(managedCertificate, null, preferredCA, false);
 
                 if (!validationResult.IsValid)
                 {

@@ -679,11 +679,15 @@ namespace Certify.Management
                 }
             }
 
+            var currentCAId = GetCurrentCAId(managedCertificate);
+            _certificateAuthorities.TryGetValue(currentCAId, out var preferredCA);
+
             results.AddRange(
                 await _challengeResponseService.TestChallengeResponse(
                     log,
                     serverProvider,
                     managedCertificate,
+                    preferredCA,
                     isPreviewMode,
                     CoreAppSettings.Current.EnableDNSValidationChecks,
                     performCleanupOnly: false,
@@ -728,12 +732,15 @@ namespace Certify.Management
             var results = new List<StatusMessage>();
 
             var serverProvider = GetTargetServerProvider(managedCertificate);
+            var currentCAId = GetCurrentCAId(managedCertificate);
+            _certificateAuthorities.TryGetValue(currentCAId, out var preferredCA);
 
             results.AddRange(
                await _challengeResponseService.TestChallengeResponse(
                    log,
                    serverProvider,
                    managedCertificate,
+                   preferredCA,
                    isPreviewMode: false,
                    enableDnsChecks: false,
                    performCleanupOnly: true,
@@ -1165,4 +1172,3 @@ namespace Certify.Management
         }
     }
 }
-
