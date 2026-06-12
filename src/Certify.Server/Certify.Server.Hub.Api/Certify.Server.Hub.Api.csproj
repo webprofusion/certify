@@ -17,9 +17,9 @@
 
     <ItemGroup>
         <PackageReference Include="Markdig" Version="1.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
-        <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.18.0" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+        <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.19.1" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.19.1" />
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\..\..\..\certify-plugins\src\DataStores\SQLite\Plugin.Datastore.SQLite.csproj" />
