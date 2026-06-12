@@ -69,9 +69,9 @@ namespace Certify.Providers.DNS.GoDaddy
         public static ChallengeProviderDefinition Definition => new ChallengeProviderDefinition
         {
             Id = "DNS01.API.GoDaddy",
-            Title = "GoDaddy DNS API",
-            Description = "Validates via GoDaddy DNS APIs using credentials. Requires account with 10+ domains hosted on GoDaddy DNS.",
-            HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/godaddy",
+            Title = "GoDaddy DNS API (Deprecated - Use GoDaddy via Posh-ACME)",
+            Description = "Legacy internal GoDaddy DNS API provider. Deprecated in favor of DNS01.API.PoshACME.GoDaddy.",
+            HelpUrl = "https://poshac.me/docs/latest/Plugins/GoDaddy/#corporate-example",
             PropagationDelaySeconds = 120,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="authkey", Name="Auth Key", IsRequired=true },
