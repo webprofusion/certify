@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,6 +41,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Hetzner](https://poshac.me/docs/latest/Plugins/Hetzner),
             [HetznerCloud](https://poshac.me/docs/latest/Plugins/HetznerCloud),
             [HostingDe](https://poshac.me/docs/latest/Plugins/HostingDe),
+            [HostUp](https://github.com/rmbolger/Posh-ACME/blob/main/Posh-ACME/Plugins/HostUp.ps1),
             [Hurricane Electric](https://poshac.me/docs/latest/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/latest/Plugins/Infoblox),
             [Infomaniak](https://poshac.me/docs/latest/Plugins/Infomaniak)
@@ -666,8 +667,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostingDe",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
-                IsTestModeSupported = false,
-
+                IsTestModeSupported = false
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.HostUp",
+                Title = "HostUp DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/HostUp",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "HUToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostUp",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false
             },
             new ChallengeProviderDefinition
             {
