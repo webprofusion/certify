@@ -386,21 +386,6 @@ namespace Certify.Models.Shared.Validation
                         );
                     }
 
-                    if (!(preferredCA != null && preferredCA.AllowInternalHostnames))
-                    {
-                        // validate hostnames
-                        if (item.DomainOptions?.Any(d => d.IsSelected && d.Type == CertIdentifierType.Dns && d.Domain != null && (!d.Domain.Contains('.') || d.Domain.ToLowerInvariant().EndsWith(".local", StringComparison.InvariantCultureIgnoreCase))) == true)
-                        {
-                            // one or more selected domains does not include a label separator (is an internal host name) or end in .local
-
-                            return new ValidationResult(
-                                false,
-                                "One or more domains specified are internal hostnames. Certificates for internal host names are not supported by the Certificate Authority.",
-                                ValidationErrorCodes.INVALID_IDENTIFIER_DNS.ToString()
-                            );
-                        }
-                    }
-
                     // if title still set to the default, automatically use the primary domain instead
                     if (item.Name == SR.ManagedCertificateSettings_DefaultTitle)
                     {
