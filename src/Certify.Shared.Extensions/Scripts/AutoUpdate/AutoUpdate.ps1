@@ -28,16 +28,27 @@ $versionPatch = $updateInfo.version.patch
 
 $updateVersionString = "$versionMajor.$versionMinor.$versionPatch"
 
-$releaseDateString = $updateInfo.message.releaseNotes[0].releasedate
-$releaseDate = [datetime]::ParseExact($releaseDateString, 'yyyy/MM/dd', $null)
+# Compare versions ignoring the 4th revision component (API only returns Major.Minor.Patch)
+$installedVer = [System.Version]$installedVersionString
+$updateVersionIsCurrent = ($installedVer.Major -eq [int]$versionMajor -and
+                            $installedVer.Minor -eq [int]$versionMinor -and
+                            $installedVer.Build -eq [int]$versionPatch)
 
-# update is considered stable if release date was more than N days ago
-$updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
+# Check release notes for stability date (empty array when no update is available)
+$hasReleaseNotes = ($null -ne $updateInfo.message.releaseNotes -and $updateInfo.message.releaseNotes.Count -gt 0)
+
+if ($hasReleaseNotes) {
+    $releaseDateString = $updateInfo.message.releaseNotes[0].releasedate
+    $releaseDate = [datetime]::ParseExact($releaseDateString, 'yyyy-MM-dd', $null)
+    $updateDateIsStable = $releaseDate -lt ((Get-Date).AddDays(-$installAfterNDays))
+} else {
+    $updateDateIsStable = $false
+}
 
 # got update info, check our installed version
 # if the installed version is different from the available stable update (or force install is enabled) proceed with update
 
-if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionString -and $updateDateIsStable) -or $forceInstall ) {
+if (($installedVersion -and -not $updateVersionIsCurrent -and $updateDateIsStable) -or $forceInstall ) {
 
     if ($forceInstall -eq $True) {
         Write-Output "$scriptName : Forced install, update may not be required."
@@ -58,7 +69,7 @@ if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionS
     
     $setupFile = Join-Path $randomTempFolder $filename
     Write-Output "Downloading to temp path ${setupFile}"
-    Invoke-WebRequest -Uri $updateInfo.message.downloadFileURL -OutFile $setupFile
+    Invoke-WebRequest -Uri $updateInfo.message.downloadFileURL -OutFile $setupFile -UseBasicParsin
 
     # computer checksum of downloaded file
     $downloadHash = Get-FileHash $setupFile -Algorithm SHA256
@@ -69,8 +80,8 @@ if (($installedVersion -and $installedVersion.DisplayVersion -ne $updateVersionS
         # Close the UI window if currently open
         Get-Process | Where-Object { $_.ProcessName -eq 'Certify.UI' } | Foreach-Object { $_.CloseMainWindow() | Out-Null } | stop-process –force
 
-        # Stop the Certify.Service background service
-        Get-Service -Name "Certify.Service" | Where-Object { $_.status –eq 'Running' } |  Stop-Service
+        # Stop the background service (name varies by version)
+        Get-Service -Name "Certify Management Agent","Certify.Service" -ErrorAction SilentlyContinue | Where-Object { $_.status –eq 'Running' } | Stop-Service
 
         # Run installer
         Start-Process -Wait -FilePath $setupFile -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-"
