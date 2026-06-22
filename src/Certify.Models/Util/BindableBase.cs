@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
 namespace Certify.Models
@@ -54,8 +56,8 @@ namespace Certify.Models
             }
 
             // hook up to events
-            DetachChangeEventHandlers(before);
-            AttachChangeEventHandlers(after);
+            RemoveChangeTrackingSubscriptions(before);
+            RefreshChangeTrackingSubscriptions(after);
 
             // fire the event
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -103,22 +105,134 @@ namespace Certify.Models
 
             if (args is NotifyCollectionChangedEventArgs ccArgs)
             {
-                if (ccArgs.Action == NotifyCollectionChangedAction.Remove && ccArgs.OldItems != null)
+                if ((ccArgs.Action == NotifyCollectionChangedAction.Remove || ccArgs.Action == NotifyCollectionChangedAction.Replace)
+                    && ccArgs.OldItems != null)
                 {
                     foreach (var obj in ccArgs.OldItems)
                     {
-                        DetachChangeEventHandlers(obj);
+                        RemoveChangeTrackingSubscriptions(obj);
                     }
                 }
 
-                if (ccArgs.Action == NotifyCollectionChangedAction.Add && ccArgs.NewItems != null)
+                if ((ccArgs.Action == NotifyCollectionChangedAction.Add || ccArgs.Action == NotifyCollectionChangedAction.Replace)
+                    && ccArgs.NewItems != null)
                 {
                     foreach (var obj in ccArgs.NewItems)
                     {
-                        AttachChangeEventHandlers(obj);
+                        RefreshChangeTrackingSubscriptions(obj);
                     }
                 }
             }
+        }
+
+        private void RefreshChangeTrackingSubscriptions() => RefreshChangeTrackingSubscriptions(this, skipCurrentObjectSubscription: true);
+
+        private void RefreshChangeTrackingSubscriptions(object? obj, bool skipCurrentObjectSubscription = false)
+        {
+            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            RefreshChangeTrackingSubscriptions(obj, visited, skipCurrentObjectSubscription);
+        }
+
+        private void RefreshChangeTrackingSubscriptions(object? obj, HashSet<object> visited, bool skipCurrentObjectSubscription)
+        {
+            if (obj == null || obj is string || !visited.Add(obj))
+            {
+                return;
+            }
+
+            var canTrackChanges = obj is INotifyPropertyChanged || obj is INotifyCollectionChanged || obj is ICollection;
+            if (!canTrackChanges)
+            {
+                return;
+            }
+
+            if (!skipCurrentObjectSubscription)
+            {
+                DetachChangeEventHandlers(obj);
+                AttachChangeEventHandlers(obj);
+            }
+
+            if (obj is ICollection collection)
+            {
+                foreach (var child in collection)
+                {
+                    RefreshChangeTrackingSubscriptions(child, visited, skipCurrentObjectSubscription: false);
+                }
+            }
+
+            foreach (var property in obj.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
+            {
+                if (!typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType)
+                    && !typeof(INotifyCollectionChanged).IsAssignableFrom(property.PropertyType)
+                    && !typeof(ICollection).IsAssignableFrom(property.PropertyType))
+                {
+                    continue;
+                }
+
+                var value = property.GetValue(obj);
+                if (value != null)
+                {
+                    RefreshChangeTrackingSubscriptions(value, visited, skipCurrentObjectSubscription: false);
+                }
+            }
+        }
+
+        private void RemoveChangeTrackingSubscriptions(object? obj)
+        {
+            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            RemoveChangeTrackingSubscriptions(obj, visited, skipCurrentObjectSubscription: false);
+        }
+
+        private void RemoveChangeTrackingSubscriptions(object? obj, HashSet<object> visited, bool skipCurrentObjectSubscription)
+        {
+            if (obj == null || obj is string || !visited.Add(obj))
+            {
+                return;
+            }
+
+            var canTrackChanges = obj is INotifyPropertyChanged || obj is INotifyCollectionChanged || obj is ICollection;
+            if (!canTrackChanges)
+            {
+                return;
+            }
+
+            if (!skipCurrentObjectSubscription)
+            {
+                DetachChangeEventHandlers(obj);
+            }
+
+            if (obj is ICollection collection)
+            {
+                foreach (var child in collection)
+                {
+                    RemoveChangeTrackingSubscriptions(child, visited, skipCurrentObjectSubscription: false);
+                }
+            }
+
+            foreach (var property in obj.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
+            {
+                if (!typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType)
+                    && !typeof(INotifyCollectionChanged).IsAssignableFrom(property.PropertyType)
+                    && !typeof(ICollection).IsAssignableFrom(property.PropertyType))
+                {
+                    continue;
+                }
+
+                var value = property.GetValue(obj);
+                if (value != null)
+                {
+                    RemoveChangeTrackingSubscriptions(value, visited, skipCurrentObjectSubscription: false);
+                }
+            }
+        }
+
+        private sealed class ReferenceEqualityComparer : IEqualityComparer<object>
+        {
+            public static ReferenceEqualityComparer Instance { get; } = new();
+
+            public new bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+
+            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
         }
 
         public void RaisePropertyChangedEvent(string prop) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -135,6 +249,7 @@ namespace Certify.Models
                 if (!value)
                 {
                     BindableBase.UnsetChanged(this);
+                    RefreshChangeTrackingSubscriptions();
                 }
                 else
                 {
@@ -152,7 +267,13 @@ namespace Certify.Models
         public void ResetIsChanged(bool val)
         {
             isChanged = val;
-            RaisePropertyChangedEvent(nameof(isChanged));
+
+            if (!val)
+            {
+                RefreshChangeTrackingSubscriptions();
+            }
+
+            RaisePropertyChangedEvent(nameof(IsChanged));
         }
 
         /// <summary>
