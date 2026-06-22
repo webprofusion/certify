@@ -55,7 +55,7 @@ namespace Certify.Config
         };
     }
 
-    public class DeploymentTaskConfig
+    public class DeploymentTaskConfig : BindableBase
     {
 
         public string? Id { get; set; }
