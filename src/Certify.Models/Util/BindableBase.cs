@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 
@@ -55,9 +54,19 @@ namespace Certify.Models
                 }
             }
 
-            // hook up to events
-            RemoveChangeTrackingSubscriptions(before);
-            RefreshChangeTrackingSubscriptions(after);
+            // maintain direct-child subscriptions when a trackable reference is swapped
+            if (!ReferenceEquals(before, after))
+            {
+                if (IsTrackable(before))
+                {
+                    UnsubscribeChild(before);
+                }
+
+                if (IsTrackable(after))
+                {
+                    AttachToChild(after, new HashSet<object>(ReferenceEqualityComparer.Instance));
+                }
+            }
 
             // fire the event
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
@@ -66,162 +75,181 @@ namespace Certify.Models
             AfterPropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        private void AttachChangeEventHandlers(object obj)
+        private static bool IsTrackable(object? value)
         {
-            // attach to INotifyPropertyChanged properties
-            if (obj is INotifyPropertyChanged prop)
+            if (value is null || value is string)
             {
-                prop.PropertyChanged += HandleChangeEvent;
+                return false;
             }
-            // attach to INotifyCollectionChanged properties
-            if (obj is INotifyCollectionChanged coll)
+
+            return value is INotifyPropertyChanged || value is INotifyCollectionChanged || value is ICollection;
+        }
+
+        private void AttachHandlers(object child)
+        {
+            // attach to INotifyPropertyChanged children
+            if (child is INotifyPropertyChanged prop)
             {
-                coll.CollectionChanged += HandleChangeEvent;
+                prop.PropertyChanged -= OnChildChanged;
+                prop.PropertyChanged += OnChildChanged;
+            }
+            // attach to INotifyCollectionChanged children
+            if (child is INotifyCollectionChanged coll)
+            {
+                coll.CollectionChanged -= OnChildChanged;
+                coll.CollectionChanged += OnChildChanged;
             }
         }
 
-        private void DetachChangeEventHandlers(object obj)
+        private void DetachHandlers(object child)
         {
-            // detach from INotifyPropertyChanged properties
-            if (obj is INotifyPropertyChanged prop)
+            // detach from INotifyPropertyChanged children
+            if (child is INotifyPropertyChanged prop)
             {
-                prop.PropertyChanged -= HandleChangeEvent;
+                prop.PropertyChanged -= OnChildChanged;
             }
-            // detach from INotifyCollectionChanged properties
-            if (obj is INotifyCollectionChanged coll)
+            // detach from INotifyCollectionChanged children
+            if (child is INotifyCollectionChanged coll)
             {
-                coll.CollectionChanged -= HandleChangeEvent;
+                coll.CollectionChanged -= OnChildChanged;
             }
         }
 
-        private void HandleChangeEvent(object? src, EventArgs args)
+        /// <summary>
+        /// Handler attached only to this object's direct children. Any reported child change marks this
+        /// object as changed; the woven IsChanged notification is in turn heard by this object's own parent,
+        /// so the dirty signal bubbles up to the root one hop at a time.
+        /// </summary>
+        private void OnChildChanged(object? src, EventArgs args)
         {
             if (_isChangeDetectionPaused)
             {
                 return;
             }
 
-            IsChanged = true;
-
             if (args is NotifyCollectionChangedEventArgs ccArgs)
             {
-                if ((ccArgs.Action == NotifyCollectionChangedAction.Remove || ccArgs.Action == NotifyCollectionChangedAction.Replace)
-                    && ccArgs.OldItems != null)
+                if (ccArgs.OldItems != null)
                 {
                     foreach (var obj in ccArgs.OldItems)
                     {
-                        RemoveChangeTrackingSubscriptions(obj);
+                        UnsubscribeChild(obj);
                     }
                 }
 
-                if ((ccArgs.Action == NotifyCollectionChangedAction.Add || ccArgs.Action == NotifyCollectionChangedAction.Replace)
-                    && ccArgs.NewItems != null)
+                if (ccArgs.NewItems != null)
                 {
                     foreach (var obj in ccArgs.NewItems)
                     {
-                        RefreshChangeTrackingSubscriptions(obj);
+                        AttachToChild(obj, new HashSet<object>(ReferenceEqualityComparer.Instance));
+                    }
+                }
+            }
+
+            IsChanged = true;
+        }
+
+        private void EstablishSubscriptions() => EstablishSubscriptions(new HashSet<object>(ReferenceEqualityComparer.Instance));
+
+        /// <summary>
+        /// (Re)attaches this object's change handler to its direct children and asks each nested model to
+        /// wire up its own children, (re)establishing change tracking across an existing object graph.
+        /// </summary>
+        private void EstablishSubscriptions(HashSet<object> visited)
+        {
+            if (!visited.Add(this))
+            {
+                return;
+            }
+
+            foreach (var child in GetTrackableChildren())
+            {
+                AttachToChild(child, visited);
+            }
+        }
+
+        /// <summary>
+        /// Attaches this object's handler to a direct child (and, for a child collection, to each of its
+        /// items); nested BindableBase children are asked to wire up their own direct children in turn.
+        /// </summary>
+        private void AttachToChild(object? child, HashSet<object> visited)
+        {
+            if (child is null || child is string)
+            {
+                return;
+            }
+
+            AttachHandlers(child);
+
+            if (child is ICollection collection)
+            {
+                foreach (var item in collection)
+                {
+                    AttachToChild(item, visited);
+                }
+            }
+            else if (child is BindableBase bindableChild)
+            {
+                bindableChild.EstablishSubscriptions(visited);
+            }
+        }
+
+        private void UnsubscribeChild(object? child)
+        {
+            if (child is null || child is string)
+            {
+                return;
+            }
+
+            DetachHandlers(child);
+
+            if (child is ICollection collection)
+            {
+                foreach (var item in collection)
+                {
+                    if (item is not null && item is not string)
+                    {
+                        DetachHandlers(item);
                     }
                 }
             }
         }
 
-        private void RefreshChangeTrackingSubscriptions() => RefreshChangeTrackingSubscriptions(this, skipCurrentObjectSubscription: true);
-
-        private void RefreshChangeTrackingSubscriptions(object? obj, bool skipCurrentObjectSubscription = false)
+        /// <summary>
+        /// Returns this object's direct property values that can participate in change tracking
+        /// (INotifyPropertyChanged / INotifyCollectionChanged / ICollection), excluding strings.
+        /// </summary>
+        private IEnumerable<object> GetTrackableChildren()
         {
-            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            RefreshChangeTrackingSubscriptions(obj, visited, skipCurrentObjectSubscription);
-        }
-
-        private void RefreshChangeTrackingSubscriptions(object? obj, HashSet<object> visited, bool skipCurrentObjectSubscription)
-        {
-            if (obj == null || obj is string || !visited.Add(obj))
+            foreach (var property in GetType().GetProperties())
             {
-                return;
-            }
-
-            var canTrackChanges = obj is INotifyPropertyChanged || obj is INotifyCollectionChanged || obj is ICollection;
-            if (!canTrackChanges)
-            {
-                return;
-            }
-
-            if (!skipCurrentObjectSubscription)
-            {
-                DetachChangeEventHandlers(obj);
-                AttachChangeEventHandlers(obj);
-            }
-
-            if (obj is ICollection collection)
-            {
-                foreach (var child in collection)
-                {
-                    RefreshChangeTrackingSubscriptions(child, visited, skipCurrentObjectSubscription: false);
-                }
-            }
-
-            foreach (var property in obj.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
-            {
-                if (!typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType)
-                    && !typeof(INotifyCollectionChanged).IsAssignableFrom(property.PropertyType)
-                    && !typeof(ICollection).IsAssignableFrom(property.PropertyType))
+                if (!property.CanRead || property.GetIndexParameters().Length != 0)
                 {
                     continue;
                 }
 
-                var value = property.GetValue(obj);
-                if (value != null)
-                {
-                    RefreshChangeTrackingSubscriptions(value, visited, skipCurrentObjectSubscription: false);
-                }
-            }
-        }
-
-        private void RemoveChangeTrackingSubscriptions(object? obj)
-        {
-            var visited = new HashSet<object>(ReferenceEqualityComparer.Instance);
-            RemoveChangeTrackingSubscriptions(obj, visited, skipCurrentObjectSubscription: false);
-        }
-
-        private void RemoveChangeTrackingSubscriptions(object? obj, HashSet<object> visited, bool skipCurrentObjectSubscription)
-        {
-            if (obj == null || obj is string || !visited.Add(obj))
-            {
-                return;
-            }
-
-            var canTrackChanges = obj is INotifyPropertyChanged || obj is INotifyCollectionChanged || obj is ICollection;
-            if (!canTrackChanges)
-            {
-                return;
-            }
-
-            if (!skipCurrentObjectSubscription)
-            {
-                DetachChangeEventHandlers(obj);
-            }
-
-            if (obj is ICollection collection)
-            {
-                foreach (var child in collection)
-                {
-                    RemoveChangeTrackingSubscriptions(child, visited, skipCurrentObjectSubscription: false);
-                }
-            }
-
-            foreach (var property in obj.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0))
-            {
-                if (!typeof(INotifyPropertyChanged).IsAssignableFrom(property.PropertyType)
-                    && !typeof(INotifyCollectionChanged).IsAssignableFrom(property.PropertyType)
-                    && !typeof(ICollection).IsAssignableFrom(property.PropertyType))
+                var type = property.PropertyType;
+                if (type == typeof(string)
+                    || (!typeof(INotifyPropertyChanged).IsAssignableFrom(type)
+                        && !typeof(INotifyCollectionChanged).IsAssignableFrom(type)
+                        && !typeof(ICollection).IsAssignableFrom(type)))
                 {
                     continue;
                 }
 
-                var value = property.GetValue(obj);
-                if (value != null)
+                object? value;
+                try
                 {
-                    RemoveChangeTrackingSubscriptions(value, visited, skipCurrentObjectSubscription: false);
+                    value = property.GetValue(this);
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (value is not null)
+                {
+                    yield return value;
                 }
             }
         }
@@ -248,12 +276,14 @@ namespace Certify.Models
             {
                 if (!value)
                 {
-                    BindableBase.UnsetChanged(this);
-                    RefreshChangeTrackingSubscriptions();
+                    SetClean();
                 }
-                else
+                else if (!isChanged)
                 {
-                    isChanged = value;
+                    // raise only on the false->true transition so the change bubbles to our parent
+                    // exactly once and cannot loop back down through a cyclic graph
+                    isChanged = true;
+                    RaisePropertyChangedEvent(nameof(IsChanged));
                 }
             }
         }
@@ -261,57 +291,58 @@ namespace Certify.Models
         private bool isChanged;
 
         /// <summary>
-        /// If an action/event will have modified IsChanged but the change should be ignored, reset the value without firing events
+        /// If an action/event will have modified IsChanged but the change should be ignored, reset the value
         /// </summary>
         /// <param name="val"></param>
         public void ResetIsChanged(bool val)
         {
-            isChanged = val;
-
-            if (!val)
+            if (val)
             {
-                RefreshChangeTrackingSubscriptions();
+                isChanged = true;
+            }
+            else
+            {
+                SetClean();
             }
 
             RaisePropertyChangedEvent(nameof(IsChanged));
         }
 
         /// <summary>
+        /// Clears IsChanged on this object and every nested model, then (re)establishes change tracking
+        /// subscriptions for the current object graph so future nested changes are detected.
+        /// </summary>
+        private void SetClean()
+        {
+            ClearChangedFlags(this, new HashSet<object>(ReferenceEqualityComparer.Instance));
+            EstablishSubscriptions();
+        }
+
+        /// <summary>
         /// recursively unsets IsChanged on a BindableBase object, any property on the object of type
         /// BindableBase, and any BindableBase objects nested in ICollection properties
         /// </summary>
-        /// <param name="obj"></param>
-        private static void UnsetChanged(object obj)
+        private static void ClearChangedFlags(object? node, HashSet<object> visited)
         {
-            if (obj is BindableBase bb)
+            if (node is null || node is string || !visited.Add(node))
             {
-                bb.isChanged = false;
-                var props = obj.GetType().GetProperties();
-                foreach (var prop in props.Where(p =>
-                    typeof(ICollection).IsAssignableFrom(p.PropertyType) ||
-                    p.PropertyType.IsSubclassOf(typeof(BindableBase))))
-                {
-                    var val = prop.GetValue(obj);
-                    if (val is ICollection propertyCollection)
-                    {
-                        foreach (var subObj in propertyCollection)
-                        {
-                            BindableBase.UnsetChanged(subObj);
-                        }
-                    }
-
-                    if (val is BindableBase bbSub)
-                    {
-                        BindableBase.UnsetChanged(bbSub);
-                    }
-                }
+                return;
             }
 
-            if (obj is ICollection collection)
+            if (node is BindableBase bb)
+            {
+                bb.isChanged = false;
+
+                foreach (var child in bb.GetTrackableChildren())
+                {
+                    ClearChangedFlags(child, visited);
+                }
+            }
+            else if (node is ICollection collection)
             {
                 foreach (var subObj in collection)
                 {
-                    BindableBase.UnsetChanged(subObj);
+                    ClearChangedFlags(subObj, visited);
                 }
             }
         }
