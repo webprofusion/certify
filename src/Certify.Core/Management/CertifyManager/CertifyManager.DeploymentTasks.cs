@@ -207,7 +207,7 @@ namespace Certify.Management
             return !ShouldContinueAfterPreviousTaskFailure(taskTrigger, primaryRequestSucceeded);
         }
 
-        private async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false, bool evaluateAgainstPrimaryRequestStatus = true)
+        internal async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false, bool evaluateAgainstPrimaryRequestStatus = true)
         {
             if (taskList == null || !taskList.Any())
             {
