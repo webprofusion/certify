@@ -215,7 +215,15 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services
-    .AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true))
+    .AddLogging(loggingBuilder =>
+    {
+        // initialise Serilog from the Serilog section of appsettings.json / hubservice.json
+        Log.Logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(builder.Configuration)
+            .CreateLogger();
+
+        loggingBuilder.AddSerilog(dispose: true);
+    })
     .AddMemoryCache()
     .AddTokenAuthentication(builder.Configuration)
     .AddAuthorization()

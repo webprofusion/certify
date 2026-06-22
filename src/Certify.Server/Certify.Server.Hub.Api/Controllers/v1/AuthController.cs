@@ -239,6 +239,9 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             try
             {
+
+                _logger.LogInformation("OIDC authentication CompleteOidcLogin: {msg} - {Description}", msg);
+
                 // Handle OIDC errors
                 if (!string.IsNullOrEmpty(msg.error))
                 {
@@ -253,6 +256,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 // Validate state parameter
                 if (string.IsNullOrEmpty(msg.state))
                 {
+                    _logger.LogWarning("OIDC authentication error: callback body message missing state");
                     return BadRequest(new AuthResponse { IsSuccess = false, Detail = "missing_state" });
                 }
 
@@ -260,6 +264,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (string.IsNullOrEmpty(stateJson))
                 {
+                    _logger.LogWarning("OIDC authentication error: callback body message missing state");
                     return BadRequest(new AuthResponse { IsSuccess = false, Detail = "invalid_state" });
                 }
                 else
