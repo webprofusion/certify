@@ -7,7 +7,8 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
-        <PackageReference Include="Microsoft.ApplicationInsights" Version="2.23.0" />
+        <PackageReference Include="OpenTelemetry" Version="1.16.0" />
+        <PackageReference Include="OpenTelemetry.Exporter.Console" Version="1.16.0" />
         <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="10.0.9" />
         <PackageReference Include="Microsoft.Bcl.Cryptography" Version="10.0.9" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.9" />

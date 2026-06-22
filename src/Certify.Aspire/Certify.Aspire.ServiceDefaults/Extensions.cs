@@ -55,7 +55,8 @@ public static class Extensions
 
                 tracing.AddAspNetCoreInstrumentation()
                        .AddGrpcClientInstrumentation()
-                       .AddHttpClientInstrumentation();
+                       .AddHttpClientInstrumentation()
+                       .AddSource("Certify.Management");
             });
 
         builder.AddOpenTelemetryExporters();

@@ -12,9 +12,10 @@ using System.Threading.Tasks;
 
 using Certify.Models;
 using Certify.Models.Config;
-using Microsoft.ApplicationInsights;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Win32;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace Certify.Management
 {
@@ -634,8 +635,8 @@ namespace Certify.Management
 
     public class TelemetryManager : IDisposable
     {
-        private TelemetryConfiguration _config = TelemetryConfiguration.CreateDefault();
-        private TelemetryClient _tc = null;
+        private static readonly ActivitySource _activitySource = new ActivitySource("Certify.Management");
+        private TracerProvider _tracerProvider;
 
         public TelemetryManager(string key)
         {
@@ -644,7 +645,7 @@ namespace Certify.Management
 
         ~TelemetryManager()
         {
-            if (_config != null)
+            if (_tracerProvider != null)
             {
                 Dispose();
             }
@@ -652,33 +653,55 @@ namespace Certify.Management
 
         public void Dispose()
         {
-            _config?.Dispose();
-            _config = null;
-            _tc = null;
+            _tracerProvider?.Dispose();
+            _tracerProvider = null;
         }
 
         public void InitTelemetry(string key)
         {
-            _config = TelemetryConfiguration.CreateDefault();
-            _config.ConnectionString = $"InstrumentationKey={key}";
-
-            _tc = new TelemetryClient(_config);
-
-            // Set session data:
-
-            _tc.Context.Session.Id = Guid.NewGuid().ToString();
-            _tc.Context.Component.Version = Util.GetAppVersion().ToString();
-            _tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
+            _tracerProvider = Sdk.CreateTracerProviderBuilder()
+                .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService("Certify", serviceVersion: Util.GetAppVersion().ToString()))
+                .AddSource(_activitySource.Name)
+                .AddConsoleExporter()
+                .Build();
         }
 
         public void TrackEvent(string eventName, IDictionary<string, string> properties = null)
         {
-            _tc?.TrackEvent(eventName, properties);
+            using var activity = _activitySource.StartActivity(eventName);
+            if (activity == null)
+            {
+                return;
+            }
+
+            if (properties != null)
+            {
+                foreach (var kvp in properties)
+                {
+                    activity.SetTag(kvp.Key, kvp.Value);
+                }
+            }
         }
 
         public void TrackException(Exception exp, IDictionary<string, string> properties = null)
         {
-            _tc?.TrackException(exp, properties);
+            using var activity = _activitySource.StartActivity("Exception");
+            if (activity == null)
+            {
+                return;
+            }
+
+            activity.SetStatus(ActivityStatusCode.Error, exp.Message);
+            activity.RecordException(exp);
+
+            if (properties != null)
+            {
+                foreach (var kvp in properties)
+                {
+                    activity.SetTag(kvp.Key, kvp.Value);
+                }
+            }
         }
     }
 }
