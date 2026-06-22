@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
@@ -37,12 +37,15 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
         ConcurrentDictionary<string, ManagedInstanceItems> GetManagedInstanceItems(string? instanceId = null);
         void UpdateCachedManagedInstanceItem(string instanceId, ManagedCertificate managedCertificate);
         void DeleteCachedManagedInstanceItem(string instanceId, string managedCertificateId);
+        void RemoveManagedInstanceRuntimeState(string instanceId);
         bool HasItemsForManagedInstance(string instanceId);
 
         bool HasStatusSummaryForManagedInstance(string instanceId);
         ConcurrentDictionary<string, StatusSummary> GetManagedInstanceStatusSummaries();
         StatusSummary? GetManagedInstanceStatusSummary(string instanceId);
         void UpdateInstanceConnectionStatus(string instanceId, string status);
+
+        IEnumerable<ManagedInstanceInfo> GetInstancesNotSeenSince(DateTimeOffset cutoff);
 
         void AddOrUpdateSystemStatusItem(ActionStep status);
         List<ActionStep> GetSystemStatusItems();
@@ -427,6 +430,44 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             {
                 instance.Items.RemoveAll(r => r.Id == managedCertificateId);
             }
+        }
+
+        /// <summary>
+        /// Remove cached runtime state for a managed instance.
+        /// </summary>
+        /// <param name="instanceId"></param>
+        public void RemoveManagedInstanceRuntimeState(string instanceId)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return;
+            }
+
+            var removedItems = _managedInstanceItems.TryRemove(instanceId, out var managedItems);
+            var removedSummary = _managedInstanceStatusSummary.TryRemove(instanceId, out _);
+
+            if (removedItems || removedSummary)
+            {
+                _logger.LogInformation(
+                    "Removed cached runtime state for managed instance {instanceId}. RemovedItems: {removedItems}. RemovedItemCount: {itemCount}. RemovedSummary: {removedSummary}.",
+                    instanceId,
+                    removedItems,
+                    managedItems?.Items?.Count ?? 0,
+                    removedSummary);
+            }
+        }
+
+        /// <summary>
+        /// Get tracked instances that have not reported since the specified cutoff.
+        /// </summary>
+        /// <param name="cutoff"></param>
+        /// <returns></returns>
+        public IEnumerable<ManagedInstanceInfo> GetInstancesNotSeenSince(DateTimeOffset cutoff)
+        {
+            return _instanceConnections.Values
+                .Where(i => !string.IsNullOrWhiteSpace(i.InstanceId) && i.DateLastReported != default && i.DateLastReported <= cutoff)
+                .GroupBy(i => i.InstanceId, StringComparer.OrdinalIgnoreCase)
+                .Select(g => g.OrderByDescending(i => i.DateLastReported).First());
         }
 
         /// <summary>  

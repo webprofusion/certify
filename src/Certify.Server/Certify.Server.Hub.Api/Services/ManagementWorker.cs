@@ -15,6 +15,7 @@ namespace Certify.Server.Hub.Api.Services
 
         private ManagementAPI _mgmtAPI;
 
+        private const int StaleInstanceCacheExpiryMinutes = 30;
         private int _updateFrequency = 30;
         private string _serviceName = "[Management Worker]";
         private bool _isBatchRunning = false;
@@ -55,15 +56,43 @@ namespace Certify.Server.Hub.Api.Services
         {
             if (!_isBatchRunning)
             {
+                _isBatchRunning = true;
+
                 try
                 {
                     var instances = _stateProvider.GetConnectedInstances();
                     _logger.LogDebug("{svc} connected instances: {count}", _serviceName, instances.Count());
 
+                    var staleCutoff = DateTimeOffset.UtcNow.AddMinutes(-StaleInstanceCacheExpiryMinutes);
+                    var staleInstances = _stateProvider.GetInstancesNotSeenSince(staleCutoff).ToList();
+
+                    foreach (var staleInstance in staleInstances)
+                    {
+                        _stateProvider.RemoveManagedInstanceRuntimeState(staleInstance.InstanceId);
+                    }
+
+                    if (staleInstances.Count > 0)
+                    {
+                        _logger.LogInformation(
+                            "{svc} evicted cached managed items for {count} instance(s) not seen since {cutoff}.",
+                            _serviceName,
+                            staleInstances.Count,
+                            staleCutoff);
+                    }
+
+                    var staleInstanceIds = staleInstances
+                        .Select(i => i.InstanceId)
+                        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
                     List<string> instancesToRefresh = [];
 
                     foreach (var instance in instances)
                     {
+                        if (string.IsNullOrWhiteSpace(instance.InstanceId) || staleInstanceIds.Contains(instance.InstanceId))
+                        {
+                            continue;
+                        }
+
                         // Check if LastUpdateId has changed, indicating managed items have been added/updated/deleted
                         var currentSummary = _stateProvider.GetManagedInstanceStatusSummary(instance.InstanceId);
 
@@ -74,7 +103,7 @@ namespace Certify.Server.Hub.Api.Services
                         {
                             var hasChanges = _stateProvider.HasLastUpdateIdChanged(instance.InstanceId, currentSummary.LastUpdateId);
 
-                            if (hasChanges && !string.IsNullOrWhiteSpace(instance?.InstanceId))
+                            if (hasChanges)
                             {
                                 instancesToRefresh.Add(instance.InstanceId);
                             }
