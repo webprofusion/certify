@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -225,6 +225,13 @@ namespace Certify.Management
         {
             try
             {
+                // the result object may be supplied directly or via the parameters collection (e.g. from deployment tasks).
+                // resolve it here so the in-process path matches the new-process path and the script still receives its -result argument.
+                if (result == null && parameters != null)
+                {
+                    result = parameters.FirstOrDefault(p => string.Equals(p.Key, "result", StringComparison.OrdinalIgnoreCase)).Value as CertificateRequestResult;
+                }
+
                 var iss = InitialSessionState.CreateDefault();
 
                 using var runspace = RunspaceFactory.CreateRunspace(iss);
@@ -1183,13 +1190,23 @@ namespace Certify.Management
                     }
                 };
 
-            // capture write-* methods (except write-host)
+            // capture write-* methods including write-host / write-information (Information stream)
 
             // TODO: one of these streams may be causing ssh hang when ssh spawned as part of script..
 
             shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
             shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
             shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
+
+            // capture Write-Host / Write-Information output so in-process logging matches the new-process host output
+            shell.Streams.Information.DataAdded += (sender, args) =>
+            {
+                var informationRecord = shell.Streams.Information[args.Index];
+                if (informationRecord != null)
+                {
+                    output.AppendLine(informationRecord.ToString());
+                }
+            };
 
             var outputData = new PSDataCollection<PSObject>();
 
