@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -204,7 +204,7 @@ namespace Certify.Management
                 return new ActionResult(sourceConfig.LastError, false);
             }
 
-            var validationResult = await ValidateExternalCertificateAsset(item, assetPath);
+            var validationResult = await ValidateExternalCertificateAsset(item, sourceConfig, assetPath);
             if (!validationResult.IsValid)
             {
                 sourceConfig.LastError = validationResult.Message;
@@ -776,7 +776,7 @@ namespace Certify.Management
             };
         }
 
-        private async Task<ExternalCertificateValidationResult> ValidateExternalCertificateAsset(ManagedCertificate item, string assetPath)
+        private async Task<ExternalCertificateValidationResult> ValidateExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath)
         {
             try
             {
@@ -838,7 +838,7 @@ namespace Certify.Management
         {
             sourceConfig.PendingSourceVersion = sourceVersion ?? sourceConfig.PendingSourceVersion;
 
-            var metadataApplied = await ApplyExternalCertificateMetadata(item, assetPath);
+            var metadataApplied = await ApplyExternalCertificateMetadata(item, sourceConfig, assetPath);
             if (!metadataApplied)
             {
                 sourceConfig.LastError = GetExternalSubscriptionPfxLoadErrorMessage();
@@ -882,7 +882,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<bool> ApplyExternalCertificateMetadata(ManagedCertificate item, string assetPath)
+        private async Task<bool> ApplyExternalCertificateMetadata(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath)
         {
             try
             {

@@ -16,7 +16,7 @@ namespace Certify.Models
         public const string Auto = "Auto";
     }
 
-    public class ExternalCertificateSubscription
+    public class ExternalCertificateSubscription : BindableBase
     {
 
         /// <summary>
