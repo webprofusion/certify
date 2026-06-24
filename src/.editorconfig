@@ -121,6 +121,7 @@ dotnet_code_quality_unused_parameters = all:suggestion
 dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
 dotnet_style_qualification_for_field = false:silent
 dotnet_diagnostic.CA1068.severity = error
+dotnet_diagnostic.CA2017.severity = error
 
 [*.cs]
 # Prefer "var" everywhere
