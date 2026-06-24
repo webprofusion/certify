@@ -226,15 +226,6 @@ namespace Certify.UI.Windows
             Mouse.OverrideCursor = Cursors.AppStarting;
             _appViewModel.IsLoading = true;
 
-            var licensingManager = _appViewModel.LicensingManager;
-            if (licensingManager != null)
-            {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath(), _appViewModel.Preferences?.InstanceId ?? string.Empty))
-                {
-                    _appViewModel.IsRegisteredVersion = true;
-                }
-            }
-
             // setup connection to background service
 
             var cts = new CancellationTokenSource();
@@ -314,6 +305,15 @@ namespace Certify.UI.Windows
 
             // init telemetry if enabled
             InitTelemetry();
+
+            var licensingManager = _appViewModel.LicensingManager;
+            if (licensingManager != null)
+            {
+                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath(), _appViewModel.Preferences?.InstanceId ?? string.Empty))
+                {
+                    _appViewModel.IsRegisteredVersion = true;
+                }
+            }
 
             // check if IIS is available, if so also populates IISVersion
             await _appViewModel.CheckServerAvailability(Models.StandardServerTypes.IIS);
