@@ -326,11 +326,12 @@ namespace Certify.Management
             // init remaining utilities and optionally enable telematics
             _challengeResponseService = new ChallengeResponseService(CoreAppSettings.Current.EnableValidationProxyAPI);
 
+#if ENABLE_TELEMETRY
             if (CoreAppSettings.Current.EnableAppTelematics)
             {
                 _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
             }
-
+#endif
             _httpChallengePort = _serverConfig.HttpChallengeServerPort;
             _httpChallengeServerClient.Timeout = new TimeSpan(0, 0, 20);
 
@@ -700,6 +701,7 @@ namespace Certify.Management
         public IManagedItemStore GetManagedItemStore() => _itemManager;
         public Task ApplyPreferences()
         {
+#if ENABLE_TELEMETRY
             if (CoreAppSettings.Current.EnableAppTelematics && _tc == null)
             {
                 _tc = new TelemetryManager(Locales.ConfigResources.AIInstrumentationKey);
@@ -709,7 +711,7 @@ namespace Certify.Management
                 _tc?.Dispose();
                 _tc = null;
             }
-
+#endif
             return Task.FromResult(true);
         }
 

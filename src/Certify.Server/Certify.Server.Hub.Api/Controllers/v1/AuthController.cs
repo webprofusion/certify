@@ -240,7 +240,7 @@ namespace Certify.Server.Hub.Api.Controllers
             try
             {
 
-                _logger.LogInformation("OIDC authentication CompleteOidcLogin: {msg} - {Description}", msg);
+                _logger.LogInformation("OIDC authentication CompleteOidcLogin: {@Callback}", msg);
 
                 // Handle OIDC errors
                 if (!string.IsNullOrEmpty(msg.error))
@@ -509,8 +509,11 @@ namespace Certify.Server.Hub.Api.Controllers
             try
             {
                 var oidcConfig = await GetOidcProviderWithSecret(provider);
+
                 if (oidcConfig == null)
+                {
                     return BadRequest(new { error = "Provider not found", provider = provider });
+                }
 
                 using var httpClient = new HttpClient();
                 var tokenRequest = new Dictionary<string, string>
@@ -522,7 +525,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     ["redirect_uri"] = oidcConfig.RedirectUri
                 };
 
-                var tokenEndpoint = oidcConfig.TokenEndpoint ?? 
+                var tokenEndpoint = oidcConfig.TokenEndpoint ??
                     $"{oidcConfig.Authority.TrimEnd('/')}/oauth2/v2.0/token";
 
                 _logger.LogInformation("OIDC Debug: Token Exchange - Provider: {provider}, Endpoint: {endpoint}", provider, tokenEndpoint);
@@ -545,8 +548,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 catch { }
 
-                return Ok(new 
-                { 
+                return Ok(new
+                {
                     success = response.IsSuccessStatusCode,
                     statusCode = response.StatusCode,
                     endpoint = tokenEndpoint,
@@ -559,7 +562,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     responseBody = parsedResponse,
                     hasIdToken = parsedResponse?.TryGetProperty("id_token", out _) ?? false,
                     hasAccessToken = parsedResponse?.TryGetProperty("access_token", out _) ?? false,
-                    responseHeaders = new 
+                    responseHeaders = new
                     {
                         contentType = response.Content.Headers.ContentType?.ToString()
                     }
@@ -587,9 +590,11 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 var oidcConfig = await GetOidcProviderWithSecret(provider);
                 if (oidcConfig == null)
+                {
                     return BadRequest(new { error = "Provider not found" });
+                }
 
-                var discoveryEndpoint = oidcConfig.DiscoveryEndpoint ?? 
+                var discoveryEndpoint = oidcConfig.DiscoveryEndpoint ??
                     $"{oidcConfig.Authority.TrimEnd('/')}/.well-known/openid-configuration";
 
                 _logger.LogInformation("OIDC Debug: Discovery - Endpoint: {endpoint}", discoveryEndpoint);
@@ -638,7 +643,9 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 var oidcConfig = await GetOidcProviderWithSecret(provider);
                 if (oidcConfig == null)
+                {
                     return BadRequest(new { error = "Provider not found" });
+                }
 
                 var tokenHandler = new JwtSecurityTokenHandler();
 
@@ -649,7 +656,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 _logger.LogInformation("OIDC Debug: Token validation - Claims in token: {@claims}", claimsNoValidation);
 
                 // Now validate
-                var discoveryEndpoint = oidcConfig.DiscoveryEndpoint ?? 
+                var discoveryEndpoint = oidcConfig.DiscoveryEndpoint ??
                     $"{oidcConfig.Authority.TrimEnd('/')}/.well-known/openid-configuration";
 
                 var configManager = new ConfigurationManager<OpenIdConnectConfiguration>(

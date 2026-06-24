@@ -61,11 +61,13 @@ namespace Certify.CLI
 
         private void InitTelematics()
         {
+#if ENABLE_TELEMETRY
             if (IsTelematicsEnabled())
             {
                 _tc = new TelemetryManager(GetInstrumentationKey());
                 _tc.TrackEvent("StartCLI");
             }
+#endif
         }
 
         internal async Task ShowVersion(bool versionOnly = false)

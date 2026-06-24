@@ -171,7 +171,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
             else
             {
-                _logger?.LogWarning("InstanceManagementHub: Instance connected to management hub with no Hub ID assigned.", hubAssignedId);
+                _logger?.LogWarning("InstanceManagementHub: Instance connected to management hub with no Hub ID assigned.");
             }
         }
 

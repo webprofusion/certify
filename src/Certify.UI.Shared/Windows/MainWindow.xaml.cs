@@ -440,6 +440,7 @@ namespace Certify.UI.Windows
 
         private void InitTelemetry()
         {
+#if ENABLE_TELEMETRY
             if (_appViewModel.Preferences.EnableAppTelematics)
             {
                 tc = new TelemetryManager(Certify.Locales.ConfigResources.AIInstrumentationKey);
@@ -450,6 +451,7 @@ namespace Certify.UI.Windows
                 tc?.Dispose();
                 tc = null;
             }
+#endif
         }
 
         private void ButtonUpdateAvailable_Click(object sender, RoutedEventArgs e)
