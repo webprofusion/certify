@@ -628,7 +628,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 [
                     new() { Key = "GDKey", Name = "API Key", IsRequired = true, IsCredential = true },
                     new() { Key = "GDSecretSecure", Name = "API Secret", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
-                    new() { Key = "GDCustomerId", Name = "Customer ID (Corporate/Brandsight)", IsRequired = false, IsCredential = false },
+                    new() { Key = "GDCustomerId", Name = "Customer ID", IsRequired = false, IsCredential = false, Description = "Optional Corporate/Brandsight Customer ID if applicable" },
                     _defaultPropagationDelayParam
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
