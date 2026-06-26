@@ -95,7 +95,11 @@ namespace Certify.Core.Management.Challenges.DNS
 
                         // TODO : move this out, shared config should be injected
                         var config = SharedUtils.ServiceConfigManager.GetAppServiceConfig();
-                        var enableDebug = config.LogLevel?.ToLower() == "debug";
+
+                        // only enable the detailed PowerShell script diagnostics (Debug/Verbose stream output)
+                        // when the configured log level is Debug or Verbose, to keep normal logs readable
+                        var logLevel = config.LogLevel?.ToLower();
+                        var enableDebug = logLevel == "debug" || logLevel == "verbose";
                         return new DnsProviderPoshACME(scriptPath, config.PowershellExecutionPolicy, enableDebug) { DelegateProviderDefinition = provider };
                     }
                 }
@@ -1539,7 +1543,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 Parameters = objParams,
                 ScriptContent = scriptContent,
                 IgnoredCommandExceptions = ignoredCommandExceptions,
-                ExecutionMode = PowerShellExecutionMode.InProcess
+                ExecutionMode = PowerShellExecutionMode.InProcess,
+                VerboseStreamLogging = _enableDebug
             });
         }
 
@@ -1555,7 +1560,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 Parameters = objParams,
                 ScriptContent = scriptContent,
                 IgnoredCommandExceptions = ignoredCommandExceptions,
-                ExecutionMode = PowerShellExecutionMode.InProcess
+                ExecutionMode = PowerShellExecutionMode.InProcess,
+                VerboseStreamLogging = _enableDebug
             });
         }
 

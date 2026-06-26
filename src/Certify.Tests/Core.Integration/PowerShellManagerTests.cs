@@ -358,6 +358,39 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "script-content-output");
         }
 
+        [TestMethod, Description("In-process mode suppresses verbose and debug streams unless verbose stream logging is enabled")]
+        public async Task TestInProcessModeSuppressesVerboseAndDebugStreamsByDefault()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "$VerbosePreference = 'Continue'; $DebugPreference = 'Continue'; Write-Verbose 'verbose-stream-marker'; Write-Debug 'debug-stream-marker'; Write-Output 'main-output-marker'",
+                ExecutionMode = PowerShellExecutionMode.InProcess
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "main-output-marker");
+            Assert.IsFalse(result.Message.Contains("verbose-stream-marker"), "Verbose stream output should be suppressed when verbose stream logging is disabled.");
+            Assert.IsFalse(result.Message.Contains("debug-stream-marker"), "Debug stream output should be suppressed when verbose stream logging is disabled.");
+        }
+
+        [TestMethod, Description("In-process mode includes verbose and debug streams when verbose stream logging is enabled")]
+        public async Task TestInProcessModeIncludesVerboseAndDebugStreamsWhenEnabled()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "$VerbosePreference = 'Continue'; $DebugPreference = 'Continue'; Write-Verbose 'verbose-stream-marker'; Write-Debug 'debug-stream-marker'; Write-Output 'main-output-marker'",
+                ExecutionMode = PowerShellExecutionMode.InProcess,
+                VerboseStreamLogging = true
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "main-output-marker");
+            StringAssert.Contains(result.Message, "verbose-stream-marker");
+            StringAssert.Contains(result.Message, "debug-stream-marker");
+        }
+
         [TestMethod, Description("In-process mode reports parse errors")]
         public async Task TestInProcessModeReportsParseErrors()
         {

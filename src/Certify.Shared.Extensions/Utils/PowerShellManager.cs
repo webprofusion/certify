@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -50,6 +50,14 @@ namespace Certify.Management
         public PowerShellExecutionMode ExecutionMode { get; set; } = PowerShellManager.GetDefaultExecutionMode();
         public PowerShellImpersonationMode ImpersonationMode { get; set; } = PowerShellImpersonationMode.Default;
         public bool LoadUserProfile { get; set; }
+
+        /// <summary>
+        /// When true, the noisy PowerShell diagnostic streams (Verbose and Debug) are captured in the
+        /// execution log. These streams are suppressed by default and should only be enabled when the
+        /// configured log level is Debug or Verbose, because some providers (e.g. Posh-ACME) emit very
+        /// detailed request/response information (including headers) to them.
+        /// </summary>
+        public bool VerboseStreamLogging { get; set; }
     }
 
     /// <summary>
@@ -152,7 +160,7 @@ namespace Certify.Management
 
                 if (executionMode == PowerShellExecutionMode.InProcess)
                 {
-                    return await Task.FromResult(RunScriptInProcess(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage));
+                    return await Task.FromResult(RunScriptInProcess(settings.PowerShellExecutionPolicy, settings.Result, settings.ScriptFile, settings.Parameters, settings.ScriptContent, settings.Credentials, settings.LogonType, settings.IgnoredCommandExceptions, settings.TimeoutMinutes, scriptInfo, executionModeMessage, settings.VerboseStreamLogging));
                 }
 
                 return new ActionResult($"Unknown PowerShell execution mode: {executionMode}", false);
@@ -221,7 +229,7 @@ namespace Certify.Management
             };
         }
 
-        private static ActionResult RunScriptInProcess(string powershellExecutionPolicy, CertificateRequestResult result, string scriptFile, Dictionary<string, object> parameters, string scriptContent, Dictionary<string, string> credentials, string logonType, string[] ignoredCommandExceptions, int timeoutMinutes, FileInfo scriptInfo, string executionModeMessage)
+        private static ActionResult RunScriptInProcess(string powershellExecutionPolicy, CertificateRequestResult result, string scriptFile, Dictionary<string, object> parameters, string scriptContent, Dictionary<string, string> credentials, string logonType, string[] ignoredCommandExceptions, int timeoutMinutes, FileInfo scriptInfo, string executionModeMessage, bool verboseStreamLogging = false)
         {
             try
             {
@@ -264,7 +272,7 @@ namespace Certify.Management
                     {
                         WindowsIdentity.RunImpersonated(userHandle, () =>
                         {
-                            powerShellResult = InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
+                            powerShellResult = InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage, verboseStreamLogging: verboseStreamLogging);
                         });
                     }
 
@@ -273,7 +281,7 @@ namespace Certify.Management
                 else
                 {
                     // run in=process without impersonation
-                    return InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage);
+                    return InvokePowershellCore(result, powershellExecutionPolicy, scriptFile, parameters, scriptContent, shell, ignoredCommandExceptions: ignoredCommandExceptions, timeoutMinutes: timeoutMinutes, executionModeMessage: executionModeMessage, verboseStreamLogging: verboseStreamLogging);
                 }
             }
             catch (Exception ex)
@@ -1095,7 +1103,7 @@ namespace Certify.Management
             }
         }
 
-        private static ActionResult InvokePowershellCore(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string executionModeMessage = null)
+        private static ActionResult InvokePowershellCore(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, string scriptContent, PowerShell shell, bool autoConvertBoolean = true, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string executionModeMessage = null, bool verboseStreamLogging = false)
         {
             // ensure execution policy will allow the script to run, default to system default, default policy is set in service config object 
 
@@ -1195,8 +1203,15 @@ namespace Certify.Management
             // TODO: one of these streams may be causing ssh hang when ssh spawned as part of script..
 
             shell.Streams.Warning.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Warning[args.Index].Message);
-            shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
-            shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
+
+            // The Verbose and Debug streams are very noisy for some providers (e.g. Posh-ACME emits full
+            // HTTP request/response detail including headers), so only capture them when verbose stream
+            // logging is enabled, i.e. when the configured log level is Debug or Verbose.
+            if (verboseStreamLogging)
+            {
+                shell.Streams.Debug.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Debug[args.Index].Message);
+                shell.Streams.Verbose.DataAdded += (sender, args) => output.AppendLine(shell.Streams.Verbose[args.Index].Message);
+            }
 
             // capture Write-Host / Write-Information output so in-process logging matches the new-process host output
             shell.Streams.Information.DataAdded += (sender, args) =>
