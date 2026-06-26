@@ -79,10 +79,7 @@ namespace Certify.Client
             .AddMessagePackProtocol()
             .Build();
 
-            _connection.On(ManagementHubMessages.SendCommandRequest, (Action<InstanceCommandRequest>)((s) =>
-            {
-                PerformRequestedCommand(s);
-            }));
+            _connection.On<InstanceCommandRequest>(ManagementHubMessages.SendCommandRequest, PerformRequestedCommand);
 
             // Wire up connection lifecycle events
             _connection.Reconnecting += (error) =>
@@ -118,33 +115,48 @@ namespace Certify.Client
             }
         }
 
-        private void PerformRequestedCommand(InstanceCommandRequest cmd)
+        private async Task PerformRequestedCommand(InstanceCommandRequest cmd)
         {
-            if (_connection.State == HubConnectionState.Connected)
+            if (_connection.State != HubConnectionState.Connected)
+            {
+                Log($"[ManagementServerClient.PerformRequestedCommand] Not Connected [{_connection?.State}], cannot send command. {cmd.CommandId} {cmd.CommandType}");
+                return;
+            }
+
+            try
             {
                 Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
 
-                var task = OnGetCommandResult?.Invoke(cmd);
+                var resultTask = OnGetCommandResult?.Invoke(cmd);
 
-                if (task != null)
+                if (resultTask == null)
                 {
-                    if (cmd.CommandType != ManagementHubCommands.Reconnect)
-                    {
-                        task.Result.IsCommandResponse = true;
-                        task.Result.CommandType = cmd.CommandType;
-                        task.Result.CommandId = cmd.CommandId;
-
-                        _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, task.Result).Wait();
-                    }
-                    else
-                    {
-                        task.Wait();
-                    }
+                    return;
                 }
+
+                var result = await resultTask;
+
+                // Reconnect commands re-establish the connection and do not return a response
+                if (cmd.CommandType == ManagementHubCommands.Reconnect)
+                {
+                    return;
+                }
+
+                if (result == null)
+                {
+                    Log($"[ManagementServerClient.PerformRequestedCommand] No result produced for command {cmd.CommandId} {cmd.CommandType}");
+                    return;
+                }
+
+                result.IsCommandResponse = true;
+                result.CommandType = cmd.CommandType;
+                result.CommandId = cmd.CommandId;
+
+                await _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
-            else
+            catch (Exception ex)
             {
-                Log($"[ManagementServerClient.PerformRequestedCommand] Not Connected [{_connection?.State}], cannot send command. {cmd.CommandId} {cmd.CommandType}");
+                Log($"[ManagementServerClient.PerformRequestedCommand] Error handling command {cmd.CommandId} {cmd.CommandType}: {ex.Message}");
             }
         }
 
