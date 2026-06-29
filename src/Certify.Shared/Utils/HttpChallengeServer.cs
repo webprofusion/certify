@@ -237,11 +237,10 @@ namespace Certify.Core.Management.Challenges
                         if (key.Length > 8 && !_challengeResponses.ContainsKey(key) && EnableChallengeRefresh)
                         {
                             // if challenge response not in our cache, fetch from local API
+                            var apiUrl = $"{_baseUri}managedcertificates/currentchallenges/";
                             try
                             {
                                 _maxServiceLookups--;
-
-                                var apiUrl = $"{_baseUri}managedcertificates/currentchallenges/";
 
                                 if (_debugMode)
                                 {
@@ -269,7 +268,8 @@ namespace Certify.Core.Management.Challenges
                             }
                             catch (Exception exp)
                             {
-                                Log($"Could not refresh current challenges from main service. Service may be unavailable or inaccessible. {exp} ");
+                                // service unreachable (e.g. wrong host/port or service not running) - log target and concise reason, full detail only in debug
+                                Log($"Could not refresh current challenges from main service at {apiUrl}. Service may be unavailable or inaccessible. {(_debugMode ? exp.ToString() : exp.Message)}");
                             }
                         }
 
