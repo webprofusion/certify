@@ -185,7 +185,7 @@ namespace Certify.Client
                 };
 
                 result.ObjectValue = _instanceInfo;
-                _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result).Wait();
+                _ = _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
             catch (Exception ex)
             {
