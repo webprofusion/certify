@@ -366,15 +366,14 @@ namespace Certify.Core.Management.Challenges
             res.ContentType = "text/plain";
 
             res.ContentEncoding = Encoding.UTF8;
-            res.ContentLength64 = Encoding.UTF8.GetByteCount(value);
 
-            using (var stream = new StreamWriter(res.OutputStream))
-            {
-                stream.Write(value);
-                stream.Flush();
-                stream.Close();
-            }
+            // write raw UTF-8 bytes (no BOM) so the bytes written match ContentLength64 exactly,
+            // a StreamWriter would emit a 3-byte BOM and exceed Content-Length (ProtocolViolationException)
+            var buffer = Encoding.UTF8.GetBytes(value);
+            res.ContentLength64 = buffer.Length;
 
+            res.OutputStream.Write(buffer, 0, buffer.Length);
+            res.OutputStream.Flush();
             res.OutputStream.Dispose();
             res.Close();
         }
