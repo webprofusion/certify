@@ -123,6 +123,7 @@ namespace Certify.Core.Management.Challenges
                     }
 
                     _isActive = true;
+                    _maxServiceLookups = 1000;
                     _httpListener = new HttpListener();
 
                     _baseUri = $"{(serverConfig.UseHTTPS ? "https" : "http")}://{serverConfig.Host}:{serverConfig.Port}/api/";
@@ -342,7 +343,7 @@ namespace Certify.Core.Management.Challenges
                     return;
                 }
 
-                if (_maxServiceLookups == 0)
+                if (_maxServiceLookups <= 0)
                 {
                     // give up trying to resolve challenges, we have been queried too many times for
                     // challenge responses we don't know about
@@ -443,7 +444,8 @@ namespace Certify.Core.Management.Challenges
         {
             foreach (var key in keyValues)
             {
-                _challengeResponses.TryAdd(key.Key, key.Value);
+                // lookups lower-case the request key, so store keys lower-cased for consistent matching
+                _challengeResponses.TryAdd(key.Key.ToLower(), key.Value);
             }
         }
     }
