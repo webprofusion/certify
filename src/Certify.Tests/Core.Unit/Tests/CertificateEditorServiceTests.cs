@@ -231,6 +231,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test with invalid local hostname")]
+        [Ignore("This test is ignored because we no longer gate local intranet names and leave this to the CA")]
         public void TestInvalidHostname()
         {
             var item = new ManagedCertificate
