@@ -63,6 +63,42 @@ namespace Certify.Core.Tests
             CleanupOutput();
         }
 
+        [TestMethod, Description("Test Script runs OK in system process mode when the script path contains spaces (secure payload wrapper)")]
+        public async Task TestSystemProcessScriptPathWithSpacesUsesWrapper()
+        {
+            CleanupOutput();
+
+            var scriptPath = CreateTempScriptWithSpacesInPath(File.ReadAllText(GetScriptPath()));
+
+            try
+            {
+                var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                {
+                    PowerShellExecutionPolicy = "Unrestricted",
+                    Result = new CertificateRequestResult(new ManagedCertificate()),
+                    ScriptFile = scriptPath,
+                    Parameters = new Dictionary<string, object>
+                    {
+                        ["message"] = "path-with-spaces",
+                        ["flag"] = "true"
+                    },
+                    ExecutionMode = PowerShellExecutionMode.SystemProcess
+                });
+
+                Assert.IsTrue(result.IsSuccess, result.Message);
+                Assert.IsTrue(File.Exists(TestOutputPath), "Powershell output file should exist");
+
+                var output = File.ReadAllText(TestOutputPath);
+                StringAssert.Contains(output, "Message: path-with-spaces");
+                StringAssert.Contains(output, "Flag: True");
+            }
+            finally
+            {
+                DeleteTempScriptWithSpacesInPath(scriptPath);
+                CleanupOutput();
+            }
+        }
+
         [TestMethod, Description("Test explicit PowerShell execution modes without parameters")]
         [DataRow(PowerShellExecutionMode.Automatic)]
         [DataRow(PowerShellExecutionMode.InProcess)]
@@ -237,6 +273,22 @@ namespace Certify.Core.Tests
 
             Assert.IsTrue(result.IsSuccess, result.Message);
             StringAssert.Contains(result.Message, "process-script-content-output");
+        }
+
+        [TestMethod, Description("System process mode reports failure when the wrapped script raises a terminating error")]
+        public async Task TestSystemProcessModeReportsFailureWhenWrappedScriptThrows()
+        {
+            // Parameters force the secure-payload wrapper to be used, so this exercises the wrapper's error handling.
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "param($message)\nthrow \"script-failure: $message\"",
+                Parameters = new Dictionary<string, object> { ["message"] = "boom" },
+                ExecutionMode = PowerShellExecutionMode.SystemProcess
+            });
+
+            Assert.IsFalse(result.IsSuccess, "A wrapped script that raises a terminating error should cause the task to fail.");
+            StringAssert.Contains(result.Message, "script-failure: boom");
         }
 
         [TestMethod, Description("Automatic mode runs script content")]
@@ -556,6 +608,29 @@ namespace Certify.Core.Tests
             var scriptPath = Path.Combine(Path.GetTempPath(), $"certify-test-powershell-{Guid.NewGuid():N}.{extension}");
             File.WriteAllText(scriptPath, content);
             return scriptPath;
+        }
+
+        private static string CreateTempScriptWithSpacesInPath(string content)
+        {
+            var folder = Path.Combine(Path.GetTempPath(), $"certify test scripts {Guid.NewGuid():N}");
+            Directory.CreateDirectory(folder);
+
+            var scriptPath = Path.Combine(folder, "Certify The Web Auth SMTP Cert.ps1");
+            File.WriteAllText(scriptPath, content);
+            return scriptPath;
+        }
+
+        private static void DeleteTempScriptWithSpacesInPath(string scriptPath)
+        {
+            try
+            {
+                var folder = Path.GetDirectoryName(scriptPath);
+                if (!string.IsNullOrEmpty(folder) && Directory.Exists(folder))
+                {
+                    Directory.Delete(folder, true);
+                }
+            }
+            catch { }
         }
 
         private static void DeleteTempScript(string scriptPath)

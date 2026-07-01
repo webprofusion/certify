@@ -6,6 +6,12 @@ param(
     $additionalParams
 )
 
+# Capture the caller's error preference so it can be restored for the target script, then fail fast on any
+# error in the wrapper's own setup (payload decode, argument marshalling). This ensures wrapper problems are
+# surfaced as a task failure (non-zero exit code) instead of being written to the error stream and ignored.
+$__certifyOriginalErrorActionPreference = $ErrorActionPreference
+$ErrorActionPreference = 'Stop'
+
 $wrappedArguments = @{}
 
 $result = $null
@@ -163,12 +169,20 @@ if ($additionalParams.Count -gt 0) {
             $lastvar = $_ -replace '^-'
             $wrappedArguments[$lastvar] = $true
         }
-        else {
+        elseif ($null -ne $lastvar) {
             # set a specific value for the last parameter added
             $wrappedArguments[$lastvar] = $_
         }
+        else {
+            # a bare value with no preceding -switch cannot be mapped to a named argument; fail with a clear
+            # message so the problem surfaces as a task failure instead of a cryptic null array index error
+            throw "Script wrapper received the value '$_' without a preceding -parameter name and cannot map it to a named argument. Verify the script path and any arguments are correctly quoted."
+        }
     }
 }
+
+# restore the caller's error preference so the target script keeps its normal (non-terminating) error semantics
+$ErrorActionPreference = $__certifyOriginalErrorActionPreference
 
 # invoke wrapped script, with all optional arguments as a splatted hashtable
 try {

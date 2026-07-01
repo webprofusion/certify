@@ -558,7 +558,10 @@ namespace Certify.Management
                 return new ActionResult($"Failed to prepare the secure PowerShell handoff payload. {ex.Message}", false);
             }
 
-            var arguments = useWrapperScript ? $" -Command \"& '{wrapperScriptPath}'\"" : $" -File \"{scriptFile}\"";
+            // Always invoke via -File so that quoted parameters (e.g. -scriptFile / -payloadFile) retain their quoting.
+            // Using -Command "& '...'" causes the host (notably classic powershell.exe) to re-parse and drop the quotes
+            // around trailing arguments, which splits any script path containing spaces into multiple tokens.
+            var arguments = useWrapperScript ? $" -File \"{wrapperScriptPath}\"" : $" -File \"{scriptFile}\"";
 
             if (parameters?.Any(p => p.Key.ToLower() == "executionpolicy") == true)
             {
