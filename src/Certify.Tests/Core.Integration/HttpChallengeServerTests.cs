@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -9,14 +9,16 @@ namespace Certify.Core.Tests
     [TestClass]
     public class HttpChallengeServerTests
     {
-        private Uri _baseUri = new Uri("http://127.0.0.1:8080/.well-known/acme-challenge/");
+        private int _httpPort = 9090;
+        private string _httpHost = "127.0.0.3";
+        private Uri _baseUri => new Uri($"http://{_httpHost}:{_httpPort}/.well-known/acme-challenge/");
 
         [TestMethod]
         public void TestStartup()
         {
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
 
-            var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck");
+            var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck");
             Assert.IsTrue(started, "Http Challenge Server should start");
 
             Assert.IsTrue(challengeServer.IsRunning, "Http Challenge Server should be running");
@@ -31,7 +33,7 @@ namespace Certify.Core.Tests
         {
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
 
-            var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck");
+            var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck");
             Assert.IsTrue(started, "Http Challenge Server should start");
 
             var client = new HttpClient();
@@ -57,7 +59,7 @@ namespace Certify.Core.Tests
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
             try
             {
-                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck", "TESTING");
+                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck", "TESTING");
                 Assert.IsTrue(started, "Http Challenge Server should start");
 
                 Assert.IsTrue(challengeServer.IsRunning, "Http Challenge Server should be running");
@@ -86,7 +88,7 @@ namespace Certify.Core.Tests
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
             try
             {
-                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck", "TESTING");
+                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck", "TESTING");
                 Assert.IsTrue(started, "Http Challenge Server should start");
 
                 Assert.IsTrue(challengeServer.IsRunning, "Http Challenge Server should be running");
@@ -115,7 +117,7 @@ namespace Certify.Core.Tests
             var challengeServer = new Core.Management.Challenges.HttpChallengeServer();
             try
             {
-                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck", "TESTING");
+                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck", "TESTING");
 
                 var client = new HttpClient();
                 client.BaseAddress = _baseUri;
@@ -148,7 +150,7 @@ namespace Certify.Core.Tests
 
             try
             {
-                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = 8080 }, "stop", "configcheck");
+                var started = challengeServer.Start(new Shared.ServiceConfig { HttpChallengeServerPort = _httpPort, Host = _httpHost }, "stop", "configcheck");
 
                 challengeServer.PopulateChallengeResponseCache(new System.Collections.Generic.Dictionary<string, string> {
                     { "test1", "TESTING1" },
