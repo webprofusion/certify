@@ -486,6 +486,56 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "Error:");
         }
 
+        [TestMethod, Description("System process mode returns failure for non ignored command exceptions")]
+        public async Task TestSystemProcessModeFailsForNonIgnoredCommandExceptions()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "Get-Item 'Certify-Definitely-Missing-File'; Write-Output 'after-error'",
+                ExecutionMode = PowerShellExecutionMode.SystemProcess
+            });
+
+            Assert.IsFalse(result.IsSuccess, "System process mode should fail when PowerShell reports command errors.");
+            StringAssert.Contains(result.Message, "Error:");
+        }
+
+        [TestMethod, Description("System process mode using modern PowerShell returns failure for non ignored command exceptions")]
+        public async Task TestSystemProcessModeModernPowerShellFailsForNonIgnoredCommandExceptions()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("Modern PowerShell process-mode selection test is currently Windows-specific.");
+            }
+
+            var modernPowerShellPath = TryResolveModernPowerShellPath();
+            if (string.IsNullOrWhiteSpace(modernPowerShellPath))
+            {
+                Assert.Inconclusive("pwsh.exe was not found on this machine.");
+            }
+
+            await WithTemporaryServiceConfig(
+                config =>
+                {
+                    config.PreferModernPowershell = true;
+                    config.CustomPowerShellPaths = [modernPowerShellPath];
+                },
+                async () =>
+                {
+                    var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                    {
+                        PowerShellExecutionPolicy = "Unrestricted",
+                        ScriptContent = "Get-Item 'Certify-Definitely-Missing-File'; Write-Output 'after-error'",
+                        ExecutionMode = PowerShellExecutionMode.SystemProcess
+                    });
+
+                    Assert.IsFalse(result.IsSuccess, "Modern system process mode should fail when PowerShell reports command errors.");
+                    StringAssert.Contains(result.Message, "Error:");
+                    StringAssert.Contains(result.Message, "PowerShell Executable:");
+                    StringAssert.Contains(result.Message, modernPowerShellPath);
+                });
+        }
+
         [TestMethod, Description("In-process mode timeout returns failure")]
         public async Task TestInProcessModeTimeoutReturnsFailure()
         {
@@ -549,6 +599,62 @@ namespace Certify.Core.Tests
             };
 
             Assert.AreEqual("CERTIFY\\certify-test-user", PowerShellManager.GetWindowsCredentialsUsername(credentials));
+        }
+
+        private static async Task WithTemporaryServiceConfig(Action<Certify.Shared.ServiceConfig> configure, Func<Task> action)
+        {
+            var originalAppDataPath = Environment.GetEnvironmentVariable("CERTIFY_APPDATA_PATH");
+            var temporaryAppDataPath = Path.Combine(Path.GetTempPath(), $"certify-serviceconfig-tests-{Guid.NewGuid():N}");
+
+            try
+            {
+                Directory.CreateDirectory(temporaryAppDataPath);
+                Environment.SetEnvironmentVariable("CERTIFY_APPDATA_PATH", temporaryAppDataPath);
+
+                var config = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
+                configure(config);
+                Certify.SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(config, throwOnError: true);
+
+                await action();
+            }
+            finally
+            {
+                Environment.SetEnvironmentVariable("CERTIFY_APPDATA_PATH", originalAppDataPath);
+
+                try
+                {
+                    if (Directory.Exists(temporaryAppDataPath))
+                    {
+                        Directory.Delete(temporaryAppDataPath, recursive: true);
+                    }
+                }
+                catch { }
+            }
+        }
+
+        private static string TryResolveModernPowerShellPath()
+        {
+            var candidates = new List<string>
+            {
+                Environment.ExpandEnvironmentVariables("%PROGRAMFILES%\\PowerShell\\7\\pwsh.exe"),
+                Environment.ExpandEnvironmentVariables("%PROGRAMFILES(X86)%\\PowerShell\\7\\pwsh.exe")
+            };
+
+            var path = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                foreach (var pathEntry in path.Split(Path.PathSeparator))
+                {
+                    if (string.IsNullOrWhiteSpace(pathEntry))
+                    {
+                        continue;
+                    }
+
+                    candidates.Add(Path.Combine(pathEntry.Trim(), "pwsh.exe"));
+                }
+            }
+
+            return candidates.FirstOrDefault(File.Exists);
         }
 
         private static async Task<Certify.Models.Config.ActionResult> RunSimpleScript(PowerShellExecutionMode executionMode, Dictionary<string, object> parameters = null)

@@ -684,6 +684,8 @@ namespace Certify.Management
                 var process = new Process { StartInfo = scriptProcessInfo };
 
                 var logMessages = new StringBuilder();
+                var processErrorMessages = new List<string>();
+                var processErrorMessagesSync = new object();
 
                 // capture output streams and add to log
                 process.OutputDataReceived += (obj, a) =>
@@ -698,6 +700,11 @@ namespace Certify.Management
                 {
                     if (!string.IsNullOrWhiteSpace(a.Data))
                     {
+                        lock (processErrorMessagesSync)
+                        {
+                            processErrorMessages.Add(a.Data);
+                        }
+
                         logMessages.AppendLine($"Error: {a.Data}");
                     }
                 };
@@ -752,6 +759,18 @@ namespace Certify.Management
                 else if (process.ExitCode != 0)
                 {
                     _log.AppendLine("Warning: Script exited with the following ExitCode: " + process.ExitCode);
+                    return new ActionResult { IsSuccess = false, Message = _log.ToString() };
+                }
+
+                List<string> unhandledProcessErrorMessages;
+                lock (processErrorMessagesSync)
+                {
+                    unhandledProcessErrorMessages = GetUnhandledProcessErrorMessages(processErrorMessages, ignoredCommandExceptions);
+                }
+
+                if (unhandledProcessErrorMessages.Any())
+                {
+                    _log.AppendLine("Warning: Script reported one or more PowerShell errors.");
                     return new ActionResult { IsSuccess = false, Message = _log.ToString() };
                 }
 
@@ -867,6 +886,66 @@ namespace Certify.Management
         {
             return parameterName.Equals("result", StringComparison.OrdinalIgnoreCase)
                 || parameterName.Equals("executionpolicy", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static List<string> GetUnhandledProcessErrorMessages(IReadOnlyCollection<string> processErrorMessages, string[] ignoredCommandExceptions)
+        {
+            if (processErrorMessages == null || processErrorMessages.Count == 0)
+            {
+                return new List<string>();
+            }
+
+            var ignoredCommands = new HashSet<string>(
+                ignoredCommandExceptions?.Where(e => !string.IsNullOrWhiteSpace(e)).Select(e => e.Trim()) ?? Enumerable.Empty<string>(),
+                StringComparer.OrdinalIgnoreCase);
+
+            if (ignoredCommands.Count == 0)
+            {
+                return processErrorMessages.ToList();
+            }
+
+            var unhandledErrors = new List<string>();
+            var currentErrorIgnored = false;
+
+            foreach (var errorMessage in processErrorMessages)
+            {
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    currentErrorIgnored = false;
+                    continue;
+                }
+
+                if (TryGetProcessErrorCommandName(errorMessage, out var commandName))
+                {
+                    currentErrorIgnored = ignoredCommands.Contains(commandName);
+                }
+
+                if (!currentErrorIgnored)
+                {
+                    unhandledErrors.Add(errorMessage);
+                }
+            }
+
+            return unhandledErrors;
+        }
+
+        private static bool TryGetProcessErrorCommandName(string processErrorMessage, out string commandName)
+        {
+            commandName = null;
+
+            if (string.IsNullOrWhiteSpace(processErrorMessage))
+            {
+                return false;
+            }
+
+            var separatorIndex = processErrorMessage.IndexOf(" : ", StringComparison.Ordinal);
+            if (separatorIndex <= 0)
+            {
+                return false;
+            }
+
+            commandName = processErrorMessage[..separatorIndex].Trim();
+            return !string.IsNullOrWhiteSpace(commandName) && !commandName.Contains(' ');
         }
 
         private static async Task<string> CreateSecureTempDirectory(string fullUsername = null, bool allowCredentialWriteAccess = false)
