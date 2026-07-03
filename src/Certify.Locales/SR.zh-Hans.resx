@@ -145,7 +145,7 @@
     <value>有可用更新</value>
   </data>
   <data name="Managed_Sites" xml:space="preserve">
-    <value>托管证书</value>
+    <value> 托管证书</value>
   </data>
   <data name="In_Progress" xml:space="preserve">
     <value>进行中</value>
@@ -193,10 +193,10 @@
     <value>导入托管证书</value>
   </data>
   <data name="ImportDlg_OpComment" xml:space="preserve">
-    <value>您正在从旧版本升级，将创建新的托管证书，您可随后调整续期设置等。</value>
+    <value>您正在从旧版本的 Certify 升级，将创建新的托管证书，您可随后调整续期设置等。</value>
   </data>
   <data name="ImportDlg_Merge" xml:space="preserve">
-    <value>将每站点的多个域名/证书合并为一个托管证书</value>
+    <value>将每个站点的多个域名/标识符合并为一个托管证书</value>
   </data>
   <data name="ImportDlg_Skip" xml:space="preserve">
     <value>跳过导入</value>
@@ -214,7 +214,7 @@
     <value>提交反馈时出现问题，请稍后再试。</value>
   </data>
   <data name="New_Contact_EmailError" xml:space="preserve">
-    <value>使用此邮箱注册证书颁发机构账户时出现问题，请检查邮箱地址是否有效，且本机可正常连接互联网（API调用需开放https出口）</value>
+    <value>使用此邮箱注册证书颁发机构账户时出现问题，请检查邮箱地址是否有效，且本机可正常连接互联网（API 调用需开放 https 出口）</value>
   </data>
   <data name="Account_Edit_AgreeConditions" xml:space="preserve">
     <value>请确认同意该证书颁发机构的最新条款与条件后继续。</value>
@@ -250,7 +250,7 @@
     <value>用户名（域\用户）</value>
   </data>
   <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
-    <value>为实现证书自动续期，将在Windows任务计划程序中创建任务，该任务需以管理员权限用户运行以管理证书及IIS</value>
+    <value>为实现证书自动续期，将在Windows任务计划程序中创建任务，该任务需以管理员帐户运行以管理证书及IIS。</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>确定</value>
@@ -259,7 +259,7 @@
     <value>密码</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>当前版本为免费试用版，仅可管理有限数量的证书。如需解除限制，请前往 https://certifytheweb.com/register 购买注册密钥。已注册用户可通过 support@certifytheweb.com 获取支持</value>
+    <value>当前版本为免费试用版，仅可管理有限数量的证书。如需解除限制，请前往 https://certifytheweb.com/register 购买注册密钥。已注册用户可通过 support@certifytheweb.com 获取支持。</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>未注册</value>
@@ -280,19 +280,19 @@
     <value>提交反馈</value>
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>您已使用最新版本</value>
+    <value>您已使用最新版本。</value>
   </data>
   <data name="ManagedCertificates_Filter" xml:space="preserve">
     <value>筛选…</value>
   </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
-    <value>请选择托管证书，或点击新建证书开始</value>
+    <value>请选择托管证书，或点击新建证书开始。</value>
   </data>
   <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>当前站点有未保存的更改，确定要放弃更改吗？</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
-    <value>当前没有正在处理的请求</value>
+    <value>当前没有正在处理的请求。</value>
   </data>
   <data name="Settings_PrimaryContact" xml:space="preserve">
     <value>主要联系人：</value>
@@ -307,10 +307,10 @@
     <value>自动检查更新</value>
   </data>
   <data name="Settings_EnableTelemetry" xml:space="preserve">
-    <value>启用APP遥测（功能使用情况上报）</value>
+    <value>启用应用遥测（功能使用情况上报）</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>启用代理API进行域名配置检查</value>
+    <value>启用代理 API 进行 HTTP 配置检查</value>
   </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
     <value>新建及续期证书时忽略已停止的IIS站点</value>
@@ -351,11 +351,11 @@
   <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>显示名称：</value>
   </data>
-  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>选中的所有域名将作为一次证书申请的一部分。证书颁发机构（CA）需要能够通过 80 端口（HTTP 验证）或 443 端口（TLS-SNI 验证）访问这些域名，认证过程才能顺利进行。</value>
-  </data>
+<data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
+  <value>下列选中的标识符将作为一次证书申请提交。证书颁发机构（CA）必须能够通过 80 端口访问所有这些标识符（使用 HTTP 验证时），认证流程才能正常完成。</value>
+</data>
   <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
-    <value>包含的域名及子域名：</value>
+    <value>要包含的标识符：</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>全选</value>
@@ -370,7 +370,7 @@
     <value>包含</value>
   </data>
   <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
-    <value>域名</value>
+    <value>标识符</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>高级</value>
@@ -382,22 +382,22 @@
     <value>站点根目录</value>
   </data>
   <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
-    <value>...</value>
+    <value>…</value>
   </data>
   <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>执行验证响应配置检查</value>
   </data>
   <data name="ManagedCertificateSettings_PerformWebAppAutoConfig" xml:space="preserve">
-    <value>执行网站自动配置</value>
+    <value>执行 Web 应用程序自动配置</value>
   </data>
   <data name="ManagedCertificateSettings_BindIP" xml:space="preserve">
-    <value>绑定指定IP：</value>
+    <value>绑定指定 IP：</value>
   </data>
   <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
     <value>绑定指定端口：</value>
   </data>
   <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
-    <value>使用SNI（IIS 8+）：</value>
+    <value>使用 SNI（IIS 8+）：</value>
   </data>
   <data name="ManagedCertificateSettings_PerRequsetScript" xml:space="preserve">
     <value>证书申请前脚本（PS）：</value>
@@ -406,10 +406,10 @@
     <value>测试</value>
   </data>
   <data name="Browser" xml:space="preserve">
-    <value>...</value>
+    <value>…</value>
   </data>
   <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
-    <value>提示：如需导出证书，请在Windows中使用“管理计算机证书”选项</value>
+    <value>注意：如需导出证书，请在Windows中使用“管理计算机证书”选项</value>
   </data>
   <data name="ManagedCertificateSettings_OpenLogFile" xml:space="preserve">
     <value>打开日志文件</value>
@@ -427,40 +427,40 @@
     <value>请选择要创建证书的站点</value>
   </data>
   <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
-    <value>必须填写名称</value>
+    <value>必须填写名称。</value>
   </data>
   <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
-    <value>必须包含主域名/标识符</value>
+    <value>必须包含主域名/标识符。</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
-    <value>{0} 验证仅适用于IIS 8及以上版本</value>
+    <value>{0} 验证仅适用于 IIS 8 及以上版本。</value>
   </data>
   <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
-    <value>Webhook的URL必须为有效链接</value>
+    <value>Webhook的URL必须为有效链接。</value>
   </data>
   <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
-    <value>Webhook的Method必须设置</value>
+    <value>Webhook 的 Method 必须设置。</value>
   </data>
   <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
-    <value>未做任何更改，跳过保存</value>
+    <value>未做任何更改，跳过保存。</value>
   </data>
   <data name="ConfirmDelete" xml:space="preserve">
     <value>确认删除</value>
   </data>
   <data name="ManagedCertificateSettings_ConfirmDelete" xml:space="preserve">
-    <value>确定要删除该项吗？删除不会影响IIS设置等</value>
+    <value>确定要删除该项吗？删除不会影响 IIS 设置等。</value>
   </data>
   <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
-    <value>该项的日志文件尚未创建</value>
+    <value>该项的日志文件尚未创建。</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
-    <value>该项的证书文件尚未生成或已被删除</value>
+    <value>该项的证书文件尚未生成或已被删除。</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>验证出错</value>
   </data>
   <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
-    <value>未检测到IIS，无法进行验证检查</value>
+    <value>未检测到 IIS，无法进行验证检查。</value>
   </data>
   <data name="Challenge" xml:space="preserve">
     <value>验证</value>
@@ -476,10 +476,10 @@
     <value>验证测试未通过</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookTestFailed" xml:space="preserve">
-    <value>Webhook测试未通过</value>
+    <value>Webhook 测试未通过</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookTest" xml:space="preserve">
-    <value>Webhook测试</value>
+    <value>Webhook 测试</value>
   </data>
   <data name="succeed" xml:space="preserve">
     <value>成功</value>
@@ -488,7 +488,7 @@
     <value>失败</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestResult" xml:space="preserve">
-    <value>Webhook请求 {0}：HTTP {1}</value>
+    <value>Webhook 请求 {0}：HTTP {1}</value>
   </data>
   <data name="ManagedCertificateSettings_WebhookRequestError" xml:space="preserve">
     <value>Webhook请求错误：{0}</value>
@@ -500,7 +500,7 @@
     <value>错误</value>
   </data>
   <data name="ManagedCertificateSettings_Certificate_Revoked" xml:space="preserve">
-    <value>证书已吊销</value>
+    <value>证书已吊销。</value>
   </data>
   <data name="ManagedCertificateSettings_RevokeCertificateError" xml:space="preserve">
     <value>吊销证书出错：
@@ -516,11 +516,13 @@
     <value>这将为所有自动续期项目续签证书（如适用），确定继续？</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>未检测到IIS，部分重要功能将无法使用，如果您确定本服务器已安装且正常运行IIS，请将您的操作系统和IIS版本详情发送至 support@certifytheweb.com 以反馈此问题</value>
+    <value>未检测到 IIS，部分重要功能将无法使用。如果您确定本服务器已安装且正常运行 IIS，请将您的操作系统和 IIS版本详情发送至 support@certifytheweb.com 以反馈此问题。</value>
   </data>
-  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
-    <value>请先注册新联系人，即可开始申请证书</value>
-  </data>
+<data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+  <value>这是您的第一个托管证书，是否先添加 ACME 账户？除非您使用的是来自 Dashboard Hub 的证书订阅，否则通常需要先添加账户。
+
+选择“是”以添加 ACME 账户，或选择“否”跳过。</value>
+</data>
   <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
     <value>现在访问下载页面？</value>
   </data>
@@ -528,7 +530,7 @@
     <value> [社区版]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
-    <value>Certify Certificate Manager贡献者（https://certifytheweb.com）</value>
+    <value>Certify Certificate Manager 贡献者（https://certifytheweb.com）</value>
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>当前语言翻译：</value>
@@ -549,7 +551,7 @@
     <value>方法：</value>
   </data>
   <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
-    <value>内容：</value>
+    <value>正文：</value>
   </data>
   <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>内容类型：</value>
@@ -561,10 +563,10 @@
     <value>自动创建/更新 IIS 绑定（使用 SNI）</value>
   </data>
   <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
-    <value>使用指定的IP/端口绑定</value>
+    <value>使用指定 IP/端口 绑定</value>
   </data>
   <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
-    <value>Webhook触发：</value>
+    <value>Webhook 触发条件：</value>
   </data>
   <data name="ManagedCertificateSettings_CertificatePathEmpty" xml:space="preserve">
     <value>证书路径：[待设置]</value>
@@ -579,10 +581,10 @@
     <value>加载中…</value>
   </data>
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
-    <value>当前的应用程序版本需要进行必要的更新以确保持续运行，请立即更新。现在关闭应用程序吗?</value>
+    <value>当前的应用程序版本需要进行必要的更新以确保持续运行，请立即更新。现在关闭应用程序吗？</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>提示：这些设置仅适用于新建https绑定，已有绑定仅会更新证书。多个证书绑定同一固定IP可能会引发冲突，请谨慎使用</value>
+    <value>提示：这些设置仅适用于新建 https 绑定，已有绑定仅会更新证书。多个证书绑定同一固定 IP 可能会引发冲突，请谨慎使用。</value>
   </data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
     <value>重新应用证书到绑定</value>
@@ -594,22 +596,22 @@
     <value>密码</value>
   </data>
   <data name="GettingStarted_AddToDashboard" xml:space="preserve">
-    <value>添加到报告面板</value>
+    <value>添加到报告仪表板</value>
   </data>
   <data name="GettingStarted_Dashboard" xml:space="preserve">
-    <value>面板</value>
+    <value>仪表板</value>
   </data>
   <data name="GettingStarted_DashboardIntro" xml:space="preserve">
-    <value>您可以通过报告面板轻松查看一个或多个服务器上的证书续期状态</value>
+    <value>您可以通过报告仪表板轻松查看一个或多个服务器上的证书续期状态。</value>
   </data>
   <data name="GettingStarted_ViewDashboard" xml:space="preserve">
-    <value>查看面板</value>
+    <value>查看仪表板</value>
   </data>
   <data name="Dashboard_NewAccount" xml:space="preserve">
     <value>创建新账户</value>
   </data>
   <data name="Dashboard_AddIntro" xml:space="preserve">
-    <value>如需将此服务器添加到您的面板，请填写 https://certifytheweb.com/profile 登录信息或注册新账户：</value>
+    <value>若要将此服务器添加到您的仪表板，请输入您在 https://certifytheweb.com/profile 的登录信息，或注册新账户：</value>
   </data>
   <data name="ScheduledTaskConfig_UseBackgroundService" xml:space="preserve">
     <value>使用后台服务（以本地系统帐户运行）</value>
@@ -621,13 +623,13 @@
     <value>刷新</value>
   </data>
   <data name="Update_DownloadNow" xml:space="preserve">
-    <value>是否立即自动下载安装更新？准备好后会有通知</value>
+    <value>是否立即自动下载安装更新？准备好后会有通知。</value>
   </data>
   <data name="Update_ReadyToApply" xml:space="preserve">
     <value>有新版本可用，是否立即安装？</value>
   </data>
   <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
-    <value>您正在尝试创建同时指定IP的SNI绑定，建议SNI绑定选择“所有未分配”IP。确定继续保存？</value>
+    <value>您正在尝试创建同时指定IP的SNI绑定，建议SNI绑定选择“全部未分配”。确定继续保存？</value>
   </data>
   <data name="Credentials_EditCredential" xml:space="preserve">
     <value>添加/更新存储凭据</value>
@@ -642,43 +644,43 @@
     <value>新建托管证书</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
-    <value>为证书添加域名：</value>
+    <value>为证书添加标识符（如域名等）：</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
-    <value>例如：test.com, www.test.com 或 *.test.com</value>
+    <value>例如：test.com、www.test.com 或 *.test.com</value>
   </data>
   <data name="Settings_EnableHttpChallengeServer" xml:space="preserve">
-    <value>启用HTTP验证服务器</value>
+    <value>启用 HTTP 验证服务器</value>
   </data>
   <data name="Settings_EnableCertificateCleanup" xml:space="preserve">
     <value>启用证书清理</value>
   </data>
   <data name="Settings_EnableStatusReporting" xml:space="preserve">
-    <value>启用面板状态上报</value>
+    <value>启用仪表板状态上报</value>
   </data>
   <data name="PreferredCertificateAuthority" xml:space="preserve">
     <value>首选证书颁发机构</value>
   </data>
   <data name="MainWindow_KeyExpired" xml:space="preserve">
-    <value>您的授权密钥已过期或已失效</value>
+    <value>您的授权密钥已过期或已失效。</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
     <value>{0} 天前已过期</value>
   </data>
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
-    <value>可从现有主机名绑定中选择域名或手动添加域名，之后可点击上方“申请证书”或按需修改选项，如需自定义 CSR，请见“高级”标签页。</value>
+    <value>可从现有主机名绑定中选择标识符或手动添加标识符，之后可点击上方“申请证书”或按需修改选项，如需自定义 CSR，请见“高级”标签页。</value>
   </data>
   <data name="Credentials_Intro" xml:space="preserve">
-    <value>自动化证书续期与部署时需使用已保存的凭据，这些凭据通过Windows数据保护API加密存储于本机</value>
+    <value>自动化证书续期与部署时需使用已保存的凭据，这些凭据通过Windows数据保护API加密存储于本机。</value>
   </data>
   <data name="ManagedCertificates_Deployment_Intro" xml:space="preserve">
-    <value>证书部署可自动完成（若目标为 IIS），也可手动处理部署任务（详见“部署”标签页）。</value>
+    <value>证书部署可自动完成（若目标为 IIS），也可手动处理部署任务（详见“任务”标签页）。</value>
   </data>
   <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
-    <value>任务可选，用于在证书更新前后对证书进行操作或触发其他动作</value>
+    <value>任务可选，用于在证书更新前后对证书进行操作或触发其他动作。</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>部署任务将在常规部署流程完成后（按显示顺序）依次运行，可选择在证书更新后立即执行或延迟至手动/计划任务执行。</value>
+    <value>部署任务将在常规部署流程完成后（详见“部署”标签页）按显示顺序依次运行，可选择在证书更新后立即执行或延迟至手动/计划任务执行。</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
     <value>可选添加任意数量的任务，在证书申请前执行：</value>
@@ -687,7 +689,7 @@
     <value>证书颁发机构</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
-    <value>证书颁发机构（CA）是可签发可信证书的组织，您需在“设置”中为每个（ACME）CA 注册账户</value>
+    <value>证书颁发机构（CA）是可签发可信证书的组织，您需在“设置”中为每个（ACME）CA 注册账户。</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiresInNHours" xml:space="preserve">
     <value>{0} 小时后到期</value>
@@ -696,10 +698,10 @@
     <value>{0} 小时前已过期</value>
   </data>
   <data name="Settings_CA_Intro" xml:space="preserve">
-    <value>证书颁发机构（CA）是可签发可信证书的组织，您需为每个想要使用的（ACME）CA 注册账户，账户分为生产环境（正式证书）和测试环境（测试证书）</value>
+    <value> 证书颁发机构（CA）是可签发可信证书的组织，您需为每个想要使用的（ACME）CA 注册账户，账户分为生产环境（正式、受信任的证书）和测试环境（测试用、不受信任的证书）。</value>
   </data>
   <data name="Settings_CA_Fallback" xml:space="preserve">
-    <value>如注册了多个CA，可实现自动故障切换，当首选CA无法签发新证书时，会自动切换到其他兼容的证书颁发机构</value>
+    <value>如注册了多个CA，可实现自动故障切换，当首选CA无法签发新证书时，会自动切换到其他兼容的证书颁发机构。</value>
   </data>
   <data name="Account_Edit_SectionTitle" xml:space="preserve">
     <value>编辑ACME账户</value>
@@ -714,7 +716,7 @@
     <value>（正式环境目录接口URL）</value>
   </data>
   <data name="Settings_Export_Intro" xml:space="preserve">
-    <value>您可以创建导出文件，打包本实例的所有相关设置和文件。注意：敏感信息已加密，但请勿与不可信人员分享或存储在非安全位置</value>
+    <value>您可以创建导出文件，打包本实例的所有相关设置和文件。注意：敏感信息已加密，但请勿与不可信人员分享或存储在非安全位置。</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions" xml:space="preserve">
     <value>CA可能会以不同根证书链（签发者）签发您的证书，您可为证书指定优先链。如未找到对应链，将采用默认链。</value>
