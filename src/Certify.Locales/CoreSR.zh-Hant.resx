@@ -143,16 +143,19 @@
     <value>憑證申請已完成</value>
   </data>
   <data name="CertifyManager_CompleteRequestAndUpdateBinding" xml:space="preserve">
-    <value>憑證申請與自動綁定已完成</value>
+    <value>憑證申請與自動繫結已完成</value>
   </data>
   <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
-    <value>憑證已安裝並已更新 SSL 綁定：{0}</value>
+    <value>憑證已安裝並已更新 SSL 繫結：{0}</value>
+  </data>
+  <data name="CertifyManager_CertificateStoredNoBindingUpdate" xml:space="preserve">
+    <value>憑證已儲存：{0}。</value>
   </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
     <value>安裝憑證時發生錯誤，憑證檔案可能無效：{0}</value>
   </data>
   <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
-    <value>憑證已建立，請手動設定綁定：{0}</value>
+    <value>憑證已準備就緒：{0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
     <value>ACME CA 服務未在時間限制內簽發有效憑證 {0}</value>
@@ -177,18 +180,18 @@
   </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_HTTP" xml:space="preserve">
     <value>自動組態檢查失敗，無法完成授權。
-請確認您的網站已設定 HTTP 綁定，並可正常瀏覽 http://{0}/.well-known/acme-challenge/configcheck 後再繼續。</value>
+請確認您的網站已設定 HTTP 繫結，並可正常瀏覽 http://{0}/.well-known/acme-challenge/configcheck 後再繼續。</value>
   </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
     <value>自動組態檢查失敗，無法完成授權。
-請確認您的網站已設定 HTTPS SNI 綁定
+請確認您的網站已設定 HTTPS SNI 繫結
 （例如：'0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid'）後再繼續。</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
     <value>申請驗證：{0}</value>
   </data>
   <data name="CertifyManager_AutoBinding" xml:space="preserve">
-    <value>自動設定憑證綁定</value>
+    <value>自動設定憑證繫結</value>
   </data>
   <data name="CertifyManager_SkipRenewalOk" xml:space="preserve">
     <value>略過續期，現有憑證仍有效。</value>
@@ -197,7 +200,7 @@
     <value>網站已停止（或不存在），因無法進行網域驗證，已略過續期。</value>
   </data>
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
-    <value>開始為指定網域申請憑證</value>
+    <value>開始為要求的識別項申請憑證</value>
   </data>
   <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
     <value>前次續期失敗：{0}，將於 48 小時內再次嘗試。</value>
