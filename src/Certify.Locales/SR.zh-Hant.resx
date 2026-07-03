@@ -145,7 +145,7 @@
     <value>有可用更新</value>
   </data>
   <data name="Managed_Sites" xml:space="preserve">
-    <value>受管憑證</value>
+    <value> 受管憑證</value>
   </data>
   <data name="In_Progress" xml:space="preserve">
     <value>處理中</value>
@@ -166,10 +166,10 @@
     <value>註冊聯絡人</value>
   </data>
   <data name="Account_Edit_Intro" xml:space="preserve">
-    <value>若要申請憑證，您需要向每一個想使用的CA註冊帳號</value>
+    <value>若要申請憑證，您需要向每一個想使用的CA註冊帳號。</value>
   </data>
   <data name="Account_Edit_Intro2" xml:space="preserve">
-    <value>所提供的電子郵件地址，可能會用來通知您憑證續期相關事項（如有需要）</value>
+    <value>所提供的電子郵件地址，可能會用來通知您憑證續期相關事項（如有需要）。</value>
   </data>
   <data name="Send_Feedback" xml:space="preserve">
     <value>意見回饋</value>
@@ -196,7 +196,7 @@
     <value>您正從舊版 Certify 升級，這會建立新的受管憑證，您可再編輯調整續期設定等資訊。</value>
   </data>
   <data name="ImportDlg_Merge" xml:space="preserve">
-    <value>將同一網站的多個網域／憑證合併為一個受管憑證</value>
+    <value>將同一網站的多個網域／識別項合併為一個受管憑證</value>
   </data>
   <data name="ImportDlg_Skip" xml:space="preserve">
     <value>略過匯入</value>
@@ -232,7 +232,7 @@
     <value>無法開始授權金鑰驗證程序。</value>
   </data>
   <data name="ScheduledTaskConfig_AlreadyConfiged" xml:space="preserve">
-    <value>自動續期工作已設定，若需更換執行帳號，可修改管理員使用者。</value>
+    <value>自動續期工作已設定，若需更換執行帳號，可修改系統管理員使用者。</value>
   </data>
   <data name="ScheduledTaskConfig_FailedToCreateTask" xml:space="preserve">
     <value>以指定認證建立排程工作失敗</value>
@@ -241,7 +241,7 @@
     <value>已建立排程工作</value>
   </data>
   <data name="ScheduledTaskConfig_PleaseProvideCredential" xml:space="preserve">
-    <value>請輸入管理員層級使用者名稱及密碼</value>
+    <value>請輸入系統管理員層級使用者名稱及密碼</value>
   </data>
   <data name="ScheduledTaskConfig_WindowTitle" xml:space="preserve">
     <value>設定自動續期</value>
@@ -250,7 +250,7 @@
     <value>使用者名稱（網域\使用者）</value>
   </data>
   <data name="ScheduledTaskConfig_Tip" xml:space="preserve">
-    <value>為自動續期憑證，系統將於 Windows 工作排程器中建立一個工作。該工作需以管理員權限執行，才能進行憑證及 IIS 管理相關作業。</value>
+    <value>為自動續期憑證，系統將於 Windows 工作排程器中建立一個工作。該工作需以系統管理員權限執行，才能進行憑證及 IIS 管理相關作業。</value>
   </data>
   <data name="OK" xml:space="preserve">
     <value>確定</value>
@@ -259,7 +259,7 @@
     <value>密碼</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>本版本僅供試用，最多可管理有限數量的憑證。如需移除限制，請至 https://certifytheweb.com/register 購買註冊金鑰，註冊用戶如需支援請寄信至 support@certifytheweb.com</value>
+    <value>本版本僅供試用，最多可管理有限數量的憑證。如需移除限制，請至 https://certifytheweb.com/register 購買註冊金鑰，註冊用戶如需支援請寄信至 support@certifytheweb.com。</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>尚未註冊</value>
@@ -286,13 +286,13 @@
     <value>篩選...</value>
   </data>
   <data name="ManagedCertificates_NoItemSelectedTip" xml:space="preserve">
-    <value>請選取受管憑證或點選新增憑證以開始</value>
+    <value>請選取受管憑證或點選新增憑證以開始。</value>
   </data>
   <data name="ManagedCertificates_UnsavedWarning" xml:space="preserve">
     <value>目前網站有未儲存變更，是否放棄變更？</value>
   </data>
   <data name="ProgressMonitor_NoProgress" xml:space="preserve">
-    <value>目前沒有任何請求正在處理</value>
+    <value>目前沒有任何請求正在處理。</value>
   </data>
   <data name="Settings_PrimaryContact" xml:space="preserve">
     <value>主要聯絡人：</value>
@@ -310,10 +310,10 @@
     <value>啟用應用程式遙測（功能使用情形回報）</value>
   </data>
   <data name="Settings_EnableProxyApiForDomainConfig" xml:space="preserve">
-    <value>啟用 Proxy API 域名組態檢查</value>
+    <value>啟用 Proxy API HTTP 組態檢查</value>
   </data>
   <data name="Settings_IgnoreStoppedSites" xml:space="preserve">
-    <value>新增憑證與續期時略過已停止的 IIS 網站</value>
+    <value>新增憑證與續期時略過已停止的 IIS 站台</value>
   </data>
   <data name="Settings_EnableDnsValidation" xml:space="preserve">
     <value>啟用 DNS 驗證檢查（解析、CAA、DNSSEC）</value>
@@ -340,22 +340,22 @@
     <value>續期失敗時通知主要聯絡人</value>
   </data>
   <data name="ManagedCertificateSettings_NoHostNameBindingWarning" xml:space="preserve">
-    <value>建立憑證時必須至少包含一組完整網域名稱（如 'github.com'）或萬用字元（如 '*.github.com'）</value>
+    <value>建立憑證時必須至少包含一組完整網域名稱（如 'github.com'）或萬用字元（如 '*.github.com'）。</value>
   </data>
   <data name="ManagedCertificateSettings_Tab_Options" xml:space="preserve">
     <value>選項</value>
   </data>
   <data name="ManagedCertificateSettings_SelectWebsite" xml:space="preserve">
-    <value>選擇網站（可選）：</value>
+    <value>選擇站台（可選）：</value>
   </data>
   <data name="ManagedCertificateSettings_DisplayName" xml:space="preserve">
     <value>顯示名稱：</value>
   </data>
-  <data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
-    <value>下列所選網域將合併為一個憑證申請，憑證機構（CA）必須能透過 port 80（HTTP 驗證）或 port 443（TLS-SNI 驗證）存取所有網域，才能順利申請憑證。</value>
-  </data>
+<data name="ManagedCertificateSettings_DomainIncluded" xml:space="preserve">
+  <value>下列選取的識別項將合併為一次憑證申請。憑證授權單位（CA）必須能透過 80 埠存取所有這些識別項（使用 HTTP 驗證時），憑證簽發流程才能順利完成。</value>
+</data>
   <data name="ManagedCertificateSettings_SelectDomain" xml:space="preserve">
-    <value>欲納入憑證的網域與子網域：</value>
+    <value>欲納入的識別項：</value>
   </data>
   <data name="SelectAll" xml:space="preserve">
     <value>全選</value>
@@ -370,7 +370,7 @@
     <value>包含</value>
   </data>
   <data name="ManagedCertificateSettings_Domain" xml:space="preserve">
-    <value>網域</value>
+    <value>識別項</value>
   </data>
   <data name="Advanced" xml:space="preserve">
     <value>進階</value>
@@ -382,7 +382,7 @@
     <value>網站根目錄</value>
   </data>
   <data name="ManagedCertificateSettings_BrowseFolder" xml:space="preserve">
-    <value>…</value>
+    <value>...</value>
   </data>
   <data name="ManagedCertificateSettings_PerformChallengeResponseConfigCheck" xml:space="preserve">
     <value>執行驗證回應組態檢查</value>
@@ -394,7 +394,7 @@
     <value>指定綁定 IP：</value>
   </data>
   <data name="ManagedCertificateSettings_BindPort" xml:space="preserve">
-    <value>指定綁定 port：</value>
+    <value>指定綁定埠：</value>
   </data>
   <data name="ManagedCertificateSettings_UseSNI" xml:space="preserve">
     <value>使用 SNI（IIS 8 以上）：</value>
@@ -406,7 +406,7 @@
     <value>測試</value>
   </data>
   <data name="Browser" xml:space="preserve">
-    <value>…</value>
+    <value>...</value>
   </data>
   <data name="ManagedCertificateSettings_ExportTip" xml:space="preserve">
     <value>提示：如需匯出憑證，請在 Windows 中使用「管理電腦憑證」選項。</value>
@@ -424,25 +424,25 @@
     <value>儲存錯誤</value>
   </data>
   <data name="ManagedCertificateSettings_SelectWebsiteOrCert" xml:space="preserve">
-    <value>請選擇要建立憑證的網站</value>
+    <value>請選擇要為其建立憑證的網站</value>
   </data>
   <data name="ManagedCertificateSettings_NameRequired" xml:space="preserve">
-    <value>此項目必須設定名稱</value>
+    <value>此項目必須設定名稱。</value>
   </data>
   <data name="ManagedCertificateSettings_NeedPrimaryDomain" xml:space="preserve">
-    <value>必須包含主要網域或識別名稱</value>
+    <value>必須包含主要網域或識別項。</value>
   </data>
   <data name="ManagedCertificateSettings_ChallengeNotAvailable" xml:space="preserve">
-    <value>{0} 驗證只適用於 IIS 8 以上版本</value>
+    <value>{0} 驗證只適用於 IIS 8 以上版本。</value>
   </data>
   <data name="ManagedCertificateSettings_HookMustBeValidUrl" xml:space="preserve">
-    <value>Webhook 必須設定為有效的網址</value>
+    <value>Webhook 必須設定為有效的網址。</value>
   </data>
   <data name="ManagedCertificateSettings_HookMethodMustBeSet" xml:space="preserve">
-    <value>Webhook 必須指定方法</value>
+    <value>Webhook 必須指定方法。</value>
   </data>
   <data name="ManagedCertificateSettings_NoChanges" xml:space="preserve">
-    <value>未有變更，略過儲存</value>
+    <value>未有變更，略過儲存。</value>
   </data>
   <data name="ConfirmDelete" xml:space="preserve">
     <value>確認刪除</value>
@@ -451,16 +451,16 @@
     <value>確定要刪除此項目嗎？刪除項目不會影響 IIS 設定等。</value>
   </data>
   <data name="ManagedCertificateSettings_LogNotCreated" xml:space="preserve">
-    <value>尚未產生此項目的記錄檔</value>
+    <value>尚未產生此項目的記錄檔。</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateNotReady" xml:space="preserve">
-    <value>此項目的憑證檔案尚未建立或檔案已被刪除</value>
+    <value>此項目的憑證檔案尚未建立或檔案已被刪除。</value>
   </data>
   <data name="ChallengeError" xml:space="preserve">
     <value>驗證錯誤</value>
   </data>
   <data name="ManagedCertificateSettings_CannotChallengeWithoutIIS" xml:space="preserve">
-    <value>若無法使用 IIS，無法執行驗證檢查</value>
+    <value>若無法使用 IIS，無法執行驗證檢查。</value>
   </data>
   <data name="Challenge" xml:space="preserve">
     <value>驗證</value>
@@ -516,11 +516,13 @@
     <value>這會為所有設定自動續期的項目進行續期，確定要繼續？</value>
   </data>
   <data name="MainWindow_IISNotAvailable" xml:space="preserve">
-    <value>本伺服器未偵測到 IIS，部分重要功能將無法使用。若確定本機已安裝並啟用 IIS，請提供您的作業系統與 IIS 版本細節回報至 support@certifytheweb.com</value>
+    <value>本伺服器未偵測到 IIS，部分重要功能將無法使用。若確定本機已安裝並啟用 IIS，請提供您的作業系統與 IIS 版本細節回報至 support@certifytheweb.com。</value>
   </data>
-  <data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
-    <value>請先註冊新聯絡人，即可開始申請憑證</value>
-  </data>
+<data name="MainWindow_GetStartGuideWithNewCert" xml:space="preserve">
+  <value>這是您的第一個受管憑證，是否先新增 ACME 帳號？除非您使用來自 Dashboard Hub 的憑證訂閱，否則通常需要先新增帳號。
+
+選擇「是」以新增 ACME 帳號，或選擇「否」略過。</value>
+</data>
   <data name="MainWindow_VisitDownloadPage" xml:space="preserve">
     <value>現在前往下載頁面嗎？</value>
   </data>
@@ -528,7 +530,7 @@
     <value> [社群版]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
-    <value>Certify Certificate Manager 貢獻者 （https://certifytheweb.com）</value>
+    <value>Certify Certificate Manager 貢獻者（https://certifytheweb.com）</value>
   </data>
   <data name="About_LanguageTranslator" xml:space="preserve">
     <value>目前語言譯者：</value>
@@ -549,7 +551,7 @@
     <value>方法：</value>
   </data>
   <data name="ManagedCertificateSettings_HookBody" xml:space="preserve">
-    <value>內容：</value>
+    <value>本文：</value>
   </data>
   <data name="ManagedCertificateSettings_HookContentType" xml:space="preserve">
     <value>內容類型：</value>
@@ -558,10 +560,10 @@
     <value>申請後 PowerShell 指令碼：</value>
   </data>
   <data name="ManagedCertificateSettings_AutoUpdateBinding" xml:space="preserve">
-    <value>自動建立／更新 IIS 綁定（使用 SNI）</value>
+    <value>自動建立／更新 IIS 繫結（使用 SNI）</value>
   </data>
   <data name="ManagedCertificateSettings_UseSpecificBinding" xml:space="preserve">
-    <value>使用指定 IP／埠綁定</value>
+    <value>使用指定 IP／埠繫結</value>
   </data>
   <data name="ManagedCertificateSettings_HookTrigger" xml:space="preserve">
     <value>Webhook 觸發條件：</value>
@@ -576,16 +578,16 @@
     <value>{0} 天後到期</value>
   </data>
   <data name="General_Loading" xml:space="preserve">
-    <value>載入中…</value>
+    <value>載入中...</value>
   </data>
   <data name="Update_MandatoryUpdateQuit" xml:space="preserve">
     <value>目前程式版本需要重要更新，才能持續運作，請立即更新。要關閉程式嗎？</value>
   </data>
   <data name="ManagedCertificateSettings_BindingNote" xml:space="preserve">
-    <value>注意：這些設定僅適用於新建立的 https 綁定，現有綁定僅會套用新憑證。多個憑證若固定使用同一 IP 可能導致綁定衝突，請小心使用。</value>
+    <value>注意：這些設定僅適用於新建立的 https 繫結，現有繫結僅會套用新憑證。多個憑證若固定使用同一 IP 可能導致繫結衝突，請小心使用。</value>
   </data>
   <data name="ManagedCertificateSettings_ReapplyCertificate" xml:space="preserve">
-    <value>重新套用憑證至綁定</value>
+    <value>重新套用憑證至繫結</value>
   </data>
   <data name="Dashboard_Register" xml:space="preserve">
     <value>新增</value>
@@ -600,7 +602,7 @@
     <value>儀表板</value>
   </data>
   <data name="GettingStarted_DashboardIntro" xml:space="preserve">
-    <value>您可使用報表儀表板，輕鬆檢視多台伺服器的憑證續期狀態</value>
+    <value>您可使用報表儀表板，輕鬆檢視多台伺服器的憑證續期狀態。</value>
   </data>
   <data name="GettingStarted_ViewDashboard" xml:space="preserve">
     <value>檢視儀表板</value>
@@ -621,13 +623,13 @@
     <value>重新整理</value>
   </data>
   <data name="Update_DownloadNow" xml:space="preserve">
-    <value>要自動下載更新嗎？更新完成後會通知您可安裝</value>
+    <value>是否自動下載更新？準備好安裝時會通知您。</value>
   </data>
   <data name="Update_ReadyToApply" xml:space="preserve">
     <value>新版本已可套用，是否立即安裝？</value>
   </data>
   <data name="ManagedCertificateSettings_InvalidSNI" xml:space="preserve">
-    <value>您正嘗試建立同時指定 SNI 與特定 IP 位址的綁定，建議 SNI 綁定應選用「所有未指定」。確定要繼續儲存嗎？</value>
+    <value>您正嘗試建立同時指定 SNI 與特定 IP 位址的繫結，建議 SNI 繫結應選用「全部未指派」。確定要繼續儲存嗎？</value>
   </data>
   <data name="Credentials_EditCredential" xml:space="preserve">
     <value>新增／更新儲存認證</value>
@@ -642,7 +644,7 @@
     <value>新增受管憑證</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsToCertificate" xml:space="preserve">
-    <value>將網域新增至憑證：</value>
+    <value>將識別項（網域等）新增至憑證：</value>
   </data>
   <data name="ManagedCertificateSettings_AddDomainsHelpText" xml:space="preserve">
     <value>例如：test.com、www.test.com 或 *.test.com</value>
@@ -660,34 +662,34 @@
     <value>偏好 CA</value>
   </data>
   <data name="MainWindow_KeyExpired" xml:space="preserve">
-    <value>您的授權金鑰已到期或已失效</value>
+    <value>您的授權金鑰已到期或已失效。</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiredNDaysAgo" xml:space="preserve">
     <value>{0} 天前已到期</value>
   </data>
   <data name="ManagedCertificateSettings_DomainsIntro" xml:space="preserve">
-    <value>可從現有網站主機名稱綁定中選取網域，或自行手動新增。之後可點上方「申請憑證」或依需求調整選項。如需自訂 CSR，請見「進階」分頁。</value>
+    <value>可從現有網站主機名稱繫結中選取識別項，或自行手動新增。之後可點上方「申請憑證」或依需求調整選項。如需自訂 CSR，請見「進階」分頁。</value>
   </data>
   <data name="Credentials_Intro" xml:space="preserve">
-    <value>自動進行憑證續期與部署時需使用儲存認證，這些認證將使用 Windows 資料保護 API 加密儲存於本機</value>
+    <value>自動進行憑證續期與部署時需使用儲存認證，這些認證將使用 Windows 資料保護 API 加密儲存於本機。</value>
   </data>
   <data name="ManagedCertificates_Deployment_Intro" xml:space="preserve">
-    <value>憑證可自動部署（若目標為 IIS），也可依需求自訂部署作業（詳見「作業」分頁）</value>
+    <value>憑證可自動部署（若目標為 IIS），也可依需求自訂部署作業（詳見「作業」分頁）。</value>
   </data>
   <data name="ManagedCertificates_Tasks_Intro" xml:space="preserve">
-    <value>作業可選擇於憑證續期前後執行，亦可單獨使用最新憑證觸發其他動作</value>
+    <value>作業可選擇於憑證續期前後執行，亦可單獨使用最新憑證觸發其他動作。</value>
   </data>
   <data name="ManagedCertificates_Tasks_DeploymentIntro" xml:space="preserve">
-    <value>部署作業會在標準部署程序完成後（依畫面順序）執行，可設定在憑證更新完畢立即執行，或延後（手動或排程執行）</value>
+    <value>部署作業會在標準部署程序完成後（詳見「部署」分頁）依畫面順序執行，可設定在憑證更新完畢立即執行，或延後（手動或排程執行）。</value>
   </data>
   <data name="ManagedCertificates_Tasks_PrerequestIntro" xml:space="preserve">
-    <value>可選擇於申請憑證開始前加入任何作業：</value>
+    <value>可選擇於申請憑證開始前加入任意數量的作業：</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Title" xml:space="preserve">
     <value>憑證授權單位（CA）</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_Intro" xml:space="preserve">
-    <value>CA 是負責簽發受信任憑證的組織，每個（ACME） CA 都需於設定中註冊帳號才能使用</value>
+    <value>CA 是負責簽發受信任憑證的組織，每個（ACME） CA 都需於設定中註冊帳號才能使用。</value>
   </data>
   <data name="ExpiryDateConverter_CertificateExpiresInNHours" xml:space="preserve">
     <value>{0} 小時後到期</value>
@@ -696,10 +698,10 @@
     <value>{0} 小時前已到期</value>
   </data>
   <data name="Settings_CA_Intro" xml:space="preserve">
-    <value>CA 是負責簽發受信任憑證的組織，每個（ACME） CA 都需註冊帳號，帳號可分為正式（實際憑證）或測試（非受信憑證）。</value>
+    <value> CA 是負責簽發受信任憑證的組織，每個（ACME） CA 都需註冊帳號，帳號分為正式環境（實際、受信任的憑證）或測試環境（測試用、不受信任的憑證）。</value>
   </data>
   <data name="Settings_CA_Fallback" xml:space="preserve">
-    <value>若註冊多個 CA ，可啟用自動 CA 容錯，當偏好 CA 無法簽發新憑證時，將自動使用其他相容 CA 。</value>
+    <value>若已註冊多個 CA，可啟用自動 CA 容錯，當偏好 CA 無法簽發新憑證時，將自動使用其他相容 CA。</value>
   </data>
   <data name="Account_Edit_SectionTitle" xml:space="preserve">
     <value>編輯 ACME 帳號</value>
@@ -714,7 +716,7 @@
     <value>（正式目錄端點網址）</value>
   </data>
   <data name="Settings_Export_Intro" xml:space="preserve">
-    <value>可建立匯出檔，將本次所有相關設定及檔案整合。如：敏感內容雖已加密，仍請勿與不信任對象共用或存放於不安全的位置。</value>
+    <value>可建立匯出檔，將本次所有相關設定及檔案整合。注意：敏感內容雖已加密，仍請勿與不信任對象共用或存放於不安全的位置。</value>
   </data>
   <data name="ManagedCertificateSettings_CertificateAuthority_PreferredChain_Instructions" xml:space="preserve">
     <value>CA 可能會提供多種簽發自不同根憑證（發行者憑證）的版本，您可選擇偏好憑證。若該憑證鏈不存在，則使用預設憑證鏈。</value>
