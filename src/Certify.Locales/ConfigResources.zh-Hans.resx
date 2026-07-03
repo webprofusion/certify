@@ -117,41 +117,20 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName" xml:space="preserve">
-    <value />
-  </data>
   <data name="Credits" xml:space="preserve">
     <value>本软件按“原样”提供，不附带任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性、无侵权性、持续可用性等的任何默示保证。
 
-使用LetsEncrypt.org免费SSL/TLS证书服务需遵守LetsEncrypt.org的服务条款。本软件与LetsEncrypt.org无任何关联，也未获得其官方认可。
+使用 LetsEncrypt.org 免费 SSL/TLS 证书服务需遵守 LetsEncrypt.org 的服务条款。本软件与 LetsEncrypt.org 无任何关联，也未获得其官方认可。
 
 本软件使用了以下开源软件（或其重要部分）：
 - ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp)，遵循 MPL V 2.0 许可协议
 - 部分图标来自 Font Awesome，作者 Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value />
-  </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>当前已是最新版本</value>
-  </data>
-  <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppWebsiteURL" xml:space="preserve">
-    <value />
+    <value>当前已是最新版本。</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
     <value>注意：本软件为测试预览版，仅用于测试和收集反馈，可能存在问题，请勿在重要的生产环境中使用。</value>
-  </data>
-  <data name="AIInstrumentationKey" xml:space="preserve">
-    <value />
-  </data>
-  <data name="LocalServiceBaseURI" xml:space="preserve">
-    <value />
-  </data>
-  <data name="LocalServiceBaseURIDebug" xml:space="preserve">
-    <value />
   </data>
 </root>
