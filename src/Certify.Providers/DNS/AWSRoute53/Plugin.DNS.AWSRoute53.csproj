@@ -7,7 +7,10 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <!-- Pin Core + service packages together; SecurityToken 4.0.7.8 requires Core >= 4.0.9.7 -->
+    <PackageReference Include="AWSSDK.Core" Version="4.0.9.7" />
     <PackageReference Include="AWSSDK.Route53" Version="4.0.9.8" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="4.0.7.8" />
   </ItemGroup>
 
   <ItemGroup>

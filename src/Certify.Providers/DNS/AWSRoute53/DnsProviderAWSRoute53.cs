@@ -3,8 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Amazon;
+using Amazon.Runtime;
 using Amazon.Route53;
 using Amazon.Route53.Model;
+using Amazon.SecurityToken;
+using Amazon.SecurityToken.Model;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -41,14 +45,18 @@ namespace Certify.Providers.DNS.AWSRoute53
         {
             Id = "DNS01.API.Route53",
             Title = "Amazon Route 53 DNS API",
-            Description = "Validates via Route 53 APIs using IAM service credentials",
+            Description = "Validates via Route 53 APIs using IAM credentials. Optional cross-account Assume Role can be configured in stored credentials.",
             HelpUrl = "https://docs.certifytheweb.com/docs/dns/providers/awsroute53",
             PropagationDelaySeconds = 60,
             ProviderParameters = new List<ProviderParameter>{
                         new ProviderParameter{ Key="accesskey",Name="Access Key", IsRequired=true, IsPassword=false },
                         new ProviderParameter{ Key="secretaccesskey",Name="Secret Access Key", IsRequired=true, IsPassword=true },
+                        new ProviderParameter{ Key="useassumerole", Name="Assume cross-account role", IsRequired=false, Value="false", Type=OptionType.Boolean, Description="Use the access keys to assume an IAM role in another AWS account, then update Route 53 in that account." },
+                        new ProviderParameter{ Key="rolearn", Name="Role ARN", IsRequired=false, IsPassword=false, Description="Target role ARN (e.g. arn:aws:iam::123456789012:role/CertifyRoute53). Required when Assume cross-account role is enabled." },
+                        new ProviderParameter{ Key="rolesessionname", Name="Session name", IsRequired=false, IsPassword=false, Value="CertifyTheWeb", Description="Optional STS session name." },
+                        new ProviderParameter{ Key="externalid",Name="External ID (optional)", IsRequired=false, IsPassword=true, Description="Optional. Required by the target role trust policy when using cross-account Assume Role." },
+                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false, Description="Hosted zone ID from Route 53 (e.g. /hostedzone/Z1234567890)." },
                         new ProviderParameter{ Key="propagationdelay",Name="Propagation Delay Seconds", IsRequired=false, IsPassword=false, Value="60", IsCredential=false },
-                        new ProviderParameter{ Key="zoneid",Name="DNS Zone Id", IsRequired=true, IsPassword=false, IsCredential=false },
                     },
             ChallengeType = SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
             Config = "Provider=Certify.Providers.DNS.AWSRoute53",
@@ -343,31 +351,144 @@ namespace Certify.Providers.DNS.AWSRoute53
             return results;
         }
 
+        private static void ApplyProxySettings(ClientConfig clientConfig, IHttpClientProvider clientProvider, Uri serviceEndpoint)
+        {
+            var handler = clientProvider.CreateHandler();
+            if (handler is HttpClientHandler httpClientHandler && httpClientHandler.Proxy != null)
+            {
+                var proxyUri = httpClientHandler.Proxy.GetProxy(serviceEndpoint);
+                clientConfig.ProxyHost = proxyUri?.Host;
+                clientConfig.ProxyPort = proxyUri?.Port ?? 0;
+
+                if (httpClientHandler.Proxy.Credentials != null)
+                {
+                    clientConfig.ProxyCredentials = httpClientHandler.Proxy.Credentials;
+                }
+            }
+        }
+
+        private static bool IsAssumeRoleEnabled(Dictionary<string, string> credentials, Dictionary<string, string> parameters)
+        {
+            if (TryGetBoolValue(credentials, "useassumerole", out var useFromCredentials))
+            {
+                return useFromCredentials;
+            }
+
+            return TryGetBoolValue(parameters, "useassumerole", out var useFromParameters) && useFromParameters;
+        }
+
+        private static bool TryGetBoolValue(Dictionary<string, string> source, string key, out bool value)
+        {
+            value = false;
+            return source?.ContainsKey(key) == true
+                && bool.TryParse(source[key], out value);
+        }
+
+        private static bool TryGetConfigValue(
+            Dictionary<string, string> credentials,
+            Dictionary<string, string> parameters,
+            string key,
+            out string value)
+        {
+            if (credentials?.TryGetValue(key, out value) == true && !string.IsNullOrWhiteSpace(value))
+            {
+                return true;
+            }
+
+            if (parameters?.TryGetValue(key, out value) == true && !string.IsNullOrWhiteSpace(value))
+            {
+                return true;
+            }
+
+            value = null;
+            return false;
+        }
+
+        private async Task<SessionAWSCredentials> AssumeRoleAsync(
+            string accessKey,
+            string secretKey,
+            IHttpClientProvider clientProvider,
+            string roleArn,
+            string roleSessionName,
+            string externalId)
+        {
+            var stsConfig = new AmazonSecurityTokenServiceConfig
+            {
+                RegionEndpoint = RegionEndpoint.USEast1
+            };
+
+            ApplyProxySettings(stsConfig, clientProvider, new Uri("https://sts.amazonaws.com"));
+
+            using (var stsClient = new AmazonSecurityTokenServiceClient(accessKey, secretKey, stsConfig))
+            {
+                var request = new AssumeRoleRequest
+                {
+                    RoleArn = roleArn,
+                    RoleSessionName = roleSessionName,
+                    DurationSeconds = 3600
+                };
+
+                if (!string.IsNullOrWhiteSpace(externalId))
+                {
+                    request.ExternalId = externalId;
+                }
+
+                _log?.Debug($"Route53 :: AssumeRole : Requesting role {roleArn} with session {roleSessionName}");
+
+                var response = await stsClient.AssumeRoleAsync(request);
+                var assumedCredentials = response.Credentials;
+
+                return new SessionAWSCredentials(
+                    assumedCredentials.AccessKeyId,
+                    assumedCredentials.SecretAccessKey,
+                    assumedCredentials.SessionToken);
+            }
+        }
+
         public async Task<bool> InitProvider(Dictionary<string, string> credentials, Dictionary<string, string> parameters, IHttpClientProvider clientProvider, ILog log = null)
         {
             _log = log;
 
             var route53Config = new AmazonRoute53Config
             {
-                RegionEndpoint = Amazon.RegionEndpoint.USEast1
+                RegionEndpoint = RegionEndpoint.USEast1
             };
 
-            // Configure proxy if needed
+            ApplyProxySettings(route53Config, clientProvider, new Uri("https://route53.amazonaws.com"));
 
-            var handler = clientProvider.CreateHandler();
-            if (handler is HttpClientHandler httpClientHandler && httpClientHandler.Proxy != null)
+            var accessKey = credentials["accesskey"];
+            var secretKey = credentials["secretaccesskey"];
+
+            if (IsAssumeRoleEnabled(credentials, parameters))
             {
-                route53Config.ProxyHost = httpClientHandler.Proxy.GetProxy(new Uri("https://route53.amazonaws.com"))?.Host;
-                route53Config.ProxyPort = httpClientHandler.Proxy.GetProxy(new Uri("https://route53.amazonaws.com"))?.Port ?? 0;
-
-                // If proxy credentials are required
-                if (httpClientHandler.Proxy.Credentials != null)
+                if (!TryGetConfigValue(credentials, parameters, "rolearn", out var roleArn))
                 {
-                    route53Config.ProxyCredentials = httpClientHandler.Proxy.Credentials;
+                    throw new ArgumentException("Role ARN is required when Assume Role (Cross-Account) is enabled.");
                 }
-            }
 
-            _route53Client = new AmazonRoute53Client(credentials["accesskey"], credentials["secretaccesskey"], route53Config);
+                var roleSessionName = "CertifyTheWeb";
+                if (TryGetConfigValue(credentials, parameters, "rolesessionname", out var customSessionName))
+                {
+                    roleSessionName = customSessionName;
+                }
+
+                TryGetConfigValue(credentials, parameters, "externalid", out var externalId);
+
+                var sessionCredentials = await AssumeRoleAsync(
+                    accessKey,
+                    secretKey,
+                    clientProvider,
+                    roleArn,
+                    roleSessionName,
+                    externalId);
+
+                _route53Client = new AmazonRoute53Client(sessionCredentials, route53Config);
+                _log?.Information($"Route53 :: Initialized with assumed role {roleArn}");
+            }
+            else
+            {
+                _route53Client = new AmazonRoute53Client(accessKey, secretKey, route53Config);
+            }
 
             if (parameters?.ContainsKey("propagationdelay") == true)
             {
@@ -377,7 +498,7 @@ namespace Certify.Providers.DNS.AWSRoute53
                 }
             }
 
-            return await Task.FromResult(true);
+            return true;
         }
     }
 }
