@@ -503,7 +503,12 @@ namespace Certify.Management
             _log.AppendLine(executionModeMessage ?? $"PowerShell Execution Mode: {executionMode}.");
             _log.AppendLine($"PowerShell Executable: {commandExe}");
 
-            var resultObj = result ?? parameters?.Where(p => p.Key == "result" && p.Value != null).FirstOrDefault().Value;
+            var resultObj = result;
+            if (resultObj == null && parameters != null)
+            {
+                resultObj = parameters.FirstOrDefault(p => p.Key.Equals("result", StringComparison.OrdinalIgnoreCase) && p.Value != null).Value as CertificateRequestResult;
+            }
+
             var payloadParameters = BuildProcessPayloadParameters(parameters, autoConvertBoolean);
             var useWrapperScript = resultObj != null || payloadParameters.Any();
 

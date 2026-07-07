@@ -535,6 +535,39 @@ namespace Certify.Core.Tests
                     StringAssert.Contains(result.Message, modernPowerShellPath);
                 });
         }
+        [TestMethod, Description("System process mode resolves result parameter from case-insensitive parameter key")]
+        public async Task TestSystemProcessModeResolvesResultParameterCaseInsensitive()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "param($result) if ($null -eq $result) { throw 'missing-result' } Write-Output 'has-result'",
+                Parameters = new Dictionary<string, object>
+                {
+                    ["Result"] = new CertificateRequestResult(new ManagedCertificate())
+                },
+                ExecutionMode = PowerShellExecutionMode.SystemProcess
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "has-result");
+        }
+
+        [TestMethod, Description("In-process mode ignores command exceptions case-insensitively")]
+        public async Task TestInProcessModeIgnoresSelectedCommandExceptionsCaseInsensitive()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "Get-Item 'Certify-Definitely-Missing-File'; Write-Output 'after-error'",
+                ExecutionMode = PowerShellExecutionMode.InProcess,
+                IgnoredCommandExceptions = ["get-item"]
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "after-error");
+        }
+
 
         [TestMethod, Description("In-process mode timeout returns failure")]
         public async Task TestInProcessModeTimeoutReturnsFailure()
