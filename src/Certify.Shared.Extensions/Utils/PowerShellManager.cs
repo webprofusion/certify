@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -1350,7 +1350,7 @@ namespace Certify.Management
                     var error = shell.Streams.Error[args.Index];
                     var src = error.InvocationInfo.MyCommand?.ToString() ?? error.InvocationInfo.InvocationName;
                     var msg = $"{src}: {error}\n{error.InvocationInfo.PositionMessage}";
-                    if (!ignoredCommandExceptions.Contains(error.InvocationInfo.MyCommand?.Name))
+                    if (!ignoredCommandExceptions.Contains(error.InvocationInfo.MyCommand?.Name, StringComparer.OrdinalIgnoreCase))
                     {
                         errors.Add(msg);
                     }
