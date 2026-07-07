@@ -438,6 +438,20 @@ namespace Certify.Management
             return null;
         }
 
+        private static string ResolveProcessWorkingDirectory(string scriptFile)
+        {
+            if (!string.IsNullOrWhiteSpace(scriptFile))
+            {
+                var scriptDirectory = Path.GetDirectoryName(scriptFile);
+                if (!string.IsNullOrWhiteSpace(scriptDirectory))
+                {
+                    return scriptDirectory;
+                }
+            }
+
+            return AppContext.BaseDirectory;
+        }
+
         private static WindowsCredentialParts ParseWindowsCredentialParts(Dictionary<string, string> credentials)
         {
             var username = credentials["username"];
@@ -529,10 +543,11 @@ namespace Certify.Management
             var appBasePath = AppContext.BaseDirectory;
 
             var wrapperScriptPath = Path.Combine([appBasePath, "Scripts", "Internal", "Script-Wrapper.ps1"]);
-            var wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
+            string wrapperScriptSourceText = null;
 
             var isUsingCredentials = (credentials != null && credentials.ContainsKey("username") && credentials.ContainsKey("password"));
-            var executingUsername = isUsingCredentials && RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true) : null;
+            var credentialParts = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && isUsingCredentials ? ParseWindowsCredentialParts(credentials) : null;
+            var executingUsername = credentialParts != null ? GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true) : null;
             var allowCredentialWriteAccess = isUsingCredentials && UsesFullImpersonation(impersonationMode);
 
             try
@@ -563,6 +578,7 @@ namespace Certify.Management
             {
                 try
                 {
+                    wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
                     wrapperScriptSourceText = BuildScriptContentWrapper(wrapperScriptSourceText, scriptContent);
                     wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     wrapperScriptTempPath = wrapperScriptPath;
@@ -582,6 +598,7 @@ namespace Certify.Management
 
                 try
                 {
+                    wrapperScriptSourceText = File.ReadAllText(wrapperScriptPath);
                     wrapperScriptPath = await CreateSecureTempFile(tempDirectoryPath, ".ps1", executingUsername, allowExecute: true, allowCredentialWriteAccess: allowCredentialWriteAccess);
                     wrapperScriptTempPath = wrapperScriptPath;
                     File.WriteAllText(wrapperScriptPath, wrapperScriptSourceText);
@@ -663,7 +680,7 @@ namespace Certify.Management
                 FileName = commandExe,
                 Arguments = arguments,
                 Verb = "RunAs",
-                WorkingDirectory = Path.GetDirectoryName(wrapperScriptPath ?? scriptFile) ?? AppContext.BaseDirectory
+                WorkingDirectory = ResolveProcessWorkingDirectory(scriptFile) ?? AppContext.BaseDirectory
             };
 
             scriptProcessInfo.Environment[PowerShellTelemetryOptOutEnvVar] = PowerShellTelemetryOptOutValue;

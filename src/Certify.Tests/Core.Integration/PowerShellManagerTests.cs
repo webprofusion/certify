@@ -568,6 +568,41 @@ namespace Certify.Core.Tests
             StringAssert.Contains(result.Message, "after-error");
         }
 
+        [TestMethod, Description("System process mode uses the script directory as the working directory")]
+        public async Task TestSystemProcessModeUsesScriptDirectoryAsWorkingDirectory()
+        {
+            var scriptDirectory = Path.Combine(Path.GetTempPath(), $"certify-test-powershell-workingdir-{Guid.NewGuid():N}");
+            var scriptPath = Path.Combine(scriptDirectory, "workingdir.ps1");
+
+            Directory.CreateDirectory(scriptDirectory);
+            File.WriteAllText(scriptPath, "Write-Output \"CurrentDir: $((Get-Location).Path)\"");
+
+            try
+            {
+                var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                {
+                    PowerShellExecutionPolicy = "Unrestricted",
+                    ScriptFile = scriptPath,
+                    ExecutionMode = PowerShellExecutionMode.SystemProcess
+                });
+
+                Assert.IsTrue(result.IsSuccess, result.Message);
+                StringAssert.Contains(result.Message, $"CurrentDir: {scriptDirectory}");
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(scriptDirectory))
+                    {
+                        Directory.Delete(scriptDirectory, recursive: true);
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
 
         [TestMethod, Description("Full impersonation timeout still captures process output")]
         [TestCategory("RequiresLocalUser")]
