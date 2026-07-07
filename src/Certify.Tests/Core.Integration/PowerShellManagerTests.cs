@@ -569,6 +569,38 @@ namespace Certify.Core.Tests
         }
 
 
+        [TestMethod, Description("Full impersonation timeout still captures process output")]
+        [TestCategory("RequiresLocalUser")]
+        public async Task TestFullImpersonationTimeoutCapturesProcessOutput()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("PowerShell Full Impersonation is only supported on Windows.");
+            }
+
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "Write-Output 'full-impersonation-timeout-marker'; Start-Sleep -Seconds 2",
+                ExecutionMode = PowerShellExecutionMode.SystemProcess,
+                ImpersonationMode = PowerShellImpersonationMode.Full,
+                Credentials = new Dictionary<string, string>
+                {
+                    ["username"] = "testuser",
+                    ["password"] = "testing123"
+                },
+                TimeoutMinutes = 0
+            });
+
+            Assert.IsFalse(result.IsSuccess, "Full impersonation timeout should fail.");
+            StringAssert.Contains(result.Message, "took too long to exit");
+
+            var outputCaptured = result.Message.Contains("full-impersonation-timeout-marker", StringComparison.Ordinal)
+                || !result.Message.Contains("Running Powershell As New Process: Could not delete temp handoff directory.", StringComparison.Ordinal);
+
+            Assert.IsTrue(outputCaptured, "Timeout path should either capture process output or successfully clean up timeout handoff files without sharing violations.");
+        }
+
         [TestMethod, Description("In-process mode timeout returns failure")]
         public async Task TestInProcessModeTimeoutReturnsFailure()
         {

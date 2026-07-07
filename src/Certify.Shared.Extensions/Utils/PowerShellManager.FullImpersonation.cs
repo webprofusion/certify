@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -148,6 +148,18 @@ namespace Certify.Management
                 if (waitResult == WaitResult.Timeout)
                 {
                     TerminateProcess(processInfo.hProcess, 1);
+
+                    try
+                    {
+                        WaitForSingleObject(processInfo.hProcess, 5000);
+                    }
+                    catch
+                    {
+                    }
+
+                    stdoutHandle.Dispose();
+                    stderrHandle.Dispose();
+
                     log.AppendLine("Warning: Script ran but took too long to exit and was terminated.");
                     AppendProcessOutput(log, stdoutPath, stderrPath);
                     return new ActionResult { IsSuccess = false, Message = log.ToString() };
