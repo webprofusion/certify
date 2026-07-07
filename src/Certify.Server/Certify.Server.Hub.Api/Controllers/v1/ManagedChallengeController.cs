@@ -58,6 +58,12 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
+                _logger.LogWarning(
+                    "PerformManagedChallenge failed for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                    request?.ManagedCertId,
+                    request?.Identifier,
+                    request?.ChallengeType,
+                    result.Message);
                 return Problem(
                     detail: result.Message,
                     statusCode: StatusCodes.Status502BadGateway
@@ -148,14 +154,34 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private async Task<IActionResult?> AuthorizeManagedChallengeActionAsync(string actionId, ManagedChallengeRequest? request = null)
         {
+            var managedCertId = request?.ManagedCertId ?? "<none>";
+            var identifier = request?.Identifier ?? "<none>";
+            var challengeType = request?.ChallengeType ?? "<none>";
+            var hasManagedInstanceHeader = HasManagedInstanceRequestHeader();
+
             var accessCheck = new AccessCheck
             {
                 ResourceType = ResourceTypes.ManagedChallenge,
                 ResourceActionId = actionId
             };
 
+            _logger.LogDebug(
+                "AuthorizeManagedChallengeActionAsync evaluating action {actionId} for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}. Managed instance header present: {hasManagedInstanceHeader}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType,
+                hasManagedInstanceHeader);
+
             if (await IsAuthorized(_client, accessCheck))
             {
+                _logger.LogDebug(
+                    "AuthorizeManagedChallengeActionAsync succeeded via direct access token for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                    actionId,
+                    managedCertId,
+                    identifier,
+                    challengeType);
+
                 if (request != null)
                 {
                     var tagScopes = await GetTagScopesFromAccessToken(GetAccessTokenFromRequest(), null);
@@ -164,6 +190,13 @@ namespace Certify.Server.Hub.Api.Controllers
                         var isAllowed = await ValidateChallengeAccessByTags(request, tagScopes);
                         if (!isAllowed)
                         {
+                            _logger.LogWarning(
+                                "AuthorizeManagedChallengeActionAsync denied by tag scope for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                                actionId,
+                                managedCertId,
+                                identifier,
+                                challengeType);
+
                             return Problem(
                                 detail: "Access denied. No accessible managed challenge found for this domain with your API token's tag scope.",
                                 statusCode: StatusCodes.Status403Forbidden
@@ -175,17 +208,32 @@ namespace Certify.Server.Hub.Api.Controllers
                 return null;
             }
 
+            _logger.LogDebug(
+                "AuthorizeManagedChallengeActionAsync direct access token authorization failed for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType);
+
             var accessToken = GetAccessTokenFromRequestOrManagedChallenge(request);
             if (accessToken != null)
             {
                 ManagedChallengeAuthorizationResult? managedInstanceAuthorization = null;
-                if (request != null && HasManagedInstanceRequestHeader())
+                if (request != null && hasManagedInstanceHeader)
                 {
                     managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, accessToken);
                     if (managedInstanceAuthorization.IsSuccess)
                     {
                         return null;
                     }
+
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync managed-instance authorization failed for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
                 }
 
                 var authResult = await IsAccessTokenAuthorized(_client, accessToken, accessCheck);
@@ -199,6 +247,13 @@ namespace Certify.Server.Hub.Api.Controllers
                             var isAllowed = await ValidateChallengeAccessByTags(request, tagScopes);
                             if (!isAllowed)
                             {
+                                _logger.LogWarning(
+                                    "AuthorizeManagedChallengeActionAsync denied by tag scope after API token authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                                    actionId,
+                                    managedCertId,
+                                    identifier,
+                                    challengeType);
+
                                 return Problem(
                                     detail: "Access denied. No accessible managed challenge found for this domain with your API token's tag scope.",
                                     statusCode: StatusCodes.Status403Forbidden
@@ -212,11 +267,26 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (managedInstanceAuthorization?.WasEvaluated == true)
                 {
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
+
                     return Problem(
                         detail: managedInstanceAuthorization.Message,
                         statusCode: managedInstanceAuthorization.StatusCode
                     );
                 }
+
+                _logger.LogWarning(
+                    "AuthorizeManagedChallengeActionAsync found no valid access token or managed-instance auth for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                    actionId,
+                    managedCertId,
+                    identifier,
+                    challengeType);
 
                 return Problem(
                 detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
@@ -234,12 +304,27 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (managedInstanceAuthorization.WasEvaluated)
                 {
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization without access token for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
+
                     return Problem(
                         detail: managedInstanceAuthorization.Message,
                         statusCode: managedInstanceAuthorization.StatusCode
                     );
                 }
             }
+
+            _logger.LogWarning(
+                "AuthorizeManagedChallengeActionAsync rejected request due to missing authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType);
 
             return Problem(
                 detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
@@ -372,11 +457,16 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
+                _logger.LogWarning(
+                    "ValidateManagedInstanceChallengeAccessAsync found no accessible managed challenge for managed instance {managedInstanceId} / security principal {securityPrincipalId}.",
+                    managedInstance.InstanceId,
+                    managedInstance.SecurityPrincipalId);
+
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error validating managed instance challenge access");
+                _logger.LogError(ex, "Error validating managed instance challenge access for managed instance {managedInstanceId} / security principal {securityPrincipalId}", managedInstance.InstanceId, managedInstance.SecurityPrincipalId);
                 return false;
             }
         }
@@ -389,8 +479,14 @@ namespace Certify.Server.Hub.Api.Controllers
             try
             {
                 var potentialMatches = await GetPotentialManagedChallenges(request);
+
                 if (!potentialMatches.Any())
                 {
+                    _logger.LogWarning(
+                        "ValidateChallengeAccessByTags found no potential managed challenge matches for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                        request?.ManagedCertId,
+                        request?.Identifier,
+                        request?.ChallengeType);
                     return false;
                 }
 
@@ -405,7 +501,6 @@ namespace Certify.Server.Hub.Api.Controllers
 
                     if (challengeTags == null || !challengeTags.Any())
                     {
-                        // Untagged challenges are NOT accessible to tag-scoped tokens
                         continue;
                     }
 
@@ -420,11 +515,17 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
+                _logger.LogWarning(
+                    "ValidateChallengeAccessByTags found no tag-matching managed challenge for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                    request?.ManagedCertId,
+                    request?.Identifier,
+                    request?.ChallengeType);
+
                 return false;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error validating challenge access by tags");
+                _logger.LogError(ex, "Error validating challenge access by tags for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}", request?.ManagedCertId, request?.Identifier, request?.ChallengeType);
                 return false;
             }
         }
