@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -599,6 +599,18 @@ namespace Certify.Core.Tests
             };
 
             Assert.AreEqual("CERTIFY\\certify-test-user", PowerShellManager.GetWindowsCredentialsUsername(credentials));
+        }
+
+        [TestMethod, Description("Windows credential username keeps domain-qualified username unchanged when includeAutoLocalDomain is enabled")]
+        public void TestGetWindowsCredentialsUsernamePreservesDomainQualifiedUsername()
+        {
+            var credentials = new Dictionary<string, string>
+            {
+                ["username"] = "CERTIFY\\certify-test-user",
+                ["password"] = "test-password"
+            };
+
+            Assert.AreEqual("CERTIFY\\certify-test-user", PowerShellManager.GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true));
         }
 
         private static async Task WithTemporaryServiceConfig(Action<Certify.Shared.ServiceConfig> configure, Func<Task> action)

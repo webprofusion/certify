@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -103,6 +103,17 @@ namespace Certify.Management
         {
             public object Result { get; set; }
             public Dictionary<string, object> Parameters { get; set; } = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private sealed class WindowsCredentialParts
+        {
+            public string Username { get; init; }
+            public string Domain { get; init; }
+            public string Password { get; init; }
+            public bool WasLocalQualified { get; init; }
+            public bool WasDomainQualified { get; init; }
+            public bool WasUpn { get; init; }
+            public bool HasExplicitDomain { get; init; }
         }
 
         /// <summary>
@@ -427,6 +438,55 @@ namespace Certify.Management
             return null;
         }
 
+        private static WindowsCredentialParts ParseWindowsCredentialParts(Dictionary<string, string> credentials)
+        {
+            var username = credentials["username"];
+            var password = credentials["password"];
+            credentials.TryGetValue("domain", out var domain);
+
+            var wasLocalQualified = username.StartsWith(@".\", StringComparison.Ordinal);
+            var wasUpn = username.Contains("@", StringComparison.Ordinal);
+            var slashIndex = username.IndexOf('\\');
+            var wasDomainQualified = slashIndex > 0 && !wasUpn;
+            var hasExplicitDomain = !string.IsNullOrWhiteSpace(domain);
+
+            if (wasLocalQualified)
+            {
+                username = username.Substring(2);
+                domain = ".";
+            }
+            else if (wasDomainQualified)
+            {
+                var parsedDomain = username.Substring(0, slashIndex);
+                username = username.Substring(slashIndex + 1);
+
+                if (!hasExplicitDomain)
+                {
+                    domain = parsedDomain;
+                }
+            }
+
+            if (wasUpn)
+            {
+                domain = null;
+            }
+            else if (string.IsNullOrWhiteSpace(domain))
+            {
+                domain = ".";
+            }
+
+            return new WindowsCredentialParts
+            {
+                Username = username,
+                Domain = domain,
+                Password = password,
+                WasLocalQualified = wasLocalQualified,
+                WasDomainQualified = wasDomainQualified,
+                WasUpn = wasUpn,
+                HasExplicitDomain = hasExplicitDomain
+            };
+        }
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
         private static async Task<ActionResult> ExecutePowershellAsProcess(CertificateRequestResult result, string executionPolicy, string scriptFile, Dictionary<string, object> parameters, Dictionary<string, string> credentials, string logonType, string scriptContent, bool autoConvertBoolean = true, PowerShellExecutionMode executionMode = PowerShellExecutionMode.SystemProcess, string[] ignoredCommandExceptions = null, int timeoutMinutes = 5, string powershellPathPreference = null, string executionModeMessage = null, PowerShellImpersonationMode impersonationMode = PowerShellImpersonationMode.Default, bool loadUserProfile = false)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -647,15 +707,9 @@ namespace Certify.Management
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
 
-                    var username = credentials["username"];
-                    var pwd = credentials["password"];
-
-                    credentials.TryGetValue("domain", out var domain);
-
-                    if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
-                    {
-                        domain = ".";
-                    }
+                    var username = credentialParts?.Username ?? credentials["username"];
+                    var pwd = credentialParts?.Password ?? credentials["password"];
+                    var domain = credentialParts?.Domain;
 
                     // Note: process running as local system cannot start a process as different user due to lack of security token context
                     scriptProcessInfo.UserName = username;
@@ -1395,57 +1449,46 @@ namespace Certify.Management
 
         public static UserCredentials GetWindowsCredentials(Dictionary<string, string> credentials)
         {
-            UserCredentials windowsCredentials;
+            var credentialParts = ParseWindowsCredentialParts(credentials);
 
-            var username = credentials["username"];
-            var pwd = credentials["password"];
-
-            credentials.TryGetValue("domain", out var domain);
-
-            if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+            if (!string.IsNullOrWhiteSpace(credentialParts.Domain))
             {
-                domain = ".";
+                return new UserCredentials(credentialParts.Domain, credentialParts.Username, credentialParts.Password);
             }
 
-            if (domain != null)
-            {
-                windowsCredentials = new UserCredentials(domain, username, pwd);
-            }
-            else
-            {
-                windowsCredentials = new UserCredentials(username, pwd);
-            }
-
-            return windowsCredentials;
+            return new UserCredentials(credentialParts.Username, credentialParts.Password);
         }
 
         public static string GetWindowsCredentialsUsername(Dictionary<string, string> credentials, bool includeAutoLocalDomain = false)
         {
-            var username = credentials["username"];
+            var credentialParts = ParseWindowsCredentialParts(credentials);
 
-            credentials.TryGetValue("domain", out var domain);
-
-            if (includeAutoLocalDomain)
+            if (!includeAutoLocalDomain)
             {
-                if (username.StartsWith(@".\", StringComparison.Ordinal))
+                if (credentialParts.WasLocalQualified)
                 {
-                    return $"{Environment.MachineName}\\{username.Substring(2)}";
+                    return $".\\{credentialParts.Username}";
                 }
 
-                if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
+                if (credentialParts.WasDomainQualified || credentialParts.HasExplicitDomain)
                 {
-                    domain = Environment.MachineName;
+                    return $"{credentialParts.Domain}\\{credentialParts.Username}";
                 }
+
+                return credentialParts.Username;
             }
 
-            if (domain != null)
+            if (credentialParts.WasUpn)
             {
-                return $"{domain}\\{username}";
+                return credentialParts.Username;
             }
-            else
+
+            if (!string.IsNullOrWhiteSpace(credentialParts.Domain) && credentialParts.Domain != ".")
             {
-                return username;
+                return $"{credentialParts.Domain}\\{credentialParts.Username}";
             }
+
+            return $"{Environment.MachineName}\\{credentialParts.Username}";
         }
     }
 }
