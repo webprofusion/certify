@@ -98,6 +98,10 @@ namespace Certify.Management
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "PerformExternalCertificateSubscriptionTasks: unhandled exception while processing external certificate subscriptions");
+            }
             finally
             {
                 Interlocked.Exchange(ref _isExternalSubscriptionTaskRunning, 0);

@@ -392,21 +392,28 @@ namespace Certify.Management
             {
                 _initTimer.Stop();
 
-                if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_AUTOJOIN") == "true")
+                try
                 {
-                    _serverConfig.ManagementServerHubAPI = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
-                    SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
+                    if (string.IsNullOrWhiteSpace(_serverConfig.HubAssignedInstanceId) && Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_AUTOJOIN") == "true")
+                    {
+                        _serverConfig.ManagementServerHubAPI = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB");
+                        SharedUtils.ServiceConfigManager.StoreUpdatedAppServiceConfig(_serverConfig);
 
-                    await JoinManagementHub(
-                        Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"),
-                        new Models.Hub.ClientSecret
-                        {
-                            ClientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID"),
-                            Secret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET")
-                        });
+                        await JoinManagementHub(
+                            Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB"),
+                            new Models.Hub.ClientSecret
+                            {
+                                ClientId = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_ID"),
+                                Secret = Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_CLIENT_SECRET")
+                            });
+                    }
+
+                    await EnsureMgmtHubConnection();
                 }
-
-                await EnsureMgmtHubConnection();
+                catch (Exception ex)
+                {
+                    _serviceLog?.Error(ex, "SetupJobs: unhandled exception during initial management hub connection setup.");
+                }
             };
             _initTimer.Start();
 
@@ -437,49 +444,76 @@ namespace Certify.Management
 
         private async void _dailyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            await PerformDailyMaintenanceTasks();
+            try
+            {
+                await PerformDailyMaintenanceTasks();
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "_dailyTimer_Elapsed: unhandled exception during daily maintenance tasks.");
+            }
         }
 
         private async void _hourlyTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            await PerformCertificateMaintenanceTasks();
-
             try
             {
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
+                await PerformCertificateMaintenanceTasks();
+
+                try
+                {
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
+                }
+                catch
+                {
+                    // failed to perform garbage collection, ignore.
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                // failed to perform garbage collection, ignore.
+                _serviceLog?.Error(ex, "_hourlyTimer_Elapsed: unhandled exception during hourly maintenance tasks.");
             }
         }
 
         private async void _heartbeatTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            await EnsureMgmtHubConnection();
-
-            if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
+            try
             {
-                if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEM_UPDATES") == "true")
+                await EnsureMgmtHubConnection();
+
+                if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS") == "true")
                 {
-                    await RandomlyUpdateDemoItems();
+                    if (Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEM_UPDATES") == "true")
+                    {
+                        await RandomlyUpdateDemoItems();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "_heartbeatTimer_Elapsed: unhandled exception during heartbeat processing.");
             }
         }
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            try
+            {
+                // perform frequent tasks such as checking for due renewals
+                await PerformRenewalTasks(CancellationToken.None);
 
-            // perform frequent tasks such as checking for due renewals
-            await PerformRenewalTasks(CancellationToken.None);
+                // process external subscription polls, pending deployments, and queued push notifications
+                await PerformExternalCertificateSubscriptionTasks(CancellationToken.None);
 
-            // process external subscription polls, pending deployments, and queued push notifications
-            await PerformExternalCertificateSubscriptionTasks(CancellationToken.None);
+                // perform managhed challenge cleanup tasks (if any)
+                _ = PerformManagedChallengeCleanup();
 
-            // perform managhed challenge cleanup tasks (if any)
-            _ = PerformManagedChallengeCleanup();
-
-            CleanupStaleChallengeResponses();
+                CleanupStaleChallengeResponses();
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "_frequentTimer_Elapsed: unhandled exception during frequent maintenance tasks.");
+            }
         }
 
         // Add periodic cleanup for stale challenges

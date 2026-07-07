@@ -432,6 +432,8 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null)
         {
+            try
+            {
             // connect/reconnect to management hub if enabled (either connection not established or our joining token is null/expired)
             if (_managementServerClient?.IsConnected() != true)
             {
@@ -600,6 +602,11 @@ namespace Certify.Management
 
                 // send heartbeat message to management hub
                 SendHeartbeatToManagementHub();
+            }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "EnsureMgmtHubConnection: unhandled exception while establishing/maintaining the management hub connection. Will retry on next scheduled check.");
             }
         }
 
