@@ -159,6 +159,13 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateLastRenewalAttempt = item.DateLastRenewalAttempt,
                 DateNextScheduledRenewalAttempt = item.DateNextScheduledRenewalAttempt,
                 LastRenewalStatus = item.LastRenewalStatus,
+                LastPrimaryRequest = item.LastPrimaryRequest == null
+                    ? null
+                    : new RequestStageStatus
+                    {
+                        Status = item.LastPrimaryRequest.Status,
+                        Message = item.LastPrimaryRequest.Message
+                    },
                 RenewalFailureCount = item.RenewalFailureCount,
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
@@ -468,6 +475,41 @@ namespace Certify.Tests.Core.Unit.Tests
             var renewedIds = results.Select(r => r.ManagedItem.Id).ToList();
             Assert.Contains("cert1", renewedIds, "cert1 should be renewed");
             Assert.Contains("cert4", renewedIds, "cert4 should be renewed despite errors");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll with RenewalsWithErrors mode includes failed primary request state")]
+        public async Task TestPerformRenewAll_RenewalsWithErrors_UsesLastPrimaryRequestError()
+        {
+            // Arrange
+            var certWithPrimaryError = CreateTestManagedCertificate("cert-primary-error", "PrimaryErrorOnly", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+            certWithPrimaryError.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Validation failed"
+            };
+
+            var healthyCert = CreateTestManagedCertificate("cert-healthy", "Healthy", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+
+            await _itemStore.Update(certWithPrimaryError);
+            await _itemStore.Update(healthyCert);
+
+            var settings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "Only certificates with error status or failed primary request should be renewed in RenewalsWithErrors mode.");
+            Assert.AreEqual("cert-primary-error", results[0].ManagedItem.Id, "Certificate with failed LastPrimaryRequest should be included.");
         }
 
         [TestMethod, Description("Test PerformRenewAll with specific target certificates")]
