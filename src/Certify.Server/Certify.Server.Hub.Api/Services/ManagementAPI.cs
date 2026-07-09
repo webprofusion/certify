@@ -962,6 +962,75 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<string[]>(instanceId, args, ManagementHubCommands.GetSystemLog) ?? [];
         }
 
+        public async Task<ICollection<ProviderDefinition>?> GetDataStoreProviders(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ProviderDefinition>>(instanceId, args, ManagementHubCommands.GetDataStoreProviders);
+        }
+
+        public async Task<ICollection<DataStoreConnection>?> GetDataStores(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<DataStoreConnection>>(instanceId, args, ManagementHubCommands.GetDataStores);
+        }
+
+        public async Task<ICollection<ActionStep>?> TestDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.TestDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> UpdateDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.UpdateDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> SetDefaultDataStore(string instanceId, string dataStoreId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStoreId", dataStoreId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.SetDefaultDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> CopyDataStoreToTarget(string instanceId, string sourceId, string destId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("sourceId", sourceId),
+                new("destId", destId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.CopyDataStoreToTarget) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> RemoveDataStore(string instanceId, string dataStoreId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStoreId", dataStoreId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.RemoveDataStore) ?? [];
+        }
+
         /// <summary>
         /// Retrieves the service configuration for the specified instance.
         /// </summary>
