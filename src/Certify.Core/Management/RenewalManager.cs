@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -243,7 +243,7 @@ namespace Certify.Management
 
                                 var hasPrimaryRequestError = item.LastPrimaryRequest?.Status == RequestState.Error;
 
-                                if (settings.Mode == RenewalMode.RenewalsWithErrors && item.LastRenewalStatus != RequestState.Error && !hasPrimaryRequestError)
+                                if (settings.Mode == RenewalMode.RenewalsWithErrors && (item.LastRenewalStatus != RequestState.Error && item.LastRenewalStatus != RequestState.Warning) && !hasPrimaryRequestError)
                                 {
                                     // if we are only renewing items with errors, skip this one
                                     continue;
@@ -251,7 +251,7 @@ namespace Certify.Management
 
                                 // check if item is due for renewal based on current settings
 
-                                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode, checkFailureStatus: false);
+                                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode);
                                 var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
                                 var renewalReason = renewalDueCheck.Reason;

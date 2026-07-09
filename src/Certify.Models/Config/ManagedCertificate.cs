@@ -814,7 +814,7 @@ namespace Certify.Models
             }
         }
 
-        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, bool checkFailureStatus = false, DateTimeOffset? testDateTime = null)
+        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, DateTimeOffset? testDateTime = null)
         {
 
             if (s == null)

@@ -1697,7 +1697,16 @@ namespace Certify.Management
 
                 if (!isPreviewOnly)
                 {
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    // a successful redeployment must not mask a recorded primary request failure;
+                    // only mark the overall status as success if the last primary request did not explicitly fail
+                    if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Error)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, managedCertificate.LastPrimaryRequest?.Message ?? managedCertificate.RenewalFailureMessage, incrementFailureCount: false, updateLastAttempt: false);
+                    }
+                    else
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    }
                 }
 
                 result.IsSuccess = true;

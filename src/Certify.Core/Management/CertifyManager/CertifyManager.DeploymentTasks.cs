@@ -115,11 +115,16 @@ namespace Certify.Management
                 evaluateAgainstPrimaryRequestStatus: true
             );
 
-            var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: manualTaskPrimaryRequestSucceeded, string.Empty)
+            // when recomputing the overall stored status, the explicitly recorded primary request status is
+            // authoritative (a failed renewal must stay failed even if an older usable certificate allowed the
+            // manual task run to proceed); the certificate-availability fallback only applies when no status was recorded
+            var recordedPrimaryRequestStatus = ResolveRecordedPrimaryRequestStatus(managedCert);
+
+            var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: recordedPrimaryRequestStatus == RequestState.Success, string.Empty)
             {
                 PrimaryRequest = new RequestStageStatus
                 {
-                    Status = manualTaskPrimaryRequestSucceeded ? RequestState.Success : RequestState.Error,
+                    Status = recordedPrimaryRequestStatus,
                     Message = managedCert.LastPrimaryRequest?.Message
                 },
                 Message = managedCert.LastPrimaryRequest?.Message ?? string.Empty
@@ -170,6 +175,23 @@ namespace Certify.Management
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Resolve the primary request status to use when recomputing the stored overall renewal status.
+        /// An explicitly recorded status is authoritative; the certificate-availability fallback is only
+        /// used for older items where no primary request status has been recorded.
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns></returns>
+        private static RequestState ResolveRecordedPrimaryRequestStatus(ManagedCertificate managedCert)
+        {
+            if (managedCert.LastPrimaryRequest?.Status != null)
+            {
+                return managedCert.LastPrimaryRequest.Status.Value;
+            }
+
+            return WasLastCertificatePrimaryRequestSuccessful(managedCert) ? RequestState.Success : RequestState.Error;
         }
 
         /// <summary>

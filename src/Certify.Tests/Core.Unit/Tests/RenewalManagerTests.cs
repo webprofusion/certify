@@ -512,6 +512,47 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("cert-primary-error", results[0].ManagedItem.Id, "Certificate with failed LastPrimaryRequest should be included.");
         }
 
+        [TestMethod, Description("Test PerformRenewAll never attempts paused items awaiting user input, regardless of renewal mode")]
+        [DataRow(RenewalMode.Auto)]
+        [DataRow(RenewalMode.RenewalsDue)]
+        [DataRow(RenewalMode.All)]
+        [DataRow(RenewalMode.RenewalsWithErrors)]
+        public async Task TestPerformRenewAll_SkipsPausedItems(RenewalMode mode)
+        {
+            // Arrange - paused item is otherwise due for renewal and has a failed primary request
+            await _itemStore.DeleteAll();
+
+            var pausedCert = CreateTestManagedCertificate("cert-paused", "PausedCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Paused);
+            pausedCert.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Awaiting manual DNS challenge completion"
+            };
+
+            var dueCert = CreateTestManagedCertificate("cert-due", "DueCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Error);
+
+            await _itemStore.Update(pausedCert);
+            await _itemStore.Update(dueCert);
+
+            var settings = new RenewalSettings { Mode = mode, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.IsFalse(results.Any(r => r.ManagedItem?.Id == "cert-paused"), $"Paused certificate must not be attempted in {mode} mode.");
+            Assert.IsTrue(results.Any(r => r.ManagedItem?.Id == "cert-due"), $"Non-paused due certificate should still be attempted in {mode} mode.");
+        }
+
         [TestMethod, Description("Test PerformRenewAll with specific target certificates")]
         public async Task TestPerformRenewAll_SpecificTargets()
         {
