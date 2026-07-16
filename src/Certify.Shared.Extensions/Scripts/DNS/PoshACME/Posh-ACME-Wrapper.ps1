@@ -1,4 +1,4 @@
-﻿# Posh-ACME Wrapper script to allow direct use of DNS Plugins
+# Posh-ACME Wrapper script to allow direct use of DNS Plugins
 
 # $PoshACMERoot = "\Posh-ACME"
 $Public  = @( Get-ChildItem -Path $PoshACMERoot\Public\*.ps1 -ErrorAction Ignore )
@@ -35,3 +35,4 @@ function Import-PluginVar { param([Parameter(ValueFromRemainingArguments)]$DumpA
 
 $script:UseBasic = @{} 
 if ('UseBasicParsing' -in (Get-Command Invoke-WebRequest).Parameters.Keys) {  $script:UseBasic.UseBasicParsing = $true } 
+if ('AllowInsecureRedirect' -in (Get-Command Invoke-RestMethod).Parameters.Keys) { $script:UseBasic.AllowInsecureRedirect = $true }
