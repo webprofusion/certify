@@ -401,8 +401,14 @@ namespace Certify.Core.Management.Access
             if (isAuthorised)
             {
                 // TODO: check token scope restrictions
-
-                return new ActionResult("OK", true);
+                return new ActionResult("OK", true)
+                {
+                    Result = new AccessTokenAuthorizationContext
+                    {
+                        SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
+                        ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles ?? []
+                    }
+                };
             }
             else
             {

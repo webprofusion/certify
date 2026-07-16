@@ -1,7 +1,9 @@
 ﻿using System.Net.Http.Headers;
+using System.Linq;
 using System.Security.Claims;
 using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -110,6 +112,36 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             get
             {
+                var principal = HttpContext?.User;
+                if (principal?.Identity?.IsAuthenticated == true)
+                {
+                    var userIdFromClaims = principal.FindFirst(ClaimTypes.Sid)?.Value;
+                    if (!string.IsNullOrWhiteSpace(userIdFromClaims))
+                    {
+                        var authContext = new AuthContext { UserId = userIdFromClaims };
+
+                        var scopedAssignedRoles = principal
+                            .FindAll(ApiKeyAuthenticationDefaults.ScopedAssignedRoleClaimType)
+                            .Select(c => c.Value)
+                            .Where(v => !string.IsNullOrWhiteSpace(v))
+                            .Distinct()
+                            .ToList();
+
+                        if (scopedAssignedRoles.Any())
+                        {
+                            authContext.ScopedAssignedRoles = scopedAssignedRoles;
+                        }
+
+                        var authHeaderValue = Request.Headers["Authorization"];
+                        if (!string.IsNullOrWhiteSpace(authHeaderValue) && authHeaderValue.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                        {
+                            authContext.Token = AuthenticationHeaderValue.Parse(authHeaderValue!).Parameter;
+                        }
+
+                        return authContext;
+                    }
+                }
+
                 var authHeader = Request.Headers["Authorization"];
 
                 if (string.IsNullOrWhiteSpace(authHeader))

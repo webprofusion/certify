@@ -127,6 +127,12 @@ namespace Certify.Models.Hub
         public AccessCheck Check { get; set; } = default!;
     }
 
+    public class AccessTokenAuthorizationContext
+    {
+        public string SecurityPrincipalId { get; set; } = default!;
+        public List<string> ScopedAssignedRoles { get; set; } = [];
+    }
+
     public class AccessTokenTypes
     {
         public const string Simple = "simple";
