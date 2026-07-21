@@ -139,7 +139,7 @@ namespace Certify.UI.Windows
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception exp)
                 {
                     if (IsRemovalMode)
                     {
@@ -158,7 +158,7 @@ namespace Certify.UI.Windows
                     }
                     else
                     {
-                        MessageBox.Show(Certify.Locales.SR.Registration_KeyValidationError);
+                        MessageBox.Show("There was a problem adding the instance to the dashbord: " + exp.Message);
                     }
                 }
             }

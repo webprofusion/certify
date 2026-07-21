@@ -1070,6 +1070,10 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>Returns the result of the update operation, which may indicate success or failure.</returns>
         public async Task<ActionResult?> UpdateServiceCoreSettings(string instanceId, Preferences prefs, AuthContext? currentAuthContext)
         {
+
+            prefs.ConfigDataStoreConnectionId ??= "(default)";
+            prefs.FeatureFlags ??= [];
+
             var args = new KeyValuePair<string, string>[] {
                      new("instanceId", instanceId) ,
                      new("prefs", JsonSerializer.Serialize(prefs))
@@ -1120,13 +1124,35 @@ namespace Certify.Server.Hub.Api.Services
                 return result;
             }
 
-            await QueueManagedInstanceStatusReportsForDashboard(instanceId);
+            var queueResult = await QueueManagedInstanceStatusReportsForDashboard(instanceId);
 
             var updateSettingsResult = await UpdateManagedInstanceDashboardRegistration(instanceId, true, currentAuthContext);
 
             if (updateSettingsResult?.IsSuccess != true)
             {
-                return new ActionResult("Dashboard registration completed, but enabling dashboard reporting on the instance failed.", false);
+                var message = "Dashboard registration completed, but enabling dashboard reporting on the instance failed.";
+
+                if (!queueResult.IsSuccess)
+                {
+                    message += " Initial dashboard status report queueing also failed.";
+                }
+
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = message
+                };
+            }
+
+            if (!queueResult.IsSuccess)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = "Managed instance added to the dashboard and dashboard reporting enabled, but initial dashboard status report queueing failed."
+                };
             }
 
             return result;
@@ -1161,9 +1187,18 @@ namespace Certify.Server.Hub.Api.Services
             return new ActionResult("Managed instance removed from the dashboard.", true);
         }
 
-        private async Task QueueManagedInstanceStatusReportsForDashboard(string instanceId)
+        private async Task<ActionResult> QueueManagedInstanceStatusReportsForDashboard(string instanceId)
         {
-            await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.QueueAllStatusReports));
+            try
+            {
+                await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.QueueAllStatusReports));
+                return new ActionResult("Dashboard status reports queued.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "Failed to queue dashboard status reports for managed instance {instanceId}.", instanceId);
+                return new ActionResult("Initial dashboard status report queueing failed.", false);
+            }
         }
 
         private async Task<ActionResult?> UpdateManagedInstanceDashboardRegistration(string instanceId, bool isDashboardEnabled, AuthContext? currentAuthContext)
@@ -1176,8 +1211,6 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             prefs.IsInstanceRegistered = isDashboardEnabled;
-            prefs.ConfigDataStoreConnectionId ??= "(default)";
-            prefs.FeatureFlags ??= [];
 
             return await UpdateServiceCoreSettings(instanceId, prefs, currentAuthContext);
         }
