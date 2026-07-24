@@ -258,21 +258,6 @@ namespace Certify.Tests.Core.Unit.Tests
         }
     }
 
-    /// <summary>
-    /// Mock implementation of ILog for testing
-    /// </summary>
-    public class MockLog : ILog
-    {
-        public List<string> LogEntries { get; } = new List<string>();
-
-        public void Verbose(string template, params object[] propertyValues) => LogEntries.Add($"VERBOSE: {string.Format(template, propertyValues)}");
-        public void Debug(string template, params object[] propertyValues) => LogEntries.Add($"DEBUG: {string.Format(template, propertyValues)}");
-        public void Information(string template, params object[] propertyValues) => LogEntries.Add($"INFO: {string.Format(template, propertyValues)}");
-        public void Warning(string template, params object[] propertyValues) => LogEntries.Add($"WARNING: {string.Format(template, propertyValues)}");
-        public void Error(string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)}");
-        public void Error(Exception ex, string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)} - {ex.Message}");
-    }
-
     [TestClass]
     public class RenewalManagerTests
     {

@@ -1,14 +1,12 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Certify.Client;
 using Certify.Core.Management.Access;
 using Certify.Models;
-using Certify.Models.Config;
 using Certify.Models.Hub;
+using Certify.Models.Providers;
 using Certify.Providers;
-using Xunit;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Certify.Tests.Core.Unit.Tests
 {
@@ -21,6 +19,7 @@ namespace Certify.Tests.Core.Unit.Tests
     /// principal ID to permission checks, causing requests to fail with missing permissions
     /// even when the role had those permissions.
     /// </summary>
+    [TestClass]
     public class HubApiAuthIntegrationTests
     {
         private IAccessControl _accessControl;
@@ -41,7 +40,8 @@ namespace Certify.Tests.Core.Unit.Tests
         /// Expected: Token validation returns AccessTokenAuthorizationContext with real principal ID
         /// This fixes the bug where principal context was lost
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task ApiTokenValidation_WithHubViewerRole_ReturnsPrincipalContext()
         {
             // Arrange
@@ -51,7 +51,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Create test access token
             var accessToken = new AccessToken { ClientId = clientId, Secret = secret };
-            
+
             // Create check for TagList permission (the permission from the bug report)
             var accessCheck = new AccessCheck(
                 principalId,
@@ -64,13 +64,13 @@ namespace Certify.Tests.Core.Unit.Tests
             var result = await _accessControl.IsAccessTokenAuthorised("system", accessToken, accessCheck);
 
             // Assert
-            Assert.True(result.IsSuccess, "API token should validate successfully");
-            Assert.NotNull(result.Result, "Result should contain AccessTokenAuthorizationContext");
-            
+            Assert.IsTrue(result.IsSuccess, "API token should validate successfully");
+            Assert.IsNotNull(result.Result, "Result should contain AccessTokenAuthorizationContext");
+
             var context = result.Result as AccessTokenAuthorizationContext;
-            Assert.NotNull(context);
-            Assert.Equal(principalId, context.SecurityPrincipalId);
-            Assert.NotEmpty(context.ScopedAssignedRoles);
+            Assert.IsNotNull(context);
+            Assert.AreEqual(principalId, context.SecurityPrincipalId);
+            Assert.IsNotEmpty(context.ScopedAssignedRoles);
         }
 
         /// <summary>
@@ -78,12 +78,13 @@ namespace Certify.Tests.Core.Unit.Tests
         /// Expected: Principal with HubViewer role should have TagList permission
         /// This verifies the role → policy → action permission chain
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task PermissionCheck_HubViewerWithTagList_ShouldAuthorize()
         {
             // Arrange
             var principalId = "test_principal_01";
-            
+
             // Create AccessCheck for TagList (from the bug report)
             var accessCheck = new AccessCheck(
                 principalId,
@@ -96,7 +97,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
 
             // Assert
-            Assert.True(isAuthorized, "Principal with HubViewer role should have TagList permission");
+            Assert.IsTrue(isAuthorized, "Principal with HubViewer role should have TagList permission");
         }
 
         /// <summary>
@@ -104,13 +105,14 @@ namespace Certify.Tests.Core.Unit.Tests
         /// Expected: Permission check should only evaluate the scoped roles
         /// This tests the ScopedAssignedRoles filtering
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task PermissionCheck_WithScopedRoles_FiltersToScopedRolesOnly()
         {
             // Arrange
             var principalId = "test_principal_01";
             var scopedRoleId = "scoped_hub_viewer_assignment_01";
-            
+
             var accessCheck = new AccessCheck(
                 principalId,
                 ResourceTypes.Tag,
@@ -126,7 +128,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assert
             // Should still authorize if the scoped role has the permission
-            Assert.True(isAuthorized, "Scoped role assignment should still grant permission");
+            Assert.IsTrue(isAuthorized, "Scoped role assignment should still grant permission");
         }
 
         /// <summary>
@@ -134,12 +136,13 @@ namespace Certify.Tests.Core.Unit.Tests
         /// Expected: Should NOT have any permissions
         /// This tests the deny-by-default principle
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task PermissionCheck_NoRolesAssigned_ShouldDeny()
         {
             // Arrange
             var principalIdWithNoRoles = "test_principal_no_roles";
-            
+
             var accessCheck = new AccessCheck(
                 principalIdWithNoRoles,
                 ResourceTypes.Tag,
@@ -150,14 +153,15 @@ namespace Certify.Tests.Core.Unit.Tests
             var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalIdWithNoRoles, accessCheck);
 
             // Assert
-            Assert.False(isAuthorized, "Principal with no roles should not have any permissions");
+            Assert.IsFalse(isAuthorized, "Principal with no roles should not have any permissions");
         }
 
         /// <summary>
         /// Scenario: Check multiple tag-related permissions
         /// Expected: All tag permissions should be granted to HubViewer role
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task PermissionCheck_AllTagPermissions_WithHubViewer()
         {
             // Arrange
@@ -181,15 +185,15 @@ namespace Certify.Tests.Core.Unit.Tests
                 );
 
                 var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
-                
+
                 // Note: TagAdmin role has all permissions, HubViewer only has TagList
                 if (permission == StandardResourceActions.TagList)
                 {
-                    Assert.True(isAuthorized, $"HubViewer should have {permission}");
+                    Assert.IsTrue(isAuthorized, $"HubViewer should have {permission}");
                 }
                 else
                 {
-                    Assert.False(isAuthorized, $"HubViewer should NOT have {permission}");
+                    Assert.IsFalse(isAuthorized, $"HubViewer should NOT have {permission}");
                 }
             }
         }
@@ -198,12 +202,17 @@ namespace Certify.Tests.Core.Unit.Tests
         /// Scenario: Tag-scoped role assignment
         /// Expected: Permission check with resource tags should evaluate scope restrictions
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task PermissionCheck_WithTagScope_ValidatesResourceTags()
         {
             // Arrange
             var principalId = "test_principal_01";
-            var resourceTags = new List<string> { "production", "critical" };
+            var resourceTags = new List<TagSummary>
+            {
+                new TagSummary { CategoryKey = "environment", CategoryDisplayName = "Environment", Value = "production" },
+                new TagSummary { CategoryKey = "priority", CategoryDisplayName = "Priority", Value = "critical" }
+            };
 
             var accessCheck = new AccessCheck(
                 principalId,
@@ -222,19 +231,20 @@ namespace Certify.Tests.Core.Unit.Tests
             // Result depends on whether principal's role assignment has matching tag scope
             // If no tag scope restriction, should allow
             // If tag scope restriction, should check for match
-            Assert.NotNull(isAuthorized);
+            Assert.IsNotNull(isAuthorized);
         }
 
         /// <summary>
         /// Scenario: Expired API token
         /// Expected: Should be rejected during token validation
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task ApiTokenValidation_ExpiredToken_ShouldReject()
         {
             // Arrange
-            var expiredToken = new AccessToken 
-            { 
+            var expiredToken = new AccessToken
+            {
                 ClientId = "expired_client_id",
                 Secret = "expired_secret"
             };
@@ -249,19 +259,20 @@ namespace Certify.Tests.Core.Unit.Tests
             var result = await _accessControl.IsAccessTokenAuthorised("system", expiredToken, accessCheck);
 
             // Assert
-            Assert.False(result.IsSuccess, "Expired token should be rejected");
+            Assert.IsFalse(result.IsSuccess, "Expired token should be rejected");
         }
 
         /// <summary>
         /// Scenario: Revoked API token
         /// Expected: Should be rejected during token validation
         /// </summary>
-        [Fact(Skip = "Requires test database setup")]
+        [TestMethod]
+        [Ignore("Requires test database setup")]
         public async Task ApiTokenValidation_RevokedToken_ShouldReject()
         {
             // Arrange
-            var revokedToken = new AccessToken 
-            { 
+            var revokedToken = new AccessToken
+            {
                 ClientId = "revoked_client_id",
                 Secret = "revoked_secret"
             };
@@ -276,19 +287,19 @@ namespace Certify.Tests.Core.Unit.Tests
             var result = await _accessControl.IsAccessTokenAuthorised("system", revokedToken, accessCheck);
 
             // Assert
-            Assert.False(result.IsSuccess, "Revoked token should be rejected");
+            Assert.IsFalse(result.IsSuccess, "Revoked token should be rejected");
         }
 
         /// <summary>
         /// Scenario: System principal always authorized
         /// Expected: System principal should bypass permission checks
         /// </summary>
-        [Fact]
+        [TestMethod]
         public async Task PermissionCheck_SystemPrincipal_AlwaysAuthorized()
         {
             // Arrange
             var systemPrincipalId = "system";
-            
+
             var accessCheck = new AccessCheck(
                 systemPrincipalId,
                 ResourceTypes.Tag,
@@ -299,60 +310,85 @@ namespace Certify.Tests.Core.Unit.Tests
             var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(systemPrincipalId, accessCheck);
 
             // Assert
-            Assert.True(isAuthorized, "System principal should always be authorized");
+            Assert.IsTrue(isAuthorized, "System principal should always be authorized");
         }
-    }
-
-    /// <summary>
-    /// Mock implementations for testing (would use real implementations in production)
-    /// </summary>
-    public class MockLog : ILog
-    {
-        public void Debug(string template, params object[] propertyValues) { }
-        public void Error(string template, params object[] propertyValues) { }
-        public void Information(string template, params object[] propertyValues) { }
-        public void Warning(string template, params object[] propertyValues) { }
     }
 
     public class MockConfigurationStore : IConfigurationStore
     {
-        private Dictionary<string, List<object>> _store = new();
+        private readonly Dictionary<string, List<object>> _store = new();
 
-        public async Task Add(string itemType, object item)
+        public Task Add<T>(string itemType, T item)
         {
             if (!_store.ContainsKey(itemType))
+            {
                 _store[itemType] = new List<object>();
+            }
+
             _store[itemType].Add(item);
-            await Task.CompletedTask;
+            return Task.CompletedTask;
         }
 
-        public async Task<T> Get<T>(string itemType, string key) where T : class
+        public Task<T> Get<T>(string itemType, string key)
         {
             if (_store.ContainsKey(itemType))
             {
-                var item = _store[itemType].FirstOrDefault(x => x?.GetType().GetProperty("Id")?.GetValue(x)?.ToString() == key);
-                return item as T;
+                var item = _store[itemType].OfType<T>().FirstOrDefault(x => GetItemId(x) == key);
+                return Task.FromResult(item);
             }
-            return default;
+
+            return Task.FromResult(default(T));
         }
 
-        public async Task<List<T>> GetItems<T>(string itemType) where T : class
+        public Task<List<T>> GetItems<T>(string itemType)
         {
             if (_store.ContainsKey(itemType))
-                return _store[itemType].Cast<T>().ToList();
-            return new List<T>();
+            {
+                return Task.FromResult(_store[itemType].Cast<T>().ToList());
+            }
+
+            return Task.FromResult(new List<T>());
         }
 
-        public async Task Remove(string itemType, string key)
+        public Task Update<T>(string itemType, T item)
         {
             if (_store.ContainsKey(itemType))
-                _store[itemType].RemoveAll(x => x?.GetType().GetProperty("Id")?.GetValue(x)?.ToString() == key);
-            await Task.CompletedTask;
+            {
+                var itemId = GetItemId(item);
+                _store[itemType].RemoveAll(x => GetItemId(x) == itemId);
+            }
+
+            return Add(itemType, item);
         }
 
-        public async Task Update(string itemType, object item)
+        public Task<bool> Delete<T>(string itemType, string key)
         {
-            await Add(itemType, item);
+            if (!_store.ContainsKey(itemType))
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(_store[itemType].RemoveAll(x => GetItemId(x) == key) > 0);
+        }
+
+        public Task<bool> IsInitialised()
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<List<SerializedConfigurationItem>> GetAllSerializedItems()
+        {
+            return Task.FromResult(new List<SerializedConfigurationItem>());
+        }
+
+        public Task UpsertSerializedItem(SerializedConfigurationItem item)
+        {
+            return Update(item.ItemType, item);
+        }
+
+        private static string GetItemId(object item)
+        {
+            return item?.GetType().GetProperty("Id")?.GetValue(item)?.ToString();
         }
     }
 }
