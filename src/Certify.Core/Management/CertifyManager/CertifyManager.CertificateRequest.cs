@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -324,6 +324,7 @@ namespace Certify.Management
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {
                             // resume a previously paused request
+                            managedCertificate.LastRenewalStatus = RequestState.Running;
                             CertificateRequestResult result;
 
                             // If mixing manual dns with acme-dns, manual challenges need to be checked without re-challenging
