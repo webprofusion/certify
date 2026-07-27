@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Certify.Config;
@@ -50,6 +50,63 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(storedCert);
 
             CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
+        }
+
+        [TestMethod]
+        [DataRow("example.com [Certify] - 25/06/2025 8:22:34 AM to 23 / 09 / 2025 8:22:33 AM", "example.com [Certify]")]
+        [DataRow("example.com [Certify] - issued 2026", "example.com [Certify]")]
+        [DataRow("[certify] example.com - issued 2026", "[certify]")]
+        [DataRow("example.com - [CERTIFY] issued 2026", "example.com - [CERTIFY]")]
+        [DataRow("example.com [CeRtIfY] primary [Certify] secondary", "example.com [CeRtIfY]")]
+        [DataRow("example.com - issued 2026", "example.com")]
+        [DataRow("", "example.com")]
+        public void GetCertificateCleanupName_UsesFirstCertifyMarkerOrFallback(string friendlyName, string expectedCleanupName)
+        {
+            var cleanupName = CertificateManager.GetCertificateCleanupName(friendlyName, "example.com");
+
+            Assert.AreEqual(expectedCleanupName, cleanupName);
+        }
+
+        [TestMethod]
+        public void PerformCertificateStoreCleanup_MatchesCertifyMarkerAndPrefixCaseInsensitively()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
+
+            var uniqueName = $"cleanup-{Guid.NewGuid():N}";
+            var cert = CertificateManager.GenerateSelfSignedCertificate(
+                uniqueName,
+                DateTime.UtcNow.AddDays(-2),
+                DateTime.UtcNow.AddDays(-1));
+            cert.FriendlyName = $"{uniqueName} [certify] expired";
+
+            try
+            {
+                CertificateManager.StoreCertificate(cert, CertificateManager.DEFAULT_STORE_NAME);
+
+                var removed = CertificateManager.PerformCertificateStoreCleanup(
+                    CertificateCleanupMode.AfterExpiry,
+                    DateTimeOffset.UtcNow,
+                    $"{uniqueName} [Certify]",
+                    excludedThumbprints: null,
+                    storeName: CertificateManager.DEFAULT_STORE_NAME);
+
+                Assert.IsTrue(removed.Any(c => c.Contains(cert.Thumbprint)), "Cleanup should remove a matching certificate regardless of marker or prefix casing.");
+                Assert.IsNull(CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, CertificateManager.DEFAULT_STORE_NAME));
+            }
+            finally
+            {
+                var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, CertificateManager.DEFAULT_STORE_NAME);
+                if (storedCert != null)
+                {
+                    CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
+                }
+
+                cert.Dispose();
+            }
         }
 
         [TestMethod, Description("Test get cert RSA private key file path")]

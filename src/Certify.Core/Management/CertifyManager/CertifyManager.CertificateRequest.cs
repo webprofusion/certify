@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1155,11 +1155,8 @@ namespace Certify.Management
                             certInfo = certRequestResult.SupportingData as X509Certificate2;
                         }
 
-                        if (!string.IsNullOrWhiteSpace(certInfo.FriendlyName))
-                        {
-                            // PFX only has friendly name in the exported file version, if available this is then used for the cleanup later
-                            certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
-                        }
+                        // PFX only has friendly name in the exported file version, if available this is then used for the cleanup later
+                        certCleanupName = CertificateManager.GetCertificateCleanupName(certInfo.FriendlyName, managedCertificate.RequestConfig.PrimaryDomain);
 
                         managedCertificate.DateStart = new DateTimeOffset(certInfo.NotBefore);
                         managedCertificate.DateExpiry = new DateTimeOffset(certInfo.NotAfter);
