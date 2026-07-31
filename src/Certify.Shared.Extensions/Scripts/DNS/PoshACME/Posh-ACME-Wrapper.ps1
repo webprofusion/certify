@@ -35,4 +35,5 @@ function Import-PluginVar { param([Parameter(ValueFromRemainingArguments)]$DumpA
 
 $script:UseBasic = @{} 
 if ('UseBasicParsing' -in (Get-Command Invoke-WebRequest).Parameters.Keys) {  $script:UseBasic.UseBasicParsing = $true } 
-if ('AllowInsecureRedirect' -in (Get-Command Invoke-RestMethod).Parameters.Keys) { $script:UseBasic.AllowInsecureRedirect = $true }
+# AllowInsecureRedirect is only set when ChallengeProviderDefinition.AllowInsecureRedirect is true (e.g. DMEasy)
+if ($AllowInsecureRedirect -and 'AllowInsecureRedirect' -in (Get-Command Invoke-RestMethod).Parameters.Keys) { $script:UseBasic.AllowInsecureRedirect = $true }
