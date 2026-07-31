@@ -253,7 +253,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             //TODO: pre-check we can honor the required identifiers with a managed challenge, otherwise reject order
 
             var orderId = AcmeHelper.GenerateOrderId();
+            var authorizationUrls = new List<string>();
             var authorizationIds = new List<string>();
+            var createdAt = DateTime.UtcNow;
 
             var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
 
@@ -264,7 +266,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
                 var authorization = _acmeHelper.CreateAuthorization(identifier, baseUrl);
 
-                authorizationIds.Add(AcmeHelper.BuildAuthorizationUrl(baseUrl, authId));
+                authorizationIds.Add(authId);
+                authorizationUrls.Add(AcmeHelper.BuildAuthorizationUrl(baseUrl, authId));
 
                 await _config.StoreAcmeAuthorization(authId, authorization);
             }
@@ -273,13 +276,19 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             {
                 Id = orderId,
                 Status = OrderStatus.Ready,
-                Expires = DateTime.UtcNow.AddDays(30),
+                CreatedAt = createdAt,
+                Expires = createdAt.Add(AcmeBackgroundTaskService.OrderMaxAge),
                 Identifiers = request.Identifiers,
                 NotBefore = request.NotBefore,
                 NotAfter = request.NotAfter,
-                Authorizations = authorizationIds,
-                Finalize = $"{baseUrl}/order/{orderId}/finalize"
+                Authorizations = authorizationUrls,
+                AuthorizationIds = authorizationIds,
+                Finalize = $"{baseUrl}/order/{orderId}/finalize",
+                HubInstanceId = _hubInstanceId
             };
+
+            // Store order first so authorization cleanup works if later steps fail.
+            await _config.StoreAcmeOrder(orderId, order);
 
             // create temp order in hub using a managed challenge
             var managedCert = AcmeHelper.PrepareManagedCertificate(orderId, request);
@@ -288,12 +297,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             if (tempCert == null)
             {
                 _logger.LogError("Failed to create temporary managed certificate for order {OrderId}", orderId);
+                await _config.RemoveAcmeOrder(orderId);
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to create temporary managed certificate");
             }
 
             order.ManagedCertificateId = tempCert.Id;
-
-            // Store order
             await _config.StoreAcmeOrder(orderId, order);
 
             // Enqueue background task for order processing
@@ -306,6 +314,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             if (!taskEnqueued)
             {
                 _logger.LogError("Failed to enqueue background task for order {OrderId}", orderId);
+                await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to process order");
             }
 
@@ -386,7 +395,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             await _config.StoreAcmeOrder(orderId, order);
 
             await AddReplayNonceHeader();
-
+            AddRetryAfterHeader(60);
             return Ok(order);
         }
 
@@ -434,9 +443,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var certPEM = System.Text.Encoding.UTF8.GetString(result.Result);
 
-            // delete order and temp managed cert
-            await _mgmtAPI.RemoveManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
-            await _config.RemoveAcmeOrder(order.Id);
+            // delete order and temp managed cert after successful export
+            order.HubInstanceId ??= _hubInstanceId;
+            await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
 
             await AddReplayNonceHeader();
 
@@ -489,7 +498,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             if (order.Status == OrderStatus.Processing)
             {
-                AddRetryAfterHeader(5);
+                AddRetryAfterHeader(10);
             }
 
             return Ok(order);

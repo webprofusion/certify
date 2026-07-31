@@ -1,10 +1,12 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Certify.ACME.Anvil;
 using Certify.ACME.Anvil.Acme;
+using Certify.ACME.Anvil.Acme.Resource;
 using Certify.Models;
 using Certify.Providers.ACME.Anvil;
 using Microsoft.Extensions.Logging;
@@ -18,6 +20,26 @@ namespace Certify.Tests.Core.Unit.Tests
     [TestClass]
     public class MiscAcmeTests
     {
+
+        [TestMethod, Description("Order context retains Retry-After from resource response")]
+        public async Task OrderResourceSetsRetryAfter()
+        {
+            var directoryUri = new Uri("https://acme.example/directory");
+            var accountUri = new Uri("https://acme.example/account/1");
+            var orderUri = new Uri("https://acme.example/order/1");
+            var httpClient = new Mock<IAcmeHttpClient>();
+
+            httpClient.Setup(client => client.ConsumeNonce()).ReturnsAsync("nonce");
+            httpClient.Setup(client => client.Post<Order>(orderUri, It.IsAny<object>()))
+                .ReturnsAsync(new AcmeHttpResponse<Order>(orderUri, new Order(), null, null, retryAfter: 15));
+
+            var acmeContext = new AcmeContext(directoryUri, http: httpClient.Object, accountUri: accountUri);
+            var orderContext = acmeContext.Order(orderUri);
+
+            await orderContext.Resource();
+
+            Assert.AreEqual(15, orderContext.RetryAfter);
+        }
 
         [TestMethod, Description("Test Directory Query")]
         public async Task TestAcmeDirectory()
