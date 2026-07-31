@@ -54,7 +54,6 @@ namespace Certify.UI.ViewModel
             var prefs = await GetPreferences();
             prefs.IsInstanceRegistered = isRegistered;
             await SetPreferences(prefs);
-            Preferences = prefs;
         }
 
         internal async Task<ActionResult> QueueAllDashboardStatusReports()

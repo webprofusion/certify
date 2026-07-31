@@ -90,8 +90,9 @@ namespace Certify.UI.ViewModel
 
         internal async Task SetPreferences(Preferences prefs)
         {
-            await _certifyClient.SetPreferences(prefs);
             Preferences = prefs;
+
+            await SavePreferences();
         }
 
         /// <summary>
