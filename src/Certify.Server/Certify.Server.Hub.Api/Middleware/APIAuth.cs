@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Certify.Client;
 using Certify.Models.Hub;
@@ -130,6 +128,7 @@ namespace Certify.Server.Hub.Api.Middleware
             }
 
             var tokenAuthContext = ParseTokenAuthContext(result.Result);
+
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Sid, string.IsNullOrWhiteSpace(tokenAuthContext?.SecurityPrincipalId) ? "api-client" : tokenAuthContext.SecurityPrincipalId),
