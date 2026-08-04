@@ -948,6 +948,9 @@ namespace Certify.Management
                 item.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
                 item.CertificateRevoked = false;
 
+                // a new certificate has been retrieved, so any previously scheduled renewal attempt no longer applies
+                item.DateNextScheduledRenewalAttempt = null;
+
                 item.ARICertificateId = CertUtils.GetARICertIdBase64(certInfo);
 
                 // Populate domain/IP identifiers from the certificate's SAN extension so that

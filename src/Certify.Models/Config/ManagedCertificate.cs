@@ -1043,6 +1043,14 @@ namespace Certify.Models
                 nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
             }
 
+            // a planned renewal should never be scheduled before the certificate itself became valid. This can otherwise happen due to clock skew,
+            // a certificate issued with a future NotBefore, or a CA suggested renewal window which predates the current certificate.
+            if (!isRenewalRequired && s.DateStart.HasValue && nextRenewalAttemptDate < s.DateStart.Value)
+            {
+                nextRenewalAttemptDate = s.DateStart.Value;
+                renewalStatusReason = "Certificate renewal is not yet required. The planned renewal date has been adjusted because it preceded the certificate start date.";
+            }
+
             return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
         }
 
