@@ -852,6 +852,76 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual(managedCertificate.DateNextScheduledRenewalAttempt, renewalDueCheck.DateNextRenewalAttempt, "Should use ARI scheduled time for short lifetime certs");
         }
 
+        [TestMethod, Description("Test planned renewal date is not before certificate start date when scheduled renewal predates it")]
+        public void TestPlannedRenewalNotBeforeCertStartWithScheduledDate()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var startDate = DateTimeOffset.UtcNow.AddDays(-1);
+
+            // an ARI suggested (or otherwise scheduled) renewal date which predates the current certificate
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = startDate,
+                DateRenewed = startDate,
+                DateExpiry = startDate.AddDays(90),
+                DateNextScheduledRenewalAttempt = startDate.AddDays(-10),
+                ARICertificateId = "stale.window.id"
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // a scheduled date in the past still means renewal is due now, the clamp must not suppress that
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Scheduled renewal date in the past should still be due");
+        }
+
+        [TestMethod, Description("Test planned renewal date is clamped to certificate start date when not yet due")]
+        public void TestPlannedRenewalClampedToCertStartDate()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            // certificate issued with a NotBefore ahead of our clock (clock skew), but recorded as renewed earlier.
+            // the calculated next renewal (DateRenewed + interval) would otherwise fall before the certificate start date.
+            var startDate = DateTimeOffset.UtcNow.AddDays(40);
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = startDate,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-1),
+                DateExpiry = startDate.AddDays(90)
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "Certificate should not be due for renewal");
+            Assert.IsNotNull(renewalDueCheck.DateNextRenewalAttempt, "Next renewal attempt date should be set");
+            Assert.IsTrue(renewalDueCheck.DateNextRenewalAttempt >= startDate, "Planned renewal date should not be before the certificate start date");
+        }
+
+        [TestMethod, Description("Test planned renewal date is not clamped when certificate start date is unknown")]
+        public void TestPlannedRenewalNotClampedWhenStartDateUnknown()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = null,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-10),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(80)
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "Certificate should not be due for renewal");
+            Assert.IsNotNull(renewalDueCheck.DateNextRenewalAttempt, "Next renewal attempt date should still be calculated when start date is unknown");
+        }
+
         #endregion ARI Tests
 
         #region Complex Date Edge Cases Tests
