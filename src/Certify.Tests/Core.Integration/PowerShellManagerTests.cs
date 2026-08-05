@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -535,6 +535,106 @@ namespace Certify.Core.Tests
                     StringAssert.Contains(result.Message, modernPowerShellPath);
                 });
         }
+        [TestMethod, Description("System process mode resolves result parameter from case-insensitive parameter key")]
+        public async Task TestSystemProcessModeResolvesResultParameterCaseInsensitive()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "param($result) if ($null -eq $result) { throw 'missing-result' } Write-Output 'has-result'",
+                Parameters = new Dictionary<string, object>
+                {
+                    ["Result"] = new CertificateRequestResult(new ManagedCertificate())
+                },
+                ExecutionMode = PowerShellExecutionMode.SystemProcess
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "has-result");
+        }
+
+        [TestMethod, Description("In-process mode ignores command exceptions case-insensitively")]
+        public async Task TestInProcessModeIgnoresSelectedCommandExceptionsCaseInsensitive()
+        {
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "Get-Item 'Certify-Definitely-Missing-File'; Write-Output 'after-error'",
+                ExecutionMode = PowerShellExecutionMode.InProcess,
+                IgnoredCommandExceptions = ["get-item"]
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+            StringAssert.Contains(result.Message, "after-error");
+        }
+
+        [TestMethod, Description("System process mode uses the script directory as the working directory")]
+        public async Task TestSystemProcessModeUsesScriptDirectoryAsWorkingDirectory()
+        {
+            var scriptDirectory = Path.Combine(Path.GetTempPath(), $"certify-test-powershell-workingdir-{Guid.NewGuid():N}");
+            var scriptPath = Path.Combine(scriptDirectory, "workingdir.ps1");
+
+            Directory.CreateDirectory(scriptDirectory);
+            File.WriteAllText(scriptPath, "Write-Output \"CurrentDir: $((Get-Location).Path)\"");
+
+            try
+            {
+                var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+                {
+                    PowerShellExecutionPolicy = "Unrestricted",
+                    ScriptFile = scriptPath,
+                    ExecutionMode = PowerShellExecutionMode.SystemProcess
+                });
+
+                Assert.IsTrue(result.IsSuccess, result.Message);
+                StringAssert.Contains(result.Message, $"CurrentDir: {scriptDirectory}");
+            }
+            finally
+            {
+                try
+                {
+                    if (Directory.Exists(scriptDirectory))
+                    {
+                        Directory.Delete(scriptDirectory, recursive: true);
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        [TestMethod, Description("Full impersonation timeout still captures process output")]
+        [TestCategory("RequiresLocalUser")]
+        public async Task TestFullImpersonationTimeoutCapturesProcessOutput()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Assert.Inconclusive("PowerShell Full Impersonation is only supported on Windows.");
+            }
+
+            var result = await PowerShellManager.RunScript(new PowerShellScriptSettings
+            {
+                PowerShellExecutionPolicy = "Unrestricted",
+                ScriptContent = "Write-Output 'full-impersonation-timeout-marker'; Start-Sleep -Seconds 2",
+                ExecutionMode = PowerShellExecutionMode.SystemProcess,
+                ImpersonationMode = PowerShellImpersonationMode.Full,
+                Credentials = new Dictionary<string, string>
+                {
+                    ["username"] = "testuser",
+                    ["password"] = "testing123"
+                },
+                TimeoutMinutes = 0
+            });
+
+            Assert.IsFalse(result.IsSuccess, "Full impersonation timeout should fail.");
+            StringAssert.Contains(result.Message, "took too long to exit");
+
+            var outputCaptured = result.Message.Contains("full-impersonation-timeout-marker", StringComparison.Ordinal)
+                || !result.Message.Contains("Running Powershell As New Process: Could not delete temp handoff directory.", StringComparison.Ordinal);
+
+            Assert.IsTrue(outputCaptured, "Timeout path should either capture process output or successfully clean up timeout handoff files without sharing violations.");
+        }
 
         [TestMethod, Description("In-process mode timeout returns failure")]
         public async Task TestInProcessModeTimeoutReturnsFailure()
@@ -599,6 +699,18 @@ namespace Certify.Core.Tests
             };
 
             Assert.AreEqual("CERTIFY\\certify-test-user", PowerShellManager.GetWindowsCredentialsUsername(credentials));
+        }
+
+        [TestMethod, Description("Windows credential username keeps domain-qualified username unchanged when includeAutoLocalDomain is enabled")]
+        public void TestGetWindowsCredentialsUsernamePreservesDomainQualifiedUsername()
+        {
+            var credentials = new Dictionary<string, string>
+            {
+                ["username"] = "CERTIFY\\certify-test-user",
+                ["password"] = "test-password"
+            };
+
+            Assert.AreEqual("CERTIFY\\certify-test-user", PowerShellManager.GetWindowsCredentialsUsername(credentials, includeAutoLocalDomain: true));
         }
 
         private static async Task WithTemporaryServiceConfig(Action<Certify.Shared.ServiceConfig> configure, Func<Task> action)

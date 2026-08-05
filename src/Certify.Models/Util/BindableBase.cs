@@ -183,7 +183,13 @@ namespace Certify.Models
 
             if (child is ICollection collection)
             {
+                var snapshot = new List<object?>();
                 foreach (var item in collection)
+                {
+                    snapshot.Add(item);
+                }
+
+                foreach (var item in snapshot)
                 {
                     AttachToChild(item, visited);
                 }

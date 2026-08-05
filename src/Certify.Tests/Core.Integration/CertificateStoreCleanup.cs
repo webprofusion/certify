@@ -243,7 +243,7 @@ namespace Certify.Core.Tests
             CertificateManager.PerformCertificateStoreCleanup(
                 Models.CertificateCleanupMode.AfterRenewal,
                 new DateTime(1936, 06, 01),
-                matchingName: "cert-test2.example.com",
+                matchingName: "cert-test2.example.com [Certify]",
                 excludedThumbprints: new List<string> { cert3.Thumbprint },
                 storeName: targetStore
                 );

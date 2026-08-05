@@ -1,5 +1,38 @@
 ﻿using System.Runtime.InteropServices;
+using Certify.Models;
 using Certify.Server.Core;
+
+// Last-resort diagnostics: if any exception ever escapes to this point the process is about to be
+// terminated by the runtime, so log full exception details before that happens. Without this, a crash
+// only shows up as a generic "unhandled exception" Application Error in the Windows Event Log with no
+// further detail.
+AppDomain.CurrentDomain.UnhandledException += (s, e) =>
+{
+    try
+    {
+        var logPath = EnvironmentUtil.EnsuredAppDataPath("logs");
+        System.IO.File.AppendAllText(System.IO.Path.Combine(logPath, "unhandled_exceptions.log"), $"{DateTime.Now}: IsTerminating={e.IsTerminating} : {e.ExceptionObject}\r\n");
+    }
+    catch
+    {
+        // best effort only, never throw from within the handler itself
+    }
+};
+
+TaskScheduler.UnobservedTaskException += (s, e) =>
+{
+    try
+    {
+        var logPath = EnvironmentUtil.EnsuredAppDataPath("logs");
+        System.IO.File.AppendAllText(System.IO.Path.Combine(logPath, "unhandled_exceptions.log"), $"{DateTime.Now}: Unobserved Task Exception : {e.Exception}\r\n");
+    }
+    catch
+    {
+        // best effort only, never throw from within the handler itself
+    }
+
+    e.SetObserved();
+};
 
 var builder = WebApplication.CreateBuilder(args);
 

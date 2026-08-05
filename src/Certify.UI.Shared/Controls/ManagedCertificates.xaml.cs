@@ -225,7 +225,7 @@ _appViewModel.ManagedCertificates != null))
                     await Task.Delay(new TimeSpan(milliseconds), tokenSrc.Token);
                     if (!tokenSrc.IsCancellationRequested)
                     {
-                        await Task.Run(action, tokenSrc.Token);
+                        await action();
                     }
                 }
                 catch (TaskCanceledException)

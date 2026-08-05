@@ -406,8 +406,16 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    var original = _appViewModel.SelectedItem.PostRequestTasks.First(f => f.Id == SelectedItem.Id);
-                    _appViewModel.SelectedItem.PostRequestTasks[_appViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = SelectedItem;
+                    var original = _appViewModel.SelectedItem.PostRequestTasks.FirstOrDefault(f => f.Id == SelectedItem.Id);
+                    if (original != null)
+                    {
+                        _appViewModel.SelectedItem.PostRequestTasks[_appViewModel.SelectedItem.PostRequestTasks.IndexOf(original)] = SelectedItem;
+                    }
+                    else
+                    {
+                        // Item not found in collection, add it as a new item
+                        _appViewModel.SelectedItem.PostRequestTasks.Add(SelectedItem);
+                    }
                 }
             }
             else
@@ -426,8 +434,16 @@ namespace Certify.UI.ViewModel
                 }
                 else
                 {
-                    var original = _appViewModel.SelectedItem.PreRequestTasks.First(f => f.Id == SelectedItem.Id);
-                    _appViewModel.SelectedItem.PreRequestTasks[_appViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = SelectedItem;
+                    var original = _appViewModel.SelectedItem.PreRequestTasks.FirstOrDefault(f => f.Id == SelectedItem.Id);
+                    if (original != null)
+                    {
+                        _appViewModel.SelectedItem.PreRequestTasks[_appViewModel.SelectedItem.PreRequestTasks.IndexOf(original)] = SelectedItem;
+                    }
+                    else
+                    {
+                        // Item not found in collection, add it as a new item
+                        _appViewModel.SelectedItem.PreRequestTasks.Add(SelectedItem);
+                    }
                 }
             }
 

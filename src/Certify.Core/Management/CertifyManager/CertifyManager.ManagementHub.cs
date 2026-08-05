@@ -432,6 +432,8 @@ namespace Certify.Management
         /// <returns></returns>
         private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null)
         {
+            try
+            {
             // connect/reconnect to management hub if enabled (either connection not established or our joining token is null/expired)
             if (_managementServerClient?.IsConnected() != true)
             {
@@ -600,6 +602,11 @@ namespace Certify.Management
 
                 // send heartbeat message to management hub
                 SendHeartbeatToManagementHub();
+            }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "EnsureMgmtHubConnection: unhandled exception while establishing/maintaining the management hub connection. Will retry on next scheduled check.");
             }
         }
 
@@ -1043,6 +1050,47 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.GetSystemStatusItems)
             {
                 val = _systemStatusItems;
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetDataStoreProviders)
+            {
+                val = await GetDataStoreProviders();
+            }
+            else if (arg.CommandType == ManagementHubCommands.GetDataStores)
+            {
+                val = await GetDataStores();
+            }
+            else if (arg.CommandType == ManagementHubCommands.TestDataStore)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var dataStoreArg = args.FirstOrDefault(a => a.Key == "dataStore");
+                var dataStore = JsonSerializer.Deserialize<DataStoreConnection>(dataStoreArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                val = await TestDataStoreConnection(dataStore);
+            }
+            else if (arg.CommandType == ManagementHubCommands.UpdateDataStore)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var dataStoreArg = args.FirstOrDefault(a => a.Key == "dataStore");
+                var dataStore = JsonSerializer.Deserialize<DataStoreConnection>(dataStoreArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                val = await UpdateDataStoreConnection(dataStore);
+            }
+            else if (arg.CommandType == ManagementHubCommands.SetDefaultDataStore)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var idArg = args.FirstOrDefault(a => a.Key == "dataStoreId");
+                val = await SetDefaultDataStore(idArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.CopyDataStoreToTarget)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var sourceArg = args.FirstOrDefault(a => a.Key == "sourceId");
+                var destArg = args.FirstOrDefault(a => a.Key == "destId");
+                val = await CopyDateStoreToTarget(sourceArg.Value, destArg.Value);
+            }
+            else if (arg.CommandType == ManagementHubCommands.RemoveDataStore)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var idArg = args.FirstOrDefault(a => a.Key == "dataStoreId");
+                val = await RemoveDataStoreConnection(idArg.Value);
             }
             else if (arg.CommandType == ManagementHubCommands.GetServiceConfig)
             {
