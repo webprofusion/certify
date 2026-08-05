@@ -179,7 +179,7 @@ namespace Certify.Management
                 defaultMatchingAccount = accounts.FirstOrDefault(a => a.CertificateAuthorityId == currentCA && a.IsStagingAccount == item.UseStagingMode);
             }
 
-            if (CoreAppSettings.Current.EnableAutomaticCAFailover && allowFailover)
+            if (CoreAppSettings.Current.EnableAutomaticCAFailover && allowFailover && item.RequestConfig?.DisableCAFailover != true)
             {
                 //If failover enabled check if we want to use this or a fallback account
                 defaultMatchingAccount = RenewalManager.SelectCAWithFailover(_certificateAuthorities.Values, accounts, item, defaultMatchingAccount);

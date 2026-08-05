@@ -75,6 +75,11 @@
                                 IsChecked="{Binding SelectedItem.UseStagingMode}"
                                 Visibility="{Binding SelectedItem.CertificateAuthorityId, Converter={StaticResource NullCollapsedConverter}}" />
                         </StackPanel>
+                        <CheckBox
+                            Margin="0,8,0,0"
+                            Content="Disable automatic failover to an alternative Certificate Authority"
+                            DockPanel.Dock="Top"
+                            IsChecked="{Binding SelectedItem.RequestConfig.DisableCAFailover}" />
                         <TextBlock
                             Margin="0,8"
                             DockPanel.Dock="Top"

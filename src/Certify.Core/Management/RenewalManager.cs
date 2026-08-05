@@ -457,6 +457,12 @@ namespace Certify.Management
                 return defaultMatchingAccount;
             }
 
+            if (item?.RequestConfig?.DisableCAFailover == true)
+            {
+                // failover is disabled for this item, always use the preferred CA
+                return defaultMatchingAccount;
+            }
+
             // If item has been failing recently, decide if we should attempt failover to a fallback account with another CA
 
             if (item.LastRenewalStatus == RequestState.Error && item.RenewalFailureCount > 2)
