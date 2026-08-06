@@ -557,84 +557,11 @@ namespace Certify.Models
                 }
                 else
                 {
-                    // start by matching first config with no specific identifier
-                    var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
-
-                    if (identifier != null && !string.IsNullOrEmpty(identifier?.Value))
-                    {
-                        // expand configs into per identifier list
-                        var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
-                        foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
-                        {
-                            if (c != null)
-                            {
-                                if (c.DomainMatch != null && !string.IsNullOrEmpty(c.DomainMatch))
-                                {
-                                    c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
-
-                                    if (!c.DomainMatch.Contains(';'))
-                                    {
-                                        var domainMatchKey = c.DomainMatch.Trim();
-
-                                        // if identifier key is test.com for example we only support one matching config
-                                        if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                        {
-                                            configsPerDomain.Add(domainMatchKey, c);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        var domains = c.DomainMatch.Split(';');
-                                        foreach (var d in domains)
-                                        {
-                                            if (!string.IsNullOrWhiteSpace(d))
-                                            {
-                                                var domainMatchKey = d.Trim().ToLowerInvariant();
-                                                if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                                {
-                                                    configsPerDomain.Add(domainMatchKey, c);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // if exact match exists, use that
-                        var identifierKey = identifier!.Value.ToLowerInvariant();
-                        if (configsPerDomain.TryGetValue(identifierKey, out var value))
-                        {
-                            return value;
-                        }
-
-                        // if explicit wildcard match exists, use that
-                        if (configsPerDomain.TryGetValue("*." + identifierKey, out var wildValue))
-                        {
-                            return wildValue;
-                        }
-
-                        //if a more specific config matches the identifier, use that, in order of longest identifier name match first
-                        var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
-
-                        foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
-                        {
-                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifier?.Value))
-                            {
-                                return configsPerDomain[wildcard];
-                            }
-                        }
-
-                        foreach (var configDomain in allMatchingConfigKeys)
-                        {
-                            if (configDomain.EndsWith(identifier!.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                // use longest matching identifier (so subdomain.test.com takes priority
-                                // over test.com, )
-                                return configsPerDomain[configDomain];
-                            }
-                        }
-                    }
+                    // domain match rule evaluation is shared, see DomainMatchRules
+                    var matchedConfig = DomainMatchRules.FindBestMatch(
+                        identifier?.Value,
+                        RequestConfig.Challenges,
+                        c => c.DomainMatch);
 
                     // no other matches, just use first
                     if (matchedConfig != null)

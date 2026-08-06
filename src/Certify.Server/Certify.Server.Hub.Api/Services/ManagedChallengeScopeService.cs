@@ -116,18 +116,58 @@ namespace Certify.Server.Hub.Api.Services
 
             try
             {
-                var accessible = await GetAccessibleManagedChallenges(securityPrincipalId, scopedAssignedRoles, requiredActionId);
+                var scope = await ResolveAccessScope(securityPrincipalId, scopedAssignedRoles, requiredActionId);
+
+                if (!scope.HasAccess)
+                {
+                    _logger.LogWarning(
+                        "Managed challenge access denied for principal {PrincipalId}: no authorizing role grants {ActionId} (scoped assigned roles: {ScopedRoles})",
+                        securityPrincipalId,
+                        requiredActionId,
+                        scopedAssignedRoles?.Count > 0 ? string.Join(", ", scopedAssignedRoles) : "(none)");
+
+                    return (false, "Security principal is not authorised to use managed challenges", Array.Empty<ManagedChallenge>());
+                }
+
+                var accessible = await GetAccessibleManagedChallenges(scope);
+
+                _logger.LogDebug(
+                    "Managed challenge scope for principal {PrincipalId}: unrestricted={IsUnrestricted}, allowUnscoped={AllowUnscoped}, accessibleChallenges={Count}, identifiers={Identifiers}, rules={Rules}",
+                    securityPrincipalId,
+                    scope.IsUnrestricted,
+                    scope.AllowUnscopedResources,
+                    accessible.Count,
+                    string.Join(", ", identifierList),
+                    DescribeDomainMatchRules(accessible));
+
+                if (accessible.Count == 0)
+                {
+                    _logger.LogWarning(
+                        "No managed challenges are accessible to principal {PrincipalId} (unrestricted={IsUnrestricted}, allowUnscoped={AllowUnscoped}). Check managed challenge tags against the authorizing role tag scopes.",
+                        securityPrincipalId,
+                        scope.IsUnrestricted,
+                        scope.AllowUnscopedResources);
+
+                    return (
+                        false,
+                        "No managed challenges are accessible to this security principal. The authorizing role is tag scoped and no managed challenge matches that tag scope.",
+                        accessible);
+                }
 
                 if (!ManagedChallengeAccess.CanSatisfyIdentifiers(identifierList, accessible, out var unsatisfied))
                 {
+                    var rulesSummary = DescribeDomainMatchRules(accessible);
+
                     var detail = unsatisfied.Count == 1
-                        ? $"No accessible managed challenge matches identifier '{unsatisfied[0]}' for this security principal's role scope."
-                        : $"No accessible managed challenge matches identifiers: {string.Join(", ", unsatisfied)} for this security principal's role scope.";
+                        ? $"No accessible managed challenge matches identifier '{unsatisfied[0]}'. Accessible Domain Match rules: {rulesSummary}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains)."
+                        : $"No accessible managed challenge matches identifiers: {string.Join(", ", unsatisfied)}. Accessible Domain Match rules: {rulesSummary}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains).";
 
                     _logger.LogWarning(
-                        "Managed challenge scope validation failed for principal {PrincipalId}. Unsatisfied: {Identifiers}",
+                        "Managed challenge identifier matching failed for principal {PrincipalId} against {Count} accessible challenge(s). Unsatisfied: {Identifiers}. Accessible challenges and their Domain Match rules: {Rules}",
                         securityPrincipalId,
-                        string.Join(", ", unsatisfied));
+                        accessible.Count,
+                        string.Join(", ", unsatisfied),
+                        rulesSummary);
 
                     return (false, detail, accessible);
                 }
@@ -147,7 +187,15 @@ namespace Certify.Server.Hub.Api.Services
             string requiredActionId = StandardResourceActions.ManagedAcmePerformOrder)
         {
             var scope = await ResolveAccessScope(securityPrincipalId, scopedAssignedRoles, requiredActionId);
-            if (!scope.HasAccess)
+            return await GetAccessibleManagedChallenges(scope);
+        }
+
+        /// <summary>
+        /// Get managed challenges accessible under a previously resolved access scope.
+        /// </summary>
+        public async Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope)
+        {
+            if (scope == null || !scope.HasAccess)
             {
                 return Array.Empty<ManagedChallenge>();
             }
@@ -222,6 +270,28 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Summarise the accessible managed challenges and their Domain Match rules, so a matching
+        /// failure reports exactly which rules were evaluated.
+        /// </summary>
+        private static string DescribeDomainMatchRules(ICollection<ManagedChallenge> accessible)
+        {
+            if (accessible == null || accessible.Count == 0)
+            {
+                return "(none)";
+            }
+
+            return string.Join(", ", accessible.Select(c =>
+            {
+                var name = string.IsNullOrWhiteSpace(c.Title) ? c.Id : c.Title;
+                var rules = string.IsNullOrWhiteSpace(c.ChallengeConfig?.DomainMatch)
+                    ? "(no Domain Match set - matches nothing unless it is the only fallback)"
+                    : c.ChallengeConfig!.DomainMatch;
+
+                return $"'{name}' => [{rules}]";
+            }));
         }
     }
 }

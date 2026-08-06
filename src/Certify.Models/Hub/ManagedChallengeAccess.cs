@@ -92,6 +92,7 @@ namespace Certify.Models.Hub
 
         /// <summary>
         /// Find the most specific matching managed challenge for an identifier within an already-accessible set.
+        /// Domain match rule evaluation is shared with <see cref="DomainMatchRules"/>.
         /// </summary>
         public static ManagedChallenge? FindBestMatch(ManagedChallengeRequest request, ICollection<ManagedChallenge> accessibleChallenges)
         {
@@ -100,71 +101,10 @@ namespace Certify.Models.Hub
                 return null;
             }
 
-            // Prefer explicit domain matches over empty/global DomainMatch configs.
-            var matchedConfig = accessibleChallenges.FirstOrDefault(c => string.IsNullOrEmpty(c.ChallengeConfig?.DomainMatch));
-
-            if (request?.Identifier != null && !string.IsNullOrEmpty(request.Identifier))
-            {
-                var configsPerDomain = new Dictionary<string, ManagedChallenge>(StringComparer.OrdinalIgnoreCase);
-
-                foreach (var managedChallenge in accessibleChallenges.Where(c => !string.IsNullOrEmpty(c.ChallengeConfig?.DomainMatch)))
-                {
-                    var c = managedChallenge.ChallengeConfig;
-                    if (string.IsNullOrWhiteSpace(c?.DomainMatch))
-                    {
-                        continue;
-                    }
-
-                    var domains = c.DomainMatch.Split(';', ',').Where(d => !string.IsNullOrWhiteSpace(d));
-
-                    foreach (var d in domains)
-                    {
-                        if (!configsPerDomain.ContainsKey(d))
-                        {
-                            configsPerDomain.Add(d, managedChallenge);
-                        }
-                    }
-                }
-
-                var identifierKey = request.Identifier.StartsWith("*.", StringComparison.Ordinal)
-                                    ? request.Identifier.Substring(2)
-                                    : request.Identifier;
-
-                if (configsPerDomain.TryGetValue(request.Identifier, out var exact))
-                {
-                    return exact;
-                }
-
-                if (configsPerDomain.TryGetValue(identifierKey, out var exactNoWildcard))
-                {
-                    return exactNoWildcard;
-                }
-
-                if (configsPerDomain.TryGetValue("*." + identifierKey, out var wildExact))
-                {
-                    return wildExact;
-                }
-
-                var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
-
-                foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.OrdinalIgnoreCase)))
-                {
-                    if (ManagedCertificate.IsDomainOrWildcardMatch([wildcard], request.Identifier))
-                    {
-                        return configsPerDomain[wildcard];
-                    }
-                }
-
-                foreach (var configDomain in allMatchingConfigKeys)
-                {
-                    if (identifierKey.EndsWith($".{configDomain}", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return configsPerDomain[configDomain];
-                    }
-                }
-            }
-
-            return matchedConfig;
+            return DomainMatchRules.FindBestMatch(
+                request?.Identifier,
+                accessibleChallenges,
+                c => c.ChallengeConfig?.DomainMatch);
         }
 
         /// <summary>

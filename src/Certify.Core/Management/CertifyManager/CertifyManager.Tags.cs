@@ -574,29 +574,10 @@ namespace Certify.Management
             {
                 var itemTags = itemGroup.ToList();
 
-                if (requireAll)
+                // tag scope matching is shared, see ResourceAccess.IsResourceTagScopeMatch
+                if (ResourceAccess.IsResourceTagScopeMatch(ResourceAccess.ToTagSummaries(itemTags), scopes.ToList(), requireAll))
                 {
-                    // Item must match ALL scopes
-                    var matchesAll = scopes.All(scope =>
-                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (matchesAll)
-                    {
-                        matchingItemIds.Add(itemGroup.Key.TaggedItemId);
-                    }
-                }
-                else
-                {
-                    // Item must match ANY scope
-                    var matchesAny = scopes.Any(scope =>
-                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (matchesAny)
-                    {
-                        matchingItemIds.Add(itemGroup.Key.TaggedItemId);
-                    }
+                    matchingItemIds.Add(itemGroup.Key.TaggedItemId);
                 }
             }
 
@@ -648,8 +629,8 @@ namespace Certify.Management
                         var matching = allTags.Where(t =>
                             t.TaggedItemId == itemId &&
                             t.TaggedItemType == itemType &&
-                            t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value));
+                            string.Equals(t.CategoryKey, scope.CategoryKey, StringComparison.OrdinalIgnoreCase) &&
+                            (scope.Value == null || string.Equals(t.Value, scope.Value, StringComparison.OrdinalIgnoreCase)));
 
                         idsToRemove.AddRange(matching.Select(t => t.Id));
                     }

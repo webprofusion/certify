@@ -306,6 +306,8 @@ namespace Certify.Models.Hub
 
         /// <summary>
         /// Check if resource tags match the required tag scope for access control.
+        /// Category keys are normalised to lowercase when stored, and tag values are user entered,
+        /// so both are compared case-insensitively to avoid casing differences silently denying access.
         /// </summary>
         public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
         {
@@ -323,11 +325,7 @@ namespace Certify.Models.Hub
             {
                 foreach (var scope in scopedTags)
                 {
-                    var hasMatch = resourceTags.Any(tag =>
-                        tag.CategoryKey == scope.CategoryKey &&
-                        (scope.Value == null || tag.Value == scope.Value));
-
-                    if (!hasMatch)
+                    if (!resourceTags.Any(tag => IsTagScopeMatch(tag, scope)))
                     {
                         return false;
                     }
@@ -336,10 +334,21 @@ namespace Certify.Models.Hub
                 return true;
             }
 
-            return scopedTags.Any(scope =>
-                resourceTags.Any(tag =>
-                    tag.CategoryKey == scope.CategoryKey &&
-                    (scope.Value == null || tag.Value == scope.Value)));
+            return scopedTags.Any(scope => resourceTags.Any(tag => IsTagScopeMatch(tag, scope)));
+        }
+
+        /// <summary>
+        /// True when a single resource tag satisfies a single tag scope (null scope value matches any value in the category).
+        /// </summary>
+        private static bool IsTagScopeMatch(TagSummary tag, TagScope scope)
+        {
+            if (!string.Equals(tag.CategoryKey, scope.CategoryKey, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return scope.Value == null
+                || string.Equals(tag.Value, scope.Value, StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>

@@ -573,6 +573,88 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        [Description("A wildcard domain match rule matches a first level subdomain of a multi-level domain")]
+        public void ManagedChallengeAccess_FindBestMatch_WildcardMatchesFirstLevelSubdomain()
+        {
+            var challenge = new ManagedChallenge
+            {
+                Id = "c-dev",
+                ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.dev.projectbids.co.uk", ChallengeType = "dns-01" }
+            };
+
+            var best = ManagedChallengeAccess.FindBestMatch(
+                new ManagedChallengeRequest { Identifier = "acme-01.dev.projectbids.co.uk", ChallengeType = "dns-01" },
+                [challenge]);
+
+            Assert.AreEqual("c-dev", best?.Id, "*.dev.projectbids.co.uk should match acme-01.dev.projectbids.co.uk");
+
+            Assert.IsTrue(
+                ManagedChallengeAccess.CanSatisfyIdentifiers(["acme-01.dev.projectbids.co.uk"], [challenge], out var unsatisfied),
+                "identifier should be satisfiable, unsatisfied: " + string.Join(", ", unsatisfied));
+        }
+
+        [TestMethod]
+        [Description("Tag scope matching ignores casing differences between stored tags and role tag scopes")]
+        public void ManagedChallengeAccess_TagScopeMatch_IsCaseInsensitive()
+        {
+            // category keys are normalised to lowercase on save, but a role tag scope may have been
+            // stored with the original casing (eg "Environment"/"Development")
+            var challenge = new ManagedChallenge
+            {
+                Id = "c-dev",
+                ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.dev.projectbids.co.uk", ChallengeType = "dns-01" }
+            };
+
+            var scopedRole = new AssignedRole
+            {
+                Id = "ar-dev",
+                RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                SecurityPrincipalId = "sp-dev",
+                ScopedTags = [new TagScope { CategoryKey = "Environment", Value = "Development" }]
+            };
+
+            var scope = new ManagedChallengeAccessScope
+            {
+                HasAccess = true,
+                IsUnrestricted = false,
+                AuthorizingRoles = [scopedRole],
+                AllowUnscopedResources = false
+            };
+
+            var tags = new Dictionary<string, List<ItemTag>>
+            {
+                ["c-dev"] = [new ItemTag("c-dev", TaggedItemTypes.ManagedChallenge, "environment", "development")]
+            };
+
+            var accessible = ManagedChallengeAccess.FilterChallenges([challenge], tags, scope).ToList();
+
+            Assert.HasCount(1, accessible, "challenge tagged environment:development should be accessible to a role scoped to Environment:Development");
+
+            Assert.IsTrue(
+                ManagedChallengeAccess.CanSatisfyIdentifiers(["acme-01.dev.projectbids.co.uk"], accessible, out _),
+                "identifier should be satisfiable once the challenge is accessible");
+        }
+
+        [TestMethod]
+        [Description("Tag scope preview resource types are derived from what the role actually grants")]
+        public void Policies_GetTaggedItemTypesForRoles_ReflectsRoleGrants()
+        {
+            // a Managed ACME Consumer only grants managed challenge access, not managed certificate listing
+            var acmeConsumerTypes = Policies.GetTaggedItemTypesForRoles([StandardRoles.ManagedAcmeConsumer.Id]);
+
+            CollectionAssert.Contains(acmeConsumerTypes, TaggedItemTypes.ManagedChallenge, "Managed ACME Consumer should scope to managed challenges");
+            CollectionAssert.DoesNotContain(acmeConsumerTypes, TaggedItemTypes.ManagedCertificate, "Managed ACME Consumer should not scope to managed certificates");
+
+            // a certificate manager should conversely include managed certificates
+            var certManagerTypes = Policies.GetTaggedItemTypesForRoles([StandardRoles.CertificateManager.Id]);
+
+            CollectionAssert.Contains(certManagerTypes, TaggedItemTypes.ManagedCertificate, "Certificate Manager should scope to managed certificates");
+
+            // unknown roles contribute nothing
+            Assert.IsEmpty(Policies.GetTaggedItemTypesForRoles(["not_a_real_role"]), "unknown roles should not contribute resource types");
+        }
+
+        [TestMethod]
         [Description("Unscoped authorizing role grants unrestricted challenge access")]
         public void ManagedChallengeAccess_UnscopedRole_IsUnrestricted()
         {

@@ -379,6 +379,83 @@ namespace Certify.Models.Hub
             ];
         }
 
+        /// <summary>
+        /// Maps an access control resource type to the corresponding taggable item type, where one exists.
+        /// Returns null for resource types which are not tag scoped (e.g. system, role, accesstoken).
+        /// </summary>
+        public static string? GetTaggedItemTypeForResourceType(string? resourceType)
+        {
+            if (string.IsNullOrWhiteSpace(resourceType))
+            {
+                return null;
+            }
+
+            switch (resourceType.ToLowerInvariant())
+            {
+                case ResourceTypes.ManagedItem:
+                case ResourceTypes.Certificate:
+                    return TaggedItemTypes.ManagedCertificate;
+                case ResourceTypes.ManagedInstance:
+                    return TaggedItemTypes.ManagedInstance;
+                case ResourceTypes.StoredCredential:
+                    return TaggedItemTypes.StoredCredential;
+                case ResourceTypes.DeploymentTask:
+                    return TaggedItemTypes.DeploymentTask;
+                case ResourceTypes.ManagedChallenge:
+                case ResourceTypes.ManagedAcme:
+                    return TaggedItemTypes.ManagedChallenge;
+                case ResourceTypes.SecurityPrincipal:
+                    return TaggedItemTypes.SecurityPrincipal;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Determine which taggable resource types a set of roles can actually act upon, so that tag scope
+        /// can be previewed against only the resources the role really grants access to. For example a
+        /// Managed ACME Consumer only grants managed challenge access, not managed certificate listing.
+        /// </summary>
+        public static List<string> GetTaggedItemTypesForRoles(IEnumerable<string>? roleIds)
+        {
+            var result = new List<string>();
+
+            if (roleIds == null)
+            {
+                return result;
+            }
+
+            var roles = GetStandardRoles();
+            var policies = GetStandardPolicies();
+            var actions = GetStandardResourceActions();
+
+            foreach (var roleId in roleIds)
+            {
+                var role = roles.FirstOrDefault(r => string.Equals(r.Id, roleId, StringComparison.OrdinalIgnoreCase));
+
+                if (role == null)
+                {
+                    continue;
+                }
+
+                foreach (var policy in policies.Where(p => role.Policies.Contains(p.Id) && p.SecurityPermissionType == SecurityPermissionType.ALLOW))
+                {
+                    foreach (var actionId in policy.ResourceActions)
+                    {
+                        var action = actions.FirstOrDefault(a => a.Id == actionId);
+                        var taggedItemType = GetTaggedItemTypeForResourceType(action?.ResourceType);
+
+                        if (taggedItemType != null && !result.Contains(taggedItemType))
+                        {
+                            result.Add(taggedItemType);
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
         public static List<ResourcePolicy> GetStandardPolicies()
         {
             return [
