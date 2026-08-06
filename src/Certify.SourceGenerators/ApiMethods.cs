@@ -80,6 +80,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "EvaluateAccessScope",
+                    OperationMethod = HttpPost,
+                    Comment = "Evaluate authorizing roles and unrestricted/scoped state for a security principal and resource action",
+                    PublicAPIController = "Access",
+                    PublicAPIRoute = "securityprincipal/accessscope",
+                    ServiceAPIRoute = "access/securityprincipal/accessscope",
+                    ReturnType = nameof(ResourceAccessScope),
+                    Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
+                },
+                new()
+                {
                     OperationName = "GetSecurityPrincipalAssignedRoles",
                     OperationMethod = HttpGet,
                     Comment = "Get list of Assigned Roles for a given security principal",
@@ -447,6 +459,32 @@ namespace Certify.SourceGenerators
                         { "request", GetFormattedTypeName(typeof(Certify.Models.Hub.ManagedChallengeRequest)) }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup)]
+                },
+                new()
+                {
+                    OperationName = "GetHubSettings",
+                    OperationMethod = HttpGet,
+                    Comment = "Get hub feature settings (managed challenges, managed ACME etc)",
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "settings",
+                    ServiceAPIRoute = "hubsettings",
+                    ReturnType = nameof(HubSettings),
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsList)]
+                },
+                new()
+                {
+                    OperationName = "UpdateHubSettings",
+                    OperationMethod = HttpPost,
+                    Comment = "Update hub feature settings (managed challenges, managed ACME etc)",
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "settings",
+                    ServiceAPIRoute = "hubsettings",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string>
+                    {
+                        { "settings", GetFormattedTypeName(typeof(Certify.Models.Hub.HubSettings)) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsUpdate)]
                 },
                 new()
                  {

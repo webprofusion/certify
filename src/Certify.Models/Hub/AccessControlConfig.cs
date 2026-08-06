@@ -7,6 +7,19 @@ using Certify.Management;
 
 namespace Certify.Models.Hub
 {
+    /// <summary>
+    /// Well known security principal identifiers which are implied rather than stored in the access control data store.
+    /// </summary>
+    public static class StandardSecurityPrincipals
+    {
+        /// <summary>
+        /// The implied internal system principal, used for trusted in-process/service calls (e.g. ACME endpoints and
+        /// internal hub services) which have no associated stored security principal. This context may evaluate access
+        /// on behalf of another principal but is not itself granted blanket authorization.
+        /// </summary>
+        public const string System = "system";
+    }
+
     public class StandardRoles
     {
         internal static Role BackupOperator { get; } = new Role("backup_operator_role", "Backup Operator", "Can perform import and export operations",

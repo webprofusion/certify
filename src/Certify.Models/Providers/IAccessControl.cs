@@ -19,6 +19,18 @@ namespace Certify.Core.Management.Access
         Task<List<Role>> GetRoles(string contextUserId);
         Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check);
         Task<Models.Config.ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
+
+        /// <summary>
+        /// Evaluate the access scope for a principal/action, including authorizing roles and whether
+        /// access is unrestricted or constrained by tag scopes / included resources.
+        /// </summary>
+        Task<ResourceAccessScope> EvaluateAccessScope(string contextUserId, AccessCheck check);
+
+        /// <summary>
+        /// True when a concrete resource (represented by its tags) is within the resolved access scope.
+        /// </summary>
+        bool IsResourceInScope(ResourceAccessScope scope, IEnumerable<TagSummary>? resourceTags);
+
         Task<bool> IsPrincipalInRole(string contextUserId, string id, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
         Task<RoleStatus> GetSecurityPrincipalRoleStatus(string contextUserId, string id);

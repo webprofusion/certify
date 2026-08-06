@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Certify.Server.Hub.Api.Models.Acme
 {
@@ -12,6 +13,22 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonPropertyName("internalId")]
         public string internalId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the id of the security principal which owns this account, resolved from the
+        /// External Account Binding used during registration. Used to authorize order operations.
+        /// Internal hub bookkeeping only; not part of the ACME account resource.
+        /// </summary>
+        [JsonIgnore]
+        public string SecurityPrincipalId { get; set; }
+
+        /// <summary>
+        /// Assigned-role ids from the EAB-mapped access token. When present, managed challenge access
+        /// is limited to these role assignments (and their tag scopes).
+        /// Internal hub bookkeeping only; not part of the ACME account resource.
+        /// </summary>
+        [JsonIgnore]
+        public List<string> ScopedAssignedRoles { get; set; } = [];
 
         /// <summary>
         /// Gets or sets the status of the ACME account.

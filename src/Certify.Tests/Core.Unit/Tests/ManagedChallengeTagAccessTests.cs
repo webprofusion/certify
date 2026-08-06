@@ -496,14 +496,196 @@ namespace Certify.Tests.Core.Unit.Tests
 
         #endregion
 
-        #region Edge Cases
+        #region ManagedChallengeAccess helper / FindBestMatch scope
 
         [TestMethod]
-        [Description("Empty tag scopes list behaves same as null (no filtering)")]
-        public async Task GetManagedChallengesWithTagFilter_EmptyScopesReturnsAll()
+        [Description("Scoped Managed ACME role only sees matching tagged challenges")]
+        public void ManagedChallengeAccess_ScopedRole_FiltersChallenges()
         {
-            // Arrange
-            await CreateManagedChallenge("challenge-1", "*.example.com");
+            var scopedRole = new AssignedRole
+            {
+                Id = "ar-1",
+                RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                SecurityPrincipalId = "sp-1",
+                ScopedTags =
+                [
+                    new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }
+                ]
+            };
+
+            var scope = new ManagedChallengeAccessScope
+            {
+                HasAccess = true,
+                IsUnrestricted = false,
+                AuthorizingRoles = [scopedRole],
+                AllowUnscopedResources = false
+            };
+
+            Assert.IsTrue(scope.HasAccess);
+            Assert.IsFalse(scope.IsUnrestricted);
+            Assert.IsTrue(scope.RequiresTagFiltering);
+
+            var challenges = new List<ManagedChallenge>
+            {
+                new() { Id = "c-finance", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.finance.example.com", ChallengeType = "dns-01" } },
+                new() { Id = "c-eng", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.eng.example.com", ChallengeType = "dns-01" } },
+                new() { Id = "c-unscoped", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.example.com", ChallengeType = "dns-01" } }
+            };
+
+            var tags = new Dictionary<string, List<ItemTag>>
+            {
+                ["c-finance"] = [new ItemTag("c-finance", TaggedItemTypes.ManagedChallenge, DepartmentCategory, FinanceDept)],
+                ["c-eng"] = [new ItemTag("c-eng", TaggedItemTypes.ManagedChallenge, DepartmentCategory, EngineeringDept)]
+            };
+
+            var accessible = ManagedChallengeAccess.FilterChallenges(challenges, tags, scope).ToList();
+            Assert.HasCount(1, accessible);
+            Assert.AreEqual("c-finance", accessible[0].Id);
+
+            // Pref allows unscoped/untagged resources
+            scope.AllowUnscopedResources = true;
+            accessible = ManagedChallengeAccess.FilterChallenges(challenges, tags, scope).ToList();
+            Assert.HasCount(2, accessible);
+            Assert.IsTrue(accessible.Any(c => c.Id == "c-unscoped"));
+        }
+
+        [TestMethod]
+        [Description("FindBestMatch only considers accessible challenges when scope is applied")]
+        public void ManagedChallengeAccess_FindBestMatch_HonoursAccessibleSet()
+        {
+            var challenges = new List<ManagedChallenge>
+            {
+                new() { Id = "global", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "", ChallengeType = "dns-01" } },
+                new() { Id = "specific", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.finance.example.com", ChallengeType = "dns-01" } }
+            };
+
+            // Without filtering, specific domain match wins
+            var best = ManagedChallengeAccess.FindBestMatch(
+                new ManagedChallengeRequest { Identifier = "app.finance.example.com", ChallengeType = "dns-01" },
+                challenges);
+            Assert.AreEqual("specific", best?.Id);
+
+            // When only global is accessible, that is selected
+            best = ManagedChallengeAccess.FindBestMatch(
+                new ManagedChallengeRequest { Identifier = "app.finance.example.com", ChallengeType = "dns-01" },
+                [challenges[0]]);
+            Assert.AreEqual("global", best?.Id);
+        }
+
+        [TestMethod]
+        [Description("Unscoped authorizing role grants unrestricted challenge access")]
+        public void ManagedChallengeAccess_UnscopedRole_IsUnrestricted()
+        {
+            var unscopedRole = new AssignedRole
+            {
+                Id = "ar-2",
+                RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                SecurityPrincipalId = "sp-2"
+            };
+
+            var scope = new ManagedChallengeAccessScope
+            {
+                HasAccess = true,
+                IsUnrestricted = true,
+                AuthorizingRoles = [unscopedRole],
+                AllowUnscopedResources = false
+            };
+
+            Assert.IsTrue(scope.HasAccess);
+            Assert.IsTrue(scope.IsUnrestricted);
+            Assert.IsFalse(scope.RequiresTagFiltering);
+        }
+
+        [TestMethod]
+        [Description("CanSatisfyIdentifiers reports domains with no matching accessible challenge")]
+        public void ManagedChallengeAccess_CanSatisfyIdentifiers_ReportsMissing()
+        {
+            var challenges = new List<ManagedChallenge>
+            {
+                new() { Id = "finance", ChallengeConfig = new CertRequestChallengeConfig { DomainMatch = "*.finance.example.com", ChallengeType = "dns-01" } }
+            };
+
+            var ok = ManagedChallengeAccess.CanSatisfyIdentifiers(
+                ["app.finance.example.com", "other.example.com"],
+                challenges,
+                out var unsatisfied);
+
+            Assert.IsFalse(ok);
+            Assert.HasCount(1, unsatisfied);
+            Assert.AreEqual("other.example.com", unsatisfied[0]);
+        }
+
+        [TestMethod]
+        [Description("Scope with no access resolves to no accessible challenges")]
+        public async Task GetAccessibleManagedChallenges_NoAccessScope_ReturnsEmpty()
+        {
+            await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
+            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
+
+            var accessible = await _manager.GetAccessibleManagedChallenges(
+                new ManagedChallengeAccessScope { HasAccess = false });
+
+            Assert.IsEmpty(accessible);
+        }
+
+        [TestMethod]
+        [Description("Tag-scoped scope resolves stored challenge tags so matching tagged challenges remain accessible")]
+        public async Task GetAccessibleManagedChallenges_ScopedRole_ResolvesStoredTags()
+        {
+            await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
+            await CreateManagedChallenge("challenge-eng", "*.eng.example.com");
+            await CreateManagedChallenge("challenge-untagged", "*.example.com");
+
+            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
+            await TagChallenge("challenge-eng", DepartmentCategory, EngineeringDept);
+
+            var scope = new ManagedChallengeAccessScope
+            {
+                HasAccess = true,
+                IsUnrestricted = false,
+                AllowUnscopedResources = false,
+                AuthorizingRoles =
+                [
+                    new AssignedRole
+                    {
+                        Id = "ar-finance",
+                        RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                        SecurityPrincipalId = "sp-finance",
+                        ScopedTags = [new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }]
+                    }
+                ]
+            };
+
+            var accessible = await _manager.GetAccessibleManagedChallenges(scope);
+
+            Assert.HasCount(1, accessible);
+            Assert.AreEqual("challenge-finance", accessible.First().Id);
+        }
+
+        [TestMethod]
+        [Description("Unrestricted scope returns all challenges regardless of tags")]
+        public async Task GetAccessibleManagedChallenges_UnrestrictedScope_ReturnsAll()
+        {
+            await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
+            await CreateManagedChallenge("challenge-untagged", "*.example.com");
+            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
+
+            var accessible = await _manager.GetAccessibleManagedChallenges(
+                new ManagedChallengeAccessScope { HasAccess = true, IsUnrestricted = true });
+
+            Assert.HasCount(2, accessible);
+        }
+
+        #endregion
+
+                #region Edge Cases
+
+                [TestMethod]
+                [Description("Empty tag scopes list behaves same as null (no filtering)")]
+                public async Task GetManagedChallengesWithTagFilter_EmptyScopesReturnsAll()
+                {
+                    // Arrange
+                    await CreateManagedChallenge("challenge-1", "*.example.com");
             await CreateManagedChallenge("challenge-2", "*.test.com");
 
             await TagChallenge("challenge-1", DepartmentCategory, FinanceDept);

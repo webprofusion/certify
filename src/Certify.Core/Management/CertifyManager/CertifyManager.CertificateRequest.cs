@@ -1514,7 +1514,11 @@ namespace Certify.Management
                                 Identifier = authorization.Identifier.Value,
                                 ResponseKey = rc?.Key,
                                 ResponseValue = rc?.Value,
-                                ManagedCertId = managedCertificate.Id
+                                ManagedCertId = managedCertificate.Id,
+                                SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
+                                ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
+                                    ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
+                                    : null
                             };
 
                             var challengeResponseResult = await PerformManagedChallengeRequest(request);

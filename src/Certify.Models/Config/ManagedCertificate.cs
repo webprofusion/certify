@@ -157,6 +157,12 @@ namespace Certify.Models
         public string? SourceName { get; set; }
 
         /// <summary>
+        /// If set, this item is (or was) the temporary target of a hub Managed ACME order. Carries the order id
+        /// plus the owning principal and role scope used when fulfilling the order.
+        /// </summary>
+        public ManagedAcmeOrderInfo? ManagedAcmeOrder { get; set; }
+
+        /// <summary>
         /// Default CA to use for this request
         /// </summary>
         public string? CertificateAuthorityId { get; set; }
@@ -673,6 +679,7 @@ namespace Certify.Models
             managedCert.LastAttemptedCA = null;
             managedCert.SourceId = null;
             managedCert.SourceName = null;
+            managedCert.ManagedAcmeOrder = null;
             managedCert.ExternalSource = null;
             managedCert.RenewalFailureCount = 0;
             managedCert.RenewalFailureMessage = null;

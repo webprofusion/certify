@@ -57,6 +57,17 @@ namespace Certify.Models.Hub
 
         public DateTimeOffset? DateTimePerformed { get; set; }
         public string? ManagedCertId { get; set; }
+
+        /// <summary>
+        /// Optional security principal on whose behalf the challenge is being performed.
+        /// When set, managed challenge selection honours that principal's scoped roles.
+        /// </summary>
+        public string? SecurityPrincipalId { get; set; }
+
+        /// <summary>
+        /// Optional assigned-role ids that further scope the principal (e.g. from EAB/API token).
+        /// </summary>
+        public List<string>? ScopedAssignedRoles { get; set; }
     }
 
     public static class ManagedChallengeOperationStates
