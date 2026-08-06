@@ -294,7 +294,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
             }
             else
             {
-                _logger?.LogError("Received instance command result for an unknown command {cmdId} {result}", result.CommandId, result.CommandType);
+                _logger?.LogDebug("Received instance command result for a command not requested {cmdId} {result}", result.CommandId, result.CommandType);
             }
         }
 
