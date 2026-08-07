@@ -569,7 +569,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 throw new InvalidOperationException($"Cannot send command to instance '{instanceId}' because no current connection exists.");
             }
 
-            await Clients.Client(connectionId).SendCommandRequest(command);
+            var targetClient = Clients.Client(connectionId);
+
+            if (targetClient == null)
+            {
+                _logger?.LogWarning("Cannot send command {cmd} to instance '{instanceId}' because the target SignalR client is null or not connected.", command.CommandType, instanceId);
+            }
+            else
+            {
+                await targetClient.SendCommandRequest(command);
+            }
         }
 
         private static bool IsPushSubscriberForSource(ManagedCertificate managedCertificate, string sourceInstanceId, string sourceManagedCertificateId)
