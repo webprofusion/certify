@@ -27,16 +27,48 @@ namespace Certify.Management
         private bool _isRenewAllInProgress { get; set; }
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
-        private static async Task<T> DelayedTimeoutExceptionTask<T>(TimeSpan delay)
-        {
-            await Task.Delay(delay);
-            throw new TimeoutException();
-        }
-
         private static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
         {
-            // https://devblogs.microsoft.com/oldnewthing/20220505-00/?p=106585
-            return await await Task.WhenAny(task, DelayedTimeoutExceptionTask<T>(timeout));
+            using (var timeoutCancellation = new CancellationTokenSource())
+            {
+                var timeoutTask = Task.Delay(timeout, timeoutCancellation.Token);
+                var completedTask = await Task.WhenAny(task, timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    throw new TimeoutException();
+                }
+
+                timeoutCancellation.Cancel();
+                return await task;
+            }
+        }
+
+        private async Task LogTimedOutRenewals(string context)
+        {
+            var timedOutRenewals = _renewalsInProgress.ToArray();
+
+            if (!timedOutRenewals.Any())
+            {
+                _serviceLog?.Warning("{context}: Renewal batch timeout occurred but no in-progress managed certificates were tracked.", context);
+                return;
+            }
+
+            foreach (var timedOutRenewal in timedOutRenewals)
+            {
+                var managedCertificateId = timedOutRenewal.Key;
+                var startedAt = timedOutRenewal.Value;
+                var elapsed = startedAt.HasValue ? DateTimeOffset.UtcNow - startedAt.Value : (TimeSpan?)null;
+                var elapsedDescription = elapsed.HasValue
+                    ? $"{Math.Max(0, (int)elapsed.Value.TotalMinutes)}m {Math.Max(0, elapsed.Value.Seconds)}s"
+                    : "unknown duration";
+
+                var managedCertificate = await _itemManager.GetById(managedCertificateId);
+                var managedCertificateName = managedCertificate?.Name ?? "(unknown managed certificate)";
+
+                _serviceLog?.Error("{context}: Renewal timed out for managed certificate '{name}' [{id}] after approximately {elapsed}.", context, managedCertificateName, managedCertificateId, elapsedDescription);
+                LogMessage(managedCertificateId, $"[Progress] Renewal timed out after approximately {elapsedDescription}. Batch exceeded the allowed time.", LogItemType.GeneralError);
+            }
         }
 
         /// <summary>
@@ -62,6 +94,7 @@ namespace Certify.Management
                 {
                     renewalCancellationSource.Cancel();
 
+                    await LogTimedOutRenewals("PerformRenewalTasks");
                     _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
                     renewalPerformedOK = false;
                 }
@@ -157,7 +190,8 @@ namespace Certify.Management
                     {
                         renewalCancellationSource.Cancel();
 
-                        _serviceLog?.Error("PerformRenewalTasks: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
+                        await LogTimedOutRenewals("PerformRenewAll");
+                        _serviceLog?.Error("PerformRenewAll: Timeout while performing renewal tasks. Batch exceeded the allowed time.");
 
                         return [];
                     }
