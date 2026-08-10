@@ -198,6 +198,48 @@ namespace Certify.Server.Hub.Api.Services
             };
         }
 
+        public async Task<ActionResult> RefreshExternalManagedCertificates(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return new ActionResult("Managed instance id is required.", false);
+            }
+
+            var hubInstanceId = _mgmtStateProvider.GetManagementHubInstanceId();
+            var connectedInstance = _mgmtStateProvider
+                .GetConnectedInstances()
+                .FirstOrDefault(i => string.Equals(i.InstanceId, instanceId, StringComparison.Ordinal));
+
+            var isHubInstance = string.Equals(instanceId, hubInstanceId, StringComparison.Ordinal);
+            if (!isHubInstance && connectedInstance == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "Managed instance is not currently connected, so the external certificate refresh command could not be sent."
+                };
+            }
+
+            try
+            {
+                await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.RefreshExternalManagedCertificates));
+
+                var displayTitle = connectedInstance?.DisplayTitle;
+                if (string.IsNullOrWhiteSpace(displayTitle) && isHubInstance)
+                {
+                    displayTitle = "integrated management hub instance";
+                }
+
+                return new ActionResult($"External managed certificate refresh requested for '{displayTitle ?? instanceId}'.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to dispatch external managed certificate refresh command to instance {instanceId}.", instanceId);
+                return new ActionResult($"Failed to send external certificate refresh command: {ex.Message}", false);
+            }
+        }
+
         /// <summary>
         /// Sends a command request to the target instance and retrieves the command result.
         /// </summary>

@@ -77,6 +77,7 @@ namespace Certify.Models.Hub
 
         public const string Reconnect = "Reconnect";
         public const string RejoinManagementHub = "RejoinManagementHub";
+        public const string RefreshExternalManagedCertificates = "RefreshExternalManagedCertificates";
 
         /// <summary>
         /// Notification messages are used to send topic specific info ad-hoc back to the mgmt hub

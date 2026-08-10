@@ -90,6 +90,11 @@ namespace Certify.Management
                 return _externallyManagedCertificatesCache;
             }
 
+            return await RefreshExternalManagedCertificates();
+        }
+
+        private async Task<List<ManagedCertificate>> RefreshExternalManagedCertificates()
+        {
             if (_pluginManager?.CertificateManagerProviders?.Any() == true)
             {
                 List<ManagedCertificate> list = [];
@@ -121,11 +126,9 @@ namespace Certify.Management
                                             var certManager = p.GetProvider(pluginType, cp.Id);
 
                                             // Initialize or use the certificate manager with the specified config and log paths
-
                                             certManager.Init(loggerAdapter, providerPrefs);
 
-                                            var certs = await certManager.GetManagedCertificates(filter);
-
+                                            var certs = await certManager.GetManagedCertificates(new ManagedCertificateFilter { IncludeExternal = true });
                                             list.AddRange(certs);
 
                                             if (providerPrefs == null)
@@ -163,7 +166,6 @@ namespace Certify.Management
 
                 lock (_externallyManagedCertificatesCache)
                 {
-                    // reset cache
                     _externallyManagedCertificatesCache = list;
                 }
 
@@ -180,10 +182,25 @@ namespace Certify.Management
                     }
                 }
             }
+            else
+            {
+                lock (_externallyManagedCertificatesCache)
+                {
+                    _externallyManagedCertificatesCache = [];
+                }
+            }
 
             _externallyManagedCacheUpdated = DateTimeOffset.UtcNow;
 
             return _externallyManagedCertificatesCache;
+        }
+
+        private async Task<ActionResult> RefreshExternalManagedCertificateCache()
+        {
+            _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
+            var refreshed = await RefreshExternalManagedCertificates();
+
+            return new ActionResult($"Refreshed external certificate manager cache with {refreshed.Count} certificate{(refreshed.Count == 1 ? string.Empty : "s") }.", true);
         }
 
         /// <summary>

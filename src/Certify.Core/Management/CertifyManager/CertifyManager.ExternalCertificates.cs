@@ -52,6 +52,19 @@ namespace Certify.Management
             return "External certificate update could not be validated as deployable PFX data. The PFX may require a different password credential setting.";
         }
 
+        private async Task<List<ManagedCertificate>> GetExternalManagedCertificateSubscriptionTargets()
+        {
+            var allItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
+
+            return allItems
+                .Where(i =>
+                    i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                    && !string.IsNullOrWhiteSpace(i.ExternalSource?.ExternalReference)
+                    && !string.IsNullOrWhiteSpace(i.ExternalSource?.SourceType)
+                    )
+                .ToList();
+        }
+
         private async Task PerformExternalCertificateSubscriptionTasks(CancellationToken cancellationToken)
         {
             if (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
@@ -66,15 +79,7 @@ namespace Certify.Management
                     return;
                 }
 
-                var allItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
-
-                var targetItems = allItems
-                    .Where(i =>
-                        i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
-                        && !string.IsNullOrWhiteSpace(i.ExternalSource?.ExternalReference)
-                        && !string.IsNullOrWhiteSpace(i.ExternalSource?.SourceType)
-                        )
-                    .ToList();
+                var targetItems = await GetExternalManagedCertificateSubscriptionTargets();
 
                 if (!targetItems.Any())
                 {

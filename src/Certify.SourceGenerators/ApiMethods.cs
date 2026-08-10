@@ -353,6 +353,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "RefreshExternalManagedCertificates",
+                    OperationMethod = HttpPost,
+                    Comment = "Command a managed instance to refresh its externally managed certificates",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/externalcertificates/refresh",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
                     OperationName = "RejoinAllManagedInstances",
                     OperationMethod = HttpPost,
                     Comment = "Command all connected managed instances to rejoin the management hub using the latest joining key",
