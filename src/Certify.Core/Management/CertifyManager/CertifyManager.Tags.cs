@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,7 +12,45 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private static readonly Regex CategoryKeyRegex = new Regex(@"^[a-z][a-z0-9\-]*$", RegexOptions.Compiled);
-        private static readonly Regex TagValueRegex = new Regex(@"^[\w\s\-]+$", RegexOptions.Compiled);
+
+        private static bool IsValidTagValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            value = value.Trim();
+
+            for (var i = 0; i < value.Length; i++)
+            {
+                var c = value[i];
+
+                if (c is '/' or ':' or '\\')
+                {
+                    return false;
+                }
+
+                if (char.IsSurrogate(c))
+                {
+                    if (char.IsHighSurrogate(c) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
+                    {
+                        i++;
+                        continue;
+                    }
+
+                    return false;
+                }
+
+                var category = char.GetUnicodeCategory(c);
+                if (category is UnicodeCategory.Control or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         #region Tag Categories
 
@@ -196,7 +235,7 @@ namespace Certify.Management
             }
 
             // Validate value format
-            if (!TagValueRegex.IsMatch(value))
+            if (!IsValidTagValue(value))
             {
                 return null;
             }
@@ -240,9 +279,9 @@ namespace Certify.Management
             if (!string.IsNullOrWhiteSpace(newValue))
             {
                 newValue = newValue.Trim();
-                if (!TagValueRegex.IsMatch(newValue))
+                if (!IsValidTagValue(newValue))
                 {
-                    return new ActionResult("Invalid value format", false);
+                    return new ActionResult("Invalid value format. Use printable text, including letters from any language and emojis. Avoid /, :, or \\.", false);
                 }
 
                 // Check for duplicates
