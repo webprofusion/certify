@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Models.Hub;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -22,6 +23,7 @@ namespace Certify.Client
         public event Func<InstanceCommandRequest, Task<InstanceCommandResult>> OnGetCommandResult;
 
         private HubConnection _connection;
+        private readonly SemaphoreSlim _connectionSync = new SemaphoreSlim(1, 1);
 
         private string _hubUri = "";
 
@@ -50,68 +52,94 @@ namespace Certify.Client
 
         public async Task ConnectAsync(string hubConnectionAuthToken)
         {
-            var allowUntrusted = true;
+            await _connectionSync.WaitAsync();
 
-            _connection = new HubConnectionBuilder()
-
-            .WithUrl(_hubUri, opts =>
+            try
             {
-                opts.HttpMessageHandlerFactory = (message) =>
+                if (_connection?.State == HubConnectionState.Connected
+                    || _connection?.State == HubConnectionState.Connecting
+                    || _connection?.State == HubConnectionState.Reconnecting)
                 {
-                    if (message is System.Net.Http.HttpClientHandler clientHandler)
-                    {
-                        if (allowUntrusted)
-                        {
-                            // allow invalid/untrusted tls cert
-                            clientHandler.ServerCertificateCustomValidationCallback +=
-                                (sender, certificate, chain, sslPolicyErrors) => true;
-                        }
-                    }
+                    return;
+                }
 
-                    return message;
+                var allowUntrusted = true;
+
+                var connection = new HubConnectionBuilder()
+
+                .WithUrl(_hubUri, opts =>
+                {
+                    opts.HttpMessageHandlerFactory = (message) =>
+                    {
+                        if (message is System.Net.Http.HttpClientHandler clientHandler)
+                        {
+                            if (allowUntrusted)
+                            {
+                                // allow invalid/untrusted tls cert
+                                clientHandler.ServerCertificateCustomValidationCallback +=
+                                    (sender, certificate, chain, sslPolicyErrors) => true;
+                            }
+                        }
+
+                        return message;
+                    };
+
+                    opts.UseStatefulReconnect = true;
+                    opts.AccessTokenProvider = () => Task.FromResult(hubConnectionAuthToken ?? "");
+
+                })
+                .WithAutomaticReconnect()
+                .AddMessagePackProtocol()
+                .Build();
+
+                connection.On<InstanceCommandRequest>(ManagementHubMessages.SendCommandRequest, PerformRequestedCommand);
+
+                // Wire up connection lifecycle events
+                connection.Reconnecting += (error) =>
+                {
+                    Log($"[ManagementServerClient] Reconnecting to hub. Error: {error?.Message}");
+                    OnConnectionReconnecting?.Invoke();
+                    return Task.CompletedTask;
                 };
 
-                opts.UseStatefulReconnect = true;
-                opts.AccessTokenProvider = () => Task.FromResult(hubConnectionAuthToken ?? "");
+                connection.Reconnected += (connectionId) =>
+                {
+                    Log($"[ManagementServerClient] Reconnected to hub. ConnectionId: {connectionId}");
+                    OnConnectionReconnected?.Invoke();
+                    return Task.CompletedTask;
+                };
 
-            })
-            .WithAutomaticReconnect()
-            .AddMessagePackProtocol()
-            .Build();
+                connection.Closed += async (error) =>
+                {
+                    Log($"[ManagementServerClient] Connection closed. Error: {error?.Message}");
 
-            _connection.On<InstanceCommandRequest>(ManagementHubMessages.SendCommandRequest, PerformRequestedCommand);
+                    // rely on delegate to organize reconnect
+                    OnConnectionClosed?.Invoke();
+                };
 
-            // Wire up connection lifecycle events
-            _connection.Reconnecting += (error) =>
+                await connection.StartAsync();
+                _connection = connection;
+            }
+            finally
             {
-                Log($"[ManagementServerClient] Reconnecting to hub. Error: {error?.Message}");
-                OnConnectionReconnecting?.Invoke();
-                return Task.CompletedTask;
-            };
-
-            _connection.Reconnected += (connectionId) =>
-            {
-                Log($"[ManagementServerClient] Reconnected to hub. ConnectionId: {connectionId}");
-                OnConnectionReconnected?.Invoke();
-                return Task.CompletedTask;
-            };
-
-            _connection.Closed += async (error) =>
-            {
-                Log($"[ManagementServerClient] Connection closed. Error: {error?.Message}");
-
-                // rely on delegate to organize reconnect
-                OnConnectionClosed?.Invoke();
-            };
-
-            await _connection.StartAsync();
+                _connectionSync.Release();
+            }
         }
 
         public async Task Disconnect()
         {
-            if (_connection != null)
+            await _connectionSync.WaitAsync();
+
+            try
             {
-                await _connection.StopAsync();
+                if (_connection != null)
+                {
+                    await _connection.StopAsync();
+                }
+            }
+            finally
+            {
+                _connectionSync.Release();
             }
         }
 
