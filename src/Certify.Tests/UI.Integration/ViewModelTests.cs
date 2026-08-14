@@ -247,7 +247,7 @@ namespace Certify.Tests.UI.Integration
         [TestMethod]
         public void DeleteManagedCertificateBlockingUsesSourceIdOwnership()
         {
-            var locallyOwnedExternalSubscription = new ManagedCertificate
+            var locallyOwnedSubscription = new ManagedCertificate
             {
                 ItemType = ManagedCertificateType.SSL_ExternallyManaged,
                 SourceId = null
@@ -259,12 +259,12 @@ namespace Certify.Tests.UI.Integration
                 SourceId = "certbot"
             };
 
-            Assert.IsFalse(AppViewModel.IsDeleteBlockedForManagedCertificate(locallyOwnedExternalSubscription));
+            Assert.IsFalse(AppViewModel.IsDeleteBlockedForManagedCertificate(locallyOwnedSubscription));
             Assert.IsTrue(AppViewModel.IsDeleteBlockedForManagedCertificate(externallyManagedCertificate));
         }
 
         [TestMethod]
-        public void ExternalSubscriptionDefaultsToManagementHubForNewItem()
+        public void SubscriptionDefaultsToManagementHubForNewItem()
         {
             var defaultSubscription = new ExternalCertificateSubscription();
             Assert.AreEqual(ExternalCertificateSourceTypes.ManagementHub, defaultSubscription.SourceType);
@@ -292,7 +292,7 @@ namespace Certify.Tests.UI.Integration
         }
 
         [TestMethod]
-        public void NonExternalManagedCertificateClearsExternalSubscriptionSettings()
+        public void NonExternalManagedCertificateClearsSubscriptionSettings()
         {
             var item = new ManagedCertificate
             {

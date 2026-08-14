@@ -327,7 +327,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
         }
 
-        private ManagedCertificate CreateExternalManagedCertificate(string id, string name, DateTimeOffset? dateRenewed = null, string pendingSourceVersion = null)
+        private ManagedCertificate CreateManagedCertificateSubscription(string id, string name, DateTimeOffset? dateRenewed = null, string pendingSourceVersion = null)
         {
             return new ManagedCertificate
             {
@@ -578,9 +578,9 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test PerformRenewAll excludes targeted external subscriptions that are not due and have no pending update")]
-        public async Task TestPerformRenewAll_SpecificTargets_ExcludesExternalSubscriptionsNotDue()
+        public async Task TestPerformRenewAll_SpecificTargets_ExcludesSubscriptionsNotDue()
         {
-            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+            var externalNotDue = CreateManagedCertificateSubscription("sub-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
             var normalDue = CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
 
             await _itemStore.Update(externalNotDue);
@@ -590,7 +590,7 @@ namespace Certify.Tests.Core.Unit.Tests
             {
                 Mode = RenewalMode.Auto,
                 IsPreviewMode = false,
-                TargetManagedCertificates = new List<string> { "ext-not-due", "cert1" }
+                TargetManagedCertificates = new List<string> { "sub-not-due", "cert1" }
             };
 
             var results = await RenewalManager.PerformRenewAll(
@@ -609,10 +609,10 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test PerformRenewAll includes external subscriptions when a pending update exists")]
-        public async Task TestPerformRenewAll_IncludesExternalSubscriptionsWithPendingUpdate()
+        public async Task TestPerformRenewAll_IncludesSubscriptionsWithPendingUpdate()
         {
-            var externalPending = CreateExternalManagedCertificate("ext-pending", "ExternalPending", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5), pendingSourceVersion: "source-version-1");
-            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+            var externalPending = CreateManagedCertificateSubscription("sub-pending", "ExternalPending", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5), pendingSourceVersion: "source-version-1");
+            var externalNotDue = CreateManagedCertificateSubscription("sub-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
 
             await _itemStore.Update(externalPending);
             await _itemStore.Update(externalNotDue);
@@ -629,7 +629,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             Assert.HasCount(1, results, "Only the external subscription with a pending update should be queued.");
-            Assert.AreEqual("ext-pending", results[0].ManagedItem.Id, "Pending external updates should still be processed.");
+            Assert.AreEqual("sub-pending", results[0].ManagedItem.Id, "Pending external updates should still be processed.");
             StringAssert.Contains(results[0].Message, "Pending external certificate update", "The renewal reason should indicate the pending external update.");
         }
 

@@ -42,7 +42,7 @@
                     Controls:HeaderedControlHelper.HeaderFontSize="12"
                     Header="{x:Static Resources:SR.ManagedCertificateSettings_CertificateAuthority_Title}"
                     IsSelected="true"
-                    Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                    Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                     <!--  Certificate Authority Preference  -->
                     <DockPanel Margin="16,0,8,8" DockPanel.Dock="Top">
                         <TextBlock
@@ -125,7 +125,7 @@
 
                     <!--  CSR Options  -->
                     <StackPanel Margin="16,0,0,0" Orientation="Vertical">
-                        <StackPanel Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                        <StackPanel Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                             <TextBlock Style="{StaticResource Subheading}">Certificate Signing Request (CSR)</TextBlock>
 
                             <StackPanel Visibility="{Binding SelectedItem.RequestConfig.CustomCSR, Converter={StaticResource ResourceKey=NullVisibleConverter}}">
@@ -243,8 +243,8 @@
                         <StackPanel Visibility="{Binding Converter={StaticResource FeatureVisibilityConverter}, ConverterParameter='PRIVKEY_PWD', Path=Preferences}">
                             <TextBlock Style="{StaticResource SubheadingWithMargin}">Security</TextBlock>
 
-                            <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>
-                            <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">Specify a password credential when the external subscription PFX requires one. Leave this empty when the source PFX is unprotected.</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">You can optionally specify a password credential to use for private keys and PFX files generated for this certificate:</TextBlock>
+                            <TextBlock Style="{StaticResource Instructions}" Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">Specify a password credential when the external subscription PFX requires one. Leave this empty when the source PFX is unprotected.</TextBlock>
                             <StackPanel Orientation="Horizontal">
                                 <ComboBox
                                     x:Name="CertPasswordCredential"
@@ -260,7 +260,7 @@
                                     Click="AddStoredCredential_Click"
                                     Content="New" />
                             </StackPanel>
-                            <StackPanel Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            <StackPanel Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                                 <TextBlock Style="{StaticResource Instructions}">You can optionally limit the lifetime (in Days) of a certificate, if supported by the CA. Use this with caution as most CAs will reject the order if they don't support this feature:</TextBlock>
 
                                 <TextBox

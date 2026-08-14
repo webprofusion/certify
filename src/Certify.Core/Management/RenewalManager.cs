@@ -147,15 +147,15 @@ namespace Certify.Management
                 {
                     var renewalReason = "Renewal requested";
 
-                    if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                    if (item.IsSubscription)
                     {
-                        if (!CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource))
+                        if (!CertifyManager.ShouldProcessSubscription(item, item.ExternalSource))
                         {
                             serviceLog?.Information($"Skipping targeted external subscription '{item.Name}' because it is not due and has no pending certificate update.");
                             continue;
                         }
 
-                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource)
+                        if (CertifyManager.HasPendingSubscriptionUpdate(item.ExternalSource)
                             && !CertifyManager.IsAutomaticSubscriptionRetryDue(item))
                         {
                             renewalReason = "Pending external certificate update is awaiting deployment.";
@@ -263,14 +263,14 @@ namespace Certify.Management
                                     renewalReason = "Renewal Mode is set to All";
                                 }
 
-                                if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                                if (item.IsSubscription)
                                 {
-                                    var shouldProcessExternalSubscription = CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource);
-                                    if (shouldProcessExternalSubscription)
+                                    var shouldProcessSubscription = CertifyManager.ShouldProcessSubscription(item, item.ExternalSource);
+                                    if (shouldProcessSubscription)
                                     {
                                         isRenewalRequired = true;
 
-                                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource) && !renewalDueCheck.IsRenewalDue)
+                                        if (CertifyManager.HasPendingSubscriptionUpdate(item.ExternalSource) && !renewalDueCheck.IsRenewalDue)
                                         {
                                             renewalReason = "Pending external certificate update is awaiting deployment.";
                                         }

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -32,7 +33,7 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> GetManagedCertificate(string id)
         {
-            if (id.StartsWith("ext-"))
+            if (ManagedCertificate.IsExternalItemId(id))
             {
                 // look for item via external managed certificate provider
                 return _externallyManagedCertificatesCache
@@ -200,7 +201,7 @@ namespace Certify.Management
             _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
             var refreshed = await RefreshExternalManagedCertificates();
 
-            return new ActionResult($"Refreshed external certificate manager cache with {refreshed.Count} certificate{(refreshed.Count == 1 ? string.Empty : "s") }.", true);
+            return new ActionResult($"Refreshed external certificate manager cache with {refreshed.Count} certificate{(refreshed.Count == 1 ? string.Empty : "s")}.", true);
         }
 
         /// <summary>
@@ -289,10 +290,19 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate managedCert)
         {
+            // an externally managed item is a read-only view of a certificate owned by an external certificate manager
+            // provider, storing it here would create a duplicate this instance would then try to manage itself.
+            // This is keyed on the id, the same signal DeleteManagedCertificate uses, because those items exist only in
+            // the provider cache and are the only items carrying the external id prefix. Keying it on item type instead
+            // would also reject a subscription whose source type has not been chosen yet, which is a stored item
+            if (ManagedCertificate.IsExternalItemId(managedCert.Id))
+            {
+                _serviceLog?.Error("Ignoring attempt to store externally managed certificate {name} [{id}], it is owned by an external certificate manager provider.", managedCert.Name, managedCert.Id);
+                return managedCert;
+            }
+
             // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
             managedCert = MigrateManagedCertificateSettings(managedCert);
-
-            managedCert.NormalizeExternalSourceSettings();
 
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
@@ -557,6 +567,12 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ActionResult> DeleteManagedCertificate(string id)
         {
+            // an externally managed item is owned by an external certificate manager provider and is not ours to delete
+            if (ManagedCertificate.IsExternalItemId(id))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Externally managed certificates cannot be deleted here, remove the certificate using the tool which manages it." };
+            }
+
             if (!string.IsNullOrEmpty(id))
             {
                 var item = await _itemManager.GetById(id);
@@ -639,9 +655,9 @@ namespace Certify.Management
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
-            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            if (managedCertificate.IsExternalSourceItem)
             {
-                return await TestExternalSubscriptionAccess(log, managedCertificate, progress);
+                return await TestSubscriptionAccess(log, managedCertificate, progress);
             }
 
             var results = new List<StatusMessage>();
@@ -932,6 +948,11 @@ namespace Certify.Management
 
         public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
+            if (ManagedCertificate.IsExternalItemId(id))
+            {
+                return await GetExternalItemLog(id, limit);
+            }
+
             var logPath = ManagedCertificateLog.GetLogPath(id);
 
             if (!string.IsNullOrEmpty(logPath) && System.IO.File.Exists(logPath))
@@ -960,6 +981,150 @@ namespace Certify.Management
             }
         }
 
+        private async Task<LogItem[]> GetExternalItemLog(string id, int limit)
+        {
+            var externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id) ?? await GetManagedCertificate(id);
+
+            if (externalItem == null || string.IsNullOrWhiteSpace(externalItem.SourceId))
+            {
+                return [];
+            }
+
+            var prefs = SettingsManager.ToPreferences();
+            var providerPrefs = prefs.CertificateManagers?.FirstOrDefault(c => string.Equals(c.Id, externalItem.SourceId, StringComparison.OrdinalIgnoreCase));
+            var logPath = providerPrefs?.LogPath;
+
+            LogItem[] NoLogsAvailable(string reason)
+            {
+                _serviceLog?.Warning(
+                    "External certificate log fetch: {reason} for provider {providerId}, managed item {itemId} ({itemName}). Path tried: {logPath}.",
+                    reason,
+                    externalItem.SourceId,
+                    externalItem.Id,
+                    externalItem.Name ?? "<unnamed>",
+                    logPath ?? "<none configured>");
+
+                return [];
+            }
+
+            if (string.IsNullOrWhiteSpace(logPath))
+            {
+                return NoLogsAvailable("no log path configured");
+            }
+
+            if (!Directory.Exists(logPath))
+            {
+                return NoLogsAvailable("log path does not exist");
+            }
+
+            var maxLines = limit <= 0 ? 1000 : Math.Min(limit, 1000);
+            List<FileInfo> logFiles;
+
+            try
+            {
+                logFiles = new DirectoryInfo(logPath)
+                    .GetFiles("*.log*", SearchOption.AllDirectories)
+                    .OrderByDescending(f => f.LastWriteTimeUtc)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                return NoLogsAvailable($"failed to enumerate log files ({ex.Message})");
+            }
+
+            if (!logFiles.Any())
+            {
+                return NoLogsAvailable("no log files found");
+            }
+
+            var itemName = externalItem.Name?.Trim();
+            var matchedItems = new List<LogItem>();
+
+            foreach (var file in logFiles)
+            {
+                foreach (var line in ReadLogTailSafe(file.FullName, maxLines))
+                {
+                    if (string.IsNullOrWhiteSpace(itemName) || line.Contains(itemName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matchedItems.Add(ParseExternalProviderLogLine(line));
+
+                        if (matchedItems.Count >= maxLines)
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                if (matchedItems.Count >= maxLines)
+                {
+                    break;
+                }
+            }
+
+            if (!matchedItems.Any())
+            {
+                // no lines could be attributed to this item, so show the most recent provider log activity instead
+                matchedItems.AddRange(ReadLogTailSafe(logFiles.First().FullName, maxLines).Select(ParseExternalProviderLogLine));
+            }
+
+            // lines are gathered newest file first, so order the combined set for display
+            return [.. matchedItems.OrderBy(i => i.EventDate)];
+        }
+
+        private IEnumerable<string> ReadLogTailSafe(string filePath, int maxLines)
+        {
+            try
+            {
+                return LogParsing.ReadLogTail(filePath, maxLines);
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Warning("External certificate log fetch: could not read log file {logFile}. Error: {error}", filePath, ex.Message);
+                return [];
+            }
+        }
+
+        private static readonly Regex _logLineErrorPattern = new Regex(@"\b(error|err|fatal|fail(ed|ure)?)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private static readonly Regex _logLineWarningPattern = new Regex(@"\b(warning|warn)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+        /// <summary>
+        /// Present a line from an external certificate manager provider's own log file as a log item.
+        /// Each provider has its own log format, so the level and event date are inferred heuristically and a line
+        /// which merely mentions a failure may be reported at a higher level than the provider intended
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        private static LogItem ParseExternalProviderLogLine(string line)
+        {
+            var message = line?.Trim() ?? string.Empty;
+
+            var logLevel = "INF";
+
+            if (_logLineErrorPattern.IsMatch(message))
+            {
+                logLevel = "ERR";
+            }
+            else if (_logLineWarningPattern.IsMatch(message))
+            {
+                logLevel = "WRN";
+            }
+
+            DateTime? eventDate = null;
+
+            var firstItem = message.Split(',').FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(firstItem) && DateTimeOffset.TryParse(firstItem, out var parsedDate))
+            {
+                eventDate = parsedDate.UtcDateTime;
+            }
+
+            return new LogItem
+            {
+                LogLevel = logLevel,
+                EventDate = eventDate ?? DateTime.UtcNow,
+                Message = message
+            };
+        }
+
         /// <summary>
         /// Perform any one-time migrations of legacy managed certificate settings and deployment tasks etc
         /// </summary>
@@ -980,6 +1145,28 @@ namespace Certify.Management
                     await UpdateManagedCertificate(result.Item1);
                 }
             }
+
+            await MigrateSubscriptionItemTypes();
+        }
+
+        /// <summary>
+        /// Adopt the current item type for stored certificate subscriptions. These were originally stored using the
+        /// same item type as externally managed certificates, distinguished only by having an external source configured
+        /// </summary>
+        /// <returns></returns>
+        private async Task MigrateSubscriptionItemTypes()
+        {
+            // only stored items are migrated, externally managed items are not stored by this instance
+            var storedItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
+
+            foreach (var item in storedItems)
+            {
+                if (item.NormalizeSubscriptionItemType())
+                {
+                    _serviceLog?.Information("Migrating certificate subscription {name} [{id}] to the certificate subscription item type.", item.Name, item.Id);
+                    await UpdateManagedCertificate(item);
+                }
+            }
         }
 
         /// <summary>
@@ -989,6 +1176,13 @@ namespace Certify.Management
         /// <returns>The updated managed certificate to be stored</returns>
         private ManagedCertificate MigrateManagedCertificateSettings(ManagedCertificate managedCert)
         {
+            // an item stored with the legacy certificate subscription item type adopts the current one, so that a
+            // subscription is not confused with an externally managed item
+            managedCert.NormalizeSubscriptionItemType();
+
+            // an external source configuration is only meaningful for an item which takes its certificate externally
+            managedCert.NormalizeExternalSourceSettings();
+
             if (
                 !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
                 || !string.IsNullOrEmpty(managedCert.RequestConfig.PreRequestPowerShellScript)

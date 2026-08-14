@@ -395,16 +395,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
                     _stateProvider.DeleteCachedManagedInstanceItem(instanceId, managedItemId);
                 }
-                else if (result.CommandType == ManagementHubCommands.NotificationRequestExternalManagedCertificateUpdate && result.Value != null)
+                else if (result.CommandType == ManagementHubCommands.NotificationRequestSubscriptionUpdate && result.Value != null)
                 {
-                    await HandleExternalManagedCertificateRequest(instanceId, result.Value);
+                    await HandleSubscriptionUpdateRequest(instanceId, result.Value);
                 }
             }
         }
 
-        private async Task HandleExternalManagedCertificateRequest(string requestingInstanceId, string serializedRequest)
+        private async Task HandleSubscriptionUpdateRequest(string requestingInstanceId, string serializedRequest)
         {
-            var request = System.Text.Json.JsonSerializer.Deserialize<ExternalManagedCertificateRequest>(serializedRequest, JsonOptions.DefaultJsonSerializerOptions);
+            var request = System.Text.Json.JsonSerializer.Deserialize<SubscriptionUpdateRequest>(serializedRequest, JsonOptions.DefaultJsonSerializerOptions);
 
             if (request == null || string.IsNullOrWhiteSpace(request.TargetManagedCertificateId))
             {
@@ -412,13 +412,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
-            var payload = new ExternalManagedCertificateUpdate
+            var payload = new SubscriptionUpdate
             {
                 ManagedCertificateId = request.TargetManagedCertificateId,
                 SourceVersion = null
             };
 
-            var command = new InstanceCommandRequest(ManagementHubCommands.PushExternalManagedCertificateUpdate)
+            var command = new InstanceCommandRequest(ManagementHubCommands.PushSubscriptionUpdate)
             {
                 Value = System.Text.Json.JsonSerializer.Serialize(payload)
             };
@@ -451,13 +451,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
 
             foreach (var target in targets)
             {
-                var payload = new ExternalManagedCertificateUpdate
+                var payload = new SubscriptionUpdate
                 {
                     ManagedCertificateId = target.TargetManagedCertificateId,
                     SourceVersion = sourceVersion
                 };
 
-                var command = new InstanceCommandRequest(ManagementHubCommands.PushExternalManagedCertificateUpdate)
+                var command = new InstanceCommandRequest(ManagementHubCommands.PushSubscriptionUpdate)
                 {
                     Value = System.Text.Json.JsonSerializer.Serialize(payload)
                 };
@@ -569,15 +569,16 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 throw new InvalidOperationException($"Cannot send command to instance '{instanceId}' because no current connection exists.");
             }
 
-            var targetClient = Clients.Client(connectionId);
-
-            if (targetClient == null)
+            try
             {
-                _logger?.LogWarning("Cannot send command {cmd} to instance '{instanceId}' because the target SignalR client is null or not connected.", command.CommandType, instanceId);
-            }
-            else
-            {
+                var targetClient = Clients.Client(connectionId);
                 await targetClient.SendCommandRequest(command);
+            }
+            catch (Exception ex)
+            {
+                // the connection may have dropped between resolving the connection id and sending, and a send can also
+                // fail for other reasons, so the exception detail matters here
+                _logger?.LogWarning(ex, "Failed to send command {cmd} to instance '{instanceId}'. The target SignalR client may no longer be connected.", command.CommandType, instanceId);
             }
         }
 

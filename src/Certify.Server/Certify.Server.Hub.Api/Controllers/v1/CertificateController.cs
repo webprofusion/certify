@@ -280,7 +280,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 Comments = i.Comments ?? "",
                 Status = i.Health.ToString(),
                 HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                IsExternallyManaged = i.IsExternallyManaged,
+                IsSubscription = i.IsSubscription
             }).OrderBy(a => a.Title);
 
             var result = new ManagedCertificateSummaryResult
@@ -572,7 +573,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 Status = item.Health.ToString(),
                 Comments = item.Comments ?? string.Empty,
                 HasCertificate = !string.IsNullOrEmpty(item.CertificatePath),
-                IsExternallyManaged = item.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                IsExternallyManaged = item.IsExternallyManaged,
+                IsSubscription = item.IsSubscription
             };
         }
     }

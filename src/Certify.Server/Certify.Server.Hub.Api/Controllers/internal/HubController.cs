@@ -186,7 +186,8 @@ namespace Certify.Server.Hub.Api.Controllers
                         Status = i.Health.ToString(),
                         DateRetrieved = i.DateRetrieved,
                         HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                        IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged,
+                        IsExternallyManaged = i.IsExternallyManaged,
+                        IsSubscription = i.IsSubscription,
                         Tags = tags
                     });
                 }
@@ -255,6 +256,11 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Summarise a set of managed certificate summaries into overall status counts.
         /// </summary>
+        /// <remarks>
+        /// The counts must match those an instance reports for itself, because this endpoint falls back to the
+        /// pre-aggregated instance summaries when no filtering applies. In particular ExternallyManaged counts only
+        /// items discovered via an external certificate manager provider, not certificate subscriptions.
+        /// </remarks>
         private static StatusSummary SummariseManagedItems(IEnumerable<ManagedCertificateSummary> items, string? instanceId)
         {
             var summary = new StatusSummary { InstanceId = instanceId ?? string.Empty };

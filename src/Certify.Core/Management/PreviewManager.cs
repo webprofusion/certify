@@ -38,9 +38,9 @@ namespace Certify.Management
             // ensure defaults are applied for the deployment mode, overwriting any previous selections
             item.RequestConfig.ApplyDeploymentOptionDefaults();
 
-            if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            if (item.IsExternalSourceItem)
             {
-                return await GenerateExternalSubscriptionPreview(item, serverProvider, certifyManager, allTaskProviders);
+                return await GenerateSubscriptionPreview(item, serverProvider, certifyManager, allTaskProviders);
             }
 
             var identifiers = item.GetCertificateIdentifiers();
@@ -285,7 +285,7 @@ namespace Certify.Management
             return steps;
         }
 
-        private async Task<List<ActionStep>> GenerateExternalSubscriptionPreview(
+        private async Task<List<ActionStep>> GenerateSubscriptionPreview(
             ManagedCertificate item,
             ITargetWebServer serverProvider,
             ICertifyManager certifyManager,

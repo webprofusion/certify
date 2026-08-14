@@ -281,8 +281,11 @@
 
             </StackPanel>
 
-            <StackPanel x:Name="ExternalSyncInfo" Margin="0,16,0,0" Visibility="Collapsed">
-                <TextBlock Style="{StaticResource Subheading}" Text="External Sync" />
+            <StackPanel
+                x:Name="ExternalSyncInfo"
+                Margin="0,16,0,0"
+                Visibility="Collapsed">
+                <TextBlock Style="{StaticResource Subheading}" Text="Subscription Status" />
                 <StackPanel Orientation="Horizontal">
                     <Label
                         Width="160"

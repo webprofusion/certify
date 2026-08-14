@@ -45,13 +45,13 @@ namespace Certify.Server.Hub.Api.Services
 
                 foreach (var target in targets)
                 {
-                    var payload = new ExternalManagedCertificateUpdate
+                    var payload = new SubscriptionUpdate
                     {
                         ManagedCertificateId = target.TargetManagedCertificateId,
                         SourceVersion = sourceVersion
                     };
 
-                    var command = new InstanceCommandRequest(ManagementHubCommands.PushExternalManagedCertificateUpdate)
+                    var command = new InstanceCommandRequest(ManagementHubCommands.PushSubscriptionUpdate)
                     {
                         Value = System.Text.Json.JsonSerializer.Serialize(payload)
                     };

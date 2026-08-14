@@ -11,6 +11,12 @@ namespace Certify.Models.Hub
         public const string GetCommandResult = "GetCommandResult";
     }
 
+    /// <summary>
+    /// Command and notification identifiers used by the management hub protocol.
+    /// The value of each constant is the identifier sent on the wire, and instances may be running an older version, so
+    /// a value is never changed once shipped. Most constants therefore have a value matching their name, but a renamed
+    /// constant deliberately keeps its original value - see the individual remarks
+    /// </summary>
     public class ManagementHubCommands
     {
         public const string GetInstanceInfo = "GetInstanceInfo";
@@ -87,14 +93,23 @@ namespace Certify.Models.Hub
         public const string NotificationManagedItemRequestProgress = "NotificationManagedItemRequestProgress";
 
         /// <summary>
-        /// Command sent to an instance to indicate an externally sourced certificate has changed and should be refreshed.
+        /// Command sent to an instance to indicate the source certificate for one of its certificate subscriptions
+        /// has changed and should be fetched.
         /// </summary>
-        public const string PushExternalManagedCertificateUpdate = "PushExternalManagedCertificateUpdate";
+        /// <remarks>
+        /// The value is part of the management hub protocol and is not changed when the name is, so that instances
+        /// running an older version are still understood
+        /// </remarks>
+        public const string PushSubscriptionUpdate = "PushExternalManagedCertificateUpdate";
 
         /// <summary>
-        /// Notification from an instance to request the hub trigger an external managed certificate push update.
+        /// Notification from an instance to request the hub trigger a certificate subscription push update.
         /// </summary>
-        public const string NotificationRequestExternalManagedCertificateUpdate = "NotificationRequestExternalManagedCertificateUpdate";
+        /// <remarks>
+        /// The value is part of the management hub protocol and is not changed when the name is, so that instances
+        /// running an older version are still understood
+        /// </remarks>
+        public const string NotificationRequestSubscriptionUpdate = "NotificationRequestExternalManagedCertificateUpdate";
 
         /// <summary>
         /// Caller instance needs to authenticate before proceeding, they should reacquire a valid auth token and reconnect
@@ -102,13 +117,13 @@ namespace Certify.Models.Hub
         public const string NotificationAuthenticationRequired = "NotificationAuthenticationRequired";
     }
 
-    public class ExternalManagedCertificateUpdate
+    public class SubscriptionUpdate
     {
         public string? ManagedCertificateId { get; set; }
         public string? SourceVersion { get; set; }
     }
 
-    public class ExternalManagedCertificateRequest
+    public class SubscriptionUpdateRequest
     {
         public string? TargetManagedCertificateId { get; set; }
         public string? SourceInstanceId { get; set; }

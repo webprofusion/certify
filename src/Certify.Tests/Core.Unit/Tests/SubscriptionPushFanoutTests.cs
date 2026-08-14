@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Core.Tests.Unit
 {
     [TestClass]
-    public class ExternalSubscriptionPushFanoutTests
+    public class SubscriptionPushFanoutTests
     {
         [TestMethod]
         public void GetExternalPushSubscriptionTargets_MatchesSubscribedTarget_ForHubPushMode()
@@ -359,7 +359,7 @@ namespace Certify.Core.Tests.Unit
                 PendingSourceVersion = "source-version-1"
             };
 
-            Assert.IsTrue(CertifyManager.HasPendingExternalCertificateUpdate(source));
+            Assert.IsTrue(CertifyManager.HasPendingSubscriptionUpdate(source));
         }
 
         [TestMethod]
@@ -370,11 +370,11 @@ namespace Certify.Core.Tests.Unit
                 PendingSourceVersion = "source-version-1"
             };
 
-            Assert.IsTrue(CertifyManager.HasPendingExternalSourceUpdate(source));
+            Assert.IsTrue(CertifyManager.HasPendingSubscriptionUpdate(source));
         }
 
         [TestMethod]
-        public void ShouldUseDefaultPfxPasswordCredential_ReturnsFalse_ForExternalSubscription()
+        public void ShouldUseDefaultPfxPasswordCredential_ReturnsFalse_ForSubscription()
         {
             var item = new ManagedCertificate
             {
@@ -401,9 +401,9 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public void GetExternalSubscriptionPfxLoadErrorMessage_IncludesPasswordCredentialGuidance()
+        public void GetSubscriptionPfxLoadErrorMessage_IncludesPasswordCredentialGuidance()
         {
-            var message = CertifyManager.GetExternalSubscriptionPfxLoadErrorMessage();
+            var message = CertifyManager.SubscriptionPfxLoadErrorMessage;
 
             StringAssert.Contains(message, "deployable PFX data");
             StringAssert.Contains(message, "different password credential setting");
@@ -432,7 +432,7 @@ namespace Certify.Core.Tests.Unit
                 DateLastPoll = now.AddMinutes(-10)
             };
 
-            Assert.IsFalse(CertifyManager.ShouldProcessExternalManagedCertificate(item, source, now));
+            Assert.IsFalse(CertifyManager.ShouldProcessSubscription(item, source, now));
         }
 
         [TestMethod]
@@ -458,7 +458,7 @@ namespace Certify.Core.Tests.Unit
                 DateLastPoll = now
             };
 
-            Assert.IsTrue(CertifyManager.ShouldProcessExternalManagedCertificate(item, source, now));
+            Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, source, now));
         }
 
         [TestMethod]
@@ -475,7 +475,7 @@ namespace Certify.Core.Tests.Unit
                 PendingSourceVersion = "source-version-1"
             };
 
-            CertifyManager.ClearExternalManagedCertificateRenewalTrigger(item, source, clearPendingSourceVersion: true);
+            CertifyManager.ClearSubscriptionRenewalTrigger(item, source, clearPendingSourceVersion: true);
 
             Assert.IsNull(item.DateNextScheduledRenewalAttempt);
             Assert.IsNull(source.PendingSourceVersion);

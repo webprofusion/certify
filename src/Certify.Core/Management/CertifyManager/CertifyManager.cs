@@ -503,7 +503,7 @@ namespace Certify.Management
                 await PerformRenewalTasks(CancellationToken.None);
 
                 // process external subscription polls, pending deployments, and queued push notifications
-                await PerformExternalCertificateSubscriptionTasks(CancellationToken.None);
+                await PerformSubscriptionTasks(CancellationToken.None);
 
                 // perform managhed challenge cleanup tasks (if any)
                 _ = PerformManagedChallengeCleanup();

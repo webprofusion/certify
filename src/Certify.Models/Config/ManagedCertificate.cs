@@ -11,7 +11,8 @@ namespace Certify.Models
     {
         SSL_ACME = 1,
         SSL_Manual = 2,
-        SSL_ExternallyManaged = 3
+        SSL_ExternallyManaged = 3,
+        SSL_ExternalSubscription = 4
     }
 
     public enum RequiredActionType
@@ -142,12 +143,50 @@ namespace Certify.Models
 #endif
         }
 
+        /// <summary>
+        /// Id prefix used for managed certificates discovered via an external certificate manager provider
+        /// </summary>
+        public const string ExternalItemIdPrefix = "ext-";
+
+        /// <summary>
+        /// Determine whether the given managed certificate id refers to an item discovered via an external
+        /// certificate manager provider, for use where only the id is known
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool IsExternalItemId(string? id) => id?.StartsWith(ExternalItemIdPrefix, StringComparison.OrdinalIgnoreCase) == true;
+
+        /// <summary>
+        /// Determine whether the given item type is one where the certificate is acquired from an external
+        /// source rather than ordered by this instance
+        /// </summary>
+        /// <param name="itemType"></param>
+        /// <returns></returns>
+        public static bool IsExternalSourceItemType(ManagedCertificateType itemType) => itemType == ManagedCertificateType.SSL_ExternallyManaged || itemType == ManagedCertificateType.SSL_ExternalSubscription;
+
         public void NormalizeExternalSourceSettings()
         {
-            if (ItemType != ManagedCertificateType.SSL_ExternallyManaged)
+            if (!IsExternalSourceItem)
             {
                 ExternalSource = null;
             }
+        }
+
+        /// <summary>
+        /// Adopt the current item type for a certificate subscription, if this item still carries the legacy type.
+        /// Subscriptions were originally stored as <see cref="ManagedCertificateType.SSL_ExternallyManaged"/> with a
+        /// configured external source, which is the same type used for items discovered via a certificate manager provider
+        /// </summary>
+        /// <returns>true if the item type was changed and the item needs to be stored</returns>
+        public bool NormalizeSubscriptionItemType()
+        {
+            if (ItemType == ManagedCertificateType.SSL_ExternallyManaged && IsSubscription)
+            {
+                ItemType = ManagedCertificateType.SSL_ExternalSubscription;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -347,6 +386,41 @@ namespace Certify.Models
         /// PEM encoded version of public certificate
         /// </summary>
         public string? CertificatePEM { get; set; }
+
+        /// <summary>
+        /// True if this item's certificate is acquired from an external source rather than ordered by this instance
+        /// </summary>
+        [JsonIgnore]
+        public bool IsExternalSourceItem => IsExternalSourceItemType(ItemType);
+
+        /// <summary>
+        /// True if this item is an external certificate subscription, which periodically fetches an updated
+        /// certificate from its configured external source.
+        /// An item stored before subscriptions had their own item type still carries the legacy type, and is
+        /// recognised by having an external source configured (items discovered via a certificate manager
+        /// provider never carry one)
+        /// </summary>
+        [JsonIgnore]
+        public bool IsSubscription => ItemType == ManagedCertificateType.SSL_ExternalSubscription
+            || (ItemType == ManagedCertificateType.SSL_ExternallyManaged && ExternalSource?.SourceType != null);
+
+        /// <summary>
+        /// True if this item is a certificate subscription which has enough configuration for a request to actually be
+        /// attempted against its source. A subscription which has not been configured yet is still a subscription, but
+        /// there is nothing to fetch and nothing to fetch it from.
+        /// Use <see cref="IsSubscription"/> to decide how an item is processed, and this to decide whether a request
+        /// can be attempted - an unconfigured subscription must never fall through to ordering its own certificate
+        /// </summary>
+        [JsonIgnore]
+        public bool IsActionableSubscription => IsSubscription
+            && !string.IsNullOrWhiteSpace(ExternalSource?.SourceType)
+            && !string.IsNullOrWhiteSpace(ExternalSource?.ExternalReference);
+
+        /// <summary>
+        /// True if this item was discovered via an external certificate manager provider and is not stored by this instance
+        /// </summary>
+        [JsonIgnore]
+        public bool IsExternallyManaged => IsExternalSourceItem && !IsSubscription;
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 

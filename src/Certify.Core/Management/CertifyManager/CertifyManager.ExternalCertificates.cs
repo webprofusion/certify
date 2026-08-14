@@ -20,7 +20,7 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        private enum ExternalSubscriptionRequestMode
+        internal enum SubscriptionRequestMode
         {
             Automatic,
             Manual
@@ -45,29 +45,67 @@ namespace Certify.Management
             public string? Thumbprint { get; set; }
         }
 
-        private int _isExternalSubscriptionTaskRunning = 0;
-
-        public static string GetExternalSubscriptionPfxLoadErrorMessage()
+        /// <summary>
+        /// The outcome of an attempt to fetch and deploy a certificate update from an external (subscription) source.
+        /// This drives deployment task trigger evaluation, so the three cases are kept distinct rather than inferred
+        /// from a success flag plus the item's stored status - a failed request must never be able to present itself
+        /// as a success left over from a previous run
+        /// </summary>
+        internal enum SubscriptionRequestOutcome
         {
-            return "External certificate update could not be validated as deployable PFX data. The PFX may require a different password credential setting.";
+            /// <summary>
+            /// The request ran to completion and the certificate we now hold is the one to deploy. ON_SUCCESS
+            /// deployment tasks apply
+            /// </summary>
+            Completed,
+
+            /// <summary>
+            /// Nothing was attempted or applied, because no update was available yet, the subscription was not due,
+            /// deployment was deliberately deferred, or the subscription is not configured well enough to attempt.
+            /// The source will be checked again later, so no deployment and no deployment tasks apply
+            /// </summary>
+            Deferred,
+
+            /// <summary>
+            /// The request was attempted against the source and failed. ON_ERROR deployment tasks apply
+            /// </summary>
+            Failed
         }
 
-        private async Task<List<ManagedCertificate>> GetExternalManagedCertificateSubscriptionTargets()
+        /// <summary>
+        /// The outcome of an attempt to fetch and deploy a certificate update from an external (subscription) source
+        /// </summary>
+        private class SubscriptionProcessResult
+        {
+            public SubscriptionProcessResult(string? msg, SubscriptionRequestOutcome outcome)
+            {
+                Message = msg ?? string.Empty;
+                Outcome = outcome;
+            }
+
+            public string Message { get; }
+            public SubscriptionRequestOutcome Outcome { get; }
+        }
+
+        private int _isSubscriptionTaskRunning = 0;
+
+        /// <summary>
+        /// Message reported when a certificate fetched from an external source could not be loaded as a PFX
+        /// </summary>
+        public const string SubscriptionPfxLoadErrorMessage = "External certificate update could not be validated as deployable PFX data. The PFX may require a different password credential setting.";
+
+        private async Task<List<ManagedCertificate>> GetSubscriptionTargets()
         {
             var allItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
 
             return allItems
-                .Where(i =>
-                    i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
-                    && !string.IsNullOrWhiteSpace(i.ExternalSource?.ExternalReference)
-                    && !string.IsNullOrWhiteSpace(i.ExternalSource?.SourceType)
-                    )
+                .Where(i => i.IsActionableSubscription)
                 .ToList();
         }
 
-        private async Task PerformExternalCertificateSubscriptionTasks(CancellationToken cancellationToken)
+        private async Task PerformSubscriptionTasks(CancellationToken cancellationToken)
         {
-            if (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
+            if (Interlocked.CompareExchange(ref _isSubscriptionTaskRunning, 1, 0) != 0)
             {
                 return;
             }
@@ -79,7 +117,7 @@ namespace Certify.Management
                     return;
                 }
 
-                var targetItems = await GetExternalManagedCertificateSubscriptionTargets();
+                var targetItems = await GetSubscriptionTargets();
 
                 if (!targetItems.Any())
                 {
@@ -93,9 +131,19 @@ namespace Certify.Management
                         break;
                     }
 
+                    // a renewal driven request for this item holds its place in _renewalsInProgress for the whole
+                    // request, including its post-request deployment tasks, which run after the subscription gate is
+                    // released. Skipping the item here is what keeps the two paths off the same item, the gate alone
+                    // only covers fetch and deployment
+                    if (_renewalsInProgress.ContainsKey(item.Id))
+                    {
+                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], a certificate request is already in progress for it.", item.Name, item.Id);
+                        continue;
+                    }
+
                     try
                     {
-                        await ProcessExternalManagedCertificate(item, ExternalSubscriptionRequestMode.Automatic, cancellationToken);
+                        await ProcessSubscriptionPoll(item, cancellationToken);
                     }
                     catch (Exception ex)
                     {
@@ -105,75 +153,115 @@ namespace Certify.Management
             }
             catch (Exception ex)
             {
-                _serviceLog?.Error(ex, "PerformExternalCertificateSubscriptionTasks: unhandled exception while processing external certificate subscriptions");
+                _serviceLog?.Error(ex, "PerformSubscriptionTasks: unhandled exception while processing external certificate subscriptions");
             }
             finally
             {
-                Interlocked.Exchange(ref _isExternalSubscriptionTaskRunning, 0);
+                Interlocked.Exchange(ref _isSubscriptionTaskRunning, 0);
             }
         }
 
-        private async Task<ActionResult> ProcessExternalManagedCertificate(ManagedCertificate candidate, ExternalSubscriptionRequestMode requestMode, CancellationToken cancellationToken)
+        /// <summary>
+        /// Perform a scheduled check of an external certificate subscription, deploying any available update and
+        /// performing the applicable post-request deployment tasks. This uses the same task trigger evaluation as a
+        /// renewal driven request, so the outcome does not depend on which scheduled process picked up the item first.
+        /// Only called from <see cref="PerformSubscriptionTasks"/>, which already holds the subscription processing gate
+        /// (<see cref="_isSubscriptionTaskRunning"/>), so it does not take it again, and which skips any item with a
+        /// certificate request already in progress
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task ProcessSubscriptionPoll(ManagedCertificate item, CancellationToken cancellationToken)
         {
+            // preserve the failure count from before the request, since the request itself may reset it
+            var currentFailureCount = item.RenewalFailureCount;
+
+            var result = await PerformSubscriptionRequest(item, progress: null, SubscriptionRequestMode.Automatic, cancellationToken);
+
+            await PerformPostRequestTasksIfApplicable(log: null, result.ManagedItem ?? item, result, skipTasks: false, currentFailureCount, persistTaskState: true);
+        }
+
+        /// <summary>
+        /// Fetch and deploy an updated certificate for a certificate subscription item.
+        /// Post-request deployment tasks are not performed here; the caller runs them once the overall request
+        /// outcome is known so that status based task triggers are evaluated once, using the applicable evaluation mode.
+        /// </summary>
+        /// <param name="candidate"></param>
+        /// <param name="requestMode"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<SubscriptionProcessResult> ProcessSubscription(ManagedCertificate candidate, SubscriptionRequestMode requestMode, CancellationToken cancellationToken)
+        {
+            // a precondition failure means nothing was attempted against the source, so the request is deferred rather
+            // than failed - firing ON_ERROR deployment tasks here would raise an alert for a request we never made
             if (string.IsNullOrWhiteSpace(candidate.Id))
             {
-                return new ActionResult("Managed cert ID is missing", false);
+                return new SubscriptionProcessResult("Managed cert ID is missing", SubscriptionRequestOutcome.Deferred);
             }
 
             var item = await _itemManager.GetById(candidate.Id);
             if (item?.ExternalSource == null)
             {
-                return new ActionResult("Managed cert external source not configured", false);
+                return new SubscriptionProcessResult("Managed cert external source not configured", SubscriptionRequestOutcome.Deferred);
             }
 
             var sourceConfig = item.ExternalSource;
-            var hasPendingSourceUpdate = HasPendingExternalSourceUpdate(sourceConfig);
+            var hasPendingSourceUpdate = HasPendingSubscriptionUpdate(sourceConfig);
 
             var canFetchFromSource = hasPendingSourceUpdate || IsPullModeEnabled(sourceConfig);
             if (!canFetchFromSource)
             {
-                if (requestMode == ExternalSubscriptionRequestMode.Manual)
+                if (requestMode == SubscriptionRequestMode.Manual)
                 {
-                    return new ActionResult($"Manual request is not currently supported for external source type '{sourceConfig.SourceType}'.", false);
+                    // a push-only source has nothing for us to pull on demand, so nothing was attempted
+                    return new SubscriptionProcessResult($"Manual request is not currently supported for external source type '{sourceConfig.SourceType}'.", SubscriptionRequestOutcome.Deferred);
                 }
 
-                return new ActionResult("Source polling not enabled", false);
+                return new SubscriptionProcessResult("Source polling not enabled", SubscriptionRequestOutcome.Deferred);
             }
 
-            var shouldFetchFromSource = requestMode == ExternalSubscriptionRequestMode.Manual
+            var shouldFetchFromSource = requestMode == SubscriptionRequestMode.Manual
                 || hasPendingSourceUpdate
                 || ShouldPollSource(item, sourceConfig);
 
             if (!shouldFetchFromSource)
             {
-                return new ActionResult("Source polling not applicable [ShouldPollSource] ", false);
+                return new SubscriptionProcessResult("Source polling not applicable [ShouldPollSource] ", SubscriptionRequestOutcome.Deferred);
             }
 
-            var maintenanceWindowCheck = GetMaintenanceWindowStatus(item);
-            if (!maintenanceWindowCheck.IsWithinWindow)
+            // a manual request is an explicit user override of automatic renewal scheduling, so it fetches and deploys
+            // immediately regardless of any configured maintenance window
+            if (requestMode != SubscriptionRequestMode.Manual)
             {
-                sourceConfig.LastError = null;
+                var maintenanceWindowCheck = GetMaintenanceWindowStatus(item);
+                if (!maintenanceWindowCheck.IsWithinWindow)
+                {
+                    sourceConfig.LastError = null;
 
-                var deferredMessage = $"External certificate update deferred: {maintenanceWindowCheck.Reason}";
-                SetBindingDeploymentStatus(item, RequestState.Warning, deferredMessage);
-                item.LastRenewalStatus = RequestState.Warning;
-                item.RenewalFailureMessage = deferredMessage;
+                    var deferredMessage = $"External certificate update deferred: {maintenanceWindowCheck.Reason}";
+                    SetBindingDeploymentStatus(item, RequestState.Warning, deferredMessage);
+                    item.LastRenewalStatus = RequestState.Warning;
+                    item.RenewalFailureMessage = deferredMessage;
 
-                LogMessage(item.Id, $"Deferred external certificate fetch and deployment - {maintenanceWindowCheck.Reason}");
-                await UpdateManagedCertificate(item);
-                return new ActionResult(deferredMessage, false);
+                    LogMessage(item.Id, $"Deferred external certificate fetch and deployment - {maintenanceWindowCheck.Reason}");
+                    await UpdateManagedCertificate(item);
+
+                    // deployment has been deliberately deferred until the next maintenance window, so no deployment tasks apply
+                    return new SubscriptionProcessResult(deferredMessage, SubscriptionRequestOutcome.Deferred);
+                }
             }
 
             ClearPrimaryAndBindingRequestStatus(item);
 
-            LogExternalSubscriptionStart(item, sourceConfig, requestMode);
+            LogSubscriptionStart(item, sourceConfig, requestMode);
 
             var fetchResult = await FetchExternalCertificateAsset(
                 item,
                 sourceConfig,
                 pushedSourceVersion: hasPendingSourceUpdate ? sourceConfig.PendingSourceVersion : null,
                 cancellationToken,
-                ignoreCurrentVersion: requestMode == ExternalSubscriptionRequestMode.Manual);
+                ignoreCurrentVersion: requestMode == SubscriptionRequestMode.Manual);
 
             sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
 
@@ -184,7 +272,7 @@ namespace Certify.Management
                 SetPrimaryRequestStatus(item, null, RequestState.Error, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
 
                 await RecordPrimaryRequestFailure(item, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
-                return new ActionResult(fetchResult.Message, false);
+                return new SubscriptionProcessResult(fetchResult.Message, SubscriptionRequestOutcome.Failed);
             }
 
             if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
@@ -194,11 +282,20 @@ namespace Certify.Management
                 LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} completed with no update. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}. Recorded status: {noUpdateStatus}; failure count: {item.RenewalFailureCount}.", noUpdateStatus == RequestState.Error ? LogItemType.GeneralError : LogItemType.CertificateRequestAttentionRequired);
                 SetPrimaryRequestStatus(item, null, noUpdateStatus, message);
 
-                ClearExternalManagedCertificateRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
+                ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastError = noUpdateStatus == RequestState.Error ? message : null;
                 await UpdateManagedCertificate(item);
 
-                return new ActionResult(message, false);
+                // an automatic check simply tries again later. A manual request still performs its deployment tasks,
+                // deploying the certificate we already hold - unless the subscription is now overdue for an update,
+                // which is a genuine failure to report
+                var noUpdateOutcome = requestMode == SubscriptionRequestMode.Automatic
+                    ? SubscriptionRequestOutcome.Deferred
+                    : noUpdateStatus == RequestState.Error
+                        ? SubscriptionRequestOutcome.Failed
+                        : SubscriptionRequestOutcome.Completed;
+
+                return new SubscriptionProcessResult(message, noUpdateOutcome);
             }
 
             LogMessage(item.Id, $"External certificate update detected. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}.");
@@ -210,7 +307,7 @@ namespace Certify.Management
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
                 SetPrimaryRequestStatus(item, null, RequestState.Error, sourceConfig.LastError);
                 await RecordPrimaryRequestFailure(item, sourceConfig.LastError);
-                return new ActionResult(sourceConfig.LastError, false);
+                return new SubscriptionProcessResult(sourceConfig.LastError, SubscriptionRequestOutcome.Failed);
             }
 
             var validationResult = await ValidateExternalCertificateAsset(item, sourceConfig, assetPath);
@@ -220,23 +317,25 @@ namespace Certify.Management
                 LogMessage(item.Id, $"External certificate update rejected: {validationResult.Message}", LogItemType.GeneralError);
                 SetPrimaryRequestStatus(item, null, RequestState.Error, validationResult.Message ?? "External certificate update failed validation.");
                 await RecordPrimaryRequestFailure(item, validationResult.Message ?? "External certificate update failed validation.");
-                return new ActionResult(validationResult.Message, false);
+                return new SubscriptionProcessResult(validationResult.Message, SubscriptionRequestOutcome.Failed);
             }
 
             LogMessage(item.Id, $"External certificate asset validated. Thumbprint: {validationResult.Thumbprint}; valid until {validationResult.DateExpiry:u}; lifetime elapsed: {validationResult.PercentageElapsed}%.");
             SetPrimaryRequestStatus(item, null, RequestState.Success, "External certificate pulled from Management Hub.");
 
-            var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == ExternalSubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update");
+            var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == SubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update");
 
-            if (deploymentResult.IsSuccess && requestMode == ExternalSubscriptionRequestMode.Manual)
+            if (deploymentResult.IsSuccess && requestMode == SubscriptionRequestMode.Manual)
             {
-                return new ActionResult("External certificate pulled from Management Hub and deployment completed.", true);
+                return new SubscriptionProcessResult("External certificate pulled from Management Hub and deployment completed.", SubscriptionRequestOutcome.Completed);
             }
 
-            return deploymentResult;
+            return new SubscriptionProcessResult(
+                deploymentResult.Message,
+                deploymentResult.IsSuccess ? SubscriptionRequestOutcome.Completed : SubscriptionRequestOutcome.Failed);
         }
 
-        private async Task<ActionResult> MarkExternalManagedCertificateUpdateAvailable(string managedCertificateId, string? sourceVersion)
+        private async Task<ActionResult> MarkSubscriptionUpdateAvailable(string managedCertificateId, string? sourceVersion)
         {
             if (string.IsNullOrWhiteSpace(managedCertificateId))
             {
@@ -274,6 +373,30 @@ namespace Certify.Management
             return new ActionResult("External managed certificate update is available.", true);
         }
 
+        /// <summary>
+        /// Resolve the overall state of an external (subscription) certificate request from its outcome. The stored
+        /// status is only ever consulted to recover the specific failure recorded during this request - it can never
+        /// promote a request to success, so a failed request cannot inherit a success left over from a previous run
+        /// </summary>
+        /// <param name="outcome"></param>
+        /// <param name="storedRenewalStatus"></param>
+        /// <returns></returns>
+        internal static RequestState ResolveSubscriptionRequestState(SubscriptionRequestOutcome outcome, RequestState? storedRenewalStatus)
+        {
+            if (outcome == SubscriptionRequestOutcome.Completed)
+            {
+                return RequestState.Success;
+            }
+
+            var recordedFailure = storedRenewalStatus.HasValue && storedRenewalStatus != RequestState.Success
+                ? storedRenewalStatus
+                : null;
+
+            // a deferred request did not attempt anything, so it reports the item's existing state rather than a new
+            // problem; a failed request always reports a problem even when nothing specific was recorded
+            return recordedFailure ?? (outcome == SubscriptionRequestOutcome.Failed ? RequestState.Warning : RequestState.Success);
+        }
+
         private (bool IsWithinWindow, string Reason) GetMaintenanceWindowStatus(ManagedCertificate item)
         {
             var prefs = new RenewalPrefs
@@ -299,25 +422,38 @@ namespace Certify.Management
                    || mode.Equals(ExternalCertificateRetrievalModes.Auto, StringComparison.OrdinalIgnoreCase);
         }
 
-        internal static bool HasPendingExternalCertificateUpdate(ExternalCertificateSubscription? sourceConfig)
-        {
-            return HasPendingExternalSourceUpdate(sourceConfig);
-        }
-
-        internal static bool HasPendingExternalSourceUpdate(ExternalCertificateSubscription? sourceConfig)
+        /// <summary>
+        /// Determine whether the subscription source has notified us of a certificate update which has not yet been applied
+        /// </summary>
+        /// <param name="sourceConfig"></param>
+        /// <returns></returns>
+        internal static bool HasPendingSubscriptionUpdate(ExternalCertificateSubscription? sourceConfig)
         {
             return !string.IsNullOrWhiteSpace(sourceConfig?.PendingSourceVersion);
         }
 
-        internal static bool ShouldProcessExternalManagedCertificate(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, DateTimeOffset? checkDate = null)
+        /// <summary>
+        /// Determine whether a subscription should be processed now. A subscription with no source configuration
+        /// cannot be processed, so callers may pass the item's external source without checking it first
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="checkDate"></param>
+        /// <returns></returns>
+        internal static bool ShouldProcessSubscription(ManagedCertificate item, ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
         {
-            return HasPendingExternalCertificateUpdate(sourceConfig)
+            if (sourceConfig == null)
+            {
+                return false;
+            }
+
+            return HasPendingSubscriptionUpdate(sourceConfig)
                    || ShouldPollSource(item, sourceConfig, checkDate);
         }
 
-        internal static bool ShouldPollSource(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, DateTimeOffset? checkDate = null)
+        internal static bool ShouldPollSource(ManagedCertificate item, ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
         {
-            if (!IsPullModeEnabled(sourceConfig))
+            if (sourceConfig == null || !IsPullModeEnabled(sourceConfig))
             {
                 return false;
             }
@@ -357,7 +493,7 @@ namespace Certify.Management
             return renewalCheck?.IsRenewalDue == true && !renewalCheck.IsRenewalOnHold;
         }
 
-        internal static void ClearExternalManagedCertificateRenewalTrigger(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, bool clearPendingSourceVersion)
+        internal static void ClearSubscriptionRenewalTrigger(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, bool clearPendingSourceVersion)
         {
             item.DateNextScheduledRenewalAttempt = null;
 
@@ -367,7 +503,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<List<StatusMessage>> TestExternalSubscriptionAccess(Certify.Models.Providers.ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null)
+        private async Task<List<StatusMessage>> TestSubscriptionAccess(Certify.Models.Providers.ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null)
         {
             var results = new List<StatusMessage>();
 
@@ -635,14 +771,14 @@ namespace Certify.Management
             return $"{sourceType} item '{sourceItem}'";
         }
 
-        private static string GetExternalActionNoun(ExternalSubscriptionRequestMode requestMode)
+        private static string GetExternalActionNoun(SubscriptionRequestMode requestMode)
         {
-            return requestMode == ExternalSubscriptionRequestMode.Manual ? "request" : "pull";
+            return requestMode == SubscriptionRequestMode.Manual ? "request" : "pull";
         }
 
-        private void LogExternalSubscriptionStart(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, ExternalSubscriptionRequestMode requestMode)
+        private void LogSubscriptionStart(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, SubscriptionRequestMode requestMode)
         {
-            if (requestMode == ExternalSubscriptionRequestMode.Manual)
+            if (requestMode == SubscriptionRequestMode.Manual)
             {
                 LogMessage(item.Id, $"Starting manual external certificate subscription request for {GetExternalSourceLogDescription(sourceConfig)}. Last source version: {FormatSourceVersion(sourceConfig.LastSourceVersion)}.");
 
@@ -880,7 +1016,7 @@ namespace Certify.Management
                 return new ExternalCertificateValidationResult
                 {
                     IsValid = false,
-                    Message = GetExternalSubscriptionPfxLoadErrorMessage()
+                    Message = SubscriptionPfxLoadErrorMessage
                 };
             }
         }
@@ -892,7 +1028,7 @@ namespace Certify.Management
             var metadataApplied = await ApplyExternalCertificateMetadata(item, sourceConfig, assetPath);
             if (!metadataApplied)
             {
-                sourceConfig.LastError = GetExternalSubscriptionPfxLoadErrorMessage();
+                sourceConfig.LastError = SubscriptionPfxLoadErrorMessage;
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
                 SetBindingDeploymentStatus(item, RequestState.Error, sourceConfig.LastError);
                 IncrementManagedCertificateRenewalFailureCount(item);
@@ -904,7 +1040,9 @@ namespace Certify.Management
 
             _serviceLog?.Information("Deploying external certificate update for {name} [{id}] - {reason}", item.Name, item.Id, reason);
 
-            var deployResult = await DeployCertificate(item, progress: null, isPreviewOnly: false, includeDeploymentTasks: true);
+            // deployment tasks are performed by the caller once the overall request outcome is known, so that status
+            // based task triggers are evaluated once using the mode applicable to this request
+            var deployResult = await DeployCertificate(item, progress: null, isPreviewOnly: false, includeDeploymentTasks: false);
 
             if (!deployResult.IsSuccess)
             {
@@ -921,7 +1059,7 @@ namespace Certify.Management
             }
             else
             {
-                ClearExternalManagedCertificateRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
+                ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastSourceVersion = sourceVersion ?? sourceConfig.LastSourceVersion;
                 sourceConfig.LastError = null;
 
@@ -1011,29 +1149,43 @@ namespace Certify.Management
             return identifiers;
         }
 
-        private async Task<CertificateRequestResult> PerformAutomaticExternalManagedCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress)
+        /// <summary>
+        /// Perform an automatic (renewal driven) subscription request, waiting for any scheduled subscription poll to
+        /// finish first so that a fetch and deployment is not run by both at once.
+        /// This gate covers fetch and deployment only - the post-request deployment tasks run after it is released, by
+        /// the caller. The poll skips items with a request in progress, which is what keeps the two paths off the same
+        /// item for the whole request
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="progress"></param>
+        /// <returns></returns>
+        private async Task<CertificateRequestResult> PerformAutomaticSubscriptionRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress)
         {
-            while (Interlocked.CompareExchange(ref _isExternalSubscriptionTaskRunning, 1, 0) != 0)
+            while (Interlocked.CompareExchange(ref _isSubscriptionTaskRunning, 1, 0) != 0)
             {
                 await Task.Delay(1000);
             }
 
             try
             {
-                return await PerformExternalManagedCertificateRequest(managedCertificate, progress, ExternalSubscriptionRequestMode.Automatic);
+                return await PerformSubscriptionRequest(managedCertificate, progress, SubscriptionRequestMode.Automatic);
             }
             finally
             {
-                Interlocked.Exchange(ref _isExternalSubscriptionTaskRunning, 0);
+                Interlocked.Exchange(ref _isSubscriptionTaskRunning, 0);
             }
         }
 
-        private async Task<CertificateRequestResult> PerformExternalManagedCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress)
-        {
-            return await PerformExternalManagedCertificateRequest(managedCertificate, progress, ExternalSubscriptionRequestMode.Manual);
-        }
-
-        private async Task<CertificateRequestResult> PerformExternalManagedCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, ExternalSubscriptionRequestMode requestMode)
+        /// <summary>
+        /// Perform an external (subscription) certificate request. Post-request deployment tasks are not performed here,
+        /// the caller performs them once the overall request outcome is known
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="progress"></param>
+        /// <param name="requestMode"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        private async Task<CertificateRequestResult> PerformSubscriptionRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, SubscriptionRequestMode requestMode, CancellationToken cancellationToken = default)
         {
             var result = new CertificateRequestResult(managedCertificate)
             {
@@ -1044,35 +1196,30 @@ namespace Certify.Management
             ClearPrimaryAndBindingRequestStatus(managedCertificate);
             if (sourceConfig == null)
             {
+                // the misconfiguration is surfaced as an error, but nothing was attempted against a source so the
+                // request is deferred and no deployment tasks apply
                 result.Message = "External subscription is not configured for this managed certificate.";
+                result.IsSubscriptionUpdateDeferred = true;
                 LogMessage(managedCertificate.Id, result.Message, LogItemType.GeneralError);
                 SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, result.Message);
                 ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
                 return result;
             }
 
-            if (requestMode == ExternalSubscriptionRequestMode.Automatic && !ShouldProcessExternalManagedCertificate(managedCertificate, sourceConfig))
-            {
-                result.Message = "External certificate subscription is not due and has no pending certificate update.";
-                return result;
-            }
+            // the not-due and no-pending-update checks are applied by ProcessSubscription, which is the single place
+            // deciding whether a fetch is applicable for this request mode
 
-            var processResult = await ProcessExternalManagedCertificate(managedCertificate, requestMode, CancellationToken.None);
+            var processResult = await ProcessSubscription(managedCertificate, requestMode, cancellationToken);
             var updatedManagedCertificate = await _itemManager.GetById(managedCertificate.Id) ?? managedCertificate;
 
             result.ManagedItem = updatedManagedCertificate;
-            result.IsSuccess = processResult.IsSuccess;
+            result.IsSubscriptionUpdateDeferred = processResult.Outcome == SubscriptionRequestOutcome.Deferred;
             result.Message = processResult.Message;
 
-            var finalState = RequestState.Warning;
-            if (processResult.IsSuccess)
-            {
-                finalState = RequestState.Success;
-            }
-            else if (updatedManagedCertificate.LastRenewalStatus.HasValue)
-            {
-                finalState = updatedManagedCertificate.LastRenewalStatus.Value;
-            }
+            var finalState = ResolveSubscriptionRequestState(processResult.Outcome, updatedManagedCertificate.LastRenewalStatus);
+
+            result.PrimaryRequest = new RequestStageStatus { Status = finalState, Message = result.Message };
+            result.IsSuccess = finalState == RequestState.Success;
 
             ReportProgress(progress, new RequestProgressState(finalState, result.Message, updatedManagedCertificate), logThisEvent: false);
             return result;

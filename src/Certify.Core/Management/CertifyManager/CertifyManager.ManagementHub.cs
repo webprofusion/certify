@@ -1290,13 +1290,13 @@ namespace Certify.Management
                 });
                 val = new ActionResult("External certificate manager cache refresh initiated.", true);
             }
-            else if (arg.CommandType == ManagementHubCommands.PushExternalManagedCertificateUpdate)
+            else if (arg.CommandType == ManagementHubCommands.PushSubscriptionUpdate)
             {
-                var update = JsonSerializer.Deserialize<ExternalManagedCertificateUpdate>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);
+                var update = JsonSerializer.Deserialize<SubscriptionUpdate>(arg.Value ?? "{}", JsonOptions.DefaultJsonSerializerOptions);
 
                 if (!string.IsNullOrWhiteSpace(update?.ManagedCertificateId))
                 {
-                    val = await MarkExternalManagedCertificateUpdateAvailable(update.ManagedCertificateId, update.SourceVersion);
+                    val = await MarkSubscriptionUpdateAvailable(update.ManagedCertificateId, update.SourceVersion);
                 }
                 else
                 {

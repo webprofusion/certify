@@ -247,6 +247,12 @@ namespace Certify.Management
         /// <param name="log">  </param>
         /// <param name="managedCertificate">  </param>
         /// <param name="progress">  </param>
+        /// <param name="resumePaused">  </param>
+        /// <param name="skipRequest">if true, the certificate order itself is not attempted  </param>
+        /// <param name="failOnSkip">  </param>
+        /// <param name="skipTasks">if true, pre-request and post-request deployment tasks are not performed  </param>
+        /// <param name="isInteractive">true when the request was explicitly started by a user rather than by scheduled renewal  </param>
+        /// <param name="reason">  </param>
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(
                 ILog log, ManagedCertificate managedCertificate,
@@ -298,12 +304,10 @@ namespace Certify.Management
 
             // start with a failure result, set to success when succeeding
             var requestResult = new CertificateRequestResult(managedCertificate);
-            var isExternalSubscriptionRequest = false;
 
-            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged && managedCertificate.ExternalSource?.SourceType != null)
-            {
-                isExternalSubscriptionRequest = true;
-            }
+            // routing is decided by what the item is, not by how completely it is configured - an unconfigured
+            // subscription must be skipped, never fall through to ordering its own certificate
+            var isSubscriptionRequest = managedCertificate.IsSubscription;
 
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
             var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
@@ -312,13 +316,13 @@ namespace Certify.Management
             try
             {
 
-                if (managedCertificate.PreRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
+                if (!skipTasks && managedCertificate.PreRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
                     // run pre-request tasks, currently if any of these fail the request will abort
 
                     log.Information($"Performing Pre-Request Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PreRequestTasks, evaluateAgainstPrimaryRequestStatus: false);
+                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PreRequestTasks, forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: false);
 
                     // log results
                     var preRequestTasks = new ActionStep
@@ -350,7 +354,7 @@ namespace Certify.Management
                 }
 
                 // if the script has requested the certificate request to be aborted, skip the request
-                if (!isExternalSubscriptionRequest && !requestResult.Abort)
+                if (!isSubscriptionRequest && !requestResult.Abort)
                 {
 
                     if (!skipRequest && managedCertificate.SkipCertificateRequest != true)
@@ -415,25 +419,23 @@ namespace Certify.Management
                     }
                 }
 
-                if (isExternalSubscriptionRequest)
+                if (isSubscriptionRequest)
                 {
 
-                    if (!string.IsNullOrWhiteSpace(managedCertificate.ExternalSource?.ExternalReference))
+                    if (managedCertificate.IsActionableSubscription)
                     {
                         // interactive requests explicitly fetch the latest external certificate;
                         // non-interactive renewals follow the automatic due/pending checks.
-                        if (isInteractive)
-                        {
-                            requestResult = await PerformExternalManagedCertificateRequest(managedCertificate, progress);
-                        }
-                        else
-                        {
-                            requestResult = await PerformAutomaticExternalManagedCertificateRequest(managedCertificate, progress);
-                        }
+                        requestResult = isInteractive
+                            ? await PerformSubscriptionRequest(managedCertificate, progress, SubscriptionRequestMode.Manual)
+                            : await PerformAutomaticSubscriptionRequest(managedCertificate, progress);
                     }
                     else
                     {
-                        log?.Information($"Certificate request is an external subscription [{managedCertificate.ExternalSource.SourceType}] but is not currently enabled. Request skipped.");
+                        log?.Information($"Certificate request is an external subscription [{managedCertificate.ExternalSource?.SourceType}] but is not currently enabled. Request skipped.");
+
+                        // nothing was attempted for this request, so no deployment or deployment tasks apply
+                        requestResult.IsSubscriptionUpdateDeferred = true;
                     }
                 }
             }
@@ -462,65 +464,24 @@ namespace Certify.Management
             }
             finally
             {
+                // an external subscription request reloads the managed certificate from the store and updates it with the
+                // newly deployed certificate details, so the refreshed copy is used from here on. Using the stale instance
+                // supplied by the caller would run deployment tasks against the previous certificate and would discard the
+                // updated certificate details when the item is stored.
+                if (isSubscriptionRequest && requestResult.ManagedItem != null)
+                {
+                    managedCertificate = requestResult.ManagedItem;
+                }
+
                 requestResult.ManagedItem = managedCertificate;
 
                 // if request is not paused and there are any post-request tasks, evaluate each task trigger now
-                var postRequestTasksRan = false;
+                var tasksRan = await PerformPostRequestTasksIfApplicable(log, managedCertificate, requestResult, skipTasks, currentFailureCount, persistTaskState: isSubscriptionRequest);
 
-                if (!isExternalSubscriptionRequest && managedCertificate.PostRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
+                if (!isSubscriptionRequest)
                 {
-
-                    // run applicable deployment tasks (whether success or failed), powershell
-                    log?.Information($"Performing Post-Request (Deployment) Tasks..");
-
-                    var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks, evaluateAgainstPrimaryRequestStatus: true);
-                    postRequestTasksRan = true;
-
-                    // log results
-                    var postRequestTasks = new ActionStep
-                    {
-                        Category = "Post-Request Tasks",
-                        Key = "PostRequestTasks",
-                        Substeps = new List<ActionStep>(),
-                        HasError = results.Any(r => r.HasError),
-                        HasWarning = results.Any(r => r.HasWarning),
-                    };
-
-                    foreach (var r in results)
-                    {
-                        if (r.HasError || r.HasWarning)
-                        {
-                            log.Error($"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning));
-
-                        }
-                        else
-                        {
-                            log.Information($"{r.Title} :: {r.Description}", (r.HasError || r.HasWarning) ? LogItemType.CertificateRequestAttentionRequired : LogItemType.GeneralInfo);
-
-                        }
-
-                        r.Category = "Post-Request Tasks";
-                        postRequestTasks.Substeps.Add(r);
-
-                    }
-
-                    requestResult.Actions.Add(postRequestTasks);
-
-                    // certificate may already be deployed to some extent so this counts a completed with warnings
-                    if (results.Any(r => r.HasError))
-                    {
-                        requestResult.IsSuccess = false;
-
-                        var msg = GetDeploymentTaskFailureMessage(managedCertificate);
-                        requestResult.Message = msg;
-                        await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
-                    }
-                }
-
-                if (!isExternalSubscriptionRequest)
-                {
-                    var finalState = ResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan);
-                    requestResult.Message = ResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan);
+                    var finalState = ResolveOverallRenewalStatus(managedCertificate, requestResult, tasksRan);
+                    requestResult.Message = ResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, tasksRan);
 
                     requestResult.IsSuccess = finalState == RequestState.Success;
 
@@ -1404,8 +1365,8 @@ namespace Certify.Management
 
         public static bool ShouldUseDefaultPfxPasswordCredential(ManagedCertificate managedCertificate)
         {
-            return !(managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged
-                && !string.IsNullOrWhiteSpace(managedCertificate.ExternalSource?.SourceType));
+            // a subscription takes its PFX from the source, which may use its own password credential
+            return !managedCertificate.IsSubscription;
         }
 
         /// <summary>
@@ -1780,7 +1741,11 @@ namespace Certify.Management
                     // run applicable deployment tasks (whether success or failed), powershell
                     LogMessage(managedCertificate.Id, $"Performing Post-Request (Deployment) Tasks..");
 
-                    var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks, evaluateAgainstPrimaryRequestStatus: true);
+                    // this is an explicit (re)deployment of the certificate we already hold rather than the outcome of a
+                    // certificate request, so there is no primary request status to judge. Tasks are evaluated as if
+                    // the request succeeded: ON_SUCCESS tasks run (they are the deployment being asked for) and
+                    // ON_ERROR tasks do not, because there is no failed request for them to react to
+                    var results = await PerformTaskList(log, isPreviewOnly: isPreviewOnly, skipDeferredTasks: true, result, managedCertificate.PostRequestTasks, forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: false);
 
                     // log results
                     var postRequestTasks = new ActionStep

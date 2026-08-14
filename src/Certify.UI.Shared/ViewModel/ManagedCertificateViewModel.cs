@@ -66,8 +66,9 @@ namespace Certify.UI.ViewModel
 
             RaisePropertyChangedEvent(nameof(StoredPasswords));
             RaisePropertyChangedEvent(nameof(CertificateAuthorities));
-            RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
-            RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+            RaisePropertyChangedEvent(nameof(IsExternalSourceItem));
+            RaisePropertyChangedEvent(nameof(IsSubscription));
+            RaisePropertyChangedEvent(nameof(IsSubscriptionMode));
             RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
             RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
             RaisePropertyChangedEvent(nameof(ExternalSourceTypes));
@@ -633,13 +634,24 @@ namespace Certify.UI.ViewModel
         public bool UseAuthorityTokenListView { get; set; }
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
+        /// <summary>
+        /// True when the selected item takes its certificate from an external source, whether it is externally
+        /// managed (discovered via a certificate manager provider) or a certificate subscription
+        /// </summary>
         [DependsOn(nameof(SelectedItem))]
-        public bool IsExternalManagedCertificateItem => SelectedItem?.ItemType == ManagedCertificateType.SSL_ExternallyManaged;
+        public bool IsExternalSourceItem => SelectedItem?.IsExternalSourceItem == true;
+
+        /// <summary>
+        /// True when the selected item is a certificate subscription, as opposed to an externally managed item
+        /// discovered via a certificate manager provider (which is read-only and never reaches this editor).
+        /// </summary>
+        [DependsOn(nameof(SelectedItem))]
+        public bool IsSubscription => SelectedItem?.IsSubscription == true;
 
         [DependsOn(nameof(SelectedItem))]
-        public bool IsExternalSubscriptionMode
+        public bool IsSubscriptionMode
         {
-            get => IsExternalManagedCertificateItem;
+            get => IsExternalSourceItem;
             set
             {
                 if (SelectedItem == null)
@@ -647,8 +659,14 @@ namespace Certify.UI.ViewModel
                     return;
                 }
 
+                // an item which already takes its certificate from an external source stays as that type
+                if (value && SelectedItem.IsExternalSourceItem)
+                {
+                    return;
+                }
+
                 var targetType = value
-                    ? ManagedCertificateType.SSL_ExternallyManaged
+                    ? ManagedCertificateType.SSL_ExternalSubscription
                     : ManagedCertificateType.SSL_ACME;
 
                 if (SelectedItem.ItemType == targetType)
@@ -666,18 +684,18 @@ namespace Certify.UI.ViewModel
 
                 SelectedItem.IsChanged = true;
 
-                RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
-                RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+                RaisePropertyChangedEvent(nameof(IsExternalSourceItem));
+                RaisePropertyChangedEvent(nameof(IsSubscriptionMode));
                 RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
                 RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
             }
         }
 
         [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
-        public bool ShowStandardIdentifiersEditor => !IsExternalManagedCertificateItem && !UseAuthorityTokenListView;
+        public bool ShowStandardIdentifiersEditor => !IsExternalSourceItem && !UseAuthorityTokenListView;
 
         [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
-        public bool ShowAuthorityTokenEditor => !IsExternalManagedCertificateItem && UseAuthorityTokenListView;
+        public bool ShowAuthorityTokenEditor => !IsExternalSourceItem && UseAuthorityTokenListView;
 
         public IEnumerable<KeyValuePair<string, string>> ExternalSourceTypes => new[]
         {
@@ -794,7 +812,7 @@ namespace Certify.UI.ViewModel
                 return new ValidationResult(false, "No item selected", ValidationErrorCodes.ITEM_NOT_FOUND.ToString());
             }
 
-            if (IsExternalManagedCertificateItem)
+            if (IsExternalSourceItem)
             {
                 return ValidateExternalSource();
             }
@@ -980,7 +998,7 @@ namespace Certify.UI.ViewModel
 
         public void EnsureExternalSourceConfiguration()
         {
-            if (!IsExternalManagedCertificateItem || SelectedItem == null)
+            if (!IsExternalSourceItem || SelectedItem == null)
             {
                 return;
             }

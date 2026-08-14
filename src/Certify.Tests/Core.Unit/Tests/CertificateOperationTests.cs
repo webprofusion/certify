@@ -288,7 +288,8 @@ namespace Certify.Tests.Core.Unit.Tests
                 {
                     Status = RequestState.Success,
                     Message = "Primary request succeeded"
-                }
+                },
+                IsSubscriptionUpdateDeferred = true
             };
 
             target.ApplyChanges(source);
@@ -298,6 +299,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(target.PrimaryRequest, "Primary request status should be copied during ApplyChanges.");
             Assert.AreEqual(RequestState.Success, target.PrimaryRequest.Status, "Primary request status should be cloned rather than aliased.");
             Assert.AreEqual("Primary request succeeded", target.PrimaryRequest.Message, "Primary request message should be cloned rather than aliased.");
+            Assert.IsTrue(target.IsSubscriptionUpdateDeferred, "Subscription deferred flag should be copied during ApplyChanges.");
         }
 
         [TestMethod, Description("Overall renewal status should not treat a current primary request failure as success just because an older certificate still exists")]

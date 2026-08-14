@@ -273,7 +273,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Ensure external subscription update notifications can queue the next renewal batch via DateNextScheduledRenewalAttempt")]
-        public void TestExternalSubscriptionUpdateQueuesNextRenewalBatch()
+        public void TestSubscriptionUpdateQueuesNextRenewalBatch()
         {
             var renewalPeriodDays = 30;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;

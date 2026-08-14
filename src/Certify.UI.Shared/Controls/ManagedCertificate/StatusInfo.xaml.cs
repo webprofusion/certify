@@ -72,8 +72,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                 RenewalPaused.Visibility = Visibility.Collapsed;
             }
 
-            ExternalSyncInfo.Visibility = ItemViewModel.SelectedItem.ItemType == Models.ManagedCertificateType.SSL_ExternallyManaged
-                && ItemViewModel.SelectedItem.ExternalSource != null
+            ExternalSyncInfo.Visibility = ItemViewModel.SelectedItem.IsActionableSubscription
                     ? Visibility.Visible
                     : Visibility.Collapsed;
 
