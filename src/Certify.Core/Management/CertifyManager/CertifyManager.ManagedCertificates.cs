@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
@@ -13,6 +12,7 @@ using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Providers.CertificateManagers;
 using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 
@@ -33,23 +33,20 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> GetManagedCertificate(string id)
         {
-            if (ManagedCertificate.IsExternalItemId(id))
-            {
+            var item = ManagedCertificate.IsExternalItemId(id)
                 // look for item via external managed certificate provider
-                return _externallyManagedCertificatesCache
-                    .FirstOrDefault(i => i.Id == id);
-            }
-            else
-            {
-                var item = await _itemManager.GetById(id);
-                if (item != null)
-                {
-                    item.InstanceId = _serverConfig.HubAssignedInstanceId;
-                    item.DateRetrieved = DateTime.UtcNow;
-                }
+                ? _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id)
+                : await _itemManager.GetById(id);
 
-                return item;
+            if (item != null)
+            {
+                // an externally managed item is not stored by this instance, but callers still need to know which
+                // instance it belongs to (a hub client addresses per item operations such as log retrieval by instance)
+                item.InstanceId = _serverConfig.HubAssignedInstanceId;
+                item.DateRetrieved = DateTime.UtcNow;
             }
+
+            return item;
         }
 
         /// <summary>
@@ -981,149 +978,99 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Fetch log entries for an externally managed item from the certificate manager which owns it. Each
+        /// external tool knows where its own logs are kept and how they are formatted, so the fetch is delegated
+        /// to the provider rather than being resolved from the configured log path alone
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
         private async Task<LogItem[]> GetExternalItemLog(string id, int limit)
         {
-            var externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id) ?? await GetManagedCertificate(id);
+            var externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id);
+
+            if (externalItem == null)
+            {
+                // the item may not be cached yet, e.g. this service has restarted since the item list was fetched
+                await RefreshExternalManagedCertificates();
+                externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id);
+            }
 
             if (externalItem == null || string.IsNullOrWhiteSpace(externalItem.SourceId))
             {
-                return [];
+                _serviceLog?.Warning("External certificate log fetch: managed item {itemId} is not available from any certificate manager on this instance.", id);
+
+                return ExternalLogMessage($"This certificate is no longer available from the certificate manager which reported it, so no log can be fetched.");
+            }
+
+            var provider = GetCertificateManagerProvider(externalItem.SourceId);
+
+            if (provider == null)
+            {
+                _serviceLog?.Warning("External certificate log fetch: certificate manager {providerId} is not available on this instance.", externalItem.SourceId);
+
+                return ExternalLogMessage($"The certificate manager {externalItem.SourceName ?? externalItem.SourceId} is not available on this instance, so no log can be fetched.");
+            }
+
+            try
+            {
+                return await provider.GetItemLog(externalItem, limit);
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, "External certificate log fetch: failed to fetch log for {itemId} from {providerId}", externalItem.Id, externalItem.SourceId);
+
+                return ExternalLogMessage($"Failed to fetch the log from {externalItem.SourceName ?? externalItem.SourceId}: {exp.Message}", "ERR");
+            }
+        }
+
+        /// <summary>
+        /// Create and initialise the certificate manager provider with the given id, using the stored preferences
+        /// for that provider
+        /// </summary>
+        /// <param name="providerId"></param>
+        /// <returns></returns>
+        private ICertificateManager GetCertificateManagerProvider(string providerId)
+        {
+            if (_pluginManager?.CertificateManagerProviders?.Any() != true)
+            {
+                return null;
             }
 
             var prefs = SettingsManager.ToPreferences();
-            var providerPrefs = prefs.CertificateManagers?.FirstOrDefault(c => string.Equals(c.Id, externalItem.SourceId, StringComparison.OrdinalIgnoreCase));
-            var logPath = providerPrefs?.LogPath;
+            var providerPrefs = prefs.CertificateManagers?.FirstOrDefault(c => string.Equals(c.Id, providerId, StringComparison.OrdinalIgnoreCase));
 
-            LogItem[] NoLogsAvailable(string reason)
+            foreach (var p in _pluginManager.CertificateManagerProviders.Where(p => p != null))
             {
-                _serviceLog?.Warning(
-                    "External certificate log fetch: {reason} for provider {providerId}, managed item {itemId} ({itemName}). Path tried: {logPath}.",
-                    reason,
-                    externalItem.SourceId,
-                    externalItem.Id,
-                    externalItem.Name ?? "<unnamed>",
-                    logPath ?? "<none configured>");
-
-                return [];
-            }
-
-            if (string.IsNullOrWhiteSpace(logPath))
-            {
-                return NoLogsAvailable("no log path configured");
-            }
-
-            if (!Directory.Exists(logPath))
-            {
-                return NoLogsAvailable("log path does not exist");
-            }
-
-            var maxLines = limit <= 0 ? 1000 : Math.Min(limit, 1000);
-            List<FileInfo> logFiles;
-
-            try
-            {
-                logFiles = new DirectoryInfo(logPath)
-                    .GetFiles("*.log*", SearchOption.AllDirectories)
-                    .OrderByDescending(f => f.LastWriteTimeUtc)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                return NoLogsAvailable($"failed to enumerate log files ({ex.Message})");
-            }
-
-            if (!logFiles.Any())
-            {
-                return NoLogsAvailable("no log files found");
-            }
-
-            var itemName = externalItem.Name?.Trim();
-            var matchedItems = new List<LogItem>();
-
-            foreach (var file in logFiles)
-            {
-                foreach (var line in ReadLogTailSafe(file.FullName, maxLines))
+                try
                 {
-                    if (string.IsNullOrWhiteSpace(itemName) || line.Contains(itemName, StringComparison.OrdinalIgnoreCase))
-                    {
-                        matchedItems.Add(ParseExternalProviderLogLine(line));
+                    var provider = p.GetProvider(p.GetType(), providerId);
 
-                        if (matchedItems.Count >= maxLines)
-                        {
-                            break;
-                        }
+                    if (provider != null)
+                    {
+                        provider.Init(new LogToILoggerAdapter(_serviceLog), providerPrefs);
+                        return provider;
                     }
                 }
-
-                if (matchedItems.Count >= maxLines)
+                catch (Exception exp)
                 {
-                    break;
+                    _serviceLog?.Error(exp, "Failed to create certificate manager provider {providerId}", providerId);
                 }
             }
 
-            if (!matchedItems.Any())
-            {
-                // no lines could be attributed to this item, so show the most recent provider log activity instead
-                matchedItems.AddRange(ReadLogTailSafe(logFiles.First().FullName, maxLines).Select(ParseExternalProviderLogLine));
-            }
-
-            // lines are gathered newest file first, so order the combined set for display
-            return [.. matchedItems.OrderBy(i => i.EventDate)];
+            return null;
         }
-
-        private IEnumerable<string> ReadLogTailSafe(string filePath, int maxLines)
-        {
-            try
-            {
-                return LogParsing.ReadLogTail(filePath, maxLines);
-            }
-            catch (Exception ex)
-            {
-                _serviceLog?.Warning("External certificate log fetch: could not read log file {logFile}. Error: {error}", filePath, ex.Message);
-                return [];
-            }
-        }
-
-        private static readonly Regex _logLineErrorPattern = new Regex(@"\b(error|err|fatal|fail(ed|ure)?)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        private static readonly Regex _logLineWarningPattern = new Regex(@"\b(warning|warn)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
         /// <summary>
-        /// Present a line from an external certificate manager provider's own log file as a log item.
-        /// Each provider has its own log format, so the level and event date are inferred heuristically and a line
-        /// which merely mentions a failure may be reported at a higher level than the provider intended
+        /// Report why a log could not be fetched as a log entry, so the reason is visible to the user rather than
+        /// appearing as an item with no log history
         /// </summary>
-        /// <param name="line"></param>
+        /// <param name="message"></param>
+        /// <param name="logLevel"></param>
         /// <returns></returns>
-        private static LogItem ParseExternalProviderLogLine(string line)
-        {
-            var message = line?.Trim() ?? string.Empty;
-
-            var logLevel = "INF";
-
-            if (_logLineErrorPattern.IsMatch(message))
-            {
-                logLevel = "ERR";
-            }
-            else if (_logLineWarningPattern.IsMatch(message))
-            {
-                logLevel = "WRN";
-            }
-
-            DateTime? eventDate = null;
-
-            var firstItem = message.Split(',').FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(firstItem) && DateTimeOffset.TryParse(firstItem, out var parsedDate))
-            {
-                eventDate = parsedDate.UtcDateTime;
-            }
-
-            return new LogItem
-            {
-                LogLevel = logLevel,
-                EventDate = eventDate ?? DateTime.UtcNow,
-                Message = message
-            };
-        }
+        private static LogItem[] ExternalLogMessage(string message, string logLevel = "WRN") =>
+            [new LogItem { LogLevel = logLevel, EventDate = DateTime.UtcNow, Message = message }];
 
         /// <summary>
         /// Perform any one-time migrations of legacy managed certificate settings and deployment tasks etc
