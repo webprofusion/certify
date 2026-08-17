@@ -163,7 +163,7 @@ namespace Certify.Models.Hub
 
         public const string ManagedChallengeList = "managedchallenge_list_action";
         public const string ManagedChallengeUpdate = "managedchallenge_update_action";
-        public const string ManagedChallengeDelete = "managedchallenge_update_action";
+        public const string ManagedChallengeDelete = "managedchallenge_delete_action";
         public const string ManagedChallengeRequest = "managedchallenge_request_action";
         public const string ManagedChallengeCleanup = "managedchallenge_cleanup_action";
 
@@ -305,8 +305,6 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.AccessTokenUpdate, "Update Access Token", ResourceTypes.AccessToken),
 
                 new(StandardResourceActions.RoleList, "List Roles", ResourceTypes.Role),
-
-                new(StandardResourceActions.ManagedItemRequest, "Request New Managed Items", ResourceTypes.ManagedItem),
 
                 new(StandardResourceActions.ManagedItemList, "List Managed Items", ResourceTypes.ManagedItem),
                 new(StandardResourceActions.ManagedItemAdd, "Add Managed Items", ResourceTypes.ManagedItem),
@@ -721,7 +719,7 @@ namespace Certify.Models.Hub
     public static class AccessControlConfig
     {
         /// <summary>
-        /// Add/update standard system roles, policies and resource actions
+        /// Add/update standard system roles, policies and resource actions. Items which already match the standard config are left unchanged.
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
@@ -731,31 +729,86 @@ namespace Certify.Models.Hub
 
             var adminSvcPrincipal = "admin_01";
 
-            var actions = Policies.GetStandardResourceActions();
+            // fetch the currently stored config so we only write items which are new or have changed, otherwise every startup rewrites (and audit logs) the entire standard config
+
+            var storedActions = await access.GetResourceActions(adminSvcPrincipal) ?? [];
+            var storedPolicies = await access.GetResourcePolicies(adminSvcPrincipal) ?? [];
+            var storedRoles = await access.GetRoles(adminSvcPrincipal) ?? [];
+
+            var actions = DistinctById(Policies.GetStandardResourceActions());
 
             foreach (var action in actions)
             {
-                await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
+                if (!IsResourceActionUnchanged(storedActions.FirstOrDefault(a => a.Id == action.Id), action))
+                {
+                    await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
+                }
             }
 
             // setup policies with actions
 
-            var policies = Policies.GetStandardPolicies();
+            var policies = DistinctById(Policies.GetStandardPolicies());
 
             // add policies to store
             foreach (var r in policies)
             {
-                _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                if (!IsResourcePolicyUnchanged(storedPolicies.FirstOrDefault(p => p.Id == r.Id), r))
+                {
+                    _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                }
             }
 
             // setup roles with policies
-            var roles = Policies.GetStandardRoles();
+            var roles = DistinctById(Policies.GetStandardRoles());
 
             foreach (var r in roles)
             {
-                // add roles and policy assignments to store
-                await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                if (!IsRoleUnchanged(storedRoles.FirstOrDefault(role => role.Id == r.Id), r))
+                {
+                    // add roles and policy assignments to store
+                    await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                }
             }
+        }
+
+        /// <summary>
+        /// The standard config can currently declare more than one item with the same id (duplicate or aliased ids). When written to the store the
+        /// last declaration wins, so use the same rule here to give a single definition per id and keep the config check idempotent.
+        /// </summary>
+        private static List<T> DistinctById<T>(List<T> items) where T : ConfigurationStoreItem
+        {
+            return items.GroupBy(i => i.Id).Select(g => g.Last()).ToList();
+        }
+
+        /// <summary>
+        /// Compare the common stored item properties of an existing stored item against the standard config version of the same item.
+        /// ItemType is not compared as it is a storage level discriminator rather than part of the standard config definition.
+        /// </summary>
+        private static bool IsStoredItemUnchanged(ConfigurationStoreItem? existing, ConfigurationStoreItem standard)
+        {
+            return existing != null
+                && existing.Title == standard.Title
+                && existing.Description == standard.Description;
+        }
+
+        private static bool IsResourceActionUnchanged(ResourceAction? existing, ResourceAction standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && existing!.ResourceType == standard.ResourceType;
+        }
+
+        private static bool IsResourcePolicyUnchanged(ResourcePolicy? existing, ResourcePolicy standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && existing!.SecurityPermissionType == standard.SecurityPermissionType
+                && existing.IsResourceSpecific == standard.IsResourceSpecific
+                && (existing.ResourceActions ?? []).SequenceEqual(standard.ResourceActions ?? []);
+        }
+
+        private static bool IsRoleUnchanged(Role? existing, Role standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && (existing!.Policies ?? []).SequenceEqual(standard.Policies ?? []);
         }
 
         public static async Task ConfigureStandardUsersAndRoles(IAccessControl access, ICredentialsManager creds)
