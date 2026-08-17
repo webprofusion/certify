@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -1050,7 +1050,7 @@ namespace Certify.Management
             }
             else if (arg.CommandType == ManagementHubCommands.GetSystemStatusItems)
             {
-                val = _systemStatusItems;
+                val = GetSystemStatusItems();
             }
             else if (arg.CommandType == ManagementHubCommands.GetDataStoreProviders)
             {

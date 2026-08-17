@@ -17,6 +17,19 @@ namespace Certify.Core.Management.Access
         /// </summary>
         /// <returns></returns>
         Task<List<Role>> GetRoles(string contextUserId);
+
+        /// <summary>
+        /// Get the list of stored resource policies
+        /// </summary>
+        /// <returns></returns>
+        Task<List<ResourcePolicy>> GetResourcePolicies(string contextUserId);
+
+        /// <summary>
+        /// Get the list of stored resource actions
+        /// </summary>
+        /// <returns></returns>
+        Task<List<ResourceAction>> GetResourceActions(string contextUserId);
+
         Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check);
         Task<Models.Config.ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
 

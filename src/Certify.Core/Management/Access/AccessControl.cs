@@ -63,6 +63,16 @@ namespace Certify.Core.Management.Access
             return await _store.GetItems<Role>(nameof(Role));
         }
 
+        public async Task<List<ResourcePolicy>> GetResourcePolicies(string contextUserId)
+        {
+            return await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
+        }
+
+        public async Task<List<ResourceAction>> GetResourceActions(string contextUserId)
+        {
+            return await _store.GetItems<ResourceAction>(nameof(ResourceAction));
+        }
+
         public async Task<List<SecurityPrincipal>> GetSecurityPrincipals(string contextUserId, bool includePassword = false)
         {
             var results = await _store.GetItems<SecurityPrincipal>(nameof(SecurityPrincipal));
