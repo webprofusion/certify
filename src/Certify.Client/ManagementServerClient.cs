@@ -50,8 +50,13 @@ namespace Certify.Client
             return true;
         }
 
-        public async Task ConnectAsync(string hubConnectionAuthToken)
+        public async Task ConnectAsync(Func<CancellationToken, Task<string>> hubConnectionTokenFactory)
         {
+            if (hubConnectionTokenFactory == null)
+            {
+                throw new ArgumentNullException(nameof(hubConnectionTokenFactory));
+            }
+
             await _connectionSync.WaitAsync();
 
             try
@@ -62,6 +67,9 @@ namespace Certify.Client
                 {
                     return;
                 }
+
+                // discard any previous connection (e.g. one closed by the hub) before replacing it
+                await DisposeCurrentConnection();
 
                 var allowUntrusted = true;
 
@@ -85,7 +93,10 @@ namespace Certify.Client
                     };
 
                     opts.UseStatefulReconnect = true;
-                    opts.AccessTokenProvider = () => Task.FromResult(hubConnectionAuthToken ?? "");
+
+                    // called for each connect and reconnect attempt, so an expired token is replaced with a fresh one
+                    // rather than the same stale token being presented until the hub rejects the connection
+                    opts.AccessTokenProvider = async () => await hubConnectionTokenFactory(CancellationToken.None) ?? "";
 
                 })
                 .WithAutomaticReconnect()
@@ -117,7 +128,17 @@ namespace Certify.Client
                     OnConnectionClosed?.Invoke();
                 };
 
-                await connection.StartAsync();
+                try
+                {
+                    await connection.StartAsync();
+                }
+                catch
+                {
+                    // the handshake can fail (e.g. an unauthorized token is rejected with a 401), don't leak the unusable connection
+                    await connection.DisposeAsync();
+                    throw;
+                }
+
                 _connection = connection;
             }
             finally
@@ -132,10 +153,7 @@ namespace Certify.Client
 
             try
             {
-                if (_connection != null)
-                {
-                    await _connection.StopAsync();
-                }
+                await DisposeCurrentConnection();
             }
             finally
             {
@@ -143,9 +161,38 @@ namespace Certify.Client
             }
         }
 
+        /// <summary>
+        /// Stop and dispose the current connection, if any. Caller must hold <see cref="_connectionSync"/>.
+        /// </summary>
+        private async Task DisposeCurrentConnection()
+        {
+            var connection = _connection;
+
+            if (connection == null)
+            {
+                return;
+            }
+
+            // clear the field first so in-flight command handlers see there is no usable connection rather than a disposed one
+            _connection = null;
+
+            try
+            {
+                await connection.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                Log($"[ManagementServerClient] Error stopping hub connection: {ex.Message}");
+            }
+            finally
+            {
+                await connection.DisposeAsync();
+            }
+        }
+
         private async Task PerformRequestedCommand(InstanceCommandRequest cmd)
         {
-            if (_connection.State != HubConnectionState.Connected)
+            if (_connection?.State != HubConnectionState.Connected)
             {
                 Log($"[ManagementServerClient.PerformRequestedCommand] Not Connected [{_connection?.State}], cannot send command. {cmd.CommandId} {cmd.CommandType}");
                 return;
@@ -153,8 +200,6 @@ namespace Certify.Client
 
             try
             {
-                Log($"[ManagementServerClient.PerformRequestedCommand] Got command from management server {cmd.CommandId} {cmd.CommandType}");
-
                 var resultTask = OnGetCommandResult?.Invoke(cmd);
 
                 if (resultTask == null)
@@ -180,7 +225,15 @@ namespace Certify.Client
                 result.CommandType = cmd.CommandType;
                 result.CommandId = cmd.CommandId;
 
-                await _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                // the handler itself may have torn down the connection (e.g. a re-authentication command), so re-check before replying
+                var connection = _connection;
+                if (connection?.State != HubConnectionState.Connected)
+                {
+                    Log($"[ManagementServerClient.PerformRequestedCommand] Connection no longer active [{connection?.State}], dropping result for {cmd.CommandId} {cmd.CommandType}");
+                    return;
+                }
+
+                await connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
             catch (Exception ex)
             {
@@ -197,9 +250,11 @@ namespace Certify.Client
         {
             try
             {
-                if (_connection?.State != HubConnectionState.Connected)
+                var connection = _connection;
+
+                if (connection?.State != HubConnectionState.Connected)
                 {
-                    Log($"[ManagementServerClient] Cannot send instance info - not connected (State: {_connection?.State})");
+                    Log($"[ManagementServerClient] Cannot send instance info - not connected (State: {connection?.State})");
                     return;
                 }
 
@@ -213,7 +268,7 @@ namespace Certify.Client
                 };
 
                 result.ObjectValue = _instanceInfo;
-                _ = _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                _ = connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
             catch (Exception ex)
             {
@@ -229,9 +284,11 @@ namespace Certify.Client
         {
             try
             {
-                if (_connection?.State != HubConnectionState.Connected)
+                var connection = _connection;
+
+                if (connection?.State != HubConnectionState.Connected)
                 {
-                    Log($"[ManagementServerClient] Cannot send notification - not connected (State: {_connection?.State})");
+                    Log($"[ManagementServerClient] Cannot send notification - not connected (State: {connection?.State})");
                     return;
                 }
 
@@ -246,7 +303,7 @@ namespace Certify.Client
                 };
 
                 result.ObjectValue = updateMsg;
-                _ = _connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
+                _ = connection.SendAsync(ManagementHubMessages.ReceiveCommandResult, result);
             }
             catch (Exception ex)
             {

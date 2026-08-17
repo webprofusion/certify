@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -198,7 +198,8 @@ namespace Certify.Management
 
                 try
                 {
-                    await EnsureMgmtHubConnection(hubConnectionAuthToken);
+                    // explicit join, wait for any in-progress connection check to complete rather than skipping
+                    await EnsureMgmtHubConnection(hubConnectionAuthToken, skipIfCheckInProgress: false);
                 }
                 catch
                 {
@@ -427,14 +428,125 @@ namespace Certify.Management
 
         private JsonWebTokenHandler _joiningTokenHandler = new JsonWebTokenHandler();
 
+        private readonly SemaphoreSlim _hubConnectionCheckSync = new SemaphoreSlim(1, 1);
+
+        private readonly SemaphoreSlim _hubTokenSync = new SemaphoreSlim(1, 1);
+
+        private string? _cachedHubConnectionToken;
+        private DateTimeOffset _cachedHubConnectionTokenExpiry = DateTimeOffset.MinValue;
+
+        /// <summary>
+        /// The management hub API url currently in use, resolved from either environment config or stored service config.
+        /// </summary>
+        private string? _resolvedMgmtHubApi;
+
+        /// <summary>
+        /// Cache a hub connection token along with its expiry, so it can be reused until it is close to expiring.
+        /// </summary>
+        private void StoreHubConnectionToken(string? token)
+        {
+            _cachedHubConnectionToken = token;
+            _cachedHubConnectionTokenExpiry = DateTimeOffset.MinValue;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return;
+            }
+
+            try
+            {
+                var validTo = _joiningTokenHandler.ReadJsonWebToken(token).ValidTo;
+                _cachedHubConnectionTokenExpiry = new DateTimeOffset(DateTime.SpecifyKind(validTo, DateTimeKind.Utc));
+            }
+            catch (Exception ex)
+            {
+                // if the expiry can't be read the token is treated as already expired, so the next connection attempt acquires a fresh one
+                _serviceLog.Debug("Could not read expiry from management hub connection token: {message}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Provides a currently valid hub connection auth token, acquiring a new one when the cached token is missing or near expiry.
+        /// This is invoked by the SignalR client for every connect and reconnect attempt.
+        /// </summary>
+        private async Task<string> GetHubConnectionTokenAsync(CancellationToken cancellationToken)
+        {
+            await _hubTokenSync.WaitAsync(cancellationToken);
+
+            try
+            {
+                // reuse the current token while it has enough life left for a connection attempt to complete
+                if (!string.IsNullOrWhiteSpace(_cachedHubConnectionToken)
+                    && _cachedHubConnectionTokenExpiry > DateTimeOffset.UtcNow.AddMinutes(5))
+                {
+                    return _cachedHubConnectionToken!;
+                }
+
+                var api = !string.IsNullOrWhiteSpace(_resolvedMgmtHubApi) ? _resolvedMgmtHubApi : _serverConfig.ManagementServerHubAPI;
+
+                if (string.IsNullOrWhiteSpace(api) || _mgmtHubJoiningSecret == null)
+                {
+                    _serviceLog.Warning("Cannot acquire a management hub connection token: hub API url or joining key is not available.");
+                    return string.Empty;
+                }
+
+                var check = await CheckManagementHubCredentials(api, _mgmtHubJoiningSecret);
+
+                if (!check.IsSuccess || string.IsNullOrWhiteSpace(check.Result?.JoiningToken))
+                {
+                    // returning empty fails the handshake, the reconnect policy and the scheduled connection check will retry
+                    _serviceLog.Warning("Could not refresh the management hub connection token: {message}", check.Message);
+                    StoreHubConnectionToken(null);
+                    return string.Empty;
+                }
+
+                StoreHubConnectionToken(check.Result.JoiningToken);
+
+                await StoreManagementHubRequestAuthSecret(check.Result.RequestAuthSecret);
+
+                return _cachedHubConnectionToken!;
+            }
+            catch (Exception ex)
+            {
+                _serviceLog.Error(ex, "Unhandled exception while acquiring a management hub connection token.");
+                return string.Empty;
+            }
+            finally
+            {
+                _hubTokenSync.Release();
+            }
+        }
+
         /// <summary>
         /// Ensures there is a current connection to the management hub, reconnecting if necessary. Sends a heartbeat message to the hub if already connected.
         /// </summary>
+        /// <param name="hubConnectionAuthToken">Optional pre-acquired joining token to connect with.</param>
+        /// <param name="skipIfCheckInProgress">If true (the default, used by the scheduled checks) this attempt is skipped when another check is already running, otherwise it waits for the in-progress check to complete first.</param>
         /// <returns></returns>
-        private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null)
+        private async Task EnsureMgmtHubConnection(string? hubConnectionAuthToken = null, bool skipIfCheckInProgress = true)
         {
+            // only one connection check should run at a time, otherwise overlapping checks each perform their own hub join check and each report the same connection status
+            if (skipIfCheckInProgress)
+            {
+                if (!await _hubConnectionCheckSync.WaitAsync(0))
+                {
+                    _serviceLog?.Debug("EnsureMgmtHubConnection: a hub connection check is already in progress, skipping this attempt.");
+                    return;
+                }
+            }
+            else
+            {
+                await _hubConnectionCheckSync.WaitAsync();
+            }
+
             try
             {
+                // an explicit join passes a token it has just acquired, reuse it rather than immediately acquiring another
+                if (!string.IsNullOrWhiteSpace(hubConnectionAuthToken))
+                {
+                    StoreHubConnectionToken(hubConnectionAuthToken);
+                }
+
                 // connect/reconnect to management hub if enabled (either connection not established or our joining token is null/expired)
                 if (_managementServerClient?.IsConnected() != true)
                 {
@@ -469,6 +581,9 @@ namespace Certify.Management
                             endpoint = _serverConfig.ManagementServerHubEndpoint.Trim('/');
                             mgmtHubUri = $"{api}/{endpoint}";
                         }
+
+                        // remember the resolved API url so the token factory can re-acquire tokens for the same hub
+                        _resolvedMgmtHubApi = api;
 
                         // if hub url has resolved to "/", remove trailing slash and continue with empty string
                         mgmtHubUri = mgmtHubUri?.TrimEnd('/');
@@ -536,7 +651,7 @@ namespace Certify.Management
 
                             if (check.IsSuccess)
                             {
-                                hubConnectionAuthToken = check.Result.JoiningToken;
+                                StoreHubConnectionToken(check.Result.JoiningToken);
 
                                 await StoreManagementHubRequestAuthSecret(check.Result.RequestAuthSecret);
 
@@ -595,7 +710,7 @@ namespace Certify.Management
 
                     if (!string.IsNullOrWhiteSpace(mgmtHubUri))
                     {
-                        await StartManagementHubConnection(mgmtHubUri, hubConnectionAuthToken);
+                        await StartManagementHubConnection(mgmtHubUri);
                     }
                 }
                 else
@@ -608,6 +723,10 @@ namespace Certify.Management
             catch (Exception ex)
             {
                 _serviceLog?.Error(ex, "EnsureMgmtHubConnection: unhandled exception while establishing/maintaining the management hub connection. Will retry on next scheduled check.");
+            }
+            finally
+            {
+                _hubConnectionCheckSync.Release();
             }
         }
 
@@ -661,9 +780,13 @@ namespace Certify.Management
             };
         }
 
-        private async Task StartManagementHubConnection(string hubUri, string hubConnectionAuthToken)
+        private async Task StartManagementHubConnection(string hubUri)
         {
-            if (string.IsNullOrWhiteSpace(hubConnectionAuthToken))
+            // fail fast if a token can't be acquired at all, otherwise the connection is made with the factory
+            // so that each subsequent reconnect attempt presents a currently valid token
+            var initialToken = await GetHubConnectionTokenAsync(CancellationToken.None);
+
+            if (string.IsNullOrWhiteSpace(initialToken))
             {
                 _serviceLog.Error("No hub connection auth token available, cannot connect to management hub.");
                 return;
@@ -679,7 +802,7 @@ namespace Certify.Management
                 if (!_managementServerClient.IsConnected())
                 {
                     _serviceLog.Information("Hub not connected, attempting connection. {hubUri}", hubUri);
-                    await _managementServerClient.ConnectAsync(hubConnectionAuthToken);
+                    await _managementServerClient.ConnectAsync(GetHubConnectionTokenAsync);
                 }
 
                 // if connected now, update status
@@ -704,7 +827,7 @@ namespace Certify.Management
                     _managementServerClient.OnConnectionReconnected += _managementServerClient_OnConnectionReconnected;
                     _managementServerClient.OnConnectionClosed += _managementServerClient_OnConnectionClosed;
 
-                    await _managementServerClient.ConnectAsync(hubConnectionAuthToken);
+                    await _managementServerClient.ConnectAsync(GetHubConnectionTokenAsync);
 
                     if (_managementServerClient.IsConnected())
                     {
@@ -1245,6 +1368,10 @@ namespace Certify.Management
             else if (arg.CommandType == ManagementHubCommands.NotificationAuthenticationRequired)
             {
                 _serviceLog.Information("Hub has requested that this instance re-authenticate");
+
+                // discard the cached token so the next connection attempt acquires a new one
+                StoreHubConnectionToken(null);
+
                 await _managementServerClient.Disconnect();
             }
             else if (arg.CommandType == ManagementHubCommands.Reconnect)
