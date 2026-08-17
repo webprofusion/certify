@@ -119,5 +119,23 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsNotNull(subscription.ExternalSource, "A certificate subscription keeps its external source configuration.");
         }
+
+        [TestMethod, Description("Editor defaults are not user configuration, so switching an unconfigured subscription off discards nothing")]
+        public void SubscriptionUserConfigurationIsOnlyUserSuppliedSettings()
+        {
+            var defaults = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PollIntervalMinutes = 30
+            };
+
+            Assert.IsFalse(defaults.HasUserConfiguration, "Editor defaults alone are not user configuration.");
+
+            Assert.IsTrue(new ExternalCertificateSubscription { ExternalReference = "instance/cert" }.HasUserConfiguration);
+            Assert.IsTrue(new ExternalCertificateSubscription { SourceConnection = "https://hub.example.com" }.HasUserConfiguration);
+            Assert.IsTrue(new ExternalCertificateSubscription { CredentialKey = "cred-key" }.HasUserConfiguration);
+            Assert.IsTrue(new ExternalCertificateSubscription { SourceItemName = "www.example.com" }.HasUserConfiguration);
+        }
     }
 }

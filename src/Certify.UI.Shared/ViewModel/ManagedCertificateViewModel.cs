@@ -674,12 +674,27 @@ namespace Certify.UI.ViewModel
                     return;
                 }
 
+                // turning the subscription off discards its configuration, so check with the user first
+                if (!value && SelectedItem.ExternalSource?.HasUserConfiguration == true && !ConfirmDiscardSubscriptionConfig())
+                {
+                    // re-notify once the binding has finished applying the rejected value, so the toggle returns to its previous state
+                    Application.Current?.Dispatcher?.BeginInvoke(new Action(() => RaisePropertyChangedEvent(nameof(IsSubscriptionMode))));
+                    return;
+                }
+
                 SelectedItem.ItemType = targetType;
 
                 if (value)
                 {
                     EnsureExternalSourceConfiguration();
                     UseAuthorityTokenListView = false;
+                }
+                else
+                {
+                    SelectedItem.ExternalSource = null;
+                    SelectedSubscribableCertificate = null;
+                    ClearSubscribableManagedCertificates();
+                    RaisePropertyChangedEvent(nameof(SelectedSubscribableCertificate));
                 }
 
                 SelectedItem.IsChanged = true;
@@ -724,6 +739,20 @@ namespace Certify.UI.ViewModel
             {
                 return new ManagedCertificateViewModel();
             }
+        }
+
+        /// <summary>
+        /// Ask the user to confirm that the configuration for the current certificate subscription can be discarded,
+        /// as it is not retained when the item is no longer a subscription
+        /// </summary>
+        /// <returns>true if the user chose to continue</returns>
+        private static bool ConfirmDiscardSubscriptionConfig()
+        {
+            return MessageBox.Show(
+                "Disabling Certificate Subscription will discard this item's subscription configuration (source, source certificate and credentials). Continue?",
+                "Discard Subscription Configuration?",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Warning) == MessageBoxResult.OK;
         }
 
         public async Task<bool> ConfirmDiscardUnsavedChanges()

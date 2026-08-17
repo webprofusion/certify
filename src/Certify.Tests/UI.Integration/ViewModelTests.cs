@@ -308,5 +308,27 @@ namespace Certify.Tests.UI.Integration
 
             Assert.IsNull(item.ExternalSource);
         }
+
+        [TestMethod]
+        public void DisablingSubscriptionModeDiscardsUnconfiguredExternalSource()
+        {
+            var model = new ManagedCertificateViewModel
+            {
+                SelectedItem = new ManagedCertificate
+                {
+                    ItemType = ManagedCertificateType.SSL_ExternalSubscription
+                }
+            };
+
+            model.EnsureExternalSourceConfiguration();
+
+            // an unconfigured subscription has nothing the user would miss, so switching it off does not prompt
+            Assert.IsFalse(model.SelectedItem.ExternalSource.HasUserConfiguration);
+
+            model.IsSubscriptionMode = false;
+
+            Assert.AreEqual(ManagedCertificateType.SSL_ACME, model.SelectedItem.ItemType);
+            Assert.IsNull(model.SelectedItem.ExternalSource, "Subscription configuration is discarded when subscription mode is disabled.");
+        }
     }
 }
