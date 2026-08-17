@@ -65,6 +65,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [RFC2136](https://poshac.me/docs/latest/Plugins/RFC2136),
             [Selectel](https://poshac.me/docs/latest/Plugins/Selectel),
             [Simply](https://poshac.me/docs/latest/Plugins/Simply),
+            [Spaceship](https://poshac.me/docs/latest/Plugins/Spaceship),
             [Technitium](https://poshac.me/docs/latest/Plugins/Technitium),
             [TencentDNS](https://poshac.me/docs/latest/Plugins/TencentDNS),
             [TotalUptime](https://poshac.me/docs/latest/Plugins/TotalUptime),
@@ -1142,6 +1143,26 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=SimplyCom",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.Spaceship",
+                Title = "Spaceship DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Spaceship/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    // SpaceshipCredential is a PS Credential constructed from SpaceshipAPIKey and SpaceshipAPISecret
+                    new() { Key = "SpaceshipAPIKey", Name = "API Key", IsRequired = true, IsCredential = true },
+                    new() { Key = "SpaceshipAPISecret", Name = "API Secret", IsRequired = true, IsCredential = true, IsPassword = true },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Spaceship;Credential=SpaceshipCredential,SpaceshipAPIKey,SpaceshipAPISecret;",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
 
