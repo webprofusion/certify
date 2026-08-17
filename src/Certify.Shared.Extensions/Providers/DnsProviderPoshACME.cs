@@ -576,6 +576,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 ProviderParameters =
                 [
                     new() { Key = "GCKeyFile", Name = "Key File Path", IsRequired = true, Description = "Full path to JSON account file", IsCredential = false },
+                    new() { Key = "GCProjectId", Name = "Project IDs", IsRequired = false, Description = "Optional. Comma separated list of Project IDs to search for DNS zones. Defaults to the project in the key file. Include the key file project as well as any others you need.", IsCredential = false },
                     _defaultPropagationDelayParam
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
