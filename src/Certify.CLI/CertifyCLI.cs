@@ -16,9 +16,22 @@ namespace Certify.CLI
         private Preferences _prefs = new();
         private ILicensingManager _licensingManager = new LicensingManager();
 
-        public CertifyCLI()
+        public CertifyCLI(bool useNamedPipe = false)
         {
-            _certifyClient = new CertifyServiceClient(new SharedUtils.ServiceConfigManager());
+            var configManager = new SharedUtils.ServiceConfigManager();
+
+            Shared.ServerConnection connection = null;
+
+            if (useNamedPipe)
+            {
+                connection = new Shared.ServerConnection(configManager.GetServiceConfig())
+                {
+                    DisplayName = "(local named pipe)",
+                    Mode = Shared.NamedPipeConnection.ConnectionMode
+                };
+            }
+
+            _certifyClient = new CertifyServiceClient(configManager, connection);
         }
 
         public async Task<bool> IsServiceAvailable()
@@ -105,6 +118,7 @@ namespace Certify.CLI
         {
             Console.ForegroundColor = ConsoleColor.White;
             System.Console.WriteLine("Usage: certify <command> \n");
+            System.Console.WriteLine("--pipe : connect to the local service over a named pipe instead of http (can also be set via CERTIFY_CLIENT_MODE=namedpipe)");
             System.Console.WriteLine("certify renew : renew certificates for all auto renewed managed sites");
             System.Console.WriteLine("certify deploy \"<managedcert id>\" \"<task id>\" : run a specific deployment task for the given managed certificate");
             System.Console.WriteLine("certify list : list managed certificates");

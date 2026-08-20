@@ -20,6 +20,24 @@ namespace Certify.Shared
         public DateTime? DateLastConnected { get; set; }
 
         public string? Mode { get; set; } = "direct";
+
+        /// <summary>
+        /// True when this connection uses the local named pipe transport instead of TCP. Backed by
+        /// <see cref="Mode"/> so the saved connection format is unchanged.
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        public bool UseNamedPipe
+        {
+            get => Mode == NamedPipeConnection.ConnectionMode;
+            set => Mode = value ? NamedPipeConnection.ConnectionMode : "direct";
+        }
+
+        /// <summary>
+        /// Short description of the endpoint this connection uses, for display in connection lists
+        /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
+        public string EndpointDescription => UseNamedPipe ? "named pipe (local)" : $"{Host}:{Port}";
+
         public string? Authentication { get; set; } = "default";
         public string? ServerMode { get; set; } = "v1";
         public bool IsDefault { get; set; }

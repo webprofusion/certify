@@ -16,6 +16,7 @@ namespace Certify.Server.Core
     public class Startup
     {
         private const string ServiceAuthScheme = "ServiceAuthScheme";
+        private const string NamedPipeAuthScheme = Certify.Shared.NamedPipeConnection.AuthScheme;
         private const string CertifyServiceAuthPolicy = "CertifyServiceAuth";
         private const string ApiDocTitle = "Certify Agent Service Internal API";
         private const string ApiDocVersion = "v1";
@@ -184,6 +185,7 @@ namespace Certify.Server.Core
         {
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme)
                     .AddScheme<ServiceAuthSchemeOptions, ServiceAuthSchemeHandler>(ServiceAuthScheme, opts => { })
+                    .AddScheme<NamedPipeAuthSchemeOptions, NamedPipeAuthSchemeHandler>(NamedPipeAuthScheme, opts => { })
                     .AddNegotiate();
         }
 
@@ -195,6 +197,11 @@ namespace Certify.Server.Core
             {
                 options.AddPolicy(CertifyServiceAuthPolicy, policy =>
                 {
+                    // callers on the local named pipe are identified by the pipe itself. This scheme
+                    // returns no result for TCP connections, so those still fall through to the
+                    // schemes below.
+                    policy.AddAuthenticationSchemes(NamedPipeAuthScheme);
+
                     if (windowsAuthRequired)
                     {
                         policy.AddAuthenticationSchemes(NegotiateDefaults.AuthenticationScheme);

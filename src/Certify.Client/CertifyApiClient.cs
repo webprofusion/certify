@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipes;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +11,7 @@ using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Providers;
 using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
@@ -40,7 +40,7 @@ namespace Certify.Client
 
     public class HttpRetryMessageHandler : DelegatingHandler
     {
-        public HttpRetryMessageHandler(HttpClientHandler handler) : base(handler) { }
+        public HttpRetryMessageHandler(HttpMessageHandler handler) : base(handler) { }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -79,15 +79,22 @@ namespace Certify.Client
         internal string _accessToken { get; set; } = "";
         internal string _refreshToken { get; set; } = "";
 
+        /// <summary>
+        /// True when this client talks to the service over the local named pipe instead of TCP
+        /// </summary>
+        internal bool IsNamedPipeMode => _connectionConfig?.Mode == Shared.NamedPipeConnection.ConnectionMode;
+
         public CertifyApiClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection connectionConfig = null)
         {
             _configProvider = configProvider;
 
             _connectionConfig = connectionConfig ?? new ServerConnection(configProvider.GetServiceConfig());
 
-            if (_connectionConfig.Mode == "namedpipe")
+            if (IsNamedPipeMode)
             {
-                _baseUri = $"http://localhost/{_apiRoutePrefix}";
+                // the pipe itself determines the endpoint, the host is only present so we can form
+                // a valid absolute uri
+                _baseUri = $"{Shared.NamedPipeConnection.RequestHost}{_apiRoutePrefix}";
             }
             else
             {
@@ -106,6 +113,27 @@ namespace Certify.Client
                 _client = null;
             }
 
+            // named pipe mode has to be resolved before the auth modes below, the pipe carries the
+            // caller identity itself so the http level auth settings do not apply to it
+            if (IsNamedPipeMode)
+            {
+                if (!NamedPipeTransport.IsSupported)
+                {
+                    throw new PlatformNotSupportedException("This build cannot use a named pipe connection to the Certify service, use a direct (TCP) connection instead.");
+                }
+
+                // retry as per the TCP path, so a service restart does not immediately fail the call
+                _client = new HttpClient(new HttpRetryMessageHandler(NamedPipeTransport.CreateHandler(Shared.NamedPipeConnection.GetPipeName())))
+                {
+                    BaseAddress = new Uri(Shared.NamedPipeConnection.RequestHost)
+                };
+
+                _client.DefaultRequestHeaders.Add("User-Agent", "Certify/App");
+                _client.Timeout = new TimeSpan(0, 20, 0); // 20 min timeout on service api calls
+
+                return;
+            }
+
             var _httpClientHandler = new HttpClientHandler();
 
             if (_connectionConfig.UseHTTPS && _connectionConfig.AllowUntrusted)
@@ -122,37 +150,6 @@ namespace Certify.Client
 
                 _client = new HttpClient(new HttpRetryMessageHandler(_httpClientHandler));
             }
-#if NET8_0_OR_GREATER
-            else if (_connectionConfig.Mode == "namedpipe")
-            {
-                // https://andrewlock.net/using-named-pipes-with-aspnetcore-and-httpclient/
-
-                var httpHandler = new System.Net.Http.SocketsHttpHandler
-                {
-                    // Called to open a new connection
-                    ConnectCallback = async (ctx, ct) =>
-                    {
-                        // Configure the named pipe stream
-                        var pipeClientStream = new NamedPipeClientStream(
-                            serverName: ".", // this machine
-                            pipeName: "certify-server",
-                            PipeDirection.InOut, // duplex stream 
-                            PipeOptions.Asynchronous); // async
-
-                        // Connect to the server!
-                        await pipeClientStream.ConnectAsync(ct);
-
-                        return pipeClientStream;
-                    }
-                };
-
-                // Create an HttpClient using the named pipe handler
-                _client = new HttpClient(httpHandler)
-                {
-                    BaseAddress = new Uri("http://localhost")
-                };
-            }
-#endif
             else
             {
                 //alternative auth (jwt)

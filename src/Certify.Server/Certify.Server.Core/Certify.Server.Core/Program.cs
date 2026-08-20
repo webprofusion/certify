@@ -43,11 +43,6 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 }
 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 {
-#if DEBUG
-    //  https://learn.microsoft.com/en-us/aspnet/core/grpc/interprocess-namedpipes?view=aspnetcore-8.0
-    builder.WebHost.ConfigureKestrel(opts => opts.ListenNamedPipe("certify-service"));
-#endif
-
     builder.Services.AddWindowsService()
                     .AddHostedService<AgentBackgroundService>();
 }
@@ -61,7 +56,29 @@ if (builder.Environment.IsDevelopment())
 
 var serviceConfig = Certify.SharedUtils.ServiceConfigManager.GetAppServiceConfig();
 
-if (serviceConfig.Host != null && serviceConfig.Port != 0)
+// The service listens on exactly one transport, selected by "Transport" in serviceconfig.json:
+// http by default, or the local named pipe, in which case http is not published at all. Named pipes
+// are windows only, so a named pipe selection on any other platform falls back to http.
+var namedPipeSelected = Certify.Shared.NamedPipeConnection.IsNamedPipeTransport(serviceConfig);
+
+var endpointLog = new List<string>();
+
+if (namedPipeSelected && !OperatingSystem.IsWindows())
+{
+    namedPipeSelected = false;
+    endpointLog.Add("WARNING: the named pipe transport is only available on Windows, falling back to the http endpoint.");
+}
+
+// note there is no UseUrls call on the named pipe path, and ConfigureNamedPipeEndpoint additionally
+// discards any http endpoint declared under Kestrel:Endpoints. The platform check is repeated here
+// so the analyzer can see the windows only call is guarded.
+if (namedPipeSelected && OperatingSystem.IsWindows())
+{
+    var namedPipeName = ServiceEndpointHosting.ConfigureNamedPipeEndpoint(builder);
+
+    endpointLog.Add($"Service transport is the local named pipe \\\\.\\pipe\\{namedPipeName}. The http endpoint is not published.");
+}
+else if (serviceConfig.Host != null && serviceConfig.Port != 0)
 {
     builder.WebHost.UseUrls($"http://{serviceConfig.Host}:{serviceConfig.Port}");
 }
@@ -74,6 +91,11 @@ else
 builder.AddServiceDefaults();
 
 var startup = new Startup(builder.Configuration);
+
+foreach (var msg in endpointLog)
+{
+    startup.Log(msg);
+}
 
 await startup.ConfigureServices(builder.Services);
 
