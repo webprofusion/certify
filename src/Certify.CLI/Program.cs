@@ -62,7 +62,7 @@ namespace Certify.CLI
                 if (!serviceAvailable)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    System.Console.WriteLine("Certify Certificate Manager service not started.");
+                    System.Console.WriteLine("Could not connect to Certify Management Agent service, check service started.");
                     Console.ForegroundColor = defaultFontColour;
                     return -1;
                 }

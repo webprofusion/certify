@@ -259,7 +259,7 @@
     <value>Password</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com</value>
+    <value>This app is running in Evaluation Mode. All features are available. If you are using it within a business or funded organisation please purchase a license key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>Not Registered</value>
@@ -510,9 +510,6 @@ for the certification process to work.</value>
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Are you sure you want to revoke this certificate?</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>You are using the evaluation version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab.</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>This will renew certificates for all auto-renewed items, if applicable. Proceed?</value>
   </data>
@@ -528,7 +525,7 @@ Select Yes to add an ACME Account, or No to skip.</value>
     <value>Visit download page now?</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value> [Community Edition]</value>
+    <value> [Evaluation Mode - Unlicensed]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Certify Certificate Manager Contributors （https://certifytheweb.com）</value>

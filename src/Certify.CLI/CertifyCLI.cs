@@ -66,7 +66,7 @@ namespace Certify.CLI
             }
             catch (Exception)
             {
-                return await Task.FromResult("--- (Service Not Started)");
+                return await Task.FromResult("--- (Could not connect to Certify Management Agent service, check service started.)");
             }
         }
 

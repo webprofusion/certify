@@ -259,7 +259,7 @@
     <value>密码</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>当前版本为免费试用版，仅可管理有限数量的证书。如需解除限制，请前往 https://certifytheweb.com/register 购买注册密钥。已注册用户可通过 support@certifytheweb.com 获取支持</value>
+    <value>本应用正以未授权评估模式运行，所有功能均可使用。如果您在企业或有资金支持的组织中使用，请前往 https://certifytheweb.com/register 购买注册密钥。已注册用户可通过 support@certifytheweb.com 获取支持</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>未注册</value>
@@ -509,9 +509,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>确定要吊销此证书吗？</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>您正在使用本软件的试用版，如需升级请购买注册密钥，具体请参见“关于”标签页中的注册选项。</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>这将为所有自动续期项目续签证书（如适用），确定继续？</value>
   </data>
@@ -525,7 +522,7 @@
     <value>现在访问下载页面？</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value> [社区版]</value>
+    <value> [未授权评估模式]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Certify Certificate Manager贡献者（https://certifytheweb.com）</value>

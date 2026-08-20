@@ -32,7 +32,7 @@ ACME enabled Certificate Manager, powered by [Let's Encrypt](https://letsencrypt
 - Stored Credentials (API access keys etc. protected by the Windows Data Protection API)
 - Pre/post request Deployment Tasks and scripting for advanced deployment (**Exchange, RDS, multi-server, CCS, Apache, nginx, export, webhooks, Hashicorp Vault, Azure KeyVault etc**)
 
-The Community edition is free and supports up to 5 managed certificates, the licensed version supports unlimited managed certificates. License keys are available for commercial organisations, users who wish to help fund development or users who require support.
+The app is free to download and evaluate, with no feature restrictions and no time limit. License keys are available for commercial organisations, users who wish to help fund development or users who require support.
 
 ## Requirements:
 - Windows (64-bit). Supported operating systems are limited to those Microsoft currently support.

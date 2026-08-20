@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -24,9 +24,6 @@ namespace Certify.UI.Windows
         protected static ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
         protected static ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
-        private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 5;
-        private const int NUM_ITEMS_FOR_LEGACY_INSTALL = 10;
         private System.Timers.Timer _periodicCheckTimer;
 
         public int NumManagedCertificates
@@ -60,35 +57,10 @@ namespace Certify.UI.Windows
                 return;
             }
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_REMINDER)
+            // evaluation mode is fully featured, we only advise the user of their license status
+            if (_appViewModel.IsRegisteredVersion && _appViewModel.IsLicenseExpired)
             {
-                MessageBox.Show(SR.MainWindow_TrialLimitationReached);
-
-                if (_appViewModel.IsInstallBeforeDate(new System.DateTime(2023, 1, 1)))
-                {
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LEGACY_INSTALL)
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
-                    {
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                if (_appViewModel.IsLicenseExpired)
-                {
-                    MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
-                    {
-                        return;
-                    }
-                }
+                MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
             }
 
             PromptForAcmeAccountIfFirstManagedCertificate();
@@ -284,11 +256,11 @@ namespace Certify.UI.Windows
 
                 if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
-                    MessageBox.Show("Certify Certificate Manager service not started. " + config.ServiceFaultMsg);
+                    MessageBox.Show("Could not connect to Certify Management Agent service. " + config.ServiceFaultMsg);
                 }
                 else
                 {
-                    MessageBox.Show("Certify Certificate Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq and if you cannot resolve the problem contact support@certifytheweb.com.");
+                    MessageBox.Show("Could not connect to Certify Management Agent service, check service is started. If this problem persists please refer to https://docs.certifytheweb.com and if you cannot resolve the problem contact support@certifytheweb.com.");
                 }
 
                 if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))
@@ -350,26 +322,16 @@ namespace Certify.UI.Windows
                 }
                 else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
                 {
-                    var evaluating = MessageBox.Show(this, "You are currently using the Community Edition of this app intended for personal use or evaluation. Are you still just evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+                    var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
 
                     if (evaluating == MessageBoxResult.No)
                     {
-                        var personalUse = MessageBox.Show(this, "Are you using the app for personal use?", "Confirm Usage", MessageBoxButton.YesNo);
 
-                        if (personalUse == MessageBoxResult.No)
-                        {
-                            MessageBox.Show(this, "Please purchase a license to continue using the app for non-personal use.");
+                        MessageBox.Show(this, "Please apply a license key to continue using the app. \r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nFor personal use you can apply a Community Edition license key.");
 
-                            _appViewModel.UISettings.CommunityMode = "commercial";
-                            UISettings.Save(_appViewModel.UISettings);
-                        }
-                        else
-                        {
-                            MessageBox.Show(this, "You are using the app for personal use. Please continue using the app for free. Tell your friends about us and star webprofusion/certify on github.");
+                        _appViewModel.UISettings.CommunityMode = "commercial";
+                        UISettings.Save(_appViewModel.UISettings);
 
-                            _appViewModel.UISettings.CommunityMode = "personal";
-                            UISettings.Save(_appViewModel.UISettings);
-                        }
                     }
                     else
                     {
