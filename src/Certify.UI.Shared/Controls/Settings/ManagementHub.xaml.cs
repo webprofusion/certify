@@ -67,6 +67,9 @@ namespace Certify.UI.Controls.Settings
             EditModel.IsConnected = result.IsSuccess;
             EditModel.StatusMessage = result.Message;
 
+            // update the app-level hub status indicator to reflect the new connection state
+            await EditModel.MainViewModel.RefreshManagementHubStatus();
+
             if (result.IsSuccess)
             {
                 if (!string.IsNullOrWhiteSpace(result.Message) && result.Message.Contains("instance already known to hub", System.StringComparison.OrdinalIgnoreCase))

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
@@ -25,6 +25,7 @@ namespace Certify.UI.Windows
         protected static ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
         private System.Timers.Timer _periodicCheckTimer;
+        private System.Timers.Timer _hubStatusCheckTimer;
 
         public int NumManagedCertificates
         {
@@ -327,7 +328,7 @@ namespace Certify.UI.Windows
                     if (evaluating == MessageBoxResult.No)
                     {
 
-                        MessageBox.Show(this, "Please apply a license key to continue using the app. \r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nFor personal use you can apply a Community Edition license key.");
+                        MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
 
                         _appViewModel.UISettings.CommunityMode = "commercial";
                         UISettings.Save(_appViewModel.UISettings);
@@ -350,7 +351,16 @@ namespace Certify.UI.Windows
             _periodicCheckTimer = new System.Timers.Timer(60 * 60 * 1000); // every hour
             _periodicCheckTimer.Elapsed += _periodicCheckTimer_Elapsed;
             _periodicCheckTimer.Start();
+
+            // the hub status indicator is always visible in the main UI so is refreshed more often
+            await _appViewModel.RefreshManagementHubStatus();
+
+            _hubStatusCheckTimer = new System.Timers.Timer(60 * 1000); // every minute
+            _hubStatusCheckTimer.Elapsed += _hubStatusCheckTimer_Elapsed;
+            _hubStatusCheckTimer.Start();
         }
+
+        private async void _hubStatusCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => await _appViewModel.RefreshManagementHubStatus();
 
         private async void _periodicCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {

@@ -12,6 +12,7 @@ using Certify.Models.Config;
 using Certify.Providers;
 using Certify.Shared;
 using Certify.Shared.Core.Management;
+using PropertyChanged;
 
 namespace Certify.UI.ViewModel
 {
@@ -370,6 +371,49 @@ namespace Certify.UI.ViewModel
             }
 
             return await client.CheckManagementHubConnectionStatus();
+        }
+
+        /// <summary>
+        /// True if this instance has management hub joining info populated (i.e. it has joined a hub)
+        /// </summary>
+        public bool IsHubJoined { get; set; }
+
+        /// <summary>
+        /// True if the background service currently has an active connection to the management hub
+        /// </summary>
+        public bool IsHubConnected { get; set; }
+
+        /// <summary>
+        /// UI text for the current management hub connection state
+        /// </summary>
+        [DependsOn(nameof(IsHubConnected))]
+        public string HubConnectionStatus => IsHubConnected ? "Connected to Hub" : "Not Connected to Hub";
+
+        /// <summary>
+        /// Refresh the management hub joined/connected state used by the UI hub status indicator
+        /// </summary>
+        public async Task RefreshManagementHubStatus()
+        {
+            try
+            {
+                // we consider the instance joined to a hub if hub joining info has been populated
+                IsHubJoined = !string.IsNullOrWhiteSpace(GetAppServiceConfig()?.ManagementServerHubAPI);
+
+                if (!IsHubJoined)
+                {
+                    IsHubConnected = false;
+                    return;
+                }
+
+                var status = await CheckManagementHubConnectionStatus();
+
+                IsHubConnected = status?.IsSuccess == true;
+            }
+            catch (Exception exp)
+            {
+                Log?.Error("Failed to check management hub connection status: " + exp.Message);
+                IsHubConnected = false;
+            }
         }
     }
 }
