@@ -6,6 +6,7 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
+using Certify.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -193,6 +194,8 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> TestCredentials(string credentialKey, AuthContext? authContext = null) => throw new NotImplementedException();
 #pragma warning disable CS8604 // Possible null reference argument.
         public Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<DataStoreStatus> GetDataStoreStatus(AuthContext? authContext = null) => Task.FromResult(_systemController(authContext).GetDataStoreStatus());
         public Task<ActionResult> AttemptDataStoreReconnection(AuthContext? authContext = null) => _systemController(authContext).AttemptDataStoreReconnection();
 #pragma warning restore CS8604 // Possible null reference argument.

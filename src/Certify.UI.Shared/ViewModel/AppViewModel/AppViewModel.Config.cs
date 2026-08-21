@@ -423,6 +423,23 @@ namespace Certify.UI.ViewModel
             return await _certifyClient.TestDataStoreConnection(item);
         }
 
+        /// <summary>
+        /// Check whether the database schema for the given data store connection needs migrating
+        /// </summary>
+        internal async Task<Certify.Providers.DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection item)
+        {
+            return await _certifyClient.CheckDataStoreSchema(item);
+        }
+
+        /// <summary>
+        /// Create or upgrade the database schema for the given data store connection. The credentials on the
+        /// connection must have schema modification rights.
+        /// </summary>
+        internal async Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection item)
+        {
+            return await _certifyClient.ApplyDataStoreSchemaMigrations(item);
+        }
+
         public async Task<List<Models.Hub.ManagedCertificateSummary>> GetHubSubscribableManagedCertificates()
         {
             return await _certifyClient.GetHubSubscribableManagedCertificates();

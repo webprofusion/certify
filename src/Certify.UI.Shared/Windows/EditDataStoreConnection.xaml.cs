@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using Certify.Models;
 using Certify.Models.Config;
+using Certify.Providers;
 using Certify.Shared;
 using Certify.UI.ViewModel;
 using Newtonsoft.Json;
@@ -130,14 +131,82 @@ namespace Certify.UI.Windows
 
             Mouse.OverrideCursor = Cursors.Arrow;
 
-            if (!results.Any(r => r.HasError))
-            {
-                MessageBox.Show("The data store test was successful", "Data Store Test");
-            }
-            else
+            if (results.Any(r => r.HasError))
             {
                 var err = results.First(r => r.HasError);
                 MessageBox.Show(err.Description, err.Title);
+            }
+            else if (results.Any(r => r.HasWarning))
+            {
+                var warning = results.First(r => r.HasWarning);
+                MessageBox.Show(warning.Description, warning.Title);
+            }
+            else
+            {
+                var upgrade = results.FirstOrDefault(r => r.Key == DataStoreActionKeys.SchemaUpgradeAvailable);
+
+                MessageBox.Show(
+                    upgrade != null
+                        ? $"The data store test was successful.{Environment.NewLine}{Environment.NewLine}{upgrade.Description}"
+                        : "The data store test was successful",
+                    "Data Store Test");
+            }
+        }
+
+        private async void ApplyMigrations_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Validate())
+            {
+                return;
+            }
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            var check = await MainViewModel.CheckDataStoreSchema(Model.Item);
+
+            Mouse.OverrideCursor = Cursors.Arrow;
+
+            if (!check.IsMigrationRequired && !check.HasOptionalMigrations)
+            {
+                MessageBox.Show(check.Message, "Apply Migrations");
+                return;
+            }
+
+            // spell out why an optional step is offered, and that declining leaves a working store working
+            var pending = string.Join(Environment.NewLine, check.PendingMigrations.Select(m => m.IsOptional
+                ? $" - {m.Description}{Environment.NewLine}   (optional) {m.OptionalReason}"
+                : $" - {m.Description}"));
+
+            var optionalNote = check.HasOptionalMigrations && !check.IsMigrationRequired
+                ? $"{Environment.NewLine}{Environment.NewLine}This data store works as it is - these changes are optional."
+                : string.Empty;
+
+            var confirmation = MessageBox.Show(
+                $"{check.Message}{optionalNote}{Environment.NewLine}{Environment.NewLine}{pending}{Environment.NewLine}{Environment.NewLine}Apply these changes to the database now?",
+                "Apply Migrations",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirmation != MessageBoxResult.Yes)
+            {
+                return;
+            }
+
+            Mouse.OverrideCursor = Cursors.Wait;
+
+            var results = await MainViewModel.ApplyDataStoreSchemaMigrations(Model.Item);
+
+            Mouse.OverrideCursor = Cursors.Arrow;
+
+            var failure = results.FirstOrDefault(r => r.HasError);
+
+            if (failure != null)
+            {
+                MessageBox.Show(failure.Description, failure.Title);
+            }
+            else
+            {
+                MessageBox.Show(results.FirstOrDefault()?.Description ?? "Migrations applied.", "Apply Migrations");
             }
         }
     }

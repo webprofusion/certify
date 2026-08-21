@@ -98,6 +98,8 @@ namespace Certify.Management
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore);
         Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
+        Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection connection);
+        Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStore);
 
         Task<ActionResult> TestCredentials(string storageKey);
         Task<IAccessControl> GetCurrentAccessControl();

@@ -1190,6 +1190,13 @@ namespace Certify.Management
                 var dataStore = JsonSerializer.Deserialize<DataStoreConnection>(dataStoreArg.Value, JsonOptions.DefaultJsonSerializerOptions);
                 val = await TestDataStoreConnection(dataStore);
             }
+            else if (arg.CommandType == ManagementHubCommands.ApplyDataStoreSchemaMigrations)
+            {
+                var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                var dataStoreArg = args.FirstOrDefault(a => a.Key == "dataStore");
+                var dataStore = JsonSerializer.Deserialize<DataStoreConnection>(dataStoreArg.Value, JsonOptions.DefaultJsonSerializerOptions);
+                val = await ApplyDataStoreSchemaMigrations(dataStore);
+            }
             else if (arg.CommandType == ManagementHubCommands.UpdateDataStore)
             {
                 var args = JsonSerializer.Deserialize<KeyValuePair<string, string>[]>(arg.Value, JsonOptions.DefaultJsonSerializerOptions);

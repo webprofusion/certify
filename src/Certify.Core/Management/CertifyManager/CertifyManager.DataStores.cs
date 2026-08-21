@@ -619,10 +619,196 @@ namespace Certify.Management
             return CreateExternalConfigurationStore(dataStore.TypeId, dataStore.ConnectionConfig, CoreAppSettings.Current.InstanceId);
         }
 
+        /// <summary>
+        /// Locate the schema provider for a data store type. The provider is returned uninitialised so that the
+        /// schema can be inspected or created before any attempt is made to read or write data.
+        /// </summary>
+        private IDataStoreSchemaProvider GetDataStoreSchemaProvider(DataStoreConnection dataStore)
+        {
+            if (dataStore == null)
+            {
+                return null;
+            }
+
+            foreach (var p in _pluginManager.ManagedItemStoreProviders)
+            {
+                foreach (var provider in p.GetProviders(p.GetType()))
+                {
+                    if (provider.ProviderCategoryId == dataStore.TypeId)
+                    {
+                        if (p.GetProvider(p.GetType(), provider.Id) is IDataStoreSchemaProvider schemaProvider)
+                        {
+                            return schemaProvider;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Inspect the schema of a data store without modifying it, reporting whether migrations are outstanding
+        /// and whether the credentials on this connection are able to apply them.
+        /// </summary>
+        public async Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStore)
+        {
+            if (dataStore == null)
+            {
+                return new DataStoreSchemaCheckResult { State = DataStoreSchemaState.Unknown, Message = "No data store was specified." };
+            }
+
+            var schemaProvider = GetDataStoreSchemaProvider(dataStore);
+
+            if (schemaProvider == null)
+            {
+                // stores such as sqlite manage their own schema and have nothing to apply
+                return new DataStoreSchemaCheckResult
+                {
+                    State = DataStoreSchemaState.Current,
+                    Message = $"The {dataStore.TypeId} data store does not require managed schema migrations."
+                };
+            }
+
+            return await schemaProvider.CheckSchema(dataStore.ConnectionConfig, _serviceLog);
+        }
+
+        /// <summary>
+        /// Apply outstanding schema migrations to a data store, creating the schema if it is not present. The
+        /// credentials on the given data store connection must have schema modification rights - where the
+        /// runtime database user is restricted to reading and writing data, add a separate data store connection
+        /// pointing at the same database using credentials which can modify the schema, and apply migrations
+        /// using that connection.
+        /// </summary>
+        public async Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStore)
+        {
+            var results = new List<ActionStep>();
+
+            if (dataStore == null)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ApplyMigrations,
+                    Title = "Apply Migrations",
+                    Description = "No data store was specified.",
+                    HasError = true
+                });
+                return results;
+            }
+
+            var schemaProvider = GetDataStoreSchemaProvider(dataStore);
+
+            if (schemaProvider == null)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ApplyMigrations,
+                    Title = "Apply Migrations",
+                    Description = $"The {dataStore.TypeId} data store does not require managed schema migrations."
+                });
+                return results;
+            }
+
+            var check = await schemaProvider.CheckSchema(dataStore.ConnectionConfig, _serviceLog);
+
+            if (check.State == DataStoreSchemaState.Unknown)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ApplyMigrations,
+                    Title = "Apply Migrations",
+                    Description = $"The schema could not be inspected. {check.Message}",
+                    HasError = true
+                });
+                return results;
+            }
+
+            if (!check.IsMigrationRequired && !check.HasOptionalMigrations)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ApplyMigrations,
+                    Title = "Apply Migrations",
+                    Description = "The schema is already up to date, no migrations were applied."
+                });
+                return results;
+            }
+
+            if (!check.CanApplySchemaChanges)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ApplyMigrations,
+                    Title = "Apply Migrations",
+                    Description = "This connection does not have schema modification rights. Add a data store connection for the same database using credentials which can modify the schema, then apply migrations using that connection.",
+                    HasError = true
+                });
+                return results;
+            }
+
+            // this is an explicit operator action, so optional structural steps are applied as well - they are
+            // never applied unattended on connection
+            var applyResult = await schemaProvider.ApplySchemaMigrations(dataStore.ConnectionConfig, _serviceLog, includeOptional: true);
+
+            results.Add(new ActionStep
+            {
+                Key = DataStoreActionKeys.ApplyMigrations,
+                Title = "Apply Migrations",
+                Description = applyResult.Message,
+                HasError = !applyResult.IsSuccess,
+                Substeps = applyResult.Result?.Select(m => new ActionStep { Title = m.Id, Description = m.Description }).ToList()
+            });
+
+            if (applyResult.IsSuccess)
+            {
+                _serviceLog?.Information($"Applied schema migrations to data store {dataStore.Id}.");
+            }
+
+            return results;
+        }
+
         public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStore)
         {
             // connect to data store and check schema
             var results = new List<ActionStep>();
+
+            // inspect the schema first - an empty or out of date database cannot be connected to for normal use,
+            // so reporting that a migration is needed is more useful than a generic connection failure
+            var schemaCheck = await CheckDataStoreSchema(dataStore);
+
+            if (schemaCheck.State == DataStoreSchemaState.Unknown)
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ConnectionFailed,
+                    Title = "Data Store Connection Failed",
+                    Description = $"The data store could not be reached. Verify the connection string is correct and the required connectivity and permissions are present. [{schemaCheck.Message}]",
+                    HasError = true
+                });
+
+                return results;
+            }
+
+            // only a genuinely required migration stops the store being usable. An optional upgrade is reported
+            // further down, after the connection has been tested as normal
+            if (schemaCheck.IsMigrationRequired)
+            {
+                var canApply = schemaCheck.CanApplySchemaChanges;
+
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.SchemaMigrationRequired,
+                    Title = "Schema Migration Required",
+                    Description = canApply
+                        ? $"{schemaCheck.Message} These credentials can apply them - use Apply Migrations to continue."
+                        : $"{schemaCheck.Message} These credentials cannot modify the schema. Add a data store connection for the same database using credentials which can, then apply migrations using that connection.",
+                    HasError = !canApply,
+                    HasWarning = canApply,
+                    Substeps = schemaCheck.RequiredMigrations.Select(m => new ActionStep { Title = m.Id, Description = m.Description }).ToList()
+                });
+
+                return results;
+            }
 
             var dataStoreAvailable = false;
             var errorDetail = "";
@@ -646,9 +832,45 @@ namespace Certify.Management
             {
                 results.Add(new ActionStep
                 {
+                    Key = DataStoreActionKeys.InitFailed,
                     Title = "Data Store Init Failed",
                     Description = $"The data store failed to connect. Verify the connection string is correct and the required connectivity, schema and permissions are present. [{errorDetail}]",
                     HasError = true
+                });
+            }
+            else
+            {
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.ConnectionOK,
+                    Title = "Data Store Connection OK",
+                    Description = "Connected successfully and the schema is up to date."
+                });
+            }
+
+            // a recommended upgrade is information, never a failure - an existing installation is free to carry
+            // on without it
+            if (schemaCheck.HasOptionalMigrations)
+            {
+                var canApply = schemaCheck.CanApplySchemaChanges;
+
+                results.Add(new ActionStep
+                {
+                    Key = DataStoreActionKeys.SchemaUpgradeAvailable,
+                    Title = "Optional Schema Upgrade Available",
+                    Description = canApply
+                        ? "This data store works as it is. An optional schema upgrade is available - use Apply Migrations to apply it."
+                        : "This data store works as it is. An optional schema upgrade is available, but these credentials cannot modify the schema. Apply it using a data store connection with schema modification rights.",
+                    // not an error - the store is usable either way - but flag when these credentials could not
+                    // apply it, so the UI does not offer an action which would fail
+                    HasWarning = !canApply,
+                    Substeps = schemaCheck.OptionalMigrations
+                        .Select(m => new ActionStep
+                        {
+                            Title = m.Id,
+                            Description = string.IsNullOrEmpty(m.OptionalReason) ? m.Description : $"{m.Description} {m.OptionalReason}"
+                        })
+                        .ToList()
                 });
             }
 

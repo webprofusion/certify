@@ -72,6 +72,7 @@ namespace Certify.Models.Hub
         public const string GetDataStoreProviders = "GetDataStoreProviders";
         public const string GetDataStores = "GetDataStores";
         public const string TestDataStore = "TestDataStore";
+        public const string ApplyDataStoreSchemaMigrations = "ApplyDataStoreSchemaMigrations";
         public const string UpdateDataStore = "UpdateDataStore";
         public const string SetDefaultDataStore = "SetDefaultDataStore";
         public const string CopyDataStoreToTarget = "CopyDataStoreToTarget";

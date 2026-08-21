@@ -1032,6 +1032,16 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.TestDataStore) ?? [];
         }
 
+        public async Task<ICollection<ActionStep>?> ApplyDataStoreSchemaMigrations(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ApplyDataStoreSchemaMigrations) ?? [];
+        }
+
         public async Task<ICollection<ActionStep>?> UpdateDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
         {
             var args = new KeyValuePair<string, string>[] {

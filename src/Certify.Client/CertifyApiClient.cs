@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -416,6 +416,18 @@ namespace Certify.Client
         public async Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null)
         {
             var result = await PostAsync($"system/datastores/test", dataStoreConnection, authContext);
+            return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStoreConnection, AuthContext authContext = null)
+        {
+            var result = await PostAsync($"system/datastores/schema/check", dataStoreConnection, authContext);
+            return JsonConvert.DeserializeObject<DataStoreSchemaCheckResult>(await result.Content.ReadAsStringAsync());
+        }
+
+        public async Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStoreConnection, AuthContext authContext = null)
+        {
+            var result = await PostAsync($"system/datastores/schema/migrate", dataStoreConnection, authContext);
             return JsonConvert.DeserializeObject<List<ActionStep>>(await result.Content.ReadAsStringAsync());
         }
 

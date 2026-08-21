@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Data Store Connection"
-    Width="522"
-    Height="276"
+    Width="620"
+    Height="300"
     Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanResizeWithGrip"
@@ -30,7 +30,7 @@
             VerticalAlignment="Top"
             DockPanel.Dock="Top"
             Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="Before adding a data store you must create or restore a compatible database schema on the database server. See the documentation site for more details." /><LineBreak /><Run /></TextBlock>
+            TextWrapping="Wrap"><Run Text="Test reports whether the database schema needs to be created or migrated. Use Apply Migrations with a database user which has schema modification rights - the runtime data store user only needs read/write access." /><LineBreak /><Run /></TextBlock>
         <StackPanel
             Margin="0,0,0,8"
             DockPanel.Dock="Top"
@@ -104,9 +104,16 @@
                 Click="Test_Click"
                 Content="{x:Static res:SR.Test}" />
             <Button
+                x:Name="ApplyMigrations"
+                Width="130"
+                Margin="12,0,0,0"
+                Click="ApplyMigrations_Click"
+                Content="Apply Migrations"
+                ToolTip="Create or upgrade the database schema using these credentials. Requires a database user with schema modification rights." />
+            <Button
                 x:Name="Cancel"
                 Width="100"
-                Margin="170,0,0,0"
+                Margin="40,0,0,0"
                 Click="Cancel_Click"
                 Content="{x:Static res:SR.Cancel}" />
         </StackPanel>

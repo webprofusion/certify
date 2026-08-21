@@ -1062,6 +1062,22 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "ApplyDataStoreSchemaMigrations",
+                    OperationMethod = HttpPost,
+                    Comment = "Create or upgrade the datastore database schema for a managed instance. Requires a connection whose credentials have schema modification rights.",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/schema/migrate",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStore", "Certify.Shared.DataStoreConnection" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
+                },
+                new()
+                {
                     OperationName = "UpdateDataStore",
                     OperationMethod = HttpPost,
                     Comment = "Add or update datastore connection for a managed instance",
