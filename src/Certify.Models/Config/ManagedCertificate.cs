@@ -1079,7 +1079,7 @@ namespace Certify.Models
 
             if (!isRenewalRequired && s.DateNextScheduledRenewalAttempt.HasValue && s.DateNextScheduledRenewalAttempt < nextRenewalAttemptDate)
             {
-                renewalStatusReason = "Certificate renewal is not yet required but has been scheduled ahead of normal renewal.";
+                renewalStatusReason = "Certificate renewal is not yet required but has been scheduled ahead of normal renewal (ACME ARI).";
                 nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
                 isRenewalScheduled = true;
             }

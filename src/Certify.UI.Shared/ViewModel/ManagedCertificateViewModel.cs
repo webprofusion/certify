@@ -55,8 +55,16 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
 
             RaisePropertyChangedEvent(nameof(DaysRemaining));
+
+            // the renewal plan is derived from the item's current state, so it is recalculated whenever the item changes
+            _renewalPlan = null;
+
             RaisePropertyChangedEvent(nameof(RenewalPlan));
             RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
+            RaisePropertyChangedEvent(nameof(NextRenewalDueDisplay));
+            RaisePropertyChangedEvent(nameof(RenewalPlanStatusLabel));
+            RaisePropertyChangedEvent(nameof(RenewalPlanReason));
+            RaisePropertyChangedEvent(nameof(IsRenewalOnHold));
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
 
@@ -606,18 +614,99 @@ namespace Certify.UI.ViewModel
             }
         }
 
+        private RenewalDueInfo _renewalPlan;
+
         /// <summary>
-        /// The plan for the next renewal of the selected item, using the same calculation the renewal process itself uses
+        /// The plan for the next renewal of the selected item (when renewal will next be attempted and why), using the same
+        /// calculation the renewal process itself uses. Cached until the selected item changes so that everything displayed
+        /// about the plan is drawn from one consistent result.
         /// </summary>
-        public RenewalDueInfo? RenewalPlan
+        public RenewalDueInfo RenewalPlan
         {
             get
             {
-                return RenewalScheduleCalculator.CalculateNextRenewalAttempt(SelectedItem, RenewalPrefs.FromPreferences(Preferences));
+                _renewalPlan ??= RenewalScheduleCalculator.CalculateNextRenewalAttempt(SelectedItem, RenewalPrefs.FromPreferences(Preferences));
+
+                return _renewalPlan;
             }
         }
 
         public DateTimeOffset? DateNextRenewalDue => RenewalPlan?.DateNextRenewalAttempt;
+
+        /// <summary>
+        /// True when the planned renewal is a specific time scheduled against the item (e.g. a CA suggested renewal window
+        /// via ACME ARI) rather than the estimate derived from the renewal interval
+        /// </summary>
+        public bool IsRenewalScheduled => RenewalPlan?.IsRenewalScheduled == true;
+
+        /// <summary>
+        /// True when repeated renewal failures are currently holding back the next attempt, in which case the date shown is
+        /// the retry back off time rather than any scheduled renewal
+        /// </summary>
+        public bool IsRenewalOnHold => RenewalPlan?.IsRenewalOnHold == true;
+
+        /// <summary>
+        /// True when renewal will be attempted at the next renewal check rather than on a future date. A renewal which is due
+        /// but held back (by failure back off or a maintenance window) has a meaningful future date instead.
+        /// </summary>
+        public bool IsRenewalDueNow => RenewalPlan?.IsRenewalDue == true && !IsRenewalOnHold && RenewalPlan?.IsDeferredByMaintenanceWindow != true;
+
+        /// <summary>
+        /// The next planned renewal for display. A scheduled or held renewal happens at a specific time so is shown to the
+        /// minute, an estimated renewal is shown as a date only.
+        /// </summary>
+        public string NextRenewalDueDisplay
+        {
+            get
+            {
+                if (IsRenewalDueNow)
+                {
+                    return "Due now";
+                }
+
+                if (DateNextRenewalDue == null)
+                {
+                    return "Unknown";
+                }
+
+                return IsRenewalScheduled || IsRenewalOnHold
+                    ? DateNextRenewalDue.Value.ToLocalTime().ToString("g")
+                    : DateNextRenewalDue.Value.ToLocalTime().ToString("d");
+            }
+        }
+
+        /// <summary>
+        /// Short label describing why the planned renewal is not simply the next interval based renewal, or null when it is
+        /// </summary>
+        public string RenewalPlanStatusLabel
+        {
+            get
+            {
+                if (IsRenewalScheduled)
+                {
+                    // a scheduled renewal time is normally set from the renewal window suggested by the certificate authority
+                    // (ACME ARI), which we only know about for an item whose renewal info we have checked
+                    return SelectedItem?.DateLastRenewalInfoCheck != null ? "CA Scheduled Window" : "Scheduled";
+                }
+
+                if (IsRenewalOnHold)
+                {
+                    return "On Hold";
+                }
+
+                if (RenewalPlan?.IsDeferredByMaintenanceWindow == true)
+                {
+                    return "Maintenance Window";
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The reason for the current renewal plan, shown alongside the planned renewal date
+        /// </summary>
+        public string RenewalPlanReason => RenewalPlan?.Reason;
 
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
