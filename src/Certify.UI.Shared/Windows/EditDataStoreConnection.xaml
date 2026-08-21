@@ -8,7 +8,7 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Data Store Connection"
     Width="620"
-    Height="300"
+    Height="360"
     Background="{DynamicResource MahApps.Brushes.Window.Background}"
     Loaded="MetroWindow_Loaded"
     ResizeMode="CanResizeWithGrip"
@@ -77,6 +77,7 @@
                 Margin="0,0,8,0"
                 Content="Connection String" />
             <TextBox
+                x:Name="ConnectionConfig"
                 Width="300"
                 Height="42"
                 HorizontalAlignment="Left"
@@ -85,6 +86,29 @@
                 Text="{Binding Item.ConnectionConfig}"
                 TextWrapping="Wrap"
                 VerticalScrollBarVisibility="Auto" />
+        </StackPanel>
+
+        <!--
+            the stored connection details are held encrypted by the service and are never sent back to a client, so an
+            existing connection is shown with its secrets masked and can only be replaced outright, not edited in place
+        -->
+        <StackPanel
+            x:Name="ProtectedConnectionPanel"
+            Margin="128,0,8,8"
+            DockPanel.Dock="Top"
+            Orientation="Vertical"
+            Visibility="Collapsed">
+            <Button
+                x:Name="ReplaceConnectionDetails"
+                Width="180"
+                HorizontalAlignment="Left"
+                Click="ReplaceConnectionDetails_Click"
+                Content="Replace Connection Details" />
+            <TextBlock
+                Margin="0,4,0,0"
+                Style="{StaticResource Instructions}"
+                Text="The stored connection details are not shown here. Saving without replacing them keeps the stored connection as it is."
+                TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel

@@ -44,6 +44,7 @@ namespace Certify.Management
             {
                 if (enableExtendedDataStores)
                 {
+                    await UpgradeDataStoreConfigProtection();
 
                     var defaultStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
                     var dataStoreInfo = await GetDataStore(defaultStoreId);
@@ -503,7 +504,7 @@ namespace Certify.Management
 
         public async Task<DataStoreConnection> GetDataStore(string dataStoreId)
         {
-            var dataStores = await GetDataStores();
+            var dataStores = await GetDataStoresInternal();
             return dataStores.FirstOrDefault(d => d.Id == dataStoreId);
         }
         public async Task<List<ProviderDefinition>> GetDataStoreProviders()
@@ -519,7 +520,36 @@ namespace Certify.Management
             return await Task.FromResult(allProviders.OrderBy(p => p.Title).ToList());
         }
 
+        /// <summary>
+        /// Get the configured data store connections, with the connection configuration masked so that database
+        /// credentials are not exposed to clients. A masked connection can be sent back to UpdateDataStoreConnection
+        /// unchanged, which leaves the stored connection details as they are.
+        /// </summary>
         public async Task<List<DataStoreConnection>> GetDataStores()
+        {
+            var dataStores = await GetDataStoresInternal();
+
+            return dataStores.Select(d =>
+            {
+                var maskedConfig = DataStoreConnectionProtection.Mask(d.ConnectionConfig);
+
+                return new DataStoreConnection
+                {
+                    Id = d.Id,
+                    Title = d.Title,
+                    TypeId = d.TypeId,
+                    ConnectionConfig = maskedConfig,
+                    IsDefault = d.IsDefault,
+                    IsProtected = DataStoreConnectionProtection.IsMasked(maskedConfig)
+                };
+            }).ToList();
+        }
+
+        /// <summary>
+        /// Get the configured data store connections including their real connection configuration, for service
+        /// use. The result contains database credentials and must not be returned to a client.
+        /// </summary>
+        private async Task<List<DataStoreConnection>> GetDataStoresInternal()
         {
             var dataStores = new List<DataStoreConnection>();
 
@@ -534,6 +564,11 @@ namespace Certify.Management
                     var configData = System.IO.File.ReadAllText(path);
                     dataStores = Newtonsoft.Json.JsonConvert.DeserializeObject<List<DataStoreConnection>>(configData);
                 }
+
+                foreach (var dataStore in dataStores)
+                {
+                    dataStore.ConnectionConfig = DataStoreConnectionProtection.Unprotect(dataStore.ConnectionConfig, _serviceLog);
+                }
             }
             else
             {
@@ -542,6 +577,104 @@ namespace Certify.Management
             }
 
             return await Task.FromResult(dataStores.OrderBy(t => t.Title).ToList());
+        }
+
+        /// <summary>
+        /// Write the data store connection list to disk, encrypting each connection configuration.
+        /// </summary>
+        private void PersistDataStores(List<DataStoreConnection> dataStores)
+        {
+            if (dataStores.Any(d => DataStoreConnectionProtection.IsMasked(d.ConnectionConfig)))
+            {
+                // a masked config has had its secrets stripped, so saving it would discard the real connection
+                // details. Callers must resolve masked values before saving
+                throw new InvalidOperationException("Data store connection configuration is masked and cannot be saved.");
+            }
+
+            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
+            var path = Path.Combine(appDataPath, "datastores.json");
+
+            var protectedDataStores = dataStores.Select(d => new DataStoreConnection
+            {
+                Id = d.Id,
+                Title = d.Title,
+                TypeId = d.TypeId,
+                ConnectionConfig = DataStoreConnectionProtection.Protect(d.ConnectionConfig, _serviceLog),
+                IsDefault = d.IsDefault
+            }).ToList();
+
+            lock (_dataStoreLocker)
+            {
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(protectedDataStores);
+                System.IO.File.WriteAllText(path, json);
+            }
+        }
+
+        /// <summary>
+        /// Clients receive connection configuration with the secrets masked, so that a connection can be managed
+        /// without exposing database credentials. A masked value sent back to the service means the stored
+        /// connection details should be kept as they are, so restore the real value before the connection is used.
+        /// </summary>
+        private async Task ResolveProtectedConnectionConfig(DataStoreConnection dataStore)
+        {
+            if (dataStore == null || !DataStoreConnectionProtection.IsMasked(dataStore.ConnectionConfig))
+            {
+                return;
+            }
+
+            var stored = (await GetDataStoresInternal()).FirstOrDefault(d => d.Id == dataStore.Id);
+
+            if (stored != null)
+            {
+                dataStore.ConnectionConfig = stored.ConnectionConfig;
+            }
+            else
+            {
+                _serviceLog?.Warning($"Data store {dataStore.Id} was submitted with masked connection configuration but there is no stored connection to restore it from.");
+            }
+
+            dataStore.IsProtected = false;
+        }
+
+        /// <summary>
+        /// Encrypt any data store connection configuration still stored as cleartext by a previous version. This
+        /// is best effort - failing to upgrade must not prevent the service connecting to its data store.
+        /// </summary>
+        private async Task UpgradeDataStoreConfigProtection()
+        {
+            try
+            {
+                var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
+                var path = Path.Combine(appDataPath, "datastores.json");
+
+                if (!System.IO.File.Exists(path))
+                {
+                    return;
+                }
+
+                List<DataStoreConnection> storedDataStores;
+
+                lock (_dataStoreLocker)
+                {
+                    var configData = System.IO.File.ReadAllText(path);
+                    storedDataStores = Newtonsoft.Json.JsonConvert.DeserializeObject<List<DataStoreConnection>>(configData);
+                }
+
+                var hasClearTextConfig = storedDataStores?.Any(d => !string.IsNullOrEmpty(d.ConnectionConfig) && !DataStoreConnectionProtection.IsProtectedValue(d.ConnectionConfig)) == true;
+
+                if (!hasClearTextConfig)
+                {
+                    return;
+                }
+
+                PersistDataStores(await GetDataStoresInternal());
+
+                _serviceLog?.Information("Upgraded data store connection configuration to encrypted storage.");
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Failed to upgrade data store connection configuration to encrypted storage :: {exp.Message}");
+            }
         }
         public async Task<List<ActionStep>> CopyDateStoreToTarget(string sourceId, string destId)
         {
@@ -658,6 +791,8 @@ namespace Certify.Management
                 return new DataStoreSchemaCheckResult { State = DataStoreSchemaState.Unknown, Message = "No data store was specified." };
             }
 
+            await ResolveProtectedConnectionConfig(dataStore);
+
             var schemaProvider = GetDataStoreSchemaProvider(dataStore);
 
             if (schemaProvider == null)
@@ -695,6 +830,8 @@ namespace Certify.Management
                 });
                 return results;
             }
+
+            await ResolveProtectedConnectionConfig(dataStore);
 
             var schemaProvider = GetDataStoreSchemaProvider(dataStore);
 
@@ -771,6 +908,8 @@ namespace Certify.Management
         {
             // connect to data store and check schema
             var results = new List<ActionStep>();
+
+            await ResolveProtectedConnectionConfig(dataStore);
 
             // inspect the schema first - an empty or out of date database cannot be connected to for normal use,
             // so reporting that a migration is needed is more useful than a generic connection failure
@@ -879,7 +1018,7 @@ namespace Certify.Management
 
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
         {
-            var dataStores = await GetDataStores();
+            var dataStores = await GetDataStoresInternal();
 
             var store = dataStores.FirstOrDefault(d => d.Id == dataStoreId);
 
@@ -904,6 +1043,9 @@ namespace Certify.Management
 
         public async Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore)
         {
+            // the client may have sent back the masked configuration to keep the stored connection details as they are
+            await ResolveProtectedConnectionConfig(dataStore);
+
             var testResults = await TestDataStoreConnection(dataStore);
 
             if (testResults.Any(t => t.HasError))
@@ -911,7 +1053,7 @@ namespace Certify.Management
                 return testResults;
             }
 
-            var dataStores = await GetDataStores();
+            var dataStores = await GetDataStoresInternal();
 
             var existing = dataStores.FirstOrDefault(d => d.Id == dataStore.Id);
             if (existing != null)
@@ -925,21 +1067,14 @@ namespace Certify.Management
             }
 
             //save
-            var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
-            var path = Path.Combine(appDataPath, "datastores.json");
-
-            lock (_dataStoreLocker)
+            try
             {
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(dataStores);
-                try
-                {
-                    System.IO.File.WriteAllText(path, json);
-                }
-                catch
-                {
-                    testResults.Add(new ActionStep { HasError = true, Title = "Data Store Config Save Failed", Description = "Failed to store the data store configuration to disk" });
-
-                }
+                PersistDataStores(dataStores);
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Failed to save data store configuration :: {exp.Message}");
+                testResults.Add(new ActionStep { HasError = true, Title = "Data Store Config Save Failed", Description = "Failed to store the data store configuration to disk" });
             }
 
             return testResults;
@@ -954,7 +1089,7 @@ namespace Certify.Management
                 return results;
             }
 
-            var dataStores = await GetDataStores();
+            var dataStores = await GetDataStoresInternal();
 
             var existing = dataStores.FirstOrDefault(d => d.Id == dataStoreId);
             if (existing != null)
@@ -962,20 +1097,14 @@ namespace Certify.Management
                 dataStores.Remove(existing);
 
                 //save
-                var appDataPath = EnvironmentUtil.EnsuredAppDataPath();
-                var path = Path.Combine(appDataPath, "datastores.json");
-
-                lock (_dataStoreLocker)
+                try
                 {
-                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(dataStores);
-                    try
-                    {
-                        System.IO.File.WriteAllText(path, json);
-                    }
-                    catch
-                    {
-                        results.Add(new ActionStep("Failed to Save Data Stores Config", "The data store configuration could not be saved to disk", true));
-                    }
+                    PersistDataStores(dataStores);
+                }
+                catch (Exception exp)
+                {
+                    _serviceLog?.Error($"Failed to save data store configuration :: {exp.Message}");
+                    results.Add(new ActionStep("Failed to Save Data Stores Config", "The data store configuration could not be saved to disk", true));
                 }
             }
 

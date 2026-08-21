@@ -39,6 +39,11 @@ namespace Certify.Shared.Core.Management
                         var savedList = JsonConvert.DeserializeObject<List<DataStoreConnection>>(config);
                         if (savedList?.Any() == true)
                         {
+                            foreach (var connection in savedList)
+                            {
+                                connection.ConnectionConfig = Certify.Management.DataStoreConnectionProtection.Unprotect(connection.ConnectionConfig, log);
+                            }
+
                             return savedList;
                         }
                     }
@@ -65,7 +70,17 @@ namespace Certify.Shared.Core.Management
 
             try
             {
-                File.WriteAllText(configFile, JsonConvert.SerializeObject(connections, Formatting.Indented));
+                // connection configuration commonly contains database credentials, so it is encrypted at rest
+                var protectedConnections = connections.Select(c => new DataStoreConnection
+                {
+                    Id = c.Id,
+                    Title = c.Title,
+                    TypeId = c.TypeId,
+                    ConnectionConfig = Certify.Management.DataStoreConnectionProtection.Protect(c.ConnectionConfig, log),
+                    IsDefault = c.IsDefault
+                }).ToList();
+
+                File.WriteAllText(configFile, JsonConvert.SerializeObject(protectedConnections, Formatting.Indented));
             }
             catch (Exception exp)
             {

@@ -41,6 +41,14 @@ namespace Certify.UI.Windows
                 ProviderTypes.IsEnabled = false;
             }
 
+            if (Model.Item.IsProtected)
+            {
+                // the connection details we have are masked, so they can only be replaced outright - editing them in
+                // place would send back a partial change which the service cannot merge with the stored secrets
+                ConnectionConfig.IsReadOnly = true;
+                ProtectedConnectionPanel.Visibility = Visibility.Visible;
+            }
+
             DataContext = this;
 
             Width *= MainViewModel.UIScaleFactor;
@@ -51,6 +59,23 @@ namespace Certify.UI.Windows
         private async void MetroWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Model.DataStoreProviders = await MainViewModel.GetDataStoreProviders();
+        }
+
+        /// <summary>
+        /// Clear the masked connection details so new ones can be entered. The masked value does not contain the
+        /// stored secrets, so it cannot be sent back as a partial change.
+        /// </summary>
+        private void ReplaceConnectionDetails_Click(object sender, RoutedEventArgs e)
+        {
+            Model.Item.IsProtected = false;
+            Model.Item.ConnectionConfig = "";
+
+            // the item is a plain model without change notification, so the text box is updated directly
+            ConnectionConfig.IsReadOnly = false;
+            ConnectionConfig.Text = "";
+            ProtectedConnectionPanel.Visibility = Visibility.Collapsed;
+
+            ConnectionConfig.Focus();
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
