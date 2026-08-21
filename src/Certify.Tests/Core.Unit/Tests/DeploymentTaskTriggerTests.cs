@@ -201,6 +201,33 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public void ShouldReportSubscriptionRequestProgress_DeferredAutomaticRequest_IsNotReported()
+        {
+            // a deferred automatic request attempted nothing and changed nothing, so reporting it would only add a
+            // no-op entry to the request progress shown by connected UI clients (the app and the hub)
+            Assert.IsFalse(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Automatic, CertifyManager.SubscriptionRequestOutcome.Deferred));
+        }
+
+        [TestMethod]
+        public void ShouldReportSubscriptionRequestProgress_AutomaticRequestWhichDidSomething_IsReported()
+        {
+            Assert.IsTrue(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Automatic, CertifyManager.SubscriptionRequestOutcome.Completed));
+
+            Assert.IsTrue(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Automatic, CertifyManager.SubscriptionRequestOutcome.Failed));
+        }
+
+        [TestMethod]
+        public void ShouldReportSubscriptionRequestProgress_ManualRequest_IsAlwaysReported()
+        {
+            // the user started this request and is waiting on its outcome, including being told nothing was done
+            Assert.IsTrue(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Manual, CertifyManager.SubscriptionRequestOutcome.Completed));
+
+            Assert.IsTrue(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Manual, CertifyManager.SubscriptionRequestOutcome.Deferred));
+
+            Assert.IsTrue(CertifyManager.ShouldReportSubscriptionRequestProgress(CertifyManager.SubscriptionRequestMode.Manual, CertifyManager.SubscriptionRequestOutcome.Failed));
+        }
+
+        [TestMethod]
         public void IsActionableSubscription_RequiresSourceTypeAndReference()
         {
             // an unconfigured subscription is still a subscription, so it must never fall through to the ACME path,

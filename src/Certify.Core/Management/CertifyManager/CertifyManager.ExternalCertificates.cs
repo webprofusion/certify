@@ -141,6 +141,15 @@ namespace Certify.Management
                         continue;
                     }
 
+                    // the source has no update waiting for us and is not yet due to be polled, so there is nothing
+                    // for this pass to do. The item is left untouched rather than run through a request which would
+                    // only record a no-op status against it and report that to connected UI clients
+                    if (!ShouldProcessSubscription(item, item.ExternalSource))
+                    {
+                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], the source is not due to be polled and has no pending certificate update.", item.Name, item.Id);
+                        continue;
+                    }
+
                     try
                     {
                         await ProcessSubscriptionPoll(item, cancellationToken);
@@ -218,7 +227,7 @@ namespace Certify.Management
                     return new SubscriptionProcessResult($"Manual request is not currently supported for external source type '{sourceConfig.SourceType}'.", SubscriptionRequestOutcome.Deferred);
                 }
 
-                return new SubscriptionProcessResult("Source polling not enabled", SubscriptionRequestOutcome.Deferred);
+                return new SubscriptionProcessResult("External certificate source is not configured for polling and has no pending certificate update.", SubscriptionRequestOutcome.Deferred);
             }
 
             var shouldFetchFromSource = requestMode == SubscriptionRequestMode.Manual
@@ -227,7 +236,7 @@ namespace Certify.Management
 
             if (!shouldFetchFromSource)
             {
-                return new SubscriptionProcessResult("Source polling not applicable [ShouldPollSource] ", SubscriptionRequestOutcome.Deferred);
+                return new SubscriptionProcessResult("External certificate source is not due to be checked and has no pending certificate update.", SubscriptionRequestOutcome.Deferred);
             }
 
             // a manual request is an explicit user override of automatic renewal scheduling, so it fetches and deploys
@@ -397,15 +406,24 @@ namespace Certify.Management
             return recordedFailure ?? (outcome == SubscriptionRequestOutcome.Failed ? RequestState.Warning : RequestState.Success);
         }
 
+        /// <summary>
+        /// Determine whether the outcome of an external (subscription) certificate request is worth reporting as request
+        /// progress. Progress is always broadcast to connected UI clients (the app and the hub) regardless of whether the
+        /// caller supplied a progress tracker, so a deferred automatic request - which attempted nothing against the
+        /// source and left the item unchanged - would only add a no-op entry to the request progress they display.
+        /// A manual request always reports back, the user is waiting on the outcome of the request they started
+        /// </summary>
+        /// <param name="requestMode"></param>
+        /// <param name="outcome"></param>
+        /// <returns></returns>
+        internal static bool ShouldReportSubscriptionRequestProgress(SubscriptionRequestMode requestMode, SubscriptionRequestOutcome outcome)
+        {
+            return requestMode != SubscriptionRequestMode.Automatic || outcome != SubscriptionRequestOutcome.Deferred;
+        }
+
         private (bool IsWithinWindow, string Reason) GetMaintenanceWindowStatus(ManagedCertificate item)
         {
-            var prefs = new RenewalPrefs
-            {
-                MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows ?? [],
-                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
-            };
-
-            return RenewalManager.IsWithinMaintenanceWindow(item, prefs);
+            return RenewalScheduleCalculator.IsWithinMaintenanceWindow(item, GetRenewalPrefs());
         }
 
         private static bool IsPullModeEnabled(ExternalCertificateSubscription sourceConfig)
@@ -478,8 +496,15 @@ namespace Certify.Management
 
         private static bool ShouldRequireRenewalDueForSourcePolling(ExternalCertificateSubscription sourceConfig)
         {
-            // Management Hub subscriptions are expected to receive push update notifications;
-            // polling is only used as fallback when normal renewal scheduling is due.
+            // a pull only subscription is never notified of an update by its source, so it has to poll on its own
+            // interval - otherwise it would only ever pick up an update when its own renewal happened to fall due
+            if (!IsPushModeEnabled(sourceConfig))
+            {
+                return false;
+            }
+
+            // Management Hub subscriptions which can also receive push update notifications are told when an update is
+            // available, so for them polling is only used as fallback when normal renewal scheduling is due.
             return string.IsNullOrWhiteSpace(sourceConfig.SourceType)
                 || sourceConfig.SourceType.Equals(ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase);
         }
@@ -1221,7 +1246,11 @@ namespace Certify.Management
             result.PrimaryRequest = new RequestStageStatus { Status = finalState, Message = result.Message };
             result.IsSuccess = finalState == RequestState.Success;
 
-            ReportProgress(progress, new RequestProgressState(finalState, result.Message, updatedManagedCertificate), logThisEvent: false);
+            if (ShouldReportSubscriptionRequestProgress(requestMode, processResult.Outcome))
+            {
+                ReportProgress(progress, new RequestProgressState(finalState, result.Message, updatedManagedCertificate), logThisEvent: false);
+            }
+
             return result;
         }
     }

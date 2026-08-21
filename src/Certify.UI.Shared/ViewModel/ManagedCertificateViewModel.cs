@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -1028,6 +1028,13 @@ namespace Certify.UI.ViewModel
         public void EnsureExternalSourceConfiguration()
         {
             if (!IsExternalSourceItem || SelectedItem == null)
+            {
+                return;
+            }
+
+            // an item discovered via a certificate manager provider (simple-acme, certbot etc) is not a subscription
+            // and carries no external source config - creating one here would make it appear to be a subscription
+            if (!SelectedItem.IsSubscription && SelectedItem.ExternalSource == null)
             {
                 return;
             }

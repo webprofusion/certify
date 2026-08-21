@@ -330,5 +330,25 @@ namespace Certify.Tests.UI.Integration
             Assert.AreEqual(ManagedCertificateType.SSL_ACME, model.SelectedItem.ItemType);
             Assert.IsNull(model.SelectedItem.ExternalSource, "Subscription configuration is discarded when subscription mode is disabled.");
         }
+
+        [TestMethod]
+        public void ExternallyManagedItemIsNotGivenSubscriptionConfiguration()
+        {
+            // an item discovered via a certificate manager provider carries no external source config, so it must not
+            // be given one - that would make it present as a certificate subscription in the UI
+            var model = new ManagedCertificateViewModel
+            {
+                SelectedItem = new ManagedCertificate
+                {
+                    ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                    SourceId = "simple-acme"
+                }
+            };
+
+            model.EnsureExternalSourceConfiguration();
+
+            Assert.IsNull(model.SelectedItem.ExternalSource, "An externally managed item is not given subscription configuration.");
+            Assert.IsFalse(model.SelectedItem.IsSubscription);
+        }
     }
 }

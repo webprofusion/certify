@@ -294,6 +294,61 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public void ShouldPollSource_ReturnsTrue_ForPullOnlyManagementHub_WhenRenewalNotDueButPollIntervalElapsed()
+        {
+            // a pull only subscription is never sent a push notification when its source is updated, so it has to poll
+            // on its own interval. Waiting for its own renewal to fall due would leave it on a stale certificate
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-5),
+                DateStart = now.AddDays(-5),
+                DateExpiry = now.AddDays(85)
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Pull,
+                PollIntervalMinutes = 5,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsFalse(CertifyManager.IsAutomaticSubscriptionRetryDue(item, now));
+            Assert.IsTrue(CertifyManager.ShouldPollSource(item, source, now));
+        }
+
+        [TestMethod]
+        public void ShouldPollSource_ReturnsFalse_ForPullOnlyManagementHub_WhenPollIntervalHasNotElapsed()
+        {
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-5),
+                DateStart = now.AddDays(-5),
+                DateExpiry = now.AddDays(85)
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Pull,
+                PollIntervalMinutes = 30,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsFalse(CertifyManager.ShouldPollSource(item, source, now));
+        }
+
+        [TestMethod]
         public void ShouldPollSource_ReturnsTrue_ForNonHubSource_WhenRenewalNotDueButPollIntervalElapsed()
         {
             CoreAppSettings.Current.RenewalIntervalDays = 30;
