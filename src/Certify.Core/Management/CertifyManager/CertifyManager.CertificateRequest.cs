@@ -156,17 +156,8 @@ namespace Certify.Management
             {
                 _serviceLog?.Verbose($"Performing Renew All for all applicable managed certificates.");
 
-                var prefs = new RenewalPrefs
-                {
-                    MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
-                    RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
-                    RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode,
-                    IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
-                    SuppressSkippedItems = true,
-                    PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
-                    MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows ?? [],
-                    DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
-                };
+                var prefs = GetRenewalPrefs();
+                prefs.SuppressSkippedItems = true;
 
                 using (var renewalCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                 {

@@ -44,9 +44,30 @@ namespace Certify.Management
                 // instance it belongs to (a hub client addresses per item operations such as log retrieval by instance)
                 item.InstanceId = _serverConfig.HubAssignedInstanceId;
                 item.DateRetrieved = DateTime.UtcNow;
+
+                // this instance owns the renewal settings, so it reports the renewal plan with the item rather than
+                // requiring each consumer (hub UI, desktop UI) to fetch and interpret those settings for itself
+                item.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs());
             }
 
             return item;
+        }
+
+        /// <summary>
+        /// The renewal preferences currently configured for this instance
+        /// </summary>
+        internal static RenewalPrefs GetRenewalPrefs()
+        {
+            return new RenewalPrefs
+            {
+                MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
+                RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
+                RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.PercentageLifetime,
+                IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
+                PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
+                MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows ?? [],
+                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
+            };
         }
 
         /// <summary>
@@ -67,7 +88,14 @@ namespace Certify.Management
                 }
             }
 
-            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            var renewalPrefs = GetRenewalPrefs();
+
+            list.ForEach(i =>
+            {
+                i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                i.DateRetrieved = DateTime.UtcNow;
+                i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+            });
 
             if (!string.IsNullOrWhiteSpace(filter.Health) && filter.Health.ToLower() != "nocertificate")
             {
@@ -211,8 +239,14 @@ namespace Certify.Management
             var result = new ManagedCertificateSearchResult();
 
             var list = await _itemManager.Find(filter);
+            var renewalPrefs = GetRenewalPrefs();
 
-            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            list.ForEach(i =>
+            {
+                i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                i.DateRetrieved = DateTime.UtcNow;
+                i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+            });
 
             result.Results = list;
 
@@ -224,7 +258,11 @@ namespace Certify.Management
                 if (external != null)
                 {
                     list.AddRange(await external);
-                    list.ForEach(i => i.InstanceId = _serverConfig.HubAssignedInstanceId);
+                    list.ForEach(i =>
+                    {
+                        i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                        i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+                    });
                     result.Results = list;
                 }
             }
@@ -301,10 +339,15 @@ namespace Certify.Management
             // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
             managedCert = MigrateManagedCertificateSettings(managedCert);
 
+            // the renewal plan is derived state recalculated whenever the item is fetched, a stale copy sent back by a
+            // client must not be stored with the item
+            managedCert.RenewalPlan = null;
+
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
 
             managedCert.InstanceId = _serverConfig.HubAssignedInstanceId;
+            managedCert.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(managedCert, GetRenewalPrefs());
 
             // Update the change tracking ID
             lock (_lastUpdateIdLock)
@@ -360,6 +403,9 @@ namespace Certify.Management
 
             try
             {
+                // the renewal plan is derived state recalculated whenever the item is fetched, it is not stored with the item
+                managedCertificate.RenewalPlan = null;
+
                 managedCertificate = await _itemManager.Update(managedCertificate);
             }
             catch (Exception exp)

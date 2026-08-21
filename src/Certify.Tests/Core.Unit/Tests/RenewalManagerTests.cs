@@ -1125,7 +1125,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assert
             Assert.IsFalse(result.IsWithinWindow, "Should not allow renewal on weekend when window is weekdays only");
-            Assert.Contains("Outside maintenance window", result.Reason, $"Reason should indicate outside window. Got: {result.Reason}");
+            Assert.Contains("Limited to Maintenance Window", result.Reason, $"Reason should indicate the renewal is limited to the maintenance window. Got: {result.Reason}");
         }
 
         [TestMethod, Description("Test IsWithinMaintenanceWindow - time outside window hours")]
@@ -1387,7 +1387,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("cert1", results[0].ManagedItem.Id, "cert1 (in window) should be renewed");
 
             // Check logs for skipped item
-            var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("OutsideWindow") && l.Contains("Outside maintenance window"));
+            var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("OutsideWindow") && l.Contains("Limited to Maintenance Window"));
             Assert.IsNotNull(skipLog, "Should log that cert2 was skipped due to maintenance window");
         }
 

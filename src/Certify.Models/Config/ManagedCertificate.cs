@@ -45,6 +45,28 @@ namespace Certify.Models
         /// </summary>
         public float HoldHrs { get; set; }
 
+        /// <summary>
+        /// True when <see cref="DateNextRenewalAttempt"/> is a specific renewal time scheduled against the item
+        /// (see <see cref="ManagedCertificate.DateNextScheduledRenewalAttempt"/>, e.g. a CA suggested renewal window via ACME ARI),
+        /// rather than the estimate derived from the configured renewal interval.
+        /// </summary>
+        public bool IsRenewalScheduled { get; set; }
+
+        /// <summary>
+        /// True when the renewal attempt has been deferred to the item's maintenance window. When renewal is otherwise due
+        /// this means the attempt is being held until the window next opens.
+        /// </summary>
+        public bool IsDeferredByMaintenanceWindow { get; set; }
+
+        /// <summary>
+        /// Parameterless constructor for serialization. This type travels between an instance, the hub and the UI,
+        /// which use different serializers, so it must be constructible without arguments.
+        /// </summary>
+        public RenewalDueInfo()
+        {
+            Reason = string.Empty;
+        }
+
         public RenewalDueInfo(string reason, bool isRenewalDue, DateTimeOffset? renewalAttemptDate, TimeSpan? certLifetime, bool isRenewalOnHold = false, float holdHrs = 0)
         {
             Reason = reason;
@@ -297,6 +319,14 @@ namespace Certify.Models
         /// If set, date we should next attempt renewal. This is normally not set but may be for items affected by ARI renewal windows etc
         /// </summary>
         public DateTimeOffset? DateNextScheduledRenewalAttempt { get; set; }
+
+        /// <summary>
+        /// When this item is fetched via the management API, the calculated plan for its next renewal (when renewal will next
+        /// be attempted and why), as computed by the instance which owns the item using its own renewal settings. This saves
+        /// every consumer from having to fetch and interpret those settings for itself.
+        /// This is derived state which is recalculated on each fetch, so it is not stored with the item.
+        /// </summary>
+        public RenewalDueInfo? RenewalPlan { get; set; }
 
         /// <summary>
         /// Date we last attempted renewal
@@ -840,6 +870,7 @@ namespace Certify.Models
             }
 
             var isRenewalRequired = false;
+            var isRenewalScheduled = false;
             var renewalStatusReason = " Item not due for renewal";
             TimeSpan? certLifetime = null;
 
@@ -859,6 +890,7 @@ namespace Certify.Models
                 if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= checkDate)
                 {
                     isRenewalRequired = true;
+                    isRenewalScheduled = true;
                     renewalStatusReason = "Certificate scheduled renewal is now due.";
                 }
                 else
@@ -1049,6 +1081,7 @@ namespace Certify.Models
             {
                 renewalStatusReason = "Certificate renewal is not yet required but has been scheduled ahead of normal renewal.";
                 nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
+                isRenewalScheduled = true;
             }
 
             // a planned renewal should never be scheduled before the certificate itself became valid. This can otherwise happen due to clock skew,
@@ -1057,9 +1090,13 @@ namespace Certify.Models
             {
                 nextRenewalAttemptDate = s.DateStart.Value;
                 renewalStatusReason = "Certificate renewal is not yet required. The planned renewal date has been adjusted because it preceded the certificate start date.";
+                isRenewalScheduled = false;
             }
 
-            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
+            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime)
+            {
+                IsRenewalScheduled = isRenewalScheduled
+            };
         }
 
         public static bool TryParseManagementHubReference(string? reference, out string instanceId, out string managedCertificateId)

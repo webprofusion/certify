@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -55,6 +55,7 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
 
             RaisePropertyChangedEvent(nameof(DaysRemaining));
+            RaisePropertyChangedEvent(nameof(RenewalPlan));
             RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
@@ -605,14 +606,18 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public DateTimeOffset? DateNextRenewalDue
+        /// <summary>
+        /// The plan for the next renewal of the selected item, using the same calculation the renewal process itself uses
+        /// </summary>
+        public RenewalDueInfo? RenewalPlan
         {
             get
             {
-                return ManagedCertificate
-                    .CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
+                return RenewalScheduleCalculator.CalculateNextRenewalAttempt(SelectedItem, RenewalPrefs.FromPreferences(Preferences));
             }
         }
+
+        public DateTimeOffset? DateNextRenewalDue => RenewalPlan?.DateNextRenewalAttempt;
 
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
