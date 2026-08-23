@@ -259,7 +259,7 @@
     <value>密碼</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>本版本僅供試用，最多可管理有限數量的憑證。如需移除限制，請至 https://certifytheweb.com/register 購買註冊金鑰，註冊用戶如需支援請寄信至 support@certifytheweb.com。</value>
+    <value>目前為試用版，所有功能皆可使用。企業或機構使用者請至 https://certifytheweb.com/register 購買授權，已註冊使用者如需協助請聯繫 support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>尚未註冊</value>
@@ -509,9 +509,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>確定要註銷此憑證嗎？</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>您目前正在使用本程式的試用版，請購買註冊金鑰以升級，詳情請參閱「關於」標籤頁的註冊選項。</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>這會為所有設定自動續期的項目進行續期，確定要繼續？</value>
   </data>
@@ -527,7 +524,7 @@
     <value>現在前往下載頁面嗎？</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value> [社群版]</value>
+    <value> [試用版 - 未授權]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Certify Certificate Manager 貢獻者（https://certifytheweb.com）</value>
