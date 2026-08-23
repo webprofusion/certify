@@ -63,6 +63,14 @@ namespace Certify.Models.Hub
         public const string UpdateServiceConfig = "UpdateServiceConfig";
         public const string UpdateServiceCoreSettings = "UpdateServiceCoreSettings";
 
+        public const string GetDataStoreProviders = "GetDataStoreProviders";
+        public const string GetDataStores = "GetDataStores";
+        public const string TestDataStore = "TestDataStore";
+        public const string UpdateDataStore = "UpdateDataStore";
+        public const string SetDefaultDataStore = "SetDefaultDataStore";
+        public const string CopyDataStoreToTarget = "CopyDataStoreToTarget";
+        public const string RemoveDataStore = "RemoveDataStore";
+
         public const string ApplyLicense = "ActivateManagedLicense";
         public const string DeactivateLicense = "DeactivateManagedLicense";
         public const string QueueAllStatusReports = "QueueAllStatusReports";

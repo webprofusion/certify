@@ -393,12 +393,29 @@ namespace Certify.Management
                                         log.Verbose($"Skipping ARI suggested renewal date for {item.Name} because scheduled renewal date {item.DateNextScheduledRenewalAttempt} already in same window.");
                                         newAriRenewalScheduled = false;
                                     }
-                                    else
+                                    else if (info.SuggestedWindow?.Start != null && info.SuggestedWindow?.End != null)
                                     {
-                                        var dateSpan = info.SuggestedWindow.End - info.SuggestedWindow.Start;
-                                        var randomMinsInSlot = new Random().Next((int)dateSpan.Value.TotalMinutes);
+                                        var windowStart = info.SuggestedWindow.Start.Value;
+                                        var windowEnd = info.SuggestedWindow.End.Value;
 
-                                        var scheduledRenewalDate = info.SuggestedWindow?.Start.Value.AddMinutes(randomMinsInSlot) ?? nextRenewal.DateNextRenewalAttempt;
+                                        // the CA suggested window can predate the current certificate (e.g. clock skew or a window computed for a previous certificate).
+                                        // Never schedule a renewal before the certificate itself became valid.
+                                        if (item.DateStart != null && windowStart < item.DateStart.Value)
+                                        {
+                                            log.Warning($"ARI suggested renewal window start {windowStart} for {item.Name} is before the certificate start date {item.DateStart}. Window start has been adjusted to the certificate start date.");
+                                            windowStart = item.DateStart.Value;
+
+                                            if (windowEnd < windowStart)
+                                            {
+                                                windowEnd = windowStart;
+                                            }
+                                        }
+
+                                        var dateSpan = windowEnd - windowStart;
+                                        var slotMinutes = (int)dateSpan.TotalMinutes;
+                                        var randomMinsInSlot = slotMinutes > 0 ? new Random().Next(slotMinutes) : 0;
+
+                                        var scheduledRenewalDate = (DateTimeOffset?)windowStart.AddMinutes(randomMinsInSlot);
 
                                         if (scheduledRenewalDate.HasValue)
                                         {

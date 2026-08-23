@@ -148,14 +148,45 @@ namespace Certify.Server.Hub.Api.Services
             await AddTypedStoreItem($"account_{accountKid}", account);
         }
 
-        public async Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
+        public Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
         {
+            if (orderDetails != null && orderDetails.CreatedAt == default)
+            {
+                orderDetails.CreatedAt = DateTime.UtcNow;
+            }
+
             _orders[orderId] = orderDetails;
+            return Task.CompletedTask;
         }
 
-        internal async Task StoreAcmeAuthorization(string authId, AcmeAuthorization authorization)
+        internal Task StoreAcmeAuthorization(string authId, AcmeAuthorization authorization)
         {
             _authorizations[authId] = authorization;
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Returns a snapshot of all currently tracked ACME orders.
+        /// </summary>
+        public IReadOnlyCollection<AcmeOrder> GetAcmeOrders()
+        {
+            return _orders.Values.ToList();
+        }
+
+        /// <summary>
+        /// Returns orders that are past the supplied maximum age or past their Expires timestamp.
+        /// </summary>
+        public IReadOnlyCollection<AcmeOrder> GetStaleAcmeOrders(TimeSpan maxAge)
+        {
+            var cutoff = DateTime.UtcNow - maxAge;
+            return _orders.Values
+                .Where(o =>
+                    o.Status != OrderStatus.Processing &&
+                    o.Status != OrderStatus.InternalFinalizationInProgress &&
+                    ((o.CreatedAt != default && o.CreatedAt <= cutoff) ||
+                     (o.CreatedAt == default && o.Expires != default && o.Expires <= DateTime.UtcNow) ||
+                     (o.Expires != default && o.Expires <= DateTime.UtcNow)))
+                .ToList();
         }
 
         private async Task AddTypedStoreItem<T>(string id, T item)
@@ -230,13 +261,51 @@ namespace Certify.Server.Hub.Api.Services
         public async Task RemoveAcmeOrder(string id)
         {
             var order = await GetAcmeOrder(id);
-
-            foreach (var authId in order?.Authorizations ?? [])
+            if (order == null)
             {
-                _authorizations.Remove(authId, out _);
+                return;
             }
 
-            _orders.Remove(id, out _);
+            var authIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var authId in order.AuthorizationIds ?? [])
+            {
+                if (!string.IsNullOrWhiteSpace(authId))
+                {
+                    authIds.Add(authId);
+                }
+            }
+
+            // Authorizations on the ACME resource are URLs; extract trailing ids for cache keys.
+            foreach (var authUrlOrId in order.Authorizations ?? [])
+            {
+                var extracted = ExtractTrailingId(authUrlOrId);
+                if (!string.IsNullOrWhiteSpace(extracted))
+                {
+                    authIds.Add(extracted);
+                }
+            }
+
+            foreach (var authId in authIds)
+            {
+                _authorizations.TryRemove(authId, out _);
+            }
+
+            _orders.TryRemove(id, out _);
+        }
+
+        private static string? ExtractTrailingId(string? urlOrId)
+        {
+            if (string.IsNullOrWhiteSpace(urlOrId))
+            {
+                return null;
+            }
+
+            var value = urlOrId.Trim().TrimEnd('/');
+            var separator = value.LastIndexOf('/');
+            return separator >= 0 && separator < value.Length - 1
+                ? value[(separator + 1)..]
+                : value;
         }
 
         public async Task StoreAcmeNonce(string nonce, string timestamp)

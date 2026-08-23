@@ -159,6 +159,13 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateLastRenewalAttempt = item.DateLastRenewalAttempt,
                 DateNextScheduledRenewalAttempt = item.DateNextScheduledRenewalAttempt,
                 LastRenewalStatus = item.LastRenewalStatus,
+                LastPrimaryRequest = item.LastPrimaryRequest == null
+                    ? null
+                    : new RequestStageStatus
+                    {
+                        Status = item.LastPrimaryRequest.Status,
+                        Message = item.LastPrimaryRequest.Message
+                    },
                 RenewalFailureCount = item.RenewalFailureCount,
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
@@ -249,21 +256,6 @@ namespace Certify.Tests.Core.Unit.Tests
                 return Task.FromResult((long)query.Count());
             }
         }
-    }
-
-    /// <summary>
-    /// Mock implementation of ILog for testing
-    /// </summary>
-    public class MockLog : ILog
-    {
-        public List<string> LogEntries { get; } = new List<string>();
-
-        public void Verbose(string template, params object[] propertyValues) => LogEntries.Add($"VERBOSE: {string.Format(template, propertyValues)}");
-        public void Debug(string template, params object[] propertyValues) => LogEntries.Add($"DEBUG: {string.Format(template, propertyValues)}");
-        public void Information(string template, params object[] propertyValues) => LogEntries.Add($"INFO: {string.Format(template, propertyValues)}");
-        public void Warning(string template, params object[] propertyValues) => LogEntries.Add($"WARNING: {string.Format(template, propertyValues)}");
-        public void Error(string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)}");
-        public void Error(Exception ex, string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)} - {ex.Message}");
     }
 
     [TestClass]
@@ -468,6 +460,82 @@ namespace Certify.Tests.Core.Unit.Tests
             var renewedIds = results.Select(r => r.ManagedItem.Id).ToList();
             Assert.Contains("cert1", renewedIds, "cert1 should be renewed");
             Assert.Contains("cert4", renewedIds, "cert4 should be renewed despite errors");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll with RenewalsWithErrors mode includes failed primary request state")]
+        public async Task TestPerformRenewAll_RenewalsWithErrors_UsesLastPrimaryRequestError()
+        {
+            // Arrange
+            var certWithPrimaryError = CreateTestManagedCertificate("cert-primary-error", "PrimaryErrorOnly", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+            certWithPrimaryError.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Validation failed"
+            };
+
+            var healthyCert = CreateTestManagedCertificate("cert-healthy", "Healthy", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+
+            await _itemStore.Update(certWithPrimaryError);
+            await _itemStore.Update(healthyCert);
+
+            var settings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "Only certificates with error status or failed primary request should be renewed in RenewalsWithErrors mode.");
+            Assert.AreEqual("cert-primary-error", results[0].ManagedItem.Id, "Certificate with failed LastPrimaryRequest should be included.");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll never attempts paused items awaiting user input, regardless of renewal mode")]
+        [DataRow(RenewalMode.Auto)]
+        [DataRow(RenewalMode.RenewalsDue)]
+        [DataRow(RenewalMode.All)]
+        [DataRow(RenewalMode.RenewalsWithErrors)]
+        public async Task TestPerformRenewAll_SkipsPausedItems(RenewalMode mode)
+        {
+            // Arrange - paused item is otherwise due for renewal and has a failed primary request
+            await _itemStore.DeleteAll();
+
+            var pausedCert = CreateTestManagedCertificate("cert-paused", "PausedCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Paused);
+            pausedCert.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Awaiting manual DNS challenge completion"
+            };
+
+            var dueCert = CreateTestManagedCertificate("cert-due", "DueCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Error);
+
+            await _itemStore.Update(pausedCert);
+            await _itemStore.Update(dueCert);
+
+            var settings = new RenewalSettings { Mode = mode, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.IsFalse(results.Any(r => r.ManagedItem?.Id == "cert-paused"), $"Paused certificate must not be attempted in {mode} mode.");
+            Assert.IsTrue(results.Any(r => r.ManagedItem?.Id == "cert-due"), $"Non-paused due certificate should still be attempted in {mode} mode.");
         }
 
         [TestMethod, Description("Test PerformRenewAll with specific target certificates")]

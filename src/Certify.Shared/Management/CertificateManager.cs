@@ -1010,6 +1010,20 @@ namespace Certify.Management
             return certExists;
         }
 
+        public static string GetCertificateCleanupName(string friendlyName, string fallbackName)
+        {
+            if (!string.IsNullOrWhiteSpace(friendlyName))
+            {
+                var certifyMarkerIndex = friendlyName.IndexOf("[Certify]", StringComparison.OrdinalIgnoreCase);
+                if (certifyMarkerIndex >= 0)
+                {
+                    return friendlyName.Substring(0, certifyMarkerIndex + "[Certify]".Length);
+                }
+            }
+
+            return fallbackName;
+        }
+
         /// <summary>
         /// Remove all certificate expired a month or more before the given date, with [Certify] in
         /// the friendly name, optionally where there are no existing bindings, vary by Cleanup Mode
@@ -1060,8 +1074,8 @@ namespace Certify.Management
                             {
                                 // queue removal of existing expired cert with [Certify] text in friendly name.
                                 if (
-                                     (string.IsNullOrWhiteSpace(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
-                                     && c.FriendlyName.Contains("[Certify]")
+                                     (string.IsNullOrWhiteSpace(matchingName) || c.FriendlyName.StartsWith(matchingName, StringComparison.OrdinalIgnoreCase))
+                                     && c.FriendlyName.IndexOf("[Certify]", StringComparison.OrdinalIgnoreCase) >= 0
                                      && c.NotAfter < expiryBefore
                                      )
                                 {
@@ -1073,8 +1087,8 @@ namespace Certify.Management
                                 // queue removal of existing cert based on name match
 
                                 if (
-                                    (!string.IsNullOrWhiteSpace(matchingName) && c.FriendlyName.StartsWith(matchingName))
-                                    && c.FriendlyName.Contains("[Certify]")
+                                     (!string.IsNullOrWhiteSpace(matchingName) && c.FriendlyName.StartsWith(matchingName, StringComparison.OrdinalIgnoreCase))
+                                     && c.FriendlyName.IndexOf("[Certify]", StringComparison.OrdinalIgnoreCase) >= 0
                                     )
                                 {
                                     certsToRemove.Add(c);
@@ -1085,8 +1099,8 @@ namespace Certify.Management
                                 // queue removal of any Certify cert not in excluded list
 
                                 if (
-                                     (string.IsNullOrWhiteSpace(matchingName) || (c.FriendlyName.StartsWith(matchingName)))
-                                    && c.FriendlyName.Contains("[Certify]")
+                                     (string.IsNullOrWhiteSpace(matchingName) || c.FriendlyName.StartsWith(matchingName, StringComparison.OrdinalIgnoreCase))
+                                     && c.FriendlyName.IndexOf("[Certify]", StringComparison.OrdinalIgnoreCase) >= 0
                                     )
                                 {
                                     certsToRemove.Add(c);

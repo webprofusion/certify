@@ -375,7 +375,8 @@ namespace Certify.Core.Management.Challenges.DNS
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DMEasy",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
-
+                // DMEasy API responses currently redirect in a way that requires AllowInsecureRedirect
+                AllowInsecureRedirect = true,
             },
             new ChallengeProviderDefinition
             {
@@ -1429,6 +1430,12 @@ namespace Certify.Core.Management.Challenges.DNS
             var scriptFile = Path.Combine(_poshAcmeScriptPath, "Plugins", script);
 
             var wrapper = $" $PoshACMERoot = \"{_poshAcmeScriptPath}\" \r\n";
+            // Only enable insecure redirects when the provider definition requires it (currently DMEasy)
+            if (DelegateProviderDefinition?.AllowInsecureRedirect == true)
+            {
+                wrapper += " $AllowInsecureRedirect = $true \r\n";
+            }
+
             wrapper += File.ReadAllText(Path.Combine(_poshAcmeScriptPath, "Posh-ACME-Wrapper.ps1"));
 
             var scriptContent = wrapper + "\r\n. \"" + scriptFile + ".ps1\" \r\n";

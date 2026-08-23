@@ -9,7 +9,7 @@ namespace Certify.Server.Hub.Api.Services
     /// </summary>
     public class AcmeHelper
     {
-        private const int DEFAULT_EXPIRY_DAYS = 30;
+        private static readonly TimeSpan DefaultResourceLifetime = AcmeBackgroundTaskService.OrderMaxAge;
         private const int NONCE_BYTES = 16;
         private const int TOKEN_BYTES = 32;
 
@@ -114,7 +114,7 @@ namespace Certify.Server.Hub.Api.Services
             {
                 Identifier = identifier,
                 Status = AuthorizationStatus.Valid, //presets auth to valid so the client doesn't attempt them
-                Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
+                Expires = DateTime.UtcNow.Add(DefaultResourceLifetime),
                 Challenges = CreateStandardChallenges(baseUrl)
             };
         }

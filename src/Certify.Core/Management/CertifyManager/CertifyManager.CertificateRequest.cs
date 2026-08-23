@@ -324,6 +324,7 @@ namespace Certify.Management
                         if (resumePaused && managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
                         {
                             // resume a previously paused request
+                            managedCertificate.LastRenewalStatus = RequestState.Running;
                             CertificateRequestResult result;
 
                             // If mixing manual dns with acme-dns, manual challenges need to be checked without re-challenging
@@ -1154,11 +1155,8 @@ namespace Certify.Management
                             certInfo = certRequestResult.SupportingData as X509Certificate2;
                         }
 
-                        if (!string.IsNullOrWhiteSpace(certInfo.FriendlyName))
-                        {
-                            // PFX only has friendly name in the exported file version, if available this is then used for the cleanup later
-                            certCleanupName = certInfo.FriendlyName.Substring(0, certInfo.FriendlyName.IndexOf("]") + 1);
-                        }
+                        // PFX only has friendly name in the exported file version, if available this is then used for the cleanup later
+                        certCleanupName = CertificateManager.GetCertificateCleanupName(certInfo.FriendlyName, managedCertificate.RequestConfig.PrimaryDomain);
 
                         managedCertificate.DateStart = new DateTimeOffset(certInfo.NotBefore);
                         managedCertificate.DateExpiry = new DateTimeOffset(certInfo.NotAfter);
@@ -1697,7 +1695,16 @@ namespace Certify.Management
 
                 if (!isPreviewOnly)
                 {
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    // a successful redeployment must not mask a recorded primary request failure;
+                    // only mark the overall status as success if the last primary request did not explicitly fail
+                    if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Error)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, managedCertificate.LastPrimaryRequest?.Message ?? managedCertificate.RenewalFailureMessage, incrementFailureCount: false, updateLastAttempt: false);
+                    }
+                    else
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    }
                 }
 
                 result.IsSuccess = true;

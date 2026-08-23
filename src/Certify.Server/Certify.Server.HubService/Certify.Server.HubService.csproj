@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
         <TargetFrameworks>net10.0;</TargetFrameworks>
@@ -14,14 +14,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
-        <PackageReference Include="Scalar.AspNetCore" Version="2.16.5" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.16.17" />
         <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
         <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 
         <!-- included to prevent conflict with older versions in plugins-->
-        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.9" />
+        <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="10.0.10" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -97,6 +97,10 @@ namespace Certify.Management
                         _serviceLog?.Error(ex, "External certificate processing failed for {name} [{id}]", item.Name, item.Id);
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "PerformExternalCertificateSubscriptionTasks: unhandled exception while processing external certificate subscriptions");
             }
             finally
             {
@@ -675,6 +679,16 @@ namespace Certify.Management
                 return new();
             }
 
+            var hubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId;
+            var requestAuthSecretCached = !string.IsNullOrWhiteSpace(await GetManagementHubRequestAuthSecret());
+
+            _serviceLog?.Debug(
+                "GetHubSubscribableManagedCertificates: starting query against {hubApiBase} using managed instance security principal {hubAssignedInstanceId}. Hub joining credential client id configured: {hasClientId}; request auth secret cached: {requestAuthSecretCached}.",
+                hubApiBase,
+                string.IsNullOrWhiteSpace(hubAssignedInstanceId) ? "<none>" : hubAssignedInstanceId,
+                !string.IsNullOrWhiteSpace(secret.ClientId),
+                requestAuthSecretCached);
+
             try
             {
                 var requestContext = await CreateManagementHubRequestContext(
@@ -689,16 +703,30 @@ namespace Certify.Management
                     async (client, ct) => (await client.GetSubscribableManagedCertificatesAsync(ct)).ToList(),
                     CancellationToken.None);
 
+                _serviceLog?.Debug(
+                    "GetHubSubscribableManagedCertificates: query succeeded for managed instance security principal {hubAssignedInstanceId}; returned {count} subscribable certificates.",
+                    string.IsNullOrWhiteSpace(hubAssignedInstanceId) ? "<none>" : hubAssignedInstanceId,
+                    results.Count);
+
                 return results;
             }
             catch (ApiException ex)
             {
-                _serviceLog?.Warning("GetHubSubscribableManagedCertificates: hub returned {status}: {detail}", ex.StatusCode, ex.Response);
+                _serviceLog?.Warning(
+                    "GetHubSubscribableManagedCertificates: hub returned {status} for managed instance security principal {hubAssignedInstanceId} against {hubApiBase}: {detail}",
+                    ex.StatusCode,
+                    string.IsNullOrWhiteSpace(hubAssignedInstanceId) ? "<none>" : hubAssignedInstanceId,
+                    hubApiBase,
+                    ex.Response);
                 return new();
             }
             catch (Exception ex)
             {
-                _serviceLog?.Error(ex, "GetHubSubscribableManagedCertificates failed.");
+                _serviceLog?.Error(ex,
+                    "GetHubSubscribableManagedCertificates failed for managed instance security principal {hubAssignedInstanceId} against {hubApiBase}: {message}",
+                    string.IsNullOrWhiteSpace(hubAssignedInstanceId) ? "<none>" : hubAssignedInstanceId,
+                    hubApiBase,
+                    ex.Message);
                 return new();
             }
         }
@@ -736,6 +764,11 @@ namespace Certify.Management
                 && !string.IsNullOrWhiteSpace(hubAssignedInstanceId)
                 && string.IsNullOrWhiteSpace(requestAuthSecret))
             {
+                _serviceLog?.Debug(
+                    "CreateManagementHubRequestContext: managed instance security principal {hubAssignedInstanceId} does not have a cached request auth secret. Attempting refresh before calling {hubApiBase}.",
+                    hubAssignedInstanceId,
+                    hubApiBase);
+
                 try
                 {
                     var joinCheck = await CheckManagementHubCredentials(hubApiBase, secret);
@@ -751,18 +784,31 @@ namespace Certify.Management
                         {
                             await StoreManagementHubRequestAuthSecret(joinCheck.Result.RequestAuthSecret);
                             requestAuthSecret = joinCheck.Result.RequestAuthSecret;
+                            _serviceLog?.Debug(
+                                "CreateManagementHubRequestContext: refreshed request auth secret for managed instance security principal {hubAssignedInstanceId} before calling {hubApiBase}.",
+                                hubAssignedInstanceId,
+                                hubApiBase);
                         }
 
                         hubAssignedInstanceId = _serverConfig?.HubAssignedInstanceId ?? joinCheck.Result.HubAssignedInstanceId;
                     }
                     else
                     {
-                        _serviceLog?.Warning("CreateManagementHubRequestContext: unable to refresh request auth secret before calling {hubApiBase}: {message}", hubApiBase, joinCheck.Message);
+                        _serviceLog?.Warning(
+                            "CreateManagementHubRequestContext: unable to refresh request auth secret for managed instance security principal {hubAssignedInstanceId} before calling {hubApiBase}: {message}",
+                            hubAssignedInstanceId,
+                            hubApiBase,
+                            joinCheck.Message);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _serviceLog?.Warning("CreateManagementHubRequestContext: failed to refresh request auth secret before calling {hubApiBase}: {message}", hubApiBase, ex.Message);
+                    _serviceLog?.Warning(
+                        "CreateManagementHubRequestContext: failed to refresh request auth secret for managed instance security principal {hubAssignedInstanceId} before calling {hubApiBase}. {exceptionType}: {message}",
+                        hubAssignedInstanceId,
+                        hubApiBase,
+                        ex.GetType().Name,
+                        ex.Message);
                 }
             }
 
@@ -901,6 +947,9 @@ namespace Certify.Management
                 item.DateRetrieved = DateTimeOffset.UtcNow;
                 item.DateLastRenewalAttempt = DateTimeOffset.UtcNow;
                 item.CertificateRevoked = false;
+
+                // a new certificate has been retrieved, so any previously scheduled renewal attempt no longer applies
+                item.DateNextScheduledRenewalAttempt = null;
 
                 item.ARICertificateId = CertUtils.GetARICertIdBase64(certInfo);
 

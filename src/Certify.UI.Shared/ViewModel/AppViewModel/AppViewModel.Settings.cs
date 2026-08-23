@@ -90,8 +90,9 @@ namespace Certify.UI.ViewModel
 
         internal async Task SetPreferences(Preferences prefs)
         {
-            await _certifyClient.SetPreferences(prefs);
             Preferences = prefs;
+
+            await SavePreferences();
         }
 
         /// <summary>
@@ -132,16 +133,8 @@ namespace Certify.UI.ViewModel
             try
             {
                 // set datastoreid and feature flags to pass model validation
-                if (Preferences.ConfigDataStoreConnectionId == null)
-                {
-                    Preferences.ConfigDataStoreConnectionId = "(default)";
-                }
-
-                if (Preferences.FeatureFlags == null)
-                {
-
-                    Preferences.FeatureFlags = [];
-                }
+                Preferences.ConfigDataStoreConnectionId ??= "(default)";
+                Preferences.FeatureFlags ??= [];
 
                 await _certifyClient.SetPreferences(Preferences);
             }
