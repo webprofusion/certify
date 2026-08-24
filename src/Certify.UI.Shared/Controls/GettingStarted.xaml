@@ -54,7 +54,7 @@
                     <StackPanel>
 
                         <TextBlock Margin="8" Style="{StaticResource Instructions}">
-                            <Run Text="This app is running in Evaluation Mode. All features are available. If you are using this application within a business or funded organisation you should purchase a license key when you have completed your evaluation, then use About &gt; Enter Key.. to activate. Visit certifytheweb.com/register for more information." />
+                            <Run Text="This app is running in Evaluation Mode. All features are available. If you are using this application within a business or funded organisation you should apply a license key when you have completed your evaluation. Use About &gt; Enter Key.. to activate. Visit certifytheweb.com/register for more information." />
 
                         </TextBlock>
                     </StackPanel>
