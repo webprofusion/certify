@@ -118,26 +118,26 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="ManagedCertificateType_LocalIIS" xml:space="preserve">
-    <value>本地IIS，通过ACME CA获取SSL证书</value>
+    <value>本地 IIS，通过 ACME CA 获取 SSL 证书</value>
   </data>
   <data name="ManagedCertificateType_Manual" xml:space="preserve">
-    <value>手动申请SSL证书（通过 ACME CA）</value>
+    <value>手动申请 SSL 证书（通过 ACME CA ）</value>
   </data>
   <data name="Finish" xml:space="preserve">
     <value>完成</value>
   </data>
   <data name="CertifyManager_DomainValidationFailed" xml:space="preserve">
-    <value>域名验证失败：{0} 
+    <value>验证失败：{0} 
 {1}</value>
   </data>
   <data name="CertifyManager_DomainValidationCompleted" xml:space="preserve">
-    <value>域名验证完成：{0}</value>
+    <value>验证完成：{0}</value>
   </data>
   <data name="CertifyManager_DomainValidationSkipVerifed" xml:space="preserve">
-    <value>域名当前已经验证通过，跳过验证：{0}</value>
+    <value>标识符当前已获得授权，跳过验证：{0}</value>
   </data>
   <data name="CertifyManager_RequestCertificate" xml:space="preserve">
-    <value>正在通过CA申请证书</value>
+    <value>正在通过 CA 申请证书</value>
   </data>
   <data name="CertifyManager_CompleteRequest" xml:space="preserve">
     <value>证书申请已完成</value>
@@ -148,11 +148,14 @@
   <data name="CertifyManager_CertificateInstalledAndBindingUpdated" xml:space="preserve">
     <value>证书已安装，SSL 绑定已更新：{0}</value>
   </data>
+  <data name="CertifyManager_CertificateStoredNoBindingUpdate" xml:space="preserve">
+    <value>证书已存储：{0}。</value>
+  </data>
   <data name="CertifyManager_CertificateInstallFailed" xml:space="preserve">
     <value>安装证书时出错，证书文件可能无效：{0}</value>
   </data>
   <data name="CertifyManager_CertificateCreatedForBinding" xml:space="preserve">
-    <value>证书已创建，请手动绑定：{0}</value>
+    <value>证书已准备就绪：{0}</value>
   </data>
   <data name="CertifyManager_LetsEncryptServiceTimeout" xml:space="preserve">
     <value>ACME CA服务未在指定的时间内签发有效证书 {0}</value>
@@ -164,7 +167,7 @@
     <value>{0}: 请求失败 - {1} {2}</value>
   </data>
   <data name="CertificateRequestWasAbortedByPSScript" xml:space="preserve">
-    <value>证书请求已被PowerShell脚本中止</value>
+    <value>证书请求已被 PowerShell 脚本中止</value>
   </data>
   <data name="CertifyManager_PerformingConfigTests" xml:space="preserve">
     <value>正在执行配置测试</value>
@@ -181,7 +184,7 @@
   </data>
   <data name="CertifyManager_AutomateConfigurationCheckFailed_SNI" xml:space="preserve">
     <value>自动配置检查失败，无法完成授权。
-请检查您的站点是否已绑定https SNI
+请检查您的站点是否已绑定 https SNI
 （如：'0123456789ABCDEF0123456789ABCDEF.0123456789ABCDEF0123456789ABCDEF.acme.invalid'）后再继续。</value>
   </data>
   <data name="CertifyManager_ReqestValidationFromLetsEncrypt" xml:space="preserve">
@@ -197,7 +200,7 @@
     <value>站点已停止（或不存在），无法验证域名，跳过续期。</value>
   </data>
   <data name="CertifyManager_RegisterDomainIdentity" xml:space="preserve">
-    <value>开始为请求的域名申请证书</value>
+    <value>开始为请求的标识符申请证书</value>
   </data>
   <data name="CertifyManager_RenewalOnHold" xml:space="preserve">
     <value>上次证书续期失败：{0}，将在48小时内自动重试。</value>
