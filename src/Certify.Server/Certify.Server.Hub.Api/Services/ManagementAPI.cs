@@ -198,6 +198,48 @@ namespace Certify.Server.Hub.Api.Services
             };
         }
 
+        public async Task<ActionResult> RefreshExternalManagedCertificates(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return new ActionResult("Managed instance id is required.", false);
+            }
+
+            var hubInstanceId = _mgmtStateProvider.GetManagementHubInstanceId();
+            var connectedInstance = _mgmtStateProvider
+                .GetConnectedInstances()
+                .FirstOrDefault(i => string.Equals(i.InstanceId, instanceId, StringComparison.Ordinal));
+
+            var isHubInstance = string.Equals(instanceId, hubInstanceId, StringComparison.Ordinal);
+            if (!isHubInstance && connectedInstance == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "Managed instance is not currently connected, so the external certificate refresh command could not be sent."
+                };
+            }
+
+            try
+            {
+                await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.RefreshExternalManagedCertificates));
+
+                var displayTitle = connectedInstance?.DisplayTitle;
+                if (string.IsNullOrWhiteSpace(displayTitle) && isHubInstance)
+                {
+                    displayTitle = "integrated management hub instance";
+                }
+
+                return new ActionResult($"External managed certificate refresh requested for '{displayTitle ?? instanceId}'.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to dispatch external managed certificate refresh command to instance {instanceId}.", instanceId);
+                return new ActionResult($"Failed to send external certificate refresh command: {ex.Message}", false);
+            }
+        }
+
         /// <summary>
         /// Sends a command request to the target instance and retrieves the command result.
         /// </summary>
@@ -284,7 +326,7 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? "system");
+            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System);
             var latestToken = assignedTokens
                 .Where(t => string.Equals(t.Title, "Managed Instance Hub Joining Key", StringComparison.OrdinalIgnoreCase))
                 .SelectMany(t => t.AccessTokens ?? [])
@@ -962,6 +1004,85 @@ namespace Certify.Server.Hub.Api.Services
             return await PerformInstanceCommandTaskWithResult<string[]>(instanceId, args, ManagementHubCommands.GetSystemLog) ?? [];
         }
 
+        public async Task<ICollection<ProviderDefinition>?> GetDataStoreProviders(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ProviderDefinition>>(instanceId, args, ManagementHubCommands.GetDataStoreProviders);
+        }
+
+        public async Task<ICollection<DataStoreConnection>?> GetDataStores(string instanceId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<DataStoreConnection>>(instanceId, args, ManagementHubCommands.GetDataStores);
+        }
+
+        public async Task<ICollection<ActionStep>?> TestDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.TestDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> ApplyDataStoreSchemaMigrations(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ApplyDataStoreSchemaMigrations) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> UpdateDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.UpdateDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> SetDefaultDataStore(string instanceId, string dataStoreId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStoreId", dataStoreId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.SetDefaultDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> CopyDataStoreToTarget(string instanceId, string sourceId, string destId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("sourceId", sourceId),
+                new("destId", destId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.CopyDataStoreToTarget) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> RemoveDataStore(string instanceId, string dataStoreId, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStoreId", dataStoreId)
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.RemoveDataStore) ?? [];
+        }
+
         /// <summary>
         /// Retrieves the service configuration for the specified instance.
         /// </summary>
@@ -1001,6 +1122,10 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>Returns the result of the update operation, which may indicate success or failure.</returns>
         public async Task<ActionResult?> UpdateServiceCoreSettings(string instanceId, Preferences prefs, AuthContext? currentAuthContext)
         {
+
+            prefs.ConfigDataStoreConnectionId ??= "(default)";
+            prefs.FeatureFlags ??= [];
+
             var args = new KeyValuePair<string, string>[] {
                      new("instanceId", instanceId) ,
                      new("prefs", JsonSerializer.Serialize(prefs))
@@ -1051,13 +1176,35 @@ namespace Certify.Server.Hub.Api.Services
                 return result;
             }
 
-            await QueueManagedInstanceStatusReportsForDashboard(instanceId);
+            var queueResult = await QueueManagedInstanceStatusReportsForDashboard(instanceId);
 
             var updateSettingsResult = await UpdateManagedInstanceDashboardRegistration(instanceId, true, currentAuthContext);
 
             if (updateSettingsResult?.IsSuccess != true)
             {
-                return new ActionResult("Dashboard registration completed, but enabling dashboard reporting on the instance failed.", false);
+                var message = "Dashboard registration completed, but enabling dashboard reporting on the instance failed.";
+
+                if (!queueResult.IsSuccess)
+                {
+                    message += " Initial dashboard status report queueing also failed.";
+                }
+
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = message
+                };
+            }
+
+            if (!queueResult.IsSuccess)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = true,
+                    IsWarning = true,
+                    Message = "Managed instance added to the dashboard and dashboard reporting enabled, but initial dashboard status report queueing failed."
+                };
             }
 
             return result;
@@ -1092,9 +1239,18 @@ namespace Certify.Server.Hub.Api.Services
             return new ActionResult("Managed instance removed from the dashboard.", true);
         }
 
-        private async Task QueueManagedInstanceStatusReportsForDashboard(string instanceId)
+        private async Task<ActionResult> QueueManagedInstanceStatusReportsForDashboard(string instanceId)
         {
-            await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.QueueAllStatusReports));
+            try
+            {
+                await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.QueueAllStatusReports));
+                return new ActionResult("Dashboard status reports queued.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "Failed to queue dashboard status reports for managed instance {instanceId}.", instanceId);
+                return new ActionResult("Initial dashboard status report queueing failed.", false);
+            }
         }
 
         private async Task<ActionResult?> UpdateManagedInstanceDashboardRegistration(string instanceId, bool isDashboardEnabled, AuthContext? currentAuthContext)
@@ -1107,8 +1263,6 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             prefs.IsInstanceRegistered = isDashboardEnabled;
-            prefs.ConfigDataStoreConnectionId ??= "(default)";
-            prefs.FeatureFlags ??= [];
 
             return await UpdateServiceCoreSettings(instanceId, prefs, currentAuthContext);
         }

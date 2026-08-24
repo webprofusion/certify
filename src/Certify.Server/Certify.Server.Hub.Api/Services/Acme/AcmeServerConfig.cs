@@ -3,7 +3,7 @@ using Certify.Models;
 using Certify.Providers;
 using Certify.Server.Hub.Api.Models.Acme;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// 
@@ -14,7 +14,12 @@ namespace Certify.Server.Hub.Api.Services
 
         private static readonly ConcurrentDictionary<string, AcmeOrder> _orders = new();
         private static readonly ConcurrentDictionary<string, AcmeAuthorization> _authorizations = new();
-        private static readonly ConcurrentDictionary<string, string> _nonces = new();
+        private static readonly ConcurrentDictionary<string, DateTime> _nonces = new();
+
+        /// <summary>
+        /// Maximum age of an issued replay nonce before it is rejected.
+        /// </summary>
+        public static readonly TimeSpan NonceMaxAge = TimeSpan.FromHours(1);
 
         private IConfigurationStore _configStore;
         private string _acmeServerConfigPath;
@@ -148,14 +153,45 @@ namespace Certify.Server.Hub.Api.Services
             await AddTypedStoreItem($"account_{accountKid}", account);
         }
 
-        public async Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
+        public Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
         {
+            if (orderDetails != null && orderDetails.CreatedAt == default)
+            {
+                orderDetails.CreatedAt = DateTime.UtcNow;
+            }
+
             _orders[orderId] = orderDetails;
+            return Task.CompletedTask;
         }
 
-        internal async Task StoreAcmeAuthorization(string authId, AcmeAuthorization authorization)
+        internal Task StoreAcmeAuthorization(string authId, AcmeAuthorization authorization)
         {
             _authorizations[authId] = authorization;
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Returns a snapshot of all currently tracked ACME orders.
+        /// </summary>
+        public IReadOnlyCollection<AcmeOrder> GetAcmeOrders()
+        {
+            return _orders.Values.ToList();
+        }
+
+        /// <summary>
+        /// Returns orders that are past the supplied maximum age or past their Expires timestamp.
+        /// </summary>
+        public IReadOnlyCollection<AcmeOrder> GetStaleAcmeOrders(TimeSpan maxAge)
+        {
+            var cutoff = DateTime.UtcNow - maxAge;
+            return _orders.Values
+                .Where(o =>
+                    o.Status != OrderStatus.Processing &&
+                    o.Status != OrderStatus.InternalFinalizationInProgress &&
+                    ((o.CreatedAt != default && o.CreatedAt <= cutoff) ||
+                     (o.CreatedAt == default && o.Expires != default && o.Expires <= DateTime.UtcNow) ||
+                     (o.Expires != default && o.Expires <= DateTime.UtcNow)))
+                .ToList();
         }
 
         private async Task AddTypedStoreItem<T>(string id, T item)
@@ -230,23 +266,82 @@ namespace Certify.Server.Hub.Api.Services
         public async Task RemoveAcmeOrder(string id)
         {
             var order = await GetAcmeOrder(id);
-
-            foreach (var authId in order?.Authorizations ?? [])
+            if (order == null)
             {
-                _authorizations.Remove(authId, out _);
+                return;
             }
 
-            _orders.Remove(id, out _);
+            var authIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var authId in order.AuthorizationIds ?? [])
+            {
+                if (!string.IsNullOrWhiteSpace(authId))
+                {
+                    authIds.Add(authId);
+                }
+            }
+
+            // Authorizations on the ACME resource are URLs; extract trailing ids for cache keys.
+            foreach (var authUrlOrId in order.Authorizations ?? [])
+            {
+                var extracted = ExtractTrailingId(authUrlOrId);
+                if (!string.IsNullOrWhiteSpace(extracted))
+                {
+                    authIds.Add(extracted);
+                }
+            }
+
+            foreach (var authId in authIds)
+            {
+                _authorizations.TryRemove(authId, out _);
+            }
+
+            _orders.TryRemove(id, out _);
         }
 
-        public async Task StoreAcmeNonce(string nonce, string timestamp)
+        private static string? ExtractTrailingId(string? urlOrId)
         {
-            _nonces[nonce] = timestamp;
+            if (string.IsNullOrWhiteSpace(urlOrId))
+            {
+                return null;
+            }
+
+            var value = urlOrId.Trim().TrimEnd('/');
+            var separator = value.LastIndexOf('/');
+            return separator >= 0 && separator < value.Length - 1
+                ? value[(separator + 1)..]
+                : value;
         }
 
-        public async Task<string?> GetAcmeNonce(string nonce)
+        /// <summary>
+        /// Records an issued replay nonce.
+        /// </summary>
+        public Task StoreAcmeNonce(string nonce, DateTime issuedAt)
         {
-            return _nonces.TryGetValue(nonce, out var timestamp) ? timestamp : null;
+            _nonces[nonce] = issuedAt;
+
+            // opportunistically drop expired nonces so the cache does not grow unbounded
+            var cutoff = DateTime.UtcNow - NonceMaxAge;
+            foreach (var expired in _nonces.Where(n => n.Value <= cutoff).Select(n => n.Key).ToList())
+            {
+                _nonces.TryRemove(expired, out _);
+            }
+
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Atomically consumes a replay nonce. Returns true only if the nonce was previously issued,
+        /// has not already been used and has not expired. Nonces are single use per RFC 8555 Section 6.5.
+        /// </summary>
+        public Task<bool> ConsumeAcmeNonce(string nonce)
+        {
+            if (string.IsNullOrEmpty(nonce) || !_nonces.TryRemove(nonce, out var issuedAt))
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(issuedAt > DateTime.UtcNow - NonceMaxAge);
         }
 
         internal async Task<bool> IsEabKeyConsumed(string kid)

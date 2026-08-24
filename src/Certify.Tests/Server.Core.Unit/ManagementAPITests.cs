@@ -81,6 +81,61 @@ namespace Certify.Tests.Server.Core.Unit
                 && HasExpectedRejoinPayload(cmd, "join-client", "join-secret"))), Times.Once);
         }
 
+        [TestMethod]
+        public async Task RefreshExternalManagedCertificates_ReturnsWarning_WhenInstanceIsNotConnected()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectedInstances()).Returns([]);
+
+            var hubClient = new Mock<IInstanceManagementHub>();
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                CreateManagerMock().Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.RefreshExternalManagedCertificates("remote-1", null);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.IsTrue(result.IsWarning);
+            Assert.AreEqual("Managed instance is not currently connected, so the external certificate refresh command could not be sent.", result.Message);
+            hubClient.Verify(x => x.SendCommandRequest(It.IsAny<InstanceCommandRequest>()), Times.Never);
+        }
+
+        [TestMethod]
+        public async Task RefreshExternalManagedCertificates_SendsCommandToIntegratedHubInstance()
+        {
+            var stateProvider = new Mock<IInstanceManagementStateProvider>();
+            stateProvider.Setup(x => x.GetManagementHubInstanceId()).Returns("hub-instance");
+            stateProvider.Setup(x => x.GetConnectedInstances()).Returns([]);
+
+            var hubClients = new Mock<IHubClients<IInstanceManagementHub>>();
+            var hubContext = new Mock<IHubContext<InstanceManagementHub, IInstanceManagementHub>>();
+            hubContext.SetupGet(x => x.Clients).Returns(hubClients.Object);
+
+            var manager = CreateManagerMock();
+            manager
+                .Setup(x => x.PerformHubCommandWithResult(It.IsAny<InstanceCommandRequest>()))
+                .ReturnsAsync(new InstanceCommandResult { ObjectValue = new ActionResult("Queued", true), Value = "{}" });
+
+            var managementApi = new ManagementAPI(
+                stateProvider.Object,
+                hubContext.Object,
+                manager.Object,
+                Mock.Of<ILogger<ManagementAPI>>());
+
+            var result = await managementApi.RefreshExternalManagedCertificates("hub-instance", null);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual("External managed certificate refresh requested for 'integrated management hub instance'.", result.Message);
+            manager.Verify(x => x.PerformHubCommandWithResult(It.Is<InstanceCommandRequest>(cmd => cmd.CommandType == ManagementHubCommands.RefreshExternalManagedCertificates)), Times.Once);
+        }
+
         private static bool HasExpectedRejoinPayload(InstanceCommandRequest command, string clientId, string secret)
         {
             var payload = JsonSerializer.Deserialize<ManagementHubRejoinRequest>(command.Value ?? "{}", Certify.Shared.JsonOptions.DefaultJsonSerializerOptions);

@@ -12,7 +12,16 @@ namespace Certify.CLI
         {
             var defaultFontColour = Console.ForegroundColor;
 
-            var p = new CertifyCLI();
+            // the transport flag can appear anywhere in the args, remove it before command parsing
+            var useNamedPipe = args.Any(a => string.Equals(a?.Trim(), "--pipe", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(Environment.GetEnvironmentVariable("CERTIFY_CLIENT_MODE"), "namedpipe", StringComparison.OrdinalIgnoreCase);
+
+            if (useNamedPipe)
+            {
+                args = args.Where(a => !string.Equals(a?.Trim(), "--pipe", StringComparison.OrdinalIgnoreCase)).ToArray();
+            }
+
+            var p = new CertifyCLI(useNamedPipe);
 
             if (args.Length == 0)
             {
@@ -53,7 +62,7 @@ namespace Certify.CLI
                 if (!serviceAvailable)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
-                    System.Console.WriteLine("Certify Certificate Manager service not started.");
+                    System.Console.WriteLine("Could not connect to Certify Management Agent service, check service started.");
                     Console.ForegroundColor = defaultFontColour;
                     return -1;
                 }

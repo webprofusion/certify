@@ -14,14 +14,18 @@ namespace Certify.SharedUtils
     {
         private static string GetIdentityFilePath()
         {
-            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            if (string.IsNullOrWhiteSpace(appDataPath))
-            {
-                appDataPath = AppContext.BaseDirectory;
-            }
+            string appDataPath;
 
-            appDataPath = Path.Combine(appDataPath, "certify");
-            Directory.CreateDirectory(appDataPath);
+            try
+            {
+                // use the same app data path resolution as the rest of the app, which honours CERTIFY_APPDATA_PATH
+                appDataPath = Certify.Models.EnvironmentUtil.EnsuredAppDataPath();
+            }
+            catch (Exception)
+            {
+                appDataPath = Path.Combine(AppContext.BaseDirectory, Certify.Models.SharedConstants.APPDATASUBFOLDER);
+                Directory.CreateDirectory(appDataPath);
+            }
 
             var file = Path.Combine(appDataPath, "hubinstance.identity.json");
 #if DEBUG

@@ -95,8 +95,7 @@ namespace Certify.Server.Hub.Api.Services
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateLifetime = validateTokenLifetime,
-                ValidIssuer = _issuer, 
-                IncludeTokenOnFailedValidation = true
+                ValidIssuer = _issuer
             };
 
             var tokenHandler = new JsonWebTokenHandler();
@@ -108,7 +107,8 @@ namespace Certify.Server.Hub.Api.Services
             }
             else
             {
-                throw new SecurityTokenException($"Invalid token: {result.Exception.Message} {result.TokenOnFailedValidation}");
+                // the raw token is deliberately not included here, it would otherwise be written to the service log by callers
+                throw new SecurityTokenException($"Invalid token: {result.Exception?.Message}");
             }
         }
     }

@@ -23,6 +23,7 @@
             NotNull="Collapsed"
             Null="Visible" />
         <utils:StateToColorConverter x:Key="StateToColorConverter" />
+        <utils:LocalDateTimeConverter x:Key="LocalDateTimeConverter" />
     </UserControl.Resources>
 
     <ItemsControl
@@ -131,7 +132,7 @@
                                 <TextBlock
                                     Margin="8,0,0,0"
                                     Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                    Text="{Binding DateLastExecuted, StringFormat=F}" />
+                                    Text="{Binding DateLastExecuted, Converter={StaticResource LocalDateTimeConverter}, StringFormat=F}" />
                             </StackPanel>
 
                             <TextBlock

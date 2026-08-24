@@ -3,7 +3,13 @@
     "Certify.UI.Desktop": {
       "commandName": "Project",
       "environmentVariables": {
-        "CERTIFY_APPDATA_PATH": "C:\\\\ProgramData\\\\CertifyDebugDesktop"
+        "CERTIFY_APPDATA_PATH": "C:\\ProgramData\\CertifyDebugDesktop"
+      }
+    },
+    "Certify.Support": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "CERTIFY_APPDATA_PATH": "C:\\ProgramData\\certify_support"
       }
     }
   }

@@ -247,7 +247,7 @@ namespace Certify.Tests.UI.Integration
         [TestMethod]
         public void DeleteManagedCertificateBlockingUsesSourceIdOwnership()
         {
-            var locallyOwnedExternalSubscription = new ManagedCertificate
+            var locallyOwnedSubscription = new ManagedCertificate
             {
                 ItemType = ManagedCertificateType.SSL_ExternallyManaged,
                 SourceId = null
@@ -259,12 +259,12 @@ namespace Certify.Tests.UI.Integration
                 SourceId = "certbot"
             };
 
-            Assert.IsFalse(AppViewModel.IsDeleteBlockedForManagedCertificate(locallyOwnedExternalSubscription));
+            Assert.IsFalse(AppViewModel.IsDeleteBlockedForManagedCertificate(locallyOwnedSubscription));
             Assert.IsTrue(AppViewModel.IsDeleteBlockedForManagedCertificate(externallyManagedCertificate));
         }
 
         [TestMethod]
-        public void ExternalSubscriptionDefaultsToManagementHubForNewItem()
+        public void SubscriptionDefaultsToManagementHubForNewItem()
         {
             var defaultSubscription = new ExternalCertificateSubscription();
             Assert.AreEqual(ExternalCertificateSourceTypes.ManagementHub, defaultSubscription.SourceType);
@@ -292,7 +292,7 @@ namespace Certify.Tests.UI.Integration
         }
 
         [TestMethod]
-        public void NonExternalManagedCertificateClearsExternalSubscriptionSettings()
+        public void NonExternalManagedCertificateClearsSubscriptionSettings()
         {
             var item = new ManagedCertificate
             {
@@ -307,6 +307,48 @@ namespace Certify.Tests.UI.Integration
             item.NormalizeExternalSourceSettings();
 
             Assert.IsNull(item.ExternalSource);
+        }
+
+        [TestMethod]
+        public void DisablingSubscriptionModeDiscardsUnconfiguredExternalSource()
+        {
+            var model = new ManagedCertificateViewModel
+            {
+                SelectedItem = new ManagedCertificate
+                {
+                    ItemType = ManagedCertificateType.SSL_ExternalSubscription
+                }
+            };
+
+            model.EnsureExternalSourceConfiguration();
+
+            // an unconfigured subscription has nothing the user would miss, so switching it off does not prompt
+            Assert.IsFalse(model.SelectedItem.ExternalSource.HasUserConfiguration);
+
+            model.IsSubscriptionMode = false;
+
+            Assert.AreEqual(ManagedCertificateType.SSL_ACME, model.SelectedItem.ItemType);
+            Assert.IsNull(model.SelectedItem.ExternalSource, "Subscription configuration is discarded when subscription mode is disabled.");
+        }
+
+        [TestMethod]
+        public void ExternallyManagedItemIsNotGivenSubscriptionConfiguration()
+        {
+            // an item discovered via a certificate manager provider carries no external source config, so it must not
+            // be given one - that would make it present as a certificate subscription in the UI
+            var model = new ManagedCertificateViewModel
+            {
+                SelectedItem = new ManagedCertificate
+                {
+                    ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                    SourceId = "simple-acme"
+                }
+            };
+
+            model.EnsureExternalSourceConfiguration();
+
+            Assert.IsNull(model.SelectedItem.ExternalSource, "An externally managed item is not given subscription configuration.");
+            Assert.IsFalse(model.SelectedItem.IsSubscription);
         }
     }
 }

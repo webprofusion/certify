@@ -5,6 +5,7 @@ using Certify.Models.Hub;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 
 namespace Certify.Server.Hub.Api.Middleware
 {
@@ -60,6 +61,7 @@ namespace Certify.Server.Hub.Api.Middleware
     public static class ApiKeyAuthenticationDefaults
     {
         public const string AuthenticationScheme = "ApiToken";
+        public const string ScopedAssignedRoleClaimType = "certify.scoped_assigned_role";
     }
 
     /// <summary>
@@ -125,16 +127,66 @@ namespace Certify.Server.Hub.Api.Middleware
                 return AuthenticateResult.Fail("API credentials invalid");
             }
 
-            var claims = new Claim[]
+            var tokenAuthContext = ParseTokenAuthContext(result.Result);
+
+            var claims = new List<Claim>
             {
-                new(ClaimTypes.Sid, "api-client"),
+                new(ClaimTypes.Sid, string.IsNullOrWhiteSpace(tokenAuthContext?.SecurityPrincipalId) ? "api-client" : tokenAuthContext.SecurityPrincipalId),
+                new("certify.api_client_id", token.ClientId)
             };
+
+            if (tokenAuthContext?.ScopedAssignedRoles != null)
+            {
+                foreach (var scopedAssignedRoleId in tokenAuthContext.ScopedAssignedRoles.Where(r => !string.IsNullOrWhiteSpace(r)))
+                {
+                    claims.Add(new Claim(ApiKeyAuthenticationDefaults.ScopedAssignedRoleClaimType, scopedAssignedRoleId));
+                }
+            }
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             return AuthenticateResult.Success(ticket);
+        }
+
+        private static AccessTokenAuthorizationContext? ParseTokenAuthContext(object? value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            if (value is AccessTokenAuthorizationContext typed)
+            {
+                return typed;
+            }
+
+            if (value is JObject jObject)
+            {
+                return jObject.ToObject<AccessTokenAuthorizationContext>();
+            }
+
+            if (value is IDictionary<string, object> dict)
+            {
+                var principalId = dict.TryGetValue(nameof(AccessTokenAuthorizationContext.SecurityPrincipalId), out var principalObj)
+                    ? principalObj?.ToString()
+                    : null;
+
+                var scopedRoles = new List<string>();
+                if (dict.TryGetValue(nameof(AccessTokenAuthorizationContext.ScopedAssignedRoles), out var rolesObj) && rolesObj is IEnumerable<object> roleObjs)
+                {
+                    scopedRoles.AddRange(roleObjs.Select(r => r?.ToString()).Where(r => !string.IsNullOrWhiteSpace(r))!);
+                }
+
+                return new AccessTokenAuthorizationContext
+                {
+                    SecurityPrincipalId = principalId ?? string.Empty,
+                    ScopedAssignedRoles = scopedRoles
+                };
+            }
+
+            return null;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,15 +19,19 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
+        private readonly ManagedChallengeScopeService _scopeService;
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        public ManagedChallengeController(ILogger<ManagedChallengeController> logger, ICertifyInternalApiClient client)
+        /// <param name="scopeService"></param>
+        public ManagedChallengeController(ILogger<ManagedChallengeController> logger, ICertifyInternalApiClient client, ManagedChallengeScopeService scopeService)
         {
             _logger = logger;
             _client = client;
+            _scopeService = scopeService;
         }
 
         /// <summary>
@@ -49,6 +54,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authResult;
             }
 
+            await ApplyCallerScopeToRequestAsync(request);
+
             // Perform the challenge
             var result = await _client.PerformManagedChallenge(request, null);
 
@@ -58,6 +65,12 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else
             {
+                _logger.LogWarning(
+                    "PerformManagedChallenge failed for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                    request?.ManagedCertId,
+                    request?.Identifier,
+                    request?.ChallengeType,
+                    result.Message);
                 return Problem(
                     detail: result.Message,
                     statusCode: StatusCodes.Status502BadGateway
@@ -82,6 +95,8 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 return authResult;
             }
+
+            await ApplyCallerScopeToRequestAsync(request);
 
             var operation = await _client.BeginManagedChallenge(request, null);
             return AcceptedAtAction(nameof(GetManagedChallengeOperationStatus), new { id = operation.Id }, operation);
@@ -134,6 +149,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authResult;
             }
 
+            await ApplyCallerScopeToRequestAsync(request);
+
             var result = await _client.CleanupManagedChallenge(request, null);
             return new OkObjectResult(result);
         }
@@ -148,63 +165,78 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private async Task<IActionResult?> AuthorizeManagedChallengeActionAsync(string actionId, ManagedChallengeRequest? request = null)
         {
+            var managedCertId = request?.ManagedCertId ?? "<none>";
+            var identifier = request?.Identifier ?? "<none>";
+            var challengeType = request?.ChallengeType ?? "<none>";
+            var hasManagedInstanceHeader = HasManagedInstanceRequestHeader();
+
             var accessCheck = new AccessCheck
             {
                 ResourceType = ResourceTypes.ManagedChallenge,
                 ResourceActionId = actionId
             };
 
+            _logger.LogDebug(
+                "AuthorizeManagedChallengeActionAsync evaluating action {actionId} for managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}. Managed instance header present: {hasManagedInstanceHeader}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType,
+                hasManagedInstanceHeader);
+
             if (await IsAuthorized(_client, accessCheck))
             {
-                if (request != null)
+                _logger.LogDebug(
+                    "AuthorizeManagedChallengeActionAsync succeeded via direct access token for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                    actionId,
+                    managedCertId,
+                    identifier,
+                    challengeType);
+
+                var scopeDenied = await AuthorizeIdentifierScopeAsync(GetAccessTokenFromRequest(), request, actionId);
+                if (scopeDenied != null)
                 {
-                    var tagScopes = await GetTagScopesFromAccessToken(GetAccessTokenFromRequest(), null);
-                    if (tagScopes != null && tagScopes.Any())
-                    {
-                        var isAllowed = await ValidateChallengeAccessByTags(request, tagScopes);
-                        if (!isAllowed)
-                        {
-                            return Problem(
-                                detail: "Access denied. No accessible managed challenge found for this domain with your API token's tag scope.",
-                                statusCode: StatusCodes.Status403Forbidden
-                            );
-                        }
-                    }
+                    return scopeDenied;
                 }
 
                 return null;
             }
 
+            _logger.LogDebug(
+                "AuthorizeManagedChallengeActionAsync direct access token authorization failed for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType);
+
             var accessToken = GetAccessTokenFromRequestOrManagedChallenge(request);
             if (accessToken != null)
             {
                 ManagedChallengeAuthorizationResult? managedInstanceAuthorization = null;
-                if (request != null && HasManagedInstanceRequestHeader())
+                if (request != null && hasManagedInstanceHeader)
                 {
                     managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, accessToken);
                     if (managedInstanceAuthorization.IsSuccess)
                     {
                         return null;
                     }
+
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync managed-instance authorization failed for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
                 }
 
                 var authResult = await IsAccessTokenAuthorized(_client, accessToken, accessCheck);
                 if (authResult.IsSuccess)
                 {
-                    if (request != null)
+                    var scopeDenied = await AuthorizeIdentifierScopeAsync(accessToken, request, actionId);
+                    if (scopeDenied != null)
                     {
-                        var tagScopes = await GetTagScopesFromAccessToken(accessToken, request);
-                        if (tagScopes != null && tagScopes.Any())
-                        {
-                            var isAllowed = await ValidateChallengeAccessByTags(request, tagScopes);
-                            if (!isAllowed)
-                            {
-                                return Problem(
-                                    detail: "Access denied. No accessible managed challenge found for this domain with your API token's tag scope.",
-                                    statusCode: StatusCodes.Status403Forbidden
-                                );
-                            }
-                        }
+                        return scopeDenied;
                     }
 
                     return null;
@@ -212,11 +244,26 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (managedInstanceAuthorization?.WasEvaluated == true)
                 {
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
+
                     return Problem(
                         detail: managedInstanceAuthorization.Message,
                         statusCode: managedInstanceAuthorization.StatusCode
                     );
                 }
+
+                _logger.LogWarning(
+                    "AuthorizeManagedChallengeActionAsync found no valid access token or managed-instance auth for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                    actionId,
+                    managedCertId,
+                    identifier,
+                    challengeType);
 
                 return Problem(
                 detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
@@ -234,12 +281,27 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (managedInstanceAuthorization.WasEvaluated)
                 {
+                    _logger.LogWarning(
+                        "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization without access token for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
+                        actionId,
+                        managedCertId,
+                        identifier,
+                        challengeType,
+                        managedInstanceAuthorization.Message);
+
                     return Problem(
                         detail: managedInstanceAuthorization.Message,
                         statusCode: managedInstanceAuthorization.StatusCode
                     );
                 }
             }
+
+            _logger.LogWarning(
+                "AuthorizeManagedChallengeActionAsync rejected request due to missing authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                actionId,
+                managedCertId,
+                identifier,
+                challengeType);
 
             return Problem(
                 detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
@@ -348,206 +410,88 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private async Task<bool> ValidateManagedInstanceChallengeAccessAsync(ManagedChallengeRequest request, ManagedInstanceInfo managedInstance, string actionId)
         {
-            try
+            if (string.IsNullOrWhiteSpace(request?.Identifier))
             {
-                var potentialMatches = await GetPotentialManagedChallenges(request);
-
-                foreach (var challenge in potentialMatches)
-                {
-                    var challengeTags = (await _client.GetHubItemTags(TaggedItemTypes.ManagedChallenge, challenge.Id, SystemAuthContext))?.ToList() ?? [];
-
-                    var accessCheck = new AccessCheck
-                    {
-                        SecurityPrincipalId = managedInstance.SecurityPrincipalId,
-                        ResourceType = ResourceTypes.ManagedChallenge,
-                        ResourceActionId = actionId,
-                        Identifier = challenge.Id,
-                        ResourceTags = challengeTags
-                    };
-
-                    var checkAuthContext = new AuthContext { UserId = managedInstance.SecurityPrincipalId };
-                    if (await _client.CheckSecurityPrincipalHasAccess(accessCheck, checkAuthContext))
-                    {
-                        return true;
-                    }
-                }
-
                 return false;
             }
-            catch (Exception ex)
+
+            var (canSatisfy, failureReason, _) = await _scopeService.ValidatePrincipalCanSatisfyIdentifiers(
+                managedInstance.SecurityPrincipalId,
+                [request.Identifier],
+                scopedAssignedRoles: null,
+                requiredActionId: actionId);
+
+            if (!canSatisfy)
             {
-                _logger.LogError(ex, "Error validating managed instance challenge access");
-                return false;
+                _logger.LogWarning(
+                    "ValidateManagedInstanceChallengeAccessAsync found no accessible managed challenge for managed instance {managedInstanceId} / security principal {securityPrincipalId}: {message}",
+                    managedInstance.InstanceId,
+                    managedInstance.SecurityPrincipalId,
+                    failureReason);
             }
+
+            return canSatisfy;
         }
 
         /// <summary>
-        /// Validate that the requester has access to a challenge matching the domain via tags
+        /// Deny the request when the caller's API token is tag-scoped and no accessible managed
+        /// challenge covers the requested identifier. Unrestricted principals are unaffected.
         /// </summary>
-        private async Task<bool> ValidateChallengeAccessByTags(ManagedChallengeRequest request, ICollection<TagScope> tagScopes)
+        private async Task<IActionResult?> AuthorizeIdentifierScopeAsync(AccessToken? accessToken, ManagedChallengeRequest? request, string actionId)
         {
-            try
-            {
-                var potentialMatches = await GetPotentialManagedChallenges(request);
-                if (!potentialMatches.Any())
-                {
-                    return false;
-                }
-
-                var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, SystemAuthContext);
-                var tagsByChallengeId = allChallengeTags?.GroupBy(t => t.TaggedItemId)
-                    .ToDictionary(g => g.Key, g => g.ToList()) ?? new Dictionary<string, List<ItemTag>>();
-
-                // Check if any potential match has tags that satisfy the scope
-                foreach (var challenge in potentialMatches)
-                {
-                    tagsByChallengeId.TryGetValue(challenge.Id, out var challengeTags);
-
-                    if (challengeTags == null || !challengeTags.Any())
-                    {
-                        // Untagged challenges are NOT accessible to tag-scoped tokens
-                        continue;
-                    }
-
-                    // Check if challenge has at least one matching tag (OR logic)
-                    var hasMatchingTag = tagScopes.Any(scope =>
-                        challengeTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (hasMatchingTag)
-                    {
-                        return true; // Found an accessible challenge
-                    }
-                }
-
-                return false;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error validating challenge access by tags");
-                return false;
-            }
-        }
-
-        private async Task<List<ManagedChallenge>> GetPotentialManagedChallenges(ManagedChallengeRequest request)
-        {
-            var challenges = await _client.GetManagedChallenges(SystemAuthContext);
-
-            if (challenges == null || !challenges.Any())
-            {
-                return [];
-            }
-
-            return challenges.Where(c =>
-                c.ChallengeConfig != null &&
-                (string.IsNullOrEmpty(c.ChallengeConfig.DomainMatch) ||
-                 DomainMatchesConfig(request.Identifier, c.ChallengeConfig.DomainMatch))).ToList();
-        }
-
-        /// <summary>
-        /// Check if a domain matches a challenge config domain match pattern
-        /// </summary>
-        private static bool DomainMatchesConfig(string domain, string domainMatch)
-        {
-            if (string.IsNullOrEmpty(domain) || string.IsNullOrEmpty(domainMatch))
-            {
-                return false;
-            }
-
-            domain = domain.ToLowerInvariant();
-            domainMatch = domainMatch.ToLowerInvariant().Replace(",", ";");
-
-            var patterns = domainMatch.Split(';').Select(p => p.Trim()).Where(p => !string.IsNullOrEmpty(p));
-
-            foreach (var pattern in patterns)
-            {
-                if (pattern == domain)
-                {
-                    return true; // Exact match
-                }
-
-                if (pattern.StartsWith("*.") && domain.EndsWith(pattern.Substring(1)))
-                {
-                    return true; // Wildcard match
-                }
-
-                if (domain.EndsWith("." + pattern))
-                {
-                    return true; // Subdomain match
-                }
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Extract tag scopes from the API token's scoped assigned roles
-        /// </summary>
-        private async Task<ICollection<TagScope>?> GetTagScopesFromAccessToken(AccessToken? accessToken, ManagedChallengeRequest? request)
-        {
-            accessToken ??= GetAccessTokenFromManagedChallengeRequest(request);
-
-            if (accessToken == null)
+            if (string.IsNullOrWhiteSpace(request?.Identifier))
             {
                 return null;
             }
 
-            try
+            var principal = await _scopeService.ResolveAccessTokenPrincipal(accessToken);
+            if (principal == null)
             {
-                // Get the assigned access token to find scoped roles
-                var assignedTokens = await _client.GetAssignedAccessTokens(null);
-
-                if (assignedTokens == null)
-                {
-                    return null;
-                }
-
-                // Find the token matching our credentials
-                AssignedAccessToken? matchingToken = null;
-                foreach (var at in assignedTokens)
-                {
-                    var match = at.AccessTokens?.FirstOrDefault(t =>
-                        t.ClientId == accessToken.ClientId && t.Secret == accessToken.Secret);
-                    if (match != null)
-                    {
-                        matchingToken = at;
-                        break;
-                    }
-                }
-
-                if (matchingToken?.ScopedAssignedRoles == null || !matchingToken.ScopedAssignedRoles.Any())
-                {
-                    return null;
-                }
-
-                // Get the assigned roles for the security principal
-                var assignedRoles = await _client.GetSecurityPrincipalAssignedRoles(matchingToken.SecurityPrincipalId, null);
-
-                if (assignedRoles == null)
-                {
-                    return null;
-                }
-
-                // Filter to only the scoped roles for this token
-                var scopedRoles = assignedRoles.Where(r => matchingToken.ScopedAssignedRoles.Contains(r.Id)).ToList();
-
-                // Collect tag scopes
-                var tagScopes = new List<TagScope>();
-                foreach (var role in scopedRoles)
-                {
-                    if (role.ScopedTags != null)
-                    {
-                        tagScopes.AddRange(role.ScopedTags);
-                    }
-                }
-
-                return tagScopes.Any() ? tagScopes : null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting tag scopes from API token");
+                // not an API-token principal - other authorization paths apply
                 return null;
             }
+
+            var (isAuthorized, failureReason) = await _scopeService.AuthorizeIdentifiersForPrincipal(
+                principal.SecurityPrincipalId,
+                [request.Identifier],
+                principal.ScopedAssignedRoles,
+                actionId);
+
+            if (isAuthorized)
+            {
+                return null;
+            }
+
+            _logger.LogWarning(
+                "AuthorizeManagedChallengeActionAsync denied by role scope for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                actionId,
+                request.ManagedCertId,
+                request.Identifier,
+                request.ChallengeType);
+
+            return Problem(
+                detail: failureReason ?? "Access denied. No accessible managed challenge found for this domain with your API token's role scope.",
+                statusCode: StatusCodes.Status403Forbidden
+            );
+        }
+
+        /// <summary>
+        /// Attach the caller's security principal and scoped assigned roles to the challenge request
+        /// so fulfillment only selects challenges within that scope. Caller-supplied values are never
+        /// trusted: identity is always derived from the authenticated access token, or cleared.
+        /// </summary>
+        private async Task ApplyCallerScopeToRequestAsync(ManagedChallengeRequest request)
+        {
+            if (request == null)
+            {
+                return;
+            }
+
+            // never trust principal/scope supplied by the client
+            var principal = await _scopeService.ResolveAccessTokenPrincipal(GetAccessTokenFromRequestOrManagedChallenge(request));
+
+            request.SecurityPrincipalId = principal?.SecurityPrincipalId;
+            request.ScopedAssignedRoles = principal?.ScopedAssignedRoles;
         }
     }
 }

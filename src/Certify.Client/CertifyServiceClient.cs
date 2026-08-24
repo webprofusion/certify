@@ -30,17 +30,29 @@ namespace Certify.Client
 
         private Microsoft.AspNet.SignalR.Client.HubConnection _legacyConnection;
 
-        private string _statusHubUri = "/api/status";
+        private const string StatusHubPath = "/api/status";
+
+        private string _statusHubUri = StatusHubPath;
 
         public CertifyServiceClient(Providers.IServiceConfigProvider configProvider, Shared.ServerConnection config = null) : base(configProvider, config)
         {
-            _statusHubUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + _statusHubUri;
+            if (IsNamedPipeMode)
+            {
+                // the pipe determines the endpoint, the host is only present to form a valid uri
+                _statusHubUri = Shared.NamedPipeConnection.RequestHost + StatusHubPath;
+            }
+            else
+            {
+                _statusHubUri = $"{(_connectionConfig.UseHTTPS ? "https" : "http")}://{_connectionConfig.Host}:{_connectionConfig.Port}" + StatusHubPath;
+            }
         }
 
         public async Task ConnectStatusStreamAsync()
         {
 #if !NET9_0_OR_GREATER
-            if (_connectionConfig.ServerMode == "v1")
+            // the legacy hub client cannot use a custom transport, so pipe connections always use
+            // the current signalr client below
+            if (_connectionConfig.ServerMode == "v1" && !IsNamedPipeMode)
             {
                 // older signalr client/server
                 _legacyConnection = new Microsoft.AspNet.SignalR.Client.HubConnection(_statusHubUri)
@@ -80,6 +92,23 @@ namespace Certify.Client
 
                 .WithUrl(_statusHubUri, opts =>
                 {
+                    if (IsNamedPipeMode)
+                    {
+                        // a websocket cannot be layered over a custom stream, so the hub runs over
+                        // long polling using the same pipe backed handler as the service API. The
+                        // pipe is local only and already authenticates the caller, so no additional
+                        // http credentials are sent.
+                        opts.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.LongPolling;
+                        opts.HttpMessageHandlerFactory = (message) =>
+                        {
+                            message?.Dispose();
+
+                            return NamedPipeTransport.CreateHandler(Shared.NamedPipeConnection.GetPipeName());
+                        };
+
+                        return;
+                    }
+
                     opts.HttpMessageHandlerFactory = (message) =>
                     {
                         if (message is System.Net.Http.HttpClientHandler clientHandler)

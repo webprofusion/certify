@@ -218,3 +218,5 @@ src/Certify.Tests/Certify.Core.Tests.Integration/plugins/
 .vscode/
 
 src/Certify.Server/Certify.Server.Hub.Api/Properties/launchSettings.json
+
+src/Certify.Server/Certify.Server.HubService/appsettings.Development.json

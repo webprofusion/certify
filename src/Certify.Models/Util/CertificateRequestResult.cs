@@ -35,6 +35,7 @@ namespace Certify.Models
                     Status = update.PrimaryRequest.Status,
                     Message = update.PrimaryRequest.Message
                 };
+            IsSubscriptionUpdateDeferred = update.IsSubscriptionUpdateDeferred;
             ManagedItem = update.ManagedItem;
             Result = update.Result;
             Abort = update.Abort;
@@ -48,6 +49,13 @@ namespace Certify.Models
         public ManagedCertificate? ManagedItem { get; set; }
         public bool IsSuccess { get; set; }
         public RequestStageStatus? PrimaryRequest { get; set; }
+
+        /// <summary>
+        /// True when an external certificate subscription check did not apply a certificate update because none was
+        /// available yet, the subscription was not due, or deployment was deliberately deferred. The source will be
+        /// checked again later, so no deployment or deployment tasks should be attempted for this request.
+        /// </summary>
+        public bool IsSubscriptionUpdateDeferred { get; set; }
         public bool Abort { get; set; }
         public string? Message { get; set; }
         public object? Result { get; set; }

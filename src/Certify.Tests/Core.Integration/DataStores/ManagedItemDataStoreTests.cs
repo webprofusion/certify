@@ -91,6 +91,46 @@ CREATE TABLE manageditem (
             await DataStoreTestContainers.DisposeAsync();
         }
 
+        [TestMethod, Description("Ensure the same item id can be stored by more than one instance")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestManagedItemSharedIdAcrossInstances(string storeType)
+        {
+            // the logical key of a stored row is (id, itemtype, instanceid). Schemas which declared the primary
+            // key on id alone failed here with "Violation of PRIMARY KEY constraint .. Cannot insert duplicate key",
+            // which also broke data store migration into a database already holding the same item for another instance.
+            var sharedId = Guid.NewGuid().ToString();
+
+            var storeA = GetManagedItemStore(storeType, $"instanceA_{Guid.NewGuid():N}");
+            var storeB = GetManagedItemStore(storeType, $"instanceB_{Guid.NewGuid():N}");
+
+            var itemA = BuildTestManagedCertificate();
+            itemA.Id = sharedId;
+            itemA.Name = $"InstanceA_{Guid.NewGuid():N}";
+
+            var itemB = BuildTestManagedCertificate();
+            itemB.Id = sharedId;
+            itemB.Name = $"InstanceB_{Guid.NewGuid():N}";
+
+            try
+            {
+                await storeA.Update(itemA);
+                await storeB.Update(itemB);
+
+                var storedA = await storeA.GetById(sharedId);
+                var storedB = await storeB.GetById(sharedId);
+
+                Assert.IsNotNull(storedA, $"[{storeType}] Instance A should have its own copy of the item");
+                Assert.IsNotNull(storedB, $"[{storeType}] Instance B should have its own copy of the item");
+                Assert.AreEqual(itemA.Name, storedA.Name, $"[{storeType}] Instance A should read back its own version");
+                Assert.AreEqual(itemB.Name, storedB.Name, $"[{storeType}] Instance B should read back its own version");
+            }
+            finally
+            {
+                await storeA.Delete(itemA);
+                await storeB.Delete(itemB);
+            }
+        }
+
         public static IEnumerable<object[]> LegacyTestDataStores
         {
             get

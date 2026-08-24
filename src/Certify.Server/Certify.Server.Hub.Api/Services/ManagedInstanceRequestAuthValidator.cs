@@ -18,7 +18,7 @@ namespace Certify.Server.Hub.Api.Services
     {
         private readonly ICertifyInternalApiClient _client;
         private readonly ILogger<ManagedInstanceRequestAuthValidator> _logger;
-        private static readonly AuthContext _systemAuthContext = new AuthContext { UserId = "system" };
+        private static readonly AuthContext _systemAuthContext = new AuthContext { UserId = StandardSecurityPrincipals.System };
         private static int _legacyFallbackCount;
 
         public ManagedInstanceRequestAuthValidator(ICertifyInternalApiClient client, ILogger<ManagedInstanceRequestAuthValidator> logger)
@@ -32,12 +32,14 @@ namespace Certify.Server.Hub.Api.Services
             var instanceId = request.Headers[ManagedInstanceRequestAuth.HubAssignedIdHeaderName].ToString();
             if (string.IsNullOrWhiteSpace(instanceId))
             {
+                _logger.LogWarning("Managed instance request auth failed: missing {headerName} header.", ManagedInstanceRequestAuth.HubAssignedIdHeaderName);
                 return Fail("X-Certify-HubAssignedId header is required.");
             }
 
             var instance = await _client.GetHubManagedInstance(instanceId, _systemAuthContext);
             if (instance == null)
             {
+                _logger.LogWarning("Managed instance request auth failed: managed instance {instanceId} is not registered.", instanceId);
                 return Fail("Managed instance is not registered.");
             }
 
@@ -58,22 +60,26 @@ namespace Certify.Server.Hub.Api.Services
             var timestamp = request.Headers[ManagedInstanceRequestAuth.TimestampHeaderName].ToString();
             if (string.IsNullOrWhiteSpace(timestamp))
             {
+                _logger.LogWarning("Managed instance request auth failed for {instanceId}: missing {headerName} header.", instanceId, ManagedInstanceRequestAuth.TimestampHeaderName);
                 return Fail("X-Certify-Timestamp header is required.");
             }
 
             var signature = request.Headers[ManagedInstanceRequestAuth.SignatureHeaderName].ToString();
             if (string.IsNullOrWhiteSpace(signature))
             {
+                _logger.LogWarning("Managed instance request auth failed for {instanceId}: missing {headerName} header.", instanceId, ManagedInstanceRequestAuth.SignatureHeaderName);
                 return Fail("X-Certify-Signature header is required.");
             }
 
             if (!ManagedInstanceRequestAuth.TryParseTimestamp(timestamp, out var timestampValue))
             {
+                _logger.LogWarning("Managed instance request auth failed for {instanceId}: invalid timestamp {timestamp}.", instanceId, timestamp);
                 return Fail("X-Certify-Timestamp header is invalid.");
             }
 
             if (Math.Abs((DateTimeOffset.UtcNow - timestampValue).TotalMinutes) > ManagedInstanceRequestAuth.DefaultAllowedClockSkew.TotalMinutes)
             {
+                _logger.LogWarning("Managed instance request auth failed for {instanceId}: timestamp {timestamp} is outside the allowed clock skew window.", instanceId, timestamp);
                 return Fail("X-Certify-Timestamp is outside the allowed clock skew window.");
             }
 

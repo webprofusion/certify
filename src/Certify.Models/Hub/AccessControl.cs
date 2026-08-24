@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Certify.Models.Hub
 {
@@ -111,6 +112,12 @@ namespace Certify.Models.Hub
         /// </summary>
         public List<TagSummary>? ResourceTags { get; set; }
 
+        /// <summary>
+        /// When evaluating access scope for resource selection, allow tag-scoped roles to also
+        /// use untagged resources. Used by hub preference for legacy managed-challenge behaviour.
+        /// </summary>
+        public bool AllowUnscopedResources { get; set; }
+
         public AccessCheck() { }
         public AccessCheck(string? securityPrincipalId, string resourceType, string resourceActionId, string? identifier = null)
         {
@@ -121,10 +128,49 @@ namespace Certify.Models.Hub
         }
     }
 
+    /// <summary>
+    /// Resolved access for a security principal against a resource action, including authorizing
+    /// assigned roles and whether access is unrestricted or tag-scoped.
+    /// </summary>
+    public class ResourceAccessScope
+    {
+        /// <summary>
+        /// True when the principal has at least one role granting the requested action.
+        /// </summary>
+        public bool HasAccess { get; set; }
+
+        /// <summary>
+        /// True when at least one authorizing role is not tag-scoped (unrestricted for this action).
+        /// </summary>
+        public bool IsUnrestricted { get; set; }
+
+        /// <summary>
+        /// Authorizing assigned roles used to evaluate access (already filtered to the requested action
+        /// and optional scoped assigned-role ids from an access token/EAB binding).
+        /// </summary>
+        public List<AssignedRole> AuthorizingRoles { get; set; } = [];
+
+        /// <summary>
+        /// When true, principals whose authorizing roles are tag-scoped may also use untagged resources.
+        /// </summary>
+        public bool AllowUnscopedResources { get; set; }
+
+        /// <summary>
+        /// True when resource selection must be filtered by role tag scopes.
+        /// </summary>
+        public bool RequiresTagFiltering => HasAccess && !IsUnrestricted;
+    }
+
     public class AccessTokenCheck
     {
         public AccessToken Token { get; set; } = default!;
         public AccessCheck Check { get; set; } = default!;
+    }
+
+    public class AccessTokenAuthorizationContext
+    {
+        public string SecurityPrincipalId { get; set; } = default!;
+        public List<string> ScopedAssignedRoles { get; set; } = [];
     }
 
     public class AccessTokenTypes
@@ -218,5 +264,106 @@ namespace Certify.Models.Hub
         public IEnumerable<Role> Roles { get; set; } = new List<Role>();
         public IEnumerable<ResourcePolicy> Policies { get; set; } = new List<ResourcePolicy>();
         public IEnumerable<ResourceAction> Action { get; set; } = new List<ResourceAction>();
+    }
+
+    /// <summary>
+    /// Shared access-scope helpers used by Access Control and resource consumers.
+    /// </summary>
+    public static class ResourceAccess
+    {
+        /// <summary>
+        /// True when a concrete resource (via tags) is within the resolved access scope.
+        /// </summary>
+        public static bool IsResourceInScope(ResourceAccessScope? scope, IEnumerable<TagSummary>? resourceTags)
+        {
+            if (scope == null || !scope.HasAccess)
+            {
+                return false;
+            }
+
+            if (scope.IsUnrestricted)
+            {
+                return true;
+            }
+
+            var tags = resourceTags?.ToList() ?? [];
+
+            if (tags.Count == 0)
+            {
+                return scope.AllowUnscopedResources;
+            }
+
+            foreach (var role in scope.AuthorizingRoles.Where(r => r.ScopedTags?.Count > 0))
+            {
+                if (IsResourceTagScopeMatch(tags, role.ScopedTags, role.RequireAllScopedTags))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Check if resource tags match the required tag scope for access control.
+        /// Category keys are normalised to lowercase when stored, and tag values are user entered,
+        /// so both are compared case-insensitively to avoid casing differences silently denying access.
+        /// </summary>
+        public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
+        {
+            if (scopedTags == null || scopedTags.Count == 0)
+            {
+                return true;
+            }
+
+            if (resourceTags == null || resourceTags.Count == 0)
+            {
+                return false;
+            }
+
+            if (requireAll)
+            {
+                foreach (var scope in scopedTags)
+                {
+                    if (!resourceTags.Any(tag => IsTagScopeMatch(tag, scope)))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return scopedTags.Any(scope => resourceTags.Any(tag => IsTagScopeMatch(tag, scope)));
+        }
+
+        /// <summary>
+        /// True when a single resource tag satisfies a single tag scope (null scope value matches any value in the category).
+        /// </summary>
+        private static bool IsTagScopeMatch(TagSummary tag, TagScope scope)
+        {
+            if (!string.Equals(tag.CategoryKey, scope.CategoryKey, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return scope.Value == null
+                || string.Equals(tag.Value, scope.Value, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Convert item tags to summaries used by scope matching.
+        /// </summary>
+        public static List<TagSummary> ToTagSummaries(IEnumerable<ItemTag>? tags)
+        {
+            if (tags == null)
+            {
+                return [];
+            }
+
+            return tags
+                .Select(t => new TagSummary { CategoryKey = t.CategoryKey, Value = t.Value })
+                .ToList();
+        }
     }
 }

@@ -24,10 +24,8 @@ namespace Certify.UI.Windows
         protected static ViewModel.AppViewModel _appViewModel => ViewModel.AppViewModel.Current;
         protected static ViewModel.ManagedCertificateViewModel _itemViewModel => UI.ViewModel.ManagedCertificateViewModel.Current;
 
-        private const int NUM_ITEMS_FOR_REMINDER = 3;
-        private const int NUM_ITEMS_FOR_LIMIT = 5;
-        private const int NUM_ITEMS_FOR_LEGACY_INSTALL = 10;
         private System.Timers.Timer _periodicCheckTimer;
+        private System.Timers.Timer _hubStatusCheckTimer;
 
         public int NumManagedCertificates
         {
@@ -60,35 +58,10 @@ namespace Certify.UI.Windows
                 return;
             }
 
-            if (!_appViewModel.IsRegisteredVersion && _appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_REMINDER)
+            // evaluation mode is fully featured, we only advise the user of their license status
+            if (_appViewModel.IsRegisteredVersion && _appViewModel.IsLicenseExpired)
             {
-                MessageBox.Show(SR.MainWindow_TrialLimitationReached);
-
-                if (_appViewModel.IsInstallBeforeDate(new System.DateTime(2023, 1, 1)))
-                {
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LEGACY_INSTALL)
-                    {
-                        return;
-                    }
-                }
-                else
-                {
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
-                    {
-                        return;
-                    }
-                }
-            }
-            else
-            {
-                if (_appViewModel.IsLicenseExpired)
-                {
-                    MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
-                    if (_appViewModel.NumManagedCerts >= NUM_ITEMS_FOR_LIMIT)
-                    {
-                        return;
-                    }
-                }
+                MessageBox.Show(Certify.Locales.SR.MainWindow_KeyExpired);
             }
 
             PromptForAcmeAccountIfFirstManagedCertificate();
@@ -284,11 +257,11 @@ namespace Certify.UI.Windows
 
                 if (!string.IsNullOrEmpty(config.ServiceFaultMsg))
                 {
-                    MessageBox.Show("Certify Certificate Manager service not started. " + config.ServiceFaultMsg);
+                    MessageBox.Show("Could not connect to Certify Management Agent service. " + config.ServiceFaultMsg);
                 }
                 else
                 {
-                    MessageBox.Show("Certify Certificate Manager service not started. Please restart the service. If this problem persists please refer to https://docs.certifytheweb.com/docs/faq and if you cannot resolve the problem contact support@certifytheweb.com.");
+                    MessageBox.Show("Could not connect to Certify Management Agent service, check service is started. If this problem persists please refer to https://docs.certifytheweb.com and if you cannot resolve the problem contact support@certifytheweb.com.");
                 }
 
                 if (_appViewModel.IsFeatureEnabled(FeatureFlags.SERVER_CONNECTIONS))
@@ -350,31 +323,101 @@ namespace Certify.UI.Windows
                 }
                 else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
                 {
-                    var evaluating = MessageBox.Show(this, "You are currently using the Community Edition of this app intended for personal use or evaluation. Are you still just evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
-
-                    if (evaluating == MessageBoxResult.No)
+                    try
                     {
-                        var personalUse = MessageBox.Show(this, "Are you using the app for personal use?", "Confirm Usage", MessageBoxButton.YesNo);
+                        const int daysBetween = 30;
+                        var ui = _appViewModel.UISettings;
+                        DateTime? lastNag = null;
 
-                        if (personalUse == MessageBoxResult.No)
+                        // Try common property names that might be present on UISettings
+                        string[] candidateProps = { "LastEvaluationNagUtc", "LastEvaluationNagDate", "LastEvaluationNag" };
+                        System.Reflection.PropertyInfo foundProp = null;
+
+                        foreach (var name in candidateProps)
                         {
-                            MessageBox.Show(this, "Please purchase a license to continue using the app for non-personal use.");
+                            var p = ui?.GetType().GetProperty(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                            if (p != null)
+                            {
+                                foundProp = p;
+                                var val = p.GetValue(ui);
+                                if (val != null)
+                                {
+                                    if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
+                                    {
+                                        lastNag = (DateTime)val;
+                                    }
+                                    else
+                                    {
+                                        if (DateTime.TryParse(val.ToString(), out var parsed)) lastNag = parsed;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+
+                        var shouldShow = true;
+                        if (lastNag.HasValue)
+                        {
+                            var diff = DateTime.UtcNow - lastNag.Value.ToUniversalTime();
+                            shouldShow = diff.TotalDays >= daysBetween;
+                        }
+
+                        if (shouldShow)
+                        {
+                            var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+
+                            if (evaluating == MessageBoxResult.No)
+                            {
+                                MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
+
+                                _appViewModel.UISettings.CommunityMode = "commercial";
+                            }
+                            else
+                            {
+                                _appViewModel.UISettings.CommunityMode = "evaluating";
+                            }
+
+                            // Attempt to write the last nag time back into UISettings if property exists.
+                            if (foundProp != null)
+                            {
+                                try
+                                {
+                                    if (foundProp.PropertyType == typeof(DateTime) || foundProp.PropertyType == typeof(DateTime?))
+                                    {
+                                        foundProp.SetValue(ui, DateTime.UtcNow);
+                                    }
+                                    else
+                                    {
+                                        // store ISO string for string-typed properties
+                                        foundProp.SetValue(ui, DateTime.UtcNow.ToString("o"));
+                                    }
+                                }
+                                catch
+                                {
+                                    // ignore write failures - don't block the UI for missing/readonly props
+                                }
+                            }
+
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
+                    }
+                    catch
+                    {
+                        // If anything goes wrong, fall back to the original behavior without breaking app startup.
+                        var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+
+                        if (evaluating == MessageBoxResult.No)
+                        {
+                            MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
 
                             _appViewModel.UISettings.CommunityMode = "commercial";
                             UISettings.Save(_appViewModel.UISettings);
                         }
                         else
                         {
-                            MessageBox.Show(this, "You are using the app for personal use. Please continue using the app for free. Tell your friends about us and star webprofusion/certify on github.");
-
-                            _appViewModel.UISettings.CommunityMode = "personal";
+                            _appViewModel.UISettings.CommunityMode = "evaluating";
                             UISettings.Save(_appViewModel.UISettings);
                         }
-                    }
-                    else
-                    {
-                        _appViewModel.UISettings.CommunityMode = "evaluating";
-                        UISettings.Save(_appViewModel.UISettings);
                     }
                 }
             }
@@ -388,7 +431,16 @@ namespace Certify.UI.Windows
             _periodicCheckTimer = new System.Timers.Timer(60 * 60 * 1000); // every hour
             _periodicCheckTimer.Elapsed += _periodicCheckTimer_Elapsed;
             _periodicCheckTimer.Start();
+
+            // the hub status indicator is always visible in the main UI so is refreshed more often
+            await _appViewModel.RefreshManagementHubStatus();
+
+            _hubStatusCheckTimer = new System.Timers.Timer(60 * 1000); // every minute
+            _hubStatusCheckTimer.Elapsed += _hubStatusCheckTimer_Elapsed;
+            _hubStatusCheckTimer.Start();
         }
+
+        private async void _hubStatusCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) => await _appViewModel.RefreshManagementHubStatus();
 
         private async void _periodicCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {

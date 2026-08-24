@@ -13,15 +13,26 @@ namespace Certify.Core.Tests.DataStores
         private static int _referenceCount;
         private static bool _initialized;
 
-        private const string PostgresSchemaSql = "CREATE TABLE IF NOT EXISTS manageditem (id TEXT NOT NULL PRIMARY KEY, itemtype TEXT NOT NULL, instanceid TEXT NOT NULL DEFAULT '', config JSONB NOT NULL, itemvalue TEXT NULL);";
+        // the schema a new installation gets, i.e. with the composite primary key already in place. Tests which
+        // need to exercise an older schema build their own table - the composite key upgrade is optional and is
+        // never applied to an existing database on connect
+        private const string PostgresSchemaSql = @"CREATE TABLE IF NOT EXISTS manageditem (
+    id TEXT NOT NULL,
+    itemtype TEXT NOT NULL,
+    instanceid TEXT NOT NULL DEFAULT '',
+    config JSONB NOT NULL,
+    itemvalue TEXT NULL,
+    CONSTRAINT manageditem_pkey PRIMARY KEY (id, itemtype, instanceid)
+);";
         private const string SqlServerSchemaSql = @"IF OBJECT_ID('manageditem', 'U') IS NULL
 BEGIN
     CREATE TABLE manageditem (
-        id NVARCHAR(64) NOT NULL PRIMARY KEY,
+        id NVARCHAR(64) NOT NULL,
         itemtype NVARCHAR(100) NOT NULL,
         instanceid NVARCHAR(64) NOT NULL DEFAULT '',
         config NVARCHAR(MAX) NOT NULL,
-        itemvalue NVARCHAR(MAX) NULL
+        itemvalue NVARCHAR(MAX) NULL,
+        CONSTRAINT PK_manageditem PRIMARY KEY (id, itemtype, instanceid)
     );
 END";
 
@@ -42,8 +53,7 @@ END";
                     return;
                 }
 
-                PostgresContainer = new PostgreSqlBuilder("certify-postgres-test")
-                    .WithImage("postgres:16-alpine")
+                PostgresContainer = new PostgreSqlBuilder("postgres:16-alpine")
                     .WithDatabase("certify")
                     .WithUsername("certify")
                     .WithPassword("certify")
@@ -53,7 +63,8 @@ END";
                 PostgresConnectionString = PostgresContainer.GetConnectionString();
                 await EnsurePostgresSchema(PostgresConnectionString);
 
-                SqlServerContainer = new MsSqlBuilder("certify-sqlserver-test")
+                // the module builder constructor takes the image to run (Testcontainers 4.x has no default image)
+                SqlServerContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2025-latest")
                     .Build();
 
                 await SqlServerContainer.StartAsync();

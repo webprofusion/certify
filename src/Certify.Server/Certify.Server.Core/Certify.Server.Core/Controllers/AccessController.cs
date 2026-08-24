@@ -101,6 +101,18 @@ namespace Certify.Service.Controllers
             return await accessControl.IsSecurityPrincipalAuthorised(GetContextUserId(), check);
         }
 
+        /// <summary>
+        /// Evaluate authorizing roles and unrestricted/scoped state for a principal and action.
+        /// Used by Managed ACME / Managed Challenge selection and other resource filters.
+        /// </summary>
+        [HttpPost, Route("securityprincipal/accessscope/")]
+        public async Task<ResourceAccessScope> EvaluateAccessScope(AccessCheck check)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.EvaluateAccessScope(GetContextUserId(), check);
+        }
+
         [HttpPost, Route("apitoken/check/")]
         public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessTokenCheck tokenCheck)
         {

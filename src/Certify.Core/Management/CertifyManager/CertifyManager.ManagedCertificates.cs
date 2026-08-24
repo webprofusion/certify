@@ -12,6 +12,7 @@ using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Shared;
+using Certify.Providers.CertificateManagers;
 using Certify.Shared.Core.Utils;
 using Certify.Shared.Core.Utils.PKI;
 
@@ -32,23 +33,41 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> GetManagedCertificate(string id)
         {
-            if (id.StartsWith("ext-"))
-            {
+            var item = ManagedCertificate.IsExternalItemId(id)
                 // look for item via external managed certificate provider
-                return _externallyManagedCertificatesCache
-                    .FirstOrDefault(i => i.Id == id);
-            }
-            else
-            {
-                var item = await _itemManager.GetById(id);
-                if (item != null)
-                {
-                    item.InstanceId = _serverConfig.HubAssignedInstanceId;
-                    item.DateRetrieved = DateTime.UtcNow;
-                }
+                ? _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id)
+                : await _itemManager.GetById(id);
 
-                return item;
+            if (item != null)
+            {
+                // an externally managed item is not stored by this instance, but callers still need to know which
+                // instance it belongs to (a hub client addresses per item operations such as log retrieval by instance)
+                item.InstanceId = _serverConfig.HubAssignedInstanceId;
+                item.DateRetrieved = DateTime.UtcNow;
+
+                // this instance owns the renewal settings, so it reports the renewal plan with the item rather than
+                // requiring each consumer (hub UI, desktop UI) to fetch and interpret those settings for itself
+                item.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs());
             }
+
+            return item;
+        }
+
+        /// <summary>
+        /// The renewal preferences currently configured for this instance
+        /// </summary>
+        internal static RenewalPrefs GetRenewalPrefs()
+        {
+            return new RenewalPrefs
+            {
+                MaxRenewalRequests = CoreAppSettings.Current.MaxRenewalRequests,
+                RenewalIntervalDays = CoreAppSettings.Current.RenewalIntervalDays,
+                RenewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.PercentageLifetime,
+                IncludeStoppedSites = !CoreAppSettings.Current.IgnoreStoppedSites,
+                PerformParallelRenewals = CoreAppSettings.Current.EnableParallelRenewals,
+                MaintenanceWindows = CoreAppSettings.Current.MaintenanceWindows ?? [],
+                DefaultMaintenanceWindowId = CoreAppSettings.Current.DefaultMaintenanceWindowId
+            };
         }
 
         /// <summary>
@@ -69,7 +88,14 @@ namespace Certify.Management
                 }
             }
 
-            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            var renewalPrefs = GetRenewalPrefs();
+
+            list.ForEach(i =>
+            {
+                i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                i.DateRetrieved = DateTime.UtcNow;
+                i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+            });
 
             if (!string.IsNullOrWhiteSpace(filter.Health) && filter.Health.ToLower() != "nocertificate")
             {
@@ -90,6 +116,11 @@ namespace Certify.Management
                 return _externallyManagedCertificatesCache;
             }
 
+            return await RefreshExternalManagedCertificates();
+        }
+
+        private async Task<List<ManagedCertificate>> RefreshExternalManagedCertificates()
+        {
             if (_pluginManager?.CertificateManagerProviders?.Any() == true)
             {
                 List<ManagedCertificate> list = [];
@@ -121,11 +152,9 @@ namespace Certify.Management
                                             var certManager = p.GetProvider(pluginType, cp.Id);
 
                                             // Initialize or use the certificate manager with the specified config and log paths
-
                                             certManager.Init(loggerAdapter, providerPrefs);
 
-                                            var certs = await certManager.GetManagedCertificates(filter);
-
+                                            var certs = await certManager.GetManagedCertificates(new ManagedCertificateFilter { IncludeExternal = true });
                                             list.AddRange(certs);
 
                                             if (providerPrefs == null)
@@ -163,7 +192,6 @@ namespace Certify.Management
 
                 lock (_externallyManagedCertificatesCache)
                 {
-                    // reset cache
                     _externallyManagedCertificatesCache = list;
                 }
 
@@ -180,10 +208,25 @@ namespace Certify.Management
                     }
                 }
             }
+            else
+            {
+                lock (_externallyManagedCertificatesCache)
+                {
+                    _externallyManagedCertificatesCache = [];
+                }
+            }
 
             _externallyManagedCacheUpdated = DateTimeOffset.UtcNow;
 
             return _externallyManagedCertificatesCache;
+        }
+
+        private async Task<ActionResult> RefreshExternalManagedCertificateCache()
+        {
+            _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
+            var refreshed = await RefreshExternalManagedCertificates();
+
+            return new ActionResult($"Refreshed external certificate manager cache with {refreshed.Count} certificate{(refreshed.Count == 1 ? string.Empty : "s")}.", true);
         }
 
         /// <summary>
@@ -196,8 +239,14 @@ namespace Certify.Management
             var result = new ManagedCertificateSearchResult();
 
             var list = await _itemManager.Find(filter);
+            var renewalPrefs = GetRenewalPrefs();
 
-            list.ForEach(i => { i.InstanceId = _serverConfig.HubAssignedInstanceId; i.DateRetrieved = DateTime.UtcNow; });
+            list.ForEach(i =>
+            {
+                i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                i.DateRetrieved = DateTime.UtcNow;
+                i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+            });
 
             result.Results = list;
 
@@ -209,7 +258,11 @@ namespace Certify.Management
                 if (external != null)
                 {
                     list.AddRange(await external);
-                    list.ForEach(i => i.InstanceId = _serverConfig.HubAssignedInstanceId);
+                    list.ForEach(i =>
+                    {
+                        i.InstanceId = _serverConfig.HubAssignedInstanceId;
+                        i.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(i, renewalPrefs);
+                    });
                     result.Results = list;
                 }
             }
@@ -272,15 +325,29 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ManagedCertificate> UpdateManagedCertificate(ManagedCertificate managedCert)
         {
+            // an externally managed item is a read-only view of a certificate owned by an external certificate manager
+            // provider, storing it here would create a duplicate this instance would then try to manage itself.
+            // This is keyed on the id, the same signal DeleteManagedCertificate uses, because those items exist only in
+            // the provider cache and are the only items carrying the external id prefix. Keying it on item type instead
+            // would also reject a subscription whose source type has not been chosen yet, which is a stored item
+            if (ManagedCertificate.IsExternalItemId(managedCert.Id))
+            {
+                _serviceLog?.Error("Ignoring attempt to store externally managed certificate {name} [{id}], it is owned by an external certificate manager provider.", managedCert.Name, managedCert.Id);
+                return managedCert;
+            }
+
             // migrate item settings as source can include legacy settings (e.g. CSV import) - TODO: remove when legacy sources no longer supported
             managedCert = MigrateManagedCertificateSettings(managedCert);
 
-            managedCert.NormalizeExternalSourceSettings();
+            // the renewal plan is derived state recalculated whenever the item is fetched, a stale copy sent back by a
+            // client must not be stored with the item
+            managedCert.RenewalPlan = null;
 
             // store managed cert in database store
             managedCert = await _itemManager.Update(managedCert);
 
             managedCert.InstanceId = _serverConfig.HubAssignedInstanceId;
+            managedCert.RenewalPlan = RenewalScheduleCalculator.CalculateNextRenewalAttempt(managedCert, GetRenewalPrefs());
 
             // Update the change tracking ID
             lock (_lastUpdateIdLock)
@@ -336,6 +403,9 @@ namespace Certify.Management
 
             try
             {
+                // the renewal plan is derived state recalculated whenever the item is fetched, it is not stored with the item
+                managedCertificate.RenewalPlan = null;
+
                 managedCertificate = await _itemManager.Update(managedCertificate);
             }
             catch (Exception exp)
@@ -540,6 +610,12 @@ namespace Certify.Management
         /// <returns></returns>
         public async Task<ActionResult> DeleteManagedCertificate(string id)
         {
+            // an externally managed item is owned by an external certificate manager provider and is not ours to delete
+            if (ManagedCertificate.IsExternalItemId(id))
+            {
+                return new ActionResult { IsSuccess = false, Message = "Externally managed certificates cannot be deleted here, remove the certificate using the tool which manages it." };
+            }
+
             if (!string.IsNullOrEmpty(id))
             {
                 var item = await _itemManager.GetById(id);
@@ -622,9 +698,9 @@ namespace Certify.Management
         public async Task<List<StatusMessage>> TestChallenge(ILog log, ManagedCertificate managedCertificate,
             bool isPreviewMode, IProgress<RequestProgressState> progress = null)
         {
-            if (managedCertificate.ItemType == ManagedCertificateType.SSL_ExternallyManaged)
+            if (managedCertificate.IsExternalSourceItem)
             {
-                return await TestExternalSubscriptionAccess(log, managedCertificate, progress);
+                return await TestSubscriptionAccess(log, managedCertificate, progress);
             }
 
             var results = new List<StatusMessage>();
@@ -915,6 +991,11 @@ namespace Certify.Management
 
         public async Task<LogItem[]> GetItemLog(string id, int limit)
         {
+            if (ManagedCertificate.IsExternalItemId(id))
+            {
+                return await GetExternalItemLog(id, limit);
+            }
+
             var logPath = ManagedCertificateLog.GetLogPath(id);
 
             if (!string.IsNullOrEmpty(logPath) && System.IO.File.Exists(logPath))
@@ -944,6 +1025,100 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Fetch log entries for an externally managed item from the certificate manager which owns it. Each
+        /// external tool knows where its own logs are kept and how they are formatted, so the fetch is delegated
+        /// to the provider rather than being resolved from the configured log path alone
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        private async Task<LogItem[]> GetExternalItemLog(string id, int limit)
+        {
+            var externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id);
+
+            if (externalItem == null)
+            {
+                // the item may not be cached yet, e.g. this service has restarted since the item list was fetched
+                await RefreshExternalManagedCertificates();
+                externalItem = _externallyManagedCertificatesCache.FirstOrDefault(i => i.Id == id);
+            }
+
+            if (externalItem == null || string.IsNullOrWhiteSpace(externalItem.SourceId))
+            {
+                _serviceLog?.Warning("External certificate log fetch: managed item {itemId} is not available from any certificate manager on this instance.", id);
+
+                return ExternalLogMessage($"This certificate is no longer available from the certificate manager which reported it, so no log can be fetched.");
+            }
+
+            var provider = GetCertificateManagerProvider(externalItem.SourceId);
+
+            if (provider == null)
+            {
+                _serviceLog?.Warning("External certificate log fetch: certificate manager {providerId} is not available on this instance.", externalItem.SourceId);
+
+                return ExternalLogMessage($"The certificate manager {externalItem.SourceName ?? externalItem.SourceId} is not available on this instance, so no log can be fetched.");
+            }
+
+            try
+            {
+                return await provider.GetItemLog(externalItem, limit);
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, "External certificate log fetch: failed to fetch log for {itemId} from {providerId}", externalItem.Id, externalItem.SourceId);
+
+                return ExternalLogMessage($"Failed to fetch the log from {externalItem.SourceName ?? externalItem.SourceId}: {exp.Message}", "ERR");
+            }
+        }
+
+        /// <summary>
+        /// Create and initialise the certificate manager provider with the given id, using the stored preferences
+        /// for that provider
+        /// </summary>
+        /// <param name="providerId"></param>
+        /// <returns></returns>
+        private ICertificateManager GetCertificateManagerProvider(string providerId)
+        {
+            if (_pluginManager?.CertificateManagerProviders?.Any() != true)
+            {
+                return null;
+            }
+
+            var prefs = SettingsManager.ToPreferences();
+            var providerPrefs = prefs.CertificateManagers?.FirstOrDefault(c => string.Equals(c.Id, providerId, StringComparison.OrdinalIgnoreCase));
+
+            foreach (var p in _pluginManager.CertificateManagerProviders.Where(p => p != null))
+            {
+                try
+                {
+                    var provider = p.GetProvider(p.GetType(), providerId);
+
+                    if (provider != null)
+                    {
+                        provider.Init(new LogToILoggerAdapter(_serviceLog), providerPrefs);
+                        return provider;
+                    }
+                }
+                catch (Exception exp)
+                {
+                    _serviceLog?.Error(exp, "Failed to create certificate manager provider {providerId}", providerId);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Report why a log could not be fetched as a log entry, so the reason is visible to the user rather than
+        /// appearing as an item with no log history
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="logLevel"></param>
+        /// <returns></returns>
+        private static LogItem[] ExternalLogMessage(string message, string logLevel = "WRN") =>
+            [new LogItem { LogLevel = logLevel, EventDate = DateTime.UtcNow, Message = message }];
+
+        /// <summary>
         /// Perform any one-time migrations of legacy managed certificate settings and deployment tasks etc
         /// </summary>
         /// <returns></returns>
@@ -963,6 +1138,28 @@ namespace Certify.Management
                     await UpdateManagedCertificate(result.Item1);
                 }
             }
+
+            await MigrateSubscriptionItemTypes();
+        }
+
+        /// <summary>
+        /// Adopt the current item type for stored certificate subscriptions. These were originally stored using the
+        /// same item type as externally managed certificates, distinguished only by having an external source configured
+        /// </summary>
+        /// <returns></returns>
+        private async Task MigrateSubscriptionItemTypes()
+        {
+            // only stored items are migrated, externally managed items are not stored by this instance
+            var storedItems = await _itemManager.Find(ManagedCertificateFilter.ALL);
+
+            foreach (var item in storedItems)
+            {
+                if (item.NormalizeSubscriptionItemType())
+                {
+                    _serviceLog?.Information("Migrating certificate subscription {name} [{id}] to the certificate subscription item type.", item.Name, item.Id);
+                    await UpdateManagedCertificate(item);
+                }
+            }
         }
 
         /// <summary>
@@ -972,6 +1169,13 @@ namespace Certify.Management
         /// <returns>The updated managed certificate to be stored</returns>
         private ManagedCertificate MigrateManagedCertificateSettings(ManagedCertificate managedCert)
         {
+            // an item stored with the legacy certificate subscription item type adopts the current one, so that a
+            // subscription is not confused with an externally managed item
+            managedCert.NormalizeSubscriptionItemType();
+
+            // an external source configuration is only meaningful for an item which takes its certificate externally
+            managedCert.NormalizeExternalSourceSettings();
+
             if (
                 !string.IsNullOrEmpty(managedCert.RequestConfig.WebhookUrl)
                 || !string.IsNullOrEmpty(managedCert.RequestConfig.PreRequestPowerShellScript)

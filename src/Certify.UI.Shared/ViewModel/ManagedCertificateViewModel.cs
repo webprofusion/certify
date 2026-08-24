@@ -55,7 +55,16 @@ namespace Certify.UI.ViewModel
             RaisePropertyChangedEvent(nameof(ChallengeConfigViewModels));
 
             RaisePropertyChangedEvent(nameof(DaysRemaining));
+
+            // the renewal plan is derived from the item's current state, so it is recalculated whenever the item changes
+            _renewalPlan = null;
+
+            RaisePropertyChangedEvent(nameof(RenewalPlan));
             RaisePropertyChangedEvent(nameof(DateNextRenewalDue));
+            RaisePropertyChangedEvent(nameof(NextRenewalDueDisplay));
+            RaisePropertyChangedEvent(nameof(RenewalPlanStatusLabel));
+            RaisePropertyChangedEvent(nameof(RenewalPlanReason));
+            RaisePropertyChangedEvent(nameof(IsRenewalOnHold));
 
             RaisePropertyChangedEvent(nameof(IsSelectedItemValid));
 
@@ -66,8 +75,9 @@ namespace Certify.UI.ViewModel
 
             RaisePropertyChangedEvent(nameof(StoredPasswords));
             RaisePropertyChangedEvent(nameof(CertificateAuthorities));
-            RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
-            RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+            RaisePropertyChangedEvent(nameof(IsExternalSourceItem));
+            RaisePropertyChangedEvent(nameof(IsSubscription));
+            RaisePropertyChangedEvent(nameof(IsSubscriptionMode));
             RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
             RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
             RaisePropertyChangedEvent(nameof(ExternalSourceTypes));
@@ -604,14 +614,99 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public DateTimeOffset? DateNextRenewalDue
+        private RenewalDueInfo _renewalPlan;
+
+        /// <summary>
+        /// The plan for the next renewal of the selected item (when renewal will next be attempted and why), using the same
+        /// calculation the renewal process itself uses. Cached until the selected item changes so that everything displayed
+        /// about the plan is drawn from one consistent result.
+        /// </summary>
+        public RenewalDueInfo RenewalPlan
         {
             get
             {
-                return ManagedCertificate
-                    .CalculateNextRenewalAttempt(SelectedItem, Preferences.RenewalIntervalDays, _appViewModel.Preferences?.RenewalIntervalMode)?.DateNextRenewalAttempt;
+                _renewalPlan ??= RenewalScheduleCalculator.CalculateNextRenewalAttempt(SelectedItem, RenewalPrefs.FromPreferences(Preferences));
+
+                return _renewalPlan;
             }
         }
+
+        public DateTimeOffset? DateNextRenewalDue => RenewalPlan?.DateNextRenewalAttempt;
+
+        /// <summary>
+        /// True when the planned renewal is a specific time scheduled against the item (e.g. a CA suggested renewal window
+        /// via ACME ARI) rather than the estimate derived from the renewal interval
+        /// </summary>
+        public bool IsRenewalScheduled => RenewalPlan?.IsRenewalScheduled == true;
+
+        /// <summary>
+        /// True when repeated renewal failures are currently holding back the next attempt, in which case the date shown is
+        /// the retry back off time rather than any scheduled renewal
+        /// </summary>
+        public bool IsRenewalOnHold => RenewalPlan?.IsRenewalOnHold == true;
+
+        /// <summary>
+        /// True when renewal will be attempted at the next renewal check rather than on a future date. A renewal which is due
+        /// but held back (by failure back off or a maintenance window) has a meaningful future date instead.
+        /// </summary>
+        public bool IsRenewalDueNow => RenewalPlan?.IsRenewalDue == true && !IsRenewalOnHold && RenewalPlan?.IsDeferredByMaintenanceWindow != true;
+
+        /// <summary>
+        /// The next planned renewal for display. A scheduled or held renewal happens at a specific time so is shown to the
+        /// minute, an estimated renewal is shown as a date only.
+        /// </summary>
+        public string NextRenewalDueDisplay
+        {
+            get
+            {
+                if (IsRenewalDueNow)
+                {
+                    return "Due now";
+                }
+
+                if (DateNextRenewalDue == null)
+                {
+                    return "Unknown";
+                }
+
+                return IsRenewalScheduled || IsRenewalOnHold
+                    ? DateNextRenewalDue.Value.ToLocalTime().ToString("g")
+                    : DateNextRenewalDue.Value.ToLocalTime().ToString("d");
+            }
+        }
+
+        /// <summary>
+        /// Short label describing why the planned renewal is not simply the next interval based renewal, or null when it is
+        /// </summary>
+        public string RenewalPlanStatusLabel
+        {
+            get
+            {
+                if (IsRenewalScheduled)
+                {
+                    // a scheduled renewal time is normally set from the renewal window suggested by the certificate authority
+                    // (ACME ARI), which we only know about for an item whose renewal info we have checked
+                    return SelectedItem?.DateLastRenewalInfoCheck != null ? "CA Scheduled Window" : "Scheduled";
+                }
+
+                if (IsRenewalOnHold)
+                {
+                    return "On Hold";
+                }
+
+                if (RenewalPlan?.IsDeferredByMaintenanceWindow == true)
+                {
+                    return "Maintenance Window";
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The reason for the current renewal plan, shown alongside the planned renewal date
+        /// </summary>
+        public string RenewalPlanReason => RenewalPlan?.Reason;
 
         public ObservableCollection<StatusMessage> ConfigCheckResults
         {
@@ -633,13 +728,24 @@ namespace Certify.UI.ViewModel
         public bool UseAuthorityTokenListView { get; set; }
         public bool IsSelectedItemValid => SelectedItem?.Id != null && !SelectedItem.IsChanged;
 
+        /// <summary>
+        /// True when the selected item takes its certificate from an external source, whether it is externally
+        /// managed (discovered via a certificate manager provider) or a certificate subscription
+        /// </summary>
         [DependsOn(nameof(SelectedItem))]
-        public bool IsExternalManagedCertificateItem => SelectedItem?.ItemType == ManagedCertificateType.SSL_ExternallyManaged;
+        public bool IsExternalSourceItem => SelectedItem?.IsExternalSourceItem == true;
+
+        /// <summary>
+        /// True when the selected item is a certificate subscription, as opposed to an externally managed item
+        /// discovered via a certificate manager provider (which is read-only and never reaches this editor).
+        /// </summary>
+        [DependsOn(nameof(SelectedItem))]
+        public bool IsSubscription => SelectedItem?.IsSubscription == true;
 
         [DependsOn(nameof(SelectedItem))]
-        public bool IsExternalSubscriptionMode
+        public bool IsSubscriptionMode
         {
-            get => IsExternalManagedCertificateItem;
+            get => IsExternalSourceItem;
             set
             {
                 if (SelectedItem == null)
@@ -647,12 +753,26 @@ namespace Certify.UI.ViewModel
                     return;
                 }
 
+                // an item which already takes its certificate from an external source stays as that type
+                if (value && SelectedItem.IsExternalSourceItem)
+                {
+                    return;
+                }
+
                 var targetType = value
-                    ? ManagedCertificateType.SSL_ExternallyManaged
+                    ? ManagedCertificateType.SSL_ExternalSubscription
                     : ManagedCertificateType.SSL_ACME;
 
                 if (SelectedItem.ItemType == targetType)
                 {
+                    return;
+                }
+
+                // turning the subscription off discards its configuration, so check with the user first
+                if (!value && SelectedItem.ExternalSource?.HasUserConfiguration == true && !ConfirmDiscardSubscriptionConfig())
+                {
+                    // re-notify once the binding has finished applying the rejected value, so the toggle returns to its previous state
+                    Application.Current?.Dispatcher?.BeginInvoke(new Action(() => RaisePropertyChangedEvent(nameof(IsSubscriptionMode))));
                     return;
                 }
 
@@ -663,21 +783,28 @@ namespace Certify.UI.ViewModel
                     EnsureExternalSourceConfiguration();
                     UseAuthorityTokenListView = false;
                 }
+                else
+                {
+                    SelectedItem.ExternalSource = null;
+                    SelectedSubscribableCertificate = null;
+                    ClearSubscribableManagedCertificates();
+                    RaisePropertyChangedEvent(nameof(SelectedSubscribableCertificate));
+                }
 
                 SelectedItem.IsChanged = true;
 
-                RaisePropertyChangedEvent(nameof(IsExternalManagedCertificateItem));
-                RaisePropertyChangedEvent(nameof(IsExternalSubscriptionMode));
+                RaisePropertyChangedEvent(nameof(IsExternalSourceItem));
+                RaisePropertyChangedEvent(nameof(IsSubscriptionMode));
                 RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
                 RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));
             }
         }
 
         [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
-        public bool ShowStandardIdentifiersEditor => !IsExternalManagedCertificateItem && !UseAuthorityTokenListView;
+        public bool ShowStandardIdentifiersEditor => !IsExternalSourceItem && !UseAuthorityTokenListView;
 
         [DependsOn(nameof(SelectedItem), nameof(UseAuthorityTokenListView))]
-        public bool ShowAuthorityTokenEditor => !IsExternalManagedCertificateItem && UseAuthorityTokenListView;
+        public bool ShowAuthorityTokenEditor => !IsExternalSourceItem && UseAuthorityTokenListView;
 
         public IEnumerable<KeyValuePair<string, string>> ExternalSourceTypes => new[]
         {
@@ -706,6 +833,20 @@ namespace Certify.UI.ViewModel
             {
                 return new ManagedCertificateViewModel();
             }
+        }
+
+        /// <summary>
+        /// Ask the user to confirm that the configuration for the current certificate subscription can be discarded,
+        /// as it is not retained when the item is no longer a subscription
+        /// </summary>
+        /// <returns>true if the user chose to continue</returns>
+        private static bool ConfirmDiscardSubscriptionConfig()
+        {
+            return MessageBox.Show(
+                "Disabling Certificate Subscription will discard this item's subscription configuration (source, source certificate and credentials). Continue?",
+                "Discard Subscription Configuration?",
+                MessageBoxButton.OKCancel,
+                MessageBoxImage.Warning) == MessageBoxResult.OK;
         }
 
         public async Task<bool> ConfirmDiscardUnsavedChanges()
@@ -794,7 +935,7 @@ namespace Certify.UI.ViewModel
                 return new ValidationResult(false, "No item selected", ValidationErrorCodes.ITEM_NOT_FOUND.ToString());
             }
 
-            if (IsExternalManagedCertificateItem)
+            if (IsExternalSourceItem)
             {
                 return ValidateExternalSource();
             }
@@ -980,7 +1121,14 @@ namespace Certify.UI.ViewModel
 
         public void EnsureExternalSourceConfiguration()
         {
-            if (!IsExternalManagedCertificateItem || SelectedItem == null)
+            if (!IsExternalSourceItem || SelectedItem == null)
+            {
+                return;
+            }
+
+            // an item discovered via a certificate manager provider (simple-acme, certbot etc) is not a subscription
+            // and carries no external source config - creating one here would make it appear to be a subscription
+            if (!SelectedItem.IsSubscription && SelectedItem.ExternalSource == null)
             {
                 return;
             }

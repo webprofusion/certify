@@ -17,6 +17,21 @@ namespace Certify.UI.Windows
         public StoredCredential Item { get; set; }
         public List<ChallengeProviderDefinition> ChallengeProviders { get; set; }
 
+        /// <summary>
+        /// Optional expiry date for the credential, exposed as a local DateTime for binding to a DatePicker
+        /// </summary>
+        public DateTime? ItemExpiryDate
+        {
+            get => Item?.DateExpiry?.UtcDateTime;
+            set
+            {
+                if (Item != null)
+                {
+                    Item.DateExpiry = value == null ? (DateTimeOffset?)null : new DateTimeOffset(DateTime.SpecifyKind(value.Value, DateTimeKind.Utc));
+                }
+            }
+        }
+
         public ChallengeProviderDefinition SelectedChallengeProvider
         {
             get
@@ -128,7 +143,9 @@ namespace Certify.UI.Windows
                     StorageKey = item.StorageKey,
                     ProviderType = item.ProviderType,
                     Secret = Newtonsoft.Json.JsonConvert.SerializeObject(credentialsToStore),
-                    Title = item.Title
+                    Title = item.Title,
+                    AllowUnlock = item.AllowUnlock,
+                    DateExpiry = item.DateExpiry
                 };
             }
             else
@@ -140,6 +157,8 @@ namespace Certify.UI.Windows
                     ProviderType = item.ProviderType,
                     StorageKey = Guid.NewGuid().ToString(),
                     DateCreated = DateTime.UtcNow,
+                    AllowUnlock = item.AllowUnlock,
+                    DateExpiry = item.DateExpiry,
                     Secret = Newtonsoft.Json.JsonConvert.SerializeObject(credentialsToStore)
                 };
             }
@@ -169,6 +188,7 @@ namespace Certify.UI.Windows
                     EditViewModel.CredentialSet = new ObservableCollection<ProviderParameter>(selectedType.ProviderParameters.Where(p => p.IsCredential));
 
                     EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.SelectedChallengeProvider));
+                    EditViewModel.RaisePropertyChangedEvent(nameof(EditViewModel.ItemExpiryDate));
                 }
             }
         }

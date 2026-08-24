@@ -27,6 +27,13 @@ namespace Certify.Service.Controllers
         /// </summary>
         private async Task<bool> HasTagPermission(string action)
         {
+            // internal system context (in-process service calls such as managed challenge scope resolution)
+            // is trusted to read tags, the caller performs its own principal scoped access evaluation.
+            if (IsInternalSystemContext())
+            {
+                return true;
+            }
+
             var userId = GetContextUserId();
             var cacheKey = $"{userId}:{action}";
 

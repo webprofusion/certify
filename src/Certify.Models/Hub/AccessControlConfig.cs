@@ -7,6 +7,19 @@ using Certify.Management;
 
 namespace Certify.Models.Hub
 {
+    /// <summary>
+    /// Well known security principal identifiers which are implied rather than stored in the access control data store.
+    /// </summary>
+    public static class StandardSecurityPrincipals
+    {
+        /// <summary>
+        /// The implied internal system principal, used for trusted in-process/service calls (e.g. ACME endpoints and
+        /// internal hub services) which have no associated stored security principal. This context may evaluate access
+        /// on behalf of another principal but is not itself granted blanket authorization.
+        /// </summary>
+        public const string System = "system";
+    }
+
     public class StandardRoles
     {
         internal static Role BackupOperator { get; } = new Role("backup_operator_role", "Backup Operator", "Can perform import and export operations",
@@ -150,7 +163,7 @@ namespace Certify.Models.Hub
 
         public const string ManagedChallengeList = "managedchallenge_list_action";
         public const string ManagedChallengeUpdate = "managedchallenge_update_action";
-        public const string ManagedChallengeDelete = "managedchallenge_update_action";
+        public const string ManagedChallengeDelete = "managedchallenge_delete_action";
         public const string ManagedChallengeRequest = "managedchallenge_request_action";
         public const string ManagedChallengeCleanup = "managedchallenge_cleanup_action";
 
@@ -293,8 +306,6 @@ namespace Certify.Models.Hub
 
                 new(StandardResourceActions.RoleList, "List Roles", ResourceTypes.Role),
 
-                new(StandardResourceActions.ManagedItemRequest, "Request New Managed Items", ResourceTypes.ManagedItem),
-
                 new(StandardResourceActions.ManagedItemList, "List Managed Items", ResourceTypes.ManagedItem),
                 new(StandardResourceActions.ManagedItemAdd, "Add Managed Items", ResourceTypes.ManagedItem),
                 new(StandardResourceActions.ManagedItemUpdate, "Update Managed Items", ResourceTypes.ManagedItem),
@@ -364,6 +375,83 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.OidcProviderDelete, "Delete Oidc Provider", ResourceTypes.OidcProvider),
 
             ];
+        }
+
+        /// <summary>
+        /// Maps an access control resource type to the corresponding taggable item type, where one exists.
+        /// Returns null for resource types which are not tag scoped (e.g. system, role, accesstoken).
+        /// </summary>
+        public static string? GetTaggedItemTypeForResourceType(string? resourceType)
+        {
+            if (string.IsNullOrWhiteSpace(resourceType))
+            {
+                return null;
+            }
+
+            switch (resourceType.ToLowerInvariant())
+            {
+                case ResourceTypes.ManagedItem:
+                case ResourceTypes.Certificate:
+                    return TaggedItemTypes.ManagedCertificate;
+                case ResourceTypes.ManagedInstance:
+                    return TaggedItemTypes.ManagedInstance;
+                case ResourceTypes.StoredCredential:
+                    return TaggedItemTypes.StoredCredential;
+                case ResourceTypes.DeploymentTask:
+                    return TaggedItemTypes.DeploymentTask;
+                case ResourceTypes.ManagedChallenge:
+                case ResourceTypes.ManagedAcme:
+                    return TaggedItemTypes.ManagedChallenge;
+                case ResourceTypes.SecurityPrincipal:
+                    return TaggedItemTypes.SecurityPrincipal;
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Determine which taggable resource types a set of roles can actually act upon, so that tag scope
+        /// can be previewed against only the resources the role really grants access to. For example a
+        /// Managed ACME Consumer only grants managed challenge access, not managed certificate listing.
+        /// </summary>
+        public static List<string> GetTaggedItemTypesForRoles(IEnumerable<string>? roleIds)
+        {
+            var result = new List<string>();
+
+            if (roleIds == null)
+            {
+                return result;
+            }
+
+            var roles = GetStandardRoles();
+            var policies = GetStandardPolicies();
+            var actions = GetStandardResourceActions();
+
+            foreach (var roleId in roleIds)
+            {
+                var role = roles.FirstOrDefault(r => string.Equals(r.Id, roleId, StringComparison.OrdinalIgnoreCase));
+
+                if (role == null)
+                {
+                    continue;
+                }
+
+                foreach (var policy in policies.Where(p => role.Policies.Contains(p.Id) && p.SecurityPermissionType == SecurityPermissionType.ALLOW))
+                {
+                    foreach (var actionId in policy.ResourceActions)
+                    {
+                        var action = actions.FirstOrDefault(a => a.Id == actionId);
+                        var taggedItemType = GetTaggedItemTypeForResourceType(action?.ResourceType);
+
+                        if (taggedItemType != null && !result.Contains(taggedItemType))
+                        {
+                            result.Add(taggedItemType);
+                        }
+                    }
+                }
+            }
+
+            return result;
         }
 
         public static List<ResourcePolicy> GetStandardPolicies()
@@ -631,7 +719,7 @@ namespace Certify.Models.Hub
     public static class AccessControlConfig
     {
         /// <summary>
-        /// Add/update standard system roles, policies and resource actions
+        /// Add/update standard system roles, policies and resource actions. Items which already match the standard config are left unchanged.
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
@@ -641,31 +729,86 @@ namespace Certify.Models.Hub
 
             var adminSvcPrincipal = "admin_01";
 
-            var actions = Policies.GetStandardResourceActions();
+            // fetch the currently stored config so we only write items which are new or have changed, otherwise every startup rewrites (and audit logs) the entire standard config
+
+            var storedActions = await access.GetResourceActions(adminSvcPrincipal) ?? [];
+            var storedPolicies = await access.GetResourcePolicies(adminSvcPrincipal) ?? [];
+            var storedRoles = await access.GetRoles(adminSvcPrincipal) ?? [];
+
+            var actions = DistinctById(Policies.GetStandardResourceActions());
 
             foreach (var action in actions)
             {
-                await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
+                if (!IsResourceActionUnchanged(storedActions.FirstOrDefault(a => a.Id == action.Id), action))
+                {
+                    await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
+                }
             }
 
             // setup policies with actions
 
-            var policies = Policies.GetStandardPolicies();
+            var policies = DistinctById(Policies.GetStandardPolicies());
 
             // add policies to store
             foreach (var r in policies)
             {
-                _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                if (!IsResourcePolicyUnchanged(storedPolicies.FirstOrDefault(p => p.Id == r.Id), r))
+                {
+                    _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                }
             }
 
             // setup roles with policies
-            var roles = Policies.GetStandardRoles();
+            var roles = DistinctById(Policies.GetStandardRoles());
 
             foreach (var r in roles)
             {
-                // add roles and policy assignments to store
-                await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                if (!IsRoleUnchanged(storedRoles.FirstOrDefault(role => role.Id == r.Id), r))
+                {
+                    // add roles and policy assignments to store
+                    await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                }
             }
+        }
+
+        /// <summary>
+        /// The standard config can currently declare more than one item with the same id (duplicate or aliased ids). When written to the store the
+        /// last declaration wins, so use the same rule here to give a single definition per id and keep the config check idempotent.
+        /// </summary>
+        private static List<T> DistinctById<T>(List<T> items) where T : ConfigurationStoreItem
+        {
+            return items.GroupBy(i => i.Id).Select(g => g.Last()).ToList();
+        }
+
+        /// <summary>
+        /// Compare the common stored item properties of an existing stored item against the standard config version of the same item.
+        /// ItemType is not compared as it is a storage level discriminator rather than part of the standard config definition.
+        /// </summary>
+        private static bool IsStoredItemUnchanged(ConfigurationStoreItem? existing, ConfigurationStoreItem standard)
+        {
+            return existing != null
+                && existing.Title == standard.Title
+                && existing.Description == standard.Description;
+        }
+
+        private static bool IsResourceActionUnchanged(ResourceAction? existing, ResourceAction standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && existing!.ResourceType == standard.ResourceType;
+        }
+
+        private static bool IsResourcePolicyUnchanged(ResourcePolicy? existing, ResourcePolicy standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && existing!.SecurityPermissionType == standard.SecurityPermissionType
+                && existing.IsResourceSpecific == standard.IsResourceSpecific
+                && (existing.ResourceActions ?? []).SequenceEqual(standard.ResourceActions ?? []);
+        }
+
+        private static bool IsRoleUnchanged(Role? existing, Role standard)
+        {
+            return IsStoredItemUnchanged(existing, standard)
+                && (existing!.Policies ?? []).SequenceEqual(standard.Policies ?? []);
         }
 
         public static async Task ConfigureStandardUsersAndRoles(IAccessControl access, ICredentialsManager creds)

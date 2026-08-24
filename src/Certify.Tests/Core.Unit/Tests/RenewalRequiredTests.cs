@@ -30,7 +30,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // perform check
             var renewalDueCheck
-                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
@@ -46,7 +46,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // perform check
-            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Site with no previous status - Renewal should be required");
@@ -73,7 +73,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // perform check
             var renewalDueCheck
-                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
@@ -83,7 +83,7 @@ namespace Certify.Tests.Core.Unit.Tests
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
 
             // perform check as if last attempt was over 48rs ago, item should require renewal and not be on hold
-            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
@@ -111,7 +111,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // perform check
             var renewalDueCheck
-                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+                = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
@@ -121,11 +121,90 @@ namespace Certify.Tests.Core.Unit.Tests
             managedCertificate.DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-49);
 
             // perform check as if last attempt was over 48rs ago, item should require renewal and not be on hold
-            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, true);
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // assert result
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
             Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should permanently be on hold, too many failures.");
+        }
+
+        [TestMethod, Description("Ensure Warning status is treated like Error for renewal retry pacing when due")]
+        public void TestCheckAutoRenewalPeriodRequiredWithWarningStatus()
+        {
+            // setup
+            var renewalPeriodDays = 14;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-12),
+                LastRenewalStatus = RequestState.Warning,
+                RenewalFailureCount = 2
+            };
+
+            // perform check
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // assert result: due with a low failure count means renewal proceeds without hold
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required for item with Warning status");
+            Assert.IsFalse(renewalDueCheck.IsRenewalOnHold, "Renewal should not be on hold with a low failure count");
+        }
+
+        [TestMethod, Description("Ensure Warning status with repeated failures observes renewal hold back-off")]
+        public void TestCheckAutoRenewalPeriodWithWarningStatusHold()
+        {
+            // setup
+            var renewalPeriodDays = 14;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-12),
+                LastRenewalStatus = RequestState.Warning,
+                RenewalFailureCount = 100, // high number of failures
+                DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-0.1) // scheduled renewal set to become due
+            };
+
+            // perform check
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // assert result: Warning status observes the same back-off as Error status
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
+            Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should be on hold");
+            Assert.AreEqual(48, renewalDueCheck.HoldHrs, "Hold should be for 48 Hrs");
+        }
+
+        [TestMethod, Description("Ensure Success status with residual failure count observes renewal retry pacing")]
+        public void TestCheckAutoRenewalPeriodWithResidualFailureCount()
+        {
+            // setup: item overall shows success but has accumulated failures (e.g. deployment task failures)
+            var renewalPeriodDays = 14;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateStart = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(60),
+                DateLastRenewalAttempt = DateTimeOffset.UtcNow.AddHours(-1),
+                LastRenewalStatus = RequestState.Success,
+                RenewalFailureCount = 100 // failure count > 0 triggers pacing even when status is Success
+            };
+
+            // perform check
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // assert result
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Renewal should be required");
+            Assert.IsTrue(renewalDueCheck.IsRenewalOnHold, "Renewal should be on hold due to residual failure count");
         }
 
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal")]
@@ -194,7 +273,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Ensure external subscription update notifications can queue the next renewal batch via DateNextScheduledRenewalAttempt")]
-        public void TestExternalSubscriptionUpdateQueuesNextRenewalBatch()
+        public void TestSubscriptionUpdateQueuesNextRenewalBatch()
         {
             var renewalPeriodDays = 30;
             var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
@@ -744,7 +823,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ARICertificateId = "failed.renewal.id"
             };
 
-            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode, checkFailureStatus: true);
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
 
             // Should still respect ARI even with failures (though may be subject to hold periods)
             Assert.IsTrue(renewalDueCheck.IsRenewalDue, "ARI scheduled renewal should still be due even with previous failures");
@@ -771,6 +850,76 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsFalse(renewalDueCheck.IsRenewalDue, "Short lifetime cert with future ARI renewal should not be immediately due");
             Assert.AreEqual(managedCertificate.DateNextScheduledRenewalAttempt, renewalDueCheck.DateNextRenewalAttempt, "Should use ARI scheduled time for short lifetime certs");
+        }
+
+        [TestMethod, Description("Test planned renewal date is not before certificate start date when scheduled renewal predates it")]
+        public void TestPlannedRenewalNotBeforeCertStartWithScheduledDate()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var startDate = DateTimeOffset.UtcNow.AddDays(-1);
+
+            // an ARI suggested (or otherwise scheduled) renewal date which predates the current certificate
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = startDate,
+                DateRenewed = startDate,
+                DateExpiry = startDate.AddDays(90),
+                DateNextScheduledRenewalAttempt = startDate.AddDays(-10),
+                ARICertificateId = "stale.window.id"
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            // a scheduled date in the past still means renewal is due now, the clamp must not suppress that
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "Scheduled renewal date in the past should still be due");
+        }
+
+        [TestMethod, Description("Test planned renewal date is clamped to certificate start date when not yet due")]
+        public void TestPlannedRenewalClampedToCertStartDate()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            // certificate issued with a NotBefore ahead of our clock (clock skew), but recorded as renewed earlier.
+            // the calculated next renewal (DateRenewed + interval) would otherwise fall before the certificate start date.
+            var startDate = DateTimeOffset.UtcNow.AddDays(40);
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = startDate,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-1),
+                DateExpiry = startDate.AddDays(90)
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "Certificate should not be due for renewal");
+            Assert.IsNotNull(renewalDueCheck.DateNextRenewalAttempt, "Next renewal attempt date should be set");
+            Assert.IsTrue(renewalDueCheck.DateNextRenewalAttempt >= startDate, "Planned renewal date should not be before the certificate start date");
+        }
+
+        [TestMethod, Description("Test planned renewal date is not clamped when certificate start date is unknown")]
+        public void TestPlannedRenewalNotClampedWhenStartDateUnknown()
+        {
+            var renewalPeriodDays = 30;
+            var renewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = null,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-10),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(80)
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, renewalPeriodDays, renewalIntervalMode);
+
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "Certificate should not be due for renewal");
+            Assert.IsNotNull(renewalDueCheck.DateNextRenewalAttempt, "Next renewal attempt date should still be calculated when start date is unknown");
         }
 
         #endregion ARI Tests
@@ -895,7 +1044,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test timezone offset handling")]
-       
+
         [DataRow(-12, "UTC-12 (Baker Island)")]
         [DataRow(-8, "UTC-8 (Pacific Time)")]
         [DataRow(-5, "UTC-5 (Eastern Time)")]
@@ -928,7 +1077,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test extremely short certificate lifetimes (minutes)")]
-       
+
         [DataRow(1, "1 minute certificate")]
         [DataRow(5, "5 minute certificate")]
         [DataRow(15, "15 minute certificate")]
@@ -956,7 +1105,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test certificate already expired scenarios")]
-       
+
         [DataRow(-1, "Certificate expired 1 day ago")]
         [DataRow(-7, "Certificate expired 1 week ago")]
         [DataRow(-30, "Certificate expired 1 month ago")]
@@ -1012,7 +1161,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test year boundary transitions")]
-       
+
         [DataRow(2023, 12, 31, 2024, 1, 15, "New Year transition 2023-2024")]
         [DataRow(2024, 12, 31, 2025, 1, 15, "New Year transition 2024-2025")]
         [DataRow(1999, 12, 31, 2000, 1, 15, "Y2K transition 1999-2000")]
@@ -1040,7 +1189,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test month boundary edge cases with varying month lengths")]
-       
+
         [DataRow(1, 31, "January 31 days")]
         [DataRow(2, 28, "February 28 days (non-leap)")]
         [DataRow(4, 30, "April 30 days")]
@@ -1067,7 +1216,7 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test certificates with very long lifetimes")]
-       
+
         [DataRow(365, "1 year certificate")]
         [DataRow(730, "2 year certificate")]
         [DataRow(1095, "3 year certificate")]
@@ -1107,7 +1256,7 @@ namespace Certify.Tests.Core.Unit.Tests
         #region Bulk Renewal Testing
 
         [TestMethod, Description("Test bulk renewal scenarios with 200 certificates across different renewal modes and intervals")]
-       
+
         [DataRow(RenewalIntervalModes.DaysAfterLastRenewal, 14, 150, "DaysAfterLastRenewal with 14 day interval")]
         [DataRow(RenewalIntervalModes.DaysAfterLastRenewal, 30, 140, "DaysAfterLastRenewal with 30 day interval")]
         [DataRow(RenewalIntervalModes.DaysBeforeExpiry, 30, 80, "DaysBeforeExpiry with 30 day interval")]

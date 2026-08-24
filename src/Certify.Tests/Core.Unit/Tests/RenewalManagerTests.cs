@@ -159,6 +159,13 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateLastRenewalAttempt = item.DateLastRenewalAttempt,
                 DateNextScheduledRenewalAttempt = item.DateNextScheduledRenewalAttempt,
                 LastRenewalStatus = item.LastRenewalStatus,
+                LastPrimaryRequest = item.LastPrimaryRequest == null
+                    ? null
+                    : new RequestStageStatus
+                    {
+                        Status = item.LastPrimaryRequest.Status,
+                        Message = item.LastPrimaryRequest.Message
+                    },
                 RenewalFailureCount = item.RenewalFailureCount,
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
@@ -251,21 +258,6 @@ namespace Certify.Tests.Core.Unit.Tests
         }
     }
 
-    /// <summary>
-    /// Mock implementation of ILog for testing
-    /// </summary>
-    public class MockLog : ILog
-    {
-        public List<string> LogEntries { get; } = new List<string>();
-
-        public void Verbose(string template, params object[] propertyValues) => LogEntries.Add($"VERBOSE: {string.Format(template, propertyValues)}");
-        public void Debug(string template, params object[] propertyValues) => LogEntries.Add($"DEBUG: {string.Format(template, propertyValues)}");
-        public void Information(string template, params object[] propertyValues) => LogEntries.Add($"INFO: {string.Format(template, propertyValues)}");
-        public void Warning(string template, params object[] propertyValues) => LogEntries.Add($"WARNING: {string.Format(template, propertyValues)}");
-        public void Error(string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)}");
-        public void Error(Exception ex, string template, params object[] propertyValues) => LogEntries.Add($"ERROR: {string.Format(template, propertyValues)} - {ex.Message}");
-    }
-
     [TestClass]
     public class RenewalManagerTests
     {
@@ -335,7 +327,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
         }
 
-        private ManagedCertificate CreateExternalManagedCertificate(string id, string name, DateTimeOffset? dateRenewed = null, string pendingSourceVersion = null)
+        private ManagedCertificate CreateManagedCertificateSubscription(string id, string name, DateTimeOffset? dateRenewed = null, string pendingSourceVersion = null)
         {
             return new ManagedCertificate
             {
@@ -470,6 +462,82 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.Contains("cert4", renewedIds, "cert4 should be renewed despite errors");
         }
 
+        [TestMethod, Description("Test PerformRenewAll with RenewalsWithErrors mode includes failed primary request state")]
+        public async Task TestPerformRenewAll_RenewalsWithErrors_UsesLastPrimaryRequestError()
+        {
+            // Arrange
+            var certWithPrimaryError = CreateTestManagedCertificate("cert-primary-error", "PrimaryErrorOnly", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+            certWithPrimaryError.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Validation failed"
+            };
+
+            var healthyCert = CreateTestManagedCertificate("cert-healthy", "Healthy", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Success);
+
+            await _itemStore.Update(certWithPrimaryError);
+            await _itemStore.Update(healthyCert);
+
+            var settings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "Only certificates with error status or failed primary request should be renewed in RenewalsWithErrors mode.");
+            Assert.AreEqual("cert-primary-error", results[0].ManagedItem.Id, "Certificate with failed LastPrimaryRequest should be included.");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll never attempts paused items awaiting user input, regardless of renewal mode")]
+        [DataRow(RenewalMode.Auto)]
+        [DataRow(RenewalMode.RenewalsDue)]
+        [DataRow(RenewalMode.All)]
+        [DataRow(RenewalMode.RenewalsWithErrors)]
+        public async Task TestPerformRenewAll_SkipsPausedItems(RenewalMode mode)
+        {
+            // Arrange - paused item is otherwise due for renewal and has a failed primary request
+            await _itemStore.DeleteAll();
+
+            var pausedCert = CreateTestManagedCertificate("cert-paused", "PausedCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Paused);
+            pausedCert.LastPrimaryRequest = new RequestStageStatus
+            {
+                Status = RequestState.Error,
+                Message = "Awaiting manual DNS challenge completion"
+            };
+
+            var dueCert = CreateTestManagedCertificate("cert-due", "DueCert", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35), lastRenewalStatus: RequestState.Error);
+
+            await _itemStore.Update(pausedCert);
+            await _itemStore.Update(dueCert);
+
+            var settings = new RenewalSettings { Mode = mode, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.IsFalse(results.Any(r => r.ManagedItem?.Id == "cert-paused"), $"Paused certificate must not be attempted in {mode} mode.");
+            Assert.IsTrue(results.Any(r => r.ManagedItem?.Id == "cert-due"), $"Non-paused due certificate should still be attempted in {mode} mode.");
+        }
+
         [TestMethod, Description("Test PerformRenewAll with specific target certificates")]
         public async Task TestPerformRenewAll_SpecificTargets()
         {
@@ -510,9 +578,9 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test PerformRenewAll excludes targeted external subscriptions that are not due and have no pending update")]
-        public async Task TestPerformRenewAll_SpecificTargets_ExcludesExternalSubscriptionsNotDue()
+        public async Task TestPerformRenewAll_SpecificTargets_ExcludesSubscriptionsNotDue()
         {
-            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+            var externalNotDue = CreateManagedCertificateSubscription("sub-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
             var normalDue = CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
 
             await _itemStore.Update(externalNotDue);
@@ -522,7 +590,7 @@ namespace Certify.Tests.Core.Unit.Tests
             {
                 Mode = RenewalMode.Auto,
                 IsPreviewMode = false,
-                TargetManagedCertificates = new List<string> { "ext-not-due", "cert1" }
+                TargetManagedCertificates = new List<string> { "sub-not-due", "cert1" }
             };
 
             var results = await RenewalManager.PerformRenewAll(
@@ -541,10 +609,10 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod, Description("Test PerformRenewAll includes external subscriptions when a pending update exists")]
-        public async Task TestPerformRenewAll_IncludesExternalSubscriptionsWithPendingUpdate()
+        public async Task TestPerformRenewAll_IncludesSubscriptionsWithPendingUpdate()
         {
-            var externalPending = CreateExternalManagedCertificate("ext-pending", "ExternalPending", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5), pendingSourceVersion: "source-version-1");
-            var externalNotDue = CreateExternalManagedCertificate("ext-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
+            var externalPending = CreateManagedCertificateSubscription("sub-pending", "ExternalPending", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5), pendingSourceVersion: "source-version-1");
+            var externalNotDue = CreateManagedCertificateSubscription("sub-not-due", "ExternalNotDue", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5));
 
             await _itemStore.Update(externalPending);
             await _itemStore.Update(externalNotDue);
@@ -561,8 +629,60 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             Assert.HasCount(1, results, "Only the external subscription with a pending update should be queued.");
-            Assert.AreEqual("ext-pending", results[0].ManagedItem.Id, "Pending external updates should still be processed.");
+            Assert.AreEqual("sub-pending", results[0].ManagedItem.Id, "Pending external updates should still be processed.");
             StringAssert.Contains(results[0].Message, "Pending external certificate update", "The renewal reason should indicate the pending external update.");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll excludes a renewal due external subscription which is not yet due to be polled")]
+        public async Task TestPerformRenewAll_ExcludesSubscriptionNotDueForPolling()
+        {
+            // renewal is due for this item, but its source was polled moments ago and has no update waiting, so a
+            // request would have nothing to do and must not be queued (which would report a no-op status to the UI)
+            var externalRecentlyPolled = CreateManagedCertificateSubscription("sub-recently-polled", "ExternalRecentlyPolled");
+            externalRecentlyPolled.ExternalSource.DateLastPoll = DateTimeOffset.UtcNow;
+
+            var normalDue = CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35));
+
+            await _itemStore.Update(externalRecentlyPolled);
+            await _itemStore.Update(normalDue);
+
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            Assert.HasCount(1, results, "An external subscription which is not due to be polled should not be queued for renewal.");
+            Assert.AreEqual("cert1", results[0].ManagedItem.Id, "Only the due standard managed certificate should be processed.");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll in All mode excludes an external subscription which is not yet due to be polled")]
+        public async Task TestPerformRenewAll_AllMode_ExcludesSubscriptionNotDueForPolling()
+        {
+            var externalRecentlyPolled = CreateManagedCertificateSubscription("sub-recently-polled", "ExternalRecentlyPolled");
+            externalRecentlyPolled.ExternalSource.DateLastPoll = DateTimeOffset.UtcNow;
+
+            await _itemStore.Update(externalRecentlyPolled);
+
+            var allModeSettings = new RenewalSettings { Mode = RenewalMode.All };
+
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                allModeSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            Assert.IsEmpty(results, "An external subscription with nothing to fetch should not be queued, even in All mode.");
         }
 
         [TestMethod, Description("Test PerformRenewAll with max renewal requests limit")]
@@ -1005,7 +1125,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assert
             Assert.IsFalse(result.IsWithinWindow, "Should not allow renewal on weekend when window is weekdays only");
-            Assert.Contains("Outside maintenance window", result.Reason, $"Reason should indicate outside window. Got: {result.Reason}");
+            Assert.Contains("Limited to Maintenance Window", result.Reason, $"Reason should indicate the renewal is limited to the maintenance window. Got: {result.Reason}");
         }
 
         [TestMethod, Description("Test IsWithinMaintenanceWindow - time outside window hours")]
@@ -1267,7 +1387,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("cert1", results[0].ManagedItem.Id, "cert1 (in window) should be renewed");
 
             // Check logs for skipped item
-            var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("OutsideWindow") && l.Contains("Outside maintenance window"));
+            var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("OutsideWindow") && l.Contains("Limited to Maintenance Window"));
             Assert.IsNotNull(skipLog, "Should log that cert2 was skipped due to maintenance window");
         }
 

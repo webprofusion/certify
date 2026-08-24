@@ -63,8 +63,35 @@ namespace Certify.Server.Hub.Api.Models.Acme
 
         /// <summary>
         /// Gets or sets the identifier of the managed certificate associated with the order.
+        /// Internal hub bookkeeping only; not part of the ACME order resource.
         /// </summary>
-        [JsonPropertyName("managedCertificateId")]
+        [JsonIgnore]
         public string ManagedCertificateId { get; set; }
+
+        /// <summary>
+        /// UTC timestamp when the order was created. Used for stale-order cleanup.
+        /// </summary>
+        [JsonIgnore]
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// Hub instance that owns the temporary managed certificate for this order.
+        /// </summary>
+        [JsonIgnore]
+        public string HubInstanceId { get; set; }
+
+        /// <summary>
+        /// Raw authorization identifiers (not URLs) used for reliable cleanup.
+        /// </summary>
+        [JsonIgnore]
+        public List<string> AuthorizationIds { get; set; } = [];
+
+        /// <summary>
+        /// The account KID which created and owns this order. Only this account may finalize,
+        /// read or download the certificate for the order.
+        /// Internal hub bookkeeping only; not part of the ACME order resource.
+        /// </summary>
+        [JsonIgnore]
+        public string AccountKid { get; set; }
     }
 }

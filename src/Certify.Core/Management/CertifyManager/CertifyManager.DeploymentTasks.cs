@@ -98,6 +98,8 @@ namespace Certify.Management
 
             LogMessage(managedCert.Id, $"---- Performing Task [On-Demand or Manual Execution] :: {msg} ----");
 
+            // an individually executed task deploys the certificate we currently hold, so it counts as a successful
+            // primary request whenever that certificate is usable, even if the last request did not fetch a new one
             var manualTaskPrimaryRequestSucceeded = WasLastCertificatePrimaryRequestSuccessful(managedCert);
             var result = await PerformTaskList(
                 log,
@@ -115,11 +117,16 @@ namespace Certify.Management
                 evaluateAgainstPrimaryRequestStatus: true
             );
 
-            var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: manualTaskPrimaryRequestSucceeded, string.Empty)
+            // when recomputing the overall stored status, the explicitly recorded primary request status is
+            // authoritative (a failed renewal must stay failed even if an older usable certificate allowed the
+            // manual task run to proceed); the certificate-availability fallback only applies when no status was recorded
+            var recordedPrimaryRequestStatus = ResolveRecordedPrimaryRequestStatus(managedCert);
+
+            var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: recordedPrimaryRequestStatus == RequestState.Success, string.Empty)
             {
                 PrimaryRequest = new RequestStageStatus
                 {
-                    Status = manualTaskPrimaryRequestSucceeded ? RequestState.Success : RequestState.Error,
+                    Status = recordedPrimaryRequestStatus,
                     Message = managedCert.LastPrimaryRequest?.Message
                 },
                 Message = managedCert.LastPrimaryRequest?.Message ?? string.Empty
@@ -161,27 +168,150 @@ namespace Certify.Management
                 return true;
             }
 
-            if (managedCert.DateExpiry.HasValue
-                && managedCert.DateExpiry > DateTimeOffset.UtcNow
-                && (!string.IsNullOrWhiteSpace(managedCert.CertificateThumbprintHash)
-                    || !string.IsNullOrWhiteSpace(managedCert.CertificatePath)))
-            {
-                return true;
-            }
-
-            return false;
+            return HasUsableCertificate(managedCert);
         }
 
         /// <summary>
-        /// Perform a set of deployment tasks based on the given certificate request result (managed certificate + status information)
+        /// Determine whether the managed certificate currently has a certificate we could deploy (present and not expired)
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns></returns>
+        internal static bool HasUsableCertificate(ManagedCertificate managedCert)
+        {
+            return managedCert?.DateExpiry.HasValue == true
+                && managedCert.DateExpiry > DateTimeOffset.UtcNow
+                && (!string.IsNullOrWhiteSpace(managedCert.CertificateThumbprintHash)
+                    || !string.IsNullOrWhiteSpace(managedCert.CertificatePath));
+        }
+
+        /// <summary>
+        /// Determine whether post-request deployment tasks should be evaluated for the completed request
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="result"></param>
+        /// <param name="skipTasks"></param>
+        /// <returns></returns>
+        internal static bool ShouldPerformPostRequestTasks(ManagedCertificate managedCertificate, CertificateRequestResult result, bool skipTasks)
+        {
+            if (skipTasks)
+            {
+                return false;
+            }
+
+            if (managedCertificate?.PostRequestTasks?.Any() != true)
+            {
+                return false;
+            }
+
+            if (managedCertificate.Health == ManagedCertificateHealth.AwaitingUser)
+            {
+                return false;
+            }
+
+            // an external subscription check which did not apply an update (none available yet, not due, or deployment
+            // deferred) will be retried later, so no deployment or deployment tasks are attempted for this request
+            if (result?.IsSubscriptionUpdateDeferred == true)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Evaluate and perform the post-request deployment tasks for a completed certificate request, if applicable,
+        /// recording the results against the request result and the managed certificate
         /// </summary>
         /// <param name="log"></param>
-        /// <param name="isPreviewOnly"></param>
-        /// <param name="skipDeferredTasks"></param>
-        /// <param name="result"></param>
-        /// <param name="taskList"></param>
-        /// <param name="forceTaskExecute"></param>
+        /// <param name="managedCertificate"></param>
+        /// <param name="requestResult"></param>
+        /// <param name="skipTasks"></param>
+        /// <param name="currentFailureCount"></param>
+        /// <param name="persistTaskState">
+        /// whether the deployment task run state needs storing here. True for a subscription request, which performs no
+        /// final renewal status update of its own, so last executed date, last run status and result would otherwise
+        /// stay in memory. False for a standard request, which stores the item as part of resolving its final status
+        /// </param>
+        /// <returns>whether the task list was evaluated</returns>
+        private async Task<bool> PerformPostRequestTasksIfApplicable(ILog log, ManagedCertificate managedCertificate, CertificateRequestResult requestResult, bool skipTasks, int? currentFailureCount, bool persistTaskState)
+        {
+            if (!ShouldPerformPostRequestTasks(managedCertificate, requestResult, skipTasks))
+            {
+                return false;
+            }
+
+            log ??= ManagedCertificateLog.GetLogger(managedCertificate.Id, _loggingLevelSwitch);
+
+            // run applicable deployment tasks (whether success or failed), powershell
+            log.Information($"Performing Post-Request (Deployment) Tasks..");
+
+            var results = await PerformTaskList(log, isPreviewOnly: false, skipDeferredTasks: true, requestResult, managedCertificate.PostRequestTasks, forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: true);
+
+            var postRequestTasks = new ActionStep
+            {
+                Category = "Post-Request Tasks",
+                Key = "PostRequestTasks",
+                Substeps = new List<ActionStep>(),
+                HasError = results.Any(r => r.HasError),
+                HasWarning = results.Any(r => r.HasWarning),
+            };
+
+            foreach (var r in results)
+            {
+                if (r.HasError || r.HasWarning)
+                {
+                    log.Error($"{r.Title} :: {r.Description}", true);
+                }
+                else
+                {
+                    log.Information($"{r.Title} :: {r.Description}", LogItemType.GeneralInfo);
+                }
+
+                r.Category = "Post-Request Tasks";
+                postRequestTasks.Substeps.Add(r);
+            }
+
+            requestResult.Actions.Add(postRequestTasks);
+
+            // certificate may already be deployed to some extent so this counts a completed with warnings
+            if (results.Any(r => r.HasError))
+            {
+                requestResult.IsSuccess = false;
+
+                var msg = GetDeploymentTaskFailureMessage(managedCertificate);
+                requestResult.Message = msg;
+
+                // this stores the item, so the task run state is persisted here whether or not it was asked for
+                await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
+
+                return true;
+            }
+
+            if (persistTaskState)
+            {
+                requestResult.ManagedItem = await UpdateManagedCertificate(managedCertificate);
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Resolve the primary request status to use when recomputing the stored overall renewal status.
+        /// An explicitly recorded status is authoritative; the certificate-availability fallback is only
+        /// used for older items where no primary request status has been recorded.
+        /// </summary>
+        /// <param name="managedCert"></param>
         /// <returns></returns>
+        private static RequestState ResolveRecordedPrimaryRequestStatus(ManagedCertificate managedCert)
+        {
+            if (managedCert.LastPrimaryRequest?.Status != null)
+            {
+                return managedCert.LastPrimaryRequest.Status.Value;
+            }
+
+            return WasLastCertificatePrimaryRequestSuccessful(managedCert) ? RequestState.Success : RequestState.Error;
+        }
+
         private static bool ShouldContinueAfterPreviousTaskFailure(TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
         {
             if (taskTrigger == TaskTriggerType.ON_TASK_ERROR)
@@ -207,7 +337,22 @@ namespace Certify.Management
             return !ShouldContinueAfterPreviousTaskFailure(taskTrigger, primaryRequestSucceeded);
         }
 
-        internal async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute = false, bool evaluateAgainstPrimaryRequestStatus = true)
+        /// <summary>
+        /// Perform a set of deployment tasks based on the given certificate request result (managed certificate + status information)
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="isPreviewOnly"></param>
+        /// <param name="skipDeferredTasks"></param>
+        /// <param name="result"></param>
+        /// <param name="taskList"></param>
+        /// <param name="forceTaskExecute"></param>
+        /// <param name="evaluateAgainstPrimaryRequestStatus">
+        /// whether ON_SUCCESS/ON_ERROR triggers are judged against the recorded primary request status. False where no
+        /// certificate request took place and the tasks always apply (pre-request tasks, explicit redeployment).
+        /// Required, because an inappropriate default would silently run (or skip) the wrong tasks
+        /// </param>
+        /// <returns></returns>
+        internal async Task<List<ActionStep>> PerformTaskList(ILog log, bool isPreviewOnly, bool skipDeferredTasks, CertificateRequestResult result, IEnumerable<DeploymentTaskConfig> taskList, bool forceTaskExecute, bool evaluateAgainstPrimaryRequestStatus)
         {
             if (taskList == null || !taskList.Any())
             {
@@ -288,29 +433,17 @@ namespace Certify.Management
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_SUCCESS)
                     {
-                        if (primaryRequestSucceeded)
-                        {
-                            shouldRunCurrentTask = true;
-                            taskTriggerReason = "Task is enabled and primary request was successful.";
-                        }
-                        else
-                        {
-                            shouldRunCurrentTask = false;
-                            taskTriggerReason = "Task is enabled but will not run because primary request unsuccessful.";
-                        }
+                        shouldRunCurrentTask = primaryRequestSucceeded;
+                        taskTriggerReason = primaryRequestSucceeded
+                            ? "Task is enabled and primary request was successful."
+                            : "Task is enabled but will not run because primary request unsuccessful.";
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_ERROR)
                     {
-                        if (primaryRequestSucceeded)
-                        {
-                            shouldRunCurrentTask = false;
-                            taskTriggerReason = "Task is enabled but will not run because primary request was successful.";
-                        }
-                        else
-                        {
-                            shouldRunCurrentTask = true;
-                            taskTriggerReason = "Task is enabled and will run because primary request was unsuccessful.";
-                        }
+                        shouldRunCurrentTask = !primaryRequestSucceeded;
+                        taskTriggerReason = primaryRequestSucceeded
+                            ? "Task is enabled but will not run because primary request was successful."
+                            : "Task is enabled and will run because primary request was unsuccessful.";
                     }
                     else if (task.TaskConfig.TaskTrigger == TaskTriggerType.ON_TASK_ERROR)
                     {

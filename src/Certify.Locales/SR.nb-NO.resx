@@ -488,9 +488,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Er du sikker på at du vil tilbakekalle dette sertifikatet?</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>Du bruker en prøveversjon av programmet. Vennligst kjøp en registreringsnøkkel for å oppgradere. Se alternativ på under "Om".</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>Dette fornyer sertifikater for alle automatisk fornyede elementer. Fortsette?</value>
   </data>
@@ -504,7 +501,7 @@
     <value>Gå til nedlastingssiden?</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value>[Gratis prøveversjon]</value>
+    <value> [Ulisensiert evalueringsmodus]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>j7.no</value>

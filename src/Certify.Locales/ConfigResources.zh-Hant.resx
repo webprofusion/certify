@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName" xml:space="preserve">
-    <value />
-  </data>
   <data name="Credits" xml:space="preserve">
     <value>本軟體以「現狀」方式提供，未附任何明示或暗示之保證，包括但不限於狀態保證、不間斷使用、適售性、特定用途適用性或不侵權等暗示性保證。
 
@@ -130,28 +127,10 @@
 - 部分圖示來自 Font Awesome by Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
   </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value />
-  </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
-    <value>您已使用最新版本</value>
-  </data>
-  <data name="AppUpdateCheckURI" xml:space="preserve">
-    <value />
-  </data>
-  <data name="AppWebsiteURL" xml:space="preserve">
-    <value />
+    <value>您已使用最新版本。</value>
   </data>
   <data name="BetaWarning" xml:space="preserve">
-    <value>警告：本軟體為測試與回饋用途的預覽版本，可能仍有錯誤或不穩定之處。請勿將本軟體用於重要的正式環境。</value>
-  </data>
-  <data name="AIInstrumentationKey" xml:space="preserve">
-    <value />
-  </data>
-  <data name="LocalServiceBaseURI" xml:space="preserve">
-    <value />
-  </data>
-  <data name="LocalServiceBaseURIDebug" xml:space="preserve">
-    <value />
+    <value>警告：本軟體為測試與回饋用途的預覽版本，可能仍有錯誤或不穩定之處，請勿將本軟體用於重要的正式環境。</value>
   </data>
 </root>

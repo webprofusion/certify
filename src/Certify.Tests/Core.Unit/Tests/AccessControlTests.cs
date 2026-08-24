@@ -1588,6 +1588,96 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(result, "Should NOT match when department doesn't match specific value");
         }
 
+        [TestMethod]
+        [Description("System context evaluates target principal access instead of auto-allowing")]
+        public async Task TestSystemContext_EvaluatesTargetPrincipalScopedAccess()
+        {
+            var store = new MemoryObjectStore();
+            var access = new AccessControl(null, store);
+            var adminId = TestSecurityPrincipals.Admin.Id;
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.Admin, bypassIntegrityCheck: true);
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var managedAcmeAction = Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedAcmePerformOrder);
+            await access.AddResourceAction(adminId, managedAcmeAction, bypassIntegrityCheck: true);
+
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedAcmeConsumer);
+            await access.AddResourcePolicy(adminId, policy, bypassIntegrityCheck: true);
+
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedAcmeConsumer.Id);
+            await access.AddRole(adminId, role, bypassIntegrityCheck: true);
+
+            var scopedAssignedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ScopedTags =
+                [
+                    new TagScope { CategoryKey = "environment", Value = "production" }
+                ]
+            };
+
+            await access.AddAssignedRole(adminId, scopedAssignedRole, bypassIntegrityCheck: true);
+
+            var actionCheck = new AccessCheck
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                ResourceType = ResourceTypes.ManagedAcme,
+                ResourceActionId = StandardResourceActions.ManagedAcmePerformOrder,
+                ScopedAssignedRoles = [scopedAssignedRole.Id]
+            };
+
+            // System context must evaluate the target principal (not blanket allow / not fail role reads).
+            Assert.IsTrue(await access.IsSecurityPrincipalAuthorised(StandardSecurityPrincipals.System, actionCheck));
+
+            var scope = await access.EvaluateAccessScope(StandardSecurityPrincipals.System, actionCheck);
+            Assert.IsTrue(scope.HasAccess);
+            Assert.IsFalse(scope.IsUnrestricted);
+            Assert.HasCount(1, scope.AuthorizingRoles);
+            Assert.AreEqual(scopedAssignedRole.Id, scope.AuthorizingRoles[0].Id);
+
+            Assert.IsTrue(access.IsResourceInScope(scope, [new TagSummary { CategoryKey = "environment", Value = "production" }]));
+            Assert.IsFalse(access.IsResourceInScope(scope, [new TagSummary { CategoryKey = "environment", Value = "development" }]));
+            Assert.IsFalse(access.IsResourceInScope(scope, Array.Empty<TagSummary>()));
+
+            scope.AllowUnscopedResources = true;
+            Assert.IsTrue(access.IsResourceInScope(scope, Array.Empty<TagSummary>()));
+
+            // Wrong scoped assigned role id should deny
+            actionCheck.ScopedAssignedRoles = [Guid.NewGuid().ToString()];
+            Assert.IsFalse(await access.IsSecurityPrincipalAuthorised(StandardSecurityPrincipals.System, actionCheck));
+        }
+
+        [TestMethod]
+        [Description("System context can read role status used by internal service evaluation")]
+        public async Task TestSystemContext_CanReadRoleStatus()
+        {
+            var store = new MemoryObjectStore();
+            var access = new AccessControl(null, store);
+            var adminId = TestSecurityPrincipals.Admin.Id;
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.Admin, bypassIntegrityCheck: true);
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedAcmeConsumer.Id);
+            await access.AddRole(adminId, role, bypassIntegrityCheck: true);
+
+            var assigned = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedAcmeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(adminId, assigned, bypassIntegrityCheck: true);
+
+            var status = await access.GetSecurityPrincipalRoleStatus(StandardSecurityPrincipals.System, TestSecurityPrincipals.DevopsUser.Id);
+            Assert.IsNotNull(status);
+            Assert.IsTrue(status.AssignedRoles.Any(r => r.Id == assigned.Id));
+        }
+
         #endregion
     }
 }

@@ -19,7 +19,7 @@
         //"CERTIFY_PROXY": "http://localhost:8888"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://0.0.0.0:44361"
+      "applicationUrl": "https://local.dev.certificatemanager.app:44361"
     },
     "Container (.NET SDK)": {
       "commandName": "SdkContainer",

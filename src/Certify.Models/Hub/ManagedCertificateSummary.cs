@@ -64,9 +64,15 @@ namespace Certify.Models.Hub
         public bool HasCertificate { get; set; }
 
         /// <summary>
-        /// If true, is managed by an external certificate manager (e.g. Certbot, Posh-ACME, etc.)
+        /// If true, is managed by an external certificate manager (e.g. Certbot, Posh-ACME, etc.) and is a read-only
+        /// view of a certificate this instance does not own
         /// </summary>
         public bool IsExternallyManaged { get; set; }
+
+        /// <summary>
+        /// If true, is a certificate subscription which fetches its certificate from a configured external source
+        /// </summary>
+        public bool IsSubscription { get; set; }
 
         /// <summary>
         /// Tags assigned to this managed certificate

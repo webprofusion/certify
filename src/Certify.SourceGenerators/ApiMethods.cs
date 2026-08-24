@@ -80,6 +80,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "EvaluateAccessScope",
+                    OperationMethod = HttpPost,
+                    Comment = "Evaluate authorizing roles and unrestricted/scoped state for a security principal and resource action",
+                    PublicAPIController = "Access",
+                    PublicAPIRoute = "securityprincipal/accessscope",
+                    ServiceAPIRoute = "access/securityprincipal/accessscope",
+                    ReturnType = nameof(ResourceAccessScope),
+                    Params = new Dictionary<string, string> { { "check", nameof(Certify.Models.Hub.AccessCheck) } },
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
+                },
+                new()
+                {
                     OperationName = "GetSecurityPrincipalAssignedRoles",
                     OperationMethod = HttpGet,
                     Comment = "Get list of Assigned Roles for a given security principal",
@@ -341,6 +353,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "RefreshExternalManagedCertificates",
+                    OperationMethod = HttpPost,
+                    Comment = "Command a managed instance to refresh its externally managed certificates",
+                    UseManagementAPI = true,
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "instances/{instanceId}/externalcertificates/refresh",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceUpdate)]
+                },
+                new()
+                {
                     OperationName = "RejoinAllManagedInstances",
                     OperationMethod = HttpPost,
                     Comment = "Command all connected managed instances to rejoin the management hub using the latest joining key",
@@ -447,6 +471,32 @@ namespace Certify.SourceGenerators
                         { "request", GetFormattedTypeName(typeof(Certify.Models.Hub.ManagedChallengeRequest)) }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup)]
+                },
+                new()
+                {
+                    OperationName = "GetHubSettings",
+                    OperationMethod = HttpGet,
+                    Comment = "Get hub feature settings (managed challenges, managed ACME etc)",
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "settings",
+                    ServiceAPIRoute = "hubsettings",
+                    ReturnType = nameof(HubSettings),
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsList)]
+                },
+                new()
+                {
+                    OperationName = "UpdateHubSettings",
+                    OperationMethod = HttpPost,
+                    Comment = "Update hub feature settings (managed challenges, managed ACME etc)",
+                    PublicAPIController = "Hub",
+                    PublicAPIRoute = "settings",
+                    ServiceAPIRoute = "hubsettings",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string>
+                    {
+                        { "settings", GetFormattedTypeName(typeof(Certify.Models.Hub.HubSettings)) }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemCoreSettingsUpdate)]
                 },
                 new()
                  {
@@ -969,6 +1019,127 @@ namespace Certify.SourceGenerators
                     ReturnType = "ICollection<ActionStep>",
                     Params = new Dictionary<string, string> { { "instanceId", "string" } },
                     RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemStatusList)]
+                },
+                new()
+                {
+                    OperationName = "GetDataStoreProviders",
+                    OperationMethod = HttpGet,
+                    Comment = "Get datastore providers for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/providers",
+                    ReturnType = "ICollection<ProviderDefinition>",
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigList)]
+                },
+                new()
+                {
+                    OperationName = "GetDataStores",
+                    OperationMethod = HttpGet,
+                    Comment = "Get datastore connections for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore",
+                    ReturnType = "ICollection<Certify.Shared.DataStoreConnection>",
+                    Params = new Dictionary<string, string> { { "instanceId", "string" } },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigList)]
+                },
+                new()
+                {
+                    OperationName = "TestDataStore",
+                    OperationMethod = HttpPost,
+                    Comment = "Test datastore connection and schema for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/test",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStore", "Certify.Shared.DataStoreConnection" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigList)]
+                },
+                new()
+                {
+                    OperationName = "ApplyDataStoreSchemaMigrations",
+                    OperationMethod = HttpPost,
+                    Comment = "Create or upgrade the datastore database schema for a managed instance. Requires a connection whose credentials have schema modification rights.",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/schema/migrate",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStore", "Certify.Shared.DataStoreConnection" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
+                },
+                new()
+                {
+                    OperationName = "UpdateDataStore",
+                    OperationMethod = HttpPost,
+                    Comment = "Add or update datastore connection for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStore", "Certify.Shared.DataStoreConnection" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
+                },
+                new()
+                {
+                    OperationName = "SetDefaultDataStore",
+                    OperationMethod = HttpPost,
+                    Comment = "Set default datastore for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/default/{dataStoreId}",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStoreId", "string" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
+                },
+                new()
+                {
+                    OperationName = "CopyDataStoreToTarget",
+                    OperationMethod = HttpPost,
+                    Comment = "Copy datastore contents from source to target for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/migrate/{sourceId}/{destId}",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "sourceId", "string" },
+                        { "destId", "string" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
+                },
+                new()
+                {
+                    OperationName = "RemoveDataStore",
+                    OperationMethod = HttpPost,
+                    Comment = "Remove datastore connection for a managed instance",
+                    UseManagementAPI = true,
+                    PublicAPIController = "System",
+                    PublicAPIRoute = "{instanceId}/system/datastore/delete/{dataStoreId}",
+                    ReturnType = "ICollection<ActionStep>",
+                    Params = new Dictionary<string, string>
+                    {
+                        { "instanceId", "string" },
+                        { "dataStoreId", "string" }
+                    },
+                    RequiredPermissions = [new(ResourceTypes.System, StandardResourceActions.SystemServiceConfigUpdate)]
                 },
                 new()
                 {

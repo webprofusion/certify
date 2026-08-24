@@ -98,6 +98,8 @@ namespace Certify.Management
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore);
         Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection connection);
+        Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection connection);
+        Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStore);
 
         Task<ActionResult> TestCredentials(string storageKey);
         Task<IAccessControl> GetCurrentAccessControl();
@@ -105,6 +107,10 @@ namespace Certify.Management
         Task<ICollection<ManagedChallenge>> GetManagedChallenges();
         Task<ICollection<ManagedChallenge>> GetManagedChallengesWithTagFilter(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
         Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
+        Task<ManagedChallengeAccessScope> GetManagedChallengeAccessScope(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
+        Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
+        Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope);
+        Task<(bool CanSatisfy, List<string> UnsatisfiedIdentifiers)> CanPrincipalSatisfyManagedChallengeIdentifiers(string? securityPrincipalId, IEnumerable<string> identifiers, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedAcmePerformOrder);
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
         Task<ActionResult> DeleteManagedChallenge(string id);
         Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request);
@@ -113,6 +119,9 @@ namespace Certify.Management
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
+
+        Task<HubSettings> GetHubSettings();
+        Task<ActionResult> UpdateHubSettings(HubSettings settings);
 
         Task<ActionResult> JoinManagementHub(string url, ClientSecret clientSecret);
         Task<ActionResult<HubJoiningInfo>> CheckManagementHubCredentials(string url, ClientSecret clientSecret, bool registerInstance = false, bool reissueRequestAuthSecret = false);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Service for creating ACME error responses with appropriate HTTP status codes
@@ -18,6 +18,8 @@ namespace Certify.Server.Hub.Api.Services
             public const string OrderNotFound = "urn:ietf:params:acme:error:orderNotFound";
             public const string OrderNotReady = "urn:ietf:params:acme:error:orderNotReady";
             public const string AuthorizationNotFound = "urn:ietf:params:acme:error:authorizationNotFound";
+            public const string Unauthorized = "urn:ietf:params:acme:error:unauthorized";
+            public const string RejectedIdentifier = "urn:ietf:params:acme:error:rejectedIdentifier";
             public const string ServerInternal = "urn:ietf:params:acme:error:serverInternal";
         }
 
@@ -33,13 +35,28 @@ namespace Certify.Server.Hub.Api.Services
 
             return errorType switch
             {
-                AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound => 
+                AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound =>
                     new NotFoundObjectResult(error),
-                AcmeErrorTypes.ServerInternal => 
+                AcmeErrorTypes.Unauthorized =>
+                    new ObjectResult(error) { StatusCode = 403 },
+                AcmeErrorTypes.ServerInternal =>
                     new ObjectResult(error) { StatusCode = 500 },
-                _ => 
+                _ =>
                     new BadRequestObjectResult(error)
             };
+        }
+
+        /// <summary>
+        /// Creates an ACME error response for a failed request, preserving the specific ACME error type
+        /// where the failure reported one (e.g. badNonce, so the client knows it can retry).
+        /// </summary>
+        /// <param name="ex">The exception which failed the request</param>
+        /// <param name="fallbackDetail">Detail to report when the failure carries no ACME error type</param>
+        public static IActionResult CreateAcmeErrorForException(Exception ex, string fallbackDetail)
+        {
+            return ex is AcmeRequestException acmeException
+                ? CreateAcmeError(acmeException.ErrorType, acmeException.Message)
+                : CreateAcmeError(AcmeErrorTypes.Malformed, fallbackDetail);
         }
     }
 }

@@ -131,6 +131,73 @@ namespace Certify.Core.Tests.DataStores
             }
         }
 
+        [TestMethod, Description("Ensure the same item id can be stored by more than one instance")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestConfigurationStoreSharedIdAcrossInstances(string storeType)
+        {
+            // this is the data store migration path (CopyDateStoreToTarget) - copying into a database which already
+            // holds the same item id for another instance must not collide. Schemas with the primary key on id
+            // alone failed here with a duplicate key violation.
+            var sharedId = Guid.NewGuid().ToString();
+            var itemType = "securityprincipal";
+
+            var instanceA = $"instanceA_{Guid.NewGuid():N}";
+            var instanceB = $"instanceB_{Guid.NewGuid():N}";
+
+            var storeA = GetStore(storeType, instanceA);
+            var storeB = GetStore(storeType, instanceB);
+
+            await storeA.UpsertSerializedItem(new SerializedConfigurationItem { Id = sharedId, ItemType = itemType, Config = "{\"source\":\"A\"}" });
+            await storeB.UpsertSerializedItem(new SerializedConfigurationItem { Id = sharedId, ItemType = itemType, Config = "{\"source\":\"B\"}" });
+
+            try
+            {
+                var itemsA = await storeA.GetAllSerializedItems();
+                var itemsB = await storeB.GetAllSerializedItems();
+
+                var storedA = itemsA.FirstOrDefault(i => i.Id == sharedId);
+                var storedB = itemsB.FirstOrDefault(i => i.Id == sharedId);
+
+                Assert.IsNotNull(storedA, $"[{storeType}] Instance A should have its own copy of the item");
+                Assert.IsNotNull(storedB, $"[{storeType}] Instance B should have its own copy of the item");
+                Assert.IsTrue(storedA.Config.Contains("A"), $"[{storeType}] Instance A should read back its own version");
+                Assert.IsTrue(storedB.Config.Contains("B"), $"[{storeType}] Instance B should read back its own version");
+                Assert.AreEqual(1, itemsA.Count(i => i.Id == sharedId), $"[{storeType}] Instance A should see exactly one copy");
+            }
+            finally
+            {
+                await storeA.Delete<SecurityPrincipal>(itemType, sharedId);
+                await storeB.Delete<SecurityPrincipal>(itemType, sharedId);
+            }
+        }
+
+        [TestMethod, Description("Ensure the same item id can be stored under more than one item type")]
+        [DynamicData(nameof(ExternalTestDataStores))]
+        public async Task TestConfigurationStoreSharedIdAcrossItemTypes(string storeType)
+        {
+            var sharedId = Guid.NewGuid().ToString();
+            var instanceId = $"instance_{Guid.NewGuid():N}";
+            var store = GetStore(storeType, instanceId);
+
+            await store.UpsertSerializedItem(new SerializedConfigurationItem { Id = sharedId, ItemType = "securityprincipal", Config = "{\"source\":\"principal\"}" });
+            await store.UpsertSerializedItem(new SerializedConfigurationItem { Id = sharedId, ItemType = "credential", Config = "{\"source\":\"credential\"}" });
+
+            try
+            {
+                var items = await store.GetAllSerializedItems();
+                var stored = items.Where(i => i.Id == sharedId).ToList();
+
+                Assert.AreEqual(2, stored.Count, $"[{storeType}] Both item types should be stored under the shared id");
+                Assert.IsTrue(stored.Any(i => i.ItemType == "securityprincipal" && i.Config.Contains("principal")), $"[{storeType}] Principal item should be intact");
+                Assert.IsTrue(stored.Any(i => i.ItemType == "credential" && i.Config.Contains("credential")), $"[{storeType}] Credential item should be intact");
+            }
+            finally
+            {
+                await store.Delete<SecurityPrincipal>("securityprincipal", sharedId);
+                await store.Delete<SecurityPrincipal>("credential", sharedId);
+            }
+        }
+
         [TestMethod, Description("Test multi-tenant isolation for configuration items")]
         [DynamicData(nameof(ExternalTestDataStores))]
         public async Task TestConfigurationStoreMultiTenancy(string storeType)

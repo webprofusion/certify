@@ -11,7 +11,8 @@ namespace Certify.Models
     {
         SSL_ACME = 1,
         SSL_Manual = 2,
-        SSL_ExternallyManaged = 3
+        SSL_ExternallyManaged = 3,
+        SSL_ExternalSubscription = 4
     }
 
     public enum RequiredActionType
@@ -43,6 +44,28 @@ namespace Certify.Models
         /// If set, the current number of hrs we will wait before next attempt
         /// </summary>
         public float HoldHrs { get; set; }
+
+        /// <summary>
+        /// True when <see cref="DateNextRenewalAttempt"/> is a specific renewal time scheduled against the item
+        /// (see <see cref="ManagedCertificate.DateNextScheduledRenewalAttempt"/>, e.g. a CA suggested renewal window via ACME ARI),
+        /// rather than the estimate derived from the configured renewal interval.
+        /// </summary>
+        public bool IsRenewalScheduled { get; set; }
+
+        /// <summary>
+        /// True when the renewal attempt has been deferred to the item's maintenance window. When renewal is otherwise due
+        /// this means the attempt is being held until the window next opens.
+        /// </summary>
+        public bool IsDeferredByMaintenanceWindow { get; set; }
+
+        /// <summary>
+        /// Parameterless constructor for serialization. This type travels between an instance, the hub and the UI,
+        /// which use different serializers, so it must be constructible without arguments.
+        /// </summary>
+        public RenewalDueInfo()
+        {
+            Reason = string.Empty;
+        }
 
         public RenewalDueInfo(string reason, bool isRenewalDue, DateTimeOffset? renewalAttemptDate, TimeSpan? certLifetime, bool isRenewalOnHold = false, float holdHrs = 0)
         {
@@ -142,12 +165,50 @@ namespace Certify.Models
 #endif
         }
 
+        /// <summary>
+        /// Id prefix used for managed certificates discovered via an external certificate manager provider
+        /// </summary>
+        public const string ExternalItemIdPrefix = "ext-";
+
+        /// <summary>
+        /// Determine whether the given managed certificate id refers to an item discovered via an external
+        /// certificate manager provider, for use where only the id is known
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static bool IsExternalItemId(string? id) => id?.StartsWith(ExternalItemIdPrefix, StringComparison.OrdinalIgnoreCase) == true;
+
+        /// <summary>
+        /// Determine whether the given item type is one where the certificate is acquired from an external
+        /// source rather than ordered by this instance
+        /// </summary>
+        /// <param name="itemType"></param>
+        /// <returns></returns>
+        public static bool IsExternalSourceItemType(ManagedCertificateType itemType) => itemType == ManagedCertificateType.SSL_ExternallyManaged || itemType == ManagedCertificateType.SSL_ExternalSubscription;
+
         public void NormalizeExternalSourceSettings()
         {
-            if (ItemType != ManagedCertificateType.SSL_ExternallyManaged)
+            if (!IsExternalSourceItem)
             {
                 ExternalSource = null;
             }
+        }
+
+        /// <summary>
+        /// Adopt the current item type for a certificate subscription, if this item still carries the legacy type.
+        /// Subscriptions were originally stored as <see cref="ManagedCertificateType.SSL_ExternallyManaged"/> with a
+        /// configured external source, which is the same type used for items discovered via a certificate manager provider
+        /// </summary>
+        /// <returns>true if the item type was changed and the item needs to be stored</returns>
+        public bool NormalizeSubscriptionItemType()
+        {
+            if (ItemType == ManagedCertificateType.SSL_ExternallyManaged && IsSubscription)
+            {
+                ItemType = ManagedCertificateType.SSL_ExternalSubscription;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -155,6 +216,12 @@ namespace Certify.Models
         /// </summary>
         public string? SourceId { get; set; }
         public string? SourceName { get; set; }
+
+        /// <summary>
+        /// If set, this item is (or was) the temporary target of a hub Managed ACME order. Carries the order id
+        /// plus the owning principal and role scope used when fulfilling the order.
+        /// </summary>
+        public ManagedAcmeOrderInfo? ManagedAcmeOrder { get; set; }
 
         /// <summary>
         /// Default CA to use for this request
@@ -254,6 +321,14 @@ namespace Certify.Models
         public DateTimeOffset? DateNextScheduledRenewalAttempt { get; set; }
 
         /// <summary>
+        /// When this item is fetched via the management API, the calculated plan for its next renewal (when renewal will next
+        /// be attempted and why), as computed by the instance which owns the item using its own renewal settings. This saves
+        /// every consumer from having to fetch and interpret those settings for itself.
+        /// This is derived state which is recalculated on each fetch, so it is not stored with the item.
+        /// </summary>
+        public RenewalDueInfo? RenewalPlan { get; set; }
+
+        /// <summary>
         /// Date we last attempted renewal
         /// </summary>
         public DateTimeOffset? DateLastRenewalAttempt { get; set; }
@@ -341,6 +416,41 @@ namespace Certify.Models
         /// PEM encoded version of public certificate
         /// </summary>
         public string? CertificatePEM { get; set; }
+
+        /// <summary>
+        /// True if this item's certificate is acquired from an external source rather than ordered by this instance
+        /// </summary>
+        [JsonIgnore]
+        public bool IsExternalSourceItem => IsExternalSourceItemType(ItemType);
+
+        /// <summary>
+        /// True if this item is an external certificate subscription, which periodically fetches an updated
+        /// certificate from its configured external source.
+        /// An item stored before subscriptions had their own item type still carries the legacy type, and is
+        /// recognised by having an external source configured (items discovered via a certificate manager
+        /// provider never carry one)
+        /// </summary>
+        [JsonIgnore]
+        public bool IsSubscription => ItemType == ManagedCertificateType.SSL_ExternalSubscription
+            || (ItemType == ManagedCertificateType.SSL_ExternallyManaged && ExternalSource?.SourceType != null);
+
+        /// <summary>
+        /// True if this item is a certificate subscription which has enough configuration for a request to actually be
+        /// attempted against its source. A subscription which has not been configured yet is still a subscription, but
+        /// there is nothing to fetch and nothing to fetch it from.
+        /// Use <see cref="IsSubscription"/> to decide how an item is processed, and this to decide whether a request
+        /// can be attempted - an unconfigured subscription must never fall through to ordering its own certificate
+        /// </summary>
+        [JsonIgnore]
+        public bool IsActionableSubscription => IsSubscription
+            && !string.IsNullOrWhiteSpace(ExternalSource?.SourceType)
+            && !string.IsNullOrWhiteSpace(ExternalSource?.ExternalReference);
+
+        /// <summary>
+        /// True if this item was discovered via an external certificate manager provider and is not stored by this instance
+        /// </summary>
+        [JsonIgnore]
+        public bool IsExternallyManaged => IsExternalSourceItem && !IsSubscription;
 
         public override string ToString() => $"[{Id ?? "null"}]: \"{Name}\"";
 
@@ -551,84 +661,11 @@ namespace Certify.Models
                 }
                 else
                 {
-                    // start by matching first config with no specific identifier
-                    var matchedConfig = RequestConfig.Challenges.FirstOrDefault(c => string.IsNullOrEmpty(c.DomainMatch));
-
-                    if (identifier != null && !string.IsNullOrEmpty(identifier?.Value))
-                    {
-                        // expand configs into per identifier list
-                        var configsPerDomain = new Dictionary<string, CertRequestChallengeConfig>();
-                        foreach (var c in RequestConfig.Challenges.Where(config => !string.IsNullOrEmpty(config.DomainMatch)))
-                        {
-                            if (c != null)
-                            {
-                                if (c.DomainMatch != null && !string.IsNullOrEmpty(c.DomainMatch))
-                                {
-                                    c.DomainMatch = c.DomainMatch.Replace(",", ";"); // if user has entered comma seperators instead of semicolons, convert now.
-
-                                    if (!c.DomainMatch.Contains(';'))
-                                    {
-                                        var domainMatchKey = c.DomainMatch.Trim();
-
-                                        // if identifier key is test.com for example we only support one matching config
-                                        if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                        {
-                                            configsPerDomain.Add(domainMatchKey, c);
-                                        }
-                                    }
-                                    else
-                                    {
-                                        var domains = c.DomainMatch.Split(';');
-                                        foreach (var d in domains)
-                                        {
-                                            if (!string.IsNullOrWhiteSpace(d))
-                                            {
-                                                var domainMatchKey = d.Trim().ToLowerInvariant();
-                                                if (!configsPerDomain.ContainsKey(domainMatchKey))
-                                                {
-                                                    configsPerDomain.Add(domainMatchKey, c);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // if exact match exists, use that
-                        var identifierKey = identifier!.Value.ToLowerInvariant();
-                        if (configsPerDomain.TryGetValue(identifierKey, out var value))
-                        {
-                            return value;
-                        }
-
-                        // if explicit wildcard match exists, use that
-                        if (configsPerDomain.TryGetValue("*." + identifierKey, out var wildValue))
-                        {
-                            return wildValue;
-                        }
-
-                        //if a more specific config matches the identifier, use that, in order of longest identifier name match first
-                        var allMatchingConfigKeys = configsPerDomain.Keys.OrderByDescending(l => l.Length);
-
-                        foreach (var wildcard in allMatchingConfigKeys.Where(k => k.StartsWith("*.", StringComparison.CurrentCultureIgnoreCase)))
-                        {
-                            if (ManagedCertificate.IsDomainOrWildcardMatch(new List<string> { wildcard }, identifier?.Value))
-                            {
-                                return configsPerDomain[wildcard];
-                            }
-                        }
-
-                        foreach (var configDomain in allMatchingConfigKeys)
-                        {
-                            if (configDomain.EndsWith(identifier!.Value.ToLowerInvariant(), StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                // use longest matching identifier (so subdomain.test.com takes priority
-                                // over test.com, )
-                                return configsPerDomain[configDomain];
-                            }
-                        }
-                    }
+                    // domain match rule evaluation is shared, see DomainMatchRules
+                    var matchedConfig = DomainMatchRules.FindBestMatch(
+                        identifier?.Value,
+                        RequestConfig.Challenges,
+                        c => c.DomainMatch);
 
                     // no other matches, just use first
                     if (matchedConfig != null)
@@ -673,6 +710,7 @@ namespace Certify.Models
             managedCert.LastAttemptedCA = null;
             managedCert.SourceId = null;
             managedCert.SourceName = null;
+            managedCert.ManagedAcmeOrder = null;
             managedCert.ExternalSource = null;
             managedCert.RenewalFailureCount = 0;
             managedCert.RenewalFailureMessage = null;
@@ -814,7 +852,7 @@ namespace Certify.Models
             }
         }
 
-        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, bool checkFailureStatus = false, DateTimeOffset? testDateTime = null)
+        public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, DateTimeOffset? testDateTime = null)
         {
 
             if (s == null)
@@ -832,6 +870,7 @@ namespace Certify.Models
             }
 
             var isRenewalRequired = false;
+            var isRenewalScheduled = false;
             var renewalStatusReason = " Item not due for renewal";
             TimeSpan? certLifetime = null;
 
@@ -851,6 +890,7 @@ namespace Certify.Models
                 if (s.DateNextScheduledRenewalAttempt != null && s.DateNextScheduledRenewalAttempt <= checkDate)
                 {
                     isRenewalRequired = true;
+                    isRenewalScheduled = true;
                     renewalStatusReason = "Certificate scheduled renewal is now due.";
                 }
                 else
@@ -1039,11 +1079,24 @@ namespace Certify.Models
 
             if (!isRenewalRequired && s.DateNextScheduledRenewalAttempt.HasValue && s.DateNextScheduledRenewalAttempt < nextRenewalAttemptDate)
             {
-                renewalStatusReason = "Certificate renewal is not yet required but has been scheduled ahead of normal renewal.";
+                renewalStatusReason = "Certificate renewal is not yet required but has been scheduled ahead of normal renewal (ACME ARI).";
                 nextRenewalAttemptDate = s.DateNextScheduledRenewalAttempt.Value;
+                isRenewalScheduled = true;
             }
 
-            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime);
+            // a planned renewal should never be scheduled before the certificate itself became valid. This can otherwise happen due to clock skew,
+            // a certificate issued with a future NotBefore, or a CA suggested renewal window which predates the current certificate.
+            if (!isRenewalRequired && s.DateStart.HasValue && nextRenewalAttemptDate < s.DateStart.Value)
+            {
+                nextRenewalAttemptDate = s.DateStart.Value;
+                renewalStatusReason = "Certificate renewal is not yet required. The planned renewal date has been adjusted because it preceded the certificate start date.";
+                isRenewalScheduled = false;
+            }
+
+            return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime)
+            {
+                IsRenewalScheduled = isRenewalScheduled
+            };
         }
 
         public static bool TryParseManagementHubReference(string? reference, out string instanceId, out string managedCertificateId)

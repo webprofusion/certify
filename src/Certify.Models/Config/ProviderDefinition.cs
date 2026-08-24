@@ -46,6 +46,12 @@ namespace Certify.Models.Config
         public ChallengeHandlerType HandlerType { get; set; }
         public int PropagationDelaySeconds { get; set; }
 
+        /// <summary>
+        /// When true, PowerShell HTTP helpers may follow HTTPS to HTTP redirects.
+        /// Only enable for providers that require it (e.g. DNS Made Easy / DMEasy).
+        /// </summary>
+        public bool AllowInsecureRedirect { get; set; }
+
         public ChallengeProviderDefinition() : base()
         {
 

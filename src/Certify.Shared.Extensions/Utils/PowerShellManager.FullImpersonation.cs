@@ -54,40 +54,15 @@ namespace Certify.Management
 
         private static SafeTokenHandle LogonUserForFullImpersonation(Dictionary<string, string> credentials, string logonType)
         {
-            var (username, domain, password) = GetWindowsCredentialParts(credentials);
+            var credentialParts = ParseWindowsCredentialParts(credentials);
             var logonTypeValue = GetWindowsLogonTypeValue(logonType);
 
-            if (!LogonUser(username, domain, password, logonTypeValue, LogonProvider.Default, out var token))
+            if (!LogonUser(credentialParts.Username, credentialParts.Domain, credentialParts.Password, logonTypeValue, LogonProvider.Default, out var token))
             {
                 throw new Win32Exception(Marshal.GetLastWin32Error(), "LogonUser failed.");
             }
 
             return token;
-        }
-
-        private static (string Username, string Domain, string Password) GetWindowsCredentialParts(Dictionary<string, string> credentials)
-        {
-            var username = credentials["username"];
-            var password = credentials["password"];
-            credentials.TryGetValue("domain", out var domain);
-
-            if (domain == null && !username.Contains(".\\") && !username.Contains("@"))
-            {
-                domain = ".";
-            }
-
-            if (username.StartsWith(@".\", StringComparison.Ordinal))
-            {
-                domain = ".";
-                username = username.Substring(2);
-            }
-
-            if (username.Contains("@", StringComparison.Ordinal))
-            {
-                domain = null;
-            }
-
-            return (username, domain, password);
         }
 
         private static int GetWindowsLogonTypeValue(string logonType)
@@ -157,8 +132,8 @@ namespace Certify.Management
                     creationFlags |= CreateUnicodeEnvironment;
                 }
 
-                var (username, domain, password) = GetWindowsCredentialParts(credentials);
-                if (!CreateProcessWithLogonW(username, domain, password, loadUserProfile ? LogonWithProfile : 0, startInfo.FileName, commandLine, creationFlags, environment, startInfo.WorkingDirectory, ref startupInfo, out var processInfo))
+                var credentialParts = ParseWindowsCredentialParts(credentials);
+                if (!CreateProcessWithLogonW(credentialParts.Username, credentialParts.Domain, credentialParts.Password, loadUserProfile ? LogonWithProfile : 0, startInfo.FileName, commandLine, creationFlags, environment, startInfo.WorkingDirectory, ref startupInfo, out var processInfo))
                 {
                     throw new Win32Exception(Marshal.GetLastWin32Error(), "CreateProcessWithLogonW failed.");
                 }
@@ -173,6 +148,18 @@ namespace Certify.Management
                 if (waitResult == WaitResult.Timeout)
                 {
                     TerminateProcess(processInfo.hProcess, 1);
+
+                    try
+                    {
+                        WaitForSingleObject(processInfo.hProcess, 5000);
+                    }
+                    catch
+                    {
+                    }
+
+                    stdoutHandle.Dispose();
+                    stderrHandle.Dispose();
+
                     log.AppendLine("Warning: Script ran but took too long to exit and was terminated.");
                     AppendProcessOutput(log, stdoutPath, stderrPath);
                     return new ActionResult { IsSuccess = false, Message = log.ToString() };

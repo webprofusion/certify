@@ -1,15 +1,16 @@
 ﻿using System.Security.Cryptography;
 using Certify.Models;
+using Certify.Models.Config;
 using Certify.Server.Hub.Api.Models.Acme;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Helper service for ACME-related operations and data generation
     /// </summary>
     public class AcmeHelper
     {
-        private const int DEFAULT_EXPIRY_DAYS = 30;
+        private static readonly TimeSpan DefaultResourceLifetime = AcmeBackgroundTaskService.OrderMaxAge;
         private const int NONCE_BYTES = 16;
         private const int TOKEN_BYTES = 32;
 
@@ -114,7 +115,7 @@ namespace Certify.Server.Hub.Api.Services
             {
                 Identifier = identifier,
                 Status = AuthorizationStatus.Valid, //presets auth to valid so the client doesn't attempt them
-                Expires = DateTime.UtcNow.AddDays(DEFAULT_EXPIRY_DAYS),
+                Expires = DateTime.UtcNow.Add(DefaultResourceLifetime),
                 Challenges = CreateStandardChallenges(baseUrl)
             };
         }
@@ -122,12 +123,30 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// Prepares a managed certificate from an ACME order request
         /// </summary>
-        public static ManagedCertificate PrepareManagedCertificate(string orderId, NewOrderRequest request)
+        public static ManagedCertificate PrepareManagedCertificate(
+            string orderId,
+            NewOrderRequest request,
+            string? accountKid = null,
+            string? securityPrincipalId = null,
+            IEnumerable<string>? scopedAssignedRoles = null)
         {
             var managedCert = new ManagedCertificate
             {
                 Name = $"Hub ACME Order {orderId}",
                 CertificateAuthorityId = StandardCertAuthorities.LETS_ENCRYPT,
+                // marks this as a temporary managed ACME order item, the owning principal (and any scoped roles)
+                // drive scoped managed-challenge selection during fulfillment and allow orphan cleanup later
+                ManagedAcmeOrder = new ManagedAcmeOrderInfo
+                {
+                    OrderId = orderId,
+                    AccountKid = accountKid,
+                    SecurityPrincipalId = securityPrincipalId,
+                    ScopedAssignedRoles = scopedAssignedRoles?
+                        .Where(r => !string.IsNullOrWhiteSpace(r))
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList(),
+                    DateCreated = DateTimeOffset.UtcNow
+                },
                 RequestConfig = new()
                 {
                     PrimaryDomain = request.Identifiers.FirstOrDefault()?.Value ?? "",
@@ -140,7 +159,7 @@ namespace Certify.Server.Hub.Api.Services
             [
                 new() {
                     ChallengeProvider = "ManagedAcme" ,
-                    ChallengeType = "dns-01",
+                    ChallengeType = "dns-01"
                 }
             ];
 
@@ -161,9 +180,8 @@ namespace Certify.Server.Hub.Api.Services
         public async Task<string> GenerateNonce()
         {
             var nonce = JwsConvert.ToBase64String(RandomNumberGenerator.GetBytes(NONCE_BYTES));
-            var timestamp = DateTime.UtcNow.ToString();
 
-            await _config.StoreAcmeNonce(nonce, timestamp);
+            await _config.StoreAcmeNonce(nonce, DateTime.UtcNow);
 
             return nonce;
         }

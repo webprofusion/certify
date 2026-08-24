@@ -81,13 +81,7 @@
                                     <TextBlock
                                         DockPanel.Dock="Left"
                                         Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                        Text="{Binding Path=Host}"
-                                        TextWrapping="WrapWithOverflow" />
-                                    <TextBlock
-                                        Margin="4,0,0,0"
-                                        DockPanel.Dock="Left"
-                                        Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
-                                        Text="{Binding Path=Port}"
+                                        Text="{Binding Path=EndpointDescription}"
                                         TextWrapping="WrapWithOverflow" />
                                 </StackPanel>
 

@@ -27,6 +27,39 @@
             Null="Visible" />
         <utils:ExpiryDateColourConverter x:Key="ExpiryDateColourConverter" />
         <utils:ExpiryDateConverter x:Key="ExpiryDateConverter" />
+
+        <!--
+            Highlights why the planned renewal is not simply the next interval based renewal, e.g. a renewal window
+            suggested by the CA (ARI), a retry hold after failures, or a maintenance window. Collapsed when there is
+            nothing to emphasise.
+        -->
+        <DataTemplate x:Key="RenewalPlanStatusChip">
+            <Border
+                Margin="4,0,0,0"
+                Padding="6,1,6,1"
+                VerticalAlignment="Center"
+                ToolTip="{Binding Path=RenewalPlanReason}"
+                Visibility="{Binding Path=RenewalPlanStatusLabel, Converter={StaticResource NullCollapsedConverter}}">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="CornerRadius" Value="3" />
+                        <Setter Property="BorderThickness" Value="1" />
+                        <Setter Property="Background" Value="{DynamicResource MahApps.Brushes.Accent4}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource MahApps.Brushes.Accent}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Path=IsRenewalOnHold}" Value="True">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource WarningColorBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock
+                    FontSize="11"
+                    IsHitTestVisible="False"
+                    Text="{Binding Path=RenewalPlanStatusLabel}" />
+            </Border>
+        </DataTemplate>
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="0,0,8,8">
@@ -112,9 +145,10 @@
                             Content="Next Renewal Due:"
                             FontWeight="Bold" />
                         <Label
-                            Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}"
-                            ContentStringFormat="d"
-                            FontWeight="Bold" />
+                            Content="{Binding Path=NextRenewalDueDisplay}"
+                            FontWeight="Bold"
+                            ToolTip="{Binding Path=RenewalPlanReason}" />
+                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RenewalPlanStatusChip}" />
                     </StackPanel>
                     <TextBlock
                         Margin="4,0,16,0"
@@ -190,7 +224,8 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Next Planned Renewal:" />
-                        <Label Content="{Binding Path=DateNextRenewalDue, Converter={StaticResource NullDateFormatter}}" ContentStringFormat="d" />
+                        <Label Content="{Binding Path=NextRenewalDueDisplay}" ToolTip="{Binding Path=RenewalPlanReason}" />
+                        <ContentControl Content="{Binding}" ContentTemplate="{StaticResource RenewalPlanStatusChip}" />
                     </StackPanel>
                     <!--<StackPanel Orientation="Horizontal">
                         <Label Width="160" Content="Certificate Authority:" />
@@ -281,8 +316,11 @@
 
             </StackPanel>
 
-            <StackPanel x:Name="ExternalSyncInfo" Margin="0,16,0,0" Visibility="Collapsed">
-                <TextBlock Style="{StaticResource Subheading}" Text="External Sync" />
+            <StackPanel
+                x:Name="ExternalSyncInfo"
+                Margin="0,16,0,0"
+                Visibility="Collapsed">
+                <TextBlock Style="{StaticResource Subheading}" Text="Subscription Status" />
                 <StackPanel Orientation="Horizontal">
                     <Label
                         Width="160"

@@ -50,7 +50,7 @@ namespace Certify.Server.HubService.Services
         }
 
         /// <inheritdoc/>
-        public Task ConnectAsync(string hubConnectionAuthToken) => Task.CompletedTask;
+        public Task ConnectAsync(Func<CancellationToken, Task<string>> hubConnectionTokenFactory) => Task.CompletedTask;
 
         /// <inheritdoc/>
         public Task Disconnect() => Task.CompletedTask;

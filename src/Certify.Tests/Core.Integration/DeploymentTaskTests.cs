@@ -161,6 +161,55 @@ namespace Certify.Core.Tests
         }
 
         [TestMethod, TestCategory("Tasks")]
+        public async Task TestDeployCertificateRunsPostTasksWithoutPrimaryRequestStatus()
+        {
+            var managedCertificate = GetMockManagedCertificate("DeployCertificateTaskSuccess", testSiteDomain);
+            managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig>
+            {
+                GetMockTaskConfig("Post Task 1 (on success)", triggerType: TaskTriggerType.ON_SUCCESS)
+            };
+
+            var result = await certifyManager.DeployCertificate(managedCertificate, null, isPreviewOnly: true, includeDeploymentTasks: true);
+
+            var postRequestSteps = result.Actions.FirstOrDefault(s => s.Key == "PostRequestTasks");
+            Assert.IsNotNull(postRequestSteps, "Deployment should include post-request tasks when requested.");
+
+            var successStep = postRequestSteps.Substeps.FirstOrDefault(s => s.Key == managedCertificate.PostRequestTasks[0].Id);
+            Assert.IsNotNull(successStep, "On-success deployment task should be present.");
+            Assert.IsFalse(successStep.HasWarning, "On-success deployment task should not be skipped when deployment succeeds.");
+            Assert.IsFalse(successStep.Description?.Contains("primary request unsuccessful", StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        [TestMethod, TestCategory("Tasks")]
+        public async Task TestDeployCertificateDoesNotRunErrorTasks()
+        {
+            // an explicit redeployment of the certificate we already hold is not the outcome of a failed request, so
+            // there is nothing for an on-error task to react to, even when the item last renewed unsuccessfully
+            var managedCertificate = GetMockManagedCertificate("DeployCertificateTaskError", testSiteDomain);
+            managedCertificate.LastRenewalStatus = RequestState.Error;
+            managedCertificate.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig>
+            {
+                GetMockTaskConfig("Post Task 1 (on success)", triggerType: TaskTriggerType.ON_SUCCESS),
+                GetMockTaskConfig("Post Task 2 (on error)", triggerType: TaskTriggerType.ON_ERROR)
+            };
+
+            var result = await certifyManager.DeployCertificate(managedCertificate, null, isPreviewOnly: true, includeDeploymentTasks: true);
+
+            var postRequestSteps = result.Actions.FirstOrDefault(s => s.Key == "PostRequestTasks");
+            Assert.IsNotNull(postRequestSteps, "Deployment should include post-request tasks when requested.");
+
+            var successStep = postRequestSteps.Substeps.FirstOrDefault(s => s.Key == managedCertificate.PostRequestTasks[0].Id);
+            Assert.IsNotNull(successStep, "On-success deployment task should be present.");
+            Assert.IsFalse(successStep.HasWarning, "On-success deployment task should run, it is the deployment being requested.");
+
+            var errorStep = postRequestSteps.Substeps.FirstOrDefault(s => s.Key == managedCertificate.PostRequestTasks[1].Id);
+            Assert.IsNotNull(errorStep, "On-error deployment task should be reported.");
+            Assert.IsTrue(
+                errorStep.Description?.Contains("will not run", StringComparison.OrdinalIgnoreCase) == true,
+                $"On-error deployment task should not run during an explicit redeployment. Reported: {errorStep.Description}");
+        }
+
+        [TestMethod, TestCategory("Tasks")]
         public async Task TestRunPreAndPostTasksWithFailTrigger()
         {
 

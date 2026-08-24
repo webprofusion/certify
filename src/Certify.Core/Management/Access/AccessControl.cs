@@ -47,7 +47,7 @@ namespace Certify.Core.Management.Access
         /// <returns></returns>
         public async Task<bool> IsInitialized()
         {
-            var list = await GetSecurityPrincipals("system");
+            var list = await GetSecurityPrincipals(StandardSecurityPrincipals.System);
             if (list.Count != 0)
             {
                 return true;
@@ -61,6 +61,16 @@ namespace Certify.Core.Management.Access
         public async Task<List<Role>> GetRoles(string contextUserId)
         {
             return await _store.GetItems<Role>(nameof(Role));
+        }
+
+        public async Task<List<ResourcePolicy>> GetResourcePolicies(string contextUserId)
+        {
+            return await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
+        }
+
+        public async Task<List<ResourceAction>> GetResourceActions(string contextUserId)
+        {
+            return await _store.GetItems<ResourceAction>(nameof(ResourceAction));
         }
 
         public async Task<List<SecurityPrincipal>> GetSecurityPrincipals(string contextUserId, bool includePassword = false)
@@ -78,7 +88,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddSecurityPrincipal(string contextUserId, SecurityPrincipal principal, bool bypassIntegrityCheck = false)
         {
-            if (contextUserId == "system" && !string.IsNullOrEmpty(principal.ExternalIdentifier))
+            if (contextUserId == StandardSecurityPrincipals.System && !string.IsNullOrEmpty(principal.ExternalIdentifier))
             {
                 // special case for auto added users via OIDC
                 bypassIntegrityCheck = true;
@@ -240,39 +250,100 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
-        /// Check if a security principal has access to the given resource action
+        /// Check if a security principal has access to the given resource action.
+        /// System context may evaluate another principal's access but does not auto-allow.
         /// </summary>
-        /// <param name="contextUserId">Security principal performing access check</param>
-        /// <param name="principalId">Security principal to check access for</param>
-        /// <param name="resourceType">resource type being accessed</param>
-        /// <param name="actionId">resource action required</param>
-        /// <param name="identifier">optional resource identifier, if access is limited by specific resource</param>
-        /// <param name="scopedAssignedRoles">optional scoped assigned roles to limit access to (for scoped access token checks etc)</param>
-        /// <returns></returns>
         public async Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check)
         {
-            if (contextUserId == "system")
+            if (!await CanEvaluateAccessCheck(contextUserId, check))
+            {
+                return false;
+            }
+
+            var scope = await EvaluateAccessScopeInternal(check);
+
+            if (!scope.HasAccess)
+            {
+                return false;
+            }
+
+            // Action-level checks without concrete resource tags succeed when any authorizing role grants the action,
+            // including tag-scoped roles. Concrete resource filtering uses EvaluateAccessScope / IsResourceInScope.
+            if (check.ResourceTags != null)
+            {
+                if (!IsResourceInScope(scope, check.ResourceTags))
+                {
+                    return false;
+                }
+            }
+
+            return MatchesIncludedResources(scope.AuthorizingRoles, check);
+        }
+
+        /// <summary>
+        /// Evaluate authorizing roles and unrestricted/scoped state for a principal and action.
+        /// </summary>
+        public async Task<ResourceAccessScope> EvaluateAccessScope(string contextUserId, AccessCheck check)
+        {
+            if (!await CanEvaluateAccessCheck(contextUserId, check))
+            {
+                return new ResourceAccessScope
+                {
+                    AllowUnscopedResources = check?.AllowUnscopedResources == true
+                };
+            }
+
+            return await EvaluateAccessScopeInternal(check);
+        }
+
+        /// <summary>
+        /// True when a concrete resource (via tags) is within the resolved access scope.
+        /// </summary>
+        public bool IsResourceInScope(ResourceAccessScope scope, IEnumerable<TagSummary>? resourceTags)
+            => ResourceAccess.IsResourceInScope(scope, resourceTags);
+
+        private Task<bool> CanEvaluateAccessCheck(string contextUserId, AccessCheck? check)
+        {
+            // Authorization evaluation is always against check.SecurityPrincipalId.
+            // contextUserId is reserved for mutating/read-admin gates elsewhere; historically
+            // IsSecurityPrincipalAuthorised did not require the caller to be admin to evaluate a check.
+            if (check == null || string.IsNullOrWhiteSpace(check.SecurityPrincipalId) || string.IsNullOrWhiteSpace(check.ResourceActionId))
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(true);
+        }
+
+        private async Task<bool> CanReadPrincipalAccess(string contextUserId, string principalId)
+        {
+            if (string.IsNullOrWhiteSpace(principalId))
+            {
+                return false;
+            }
+
+            if (contextUserId == StandardSecurityPrincipals.System || contextUserId == principalId)
             {
                 return true;
             }
 
-            // to determine is a principal has access to perform a particular action
-            // for each group the principal is part of
+            return await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id);
+        }
+
+        private async Task<ResourceAccessScope> EvaluateAccessScopeInternal(AccessCheck check)
+        {
+            var result = new ResourceAccessScope
+            {
+                AllowUnscopedResources = check.AllowUnscopedResources
+            };
 
             // TODO: cache results for performance based on last update of access control config, which will be largely static
 
-            // get all assigned roles (all users)
-            // assigned roles are assigned to a security principal (user) and include a specified role plus any restrictions on resource types or identifiers
             var allAssignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
-
-            // get all defined roles
             var allRoles = await _store.GetItems<Role>(nameof(Role));
-
-            // get all defined policies
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
 
-            // get the assigned roles for this specific security principal
-            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId);
+            IEnumerable<AssignedRole> spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId);
 
             // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check
             if (check.ScopedAssignedRoles?.Any() == true)
@@ -280,94 +351,67 @@ namespace Certify.Core.Management.Access
                 spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
             }
 
-            // get all role definitions included in the principals assigned roles 
             var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id)).ToList();
 
-            // narrow role definitions and assignments to only those which can grant the requested action
             var roleDefinitionsGrantingAction = spAssignedRoleDefinitions
-                .Where(r => r.Policies.Any(policyId => allPolicies.Any(p => p.Id == policyId && p.ResourceActions.Contains(check.ResourceActionId))))
+                .Where(r => r.Policies != null && r.Policies.Any(policyId =>
+                    allPolicies.Any(p => p.Id == policyId
+                        && p.ResourceActions != null
+                        && p.ResourceActions.Contains(check.ResourceActionId))))
                 .ToList();
 
-            var spSpecificAssignedRoles = spAssignedRoles.Where(a => roleDefinitionsGrantingAction.Any(r => r.Id == a.RoleId)).ToList();
+            var authorizingRoles = spAssignedRoles
+                .Where(a => roleDefinitionsGrantingAction.Any(r => r.Id == a.RoleId))
+                .ToList();
 
-            // get all resource policies included in the principals assigned roles for the requested action
-            var spAssignedPolicies = allPolicies.Where(r => roleDefinitionsGrantingAction.Any(p => p.Policies.Contains(r.Id)));
+            result.AuthorizingRoles = authorizingRoles;
+            result.HasAccess = authorizingRoles.Count > 0;
+            result.IsUnrestricted = authorizingRoles.Any(a => a.ScopedTags == null || a.ScopedTags.Count == 0);
 
-            // check an assigned policy allows the required resource action
-            if (spAssignedPolicies.Any(a => a.ResourceActions.Contains(check.ResourceActionId)))
+            return result;
+        }
+
+        private static bool MatchesIncludedResources(IEnumerable<AssignedRole> authorizingRoles, AccessCheck check)
+        {
+            var rolesWithIncludedResources = authorizingRoles
+                .Where(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true)
+                .ToList();
+
+            if (rolesWithIncludedResources.Count == 0)
             {
-                // Check for tag-based scoping on the assigned roles
-                var tagScopedRoles = spSpecificAssignedRoles.Where(a => a.ScopedTags != null && a.ScopedTags.Count > 0).ToList();
-
-                if (tagScopedRoles.Count > 0 && check.ResourceTags != null)
-                {
-                    // At least one role has tag restrictions - check if resource tags match any role's scope
-                    var tagMatched = false;
-
-                    foreach (var role in tagScopedRoles)
-                    {
-                        if (IsResourceTagScopeMatch(check.ResourceTags, role.ScopedTags, role.RequireAllScopedTags))
-                        {
-                            tagMatched = true;
-                            break;
-                        }
-                    }
-
-                    // Also check if there are non-tag-scoped roles that would grant unrestricted access
-                    var nonTagScopedRoles = spSpecificAssignedRoles.Where(a => a.ScopedTags == null || a.ScopedTags.Count == 0).ToList();
-                    if (nonTagScopedRoles.Count > 0)
-                    {
-                        tagMatched = true;
-                    }
-
-                    if (!tagMatched)
-                    {
-                        // No tag scope match found - deny access
-                        return false;
-                    }
-                }
-
-                // if any of the service principals assigned roles are restricted by resource type,
-                // check for identifier matches (e.g. role assignment restricted on domains )
-
-                if (spSpecificAssignedRoles.Any(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true))
-                {
-                    var allIncludedResources = spSpecificAssignedRoles.SelectMany(a => a.IncludedResources).Distinct();
-
-                    if (check.ResourceType == ResourceTypes.Domain && !check.Identifier.Trim().StartsWith("*") && check.Identifier.Contains("."))
-                    {
-                        // get wildcard for respective domain identifier
-                        var identifierComponents = check.Identifier.Split('.');
-
-                        var wildcard = "*." + string.Join(".", identifierComponents.Skip(1));
-
-                        // search for matching identifier
-
-                        foreach (var includedResource in allIncludedResources)
-                        {
-                            if (includedResource.ResourceType == check.ResourceType && includedResource.Identifier == wildcard)
-                            {
-                                return true;
-                            }
-                            else if (includedResource.ResourceType == check.ResourceType && includedResource.Identifier == check.Identifier)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-
-                    // no match
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(check.Identifier))
             {
                 return false;
             }
+
+            var allIncludedResources = rolesWithIncludedResources
+                .SelectMany(a => a.IncludedResources ?? [])
+                .Where(r => r.ResourceType == check.ResourceType)
+                .Distinct()
+                .ToList();
+
+            if (check.ResourceType == ResourceTypes.Domain
+                && !check.Identifier.Trim().StartsWith("*")
+                && check.Identifier.Contains("."))
+            {
+                var identifierComponents = check.Identifier.Split('.');
+                var wildcard = "*." + string.Join(".", identifierComponents.Skip(1));
+
+                foreach (var includedResource in allIncludedResources)
+                {
+                    if (includedResource.Identifier == wildcard || includedResource.Identifier == check.Identifier)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            return allIncludedResources.Any(r => r.Identifier == check.Identifier);
         }
 
         public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
@@ -401,8 +445,14 @@ namespace Certify.Core.Management.Access
             if (isAuthorised)
             {
                 // TODO: check token scope restrictions
-
-                return new ActionResult("OK", true);
+                return new ActionResult("OK", true)
+                {
+                    Result = new AccessTokenAuthorizationContext
+                    {
+                        SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
+                        ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles ?? []
+                    }
+                };
             }
             else
             {
@@ -574,7 +624,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id)
         {
-            if (id != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await CanReadPrincipalAccess(contextUserId, id))
             {
                 await AuditWarning("User {contextUserId} attempted to read assigned role for [{id}] without being in required role.", contextUserId, id);
                 return null;
@@ -587,7 +637,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<RoleStatus> GetSecurityPrincipalRoleStatus(string contextUserId, string id)
         {
-            if (id != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await CanReadPrincipalAccess(contextUserId, id))
             {
                 await AuditWarning("User {contextUserId} attempted to read role status role for [{id}] without being in required role.", contextUserId, id);
                 return null;
@@ -676,9 +726,9 @@ namespace Certify.Core.Management.Access
         public async Task<List<AssignedAccessToken>> GetAssignedAccessTokens(string contextUserId)
         {
             // if not system user, must be in administrator role to list assigned access tokens
-            // this "system" users is a special case because our ACME endpoints do not use the standard security principal model and have no associated user in most cases
+            // this system user is a special case because our ACME endpoints do not use the standard security principal model and have no associated user in most cases
 
-            if (contextUserId != "system" && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (contextUserId != StandardSecurityPrincipals.System && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to list assigned access tokens without being in required role.", contextUserId);
                 return null;
@@ -731,67 +781,10 @@ namespace Certify.Core.Management.Access
         }
 
         /// <summary>
-        /// Check if resource tags match the required tag scope for access control
+        /// Check if resource tags match the required tag scope for access control.
+        /// Delegates to the shared ResourceAccess helper.
         /// </summary>
-        /// <param name="resourceTags">Tags on the resource being accessed</param>
-        /// <param name="scopedTags">Required tag scopes from the assigned role</param>
-        /// <param name="requireAll">If true, all scopes must match; if false, any scope match is sufficient</param>
-        /// <returns>True if the resource tags satisfy the scope requirements</returns>
         public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
-        {
-            if (scopedTags == null || scopedTags.Count == 0)
-            {
-                // No tag restrictions - access granted
-                return true;
-            }
-
-            if (resourceTags == null || resourceTags.Count == 0)
-            {
-                // Resource has no tags but scope requires tags - deny access
-                return false;
-            }
-
-            if (requireAll)
-            {
-                // All scopes must match (AND logic)
-                foreach (var scope in scopedTags)
-                {
-                    var hasMatch = false;
-                    foreach (var tag in resourceTags)
-                    {
-                        if (tag.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || tag.Value == scope.Value))
-                        {
-                            hasMatch = true;
-                            break;
-                        }
-                    }
-
-                    if (!hasMatch)
-                    {
-                        return false;
-                    }
-                }
-
-                return true;
-            }
-            else
-            {
-                // Any scope match is sufficient (OR logic)
-                foreach (var scope in scopedTags)
-                {
-                    foreach (var tag in resourceTags)
-                    {
-                        if (tag.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || tag.Value == scope.Value))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-        }
+            => ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll);
     }
 }

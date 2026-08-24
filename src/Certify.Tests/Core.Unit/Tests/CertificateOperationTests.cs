@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Certify.Config;
@@ -50,6 +50,63 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(storedCert);
 
             CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
+        }
+
+        [TestMethod]
+        [DataRow("example.com [Certify] - 25/06/2025 8:22:34 AM to 23 / 09 / 2025 8:22:33 AM", "example.com [Certify]")]
+        [DataRow("example.com [Certify] - issued 2026", "example.com [Certify]")]
+        [DataRow("[certify] example.com - issued 2026", "[certify]")]
+        [DataRow("example.com - [CERTIFY] issued 2026", "example.com - [CERTIFY]")]
+        [DataRow("example.com [CeRtIfY] primary [Certify] secondary", "example.com [CeRtIfY]")]
+        [DataRow("example.com - issued 2026", "example.com")]
+        [DataRow("", "example.com")]
+        public void GetCertificateCleanupName_UsesFirstCertifyMarkerOrFallback(string friendlyName, string expectedCleanupName)
+        {
+            var cleanupName = CertificateManager.GetCertificateCleanupName(friendlyName, "example.com");
+
+            Assert.AreEqual(expectedCleanupName, cleanupName);
+        }
+
+        [TestMethod]
+        public void PerformCertificateStoreCleanup_MatchesCertifyMarkerAndPrefixCaseInsensitively()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Debug.WriteLine("Test only valid on Windows, skipping");
+                return;
+            }
+
+            var uniqueName = $"cleanup-{Guid.NewGuid():N}";
+            var cert = CertificateManager.GenerateSelfSignedCertificate(
+                uniqueName,
+                DateTime.UtcNow.AddDays(-2),
+                DateTime.UtcNow.AddDays(-1));
+            cert.FriendlyName = $"{uniqueName} [certify] expired";
+
+            try
+            {
+                CertificateManager.StoreCertificate(cert, CertificateManager.DEFAULT_STORE_NAME);
+
+                var removed = CertificateManager.PerformCertificateStoreCleanup(
+                    CertificateCleanupMode.AfterExpiry,
+                    DateTimeOffset.UtcNow,
+                    $"{uniqueName} [Certify]",
+                    excludedThumbprints: null,
+                    storeName: CertificateManager.DEFAULT_STORE_NAME);
+
+                Assert.IsTrue(removed.Any(c => c.Contains(cert.Thumbprint)), "Cleanup should remove a matching certificate regardless of marker or prefix casing.");
+                Assert.IsNull(CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, CertificateManager.DEFAULT_STORE_NAME));
+            }
+            finally
+            {
+                var storedCert = CertificateManager.GetCertificateByThumbprint(cert.Thumbprint, CertificateManager.DEFAULT_STORE_NAME);
+                if (storedCert != null)
+                {
+                    CertificateManager.RemoveCertificate(storedCert, CertificateManager.DEFAULT_STORE_NAME);
+                }
+
+                cert.Dispose();
+            }
         }
 
         [TestMethod, Description("Test get cert RSA private key file path")]
@@ -231,7 +288,8 @@ namespace Certify.Tests.Core.Unit.Tests
                 {
                     Status = RequestState.Success,
                     Message = "Primary request succeeded"
-                }
+                },
+                IsSubscriptionUpdateDeferred = true
             };
 
             target.ApplyChanges(source);
@@ -241,6 +299,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(target.PrimaryRequest, "Primary request status should be copied during ApplyChanges.");
             Assert.AreEqual(RequestState.Success, target.PrimaryRequest.Status, "Primary request status should be cloned rather than aliased.");
             Assert.AreEqual("Primary request succeeded", target.PrimaryRequest.Message, "Primary request message should be cloned rather than aliased.");
+            Assert.IsTrue(target.IsSubscriptionUpdateDeferred, "Subscription deferred flag should be copied during ApplyChanges.");
         }
 
         [TestMethod, Description("Overall renewal status should not treat a current primary request failure as success just because an older certificate still exists")]
@@ -374,6 +433,189 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual(RequestState.Error, finalState, "Overall renewal status should remain failed when the primary request did not succeed.");
         }
 
+        [TestMethod, Description("Manual deployment task rerun must not restore overall renewal status to success when the recorded primary request failed, even if an older usable certificate still exists")]
+        public void TestManualTaskStatusRecomputeKeepsRecordedPrimaryRequestFailureAuthoritative()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "DNS validation failed." },
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureMessage = "DNS validation failed.",
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-40),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(20),
+                CertificateThumbprintHash = "thumbprint",
+                PostRequestTasks =
+                [
+                    new DeploymentTaskConfig { TaskName = "Upload", LastRunStatus = RequestState.Success }
+                ]
+            };
+
+            var recordedStatus = InvokeResolveRecordedPrimaryRequestStatus(managedCertificate);
+
+            Assert.AreEqual(RequestState.Error, recordedStatus, "Recorded primary request failure should stay authoritative even when a fallback certificate is still usable.");
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: false, "DNS validation failed.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = recordedStatus, Message = managedCertificate.LastPrimaryRequest.Message }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: true);
+
+            Assert.AreEqual(RequestState.Error, finalState, "Overall renewal status should remain failed after a manual task run when the recorded primary request failed.");
+        }
+
+        [TestMethod, Description("Manual deployment task rerun status recompute should fall back to certificate availability when no primary request status was recorded")]
+        public void TestManualTaskStatusRecomputeFallsBackWhenNoRecordedStatus()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = null,
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-10),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(20),
+                CertificateThumbprintHash = "thumbprint"
+            };
+
+            var recordedStatus = InvokeResolveRecordedPrimaryRequestStatus(managedCertificate);
+
+            Assert.AreEqual(RequestState.Success, recordedStatus, "Older items without a recorded primary request status should fall back to usable certificate state.");
+        }
+
+        [TestMethod, Description("Setting primary request status must update both the in-flight request result and the persisted managed certificate sub-status")]
+        public void TestSetPrimaryRequestStatusUpdatesResultAndManagedCertificate()
+        {
+            var managedCertificate = new ManagedCertificate();
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: false, "");
+
+            InvokeSetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Error, "Validation failed");
+
+            Assert.IsNotNull(requestResult.PrimaryRequest, "Request result primary request sub-status should be created.");
+            Assert.AreEqual(RequestState.Error, requestResult.PrimaryRequest.Status, "Request result sub-status should reflect the new state.");
+            Assert.AreEqual("Validation failed", requestResult.PrimaryRequest.Message, "Request result sub-status message should be set.");
+
+            Assert.IsNotNull(managedCertificate.LastPrimaryRequest, "Managed certificate primary request sub-status should be created.");
+            Assert.AreEqual(RequestState.Error, managedCertificate.LastPrimaryRequest.Status, "Managed certificate sub-status should reflect the new state.");
+            Assert.AreEqual("Validation failed", managedCertificate.LastPrimaryRequest.Message, "Managed certificate sub-status message should be set.");
+        }
+
+        [TestMethod, Description("Setting primary request status with a null result must still record the managed certificate sub-status")]
+        public void TestSetPrimaryRequestStatusToleratesNullResult()
+        {
+            var managedCertificate = new ManagedCertificate();
+
+            InvokeSetPrimaryRequestStatus(managedCertificate, null, RequestState.Success, "New certificate received OK.");
+
+            Assert.IsNotNull(managedCertificate.LastPrimaryRequest, "Managed certificate primary request sub-status should be created.");
+            Assert.AreEqual(RequestState.Success, managedCertificate.LastPrimaryRequest.Status, "Managed certificate sub-status should reflect the new state.");
+        }
+
+        [TestMethod, Description("Setting primary request status must overwrite a previously recorded sub-status")]
+        public void TestSetPrimaryRequestStatusOverwritesPreviousStatus()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "Old failure" }
+            };
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: true, "");
+
+            InvokeSetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Success, "New certificate received OK.");
+
+            Assert.AreEqual(RequestState.Success, managedCertificate.LastPrimaryRequest.Status, "Previously failed sub-status should be replaced on success.");
+            Assert.AreEqual("New certificate received OK.", managedCertificate.LastPrimaryRequest.Message, "Sub-status message should be replaced.");
+        }
+
+        [TestMethod, Description("Setting binding deployment status must record the binding sub-status on the managed certificate")]
+        public void TestSetBindingDeploymentStatusRecordsSubStatus()
+        {
+            var managedCertificate = new ManagedCertificate();
+
+            InvokeSetBindingDeploymentStatus(managedCertificate, RequestState.Error, "Binding failed for site");
+
+            Assert.IsNotNull(managedCertificate.LastBindingDeployment, "Binding deployment sub-status should be created.");
+            Assert.AreEqual(RequestState.Error, managedCertificate.LastBindingDeployment.Status, "Binding deployment sub-status should reflect the new state.");
+            Assert.AreEqual("Binding failed for site", managedCertificate.LastBindingDeployment.Message, "Binding deployment sub-status message should be set.");
+        }
+
+        [TestMethod, Description("Clearing primary and binding request status must reset both sub-statuses ready for a new attempt")]
+        public void TestClearPrimaryAndBindingRequestStatusResetsSubStatuses()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = "Old failure" },
+                LastBindingDeployment = new RequestStageStatus { Status = RequestState.Error, Message = "Old binding failure" }
+            };
+
+            InvokeClearPrimaryAndBindingRequestStatus(managedCertificate);
+
+            Assert.IsNull(managedCertificate.LastPrimaryRequest, "Primary request sub-status should be cleared.");
+            Assert.IsNull(managedCertificate.LastBindingDeployment, "Binding deployment sub-status should be cleared.");
+        }
+
+        [TestMethod, Description("Overall renewal status must be Error when the binding deployment sub-status failed even though the primary request succeeded")]
+        public void TestOverallRenewalStatusErrorWhenBindingDeploymentFailed()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." },
+                LastBindingDeployment = new RequestStageStatus { Status = RequestState.Error, Message = "Failed to apply binding for site." }
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: true, "Certificate issued.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: false);
+            var finalMessage = InvokeResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan: false);
+
+            Assert.AreEqual(RequestState.Error, finalState, "Overall renewal status should be Error when the binding deployment failed.");
+            Assert.AreEqual("Failed to apply binding for site.", finalMessage, "Overall renewal message should report the binding deployment failure.");
+        }
+
+        [TestMethod, Description("Overall renewal status must be Paused when the item is awaiting user action")]
+        public void TestOverallRenewalStatusPausedWhenAwaitingUser()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastRenewalStatus = RequestState.Paused,
+                RenewalFailureMessage = "Awaiting manual DNS challenge completion.",
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Paused, Message = "Awaiting manual DNS challenge completion." }
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: false, "")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Paused, Message = "Awaiting manual DNS challenge completion." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: false);
+            var finalMessage = InvokeResolveOverallRenewalMessage(managedCertificate, requestResult, finalState, postRequestTasksRan: false);
+
+            Assert.AreEqual(RequestState.Paused, finalState, "Overall renewal status should be Paused when awaiting user action.");
+            Assert.AreEqual("Awaiting manual DNS challenge completion.", finalMessage, "Overall renewal message should carry the awaiting-user instructions.");
+        }
+
+        [TestMethod, Description("Deployment tasks skipped due to a failed primary request must not themselves fail the overall renewal status once the request succeeds")]
+        public void TestOverallRenewalStatusSuccessWhenTasksWereSkipped()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." },
+                PostRequestTasks =
+                [
+                    new DeploymentTaskConfig { TaskName = "Export Certificate", LastRunStatus = RequestState.Skipped, LastResult = "Task is enabled but will not run because primary request unsuccessful." },
+                    new DeploymentTaskConfig { TaskName = "Export Key", LastRunStatus = RequestState.Skipped, LastResult = "Task is enabled but will not run because primary request unsuccessful." }
+                ]
+            };
+
+            var requestResult = new CertificateRequestResult(managedCertificate, isSuccess: true, "Certificate issued.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." }
+            };
+
+            var finalState = InvokeResolveOverallRenewalStatus(managedCertificate, requestResult, postRequestTasksRan: true);
+
+            Assert.AreEqual(RequestState.Success, finalState, "Skipped deployment tasks should not fail the overall renewal status.");
+        }
+
         private static bool InvokeWasLastCertificateRequestSuccessful(ManagedCertificate managedCertificate)
         {
             var method = typeof(CertifyManager).GetMethod("WasLastCertificatePrimaryRequestSuccessful", BindingFlags.NonPublic | BindingFlags.Static);
@@ -381,6 +623,15 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(method, "Could not find deployment task success inference method.");
 
             return (bool)method.Invoke(null, [managedCertificate]);
+        }
+
+        private static RequestState InvokeResolveRecordedPrimaryRequestStatus(ManagedCertificate managedCertificate)
+        {
+            var method = typeof(CertifyManager).GetMethod("ResolveRecordedPrimaryRequestStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find recorded primary request status resolution method.");
+
+            return (RequestState)method.Invoke(null, [managedCertificate]);
         }
 
         private static bool InvokeIsPrimaryCertificateRequestSuccessful(ManagedCertificate managedCertificate, CertificateRequestResult requestResult)
@@ -408,6 +659,33 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsNotNull(method, "Could not find overall renewal message resolution method.");
 
             return (string)method.Invoke(null, [managedCertificate, requestResult, finalState, postRequestTasksRan]);
+        }
+
+        private static void InvokeSetPrimaryRequestStatus(ManagedCertificate managedCertificate, CertificateRequestResult requestResult, RequestState status, string message)
+        {
+            var method = typeof(CertifyManager).GetMethod("SetPrimaryRequestStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find primary request status setter method.");
+
+            method.Invoke(null, [managedCertificate, requestResult, status, message]);
+        }
+
+        private static void InvokeSetBindingDeploymentStatus(ManagedCertificate managedCertificate, RequestState status, string message)
+        {
+            var method = typeof(CertifyManager).GetMethod("SetBindingDeploymentStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find binding deployment status setter method.");
+
+            method.Invoke(null, [managedCertificate, status, message]);
+        }
+
+        private static void InvokeClearPrimaryAndBindingRequestStatus(ManagedCertificate managedCertificate)
+        {
+            var method = typeof(CertifyManager).GetMethod("ClearPrimaryAndBindingRequestStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method, "Could not find primary and binding request status reset method.");
+
+            method.Invoke(null, [managedCertificate]);
         }
     }
 }

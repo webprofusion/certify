@@ -7,6 +7,7 @@ using Certify.Server.Core;
 using Certify.Server.Hub.Api.Extensions;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
+using Certify.Server.Hub.Api.Services.Acme;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Server.HubService.Extensions;
@@ -217,9 +218,18 @@ builder.Services.AddCors(options =>
 builder.Services
     .AddLogging(loggingBuilder =>
     {
-        // initialise Serilog from the Serilog section of appsettings.json / hubservice.json
+        // Levels/overrides come from the Serilog section of appsettings.json / hubservice.json.
+        // File output always goes under the standard app data logs path (e.g. C:\ProgramData\certify\logs).
+        var logPath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath("logs"), "hubservice-.log");
+
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
+            .WriteTo.File(
+                path: logPath,
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: 7,
+                shared: true,
+                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}")
             .CreateLogger();
 
         loggingBuilder.AddSerilog(dispose: true);
