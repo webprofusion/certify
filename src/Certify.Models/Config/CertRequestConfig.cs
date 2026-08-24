@@ -296,6 +296,11 @@ namespace Certify.Models
         public string? PreferredChain { get; set; }
 
         /// <summary>
+        /// If enabled, automatic failover to an alternative Certificate Authority is disabled for this certificate and the preferred CA will always be used
+        /// </summary>
+        public bool DisableCAFailover { get; set; }
+
+        /// <summary>
         /// If set, the preferred number of days the certificate should expire (e.g. 14 or 0.5). Support for this will vary by CA.
         /// </summary>
         public float? PreferredExpiryDays { get; set; }

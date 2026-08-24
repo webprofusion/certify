@@ -99,6 +99,13 @@ namespace Certify.Service.Controllers
             _currentAuthContext = authContext;
         }
 
+        /// <summary>
+        /// True when this controller was invoked in-process using the internal system auth context.
+        /// Header supplied context user ids do not qualify.
+        /// </summary>
+        [NonAction]
+        public bool IsInternalSystemContext() => _currentAuthContext?.UserId == Models.Hub.StandardSecurityPrincipals.System;
+
         [NonAction]
         public string GetContextUserId()
         {

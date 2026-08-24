@@ -76,6 +76,18 @@ namespace Certify.Models
         /// </summary>
         public string? LastError { get; set; }
 
+        /// <summary>
+        /// True if the user has configured something on this subscription which would be lost if the subscription
+        /// was discarded. Source type, retrieval mode and poll interval are populated with defaults by the editor,
+        /// so on their own they do not count as user configuration
+        /// </summary>
+        [JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasUserConfiguration => !string.IsNullOrWhiteSpace(ExternalReference)
+            || !string.IsNullOrWhiteSpace(SourceConnection)
+            || !string.IsNullOrWhiteSpace(CredentialKey)
+            || !string.IsNullOrWhiteSpace(SourceItemName);
+
         [JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string RemoteNameOrReferenceDisplay => !string.IsNullOrWhiteSpace(SourceItemName)

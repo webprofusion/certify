@@ -61,7 +61,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Act
             // This should validate the token and return the context
-            var result = await _accessControl.IsAccessTokenAuthorised("system", accessToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, accessToken, accessCheck);
 
             // Assert
             Assert.IsTrue(result.IsSuccess, "API token should validate successfully");
@@ -256,7 +256,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var result = await _accessControl.IsAccessTokenAuthorised("system", expiredToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, expiredToken, accessCheck);
 
             // Assert
             Assert.IsFalse(result.IsSuccess, "Expired token should be rejected");
@@ -284,21 +284,21 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var result = await _accessControl.IsAccessTokenAuthorised("system", revokedToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, revokedToken, accessCheck);
 
             // Assert
             Assert.IsFalse(result.IsSuccess, "Revoked token should be rejected");
         }
 
         /// <summary>
-        /// Scenario: System principal always authorized
-        /// Expected: System principal should bypass permission checks
+        /// Scenario: System context evaluates a principal that has no assigned roles
+        /// Expected: System context does not auto-allow, access is evaluated and denied
         /// </summary>
         [TestMethod]
-        public async Task PermissionCheck_SystemPrincipal_AlwaysAuthorized()
+        public async Task PermissionCheck_SystemContext_DoesNotAutoAuthorize()
         {
             // Arrange
-            var systemPrincipalId = "system";
+            var systemPrincipalId = StandardSecurityPrincipals.System;
 
             var accessCheck = new AccessCheck(
                 systemPrincipalId,
@@ -310,7 +310,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(systemPrincipalId, accessCheck);
 
             // Assert
-            Assert.IsTrue(isAuthorized, "System principal should always be authorized");
+            Assert.IsFalse(isAuthorized, "System context must evaluate the target principal rather than blanket allowing access");
         }
     }
 

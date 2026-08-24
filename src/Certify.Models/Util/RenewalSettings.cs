@@ -67,5 +67,27 @@ namespace Certify.Models
                 /// If set, the ID of the default maintenance window for items that don't specify their own
                 /// </summary>
                 public string? DefaultMaintenanceWindowId { get; set; }
+
+                /// <summary>
+                /// Build the renewal preferences which apply to an instance from that instance's settings
+                /// </summary>
+                public static RenewalPrefs FromPreferences(Preferences prefs)
+                {
+                    if (prefs == null)
+                    {
+                        return new RenewalPrefs();
+                    }
+
+                    return new RenewalPrefs
+                    {
+                        RenewalIntervalDays = prefs.RenewalIntervalDays,
+                        RenewalIntervalMode = prefs.RenewalIntervalMode ?? RenewalIntervalModes.PercentageLifetime,
+                        MaxRenewalRequests = prefs.MaxRenewalRequests,
+                        IncludeStoppedSites = !prefs.IgnoreStoppedSites,
+                        PerformParallelRenewals = prefs.EnableParallelRenewals,
+                        MaintenanceWindows = prefs.MaintenanceWindows ?? [],
+                        DefaultMaintenanceWindowId = prefs.DefaultMaintenanceWindowId
+                    };
+                }
             }
         }

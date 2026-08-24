@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,7 +12,45 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         private static readonly Regex CategoryKeyRegex = new Regex(@"^[a-z][a-z0-9\-]*$", RegexOptions.Compiled);
-        private static readonly Regex TagValueRegex = new Regex(@"^[\w\s\-]+$", RegexOptions.Compiled);
+
+        private static bool IsValidTagValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            value = value.Trim();
+
+            for (var i = 0; i < value.Length; i++)
+            {
+                var c = value[i];
+
+                if (c is '/' or ':' or '\\')
+                {
+                    return false;
+                }
+
+                if (char.IsSurrogate(c))
+                {
+                    if (char.IsHighSurrogate(c) && i + 1 < value.Length && char.IsLowSurrogate(value[i + 1]))
+                    {
+                        i++;
+                        continue;
+                    }
+
+                    return false;
+                }
+
+                var category = char.GetUnicodeCategory(c);
+                if (category is UnicodeCategory.Control or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         #region Tag Categories
 
@@ -196,7 +235,7 @@ namespace Certify.Management
             }
 
             // Validate value format
-            if (!TagValueRegex.IsMatch(value))
+            if (!IsValidTagValue(value))
             {
                 return null;
             }
@@ -240,9 +279,9 @@ namespace Certify.Management
             if (!string.IsNullOrWhiteSpace(newValue))
             {
                 newValue = newValue.Trim();
-                if (!TagValueRegex.IsMatch(newValue))
+                if (!IsValidTagValue(newValue))
                 {
-                    return new ActionResult("Invalid value format", false);
+                    return new ActionResult("Invalid value format. Use printable text, including letters from any language and emojis. Avoid /, :, or \\.", false);
                 }
 
                 // Check for duplicates
@@ -574,29 +613,10 @@ namespace Certify.Management
             {
                 var itemTags = itemGroup.ToList();
 
-                if (requireAll)
+                // tag scope matching is shared, see ResourceAccess.IsResourceTagScopeMatch
+                if (ResourceAccess.IsResourceTagScopeMatch(ResourceAccess.ToTagSummaries(itemTags), scopes.ToList(), requireAll))
                 {
-                    // Item must match ALL scopes
-                    var matchesAll = scopes.All(scope =>
-                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (matchesAll)
-                    {
-                        matchingItemIds.Add(itemGroup.Key.TaggedItemId);
-                    }
-                }
-                else
-                {
-                    // Item must match ANY scope
-                    var matchesAny = scopes.Any(scope =>
-                        itemTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (matchesAny)
-                    {
-                        matchingItemIds.Add(itemGroup.Key.TaggedItemId);
-                    }
+                    matchingItemIds.Add(itemGroup.Key.TaggedItemId);
                 }
             }
 
@@ -648,8 +668,8 @@ namespace Certify.Management
                         var matching = allTags.Where(t =>
                             t.TaggedItemId == itemId &&
                             t.TaggedItemType == itemType &&
-                            t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value));
+                            string.Equals(t.CategoryKey, scope.CategoryKey, StringComparison.OrdinalIgnoreCase) &&
+                            (scope.Value == null || string.Equals(t.Value, scope.Value, StringComparison.OrdinalIgnoreCase)));
 
                         idsToRemove.AddRange(matching.Select(t => t.Id));
                     }

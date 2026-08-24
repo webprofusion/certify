@@ -9,8 +9,8 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNet.SignalR.Client" Version="2.4.3" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.11" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="10.0.11" />
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
         <PackageReference Include="Polly" Version="8.7.0" />
 

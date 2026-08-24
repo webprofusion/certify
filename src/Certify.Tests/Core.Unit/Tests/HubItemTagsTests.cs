@@ -163,6 +163,25 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task AddHubItemTags_AllowsDomainUnicodeAndEmojiValues()
+        {
+            var result = await _manager.AddHubItemTags(new List<ItemTag>
+            {
+                new ItemTag("item1", "type1", "tag1", "example.com"),
+                new ItemTag("item2", "type2", "tag2", "東京"),
+                new ItemTag("item3", "type3", "tag3", "🏳️‍🌈")
+            });
+
+            Assert.IsTrue(result.IsSuccess);
+
+            var allTags = await _manager.GetAllHubItemTags(null, null, null, null);
+            Assert.HasCount(3, allTags);
+            Assert.IsTrue(allTags.Any(t => t.Value == "example.com"));
+            Assert.IsTrue(allTags.Any(t => t.Value == "東京"));
+            Assert.IsTrue(allTags.Any(t => t.Value == "🏳️‍🌈"));
+        }
+
+        [TestMethod]
         public async Task RemoveHubItemTagByKey_RemovesSpecificTag()
         {
             await _manager.AddHubItemTags(new List<ItemTag>

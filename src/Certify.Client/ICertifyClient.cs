@@ -6,6 +6,7 @@ using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
 using Certify.Models.Reporting;
+using Certify.Providers;
 using Certify.Models.Utils;
 using Certify.Shared;
 
@@ -28,6 +29,8 @@ namespace Certify.Client
         Task<List<ActionStep>> CopyDataStore(string sourceId, string targetId, AuthContext authContext = null);
         Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
         Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
+        Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
+        Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStoreConnection, AuthContext authContext = null);
         Task<DataStoreStatus> GetDataStoreStatus(AuthContext authContext = null);
         Task<ActionResult> AttemptDataStoreReconnection(AuthContext authContext = null);
 

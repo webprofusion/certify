@@ -17,9 +17,25 @@ namespace Certify.Models.Hub
     }
 
     /// <summary>
+    /// A category:value tag applied to an item, in whichever representation the caller holds
+    /// </summary>
+    public interface ITaggedValue
+    {
+        /// <summary>
+        /// Category key (e.g., "department", "environment")
+        /// </summary>
+        string CategoryKey { get; }
+
+        /// <summary>
+        /// Value within the category (e.g., "Finance", "Production")
+        /// </summary>
+        string Value { get; }
+    }
+
+    /// <summary>
     /// Links a configuration item to a category:value tag
     /// </summary>
-    public class ItemTag : ConfigurationStoreItem
+    public class ItemTag : ConfigurationStoreItem, ITaggedValue
     {
         public ItemTag() { }
 
@@ -156,7 +172,7 @@ namespace Certify.Models.Hub
     /// <summary>
     /// Lightweight tag representation for API responses and UI display
     /// </summary>
-    public class TagSummary
+    public class TagSummary : ITaggedValue
     {
         public string CategoryKey { get; set; } = default!;
         public string CategoryDisplayName { get; set; } = default!;

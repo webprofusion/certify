@@ -259,7 +259,7 @@
     <value>Parola</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>Bu sürüm değerlendirme için ücretsizdir ve sınırlı sayıda sertifikayı yönetecektir. Bu sınırlamayı kaldırmak için lütfen https://certifytheweb.com/register adresinden bir kayıt anahtarı satın alın. Kayıtlı kullanıcılar support@certifytheweb.com adresine e-posta göndererek destek alabilirler.</value>
+    <value>Bu uygulama Lisanssız Değerlendirme Modu'nda çalışıyor. Tüm özellikler kullanılabilir. Bir işletmede veya finanse edilen bir kuruluşta kullanıyorsanız lütfen https://certifytheweb.com/register adresinden bir kayıt anahtarı satın alın. Kayıtlı kullanıcılar support@certifytheweb.com adresine e-posta göndererek destek alabilirler.</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>Kayıtlı değil</value>
@@ -506,9 +506,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>Bu sertifikayı iptal etmek istediğinizden emin misiniz?</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>Bu uygulamanın deneme sürümünü kullanıyorsunuz. Lütfen yükseltmek için bir kayıt anahtarı satın alın. Hakkında sekmesindeki Kayıt seçeneğine bakın.</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>Bu, otomatik olarak yenilenen tüm öğeler için sertifikaları yenileyecektir. Devam etmek istiyor musunuz?</value>
   </data>
@@ -522,7 +519,7 @@
     <value>İndirme sayfası şimdi ziyaret etmek istiyor musunuz?</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value>[Topluluk Sürümü]</value>
+    <value> [Lisanssız Değerlendirme Modu]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Certify Yöneticisi'ne Katkıda Bulunanlar（https://certifytheweb.com）</value>

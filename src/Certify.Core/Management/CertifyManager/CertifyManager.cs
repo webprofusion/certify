@@ -67,6 +67,8 @@ namespace Certify.Management
 
         private List<ActionStep> _systemStatusItems = [];
 
+        private readonly object _systemStatusItemsLock = new object();
+
         /// <summary>
         /// Current service log level setting
         /// </summary>
@@ -145,11 +147,38 @@ namespace Certify.Management
 
         private void AddSystemStatusItem(string systemStatusCategory, string systemStatusKey, string title, string description, bool hasError = false, bool hasWarning = false)
         {
-            _serviceLog?.Information($"Status: {title} - {description} ");
+            bool isStatusChanged;
 
-            _systemStatusItems.RemoveAll(s => s.Key == systemStatusKey);
+            lock (_systemStatusItemsLock)
+            {
+                var existing = _systemStatusItems.FirstOrDefault(s => s.Key == systemStatusKey);
 
-            _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+                isStatusChanged = existing == null
+                    || existing.Description != description
+                    || existing.HasError != hasError
+                    || existing.HasWarning != hasWarning;
+
+                _systemStatusItems.RemoveAll(s => s.Key == systemStatusKey);
+
+                _systemStatusItems.Add(new ActionStep(systemStatusKey, systemStatusCategory, title, description, hasError, hasWarning));
+            }
+
+            // only log when the status for this key has actually changed, otherwise repeated (or concurrent) status updates spam the log with identical entries
+            if (isStatusChanged)
+            {
+                _serviceLog?.Information($"Status: {title} - {description} ");
+            }
+        }
+
+        /// <summary>
+        /// Get a snapshot of the current system status items
+        /// </summary>
+        private List<ActionStep> GetSystemStatusItems()
+        {
+            lock (_systemStatusItemsLock)
+            {
+                return _systemStatusItems.ToList();
+            }
         }
 
         public async Task Init(bool enablePlugins = true)
@@ -503,7 +532,7 @@ namespace Certify.Management
                 await PerformRenewalTasks(CancellationToken.None);
 
                 // process external subscription polls, pending deployments, and queued push notifications
-                await PerformExternalCertificateSubscriptionTasks(CancellationToken.None);
+                await PerformSubscriptionTasks(CancellationToken.None);
 
                 // perform managhed challenge cleanup tasks (if any)
                 _ = PerformManagedChallengeCleanup();

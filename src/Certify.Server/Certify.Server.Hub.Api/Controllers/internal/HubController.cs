@@ -1,6 +1,7 @@
 ﻿using Certify.Client;
 using Certify.Models;
 using Certify.Models.Hub;
+using Certify.Models.Reporting;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
@@ -40,13 +41,12 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Get all managed certificates matching criteria
         /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="keyword"></param>
-        /// <param name="health"></param>
-        /// <param name="tagCategory"></param>
-        /// <param name="tagValue"></param>
-        /// <param name="requireAllTags"></param>
-        /// <param name="includeUntagged"></param>
+        /// <param name="instanceId">optionally restrict results to a single managed instance</param>
+        /// <param name="keyword">optional keyword to match against the item name</param>
+        /// <param name="health">optional health status to match</param>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
@@ -54,9 +54,69 @@ namespace Certify.Server.Hub.Api.Controllers
         [Route("items")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, string? tagCategory = null, string? tagValue = null, bool requireAllTags = false, bool includeUntagged = true, int? page = null, int? pageSize = null)
+        public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null)
         {
-            var result = new ManagedCertificateSummaryResult();
+            var list = await GetFilteredManagedItems(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
+
+            var resolvedPageSize = pageSize ?? 100;
+            var resolvedPageIndex = page > 0 ? (int)page : 0;
+
+            return new OkObjectResult(new ManagedCertificateSummaryResult
+            {
+                TotalResults = list.Count,
+                PageIndex = resolvedPageIndex,
+                PageSize = resolvedPageSize,
+                Results = list.OrderBy(l => l.Title).Skip(resolvedPageIndex * resolvedPageSize).Take(resolvedPageSize)
+            });
+        }
+
+        /// <summary>
+        /// Get a status summary for all managed certificates matching criteria.
+        /// </summary>
+        /// <remarks>
+        /// This is computed from the same filtered set as the items endpoint, so summary counts and list
+        /// contents are always consistent. When no filtering applies the pre-aggregated instance summaries are used instead.
+        /// </remarks>
+        /// <param name="instanceId">optionally restrict results to a single managed instance</param>
+        /// <param name="keyword">optional keyword to match against the item name</param>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an item must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true items with no tags at all are also included when tag scopes are supplied</param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("items/summary")]
+        [AuthorizedApi]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
+        public async Task<IActionResult> GetHubManagedItemsSummary(string? instanceId, string? keyword, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false)
+        {
+            var scopes = TagScopeFilter.ParseAll(tagScopes);
+            var userTagScopes = await GetUserTagScopes();
+
+            // when nothing needs per-item evaluation we can use the pre-aggregated summaries reported by each instance
+            if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword) && userTagScopes?.Any() != true)
+            {
+                var aggregate = string.IsNullOrEmpty(instanceId)
+                    ? await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext)
+                    : await _mgmtAPI.GetManagedCertificateSummary(instanceId, CurrentAuthContext);
+
+                return new OkObjectResult(aggregate ?? new StatusSummary { InstanceId = instanceId ?? string.Empty });
+            }
+
+            var list = await GetFilteredManagedItems(instanceId, keyword, null, tagScopes, requireAllTags, includeUntagged, userTagScopes);
+
+            return new OkObjectResult(SummariseManagedItems(list, instanceId));
+        }
+
+        /// <summary>
+        /// Build the set of managed certificate summaries matching the given criteria, including the tag scope
+        /// restrictions which apply to the current user.
+        /// </summary>
+        private async Task<List<ManagedCertificateSummary>> GetFilteredManagedItems(string? instanceId, string? keyword, string? health, IEnumerable<string>? tagScopes, bool requireAllTags, bool includeUntagged, List<TagScope>? userTagScopes = null)
+        {
+            var scopes = TagScopeFilter.ParseAll(tagScopes);
+
+            // if the user has scoped tags on their assigned roles they can only see items matching those tags
+            userTagScopes ??= await GetUserTagScopes();
 
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
@@ -64,16 +124,95 @@ namespace Certify.Server.Hub.Api.Controllers
             // TODO: would fetching cached hub status summaries be faster
             var knownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
 
-            // Pre-load all item tags for ManagedCertificates to display in the list
-            Dictionary<string, List<TagSummary>> tagsByItemId = new();
-            Dictionary<string, TagCategory> categoriesByKey = new();
-            var isTagFilterActive = !string.IsNullOrEmpty(tagCategory);
+            var tagsByItemId = await GetItemTagsByItemId(TaggedItemTypes.ManagedCertificate);
 
-            // Always load tags for display in the list
+            ManagedCertificateHealth? healthFilter = null;
+
+            if (!string.IsNullOrEmpty(health) && Enum.TryParse(health, true, out ManagedCertificateHealth healthValue))
+            {
+                healthFilter = healthValue;
+            }
+
+            var list = new List<ManagedCertificateSummary>();
+
+            foreach (var remote in managedItems.Values)
+            {
+                if (!string.IsNullOrEmpty(instanceId) && instanceId != remote.InstanceId)
+                {
+                    continue;
+                }
+
+                var instance = knownInstances.FirstOrDefault(k => k.InstanceId == remote.InstanceId)
+                               ?? instances.FirstOrDefault(c => c.InstanceId == remote.InstanceId);
+
+                foreach (var i in remote.Items)
+                {
+                    if (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) != true)
+                    {
+                        continue;
+                    }
+
+                    if (healthFilter != null && i.Health != healthFilter)
+                    {
+                        continue;
+                    }
+
+                    var tags = tagsByItemId.TryGetValue(i.Id ?? "", out var itemTags) ? itemTags : new List<TagSummary>();
+
+                    if (!TagScopeFilter.Matches(tags, scopes, requireAllTags, includeUntagged))
+                    {
+                        continue;
+                    }
+
+                    // a user restricted to tag scopes can never see untagged items
+                    if (userTagScopes?.Any() == true && !TagScopeFilter.Matches(tags, userTagScopes, matchAll: false))
+                    {
+                        continue;
+                    }
+
+                    list.Add(new ManagedCertificateSummary
+                    {
+                        InstanceId = remote.InstanceId,
+                        InstanceTitle = instance?.DisplayTitle,
+                        Id = i.Id ?? "",
+                        Title = i.Name ?? "",
+                        OS = instance?.OS,
+                        ClientDetails = i.SourceId != null ? i.SourceName : instance?.ClientName,
+                        PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
+                        Identifiers = i.GetCertificateIdentifiers(),
+                        DateRenewed = i.DateRenewed,
+                        DateExpiry = i.DateExpiry,
+                        Comments = i.Comments ?? "",
+                        Status = i.Health.ToString(),
+                        DateRetrieved = i.DateRetrieved,
+                        HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
+                        IsExternallyManaged = i.IsExternallyManaged,
+                        IsSubscription = i.IsSubscription,
+                        Tags = tags
+                    });
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Load the display tags for all items of the given type, keyed by item id.
+        /// </summary>
+        /// <remarks>
+        /// TODO: we need to optimize this by only loading tags for items we know are in the result set, which
+        /// requires a backend API to fetch tags for a given set of item ids.
+        /// </remarks>
+        private async Task<Dictionary<string, List<TagSummary>>> GetItemTagsByItemId(string itemTypeId)
+        {
+            var tagsByItemId = new Dictionary<string, List<TagSummary>>();
+
             try
             {
-                // Load tag categories to get display names and colors
+                // load tag categories to get display names and colors
+                var categoriesByKey = new Dictionary<string, TagCategory>();
                 var categories = await _client.GetTagCategories(CurrentAuthContext);
+
                 if (categories != null)
                 {
                     foreach (var cat in categories)
@@ -82,22 +221,21 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
-                // TODO: we need to optimize this by only loading tags for items we know are in the result set, but for now we'll load all tags for display purposes and filter in-memory
-                var allItemTags = await _client.GetAllHubItemTags(null, null, "ManagedCertificate", null, CurrentAuthContext);
+                var allItemTags = await _client.GetAllHubItemTags(null, null, itemTypeId, null, CurrentAuthContext);
+
                 if (allItemTags != null)
                 {
-                    // Group tags by item ID for efficient lookup
                     foreach (var tag in allItemTags)
                     {
-                        if (!tagsByItemId.ContainsKey(tag.TaggedItemId))
+                        if (!tagsByItemId.TryGetValue(tag.TaggedItemId, out var itemTags))
                         {
-                            tagsByItemId[tag.TaggedItemId] = new List<TagSummary>();
+                            itemTags = new List<TagSummary>();
+                            tagsByItemId[tag.TaggedItemId] = itemTags;
                         }
 
-                        // Get category info for color and display name
                         categoriesByKey.TryGetValue(tag.CategoryKey, out var category);
 
-                        tagsByItemId[tag.TaggedItemId].Add(new TagSummary
+                        itemTags.Add(new TagSummary
                         {
                             CategoryKey = tag.CategoryKey,
                             CategoryDisplayName = category?.DisplayName ?? tag.CategoryKey,
@@ -109,137 +247,74 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             catch
             {
-                // If tag loading fails, continue without tags
+                // if tag loading fails, continue without tags
             }
 
-            var list = new List<ManagedCertificateSummary>();
+            return tagsByItemId;
+        }
 
-            ManagedCertificateHealth? healthFilter = null;
+        /// <summary>
+        /// Summarise a set of managed certificate summaries into overall status counts.
+        /// </summary>
+        /// <remarks>
+        /// The counts must match those an instance reports for itself, because this endpoint falls back to the
+        /// pre-aggregated instance summaries when no filtering applies. In particular ExternallyManaged counts only
+        /// items discovered via an external certificate manager provider, not certificate subscriptions.
+        /// </remarks>
+        private static StatusSummary SummariseManagedItems(IEnumerable<ManagedCertificateSummary> items, string? instanceId)
+        {
+            var summary = new StatusSummary { InstanceId = instanceId ?? string.Empty };
 
-            if (!string.IsNullOrEmpty(health))
+            foreach (var item in items)
             {
-                if (Enum.TryParse(health, true, out ManagedCertificateHealth healthValue))
+                summary.Total++;
+                summary.TotalDomains += item.Identifiers?.Count() ?? 0;
+
+                if (!item.HasCertificate)
                 {
-                    healthFilter = healthValue;
+                    summary.NoCertificate++;
+                }
+
+                if (item.IsExternallyManaged)
+                {
+                    summary.ExternallyManaged++;
+                }
+
+                if (Enum.TryParse(item.Status, true, out ManagedCertificateHealth health))
+                {
+                    switch (health)
+                    {
+                        case ManagedCertificateHealth.OK:
+                            summary.Healthy++;
+                            break;
+                        case ManagedCertificateHealth.Warning:
+                            summary.Warning++;
+                            break;
+                        case ManagedCertificateHealth.Error:
+                            summary.Error++;
+                            break;
+                        case ManagedCertificateHealth.AwaitingUser:
+                            summary.AwaitingUser++;
+                            break;
+                    }
                 }
             }
 
-            foreach (var remote in managedItems.Values)
-            {
-                if (string.IsNullOrEmpty(instanceId) || (instanceId == remote.InstanceId))
-                {
-                    list.AddRange(
-                        remote.Items
-                        .Where(i => string.IsNullOrWhiteSpace(keyword) || (!string.IsNullOrWhiteSpace(keyword) && i.Name?.Contains(keyword, StringComparison.InvariantCultureIgnoreCase) == true))
-                        .Where(i => healthFilter == null || (healthFilter != null && i.Health == healthFilter))
-                        .Select(i =>
-                        {
-                            var instance = knownInstances.FirstOrDefault(k => k.InstanceId == remote.InstanceId)
-                                           ?? instances.FirstOrDefault(c => c.InstanceId == remote.InstanceId);
-
-                            // Get tags for this managed certificate from pre-loaded data
-                            var tags = tagsByItemId.TryGetValue(i.Id ?? "", out var itemTags) ? itemTags : new List<TagSummary>();
-
-                            return new ManagedCertificateSummary
-                            {
-                                InstanceId = remote.InstanceId,
-                                InstanceTitle = instance?.DisplayTitle,
-                                Id = i.Id ?? "",
-                                Title = $"{i.Name}" ?? "",
-                                OS = instance?.OS,
-                                ClientDetails = i.SourceId != null ? i.SourceName : instance?.ClientName,
-                                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                                Identifiers = i.GetCertificateIdentifiers(),
-                                DateRenewed = i.DateRenewed,
-                                DateExpiry = i.DateExpiry,
-                                Comments = i.Comments ?? "",
-                                Status = i.Health.ToString(),
-                                DateRetrieved = i.DateRetrieved,
-                                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged,
-                                Tags = tags
-                            };
-                        }
-                        )
-                    );
-                }
-            }
-
-            // Apply tag filtering if specified
-            if (isTagFilterActive)
-            {
-                var tagScopes = new List<TagScope> { new TagScope { CategoryKey = tagCategory!, Value = tagValue } };
-
-                list = list.Where(item =>
-                {
-                    var hasTags = item.Tags.Any();
-
-                    if (!hasTags)
-                    {
-                        // Item has no tags - include only if includeUntagged is true AND no specific tag filter value is set
-                        return includeUntagged && string.IsNullOrEmpty(tagValue);
-                    }
-
-                    if (requireAllTags)
-                    {
-                        // Item must match ALL scopes
-                        return tagScopes.All(scope =>
-                            item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
-                                (scope.Value == null || tag.Value == scope.Value)));
-                    }
-                    else
-                    {
-                        // Item must match ANY scope
-                        return tagScopes.Any(scope =>
-                            item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
-                                (scope.Value == null || tag.Value == scope.Value)));
-                    }
-                }).ToList();
-            }
-
-            // Apply user role-based tag scope filtering
-            // If the user has scoped tags on their assigned roles, they can only see items matching those tags
-            var userTagScopes = await GetUserTagScopes();
-            if (userTagScopes != null && userTagScopes.Any())
-            {
-                list = list.Where(item =>
-                {
-                    // If item has no tags, user with scoped tags cannot see it
-                    if (!item.Tags.Any())
-                    {
-                        return false;
-                    }
-
-                    // Item must match at least one of the user's tag scopes
-                    return userTagScopes.Any(scope =>
-                        item.Tags.Any(tag => tag.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || tag.Value == scope.Value)));
-                }).ToList();
-            }
-
-            result.TotalResults = list.Count;
-
-            var skip = 0;
-
-            if (page != null && page > 0)
-            {
-                skip = (int)page * (pageSize ?? 100);
-            }
-
-            result.Results = list.OrderBy(l => l.Title).Skip(skip).Take(pageSize ?? 100);
-
-            return new OkObjectResult(result);
+            return summary;
         }
 
         /// <summary>
         /// Get all hub managed instances
         /// </summary>
+        /// <param name="tagScopes">optional set of tag scopes to match, each expressed as "category" (any value in the category) or "category=value"</param>
+        /// <param name="requireAllTags">if true an instance must match every supplied tag scope, otherwise matching any one scope is enough</param>
+        /// <param name="includeUntagged">if true instances with no tags at all are also included when tag scopes are supplied</param>
         /// <returns></returns>
         [HttpGet]
         [Route("instances")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedInstanceInfo>))]
-        public async Task<IActionResult> GetHubManagedInstances()
+        public async Task<IActionResult> GetHubManagedInstances([FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false)
         {
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
 
@@ -288,8 +363,24 @@ namespace Certify.Server.Hub.Api.Controllers
 
             }
 
+            var scopes = TagScopeFilter.ParseAll(tagScopes);
+
+            var results = (IEnumerable<ManagedInstanceInfo>)allKnownInstances;
+
+            if (scopes.Count > 0)
+            {
+                // instance tags are held in the item tag store rather than on the stored instance record
+                var instanceTags = await GetItemTagsByItemId(TaggedItemTypes.ManagedInstance);
+
+                results = results.Where(i =>
+                {
+                    instanceTags.TryGetValue(i.Id ?? "", out var itemTags);
+                    return TagScopeFilter.Matches(itemTags, scopes, requireAllTags, includeUntagged);
+                });
+            }
+
             // Return all instances (both connected and disconnected) ordered by display title
-            return new OkObjectResult(allKnownInstances.OrderBy(o => o.DisplayTitle));
+            return new OkObjectResult(results.OrderBy(o => o.DisplayTitle));
         }
 
         /// <summary>

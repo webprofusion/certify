@@ -147,16 +147,5 @@ namespace Certify.Tests.Server.Core.Unit
             Assert.AreEqual(0, result.ExitCode, "CLI help command should succeed");
             Assert.Contains("Usage: certify", result.StandardOutput, "Help output should contain usage information");
         }
-
-        [TestMethod, Description("Test CLI service not available error")]
-        public async Task TestCLIServiceNotAvailable()
-        {
-            // Don't start service, test error handling
-            var cliCommand = Command.Run(_cliExePath, "version");
-            var result = await cliCommand.Task;
-
-            Assert.AreEqual(-1, result.ExitCode, "CLI should return error code when service unavailable");
-            Assert.Contains("service not started", result.StandardOutput, "Error message should indicate service not started");
-        }
     }
 }

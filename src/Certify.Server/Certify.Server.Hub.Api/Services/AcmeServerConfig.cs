@@ -14,7 +14,12 @@ namespace Certify.Server.Hub.Api.Services
 
         private static readonly ConcurrentDictionary<string, AcmeOrder> _orders = new();
         private static readonly ConcurrentDictionary<string, AcmeAuthorization> _authorizations = new();
-        private static readonly ConcurrentDictionary<string, string> _nonces = new();
+        private static readonly ConcurrentDictionary<string, DateTime> _nonces = new();
+
+        /// <summary>
+        /// Maximum age of an issued replay nonce before it is rejected.
+        /// </summary>
+        public static readonly TimeSpan NonceMaxAge = TimeSpan.FromHours(1);
 
         private IConfigurationStore _configStore;
         private string _acmeServerConfigPath;
@@ -308,14 +313,35 @@ namespace Certify.Server.Hub.Api.Services
                 : value;
         }
 
-        public async Task StoreAcmeNonce(string nonce, string timestamp)
+        /// <summary>
+        /// Records an issued replay nonce.
+        /// </summary>
+        public Task StoreAcmeNonce(string nonce, DateTime issuedAt)
         {
-            _nonces[nonce] = timestamp;
+            _nonces[nonce] = issuedAt;
+
+            // opportunistically drop expired nonces so the cache does not grow unbounded
+            var cutoff = DateTime.UtcNow - NonceMaxAge;
+            foreach (var expired in _nonces.Where(n => n.Value <= cutoff).Select(n => n.Key).ToList())
+            {
+                _nonces.TryRemove(expired, out _);
+            }
+
+            return Task.CompletedTask;
         }
 
-        public async Task<string?> GetAcmeNonce(string nonce)
+        /// <summary>
+        /// Atomically consumes a replay nonce. Returns true only if the nonce was previously issued,
+        /// has not already been used and has not expired. Nonces are single use per RFC 8555 Section 6.5.
+        /// </summary>
+        public Task<bool> ConsumeAcmeNonce(string nonce)
         {
-            return _nonces.TryGetValue(nonce, out var timestamp) ? timestamp : null;
+            if (string.IsNullOrEmpty(nonce) || !_nonces.TryRemove(nonce, out var issuedAt))
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(issuedAt > DateTime.UtcNow - NonceMaxAge);
         }
 
         internal async Task<bool> IsEabKeyConsumed(string kid)

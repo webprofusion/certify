@@ -31,51 +31,7 @@ namespace Certify.Management
             RenewalPrefs prefs,
             DateTimeOffset? currentTime = null)
         {
-            var checkTime = currentTime ?? DateTimeOffset.Now;
-
-            // If no maintenance windows are configured, renewal is always allowed
-            if (prefs.MaintenanceWindows == null || !prefs.MaintenanceWindows.Any())
-            {
-                return (true, "No maintenance windows configured - renewal allowed anytime");
-            }
-
-            // Determine which maintenance window to use for this item
-            var windowId = item.MaintenanceWindowId ?? prefs.DefaultMaintenanceWindowId;
-
-            // If no window is specified for this item and no default is set, renewal is allowed
-            if (string.IsNullOrEmpty(windowId))
-            {
-                return (true, "No maintenance window assigned - renewal allowed anytime");
-            }
-
-            // Find the maintenance window
-            var window = prefs.MaintenanceWindows.FirstOrDefault(w => w.Id == windowId);
-
-            if (window == null)
-            {
-                // Window ID is set but window not found - allow renewal (could be deleted window)
-                return (true, $"Configured maintenance window '{windowId}' not found - renewal allowed");
-            }
-
-            if (!window.IsEnabled)
-            {
-                return (true, $"Maintenance window '{window.Name}' is disabled - renewal allowed anytime");
-            }
-
-            // Check if we're within the window
-            if (window.IsWithinWindow(checkTime))
-            {
-                return (true, $"Within maintenance window '{window.Name}' ({window.GetScheduleDescription()})");
-            }
-            else
-            {
-                var nextOccurrence = window.GetNextOccurrence(checkTime);
-                var nextTimeStr = nextOccurrence.HasValue
-                    ? nextOccurrence.Value.ToString("g")
-                    : "unknown";
-
-                return (false, $"Outside maintenance window '{window.Name}' ({window.GetScheduleDescription()}). Next window: {nextTimeStr}");
-            }
+            return RenewalScheduleCalculator.IsWithinMaintenanceWindow(item, prefs, currentTime);
         }
 
         private static Progress<RequestProgressState> SetupProgressTracker(
@@ -147,15 +103,15 @@ namespace Certify.Management
                 {
                     var renewalReason = "Renewal requested";
 
-                    if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                    if (item.IsSubscription)
                     {
-                        if (!CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource))
+                        if (!CertifyManager.ShouldProcessSubscription(item, item.ExternalSource))
                         {
                             serviceLog?.Information($"Skipping targeted external subscription '{item.Name}' because it is not due and has no pending certificate update.");
                             continue;
                         }
 
-                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource)
+                        if (CertifyManager.HasPendingSubscriptionUpdate(item.ExternalSource)
                             && !CertifyManager.IsAutomaticSubscriptionRetryDue(item))
                         {
                             renewalReason = "Pending external certificate update is awaiting deployment.";
@@ -210,9 +166,6 @@ namespace Certify.Management
 
                 var totalRenewalCandidates = await itemManager.CountAll(filter);
 
-                var renewalIntervalDays = prefs.RenewalIntervalDays;
-                var renewalIntervalMode = prefs.RenewalIntervalMode ?? RenewalIntervalModes.PercentageLifetime;
-
                 filter.PageSize = MAX_CERTIFICATE_REQUEST_TASKS;
                 filter.PageIndex = 0;
 
@@ -249,9 +202,9 @@ namespace Certify.Management
                                     continue;
                                 }
 
-                                // check if item is due for renewal based on current settings
+                                // check if item is due for renewal based on current settings, including any maintenance window which applies
 
-                                var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, renewalIntervalDays, renewalIntervalMode);
+                                var renewalDueCheck = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, prefs);
                                 var isRenewalRequired = (settings.Mode != RenewalMode.Auto && settings.Mode != RenewalMode.RenewalsDue) || renewalDueCheck.IsRenewalDue;
 
                                 var renewalReason = renewalDueCheck.Reason;
@@ -263,22 +216,31 @@ namespace Certify.Management
                                     renewalReason = "Renewal Mode is set to All";
                                 }
 
-                                if (item.ItemType == ManagedCertificateType.SSL_ExternallyManaged && item.ExternalSource != null)
+                                if (item.IsSubscription)
                                 {
-                                    var shouldProcessExternalSubscription = CertifyManager.ShouldProcessExternalManagedCertificate(item, item.ExternalSource);
-                                    if (shouldProcessExternalSubscription)
+                                    var shouldProcessSubscription = CertifyManager.ShouldProcessSubscription(item, item.ExternalSource);
+                                    if (shouldProcessSubscription)
                                     {
                                         isRenewalRequired = true;
 
-                                        if (CertifyManager.HasPendingExternalCertificateUpdate(item.ExternalSource) && !renewalDueCheck.IsRenewalDue)
+                                        if (CertifyManager.HasPendingSubscriptionUpdate(item.ExternalSource) && !renewalDueCheck.IsRenewalDue)
                                         {
                                             renewalReason = "Pending external certificate update is awaiting deployment.";
                                         }
                                     }
-                                    else if (settings.Mode == RenewalMode.All)
+                                    else
                                     {
+                                        // the source has no update for us and is not due to be polled, so a request
+                                        // would have nothing to do. Skipping the item entirely (in every renewal mode)
+                                        // keeps a no-op request status off the UI - the scheduled subscription poll
+                                        // picks the item up when it is next due
                                         isRenewalRequired = false;
                                         renewalReason = "External certificate subscription is not due and has no pending certificate update.";
+
+                                        if (!prefs.SuppressSkippedItems)
+                                        {
+                                            serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
+                                        }
                                     }
                                 }
 
@@ -294,19 +256,16 @@ namespace Certify.Management
                                     }
                                 }
 
-                                // Check if we're within the maintenance window for this item
-                                if (isRenewalRequired && settings.Mode == RenewalMode.Auto)
+                                // a scheduled renewal is deferred when it falls outside the maintenance window for this item.
+                                // A user initiated renewal (any other mode) is not constrained by the window.
+                                if (isRenewalRequired && settings.Mode == RenewalMode.Auto && renewalDueCheck.IsDeferredByMaintenanceWindow)
                                 {
-                                    var maintenanceWindowCheck = IsWithinMaintenanceWindow(item, prefs);
-                                    if (!maintenanceWindowCheck.IsWithinWindow)
-                                    {
-                                        isRenewalRequired = false;
-                                        renewalReason = maintenanceWindowCheck.Reason;
+                                    isRenewalRequired = false;
+                                    renewalReason = renewalDueCheck.Reason;
 
-                                        if (!prefs.SuppressSkippedItems)
-                                        {
-                                            serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
-                                        }
+                                    if (!prefs.SuppressSkippedItems)
+                                    {
+                                        serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
                                     }
                                 }
 
@@ -454,6 +413,12 @@ namespace Certify.Management
             if (accounts.Count == 1)
             {
                 // nothing else to choose from, can't perform failover
+                return defaultMatchingAccount;
+            }
+
+            if (item?.RequestConfig?.DisableCAFailover == true)
+            {
+                // failover is disabled for this item, always use the preferred CA
                 return defaultMatchingAccount;
             }
 

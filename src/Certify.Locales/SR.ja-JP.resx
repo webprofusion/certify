@@ -250,7 +250,7 @@
     <value>パスワード</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>このバージョンは評価用に無料で利用できこの制限を解除するには、登録キーを購入してください。</value>
+    <value>このアプリは未ライセンス評価モードで実行されています。すべての機能を利用できます。企業や資金のある組織で使用する場合は、https://certifytheweb.com/register で登録キーを購入してください。登録ユーザーは support@certifytheweb.com へメールでサポートを受けられます。</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>未登録</value>
@@ -498,9 +498,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>この証明書を取り消してもよろしいですか？</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>このアプリの試用版を使用しています。 アップグレードするには登録キーを購入してください。バージョン番号タブの登録オプションを参照してください。</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>すべての自動更新アイテムの証明書が更新されます。 続行しますか？</value>
   </data>
@@ -514,7 +511,7 @@
     <value>ダウンロードページに訪問しますか？</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value>[コミュニティ エディション]</value>
+    <value> [未ライセンス評価モード]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Certify マネージャー コントリビューター（https://certifytheweb.com）</value>

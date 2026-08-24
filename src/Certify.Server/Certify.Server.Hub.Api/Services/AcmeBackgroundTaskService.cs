@@ -14,7 +14,7 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// Orders older than this age are eligible for automatic cleanup.
         /// </summary>
-        public static readonly TimeSpan OrderMaxAge = TimeSpan.FromMinutes(3);
+        public static readonly TimeSpan OrderMaxAge = TimeSpan.FromMinutes(10);
 
         private static readonly TimeSpan CleanupInterval = TimeSpan.FromSeconds(30);
 
@@ -157,6 +157,7 @@ namespace Certify.Server.Hub.Api.Services
                 while (await timer.WaitForNextTickAsync(stoppingToken))
                 {
                     await CleanupStaleOrdersAsync(stoppingToken);
+                    await CleanupOrphanedManagedOrderItemsAsync(stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -196,6 +197,78 @@ namespace Certify.Server.Hub.Api.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Failed stale cleanup for ACME order {OrderId}", order.Id);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes temporary managed items created for hub Managed ACME orders where the originating order state
+        /// is no longer tracked (e.g. the in-memory order cache was discarded by a service restart).
+        /// </summary>
+        private async Task CleanupOrphanedManagedOrderItemsAsync(CancellationToken cancellationToken)
+        {
+            using var scope = _serviceScopeFactory.CreateScope();
+            var configService = scope.ServiceProvider.GetRequiredService<AcmeServerConfig>();
+            var mgmtApi = scope.ServiceProvider.GetRequiredService<ManagementAPI>();
+
+            var knownOrderIds = new HashSet<string>(
+                configService.GetAcmeOrders()
+                    .Select(o => o.Id)
+                    .Where(id => !string.IsNullOrWhiteSpace(id))!,
+                StringComparer.OrdinalIgnoreCase);
+
+            var cutoff = DateTimeOffset.UtcNow - OrderMaxAge;
+
+            foreach (var instanceItems in mgmtApi.GetManagedInstanceItems().Values)
+            {
+                if (string.IsNullOrWhiteSpace(instanceItems.InstanceId))
+                {
+                    continue;
+                }
+
+                foreach (var item in instanceItems.Items ?? [])
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    var orderInfo = item.ManagedAcmeOrder;
+
+                    if (orderInfo == null || string.IsNullOrWhiteSpace(item.Id))
+                    {
+                        continue;
+                    }
+
+                    // still within the normal order lifetime, leave it to complete
+                    if (orderInfo.DateCreated == default || orderInfo.DateCreated > cutoff)
+                    {
+                        continue;
+                    }
+
+                    // order state is still tracked, the stale order sweep owns cleanup for this item
+                    if (!string.IsNullOrWhiteSpace(orderInfo.OrderId) && knownOrderIds.Contains(orderInfo.OrderId))
+                    {
+                        continue;
+                    }
+
+                    try
+                    {
+                        var result = await mgmtApi.RemoveManagedCertificate(instanceItems.InstanceId, item.Id, authContext: null);
+
+                        if (result.IsSuccess)
+                        {
+                            _logger.LogInformation("Removed orphaned Managed ACME order item {ManagedCertificateId} (order {OrderId})", item.Id, orderInfo.OrderId);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to remove orphaned Managed ACME order item {ManagedCertificateId} (order {OrderId}): {Message}", item.Id, orderInfo.OrderId, result.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed orphan cleanup for Managed ACME order item {ManagedCertificateId}", item.Id);
+                    }
                 }
             }
         }

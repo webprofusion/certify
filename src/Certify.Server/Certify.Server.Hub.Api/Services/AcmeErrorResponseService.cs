@@ -18,6 +18,8 @@ namespace Certify.Server.Hub.Api.Services
             public const string OrderNotFound = "urn:ietf:params:acme:error:orderNotFound";
             public const string OrderNotReady = "urn:ietf:params:acme:error:orderNotReady";
             public const string AuthorizationNotFound = "urn:ietf:params:acme:error:authorizationNotFound";
+            public const string Unauthorized = "urn:ietf:params:acme:error:unauthorized";
+            public const string RejectedIdentifier = "urn:ietf:params:acme:error:rejectedIdentifier";
             public const string ServerInternal = "urn:ietf:params:acme:error:serverInternal";
         }
 
@@ -35,6 +37,8 @@ namespace Certify.Server.Hub.Api.Services
             {
                 AcmeErrorTypes.OrderNotFound or AcmeErrorTypes.AuthorizationNotFound => 
                     new NotFoundObjectResult(error),
+                AcmeErrorTypes.Unauthorized => 
+                    new ObjectResult(error) { StatusCode = 403 },
                 AcmeErrorTypes.ServerInternal => 
                     new ObjectResult(error) { StatusCode = 500 },
                 _ => 

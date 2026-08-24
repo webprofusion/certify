@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Plugins;
@@ -78,20 +77,6 @@ namespace Certify.UI.ViewModel
             }
         }
 
-        public bool IsInstallBeforeDate(DateTime target)
-        {
-            var licensingManager = _licensingManager;
-
-            var installDate = licensingManager?.GetInstallDate(EnvironmentUtil.EnsuredAppDataPath());
-
-            if (installDate == null)
-            {
-                return false;
-            }
-
-            return installDate < target;
-        }
-
         /// <summary>
         /// If true, app is running in licensed mode
         /// </summary>
@@ -125,7 +110,7 @@ namespace Certify.UI.ViewModel
         }
 
         /// <summary>
-        /// If true, app is unlicensed or license has expired and will revert to basic features
+        /// If true, app is running in Evaluation Mode (no license, or the license has expired). All features remain available.
         /// </summary>
         [DependsOn(nameof(IsRegisteredVersion), nameof(IsLicenseExpired))]
         public bool IsEvaluationMode

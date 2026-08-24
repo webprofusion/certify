@@ -30,5 +30,12 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonPropertyName("challenges")]
         public List<AcmeChallenge> Challenges { get; set; }
+
+        /// <summary>
+        /// The account KID which owns this authorization.
+        /// Internal hub bookkeeping only; not part of the ACME authorization resource.
+        /// </summary>
+        [JsonIgnore]
+        public string AccountKid { get; set; }
     }
 }

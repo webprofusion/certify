@@ -259,7 +259,7 @@
     <value>Contraseña</value>
   </data>
   <data name="AboutControl_TrialDetailLabel" xml:space="preserve">
-    <value>Esta versión es gratuita para evaluación y gestionará un número limitado de certificados. Para eliminar esta limitación, compre una clave de registro en https://certifytheweb.com/register. Los usuarios registrados pueden obtener asistencia enviando un correo electrónico a support@certifytheweb.com </value>
+    <value>Esta aplicación se ejecuta en Modo de evaluación sin licencia. Todas las funciones están disponibles. Si la utiliza en una empresa u organización con financiación, compre una clave de registro en https://certifytheweb.com/register. Los usuarios registrados pueden obtener asistencia enviando un correo electrónico a support@certifytheweb.com</value>
   </data>
   <data name="AboutControl_RegistrationTypeLabel" xml:space="preserve">
     <value>No Registrado</value>
@@ -508,9 +508,6 @@
   <data name="ManagedCertificateSettings_ConfirmRevokeCertificate" xml:space="preserve">
     <value>¿Está seguro de que desea revocar este certificado?</value>
   </data>
-  <data name="MainWindow_TrialLimitationReached" xml:space="preserve">
-    <value>Estás usando la versión de prueba de esta aplicación. Por favor, compre una clave de registro para actualizar. Vea la opción Registrar en la pestaña Acerca de.</value>
-  </data>
   <data name="MainWindow_RenewAllConfirm" xml:space="preserve">
     <value>Esto renovará los certificados para todos los elementos de auto-renovación. ¿Proceder?</value>
   </data>
@@ -524,7 +521,7 @@
     <value>¿Desea visitar la página de descarga ahora?</value>
   </data>
   <data name="MainWindow_TitleTrialPostfix" xml:space="preserve">
-    <value>[Edición de la comunidad] </value>
+    <value> [Modo de evaluación sin licencia]</value>
   </data>
   <data name="LanguageAuthor" xml:space="preserve">
     <value>Colaboradores de Certify Certificate Manager https://certifytheweb.com</value>

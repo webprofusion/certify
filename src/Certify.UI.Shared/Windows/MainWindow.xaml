@@ -164,6 +164,39 @@
                     Foreground="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"><Run Text="Loading.." /></TextBlock>
             </StackPanel>
 
+            <!--  management hub connection status, only shown when this instance has joined a hub  -->
+            <StackPanel
+                x:Name="HubStatusIndicator"
+                Height="32"
+                Margin="16,0,8,5"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                DockPanel.Dock="Right"
+                Orientation="Horizontal"
+                ToolTip="Certify Management Hub connection status"
+                Visibility="{Binding IsHubJoined, Converter={StaticResource ResourceKey=BoolToVisConverter}}">
+                <fa:ImageAwesome
+                    Height="14"
+                    VerticalAlignment="Center"
+                    Icon="Cloud">
+                    <fa:ImageAwesome.Style>
+                        <Style TargetType="fa:ImageAwesome">
+                            <Setter Property="Foreground" Value="{DynamicResource ErrorColorBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsHubConnected}" Value="True">
+                                    <Setter Property="Foreground" Value="#FF6BB039" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </fa:ImageAwesome.Style>
+                </fa:ImageAwesome>
+                <TextBlock
+                    Margin="6,0,0,0"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource MahApps.Brushes.SystemControlForegroundBaseMedium}"
+                    Text="{Binding HubConnectionStatus}" />
+            </StackPanel>
+
             <DockPanel
                 Height="32"
                 Margin="32,0,16,0"

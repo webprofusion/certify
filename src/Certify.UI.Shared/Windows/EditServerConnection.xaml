@@ -10,7 +10,7 @@
     xmlns:res="clr-namespace:Certify.Locales;assembly=Certify.Locales"
     Title="Edit Server Connection"
     Width="540"
-    Height="320"
+    Height="400"
     Background="{DynamicResource MahApps.Brushes.Window.Background}"
     ResizeMode="CanResizeWithGrip"
     TitleCharacterCasing="Normal"
@@ -32,7 +32,8 @@
             VerticalAlignment="Top"
             DockPanel.Dock="Top"
             Style="{StaticResource Instructions}"
-            TextWrapping="Wrap"><Run Text="By default a service API will be bound to localhost:9696. Additional service configuration is required for remote connection (bound IP, enabling https, firewall rules etc)." /><LineBreak /><Run /></TextBlock>
+            TextWrapping="Wrap"><Run Text="By default a service API will be bound to localhost:9696. Additional service configuration is required for remote connection (bound IP, enabling https, firewall rules etc)." /><LineBreak /><Run Text="A named pipe connection reaches the service on this machine without using the network at all, and is restricted to local administrators." /><LineBreak /><Run /></TextBlock>
+
         <StackPanel
             Margin="0,0,0,8"
             DockPanel.Dock="Top"
@@ -49,6 +50,21 @@
                 Controls:TextBoxHelper.Watermark="e.g. Primary Server, WEB01 etc "
                 Text="{Binding Item.DisplayName}"
                 TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel
+            Margin="0,0,0,8"
+            DockPanel.Dock="Top"
+            Orientation="Horizontal">
+            <Label
+                Width="120"
+                Margin="0,0,8,0"
+                VerticalAlignment="Top"
+                Content="Use Named Pipe" />
+            <CheckBox
+                VerticalAlignment="Center"
+                Content="Local service only, hostname and port are not used"
+                IsChecked="{Binding Item.UseNamedPipe}" />
         </StackPanel>
 
         <StackPanel

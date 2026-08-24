@@ -4,6 +4,7 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
+using Certify.Providers;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -94,6 +95,18 @@ namespace Certify.Service.Controllers
         public async Task<List<ActionStep>> TestDataStore(DataStoreConnection dataStore)
         {
             return await _certifyManager.TestDataStoreConnection(dataStore);
+        }
+
+        [HttpPost, Route("datastores/schema/check")]
+        public async Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStore)
+        {
+            return await _certifyManager.CheckDataStoreSchema(dataStore);
+        }
+
+        [HttpPost, Route("datastores/schema/migrate")]
+        public async Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStore)
+        {
+            return await _certifyManager.ApplyDataStoreSchemaMigrations(dataStore);
         }
 
         [HttpPost, Route("datastores/delete")]

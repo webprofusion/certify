@@ -133,7 +133,7 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This version is free for evaluation and will manage a limited number of certificates. To remove this limitation please purchase a registration key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com.
+        ///   Looks up a localized string similar to This app is running in Evaluation Mode. All features are available. If you are using it within a business or funded organisation please purchase a license key at https://certifytheweb.com/register. Registered users can get support by emailing support@certifytheweb.com.
         /// </summary>
         public static string AboutControl_TrialDetailLabel {
             get {
@@ -565,7 +565,9 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Get started by registering a new contact, then you can start requesting certificates..
+        ///   Looks up a localized string similar to This is your first managed certificate. Would you like to add an ACME Account first? This is normally required unless you are using Certificate Subscriptions from the dashboard hub etc.
+        ///
+        ///Select Yes to add an ACME Account, or No to skip..
         /// </summary>
         public static string MainWindow_GetStartGuideWithNewCert {
             get {
@@ -601,20 +603,11 @@ namespace Certify.Locales {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  [Community Edition].
+        ///   Looks up a localized string similar to  [Evaluation Mode - Unlicensed].
         /// </summary>
         public static string MainWindow_TitleTrialPostfix {
             get {
                 return ResourceManager.GetString("MainWindow_TitleTrialPostfix", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You are using the evaluation version of this app. Please purchase a registration key to upgrade. See the Register option on the About tab..
-        /// </summary>
-        public static string MainWindow_TrialLimitationReached {
-            get {
-                return ResourceManager.GetString("MainWindow_TrialLimitationReached", resourceCulture);
             }
         }
         

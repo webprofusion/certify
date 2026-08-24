@@ -33,12 +33,12 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="eab">External Account Binding JWS</param>
         /// <param name="accountPublicKey">The public key from the account creation request</param>
         /// <param name="requestUrl">The request URL for validation</param>
-        /// <returns>internal id of matching access token</returns>
-        public async Task<string?> ValidateExternalAccountBinding(JwsPayload eab, JsonWebKey accountPublicKey, string requestUrl)
+        /// <returns>Validation result, including the internal id of the matching access token and the owning security principal, or the reason for failure</returns>
+        public async Task<EabValidationResult> ValidateExternalAccountBinding(JwsPayload eab, JsonWebKey accountPublicKey, string requestUrl)
         {
             if (eab == null)
             {
-                return null;
+                return EabValidationResult.Failed("External account binding is required but was not supplied");
             }
 
             try
@@ -51,7 +51,7 @@ namespace Certify.Server.Hub.Api.Services
                 if (eabHeader == null)
                 {
                     _logger.LogError("Invalid EAB protected header format");
-                    return null;
+                    return EabValidationResult.Failed("Invalid external account binding protected header format");
                 }
 
                 if (string.IsNullOrEmpty(eabHeader.Alg))
@@ -60,31 +60,42 @@ namespace Certify.Server.Hub.Api.Services
                 }
 
                 // 2. Validate EAB header requirements
-                if (!ValidateEabHeader(eabHeader, requestUrl))
+                var headerFailureReason = ValidateEabHeader(eabHeader, requestUrl);
+                if (headerFailureReason != null)
                 {
                     _logger.LogError("Failed to validate EAB header");
-                    return null;
+                    return EabValidationResult.Failed(headerFailureReason);
                 }
 
                 if (await _config.IsEabKeyConsumed(eabHeader.Kid))
                 {
                     _logger.LogError("EAB Key {keyId} has already been used to register an ACME account and cannot be re-used", eabHeader.Kid);
-                    return null;
+                    return EabValidationResult.Failed("External account binding key has already been used to register an ACME account and cannot be re-used");
                 }
 
                 // 3. Retrieve the EAB secret key using the Key ID
-                var eabMappedAccessToken = await GetEabMappedAccessToken(eabHeader.Kid);
-                if (eabMappedAccessToken == null)
+                var eabMapping = await GetEabMappedAccessToken(eabHeader.Kid);
+                if (eabMapping == null)
                 {
                     _logger.LogError("EAB Key ID not found or invalid: {KeyId}", eabHeader.Kid);
-                    return null;
+                    return EabValidationResult.Failed("External account binding key id was not found, is invalid, expired or revoked");
+                }
+
+                var eabMappedAccessToken = eabMapping.Value.Token;
+                var securityPrincipalId = eabMapping.Value.SecurityPrincipalId;
+
+                // 4. Confirm the owning principal is authorised to use Managed ACME (i.e. is a Managed ACME Consumer)
+                if (!await HasManagedAcmeAccess(securityPrincipalId, eabMapping.Value.ScopedAssignedRoles))
+                {
+                    _logger.LogError("Security principal {PrincipalId} mapped to EAB Key ID {KeyId} is not authorised to perform managed ACME orders", securityPrincipalId, eabHeader.Kid);
+                    return EabValidationResult.Failed("The account associated with this external account binding key is not authorised to perform managed ACME orders");
                 }
 
                 // 4. Verify the EAB payload contains the account public key
                 if (!ValidateEabPayload(eab.Payload, accountPublicKey))
                 {
                     _logger.LogError("EAB payload does not match account public key");
-                    return null;
+                    return EabValidationResult.Failed("External account binding payload does not match the account public key");
                 }
 
                 // 5. Verify the EAB signature using HMAC
@@ -98,39 +109,40 @@ namespace Certify.Server.Hub.Api.Services
                 if (!VerifyEabSignature(eab, hashedEabKey, eabHeader.Alg))
                 {
                     _logger.LogError("EAB signature verification failed");
-                    return null;
+                    return EabValidationResult.Failed("External account binding signature verification failed");
                 }
 
                 // 6. Mark the EAB key as used (prevent replay)
                 await MarkEabKeyAsUsed(eabHeader.Kid);
 
                 _logger.LogInformation("EAB validation successful for Key ID: {KeyId}", eabHeader.Kid);
-                return eabMappedAccessToken.Id;
+                return EabValidationResult.Success(eabMappedAccessToken.Id, securityPrincipalId, eabMapping.Value.ScopedAssignedRoles);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error validating External Account Binding");
-                return null;
+                return EabValidationResult.Failed("An unexpected error occurred while validating the external account binding");
             }
         }
 
         /// <summary>
         /// Validates EAB protected header according to RFC 8555
         /// </summary>
-        private bool ValidateEabHeader(JwsProtectedHeader header, string requestUrl)
+        /// <returns>null if the header is valid, otherwise the reason for the validation failure</returns>
+        private string? ValidateEabHeader(JwsProtectedHeader header, string requestUrl)
         {
             // Algorithm must be HMAC-based, default is HS256
-            if (string.IsNullOrEmpty(header.Alg) && !header.Alg.StartsWith("HS"))
+            if (string.IsNullOrEmpty(header.Alg) || !header.Alg.StartsWith("HS", StringComparison.Ordinal))
             {
                 _logger.LogError("EAB algorithm must be HMAC-based, got: {Algorithm}", header.Alg);
-                return false;
+                return "External account binding algorithm must be HMAC-based (HS256, HS384 or HS512)";
             }
 
             // Key ID is required
             if (string.IsNullOrEmpty(header.Kid))
             {
                 _logger.LogError("EAB Key ID (kid) is required");
-                return false;
+                return "External account binding key id (kid) is required";
             }
 
             // URL must match the newAccount endpoint
@@ -138,10 +150,10 @@ namespace Certify.Server.Hub.Api.Services
             {
                 _logger.LogError("EAB URL mismatch. Expected: {Expected}, Got: {Actual}",
                     requestUrl, header.Url);
-                return false;
+                return "External account binding url does not match the new account request url";
             }
 
-            return true;
+            return null;
         }
 
         /// <summary>
@@ -216,25 +228,80 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
-        /// Retrieve EAB secret key for the given Key ID
+        /// Retrieve EAB secret key for the given Key ID, along with the security principal it is assigned to
         /// </summary>
-        private async Task<AccessToken?> GetEabMappedAccessToken(string keyId)
+        private async Task<(AccessToken Token, string SecurityPrincipalId, List<string> ScopedAssignedRoles)?> GetEabMappedAccessToken(string keyId)
         {
             var authContext = new AuthContext
             {
-                UserId = "system"
+                UserId = StandardSecurityPrincipals.System
             };
 
             var tokens = await _client.GetAssignedAccessTokens(authContext);
-            var token = tokens.Single(t => t.AccessTokens.Any(a => a.Id == keyId)).AccessTokens.FirstOrDefault(a => a.Id == keyId);
 
-            if (token == null)
+            var matches = tokens
+                .SelectMany(assigned => assigned.AccessTokens
+                    .Where(a => a.Id == keyId)
+                    .Select(a => (Token: a, assigned.SecurityPrincipalId, assigned.ScopedAssignedRoles)))
+                .ToList();
+
+            if (matches.Count == 0)
             {
                 _logger.LogError("EAB Key ID not found: {KeyId}", keyId);
                 return null;
             }
 
-            return token;
+            if (matches.Count > 1)
+            {
+                // ambiguous mapping, we cannot determine the owning principal so fail closed
+                _logger.LogError("EAB Key ID {KeyId} is assigned to more than one security principal", keyId);
+                return null;
+            }
+
+            var match = matches[0];
+
+            if (string.IsNullOrWhiteSpace(match.SecurityPrincipalId))
+            {
+                _logger.LogError("EAB Key ID {KeyId} has no associated security principal", keyId);
+                return null;
+            }
+
+            if (match.Token.DateRevoked != null || (match.Token.DateExpiry != null && match.Token.DateExpiry <= DateTimeOffset.UtcNow))
+            {
+                _logger.LogError("EAB Key ID {KeyId} refers to a revoked or expired access token", keyId);
+                return null;
+            }
+
+            return (match.Token, match.SecurityPrincipalId, match.ScopedAssignedRoles ?? []);
+        }
+
+        /// <summary>
+        /// Confirms the given security principal is permitted to perform managed ACME orders.
+        /// This action is only granted by the Managed ACME Consumer policy.
+        /// </summary>
+        public async Task<bool> HasManagedAcmeAccess(string securityPrincipalId, List<string>? scopedAssignedRoles = null)
+        {
+            if (string.IsNullOrWhiteSpace(securityPrincipalId))
+            {
+                return false;
+            }
+
+            var check = new AccessCheck(securityPrincipalId, ResourceTypes.ManagedAcme, StandardResourceActions.ManagedAcmePerformOrder);
+
+            if (scopedAssignedRoles?.Count > 0)
+            {
+                check.ScopedAssignedRoles = scopedAssignedRoles;
+            }
+
+            try
+            {
+                return await _client.CheckSecurityPrincipalHasAccess(check, new AuthContext { UserId = StandardSecurityPrincipals.System });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check managed ACME access for security principal {PrincipalId}", securityPrincipalId);
+                return false;
+            }
         }
 
         /// <summary>

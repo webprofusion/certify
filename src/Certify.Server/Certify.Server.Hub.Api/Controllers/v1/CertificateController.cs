@@ -248,53 +248,6 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Get all managed certificates matching criteria
-        /// </summary>
-        /// <param name="keyword"></param>
-        /// <param name="page"></param>
-        /// <param name="pageSize"></param>
-        /// <returns></returns>
-        [HttpGet]
-        [AuthorizedApi]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
-        [Route("search")]
-        public async Task<IActionResult> GetManagedCertificates(string? keyword, int? page = null, int? pageSize = null)
-        {
-            var managedCertResult = await _client.GetManagedCertificateSearchResult(
-                new ManagedCertificateFilter
-                {
-                    Keyword = keyword,
-                    PageIndex = page,
-                    PageSize = pageSize
-                }, CurrentAuthContext);
-
-            var list = managedCertResult.Results.Select(i => new ManagedCertificateSummary
-            {
-                InstanceId = i.InstanceId,
-                Id = i.Id ?? "",
-                Title = i.Name ?? "",
-                PrimaryIdentifier = i.GetCertificateIdentifiers().FirstOrDefault(p => p.Value == i.RequestConfig.PrimaryDomain) ?? i.GetCertificateIdentifiers().FirstOrDefault(),
-                Identifiers = i.GetCertificateIdentifiers(),
-                DateRenewed = i.DateRenewed,
-                DateExpiry = i.DateExpiry,
-                Comments = i.Comments ?? "",
-                Status = i.Health.ToString(),
-                HasCertificate = !string.IsNullOrEmpty(i.CertificatePath),
-                IsExternallyManaged = i.ItemType == ManagedCertificateType.SSL_ExternallyManaged
-            }).OrderBy(a => a.Title);
-
-            var result = new ManagedCertificateSummaryResult
-            {
-                Results = list,
-                TotalResults = managedCertResult.TotalResults,
-                PageIndex = page ?? 0,
-                PageSize = pageSize ?? list.Count()
-            };
-
-            return new OkObjectResult(result);
-        }
-
-        /// <summary>
         /// Get summary counts of all managed certs
         /// </summary>
         /// <returns></returns>
@@ -470,30 +423,6 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Begin the managed certificate request/renewal process a set of managed certificates
-        /// </summary>
-        /// <param name="instanceId"></param>
-        /// <param name="settings"></param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("renew")]
-        [AuthorizedApi]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
-        public async Task<IActionResult> PerformRenewal(string instanceId, RenewalSettings settings)
-        {
-            // TODO: send to instance
-            var results = await _client.BeginAutoRenewal(settings, CurrentAuthContext);
-            if (results != null)
-            {
-                return new OkObjectResult(results);
-            }
-            else
-            {
-                return new BadRequestResult();
-            }
-        }
-
-        /// <summary>
         /// Perform default tests for the given configuration
         /// </summary>
         /// <param name="instanceId"></param>
@@ -572,7 +501,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 Status = item.Health.ToString(),
                 Comments = item.Comments ?? string.Empty,
                 HasCertificate = !string.IsNullOrEmpty(item.CertificatePath),
-                IsExternallyManaged = item.ItemType == ManagedCertificateType.SSL_ExternallyManaged
+                IsExternallyManaged = item.IsExternallyManaged,
+                IsSubscription = item.IsSubscription
             };
         }
     }

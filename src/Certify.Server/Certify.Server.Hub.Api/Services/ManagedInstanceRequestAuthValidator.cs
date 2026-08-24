@@ -18,7 +18,7 @@ namespace Certify.Server.Hub.Api.Services
     {
         private readonly ICertifyInternalApiClient _client;
         private readonly ILogger<ManagedInstanceRequestAuthValidator> _logger;
-        private static readonly AuthContext _systemAuthContext = new AuthContext { UserId = "system" };
+        private static readonly AuthContext _systemAuthContext = new AuthContext { UserId = StandardSecurityPrincipals.System };
         private static int _legacyFallbackCount;
 
         public ManagedInstanceRequestAuthValidator(ICertifyInternalApiClient client, ILogger<ManagedInstanceRequestAuthValidator> logger)

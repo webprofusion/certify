@@ -85,5 +85,13 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonIgnore]
         public List<string> AuthorizationIds { get; set; } = [];
+
+        /// <summary>
+        /// The account KID which created and owns this order. Only this account may finalize,
+        /// read or download the certificate for the order.
+        /// Internal hub bookkeeping only; not part of the ACME order resource.
+        /// </summary>
+        [JsonIgnore]
+        public string AccountKid { get; set; }
     }
 }

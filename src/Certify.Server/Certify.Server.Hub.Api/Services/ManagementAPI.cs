@@ -198,6 +198,48 @@ namespace Certify.Server.Hub.Api.Services
             };
         }
 
+        public async Task<ActionResult> RefreshExternalManagedCertificates(string instanceId, AuthContext? currentAuthContext)
+        {
+            if (string.IsNullOrWhiteSpace(instanceId))
+            {
+                return new ActionResult("Managed instance id is required.", false);
+            }
+
+            var hubInstanceId = _mgmtStateProvider.GetManagementHubInstanceId();
+            var connectedInstance = _mgmtStateProvider
+                .GetConnectedInstances()
+                .FirstOrDefault(i => string.Equals(i.InstanceId, instanceId, StringComparison.Ordinal));
+
+            var isHubInstance = string.Equals(instanceId, hubInstanceId, StringComparison.Ordinal);
+            if (!isHubInstance && connectedInstance == null)
+            {
+                return new ActionResult
+                {
+                    IsSuccess = false,
+                    IsWarning = true,
+                    Message = "Managed instance is not currently connected, so the external certificate refresh command could not be sent."
+                };
+            }
+
+            try
+            {
+                await SendCommandWithNoResult(instanceId, new InstanceCommandRequest(ManagementHubCommands.RefreshExternalManagedCertificates));
+
+                var displayTitle = connectedInstance?.DisplayTitle;
+                if (string.IsNullOrWhiteSpace(displayTitle) && isHubInstance)
+                {
+                    displayTitle = "integrated management hub instance";
+                }
+
+                return new ActionResult($"External managed certificate refresh requested for '{displayTitle ?? instanceId}'.", true);
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "Failed to dispatch external managed certificate refresh command to instance {instanceId}.", instanceId);
+                return new ActionResult($"Failed to send external certificate refresh command: {ex.Message}", false);
+            }
+        }
+
         /// <summary>
         /// Sends a command request to the target instance and retrieves the command result.
         /// </summary>
@@ -284,7 +326,7 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             var accessControl = await _certifyManager.GetCurrentAccessControl();
-            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? "system");
+            var assignedTokens = await accessControl.GetAssignedAccessTokens(currentAuthContext?.UserId ?? StandardSecurityPrincipals.System);
             var latestToken = assignedTokens
                 .Where(t => string.Equals(t.Title, "Managed Instance Hub Joining Key", StringComparison.OrdinalIgnoreCase))
                 .SelectMany(t => t.AccessTokens ?? [])
@@ -988,6 +1030,16 @@ namespace Certify.Server.Hub.Api.Services
             };
 
             return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.TestDataStore) ?? [];
+        }
+
+        public async Task<ICollection<ActionStep>?> ApplyDataStoreSchemaMigrations(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)
+        {
+            var args = new KeyValuePair<string, string>[] {
+                new("instanceId", instanceId),
+                new("dataStore", JsonSerializer.Serialize(dataStore))
+            };
+
+            return await PerformInstanceCommandTaskWithResult<ICollection<ActionStep>>(instanceId, args, ManagementHubCommands.ApplyDataStoreSchemaMigrations) ?? [];
         }
 
         public async Task<ICollection<ActionStep>?> UpdateDataStore(string instanceId, DataStoreConnection dataStore, AuthContext? currentAuthContext)

@@ -176,6 +176,14 @@ namespace Certify.Core.Tests.Unit
             client.Setup(c => c.GetHubItemTags(TaggedItemTypes.ManagedChallenge, "challenge-1", It.IsAny<AuthContext>()))
                 .ReturnsAsync(new List<TagSummary>());
 
+            client.Setup(c => c.GetHubSettings(It.IsAny<AuthContext>()))
+                .ReturnsAsync(new HubSettings());
+
+            client.Setup(c => c.EvaluateAccessScope(
+                    It.Is<AccessCheck>(a => a.SecurityPrincipalId == "sp-1" && a.ResourceActionId == StandardResourceActions.ManagedChallengeRequest),
+                    It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ResourceAccessScope { HasAccess = true, IsUnrestricted = true });
+
             client.Setup(c => c.CheckSecurityPrincipalHasAccess(
                     It.Is<AccessCheck>(a =>
                         a.SecurityPrincipalId == "sp-1"
@@ -196,7 +204,9 @@ namespace Certify.Core.Tests.Unit
             var context = CreateRequestContext(path, requestBody, timestamp, signature, bodyHash);
             context.RequestServices = services.BuildServiceProvider();
 
-            var controller = new ManagedChallengeController(NullLogger<ManagedChallengeController>.Instance, client.Object)
+            var scopeService = new ManagedChallengeScopeService(client.Object, NullLogger<ManagedChallengeScopeService>.Instance);
+
+            var controller = new ManagedChallengeController(NullLogger<ManagedChallengeController>.Instance, client.Object, scopeService)
             {
                 ControllerContext = new ControllerContext { HttpContext = context }
             };

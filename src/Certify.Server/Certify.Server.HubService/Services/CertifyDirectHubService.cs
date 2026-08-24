@@ -6,6 +6,7 @@ using Certify.Models.Config;
 using Certify.Models.Config.Migration;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
+using Certify.Providers;
 using Certify.Models.Reporting;
 using Certify.Models.Utils;
 using Certify.Shared;
@@ -47,6 +48,13 @@ namespace Certify.Server.HubService.Services
         private ServiceControllers.ManagedChallengeController _managedChallengeController(AuthContext authContext)
         {
             var controller = new ServiceControllers.ManagedChallengeController(_certifyManager);
+            controller.SetCurrentAuthContext(authContext);
+            return controller;
+        }
+
+        private ServiceControllers.HubSettingsController _hubSettingsController(AuthContext authContext)
+        {
+            var controller = new ServiceControllers.HubSettingsController(_certifyManager);
             controller.SetCurrentAuthContext(authContext);
             return controller;
         }
@@ -96,6 +104,7 @@ namespace Certify.Server.HubService.Services
         /// <param name="authContext">The authentication context.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains a boolean indicating whether the security principal has access.</returns>
         public Task<bool> CheckSecurityPrincipalHasAccess(AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckSecurityPrincipalHasAccess(check);
+        public Task<ResourceAccessScope> EvaluateAccessScope(AccessCheck check, AuthContext authContext) => _accessController(authContext).EvaluateAccessScope(check);
         public Task<ICollection<AssignedRole>> GetSecurityPrincipalAssignedRoles(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalAssignedRoles(id);
         public Task<RoleStatus> GetSecurityPrincipalRoleStatus(string id, AuthContext authContext) => _accessController(authContext).GetSecurityPrincipalRoleStatus(id);
         public Task<ICollection<SecurityPrincipal>> GetSecurityPrincipals(AuthContext authContext) => _accessController(authContext).GetSecurityPrincipals();
@@ -117,6 +126,8 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(request);
         public Task<ManagedChallengeOperation> BeginManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _certifyManager.BeginManagedChallengeRequest(request);
         public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId, AuthContext authContext) => _certifyManager.GetManagedChallengeOperation(operationId);
+        public Task<HubSettings> GetHubSettings(AuthContext authContext) => _hubSettingsController(authContext).Get();
+        public Task<ActionResult> UpdateHubSettings(HubSettings settings, AuthContext authContext) => _hubSettingsController(authContext).Update(settings);
 
         public Task<ManagedInstanceInfo> GetHubManagedInstance(string id, AuthContext authContext) => _managedInstanceController(authContext).Get(id);
         public Task<ActionResult<ManagedInstanceInfo>> AddHubManagedInstance(ManagedInstanceInfo item, AuthContext authContext) => _managedInstanceController(authContext).Add(item);
@@ -183,6 +194,8 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> TestCredentials(string credentialKey, AuthContext? authContext = null) => throw new NotImplementedException();
 #pragma warning disable CS8604 // Possible null reference argument.
         public Task<List<ActionStep>> TestDataStoreConnection(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<DataStoreSchemaCheckResult> CheckDataStoreSchema(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
+        public Task<List<ActionStep>> ApplyDataStoreSchemaMigrations(DataStoreConnection dataStoreConnection, AuthContext? authContext = null) => throw new NotImplementedException();
         public Task<DataStoreStatus> GetDataStoreStatus(AuthContext? authContext = null) => Task.FromResult(_systemController(authContext).GetDataStoreStatus());
         public Task<ActionResult> AttemptDataStoreReconnection(AuthContext? authContext = null) => _systemController(authContext).AttemptDataStoreReconnection();
 #pragma warning restore CS8604 // Possible null reference argument.

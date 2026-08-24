@@ -13,6 +13,14 @@ namespace Certify.Shared
 #endif
         public string? Host { get; set; } = DEFAULT_LOCALHOST;
 
+        /// <summary>
+        /// Which transport the service API listens on: "http" (default) or "namedpipe". Exactly one
+        /// endpoint is published, so selecting the named pipe means http is not exposed at all and
+        /// <see cref="Host"/>/<see cref="Port"/>/<see cref="UseHTTPS"/> no longer apply.
+        /// Named pipe is Windows only.
+        /// </summary>
+        public string? Transport { get; set; } = NamedPipeConnection.HttpMode;
+
         public int HttpChallengeServerPort { get; set; } = 80;
 
         public string? LogLevel { get; set; } = "information";

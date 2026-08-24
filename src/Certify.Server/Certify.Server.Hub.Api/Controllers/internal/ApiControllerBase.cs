@@ -19,7 +19,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Special auth context used internally for operations where the requesting user may not be authorized to query system state
         /// </summary>
-        internal AuthContext SystemAuthContext = new AuthContext { UserId = "system" };
+        internal AuthContext SystemAuthContext = new AuthContext { UserId = StandardSecurityPrincipals.System };
 
         /// <summary>
         /// Check resource action access for the current user

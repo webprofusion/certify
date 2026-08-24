@@ -26,9 +26,10 @@ namespace Certify.Server.Hub.Api.Services
         /// <typeparam name="T">Type of the request object</typeparam>
         /// <param name="payload">JWS payload</param>
         /// <param name="requestUrl">The expected request URL for validation</param>
+        /// <param name="requireAccountKid">If true, the JWS must be signed using a registered account key referenced by 'kid'. Inline 'jwk' keys are rejected.</param>
         /// <returns>Decoded request object</returns>
         /// <exception cref="ArgumentException">When JWS validation fails</exception>
-        public async Task<T> DecodeJwsPayload<T>(JwsPayload payload, string requestUrl)
+        public async Task<T> DecodeJwsPayload<T>(JwsPayload payload, string requestUrl, bool requireAccountKid = true)
         {
             if (payload == null)
             {
@@ -59,7 +60,7 @@ namespace Certify.Server.Hub.Api.Services
                 }
 
                 // Validate required fields in protected header
-                await ValidateProtectedHeader(protectedHeader, requestUrl);
+                await ValidateProtectedHeader(protectedHeader, requestUrl, requireAccountKid);
 
                 // Verify the signature
                 if (!await VerifyJwsSignature(payload, protectedHeader))
@@ -98,9 +99,9 @@ namespace Certify.Server.Hub.Api.Services
         /// <summary>
         /// Decodes JWS payload with account key information
         /// </summary>
-        public async Task<(T request, JsonWebKey? accountKey)> DecodeJwsWithAccountKey<T>(JwsPayload payload, string requestUrl)
+        public async Task<(T request, JsonWebKey? accountKey)> DecodeJwsWithAccountKey<T>(JwsPayload payload, string requestUrl, bool requireAccountKid = true)
         {
-            var request = await DecodeJwsPayload<T>(payload, requestUrl);
+            var request = await DecodeJwsPayload<T>(payload, requestUrl, requireAccountKid);
 
             var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
             var protectedJson = System.Text.Encoding.UTF8.GetString(protectedBytes);
@@ -116,7 +117,7 @@ namespace Certify.Server.Hub.Api.Services
         {
             try
             {
-                return await DecodeJwsPayload<T>(payload, requestUrl);
+                return await DecodeJwsPayload<T>(payload, requestUrl, requireAccountKid: true);
             }
             catch (Exception ex)
             {
@@ -152,7 +153,8 @@ namespace Certify.Server.Hub.Api.Services
         /// </summary>
         /// <param name="header">Protected header to validate</param>
         /// <param name="requestUrl">Expected request URL</param>
-        private async Task ValidateProtectedHeader(JwsProtectedHeader header, string requestUrl)
+        /// <param name="requireAccountKid">If true, only a registered account 'kid' is accepted</param>
+        private async Task ValidateProtectedHeader(JwsProtectedHeader header, string requestUrl, bool requireAccountKid)
         {
             // RFC 7515 Section 4.1.1 - Algorithm is required
             if (string.IsNullOrEmpty(header.Alg))
@@ -177,6 +179,13 @@ namespace Certify.Server.Hub.Api.Services
             if (header.Jwk != null && !string.IsNullOrEmpty(header.Kid))
             {
                 throw new ArgumentException("JWS header cannot contain both 'jwk' and 'kid'");
+            }
+
+            // Outside of account registration, requests must be signed by a registered account key referenced by 'kid'.
+            // Accepting a caller supplied 'jwk' here would allow an unregistered party to sign their own requests.
+            if (requireAccountKid && string.IsNullOrEmpty(header.Kid))
+            {
+                throw new ArgumentException("JWS header must contain 'kid' referencing a registered account for this request");
             }
 
             // RFC 8555 Section 6.2 - URL is required for ACME requests
@@ -308,19 +317,98 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>True if signature is valid</returns>
         private bool VerifySignatureWithAlgorithm(byte[] data, byte[] signature, JsonWebKey publicKey, string algorithm)
         {
-            // This is a simplified implementation
-            // In a real implementation, you would:
-            // 1. Use the appropriate cryptographic library (RSA, ECDSA)
-            // 2. Apply the correct hash algorithm (SHA256, SHA384, SHA512)
-            // 3. Verify the signature according to the algorithm
+            if (data == null || signature == null || publicKey == null || string.IsNullOrEmpty(algorithm) || algorithm.Length != 5)
+            {
+                return false;
+            }
 
-            // For this stub, we'll simulate verification
-            return true;
+            var hashAlgorithm = algorithm[2..] switch
+            {
+                "256" => HashAlgorithmName.SHA256,
+                "384" => HashAlgorithmName.SHA384,
+                "512" => HashAlgorithmName.SHA512,
+                _ => default
+            };
+
+            if (hashAlgorithm == default)
+            {
+                _logger.LogError("Unsupported JWS hash size in algorithm {Algorithm}", algorithm);
+                return false;
+            }
+
+            var family = algorithm[..2];
+
+            try
+            {
+                if (family is "RS" or "PS")
+                {
+                    if (publicKey.Kty != "RSA")
+                    {
+                        _logger.LogError("JWS algorithm {Algorithm} requires an RSA key but key type is {Kty}", algorithm, publicKey.Kty);
+                        return false;
+                    }
+
+                    using var rsa = RSA.Create();
+                    rsa.ImportParameters(new RSAParameters
+                    {
+                        Modulus = JwsConvert.FromBase64String(publicKey.N),
+                        Exponent = JwsConvert.FromBase64String(publicKey.E)
+                    });
+
+                    var padding = family == "RS" ? RSASignaturePadding.Pkcs1 : RSASignaturePadding.Pss;
+                    return rsa.VerifyData(data, signature, hashAlgorithm, padding);
+                }
+                else if (family == "ES")
+                {
+                    if (publicKey.Kty != "EC")
+                    {
+                        _logger.LogError("JWS algorithm {Algorithm} requires an EC key but key type is {Kty}", algorithm, publicKey.Kty);
+                        return false;
+                    }
+
+                    var curve = publicKey.Crv switch
+                    {
+                        "P-256" => ECCurve.NamedCurves.nistP256,
+                        "P-384" => ECCurve.NamedCurves.nistP384,
+                        "P-521" => ECCurve.NamedCurves.nistP521,
+                        _ => default
+                    };
+
+                    if (curve.Oid == null)
+                    {
+                        _logger.LogError("Unsupported EC curve for JWS verification: {Curve}", publicKey.Crv);
+                        return false;
+                    }
+
+                    using var ecdsa = ECDsa.Create(new ECParameters
+                    {
+                        Curve = curve,
+                        Q = new ECPoint
+                        {
+                            X = JwsConvert.FromBase64String(publicKey.X),
+                            Y = JwsConvert.FromBase64String(publicKey.Y)
+                        }
+                    });
+
+                    // JWS ECDSA signatures are fixed-width R||S (IEEE P1363), not DER
+                    return ecdsa.VerifyData(data, signature, hashAlgorithm, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
+                }
+
+                _logger.LogError("Unsupported JWS algorithm family: {Algorithm}", algorithm);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // malformed key material or signature - fail closed
+                _logger.LogError(ex, "Failed to verify JWS signature using algorithm {Algorithm}", algorithm);
+                return false;
+            }
         }
 
         private async Task<bool> IsValidNonce(string nonce)
         {
-            return !string.IsNullOrEmpty(nonce) && (await _config.GetAcmeNonce(nonce)) != null;
+            // nonces are single use (RFC 8555 Section 6.5), consuming also enforces expiry
+            return !string.IsNullOrEmpty(nonce) && await _config.ConsumeAcmeNonce(nonce);
         }
     }
 }

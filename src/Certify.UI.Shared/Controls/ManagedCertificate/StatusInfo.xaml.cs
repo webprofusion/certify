@@ -72,31 +72,25 @@ namespace Certify.UI.Controls.ManagedCertificate
                 RenewalPaused.Visibility = Visibility.Collapsed;
             }
 
-            ExternalSyncInfo.Visibility = ItemViewModel.SelectedItem.ItemType == Models.ManagedCertificateType.SSL_ExternallyManaged
-                && ItemViewModel.SelectedItem.ExternalSource != null
+            ExternalSyncInfo.Visibility = ItemViewModel.SelectedItem.IsActionableSubscription
                     ? Visibility.Visible
                     : Visibility.Collapsed;
 
-            if (!string.IsNullOrEmpty(ItemViewModel.SelectedItem.SourceId))
-            {
-                // hide log option if from external source
-                OpenLogFile.Visibility = Visibility.Hidden;
-            }
-            else
-            {
-                OpenLogFile.Visibility = Visibility.Visible;
-            }
+            // externally managed items have no local log file, their log is fetched from the certificate manager which owns them
+            OpenLogFile.Visibility = Visibility.Visible;
         }
 
         private async void OpenLogFile_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            if (ItemViewModel?.SelectedItem?.Id == null || !string.IsNullOrEmpty(ItemViewModel?.SelectedItem.SourceId))
+            if (ItemViewModel?.SelectedItem?.Id == null)
             {
                 return;
             }
 
-            // get file path for log
-            var logPath = Models.ManagedCertificateLog.GetLogPath(ItemViewModel.SelectedItem.Id);
+            // get file path for log, externally managed items have no local log file so are always fetched from the service
+            var logPath = ItemViewModel.SelectedItem.IsExternallyManaged
+                ? null
+                : Models.ManagedCertificateLog.GetLogPath(ItemViewModel.SelectedItem.Id);
 
             //check file exists, if not inform user
             if (System.IO.File.Exists(logPath))
@@ -120,7 +114,7 @@ namespace Certify.UI.Controls.ManagedCertificate
                     var log = await AppViewModel.GetItemLog(ItemViewModel.SelectedItem.Id, 1000);
                     var tempPath = System.IO.Path.GetTempFileName() + ".txt";
 
-                    System.IO.File.WriteAllLines(tempPath, log.Select(i => i.ToString()));
+                    System.IO.File.WriteAllLines(tempPath, log.Select(i => $"{i.EventDate:yyyy-MM-dd HH:mm:ss} [{i.LogLevel}] {i.Message}"));
                     _tempLogFilePath = tempPath;
 
                     try

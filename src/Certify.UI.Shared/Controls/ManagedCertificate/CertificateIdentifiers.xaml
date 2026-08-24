@@ -48,7 +48,7 @@
 
                         <Controls:ToggleSwitch
                             Content="Use Certificate Subscription"
-                            IsOn="{Binding IsExternalSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"
+                            IsOn="{Binding IsSubscriptionMode, UpdateSourceTrigger=PropertyChanged}"
                             ToolTip="Switch this managed certificate to use an external source subscription instead of ACME request/authorization settings." />
 
 
@@ -57,9 +57,9 @@
                     <DockPanel
                         Margin="8,0,0,0"
                         DockPanel.Dock="Top"
-                        Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                        Visibility="{Binding IsSubscription, Converter={StaticResource ResourceKey=BoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Instructions}">
-                            Configure how this externally managed certificate is synchronized from its source:
+                            Configure how this certificate subscription is synchronized from its source:
                         </TextBlock>
 
                         <StackPanel Margin="0,0,0,0" Orientation="Vertical">
@@ -508,7 +508,7 @@
                 Controls:HeaderedControlHelper.HeaderFontSize="12"
                 Header="Authorization"
                 IsSelected="False"
-                Visibility="{Binding IsExternalManagedCertificateItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
+                Visibility="{Binding IsExternalSourceItem, Converter={StaticResource ResourceKey=InvBoolToVisConverter}, UpdateSourceTrigger=PropertyChanged}">
                 <managedcertificate:IdentifierAuthorization />
             </TabItem>
 

@@ -1,4 +1,5 @@
 ﻿using Certify.Client;
+using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
@@ -20,6 +21,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private readonly AcmeBackgroundTaskService _backgroundTaskService;
         private readonly AcmeJwsValidator _jwsValidator;
         private readonly AcmeExternalAccountBindingValidator _eabValidator;
+        private readonly ManagedChallengeScopeService _managedChallengeScopeService;
         private readonly AcmeHelper _acmeHelper;
         private readonly string _hubInstanceId;
         private readonly AcmeServerConfig _config;
@@ -36,6 +38,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             AcmeBackgroundTaskService backgroundTaskService,
             AcmeJwsValidator jwsValidator,
             AcmeExternalAccountBindingValidator eabValidator,
+            ManagedChallengeScopeService managedChallengeScopeService,
             AcmeHelper acmeHelper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -44,6 +47,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
             _jwsValidator = jwsValidator ?? throw new ArgumentNullException(nameof(jwsValidator));
             _eabValidator = eabValidator ?? throw new ArgumentNullException(nameof(eabValidator));
+            _managedChallengeScopeService = managedChallengeScopeService ?? throw new ArgumentNullException(nameof(managedChallengeScopeService));
             _acmeHelper = acmeHelper ?? throw new ArgumentNullException(nameof(acmeHelper));
 
             _hubInstanceId = _stateProvider.GetManagementHubInstanceId();
@@ -116,7 +120,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             try
             {
-                (request, newAccountKey) = await _jwsValidator.DecodeJwsWithAccountKey<AccountRequest>(payload, requestUrl);
+                // new-account is the only flow where the caller supplies their account key inline via 'jwk'
+                (request, newAccountKey) = await _jwsValidator.DecodeJwsWithAccountKey<AccountRequest>(payload, requestUrl, requireAccountKid: false);
             }
             catch (Exception ex)
             {
@@ -124,16 +129,28 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
+            if (newAccountKey == null)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "JWS header must contain 'jwk' for new account requests");
+            }
+
             // Validate External Account Binding if required
-            string validatedEabKeyInternalId = null;
+            string validatedEabKeyInternalId;
+            string owningSecurityPrincipalId;
+            List<string> owningScopedAssignedRoles = [];
 
             if (string.IsNullOrEmpty(key))
             {
-                validatedEabKeyInternalId = await _eabValidator.ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey, requestUrl);
-                if (string.IsNullOrEmpty(validatedEabKeyInternalId))
+                var eabResult = await _eabValidator.ValidateExternalAccountBinding(request.ExternalAccountBinding, newAccountKey, requestUrl);
+                if (eabResult?.IsValid != true)
                 {
-                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ExternalAccountRequired, "Invalid external account binding");
+                    var failureReason = eabResult?.FailureReason ?? "Invalid external account binding";
+                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ExternalAccountRequired, failureReason);
                 }
+
+                validatedEabKeyInternalId = eabResult.TokenInternalId!;
+                owningSecurityPrincipalId = eabResult.SecurityPrincipalId!;
+                owningScopedAssignedRoles = eabResult.ScopedAssignedRoles ?? [];
             }
             else
             {
@@ -146,6 +163,8 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             var account = new AcmeAccount
             {
                 internalId = validatedEabKeyInternalId,
+                SecurityPrincipalId = owningSecurityPrincipalId,
+                ScopedAssignedRoles = owningScopedAssignedRoles,
                 Status = AccountStatus.Valid,
                 Contact = request.Contact,
                 TermsOfServiceAgreed = request.TermsOfServiceAgreed,
@@ -178,50 +197,45 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             // Decode the JWS payload
             AccountRequest request;
-            JsonWebKey newAccountKey;
 
             try
             {
-                (request, newAccountKey) = await _jwsValidator.DecodeJwsWithAccountKey<AccountRequest>(payload, requestUrl);
+                // signature is verified against the registered account key referenced by 'kid'
+                request = await _jwsValidator.DecodeJwsPayload<AccountRequest>(payload, requestUrl);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to decode JWS payload for new account request");
+                _logger.LogError(ex, "Failed to decode JWS payload for account request");
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
-            if (request.Status == "deactivated")
+            var matchedAccountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
+
+            // the signing account may only act on its own account resource
+            if (!string.Equals(matchedAccountKid, AcmeHelper.BuildAccountUrl(AcmeHelper.BuildBaseUrl(Request), accountId), StringComparison.OrdinalIgnoreCase))
             {
-                var matchedAccountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
+                _logger.LogWarning("Account request for {AccountId} did not match the signing account", accountId);
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account not found");
+            }
 
-                var deactivationAccount = await _config.GetAccount(matchedAccountKid);
-                if (deactivationAccount == null)
-                {
-                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Account not found");
-                }
+            var acc = await _config.GetAccount(matchedAccountKid);
+            if (acc == null)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account not found");
+            }
 
+            if (request?.Status == "deactivated")
+            {
                 // Remove from persistent storage
                 await _config.RemoveAcmeAccount(matchedAccountKid);
                 await _config.RemoveAcmeAccountKey(matchedAccountKid);
 
-                // deactivated account
-                return Ok(deactivationAccount);
+                acc.Status = AccountStatus.Deactivated;
             }
-            else
-            {
-                var matchedAccountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
 
-                var acc = await _config.GetAccount(matchedAccountKid);
+            await AddReplayNonceHeader();
 
-                if (acc != null)
-                {
-                    return Ok(acc);
-                }
-                else
-                {
-                    return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Account not found");
-                }
-            }
+            return Ok(acc);
         }
 
         /// <summary>
@@ -238,7 +252,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
 
-            // Decode the JWS payload
+            // Decode the JWS payload. Signature is verified against the registered account key referenced by 'kid'.
             NewOrderRequest request;
             try
             {
@@ -250,7 +264,48 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, $"Invalid JWS payload: {ex.Message}");
             }
 
-            //TODO: pre-check we can honor the required identifiers with a managed challenge, otherwise reject order
+            // Resolve the authenticated account which signed this request
+            var accountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
+            var account = await _config.GetAccount(accountKid);
+
+            if (account == null || account.Status != AccountStatus.Valid)
+            {
+                _logger.LogWarning("New order request rejected, account {AccountKid} is unknown or not valid", accountKid);
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account is unknown or not valid");
+            }
+
+            // The account must be linked to a security principal authorised to perform managed ACME orders.
+            // Accounts registered before ownership tracking was introduced have no principal and must re-register.
+            if (!await _eabValidator.HasManagedAcmeAccess(account.SecurityPrincipalId, account.ScopedAssignedRoles))
+            {
+                _logger.LogWarning("New order request rejected, account {AccountKid} is not authorised to perform managed ACME orders", accountKid);
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account is not authorised to perform managed ACME orders");
+            }
+
+            if (request?.Identifiers == null || request.Identifiers.Length == 0)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Order must contain at least one identifier");
+            }
+
+            // Reject orders that cannot be satisfied by a managed challenge within the principal's role scope.
+            var identifierValues = request.Identifiers.Select(i => i.Value).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
+            var challengeScopeCheck = await _managedChallengeScopeService.ValidatePrincipalCanSatisfyIdentifiers(
+                account.SecurityPrincipalId,
+                identifierValues,
+                account.ScopedAssignedRoles,
+                StandardResourceActions.ManagedAcmePerformOrder);
+
+            if (!challengeScopeCheck.CanSatisfy)
+            {
+                _logger.LogWarning(
+                    "New order request rejected for account {AccountKid}: {Reason}",
+                    accountKid,
+                    challengeScopeCheck.FailureReason);
+
+                return AcmeErrorResponseService.CreateAcmeError(
+                    AcmeErrorResponseService.AcmeErrorTypes.Unauthorized,
+                    challengeScopeCheck.FailureReason ?? "No accessible managed challenge matches the requested identifiers for this account");
+            }
 
             var orderId = AcmeHelper.GenerateOrderId();
             var authorizationUrls = new List<string>();
@@ -265,6 +320,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 var authId = AcmeHelper.GenerateAuthorizationId();
 
                 var authorization = _acmeHelper.CreateAuthorization(identifier, baseUrl);
+                authorization.AccountKid = accountKid;
 
                 authorizationIds.Add(authId);
                 authorizationUrls.Add(AcmeHelper.BuildAuthorizationUrl(baseUrl, authId));
@@ -284,14 +340,20 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 Authorizations = authorizationUrls,
                 AuthorizationIds = authorizationIds,
                 Finalize = $"{baseUrl}/order/{orderId}/finalize",
-                HubInstanceId = _hubInstanceId
+                HubInstanceId = _hubInstanceId,
+                AccountKid = accountKid
             };
 
             // Store order first so authorization cleanup works if later steps fail.
             await _config.StoreAcmeOrder(orderId, order);
 
-            // create temp order in hub using a managed challenge
-            var managedCert = AcmeHelper.PrepareManagedCertificate(orderId, request);
+            // create temp order in hub using a managed challenge, carrying principal scope for fulfillment
+            var managedCert = AcmeHelper.PrepareManagedCertificate(
+                orderId,
+                request,
+                accountKid,
+                account.SecurityPrincipalId,
+                account.ScopedAssignedRoles);
 
             var tempCert = await _mgmtAPI.UpdateManagedCertificate(_hubInstanceId, managedCert, CurrentAuthContext);
             if (tempCert == null)
@@ -339,10 +401,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         {
             _acmeHelper.ValidateKeyIfSupplied(key);
 
+            var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
+
+            // Decode and verify the JWS payload before touching any order state
+            FinalizeOrderRequest request;
+            try
+            {
+                request = await _jwsValidator.DecodeJwsPayload<FinalizeOrderRequest>(payload, requestUrl);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+            }
+
             var order = await _config.GetAcmeOrder(orderId);
             if (order == null)
             {
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.OrderNotFound, "Order not found");
+            }
+
+            if (!IsOrderOwnedBySigningAccount(order, payload, nameof(FinalizeOrder)))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Order not found");
             }
 
             if (order.Status == OrderStatus.Invalid)
@@ -354,20 +435,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             if (order.Status != OrderStatus.ReadyForInternalFinalization && order.Status != OrderStatus.Ready)
             {
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.OrderNotReady, "Order is not ready for finalization");
-            }
-
-            var requestUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
-
-            // Decode the JWS payload
-            FinalizeOrderRequest request;
-            try
-            {
-                request = await _jwsValidator.DecodeJwsPayload<FinalizeOrderRequest>(payload, requestUrl);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
             }
 
             // Check if finalization is already in progress
@@ -432,6 +499,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid or unknown certId");
             }
 
+            if (!IsOrderOwnedBySigningAccount(order, payload, nameof(DownloadCertificate)))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Invalid or unknown certId");
+            }
+
             var managedCert = await _mgmtAPI.GetManagedCertificate(_hubInstanceId, order.ManagedCertificateId, CurrentAuthContext);
             var result = await _mgmtAPI.ExportCertificate(_hubInstanceId, order.ManagedCertificateId, "pem_fullchain", strictExport: false, CurrentAuthContext);
 
@@ -485,6 +557,11 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.OrderNotFound, "Order not found");
             }
 
+            if (!IsOrderOwnedBySigningAccount(order, payload, nameof(GetOrder)))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Order not found");
+            }
+
             await AddReplayNonceHeader();
 
             if (order.Status == OrderStatus.ReadyForInternalFinalization)
@@ -535,8 +612,52 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.AuthorizationNotFound, "Authorization not found");
             }
 
+            if (!IsOwnedBySigningAccount(authorization.AccountKid, payload, nameof(GetAuthorization)))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Authorization not found");
+            }
+
             await AddReplayNonceHeader();
             return Ok(authorization);
+        }
+
+        /// <summary>
+        /// Checks the order was created by the account which signed the current request.
+        /// </summary>
+        private bool IsOrderOwnedBySigningAccount(AcmeOrder order, JwsPayload payload, string context)
+            => IsOwnedBySigningAccount(order?.AccountKid, payload, context);
+
+        /// <summary>
+        /// Checks the supplied owning account KID matches the account which signed the current request.
+        /// Fails closed if ownership was never recorded (resources created before ownership tracking).
+        /// </summary>
+        private bool IsOwnedBySigningAccount(string? ownerAccountKid, JwsPayload payload, string context)
+        {
+            string signingAccountKid;
+
+            try
+            {
+                signingAccountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not determine signing account for {Context}", context);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(ownerAccountKid))
+            {
+                _logger.LogWarning("Denied {Context}, resource has no recorded owning account", context);
+                return false;
+            }
+
+            if (!string.Equals(ownerAccountKid, signingAccountKid, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Denied {Context}, signing account does not own the requested resource", context);
+                return false;
+            }
+
+            return true;
         }
 
         private async Task AddReplayNonceHeader()
