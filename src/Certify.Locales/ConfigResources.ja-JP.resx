@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AppName" xml:space="preserve">
-    <value />
-  </data>
   <data name="Credits" xml:space="preserve">
     <value>本ソフトウェアは、明示的にも黙示的にも、条件の黙示的保証、中断のない使用、商品性、特定の目的への適合性、または非侵害性を含む一切の種類の保証なしに「現状有姿」で提供されています。
 
@@ -129,9 +126,6 @@
 - ACMESharp by Eugene Bekker (https://github.com/ebekker/ACMESharp) Licensed under the MPL V 2.0
 - Some icons from Font Awesome by Dave Gandy - http://fontawesome.io 
 - OpenSSL (https://github.com/openssl-net/openssl-net)</value>
-  </data>
-  <data name="LongAppName" xml:space="preserve">
-    <value />
   </data>
   <data name="UpdateCheckLatestVersion" xml:space="preserve">
     <value>最新バージョンを利用しています。</value>
