@@ -21,6 +21,11 @@ namespace Certify.UI.Settings
 
         public string CommunityMode { get; set; }
 
+        /// <summary>
+        /// UTC time the evaluation mode reminder was last shown to the user
+        /// </summary>
+        public System.DateTime? LastEvaluationMsgUtc { get; set; }
+
         public static UISettings Load()
         {
             var uiSettingsFilePath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), SETTINGS_FILE);
