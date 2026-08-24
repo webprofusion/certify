@@ -323,21 +323,101 @@ namespace Certify.UI.Windows
                 }
                 else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
                 {
-                    var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
-
-                    if (evaluating == MessageBoxResult.No)
+                    try
                     {
+                        const int daysBetween = 30;
+                        var ui = _appViewModel.UISettings;
+                        DateTime? lastNag = null;
 
-                        MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
+                        // Try common property names that might be present on UISettings
+                        string[] candidateProps = { "LastEvaluationNagUtc", "LastEvaluationNagDate", "LastEvaluationNag" };
+                        System.Reflection.PropertyInfo foundProp = null;
 
-                        _appViewModel.UISettings.CommunityMode = "commercial";
-                        UISettings.Save(_appViewModel.UISettings);
+                        foreach (var name in candidateProps)
+                        {
+                            var p = ui?.GetType().GetProperty(name, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                            if (p != null)
+                            {
+                                foundProp = p;
+                                var val = p.GetValue(ui);
+                                if (val != null)
+                                {
+                                    if (p.PropertyType == typeof(DateTime) || p.PropertyType == typeof(DateTime?))
+                                    {
+                                        lastNag = (DateTime)val;
+                                    }
+                                    else
+                                    {
+                                        if (DateTime.TryParse(val.ToString(), out var parsed)) lastNag = parsed;
+                                    }
+                                }
+                                break;
+                            }
+                        }
 
+                        var shouldShow = true;
+                        if (lastNag.HasValue)
+                        {
+                            var diff = DateTime.UtcNow - lastNag.Value.ToUniversalTime();
+                            shouldShow = diff.TotalDays >= daysBetween;
+                        }
+
+                        if (shouldShow)
+                        {
+                            var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+
+                            if (evaluating == MessageBoxResult.No)
+                            {
+                                MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
+
+                                _appViewModel.UISettings.CommunityMode = "commercial";
+                            }
+                            else
+                            {
+                                _appViewModel.UISettings.CommunityMode = "evaluating";
+                            }
+
+                            // Attempt to write the last nag time back into UISettings if property exists.
+                            if (foundProp != null)
+                            {
+                                try
+                                {
+                                    if (foundProp.PropertyType == typeof(DateTime) || foundProp.PropertyType == typeof(DateTime?))
+                                    {
+                                        foundProp.SetValue(ui, DateTime.UtcNow);
+                                    }
+                                    else
+                                    {
+                                        // store ISO string for string-typed properties
+                                        foundProp.SetValue(ui, DateTime.UtcNow.ToString("o"));
+                                    }
+                                }
+                                catch
+                                {
+                                    // ignore write failures - don't block the UI for missing/readonly props
+                                }
+                            }
+
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
                     }
-                    else
+                    catch
                     {
-                        _appViewModel.UISettings.CommunityMode = "evaluating";
-                        UISettings.Save(_appViewModel.UISettings);
+                        // If anything goes wrong, fall back to the original behavior without breaking app startup.
+                        var evaluating = MessageBox.Show(this, "This app is running in Evaluation Mode. Are you still evaluating the app?", "Continue Evaluation?", MessageBoxButton.YesNo);
+
+                        if (evaluating == MessageBoxResult.No)
+                        {
+                            MessageBox.Show(this, "Please apply a license key to continue using the app. \r\n\r\nVisit certifytheweb.com/register, then use About > Enter Key.. to activate.\r\nYou can also apply a Community Edition license key for personal use.");
+
+                            _appViewModel.UISettings.CommunityMode = "commercial";
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
+                        else
+                        {
+                            _appViewModel.UISettings.CommunityMode = "evaluating";
+                            UISettings.Save(_appViewModel.UISettings);
+                        }
                     }
                 }
             }
