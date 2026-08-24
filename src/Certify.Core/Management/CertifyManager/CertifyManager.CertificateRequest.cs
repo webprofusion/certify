@@ -24,7 +24,14 @@ namespace Certify.Management
         /// </summary>
         private IdnMapping _idnMapping = new IdnMapping();
 
-        private bool _isRenewAllInProgress { get; set; }
+        private int _renewAllInProgress = 0;
+
+        /// <summary>
+        /// True while a Renew All batch is running. Scheduled passes can overlap, so the flag is only ever taken with
+        /// <see cref="Interlocked.CompareExchange(ref int, int, int)"/> in <see cref="PerformRenewAll"/> - a plain
+        /// check then set allows two passes to both start a batch
+        /// </summary>
+        private bool _isRenewAllInProgress => Volatile.Read(ref _renewAllInProgress) != 0;
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
         private static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
@@ -144,13 +151,11 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken)
         {
-            if (_isRenewAllInProgress)
+            if (Interlocked.CompareExchange(ref _renewAllInProgress, 1, 0) != 0)
             {
                 _serviceLog?.Information("Renew All operation is already is progress, skipping..");
                 return [];
             }
-
-            _isRenewAllInProgress = true;
 
             try
             {
@@ -200,7 +205,7 @@ namespace Certify.Management
             }
             finally
             {
-                _isRenewAllInProgress = false;
+                Interlocked.Exchange(ref _renewAllInProgress, 0);
             }
         }
 

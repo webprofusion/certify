@@ -452,13 +452,13 @@ namespace Certify.Management
             _heartbeatTimer.AutoReset = true;
             _heartbeatTimer.Start();
 
-            // 5 minute job timer (maintenance etc)
+            // 5 minute job timer (renewals etc)
             _frequentTimer = new System.Timers.Timer(5 * 60 * 1000); // every 5 minutes
             _frequentTimer.Elapsed += _frequentTimer_Elapsed;
             _frequentTimer.AutoReset = true;
             _frequentTimer.Start();
 
-            // hourly jobs timer (renewal etc)
+            // hourly jobs timer (maintenance etc)
             _hourlyTimer = new System.Timers.Timer(60 * 60 * 1000); // every 60 minutes
             _hourlyTimer.Elapsed += _hourlyTimer_Elapsed;
             _hourlyTimer.AutoReset = true;

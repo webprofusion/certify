@@ -88,6 +88,7 @@ namespace Certify.Management
         }
 
         private int _isSubscriptionTaskRunning = 0;
+        private int _isSubscriptionPassRequested = 0;
 
         /// <summary>
         /// Message reported when a certificate fetched from an external source could not be loaded as a PFX
@@ -103,6 +104,23 @@ namespace Certify.Management
                 .ToList();
         }
 
+        /// <summary>
+        /// Request a subscription pass to pick up an update we have just been notified about, rather than leaving it
+        /// until the next scheduled pass. Requests made while a pass is running are coalesced into a single follow up
+        /// pass, so a batch of updates arriving together does not queue a pass each
+        /// </summary>
+        private void RequestSubscriptionPass()
+        {
+            Interlocked.Exchange(ref _isSubscriptionPassRequested, 1);
+
+            _ = Task.Run(() => PerformSubscriptionTasks(CancellationToken.None));
+        }
+
+        /// <summary>
+        /// Check each configured subscription and apply any available certificate update. A pass which is already
+        /// running services any request made while it runs, so only one pass takes place at a time
+        /// </summary>
+        /// <param name="cancellationToken"></param>
         private async Task PerformSubscriptionTasks(CancellationToken cancellationToken)
         {
             if (Interlocked.CompareExchange(ref _isSubscriptionTaskRunning, 1, 0) != 0)
@@ -110,6 +128,30 @@ namespace Certify.Management
                 return;
             }
 
+            try
+            {
+                do
+                {
+                    // cleared before items are selected, so an update stored during this pass requests another one
+                    Interlocked.Exchange(ref _isSubscriptionPassRequested, 0);
+
+                    await RunSubscriptionPass(cancellationToken);
+                }
+                while (!cancellationToken.IsCancellationRequested && Volatile.Read(ref _isSubscriptionPassRequested) == 1);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isSubscriptionTaskRunning, 0);
+            }
+        }
+
+        /// <summary>
+        /// Perform a single pass over the configured subscriptions. Callers hold the subscription processing gate
+        /// (<see cref="_isSubscriptionTaskRunning"/>)
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        private async Task RunSubscriptionPass(CancellationToken cancellationToken)
+        {
             try
             {
                 if (IsInDegradedMode)
@@ -162,11 +204,7 @@ namespace Certify.Management
             }
             catch (Exception ex)
             {
-                _serviceLog?.Error(ex, "PerformSubscriptionTasks: unhandled exception while processing external certificate subscriptions");
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _isSubscriptionTaskRunning, 0);
+                _serviceLog?.Error(ex, "RunSubscriptionPass: unhandled exception while processing external certificate subscriptions");
             }
         }
 
@@ -378,6 +416,10 @@ namespace Certify.Management
             item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
 
             await UpdateManagedCertificate(item);
+
+            // the point of being told about an update is that it is applied when we hear about it, rather than up to a
+            // full scheduled interval later, which matters most for the short lifetime certificates push mode exists for
+            RequestSubscriptionPass();
 
             return new ActionResult("External managed certificate update is available.", true);
         }
