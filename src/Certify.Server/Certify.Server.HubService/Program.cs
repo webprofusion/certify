@@ -7,6 +7,7 @@ using Certify.Server.Core;
 using Certify.Server.Hub.Api.Extensions;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
+using Certify.Server.Hub.Api.Services.Acme;
 using Certify.Server.Hub.Api.SignalR;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Server.HubService.Extensions;

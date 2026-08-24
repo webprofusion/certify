@@ -6,7 +6,7 @@ using Certify.Server.Hub.Api.Models.Acme;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Service for validating External Account Binding (EAB) according to RFC 8555 Section 7.3.4
@@ -157,7 +157,9 @@ namespace Certify.Server.Hub.Api.Services
         }
 
         /// <summary>
-        /// Validates that EAB payload contains the account public key
+        /// Validates that the EAB payload is the account public key, per RFC 8555 Section 7.3.4.
+        /// Keys are compared by RFC 7638 thumbprint so every parameter of the key is covered, for
+        /// every supported key type.
         /// </summary>
         private bool ValidateEabPayload(string eabPayload, JsonWebKey accountPublicKey)
         {
@@ -167,10 +169,7 @@ namespace Certify.Server.Hub.Api.Services
                 var payloadJson = System.Text.Encoding.UTF8.GetString(payloadBytes);
                 var eabAccountKey = JsonConvert.DeserializeObject<JsonWebKey>(payloadJson);
 
-                // Compare the keys (simplified - in practice, normalize and compare all relevant fields)
-                return eabAccountKey?.Kty == accountPublicKey?.Kty &&
-                       eabAccountKey?.N == accountPublicKey?.N &&
-                       eabAccountKey?.E == accountPublicKey?.E;
+                return JsonWebKeyThumbprint.IsSameKey(eabAccountKey, accountPublicKey);
             }
             catch (Exception ex)
             {

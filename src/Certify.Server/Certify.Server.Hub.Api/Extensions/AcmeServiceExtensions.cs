@@ -1,4 +1,5 @@
 ﻿using Certify.Server.Hub.Api.Services;
+using Certify.Server.Hub.Api.Services.Acme;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Certify.Server.Hub.Api.Extensions
@@ -37,6 +38,7 @@ namespace Certify.Server.Hub.Api.Extensions
             services.AddScoped<AcmeExternalAccountBindingValidator>();
             services.AddScoped<ManagedChallengeScopeService>();
             services.AddScoped<AcmeHelper>();
+            services.AddScoped<AcmeReplayNonceFilter>();
 
             return services;
         }

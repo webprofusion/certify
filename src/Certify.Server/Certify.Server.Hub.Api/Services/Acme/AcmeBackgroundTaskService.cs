@@ -2,9 +2,10 @@
 using Certify.Client;
 using Certify.Models;
 using Certify.Server.Hub.Api.Models.Acme;
+using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Background service for processing ACME order tasks and sweeping stale orders.

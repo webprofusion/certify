@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Result of an External Account Binding (EAB) validation attempt

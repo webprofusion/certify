@@ -3,7 +3,7 @@ using Certify.Models;
 using Certify.Providers;
 using Certify.Server.Hub.Api.Models.Acme;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// 

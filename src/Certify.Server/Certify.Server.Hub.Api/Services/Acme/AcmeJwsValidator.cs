@@ -4,7 +4,7 @@ using Certify.Server.Hub.Api.Models.Acme;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace Certify.Server.Hub.Api.Services
+namespace Certify.Server.Hub.Api.Services.Acme
 {
     /// <summary>
     /// Service for validating JSON Web Signatures (JWS) according to RFC 7515 and ACME requirements
@@ -28,22 +28,22 @@ namespace Certify.Server.Hub.Api.Services
         /// <param name="requestUrl">The expected request URL for validation</param>
         /// <param name="requireAccountKid">If true, the JWS must be signed using a registered account key referenced by 'kid'. Inline 'jwk' keys are rejected.</param>
         /// <returns>Decoded request object</returns>
-        /// <exception cref="ArgumentException">When JWS validation fails</exception>
+        /// <exception cref="AcmeRequestException">When JWS validation fails</exception>
         public async Task<T> DecodeJwsPayload<T>(JwsPayload payload, string requestUrl, bool requireAccountKid = true)
         {
             if (payload == null)
             {
-                throw new ArgumentException("JWS payload is null");
+                throw Malformed("JWS payload is null");
             }
 
             if (string.IsNullOrEmpty(payload.Protected))
             {
-                throw new ArgumentException("JWS protected header is missing");
+                throw Malformed("JWS protected header is missing");
             }
 
             if (string.IsNullOrEmpty(payload.Signature))
             {
-                throw new ArgumentException("JWS signature is missing");
+                throw Malformed("JWS signature is missing");
             }
 
             // RFC 7515 Section 7.2.1 - JWS structure validation
@@ -56,7 +56,7 @@ namespace Certify.Server.Hub.Api.Services
                 var protectedHeader = JsonConvert.DeserializeObject<JwsProtectedHeader>(protectedJson);
                 if (protectedHeader == null)
                 {
-                    throw new ArgumentException("Invalid JWS protected header format");
+                    throw Malformed("Invalid JWS protected header format");
                 }
 
                 // Validate required fields in protected header
@@ -65,7 +65,7 @@ namespace Certify.Server.Hub.Api.Services
                 // Verify the signature
                 if (!await VerifyJwsSignature(payload, protectedHeader))
                 {
-                    throw new ArgumentException("JWS signature verification failed. Ensure Account Key is valid and known to this CA");
+                    throw Malformed("JWS signature verification failed. Ensure Account Key is valid and known to this CA");
                 }
 
                 // Decode the payload (RFC 7515 Section 7.2.2), allow blank payload for POST-As-Get
@@ -81,18 +81,18 @@ namespace Certify.Server.Hub.Api.Services
                 var result = JsonConvert.DeserializeObject<T>(payloadJson);
                 if (result == null)
                 {
-                    throw new ArgumentException("Failed to deserialize JWS payload");
+                    throw Malformed("Failed to deserialize JWS payload");
                 }
 
                 return result;
             }
             catch (FormatException ex)
             {
-                throw new ArgumentException($"Invalid base64url encoding in JWS: {ex.Message}", ex);
+                throw Malformed($"Invalid base64url encoding in JWS: {ex.Message}", ex);
             }
             catch (System.Text.Json.JsonException ex)
             {
-                throw new ArgumentException($"Invalid JSON in JWS: {ex.Message}", ex);
+                throw Malformed($"Invalid JSON in JWS: {ex.Message}", ex);
             }
         }
 
@@ -119,10 +119,16 @@ namespace Certify.Server.Hub.Api.Services
             {
                 return await DecodeJwsPayload<T>(payload, requestUrl, requireAccountKid: true);
             }
+            catch (AcmeRequestException ex)
+            {
+                // preserve the specific acme error type (badNonce etc) so the client can act on it
+                _logger.LogError(ex, "Failed to decode JWS payload for {Context}", errorContext);
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for {Context}", errorContext);
-                throw new ArgumentException("Invalid JWS payload");
+                throw Malformed("Invalid JWS payload");
             }
         }
 
@@ -133,7 +139,7 @@ namespace Certify.Server.Hub.Api.Services
         {
             if (payload == null || string.IsNullOrEmpty(payload.Protected))
             {
-                throw new ArgumentException("JWS payload or protected header is null or empty");
+                throw Malformed("JWS payload or protected header is null or empty");
             }
 
             var protectedBytes = JwsConvert.FromBase64String(payload.Protected);
@@ -142,10 +148,10 @@ namespace Certify.Server.Hub.Api.Services
 
             if (protectedHeader == null)
             {
-                throw new ArgumentException("Invalid JWS protected header format");
+                throw Malformed("Invalid JWS protected header format");
             }
 
-            return protectedHeader?.Kid ?? throw new ArgumentException("JWS protected header 'kid' is missing");
+            return protectedHeader?.Kid ?? throw Malformed("JWS protected header 'kid' is missing");
         }
 
         /// <summary>
@@ -159,95 +165,69 @@ namespace Certify.Server.Hub.Api.Services
             // RFC 7515 Section 4.1.1 - Algorithm is required
             if (string.IsNullOrEmpty(header.Alg))
             {
-                throw new ArgumentException("JWS algorithm (alg) is required");
+                throw Malformed("JWS algorithm (alg) is required");
             }
 
             // Validate supported algorithms
-            var supportedAlgorithms = new[] { "RS256", "RS384", "RS512", "ES256", "ES384", "ES512", "PS256", "PS384", "PS512" };
-            if (!supportedAlgorithms.Contains(header.Alg))
+            if (!AcmeKeyPolicy.IsSupportedSignatureAlgorithm(header.Alg))
             {
-                throw new ArgumentException($"Unsupported JWS algorithm: {header.Alg}");
+                throw Malformed($"Unsupported JWS algorithm: {header.Alg}");
             }
 
             // RFC 8555 Section 6.2 - Either 'jwk' or 'kid' must be present
             if (header.Jwk == null && string.IsNullOrEmpty(header.Kid))
             {
-                throw new ArgumentException("JWS header must contain either 'jwk' or 'kid'");
+                throw Malformed("JWS header must contain either 'jwk' or 'kid'");
             }
 
             // RFC 8555 Section 6.2 - Both 'jwk' and 'kid' cannot be present
             if (header.Jwk != null && !string.IsNullOrEmpty(header.Kid))
             {
-                throw new ArgumentException("JWS header cannot contain both 'jwk' and 'kid'");
+                throw Malformed("JWS header cannot contain both 'jwk' and 'kid'");
             }
 
             // Outside of account registration, requests must be signed by a registered account key referenced by 'kid'.
             // Accepting a caller supplied 'jwk' here would allow an unregistered party to sign their own requests.
             if (requireAccountKid && string.IsNullOrEmpty(header.Kid))
             {
-                throw new ArgumentException("JWS header must contain 'kid' referencing a registered account for this request");
+                throw Malformed("JWS header must contain 'kid' referencing a registered account for this request");
             }
 
             // RFC 8555 Section 6.2 - URL is required for ACME requests
             if (string.IsNullOrEmpty(header.Url))
             {
-                throw new ArgumentException("JWS header must contain 'url' for ACME requests");
+                throw Malformed("JWS header must contain 'url' for ACME requests");
             }
 
             // Validate the URL matches the current request
             if (!string.Equals(header.Url, requestUrl, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException($"JWS URL mismatch. Expected: {requestUrl}, Got: {header.Url}");
+                throw Malformed($"JWS URL mismatch. Expected: {requestUrl}, Got: {header.Url}");
             }
 
-            // RFC 8555 Section 6.5 - Nonce is required
+            // RFC 8555 Section 6.5 - Nonce is required. Nonce failures are reported as badNonce so the
+            // client can retry using the fresh nonce returned with the error response.
             if (string.IsNullOrEmpty(header.Nonce))
             {
-                throw new ArgumentException("JWS header must contain 'nonce' for ACME requests");
+                throw BadNonce("JWS header must contain 'nonce' for ACME requests");
             }
 
             // Validate the nonce
             if (!await IsValidNonce(header.Nonce))
             {
-                throw new ArgumentException("Invalid or expired nonce in JWS header");
+                throw BadNonce("Invalid or expired nonce in JWS header");
             }
 
-            // If JWK is present, validate the key
+            // If JWK is present, this is an account registration and the key must meet key policy
+            // before we store it and rely on it for every subsequent request from that account.
             if (header.Jwk != null)
             {
-                ValidateJwk(header.Jwk);
-            }
-        }
+                var keyFailureReason = AcmeKeyPolicy.ValidateKeyForAlgorithm(header.Jwk, header.Alg);
 
-        /// <summary>
-        /// Validates a JSON Web Key according to RFC 7517
-        /// </summary>
-        /// <param name="jwk">JWK to validate</param>
-        private static void ValidateJwk(JsonWebKey jwk)
-        {
-            if (string.IsNullOrEmpty(jwk.Kty))
-            {
-                throw new ArgumentException("JWK key type (kty) is required");
-            }
-
-            var supportedKeyTypes = new[] { "RSA", "EC" };
-            if (!supportedKeyTypes.Contains(jwk.Kty))
-            {
-                throw new ArgumentException($"Unsupported JWK key type: {jwk.Kty}");
-            }
-
-            if (jwk.Kty == "RSA")
-            {
-                if (string.IsNullOrEmpty(jwk.N) || string.IsNullOrEmpty(jwk.E))
+                if (keyFailureReason != null)
                 {
-                    throw new ArgumentException("RSA JWK must contain 'n' and 'e' parameters");
-                }
-            }
-            else if (jwk.Kty == "EC")
-            {
-                if (string.IsNullOrEmpty(jwk.Crv) || string.IsNullOrEmpty(jwk.X) || string.IsNullOrEmpty(jwk.Y))
-                {
-                    throw new ArgumentException("EC JWK must contain 'crv', 'x', and 'y' parameters");
+                    _logger.LogWarning("Rejected account key: {Reason}", keyFailureReason);
+                    throw Malformed(keyFailureReason);
                 }
             }
         }
@@ -317,8 +297,18 @@ namespace Certify.Server.Hub.Api.Services
         /// <returns>True if signature is valid</returns>
         private bool VerifySignatureWithAlgorithm(byte[] data, byte[] signature, JsonWebKey publicKey, string algorithm)
         {
-            if (data == null || signature == null || publicKey == null || string.IsNullOrEmpty(algorithm) || algorithm.Length != 5)
+            if (data == null || signature == null)
             {
+                return false;
+            }
+
+            // Re-apply key policy at verification time, so a stored account key which no longer meets
+            // policy (or does not match the algorithm being used) can no longer authorise requests.
+            var keyFailureReason = AcmeKeyPolicy.ValidateKeyForAlgorithm(publicKey, algorithm);
+
+            if (keyFailureReason != null)
+            {
+                _logger.LogError("Rejected JWS signature verification: {Reason}", keyFailureReason);
                 return false;
             }
 
@@ -340,14 +330,9 @@ namespace Certify.Server.Hub.Api.Services
 
             try
             {
+                // key type, curve and key size were already confirmed to match the algorithm by key policy
                 if (family is "RS" or "PS")
                 {
-                    if (publicKey.Kty != "RSA")
-                    {
-                        _logger.LogError("JWS algorithm {Algorithm} requires an RSA key but key type is {Kty}", algorithm, publicKey.Kty);
-                        return false;
-                    }
-
                     using var rsa = RSA.Create();
                     rsa.ImportParameters(new RSAParameters
                     {
@@ -360,12 +345,6 @@ namespace Certify.Server.Hub.Api.Services
                 }
                 else if (family == "ES")
                 {
-                    if (publicKey.Kty != "EC")
-                    {
-                        _logger.LogError("JWS algorithm {Algorithm} requires an EC key but key type is {Kty}", algorithm, publicKey.Kty);
-                        return false;
-                    }
-
                     var curve = publicKey.Crv switch
                     {
                         "P-256" => ECCurve.NamedCurves.nistP256,
@@ -410,5 +389,14 @@ namespace Certify.Server.Hub.Api.Services
             // nonces are single use (RFC 8555 Section 6.5), consuming also enforces expiry
             return !string.IsNullOrEmpty(nonce) && await _config.ConsumeAcmeNonce(nonce);
         }
+
+        private static AcmeRequestException Malformed(string detail)
+            => new(AcmeErrorResponseService.AcmeErrorTypes.Malformed, detail);
+
+        private static AcmeRequestException Malformed(string detail, Exception innerException)
+            => new(AcmeErrorResponseService.AcmeErrorTypes.Malformed, detail, innerException);
+
+        private static AcmeRequestException BadNonce(string detail)
+            => new(AcmeErrorResponseService.AcmeErrorTypes.BadNonce, detail);
     }
 }

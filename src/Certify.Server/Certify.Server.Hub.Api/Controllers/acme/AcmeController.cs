@@ -2,6 +2,7 @@
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
+using Certify.Server.Hub.Api.Services.Acme;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     [Route("acme")]
+    // RFC 8555 Section 6.5 - every response from this controller carries a fresh replay nonce,
+    // including error responses, so a client which fails a request can immediately retry.
+    [ServiceFilter(typeof(AcmeReplayNonceFilter))]
     public partial class AcmeController : ApiControllerBase
     {
         private readonly ILogger<AcmeController> _logger;
@@ -91,10 +95,9 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         [HttpGet("new-nonce")]
         [HttpHead("{key?}/new-nonce")]
         [HttpGet("{key?}/new-nonce")]
-        public async Task<IActionResult> NewNonce(string key = default!)
+        public IActionResult NewNonce(string key = default!)
         {
-            await AddReplayNonceHeader();
-
+            // the replay nonce itself is added to every response by AcmeReplayNonceFilter
             Response.Headers.Append("Cache-Control", "no-store");
 
             return Ok();
@@ -126,7 +129,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for new account request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             if (newAccountKey == null)
@@ -177,7 +180,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             await _config.StoreAcmeAccount(accountKid, account);
             await _config.StoreAcmeAccountKey(accountKid, newAccountKey);
 
-            await AddReplayNonceHeader();
             AddLocationHeader(AcmeHelper.BuildAccountUrl(baseUrl, accountId));
 
             return Created(accountKid, account);
@@ -206,7 +208,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for account request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             var matchedAccountKid = AcmeJwsValidator.GetAccountKidFromJwsPayload(payload);
@@ -233,7 +235,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 acc.Status = AccountStatus.Deactivated;
             }
 
-            await AddReplayNonceHeader();
 
             return Ok(acc);
         }
@@ -261,7 +262,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for new order request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, $"Invalid JWS payload: {ex.Message}");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, $"Invalid JWS payload: {ex.Message}");
             }
 
             // Resolve the authenticated account which signed this request
@@ -380,7 +381,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to process order");
             }
 
-            await AddReplayNonceHeader();
 
             var orderUrl = AcmeHelper.BuildOrderUrl(baseUrl, orderId);
             AddLocationHeader(orderUrl);
@@ -412,7 +412,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for finalize order request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             var order = await _config.GetAcmeOrder(orderId);
@@ -461,7 +461,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             order.Status = OrderStatus.Processing;
             await _config.StoreAcmeOrder(orderId, order);
 
-            await AddReplayNonceHeader();
             AddRetryAfterHeader(60);
             return Ok(order);
         }
@@ -488,7 +487,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for certificate request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             var baseUrl = AcmeHelper.BuildBaseUrl(Request, key);
@@ -519,7 +518,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             order.HubInstanceId ??= _hubInstanceId;
             await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
 
-            await AddReplayNonceHeader();
 
             // Return the certificate as plain text with proper content type
             return Content(certPEM, "application/pem-certificate-chain");
@@ -547,7 +545,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for order status request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             var order = await _config.GetAcmeOrder(orderId);
@@ -562,7 +560,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Order not found");
             }
 
-            await AddReplayNonceHeader();
 
             if (order.Status == OrderStatus.ReadyForInternalFinalization)
             {
@@ -603,7 +600,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to decode JWS payload for authorization request");
-                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "Invalid JWS payload");
+                return AcmeErrorResponseService.CreateAcmeErrorForException(ex, "Invalid JWS payload");
             }
 
             var authorization = await _config.GetAcmeAuthorization(authId);
@@ -617,7 +614,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Authorization not found");
             }
 
-            await AddReplayNonceHeader();
             return Ok(authorization);
         }
 
@@ -658,11 +654,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             }
 
             return true;
-        }
-
-        private async Task AddReplayNonceHeader()
-        {
-            Response.Headers.Append("Replay-Nonce", await _acmeHelper.GenerateNonce());
         }
 
         private void AddLocationHeader(string location)
