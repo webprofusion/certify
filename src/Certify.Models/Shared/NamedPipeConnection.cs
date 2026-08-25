@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace Certify.Shared
 {
@@ -34,6 +35,13 @@ namespace Certify.Shared
         /// serviceconfig.json on a machine the service is no longer reachable on.
         /// </summary>
         public const string TransportEnvVariable = "CERTIFY_SERVICE_TRANSPORT";
+
+        /// <summary>
+        /// True when the named pipe transport can actually be used on this platform. Named pipes are
+        /// a windows only feature of Kestrel, so the service publishes http elsewhere regardless of
+        /// what the config asks for, and clients have to follow it.
+        /// </summary>
+        public static bool IsPlatformSupported => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         /// <summary>
         /// Determine whether the named pipe transport is selected by the given service config,

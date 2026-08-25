@@ -54,7 +54,12 @@ namespace Certify.Shared
             Host = config?.Host ?? Certify.Shared.ServiceConfig.DEFAULT_LOCALHOST;
             Port = config?.Port ?? 9696;
             DisplayName = "(local)";
-            Mode = "direct";
+
+            // the default connection is the local service, so it has to follow whichever transport
+            // that service publishes. The service exposes exactly one, so assuming http here left the
+            // app unable to connect at all when serviceconfig.json selected the named pipe.
+            UseNamedPipe = NamedPipeConnection.IsNamedPipeTransport(config) && NamedPipeConnection.IsPlatformSupported;
+
             Authentication = "default";
             IsDefault = true;
         }
