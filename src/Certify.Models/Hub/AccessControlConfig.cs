@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -627,6 +627,7 @@ namespace Certify.Models.Hub
                         StandardResourceActions.DeploymentTaskListProviders,
                         StandardResourceActions.ManagedChallengeList,
                         StandardResourceActions.ManagedItemList,
+                        StandardResourceActions.ManagedItemLogView,
                         StandardResourceActions.StoredCredentialList,
                         StandardResourceActions.RoleList,
                         StandardResourceActions.TagList,

@@ -87,6 +87,19 @@ namespace Certify.Server.Hub.Api.Controllers
             var results = new List<ManagedCertificateSummary>();
             var allInstanceItems = _mgmtStateProvider.GetManagedInstanceItems();
 
+            // Domain restrictions on the principal's roles are Domain Match rules and apply to every identifier on
+            // a cert, matching what the download endpoint enforces. Resolved once here rather than per item.
+            var domainRules = await GetDomainRestrictionRulesForPrincipal(
+                _client,
+                requestingInstance.SecurityPrincipalId,
+                StandardResourceActions.CertificateDownload);
+
+            if (domainRules == null)
+            {
+                // scope could not be evaluated, fail closed rather than preview items the download would refuse
+                return [];
+            }
+
             var certTagCache = new Dictionary<string, ICollection<TagSummary>>();
             foreach (var sourceItems in allInstanceItems.Values.ToList())
             {
@@ -128,6 +141,13 @@ namespace Certify.Server.Hub.Api.Controllers
                         };
 
                         if (!await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new Client.AuthContext { UserId = requestingInstance.SecurityPrincipalId }))
+                        {
+                            continue;
+                        }
+
+                        // the whole cert is downloaded, so every identifier on it must be within the domain scope
+                        if (domainRules.Count > 0
+                            && !cert.GetCertificateIdentifiers().All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i.Value)))
                         {
                             continue;
                         }

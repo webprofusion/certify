@@ -272,6 +272,70 @@ namespace Certify.Models.Hub
     public static class ResourceAccess
     {
         /// <summary>
+        /// True when the given domain identifier is permitted by the included domain resources on the
+        /// authorizing roles. When no authorizing role carries any domain-typed IncludedResources the
+        /// check is skipped (unrestricted).
+        ///
+        /// Each domain resource identifier is treated as a Domain Match rule and evaluated by the shared
+        /// <see cref="DomainMatchRules"/> implementation, so wildcard rules (*.example.com), multiple rules
+        /// in one value and case insensitivity all behave as they do elsewhere in the product.
+        /// </summary>
+        public static bool IsIdentifierPermittedByDomainRestrictions(
+            IEnumerable<AssignedRole>? authorizingRoles,
+            string? identifier)
+        {
+            var domainRules = GetDomainRestrictionRules(authorizingRoles);
+
+            // no domain restrictions on any authorizing role, so unrestricted
+            if (domainRules.Count == 0)
+            {
+                return true;
+            }
+
+            return IsIdentifierPermittedByDomainRules(domainRules, identifier);
+        }
+
+        /// <summary>
+        /// The set of Domain Match rules restricting the given roles, taken from any domain-typed
+        /// IncludedResources. An empty result means no domain restrictions apply.
+        /// </summary>
+        public static List<string> GetDomainRestrictionRules(IEnumerable<AssignedRole>? authorizingRoles)
+        {
+            return (authorizingRoles ?? [])
+                .Where(a => a != null)
+                .SelectMany(a => a.IncludedResources ?? [])
+                .Where(r => r?.ResourceType == ResourceTypes.Domain && !string.IsNullOrWhiteSpace(r.Identifier))
+                .Select(r => r.Identifier)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        /// <summary>
+        /// True when the identifier is permitted by at least one of the given Domain Match rules.
+        /// A wildcard identifier (e.g. *.example.com) must be granted by an explicit wildcard rule, as a
+        /// rule for the root domain alone does not imply authority over all of its subdomains.
+        /// </summary>
+        public static bool IsIdentifierPermittedByDomainRules(IEnumerable<string>? domainRules, string? identifier)
+        {
+            var rules = domainRules?.Where(r => !string.IsNullOrWhiteSpace(r)).ToList() ?? [];
+
+            if (rules.Count == 0 || string.IsNullOrWhiteSpace(identifier))
+            {
+                return false;
+            }
+
+            var requested = identifier!.Trim().ToLowerInvariant();
+
+            if (requested.StartsWith("*", StringComparison.Ordinal))
+            {
+                // only an explicit wildcard rule grants a wildcard identifier
+                return rules.Any(r => DomainMatchRules.ParseRules(r).Contains(requested));
+            }
+
+            return rules.Any(r => DomainMatchRules.IsMatch(r, identifier));
+        }
+
+        /// <summary>
         /// True when a concrete resource (via tags) is within the resolved access scope.
         /// </summary>
         public static bool IsResourceInScope(ResourceAccessScope? scope, IEnumerable<TagSummary>? resourceTags)

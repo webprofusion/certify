@@ -76,6 +76,96 @@ namespace Certify.Server.Hub.Api.Controllers
 
             return await IsAccessTokenAuthorized(internalApiClient, accessToken, check);
         }
+        /// <summary>
+        /// The Domain Match rules restricting a security principal for a resource action, taken from the domain-typed
+        /// IncludedResources on the roles authorizing that action.
+        /// An empty list means the principal is unrestricted; null means the scope could not be evaluated and the
+        /// caller should fail closed rather than treat the principal as unrestricted.
+        /// </summary>
+        internal async Task<List<string>?> GetDomainRestrictionRulesForPrincipal(
+            ICertifyInternalApiClient internalApiClient,
+            string? securityPrincipalId,
+            string resourceActionId,
+            ICollection<string>? scopedAssignedRoles = null)
+        {
+            if (string.IsNullOrWhiteSpace(securityPrincipalId))
+            {
+                return null;
+            }
+
+            var check = new AccessCheck
+            {
+                SecurityPrincipalId = securityPrincipalId,
+                ResourceType = ResourceTypes.Domain,
+                ResourceActionId = resourceActionId
+            };
+
+            if (scopedAssignedRoles?.Count > 0)
+            {
+                check.ScopedAssignedRoles = scopedAssignedRoles.ToList();
+            }
+
+            try
+            {
+                var scope = await internalApiClient.EvaluateAccessScope(check, SystemAuthContext) ?? new ResourceAccessScope();
+                return ResourceAccess.GetDomainRestrictionRules(scope.AuthorizingRoles);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Check the current security principal's domain restrictions for a resource action. Restrictions are
+        /// Domain Match rules held as domain-typed IncludedResources on the roles authorizing that action, so a
+        /// principal whose authorizing roles carry no domain resources is unrestricted. Every supplied identifier
+        /// must be permitted, as the caller gains access to all of them.
+        /// </summary>
+        internal async Task<Certify.Models.Config.ActionResult> CheckIdentifiersAuthorized(
+            ICertifyInternalApiClient internalApiClient,
+            string resourceActionId,
+            IEnumerable<string?>? identifiers)
+        {
+            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
+            {
+                return new Certify.Models.Config.ActionResult("No authenticated security principal to check domain restrictions for", false);
+            }
+
+            // resolve the rule set once, then evaluate each identifier locally against the shared Domain Match rules
+            var domainRules = await GetDomainRestrictionRulesForPrincipal(
+                internalApiClient,
+                CurrentAuthContext.UserId,
+                resourceActionId,
+                CurrentAuthContext.ScopedAssignedRoles);
+
+            if (domainRules == null)
+            {
+                // fail closed, a transient evaluation error must not promote a restricted principal to unrestricted
+                return new Certify.Models.Config.ActionResult("Could not evaluate access scope for domain restrictions", false);
+            }
+
+            if (domainRules.Count == 0)
+            {
+                return new Certify.Models.Config.ActionResult("No domain restrictions apply", true);
+            }
+
+            var identifierList = identifiers?
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
+
+            if (identifierList.Count == 0)
+            {
+                return new Certify.Models.Config.ActionResult("No identifiers to check against the domain restrictions on this role assignment", false);
+            }
+
+            var denied = identifierList.FirstOrDefault(i => !ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i));
+
+            return denied == null
+                ? new Certify.Models.Config.ActionResult("Authorized for all identifiers", true)
+                : new Certify.Models.Config.ActionResult($"Identifier '{denied}' is not permitted by the domain restrictions on this role assignment", false);
+        }
 
         internal AccessToken? GetAccessTokenFromRequest()
         {

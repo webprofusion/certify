@@ -20,6 +20,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
             public const string AuthorizationNotFound = "urn:ietf:params:acme:error:authorizationNotFound";
             public const string Unauthorized = "urn:ietf:params:acme:error:unauthorized";
             public const string RejectedIdentifier = "urn:ietf:params:acme:error:rejectedIdentifier";
+            public const string BadCSR = "urn:ietf:params:acme:error:badCSR";
             public const string ServerInternal = "urn:ietf:params:acme:error:serverInternal";
         }
 

@@ -78,6 +78,20 @@ namespace Certify.Server.Hub.Api.Services
                 return (false, "Security principal is not authorised to use managed challenges");
             }
 
+            // Domain restrictions apply regardless of tag scope, so check them before the tag filtering shortcut.
+            var identifierList = identifiers?
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Select(i => i.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
+
+            var domainDenied = FindIdentifierDeniedByDomainRestrictions(scope, identifierList);
+
+            if (domainDenied != null)
+            {
+                return (false, $"Identifier '{domainDenied}' is not permitted by the domain restrictions on this role assignment");
+            }
+
             if (!scope.RequiresTagFiltering)
             {
                 return (true, null);
@@ -127,6 +141,19 @@ namespace Certify.Server.Hub.Api.Services
                         scopedAssignedRoles?.Count > 0 ? string.Join(", ", scopedAssignedRoles) : "(none)");
 
                     return (false, "Security principal is not authorised to use managed challenges", Array.Empty<ManagedChallenge>());
+                }
+
+                // Enforce per-identifier domain restrictions on the authorizing roles.
+                var domainDenied = FindIdentifierDeniedByDomainRestrictions(scope, identifierList);
+
+                if (domainDenied != null)
+                {
+                    _logger.LogWarning(
+                        "Managed challenge identifier '{Identifier}' denied for principal {PrincipalId} by domain restrictions on authorizing roles",
+                        domainDenied,
+                        securityPrincipalId);
+
+                    return (false, $"Identifier '{domainDenied}' is not permitted by the domain restrictions on this role assignment", Array.Empty<ManagedChallenge>());
                 }
 
                 var accessible = await GetAccessibleManagedChallenges(scope);
@@ -270,6 +297,24 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// The first identifier not permitted by the domain restrictions on the authorizing roles, or null when
+        /// all are permitted. Domain restrictions are Domain Match rules held as domain-typed IncludedResources,
+        /// so a principal whose authorizing roles carry none is unrestricted.
+        /// </summary>
+        private static string? FindIdentifierDeniedByDomainRestrictions(ManagedChallengeAccessScope scope, ICollection<string> identifiers)
+        {
+            // resolve the rule set once, rather than rebuilding it for every identifier
+            var domainRules = ResourceAccess.GetDomainRestrictionRules(scope.AuthorizingRoles);
+
+            if (domainRules.Count == 0)
+            {
+                return null;
+            }
+
+            return identifiers.FirstOrDefault(id => !ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, id));
         }
 
         /// <summary>

@@ -371,8 +371,19 @@ namespace Certify.Core.Management.Access
             return result;
         }
 
+        /// <summary>
+        /// True when the check's identifier is within the resources explicitly included on the authorizing
+        /// roles. Roles carrying no resources of the checked type impose no restriction.
+        /// Domain resources are Domain Match rules, evaluated by the shared DomainMatchRules implementation
+        /// via <see cref="ResourceAccess"/>; other resource types match on exact identifier.
+        /// </summary>
         private static bool MatchesIncludedResources(IEnumerable<AssignedRole> authorizingRoles, AccessCheck check)
         {
+            if (check.ResourceType == ResourceTypes.Domain)
+            {
+                return ResourceAccess.IsIdentifierPermittedByDomainRestrictions(authorizingRoles, check.Identifier);
+            }
+
             var rolesWithIncludedResources = authorizingRoles
                 .Where(a => a.IncludedResources?.Any(r => r.ResourceType == check.ResourceType) == true)
                 .ToList();
@@ -387,31 +398,10 @@ namespace Certify.Core.Management.Access
                 return false;
             }
 
-            var allIncludedResources = rolesWithIncludedResources
+            return rolesWithIncludedResources
                 .SelectMany(a => a.IncludedResources ?? [])
                 .Where(r => r.ResourceType == check.ResourceType)
-                .Distinct()
-                .ToList();
-
-            if (check.ResourceType == ResourceTypes.Domain
-                && !check.Identifier.Trim().StartsWith("*")
-                && check.Identifier.Contains("."))
-            {
-                var identifierComponents = check.Identifier.Split('.');
-                var wildcard = "*." + string.Join(".", identifierComponents.Skip(1));
-
-                foreach (var includedResource in allIncludedResources)
-                {
-                    if (includedResource.Identifier == wildcard || includedResource.Identifier == check.Identifier)
-                    {
-                        return true;
-                    }
-                }
-
-                return false;
-            }
-
-            return allIncludedResources.Any(r => r.Identifier == check.Identifier);
+                .Any(r => r.Identifier == check.Identifier);
         }
 
         public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)

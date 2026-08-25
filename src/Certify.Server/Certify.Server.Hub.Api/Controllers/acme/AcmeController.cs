@@ -4,6 +4,7 @@ using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.Services.Acme;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
+using Certify.Shared.Core.Utils.PKI;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Certify.Server.Hub.Api.Controllers.acme
@@ -437,6 +438,15 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.OrderNotReady, "Order is not ready for finalization");
             }
 
+            // RFC 8555 Section 7.4 - the CSR must not request identifiers beyond those on the order, and those
+            // identifiers must still be within the account's domain restrictions (which may have been narrowed
+            // since the order was created).
+            var csrCheck = await ValidateFinalizeCsrIdentifiers(order, request.Csr);
+            if (csrCheck != null)
+            {
+                return csrCheck;
+            }
+
             // Check if finalization is already in progress
             if (order.Status != OrderStatus.InternalFinalizationInProgress)
             {
@@ -622,6 +632,94 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         /// </summary>
         private bool IsOrderOwnedBySigningAccount(AcmeOrder order, JwsPayload payload, string context)
             => IsOwnedBySigningAccount(order?.AccountKid, payload, context);
+
+        /// <summary>
+        /// Validate the identifiers requested by a finalization CSR. Returns an ACME error result when the CSR
+        /// should be rejected, or null when it is acceptable.
+        ///
+        /// The CSR must not request any identifier absent from the order (RFC 8555 Section 7.4), otherwise an
+        /// account could authorize a permitted name and then have a certificate issued for arbitrary others.
+        /// Requesting a subset of the order's identifiers is allowed. The identifiers are then re-checked against
+        /// the account's role scope, so restrictions narrowed after the order was created still apply.
+        /// </summary>
+        private async Task<IActionResult?> ValidateFinalizeCsrIdentifiers(AcmeOrder order, string? csr)
+        {
+            if (string.IsNullOrWhiteSpace(csr))
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Malformed, "A CSR is required to finalize an order");
+            }
+
+            List<string> csrIdentifiers;
+
+            try
+            {
+                var csrBytes = Certify.Management.Util.FromUrlSafeBase64String(csr);
+
+                csrIdentifiers = CSRUtils.DecodeCsrSubjects(csrBytes)
+                    .Where(i => !string.IsNullOrWhiteSpace(i))
+                    .Select(i => i.Trim().ToLowerInvariant())
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Could not decode finalization CSR for order {OrderId}", order.Id);
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.BadCSR, "CSR could not be decoded");
+            }
+
+            if (csrIdentifiers.Count == 0)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.BadCSR, "CSR does not request any identifiers");
+            }
+
+            var orderIdentifiers = (order.Identifiers ?? [])
+                .Select(i => i?.Value)
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v!.Trim().ToLowerInvariant())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            var unauthorized = csrIdentifiers.FirstOrDefault(i => !orderIdentifiers.Contains(i));
+
+            if (unauthorized != null)
+            {
+                _logger.LogWarning(
+                    "Finalization rejected for order {OrderId}, CSR requests identifier '{Identifier}' which is not on the order",
+                    order.Id,
+                    unauthorized);
+
+                return AcmeErrorResponseService.CreateAcmeError(
+                    AcmeErrorResponseService.AcmeErrorTypes.BadCSR,
+                    $"CSR requests identifier '{unauthorized}' which is not present on this order");
+            }
+
+            // re-check role scope, the account's domain restrictions may have been narrowed since the order was placed
+            var account = await _config.GetAccount(order.AccountKid);
+
+            if (account == null || account.Status != AccountStatus.Valid)
+            {
+                return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account is unknown or not valid");
+            }
+
+            var scopeCheck = await _managedChallengeScopeService.AuthorizeIdentifiersForPrincipal(
+                account.SecurityPrincipalId,
+                csrIdentifiers,
+                account.ScopedAssignedRoles,
+                StandardResourceActions.ManagedAcmePerformOrder);
+
+            if (!scopeCheck.IsAuthorized)
+            {
+                _logger.LogWarning(
+                    "Finalization rejected for order {OrderId}: {Reason}",
+                    order.Id,
+                    scopeCheck.FailureReason);
+
+                return AcmeErrorResponseService.CreateAcmeError(
+                    AcmeErrorResponseService.AcmeErrorTypes.Unauthorized,
+                    scopeCheck.FailureReason ?? "The identifiers requested by this CSR are not permitted for this account");
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Checks the supplied owning account KID matches the account which signed the current request.

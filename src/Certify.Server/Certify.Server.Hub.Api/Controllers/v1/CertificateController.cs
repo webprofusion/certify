@@ -56,6 +56,11 @@ namespace Certify.Server.Hub.Api.Controllers
         {
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
 
+            // a principal authorized by their own roles may additionally be restricted to specific domains, which
+            // can only be checked once we know the identifiers on the cert. Managed instances fetching their own
+            // subscription certs authorize by a different route and are not domain scoped.
+            var requiresDomainRestrictionCheck = accessCheck.IsSuccess;
+
             if (!accessCheck.IsSuccess)
             {
                 accessCheck = await CheckManagedInstanceSubscriptionDownloadAuthorized(managedCertId);
@@ -77,6 +82,19 @@ namespace Certify.Server.Hub.Api.Controllers
             if (managedCert == null)
             {
                 return new NotFoundResult();
+            }
+
+            if (requiresDomainRestrictionCheck)
+            {
+                var identifierCheck = await CheckIdentifiersAuthorized(
+                    _client,
+                    StandardResourceActions.CertificateDownload,
+                    managedCert.GetCertificateIdentifiers().Select(i => i.Value));
+
+                if (!identifierCheck.IsSuccess)
+                {
+                    return Problem(detail: identifierCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+                }
             }
 
             if (managedCert.DateRenewed == null)
@@ -216,6 +234,11 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(LogResult))]
         public async Task<IActionResult> DownloadLog(string instanceId, string managedCertId, int maxLines = 1000)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemLogView));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
 
             if (maxLines > 1000)
             {
@@ -240,6 +263,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> DownloadLogText(string instanceId, string managedCertId)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemLogView));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var log = await _mgmtAPI.GetItemLog(instanceId, managedCertId, -1, CurrentAuthContext);
 
             var content = string.Join("\r\n", log.Select(l => $"{l.EventDate?.ToLocalTime().ToString("yyyy-MM-dd H:mm")}\t[{l.LogLevel}]\t{l.Message}"));
@@ -257,6 +286,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetManagedCertificateSummary()
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var summary = await _mgmtAPI.GetManagedCertificateSummary(CurrentAuthContext);
             return new OkObjectResult(summary);
         }
@@ -271,6 +306,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetInstanceManagedCertificateSummary(string instanceId)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var summary = await _mgmtAPI.GetManagedCertificateSummary(instanceId, CurrentAuthContext);
             return new OkObjectResult(summary);
         }
@@ -287,6 +328,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> GetManagedCertificateDetails(string instanceId, string managedCertId)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var managedCert = await _mgmtAPI.GetManagedCertificate(instanceId, managedCertId, CurrentAuthContext);
 
             return new OkObjectResult(managedCert);
@@ -304,6 +351,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> UpdateManagedCertificateDetails(string instanceId, ManagedCertificate managedCertificate)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var result = await _mgmtAPI.UpdateManagedCertificate(instanceId, managedCertificate, CurrentAuthContext);
 
             if (result != null)
@@ -417,6 +470,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> BeginOrder(string instanceId, string id)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemRequest));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             await _mgmtAPI.PerformManagedCertificateRequest(instanceId, id, CurrentAuthContext);
 
             return new OkResult();
@@ -434,6 +493,11 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<StatusMessage>))]
         public async Task<IActionResult> PerformConfigurationTest(string instanceId, ManagedCertificate item)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemTest));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
 
             var results = await _mgmtAPI.TestManagedCertificateConfiguration(instanceId, item, CurrentAuthContext);
 
@@ -459,6 +523,11 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificate))]
         public async Task<IActionResult> ResetStatus(string instanceId, string id)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemUpdate));
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
 
             var results = await _mgmtAPI.ResetManagedItemStatus(instanceId, id, CurrentAuthContext);
 
