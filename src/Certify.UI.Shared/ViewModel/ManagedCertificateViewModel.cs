@@ -794,6 +794,7 @@ namespace Certify.UI.ViewModel
                 SelectedItem.IsChanged = true;
 
                 RaisePropertyChangedEvent(nameof(IsExternalSourceItem));
+                RaisePropertyChangedEvent(nameof(IsSubscription));
                 RaisePropertyChangedEvent(nameof(IsSubscriptionMode));
                 RaisePropertyChangedEvent(nameof(ShowStandardIdentifiersEditor));
                 RaisePropertyChangedEvent(nameof(ShowAuthorityTokenEditor));

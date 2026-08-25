@@ -1,4 +1,5 @@
-﻿using Certify.Models;
+﻿using System.Collections.Generic;
+using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Shared.Validation;
 using Certify.UI.ViewModel;
@@ -349,6 +350,30 @@ namespace Certify.Tests.UI.Integration
 
             Assert.IsNull(model.SelectedItem.ExternalSource, "An externally managed item is not given subscription configuration.");
             Assert.IsFalse(model.SelectedItem.IsSubscription);
+        }
+
+        [TestMethod]
+        public void EnablingSubscriptionModeNotifiesSubscriptionBindings()
+        {
+            // the subscription settings panel binds to IsSubscription, which is derived from the selected item rather
+            // than set directly, so the toggle has to notify it or the options stay hidden until the tab is switched
+            var model = new ManagedCertificateViewModel
+            {
+                SelectedItem = new ManagedCertificate
+                {
+                    ItemType = ManagedCertificateType.SSL_ACME
+                }
+            };
+
+            var notifiedProperties = new List<string>();
+            model.PropertyChanged += (s, e) => notifiedProperties.Add(e.PropertyName);
+
+            model.IsSubscriptionMode = true;
+
+            Assert.IsTrue(model.IsSubscription);
+            CollectionAssert.Contains(notifiedProperties, nameof(model.IsSubscription), "Subscription settings visibility is notified when subscription mode is enabled.");
+            CollectionAssert.Contains(notifiedProperties, nameof(model.IsExternalSourceItem));
+            CollectionAssert.Contains(notifiedProperties, nameof(model.ShowStandardIdentifiersEditor));
         }
     }
 }
