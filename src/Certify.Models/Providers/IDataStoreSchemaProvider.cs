@@ -126,6 +126,17 @@ namespace Certify.Providers
         public const string ConnectionOK = "datastore-connection-ok";
         public const string InitFailed = "datastore-init-failed";
         public const string ApplyMigrations = "datastore-apply-migrations";
+
+        /// <summary>
+        /// The service switched to a different default data store.
+        /// </summary>
+        public const string SwitchOK = "datastore-switch-ok";
+
+        /// <summary>
+        /// The service could not switch to the requested default data store. The previous store is restored
+        /// where it can be, so the description reports the outcome of that too.
+        /// </summary>
+        public const string SwitchFailed = "datastore-switch-failed";
     }
 
     /// <summary>

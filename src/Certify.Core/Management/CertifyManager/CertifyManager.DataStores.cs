@@ -52,7 +52,7 @@ namespace Certify.Management
                     _dataStoreStatus.DataStoreId = defaultStoreId;
                     _dataStoreStatus.DataStoreType = dataStoreInfo?.TypeId;
 
-                    if (string.IsNullOrEmpty(defaultStoreId) || defaultStoreId == "(default)" || defaultStoreId == "0")
+                    if (IsBuiltInDefaultDataStoreId(defaultStoreId))
                     {
                         // default sqlite storage
                         _itemManager = new SQLiteManagedItemStore("", _serviceLog);
@@ -255,6 +255,35 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// True when the given id refers to the built in SQLite store rather than a stored data store connection.
+        /// The stored connection list only contains an entry for it when no other connections have been added.
+        /// </summary>
+        private static bool IsBuiltInDefaultDataStoreId(string dataStoreId) =>
+            string.IsNullOrEmpty(dataStoreId) || dataStoreId == "(default)" || dataStoreId == "0";
+
+        /// <summary>
+        /// Resolve the connection details for a data store id, falling back to the built in SQLite store so that
+        /// the service can be switched back to it once other connections have been added.
+        /// </summary>
+        private async Task<DataStoreConnection> ResolveDataStoreConnection(string dataStoreId)
+        {
+            var dataStore = await GetDataStore(dataStoreId);
+
+            if (dataStore == null && IsBuiltInDefaultDataStoreId(dataStoreId))
+            {
+                dataStore = new DataStoreConnection
+                {
+                    Id = string.IsNullOrEmpty(dataStoreId) ? "(default)" : dataStoreId,
+                    Title = "(Default SQLite)",
+                    TypeId = "sqlite",
+                    ConnectionConfig = ""
+                };
+            }
+
+            return dataStore;
+        }
+
         private async Task<IManagedItemStore> GetManagedItemStoreProvider(DataStoreConnection dataStore)
         {
 
@@ -351,7 +380,7 @@ namespace Certify.Management
 
         public async Task<bool> SelectManagedItemStore(string dataStoreId)
         {
-            var dataStore = await GetDataStore(dataStoreId);
+            var dataStore = await ResolveDataStoreConnection(dataStoreId);
 
             if (dataStore == null)
             {
@@ -452,7 +481,14 @@ namespace Certify.Management
 
         public async Task<bool> SelectCredentialsStore(string dataStoreId)
         {
-            var dataStore = await GetDataStore(dataStoreId);
+            var dataStore = await ResolveDataStoreConnection(dataStoreId);
+
+            if (dataStore == null)
+            {
+                _serviceLog.Error($"Could not match data store connection information to the specified store id: {dataStoreId}");
+                return false;
+            }
+
             var provider = await GetCredentialManagerProvider(dataStore);
             if (provider == null)
             {
@@ -468,7 +504,7 @@ namespace Certify.Management
 
         public async Task<bool> SelectConfigurationStore(string dataStoreId)
         {
-            var dataStore = await GetDataStore(dataStoreId);
+            var dataStore = await ResolveDataStoreConnection(dataStoreId);
 
             if (dataStore == null)
             {
@@ -529,6 +565,10 @@ namespace Certify.Management
         {
             var dataStores = await GetDataStoresInternal();
 
+            // the service setting is the source of truth for which store is in use, so the flag is reported from
+            // there rather than from the stored connection, which is only updated when a connection is saved
+            var currentStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+
             return dataStores.Select(d =>
             {
                 var maskedConfig = DataStoreConnectionProtection.Mask(d.ConnectionConfig);
@@ -539,7 +579,7 @@ namespace Certify.Management
                     Title = d.Title,
                     TypeId = d.TypeId,
                     ConnectionConfig = maskedConfig,
-                    IsDefault = d.IsDefault,
+                    IsDefault = d.Id == currentStoreId || (IsBuiltInDefaultDataStoreId(currentStoreId) && IsBuiltInDefaultDataStoreId(d.Id)),
                     IsProtected = DataStoreConnectionProtection.IsMasked(maskedConfig)
                 };
             }).ToList();
@@ -956,7 +996,11 @@ namespace Certify.Management
                 var itemProvider = await GetManagedItemStoreProvider(dataStore);
                 var credProvider = await GetCredentialManagerProvider(dataStore);
 
-                if (itemProvider != null && credProvider != null)
+                // the configuration store holds settings, access control and hub state, so a store which cannot
+                // provide one is not usable as the service default even if items and credentials connect
+                var configProvider = await GetConfigurationStoreProvider(dataStore);
+
+                if (itemProvider != null && credProvider != null && configProvider != null && await configProvider.IsInitialised())
                 {
                     dataStoreAvailable = true;
                 }
@@ -1018,9 +1062,21 @@ namespace Certify.Management
 
         public async Task<List<ActionStep>> SetDefaultDataStore(string dataStoreId)
         {
-            var dataStores = await GetDataStoresInternal();
+            var store = await ResolveDataStoreConnection(dataStoreId);
 
-            var store = dataStores.FirstOrDefault(d => d.Id == dataStoreId);
+            if (store == null)
+            {
+                return new List<ActionStep>
+                {
+                    new ActionStep
+                    {
+                        Key = DataStoreActionKeys.ConnectionFailed,
+                        Title = "Data Store Not Found",
+                        Description = $"There is no data store connection configured with the id '{dataStoreId}'.",
+                        HasError = true
+                    }
+                };
+            }
 
             // test connection before switching
             var testResults = await TestDataStoreConnection(store);
@@ -1031,14 +1087,125 @@ namespace Certify.Management
             }
 
             SettingsManager.LoadAppSettings();
+
+            var previousDataStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+
             CoreAppSettings.Current.ConfigDataStoreConnectionId = dataStoreId;
             SettingsManager.SaveAppSettings();
 
-            await SelectManagedItemStore(dataStoreId);
-            await SelectCredentialsStore(dataStoreId);
+            try
+            {
+                // re-run the full data store initialisation rather than selecting individual stores, so that
+                // managed items, credentials and configuration (and therefore access control) all move to the new
+                // store together, and the reported connection status matches what the service is connected to
+                await InitDataStore();
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, $"Failed to switch to data store {dataStoreId}, reverting to {previousDataStoreId}. {exp.Message}");
 
-            var result = new List<ActionStep> { new ActionStep { Title = "Changed Default Data Store" } };
-            return result;
+                var revertOutcome = await RevertToDataStore(previousDataStoreId);
+
+                return new List<ActionStep>
+                {
+                    new ActionStep
+                    {
+                        Key = DataStoreActionKeys.SwitchFailed,
+                        Title = "Data Store Switch Failed",
+                        Description = $"The service could not connect to '{store.Title}' ({dataStoreId}) and the default data store was not changed. [{exp.Message}] {revertOutcome}",
+                        HasError = true
+                    }
+                };
+            }
+
+            await OnDataStoreChanged();
+
+            _serviceLog?.Information($"Default data store changed to {dataStoreId} '{store.Title}' [{store.TypeId}].");
+
+            return new List<ActionStep>
+            {
+                new ActionStep
+                {
+                    Key = DataStoreActionKeys.SwitchOK,
+                    Title = "Changed Default Data Store",
+                    Description = $"The service is now using data store '{store.Title}' ({dataStoreId})."
+                }
+            };
+        }
+
+        /// <summary>
+        /// Restore a previous default data store after a failed switch, so that the service carries on using the
+        /// store it was already connected to. Returns a description of the outcome for the operator, as this runs
+        /// while a switch failure is already being reported.
+        /// </summary>
+        private async Task<string> RevertToDataStore(string previousDataStoreId)
+        {
+            try
+            {
+                SettingsManager.LoadAppSettings();
+                CoreAppSettings.Current.ConfigDataStoreConnectionId = previousDataStoreId;
+                SettingsManager.SaveAppSettings();
+
+                await InitDataStore();
+
+                await OnDataStoreChanged();
+
+                _serviceLog?.Information($"Reverted to the previous data store {previousDataStoreId}.");
+
+                return $"The service has reverted to the previous data store '{previousDataStoreId}'.";
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, $"Failed to revert to the previous data store {previousDataStoreId}. {exp.Message}");
+
+                // neither store can be used, so drop the store references rather than leaving the service holding
+                // a partially connected set of stores
+                await InitDataStoreDegradedMode(exp.Message, previousDataStoreId, _dataStoreStatus.DataStoreType);
+
+                return $"The service could also not reconnect to the previous data store '{previousDataStoreId}' and is now running in degraded mode. [{exp.Message}]";
+            }
+        }
+
+        /// <summary>
+        /// Refresh the state derived from the data store once the service has connected to a different one, so
+        /// that values cached from the previous store are not reused and the new store has the content the
+        /// service expects to be present.
+        /// </summary>
+        private async Task OnDataStoreChanged()
+        {
+            // each of these is loaded on demand and repopulated by the next read, which now goes to the store the
+            // service has just connected to, so dropping them is all that is required - see GetHubSettings,
+            // GetAccountDetails and GetACMEProvider
+            _cachedHubSettings = null;
+
+            lock (_accountsLock)
+            {
+                _accounts = null;
+            }
+
+            // ACME providers are initialised with account details read from the previous credential store
+            _acmeClientProviders.Clear();
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                title: "Data Store Status",
+                description: "Data store connected and operational.",
+                hasError: false
+            );
+
+            // startup only initialisation which the newly selected store may not have had applied to it
+            if (!IsInDegradedMode && (_isMgtmHubBackend || _isDirectMgmtHubBackend))
+            {
+                try
+                {
+                    await EnsureDefaultTagCategories();
+                }
+                catch (Exception exp)
+                {
+                    _serviceLog?.Error(exp, $"Failed to create the default tag categories in the selected data store. {exp.Message}");
+                }
+            }
         }
 
         public async Task<List<ActionStep>> UpdateDataStoreConnection(DataStoreConnection dataStore)
@@ -1083,7 +1250,10 @@ namespace Certify.Management
         public async Task<List<ActionStep>> RemoveDataStoreConnection(string dataStoreId)
         {
             var results = new List<ActionStep>();
-            if (CoreAppSettings.Current.ConfigDataStoreConnectionId == dataStoreId)
+
+            var currentStoreId = CoreAppSettings.Current.ConfigDataStoreConnectionId;
+
+            if (currentStoreId == dataStoreId || (IsBuiltInDefaultDataStoreId(currentStoreId) && IsBuiltInDefaultDataStoreId(dataStoreId)))
             {
                 results.Add(new ActionStep("Data Store Remove Failed", "Cannot remove the data store currently in use.", true));
                 return results;
