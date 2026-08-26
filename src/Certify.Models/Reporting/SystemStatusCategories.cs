@@ -19,6 +19,7 @@ namespace Certify.Models.Reporting
         public const string HUB_API_STARTUP_ENVIRONMENT = "hub.api.startup.environment";
         public const string HUB_API_STARTUP_URL = "hub.api.startup.url";
         public const string HUB_API_STARTUP_CUSTOMCONFIG = "hub.api.startup.customconfig";
+        public const string HUB_API_STARTUP_JWTSECRET = "hub.api.startup.jwtsecret";
         public const string HUB_API_STARTUP_APIDOCS = "hub.api.startup.apidocs";
         public const string HUB_API_STARTUP_SVC_STATUS_STREAM = "hub.api.startup.svc.stream";
 

@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -122,6 +122,7 @@ void ConfigureKestrelCertificateReloadWatchers(IConfiguration configuration, str
     }
 }
 
+
 var hubServiceAssembly = typeof(Certify.Server.HubService.Services.CertifyDirectHubService).Assembly;
 
 // allow settings to be loaded from the app data path, that way settings are preserved between re-installs, copy a default config so service starts on localhost:8080
@@ -136,27 +137,44 @@ if (cwd != null)
     System.Diagnostics.Debug.WriteLine($"Using working directory {cwd}");
     Directory.SetCurrentDirectory(cwd);
 
-#if !DEBUG
-
-    // copy the default settings if they don't exist yet, then generate a new JWT issuer secret
+    // Copy the default settings if they don't exist yet, then generate a new JWT issuer secret.
+    // This runs in every build configuration: no JWT secret ships in appsettings.json, so a DEBUG
+    // build which skipped this step would otherwise have no secret to sign or validate tokens with.
     var defaultHubSettings = Path.Combine(cwd, "default-settings.json");
 
     if (!File.Exists(hubSettings) && File.Exists(defaultHubSettings))
     {
         var content = File.ReadAllText(defaultHubSettings);
 
-        var secret = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32));
-
-        content = content.Replace("<replace jwt secret>", secret);
+        content = content.Replace(HubJwtSecretProvisioning.SecretPlaceholder, HubJwtSecretProvisioning.GenerateSecret());
 
         // copy default config if it doesn't exist
         File.WriteAllText(hubSettings, content);
     }
-#endif
 }
 else
 {
     System.Diagnostics.Debug.WriteLine($"Could not determine working directory");
+}
+
+// An existing settings file may pre-date the JWT secret, or have had it removed. Generate and save one rather
+// than leaving the service with no way to sign or validate tokens. Runs before the configuration is built so
+// the newly saved value is picked up by the load below.
+if (File.Exists(hubSettings))
+{
+    var jwtSecretResult = HubJwtSecretProvisioning.EnsureSecret(hubSettings);
+
+    if (jwtSecretResult.Outcome != JwtSecretProvisioningOutcome.AlreadyPresent)
+    {
+        AddSystemStatusItem(
+            SystemStatusCategories.HUB_API,
+            SystemStatusKeys.HUB_API_STARTUP_JWTSECRET,
+            title: "Hub API JWT Secret",
+            description: jwtSecretResult.Message,
+            hasError: jwtSecretResult.Outcome == JwtSecretProvisioningOutcome.Failed,
+            hasWarning: jwtSecretResult.Outcome != JwtSecretProvisioningOutcome.Failed
+        );
+    }
 }
 
 var builder = WebApplication.CreateBuilder(args);
@@ -396,8 +414,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<UserInterfaceStatusHub>("/api/internal/status");
-app.MapHub<InstanceManagementHub>("/api/internal/managementhub");
+// Both hubs require an authenticated caller. The status hub carries managed certificate state for every
+// connected instance, so an anonymous connection to it is a live feed of managed domains and config.
+// Clients present their token via the access_token query string, which the JWT bearer middleware is
+// configured to read for these two paths (see AuthenticationExtension).
+app.MapHub<UserInterfaceStatusHub>("/api/internal/status").RequireAuthorization();
+app.MapHub<InstanceManagementHub>("/api/internal/managementhub").RequireAuthorization();
 
 app.MapDefaultControllerRoute().WithStaticAssets();
 

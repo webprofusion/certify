@@ -16,15 +16,24 @@ namespace Certify.Server.Hub.Api.Services
 
     public class ManagedInstanceRequestAuthValidator
     {
+        /// <summary>
+        /// Configuration key which re-enables acceptance of unsigned requests from instances registered without a
+        /// request auth secret. Off unless explicitly set, because when it is on an instance id is the only thing
+        /// needed to authenticate as that instance.
+        /// </summary>
+        public const string AllowLegacyUnsignedRequestsConfigKey = "ManagedInstanceRequestAuth:AllowLegacyUnsignedRequests";
+
         private readonly ICertifyInternalApiClient _client;
         private readonly ILogger<ManagedInstanceRequestAuthValidator> _logger;
+        private readonly bool _allowLegacyUnsignedRequests;
         private static readonly AuthContext _systemAuthContext = new AuthContext { UserId = StandardSecurityPrincipals.System };
         private static int _legacyFallbackCount;
 
-        public ManagedInstanceRequestAuthValidator(ICertifyInternalApiClient client, ILogger<ManagedInstanceRequestAuthValidator> logger)
+        public ManagedInstanceRequestAuthValidator(ICertifyInternalApiClient client, ILogger<ManagedInstanceRequestAuthValidator> logger, IConfiguration? configuration = null)
         {
             _client = client;
             _logger = logger;
+            _allowLegacyUnsignedRequests = configuration?.GetValue<bool>(AllowLegacyUnsignedRequestsConfigKey) == true;
         }
 
         public async Task<ManagedInstanceRequestAuthValidationResult> ValidateAsync(HttpRequest request, CancellationToken cancellationToken = default)
@@ -45,9 +54,22 @@ namespace Certify.Server.Hub.Api.Services
 
             if (string.IsNullOrWhiteSpace(instance.RequestAuthSecretHash))
             {
+                // Without a secret there is nothing to verify a signature against, so accepting the request would
+                // reduce authentication to presenting the instance id in a header. Instances are issued a secret when
+                // they check in with the hub, so this state should resolve itself; until it does, fail closed.
+                if (!_allowLegacyUnsignedRequests)
+                {
+                    _logger.LogWarning(
+                        "Managed instance request auth failed for {instanceId}: no request auth secret is configured for this instance. The instance should re-check in with the hub to be issued one. Unsigned requests can be temporarily re-enabled with {configKey}.",
+                        instanceId,
+                        AllowLegacyUnsignedRequestsConfigKey);
+
+                    return Fail("Managed instance has no request auth secret configured. Re-register the instance with the hub to be issued one.");
+                }
+
                 var legacyFallbackCount = Interlocked.Increment(ref _legacyFallbackCount);
 
-                _logger.LogWarning("Managed instance request auth secret is not configured for {instanceId}, allowing legacy request authentication. Legacy fallback count: {legacyFallbackCount}", instanceId, legacyFallbackCount);
+                _logger.LogWarning("Managed instance request auth secret is not configured for {instanceId}, allowing legacy request authentication because {configKey} is enabled. This permits any caller which knows the instance id to authenticate as that instance. Legacy fallback count: {legacyFallbackCount}", instanceId, AllowLegacyUnsignedRequestsConfigKey, legacyFallbackCount);
 
                 return new ManagedInstanceRequestAuthValidationResult
                 {

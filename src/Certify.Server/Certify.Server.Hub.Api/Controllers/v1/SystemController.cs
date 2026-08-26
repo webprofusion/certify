@@ -255,8 +255,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
             var hubAssignedInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString(); ;
             var instanceTitle = Request.Headers["X-Certify-Trace-InstanceName"].ToString();
-            var instanceVersion = Request.Headers[ManagedInstanceRequestAuth.InstanceVersionHeaderName].ToString();
-            var supportsRequestAuthSecrets = !string.IsNullOrWhiteSpace(instanceVersion);
+            // A request auth secret is always issued. This used to be conditional on the instance presenting an
+            // X-Certify-InstanceVersion header, which meant a caller could register with no secret simply by omitting
+            // that header, and then authenticate every subsequent request with an instance id and no signature.
+            // An older instance which ignores the secret we return here will now fail signature validation, which is
+            // the intended outcome - it must be upgraded, or the operator must explicitly opt in to the legacy path.
             var isKnownInstance = false;
             var requestAuthSecretReissued = false;
             string? requestAuthSecret = null;
@@ -276,11 +279,8 @@ namespace Certify.Server.Hub.Api.Controllers
                         return Problem(detail: "Invalid hub assigned instance id format", statusCode: (int)HttpStatusCode.Unauthorized, type: "https://api.certifytheweb.com/problemtype/hub-unknown-instance-id");
                     }
 
-                    if (supportsRequestAuthSecrets)
-                    {
-                        requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
-                        requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
-                    }
+                    requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
+                    requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
 
                     var newInstance = new ManagedInstanceInfo
                     {
@@ -305,8 +305,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
-                    if (supportsRequestAuthSecrets
-                        && (string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash) || reissueRequestAuthSecret == true))
+                    // this also self-heals instances which were previously registered without a secret, as they will
+                    // be issued one the next time they check in
+                    if (string.IsNullOrWhiteSpace(instanceInfo.RequestAuthSecretHash) || reissueRequestAuthSecret == true)
                     {
                         requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
                         requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
@@ -320,12 +321,9 @@ namespace Certify.Server.Hub.Api.Controllers
             }
             else if (register == true)
             {
-                // no assigned id provided, assign new one 
-                if (supportsRequestAuthSecrets)
-                {
-                    requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
-                    requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
-                }
+                // no assigned id provided, assign new one
+                requestAuthSecret = ManagedInstanceRequestAuth.GenerateSecret();
+                requestAuthSecretHash = ManagedInstanceRequestAuth.DeriveSecretHash(requestAuthSecret);
 
                 var instanceInfo = new ManagedInstanceInfo
                 {

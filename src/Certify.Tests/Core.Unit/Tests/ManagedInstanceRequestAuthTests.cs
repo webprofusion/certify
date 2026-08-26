@@ -11,6 +11,7 @@ using Certify.Server.Hub.Api.Controllers;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -217,6 +218,68 @@ namespace Certify.Core.Tests.Unit
             var okResult = (OkObjectResult)result;
             Assert.IsInstanceOfType<Certify.Models.Config.ActionResult>(okResult.Value);
             Assert.IsTrue(((Certify.Models.Config.ActionResult)okResult.Value!).IsSuccess);
+        }
+
+        [TestMethod]
+        public async Task ValidateAsync_RejectsUnsignedRequestWhenInstanceHasNoSecret()
+        {
+            // An instance registered without a request auth secret must not be able to authenticate on the strength
+            // of its instance id alone, otherwise anyone who learns that id can impersonate the instance.
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetHubManagedInstance("instance-1", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ManagedInstanceInfo
+                {
+                    Id = "instance-1",
+                    InstanceId = "instance-1",
+                    RequestAuthSecretHash = string.Empty,
+                    SecurityPrincipalId = "sp-1"
+                });
+
+            var validator = new ManagedInstanceRequestAuthValidator(client.Object, NullLogger<ManagedInstanceRequestAuthValidator>.Instance);
+
+            var context = new DefaultHttpContext();
+            context.Request.Method = HttpMethods.Post;
+            context.Request.Path = "/api/v1/managedchallenge/request";
+            context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
+            context.Request.Headers[ManagedInstanceRequestAuth.HubAssignedIdHeaderName] = "instance-1";
+
+            var result = await validator.ValidateAsync(context.Request);
+
+            Assert.IsFalse(result.IsSuccess, "An instance with no request auth secret must not be authenticated.");
+            StringAssert.Contains(result.Message, "no request auth secret");
+        }
+
+        [TestMethod]
+        public async Task ValidateAsync_AllowsUnsignedRequestOnlyWhenLegacyFallbackIsExplicitlyEnabled()
+        {
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetHubManagedInstance("instance-1", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ManagedInstanceInfo
+                {
+                    Id = "instance-1",
+                    InstanceId = "instance-1",
+                    RequestAuthSecretHash = string.Empty,
+                    SecurityPrincipalId = "sp-1"
+                });
+
+            var configuration = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    [ManagedInstanceRequestAuthValidator.AllowLegacyUnsignedRequestsConfigKey] = "true"
+                })
+                .Build();
+
+            var validator = new ManagedInstanceRequestAuthValidator(client.Object, NullLogger<ManagedInstanceRequestAuthValidator>.Instance, configuration);
+
+            var context = new DefaultHttpContext();
+            context.Request.Method = HttpMethods.Post;
+            context.Request.Path = "/api/v1/managedchallenge/request";
+            context.Request.Body = new MemoryStream(Encoding.UTF8.GetBytes("{}"));
+            context.Request.Headers[ManagedInstanceRequestAuth.HubAssignedIdHeaderName] = "instance-1";
+
+            var result = await validator.ValidateAsync(context.Request);
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
         }
 
         private static DefaultHttpContext CreateRequestContext(string path, string requestBody, string timestamp, string signature, string bodyHash)
