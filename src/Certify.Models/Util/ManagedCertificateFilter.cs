@@ -88,7 +88,7 @@ namespace Certify.Models
         /// If true, item must match ALL specified tag scopes (AND logic).
         /// If false (default), item must match ANY specified tag scope (OR logic).
         /// </summary>
-        public bool RequireAllTagScopes { get; set; } = false;
+        public bool RequireAllTagScopes { get; set; }
 
         /// <summary>
         /// If true, include items with no tags in results. Default true for backward compatibility.

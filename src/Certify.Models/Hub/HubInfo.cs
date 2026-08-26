@@ -26,7 +26,7 @@
         /// </summary>
         public string RequestAuthSecret { get; set; } = string.Empty;
 
-        public bool RejoinRequired { get; set; } = false;
+        public bool RejoinRequired { get; set; }
 
         /// <summary>
         /// True when the joining request presented a known hub-assigned instance id and the hub reused existing instance identity.

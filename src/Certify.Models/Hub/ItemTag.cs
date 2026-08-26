@@ -90,11 +90,6 @@ namespace Certify.Models.Hub
         public string DisplayName { get; set; } = default!;
 
         /// <summary>
-        /// Optional description of what this category represents
-        /// </summary>
-        public string? Description { get; set; }
-
-        /// <summary>
         /// Color hint for UI display (hex color e.g., "#4CAF50" or named color)
         /// </summary>
         public string? ColorHint { get; set; }
@@ -102,17 +97,17 @@ namespace Certify.Models.Hub
         /// <summary>
         /// If true, items should have at most one value from this category
         /// </summary>
-        public bool IsSingleValue { get; set; } = false;
+        public bool IsSingleValue { get; set; }
 
         /// <summary>
         /// Sort order for display in UI (lower numbers first)
         /// </summary>
-        public int SortOrder { get; set; } = 0;
+        public int SortOrder { get; set; }
 
         /// <summary>
         /// If true, this category is a system default and cannot be deleted
         /// </summary>
-        public bool IsSystemCategory { get; set; } = false;
+        public bool IsSystemCategory { get; set; }
     }
 
     /// <summary>
@@ -138,7 +133,7 @@ namespace Certify.Models.Hub
         /// <summary>
         /// Number of items using this tag value (denormalized for performance)
         /// </summary>
-        public int UsageCount { get; set; } = 0;
+        public int UsageCount { get; set; }
 
         /// <summary>
         /// Date this value was first created
@@ -278,6 +273,6 @@ namespace Certify.Models.Hub
     {
         public ICollection<TagScope> TagScopes { get; set; } = new List<TagScope>();
         public ICollection<string>? ResourceTypes { get; set; }
-        public bool RequireAll { get; set; } = false;
+        public bool RequireAll { get; set; }
     }
 }
