@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Certify.Models.Hub
 {
@@ -63,6 +64,24 @@ namespace Certify.Models.Hub
         public string? AuthorizeEndpoint { get; set; }
         public string? TokenEndpoint { get; set; }
         public string? DiscoveryEndpoint { get; set; }
+    }
+
+    /// <summary>
+    /// Sign in options the hub currently offers, as reported to an unauthenticated client so that it can present
+    /// only the methods which will actually work.
+    /// </summary>
+    public class AuthProviderInfo
+    {
+        /// <summary>
+        /// Configured OpenID Connect providers, keyed by provider id with the display title as the value.
+        /// </summary>
+        public Dictionary<string, string> OidcProviders { get; set; } = new Dictionary<string, string>();
+
+        /// <summary>
+        /// If false the hub has been configured to accept external (OIDC) sign in only, and the username/password
+        /// login endpoint will reject all requests.
+        /// </summary>
+        public bool IsPasswordLoginEnabled { get; set; } = true;
     }
 
     public class OidcState

@@ -105,6 +105,9 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Perform login using username and password
         /// </summary>
+        /// <remarks>
+        /// Rejected outright when the hub is configured for external (OIDC) sign in only, see <see cref="Services.AuthSettings"/>.
+        /// </remarks>
         /// <param name="login">Login credentials</param>
         /// <returns>Response contains access token and refresh token for API operations.</returns>
         [HttpPost]
@@ -114,6 +117,18 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(AuthRequest login)
         {
+            if (!Services.AuthSettings.IsPasswordLoginEnabled(_config))
+            {
+                // Reported as a failed login rather than a 404, so that an older client or a UI which still shows the
+                // sign in form gets a message explaining why the credentials were not accepted.
+                _logger.LogWarning("Username/password login attempted while password login is disabled for this hub.");
+
+                return Problem(
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                    title: "Login Failed",
+                    detail: "Username and password sign in is disabled for this hub. Sign in using a configured single sign on provider.",
+                    statusCode: StatusCodes.Status401Unauthorized);
+            }
 
             // check users login, if valid issue new JWT access token and refresh token based on their identity
             var validation = await _client.ValidateSecurityPrincipalPassword(new SecurityPrincipalPasswordCheck() { Username = login.Username, Password = login.Password }, CurrentAuthContext);

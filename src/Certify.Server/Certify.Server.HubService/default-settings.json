@@ -12,6 +12,13 @@
     "authTokenExpirationInMinutes": 60,
     "issuer": "Certify.Server.Hub.Api"
   },
+  // Sign in options for the hub API.
+  // Set "enablePasswordLogin" to false to accept OpenID Connect sign in only, so that built in username/password
+  // credentials cannot be used to bypass the identity provider. Configure at least one OIDC provider before doing
+  // this, otherwise there is no way to sign in until the setting is put back.
+  "AuthSettings": {
+    "enablePasswordLogin": true
+  },
   "Kestrel": {
     "Endpoints": {
       "SvcHttpEndpoint": {
