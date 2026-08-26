@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Certify.Models;
 using Certify.Providers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Certify.Server.Hub.Api.SignalR
@@ -64,6 +65,21 @@ namespace Certify.Server.Hub.Api.SignalR
 
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
+
+        /// <summary>
+        /// Report a service level diagnostic which requires operator action to subscribers
+        /// </summary>
+        /// <param name="diagnostic"></param>
+        /// <returns></returns>
+        public async Task ReportDiagnosticActionRequired(Certify.Models.Reporting.DiagnosticActionRequired diagnostic)
+        {
+            Debug.WriteLine($"Sending diagnostic action required message to UI: {diagnostic.Title}");
+
+            await _hubContext.Clients.All.SendAsync(
+                StatusHubMessages.SendMsg,
+                StatusHubMessages.NotificationActionRequired,
+                System.Text.Json.JsonSerializer.Serialize(diagnostic));
+        }
     }
 
     /// <summary>
@@ -88,7 +104,12 @@ namespace Certify.Server.Hub.Api.SignalR
 
     /// <summary>
     /// Status hub
+    ///
+    /// Connections are authenticated by the JWT bearer middleware during the negotiate/handshake request, so a client
+    /// presenting a missing, invalid or expired token is rejected with a 401 and never receives status updates. This
+    /// hub broadcasts managed certificate state for every connected instance, so it must not accept anonymous clients.
     /// </summary>
+    [Authorize]
     public class UserInterfaceStatusHub : Hub<IUserInterfaceStatusHub>
     {
         /// <summary>

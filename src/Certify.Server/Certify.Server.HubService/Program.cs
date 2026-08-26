@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using Certify.Client;
 using Certify.Management;
 using Certify.Models;
@@ -439,6 +439,10 @@ var certifyManager = app.Services.GetRequiredService<ICertifyManager>();
 
 certifyManager.EnableManagementHubBackend(isDirectHubBackend: true);
 
+// wire up status reporting before init, so that diagnostics raised during startup (such as the data store being
+// unreachable) reach connected clients
+certifyManager.SetStatusReporting(statusReporting);
+
 // initialize the CertifyManager instance, this includes initial setup of hub assigned instance id
 await certifyManager.Init();
 
@@ -446,9 +450,6 @@ await certifyManager.Init();
 var directServerClient = app.Services.GetRequiredService<IManagementServerClient>();
 
 certifyManager.SetDirectManagementClient(directServerClient);
-
-// wire up status reporting, include management hub cached state handlers for request progress state updates and item updates
-certifyManager.SetStatusReporting(statusReporting);
 
 var hubStateProvider = app.Services.GetRequiredService<IInstanceManagementStateProvider>();
 

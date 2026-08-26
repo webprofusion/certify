@@ -25,6 +25,16 @@ namespace Certify.Service
             Debug.WriteLine($"Sending updated managed cert message to UI: {item.Name}");
             await _hubContext.Clients.All.SendAsync(StatusHubMessages.SendManagedCertificateUpdateMsg, item);
         }
+
+        public async Task ReportDiagnosticActionRequired(Certify.Models.Reporting.DiagnosticActionRequired diagnostic)
+        {
+            Debug.WriteLine($"Sending diagnostic action required message to UI: {diagnostic.Title}");
+
+            await _hubContext.Clients.All.SendAsync(
+                StatusHubMessages.SendMsg,
+                StatusHubMessages.NotificationActionRequired,
+                System.Text.Json.JsonSerializer.Serialize(diagnostic));
+        }
     }
 
     public interface IStatusHub
@@ -32,6 +42,8 @@ namespace Certify.Service
         Task SendRequestProgressState(RequestProgressState state);
 
         Task SendManagedCertificateUpdate(ManagedCertificate item);
+
+        Task SendMessage(string notificationType, string payload);
     }
 
     public class StatusHub : Hub<IStatusHub>

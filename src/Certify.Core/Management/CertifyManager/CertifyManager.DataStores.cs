@@ -34,6 +34,114 @@ namespace Certify.Management
         /// </summary>
         public bool IsInDegradedMode => _dataStoreStatus.IsDegradedMode;
 
+        /// <summary>
+        /// How long service startup keeps retrying the data store connection before treating it as fatal. This
+        /// covers a data store which is still coming up alongside the service, such as a database container
+        /// starting at the same time.
+        /// </summary>
+        private static readonly TimeSpan _dataStoreInitRetryDuration = TimeSpan.FromSeconds(60);
+
+        /// <summary>
+        /// How long to wait between data store connection attempts during service startup.
+        /// </summary>
+        private static readonly TimeSpan _dataStoreInitRetryInterval = TimeSpan.FromSeconds(5);
+
+        /// <summary>
+        /// Connect to the data store during service startup, retrying for up to
+        /// <see cref="_dataStoreInitRetryDuration"/> and logging each failed attempt. The service cannot do
+        /// anything useful without its data store, so when the retries are exhausted this throws and the service
+        /// stops rather than running on in a degraded state where certificates silently stop being renewed.
+        /// </summary>
+        private async Task InitDataStoreWithRetry()
+        {
+            var startedAt = DateTimeOffset.UtcNow;
+            var attempt = 0;
+            Exception lastException;
+
+            while (true)
+            {
+                attempt++;
+
+                try
+                {
+                    await InitDataStore();
+
+                    if (attempt > 1)
+                    {
+                        _serviceLog?.Information($"Data store connected on attempt {attempt} after {(DateTimeOffset.UtcNow - startedAt).TotalSeconds:0.#}s.");
+                    }
+
+                    return;
+                }
+                catch (Exception exp)
+                {
+                    lastException = exp;
+
+                    var elapsed = DateTimeOffset.UtcNow - startedAt;
+                    var remaining = _dataStoreInitRetryDuration - elapsed;
+
+                    if (remaining <= TimeSpan.Zero)
+                    {
+                        break;
+                    }
+
+                    // the retry budget is wall clock time, so a slow failing attempt uses up part of it
+                    var delay = remaining < _dataStoreInitRetryInterval ? remaining : _dataStoreInitRetryInterval;
+
+                    _serviceLog?.Warning($"Data store connection attempt {attempt} failed after {elapsed.TotalSeconds:0.#}s, retrying in {delay.TotalSeconds:0.#}s. [{exp.Message}]");
+
+                    await Task.Delay(delay);
+                }
+            }
+
+            var msg = $"Data store connection failed after {attempt} attempts over {_dataStoreInitRetryDuration.TotalSeconds:0}s. The service cannot run without its data store and is stopping. Check the data store is reachable and that the connection configuration, schema and permissions are correct, then restart the service. [{lastException.Message}]";
+
+            _serviceLog?.Error(lastException, msg);
+
+            AddSystemStatusItem(
+                SystemStatusCategories.SERVICE_CORE,
+                SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                title: "Data Store Status",
+                description: msg,
+                hasError: true
+            );
+
+            await ReportDiagnosticActionRequired(
+                SystemStatusKeys.SERVICE_CORE_DATASTORE_STATUS,
+                "Data Store Unavailable",
+                msg,
+                isServiceStopping: true);
+
+            throw new DataStoreConnectionException(msg, _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+        }
+
+        /// <summary>
+        /// Send an operator facing diagnostic to connected clients where status reporting is wired up. Failing to
+        /// report must never replace the condition being reported, so any error here is logged and swallowed.
+        /// </summary>
+        private async Task ReportDiagnosticActionRequired(string key, string title, string description, bool isServiceStopping)
+        {
+            if (_statusReporting == null)
+            {
+                return;
+            }
+
+            try
+            {
+                await _statusReporting.ReportDiagnosticActionRequired(new DiagnosticActionRequired
+                {
+                    Key = key,
+                    Title = title,
+                    Description = description,
+                    IsServiceStopping = isServiceStopping
+                });
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error($"Failed to send diagnostic notification to connected clients :: {exp.Message}");
+            }
+        }
+
         private async Task InitDataStore()
         {
             var enableExtendedDataStores = true;
