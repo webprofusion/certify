@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -694,6 +694,9 @@ namespace Certify.Core.Management.Access
 
             if (principal != null && principal.PrincipalType == SecurityPrincipalType.User && IsPasswordValid(passwordCheck.Password, principal.Password))
             {
+                // The principal was fetched with includePassword so the hash could be checked. Clear it before returning
+                principal.Password = null;
+
                 return new SecurityPrincipalCheckResponse { IsSuccess = true, SecurityPrincipal = principal };
             }
             else

@@ -781,6 +781,20 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task TestSecurityPrincipalPwdCheckDoesNotReturnPasswordHash()
+        {
+            // The principal is fetched with its password hash so the check can be performed, but the hash and salt
+            // must not travel back to the caller - the login response is returned to whoever authenticated.
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            var check = await access.CheckSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordCheck(TestSecurityPrincipals.DevopsUser.Id, TestSecurityPrincipals.DevopsUser.Password));
+
+            Assert.IsTrue(check.IsSuccess, "Password should be valid");
+            Assert.IsNotNull(check.SecurityPrincipal);
+            Assert.IsNull(check.SecurityPrincipal.Password, "The stored password hash must be cleared before the principal is returned.");
+        }
+
+        [TestMethod]
         public async Task TestSecurityPrincipalPwdInvalid()
         {
             // Add test devops user security principal
