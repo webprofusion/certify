@@ -26,6 +26,7 @@ namespace Certify.Core.Management.Challenges.DNS
             [Combell](https://poshac.me/docs/latest/Plugins/Combell),
             [Constellix](https://poshac.me/docs/latest/Plugins/Constellix),
             [DMEasy](https://poshac.me/docs/latest/Plugins/DMEasy),
+            [DNSExit](https://poshac.me/docs/latest/Plugins/DNSExit),
             [DNSPod](https://poshac.me/docs/latest/Plugins/DNSPod),
             [DNSimple](https://poshac.me/docs/latest/Plugins/DNSimple),
             [DomainOffensive](https://poshac.me/docs/latest/Plugins/DomainOffensive),
@@ -37,15 +38,18 @@ namespace Certify.Core.Management.Challenges.DNS
             [EasyDNS](https://poshac.me/docs/latest/Plugins/EasyDNS),
             [Gandi](https://poshac.me/docs/latest/Plugins/Gandi),
             [GoDaddy](https://poshac.me/docs/latest/Plugins/GoDaddy),
+            [GoDaddyV3](https://poshac.me/docs/latest/Plugins/GoDaddyV3),
             [Google Cloud](https://poshac.me/docs/latest/Plugins/GCloud),
             [Google Domains](https://poshac.me/docs/latest/Plugins/GoogleDomains),
             [Hetzner](https://poshac.me/docs/latest/Plugins/Hetzner),
             [HetznerCloud](https://poshac.me/docs/latest/Plugins/HetznerCloud),
             [HostingDe](https://poshac.me/docs/latest/Plugins/HostingDe),
+            [Hosting.nl](https://poshac.me/docs/latest/Plugins/HostingNL),
             [HostUp](https://github.com/rmbolger/Posh-ACME/blob/main/Posh-ACME/Plugins/HostUp.ps1),
             [Hurricane Electric](https://poshac.me/docs/latest/Plugins/HurricaneElectric),
             [Infoblox](https://poshac.me/docs/latest/Plugins/Infoblox),
             [Infomaniak](https://poshac.me/docs/latest/Plugins/Infomaniak)
+            [InfomaniakV2](https://poshac.me/docs/latest/Plugins/InfomaniakV2),
             [INWX](https://poshac.me/docs/latest/Plugins/INWX)
             [IONOS](https://poshac.me/docs/latest/Plugins/IONOS)
             [IBM Cloud/SoftLayer](https://poshac.me/docs/latest/Plugins/IBMSoftLayer),
@@ -54,6 +58,8 @@ namespace Certify.Core.Management.Challenges.DNS
             [Linode](https://poshac.me/docs/latest/Plugins/Linode),
             [Loopia](https://poshac.me/docs/latest/Plugins/Loopia),
             [LuaDns](https://poshac.me/docs/latest/Plugins/LuaDns),
+            [Microsoft DNS/Windows](https://poshac.me/docs/latest/Plugins/Windows),
+            [mijn.host](https://poshac.me/docs/latest/Plugins/MijnHost),
             [name.com](https://poshac.me/docs/latest/Plugins/NameCom),
             [Namecheap](https://poshac.me/docs/latest/Plugins/Namecheap)
             [NameSilo](https://poshac.me/docs/latest/Plugins/NameSilo)
@@ -381,6 +387,26 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.DNSExit",
+                Title = "DNSExit DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/DNSExit/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "DNSExitApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new() { Key = "DNSExitTTL", Name = "Record TTL (minutes)", IsRequired = false, IsCredential = false, Type = OptionType.Integer, Value = "0", Description = "Optional. DNSExit expresses TTL in minutes, not seconds." },
+                    new() { Key = "DNSExitApiUri", Name = "API URL", IsRequired = false, IsCredential = false, Value = "https://api.dnsexit.com/dns/", Description = "Optional. Only change this if DNSExit change their API URL." },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=DNSExit",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.DNSPod",
                 Title = "DNSPod DNS API (Deprecated - Use v2 instead)",
                 Description = "Validates via DNS API using credentials. This provider is deprecated and you should switch to the V2 version.",
@@ -616,6 +642,7 @@ namespace Certify.Core.Management.Challenges.DNS
                 [
                     new() { Key = "GandiTokenInsecure", Name = "Legacy API Key", IsRequired = false, IsCredential = true, ExtendedConfig = _paramIsSecureStringAltKeyConfig.Replace("PARAMKEY","GandiToken") },
                     new() { Key = "GandiPAT", Name = "Personal Access Token", IsRequired = false, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new() { Key = "GandiApiBaseUrl", Name = "API Base URL", IsRequired = false, IsCredential = false, Value = "https://api.gandi.net/v5/livedns", Description = "Optional. Only change this if Gandi change their API URL." },
                     _defaultPropagationDelayParam
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
@@ -640,6 +667,25 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoDaddy",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.GoDaddyV3",
+                Title = "GoDaddy DNS API v3 (using Posh-ACME)",
+                Description = "Validates via the GoDaddy v3 DNS API using a Personal Access Token",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/GoDaddyV3/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "GDPAT", Name = "Personal Access Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    new() { Key = "GDUseOTE", Name = "Use Test (OTE) Environment", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsHidden = false, IsCredential = false },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=GoDaddyV3",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
 
@@ -694,6 +740,23 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostingDe",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.HostingNL",
+                Title = "Hosting.nl DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/HostingNL/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "HNLToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=HostingNL",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false
             },
@@ -820,6 +883,24 @@ namespace Certify.Core.Management.Challenges.DNS
 
             },
             new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.InfomaniakV2",
+                Title = "Infomaniak DNS API v2 (using Posh-ACME)",
+                Description = "Validates via the Infomaniak v2 DNS API. Requires an API token with the dns:read and dns:write scopes.",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/InfomaniakV2/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "InfomaniakToken", Name = "API Token", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=InfomaniakV2;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
              {
                  Id = "DNS01.API.PoshACME.INWX",
                  Title = "INWX API (using Posh-ACME)",
@@ -928,6 +1009,24 @@ namespace Certify.Core.Management.Challenges.DNS
                 ],
                 ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
                 Config = "Provider=Certify.Providers.DNS.PoshACME;Script=LuaDns;Credential=LuaCredential,LuaUsername,LuaPassword;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
+                Id = "DNS01.API.PoshACME.MijnHost",
+                Title = "mijn.host DNS API (using Posh-ACME)",
+                Description = "Validates via DNS API using credentials",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/MijnHost/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "MijnHostApiKey", Name = "API Key", IsRequired = true, IsCredential = true, ExtendedConfig = _paramIsSecureStringConfig },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=MijnHost",
                 HandlerType = ChallengeHandlerType.POWERSHELL,
                 IsTestModeSupported = false,
 
@@ -1247,6 +1346,30 @@ namespace Certify.Core.Management.Challenges.DNS
             },
             new ChallengeProviderDefinition
             {
+                Id = "DNS01.API.PoshACME.Windows",
+                Title = "Microsoft DNS (using Posh-ACME)",
+                Description = "Validates via a Microsoft (Windows) DNS server. Requires the DnsServer PowerShell module (RSAT DNS Server tools) on this machine.",
+                HelpUrl = "https://poshac.me/docs/latest/Plugins/Windows/",
+                PropagationDelaySeconds = DefaultPropagationDelay,
+                ProviderParameters =
+                [
+                    new() { Key = "WinServer", Name = "DNS Server", IsRequired = true, IsCredential = false, Description = "Hostname or IP of the DNS server, e.g. dns1.example.com" },
+                    new() { Key = "WinUsername", Name = "User Name", IsRequired = false, IsCredential = true, Description = "Optional. Leave blank to connect as the identity this service is running as." },
+                    new() { Key = "WinPassword", Name = "Password", IsRequired = false, IsCredential = true, IsPassword = true },
+                    new() { Key = "WinUseSSL", Name = "Connect using SSL", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsCredential = false },
+                    new() { Key = "WinSkipCACheck", Name = "Skip Certificate Checks", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsCredential = false },
+                    new() { Key = "WinNoCimSession", Name = "Do Not Use CIM Session", IsRequired = false, Value = "false", Type = OptionType.Boolean, IsCredential = false, Description = "Use the local DnsServer module directly instead of connecting via PowerShell remoting" },
+                    new() { Key = "WinZoneScope", Name = "Zone Scope", IsRequired = false, IsCredential = false, Description = "Optional. Zone scope name for split-brain DNS, e.g. external" },
+                    _defaultPropagationDelayParam
+                ],
+                ChallengeType = Models.SupportedChallengeTypes.CHALLENGE_TYPE_DNS,
+                Config = "Provider=Certify.Providers.DNS.PoshACME;Script=Windows;Credential=WinCred,WinUsername,WinPassword;",
+                HandlerType = ChallengeHandlerType.POWERSHELL,
+                IsTestModeSupported = false,
+
+            },
+            new ChallengeProviderDefinition
+            {
                 Id = "DNS01.API.PoshACME.Yandex",
                 Title = "Yandex DNS API (using Posh-ACME)",
                 Description = "Validates via DNS API using credentials",
@@ -1533,13 +1656,18 @@ namespace Certify.Core.Management.Challenges.DNS
                 var credUser = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[1]).KV.Value;
                 var credPwd = allArgumentKV.FirstOrDefault(a => a.KV.Key == psCredentialSpec[2]).KV.Value;
 
-                var credPSCredentials = $"(New-Object System.Management.Automation.PSCredential ('{credUser?.Replace("'", "''")}', (ConvertTo-SecureString '{credPwd?.Replace("'", "''")}' -asPlainText -force)))";
-
                 // remove username/pwd from our list of used arguments as it will now be provided as a combined credential instead
                 allArgumentKV.RemoveAll(a => a.KV.Key == psCredentialSpec[1]);
                 allArgumentKV.RemoveAll(a => a.KV.Key == psCredentialSpec[2]);
 
-                allArgumentKV.Add(new { Param = new ProviderParameter { Key = credKey }, KV = new KeyValuePair<string, string>(credKey, credPSCredentials) });
+                // a PSCredential can't be constructed without a username, so where the credential is optional
+                // (e.g. the Windows plugin using the identity of the current process) we omit the argument entirely
+                if (!string.IsNullOrEmpty(credUser))
+                {
+                    var credPSCredentials = $"(New-Object System.Management.Automation.PSCredential ('{credUser.Replace("'", "''")}', (ConvertTo-SecureString '{credPwd?.Replace("'", "''")}' -asPlainText -force)))";
+
+                    allArgumentKV.Add(new { Param = new ProviderParameter { Key = credKey }, KV = new KeyValuePair<string, string>(credKey, credPSCredentials) });
+                }
             }
 
             var formattedArgumentValues = allArgumentKV
