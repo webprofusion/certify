@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -109,10 +109,20 @@ namespace Certify.Core.Management.Access
 
             if (!string.IsNullOrWhiteSpace(principal.Password))
             {
+                // a caller supplied password has to meet the minimum length
+                if (principal.Password.Length < MinimumPasswordLength)
+                {
+                    await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] with a password shorter than the minimum length.", contextUserId, principal?.Id);
+                    return false;
+                }
+
                 principal.Password = HashPassword(principal.Password);
             }
             else
             {
+                // no password was supplied, which is the normal case for managed instance and other automated
+                // principals. They are given a generated password rather than being rejected, as they never
+                // authenticate with one.
                 principal.Password = HashPassword(Guid.NewGuid().ToString());
             }
 
@@ -485,11 +495,26 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
+        /// <summary>
+        /// Shortest password accepted when setting or changing a password. Enforced server side, so that a client
+        /// which does not apply its own rule (or a direct API caller) cannot set a blank or trivially short password.
+        ///
+        /// This applies only to a password supplied by a caller. Principals created without one, such as managed
+        /// instance and other automated principals, are still given a generated password instead.
+        /// </summary>
+        public const int MinimumPasswordLength = 8;
+
         public async Task<bool> UpdateSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
         {
             if (passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipalId);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(passwordUpdate.NewPassword) || passwordUpdate.NewPassword.Length < MinimumPasswordLength)
+            {
+                await AuditWarning("User {contextUserId} attempted to set a password for [{id}] which is shorter than the minimum length.", contextUserId, passwordUpdate.SecurityPrincipalId);
                 return false;
             }
 
@@ -530,18 +555,66 @@ namespace Certify.Core.Management.Access
             return updated;
         }
 
+        /// <summary>
+        /// Expected number of components in a stored password hash, in the form v1.{salt}.{hash}
+        /// </summary>
+        private const int PasswordHashComponentCount = 3;
+
+        private const string PasswordHashVersionPrefix = "v1";
+
         public bool IsPasswordValid(string password, string currentHash)
         {
-            if (string.IsNullOrWhiteSpace(currentHash) && string.IsNullOrWhiteSpace(password))
+            // Fail closed when there is no stored hash. This previously returned true for a blank hash and a blank
+            // password, which meant a principal holding no password could authenticate by supplying none. Principals
+            // are written to the store without a password by some paths (managed instance principals, for example),
+            // so this state does occur.
+            if (string.IsNullOrWhiteSpace(currentHash) || password == null)
             {
-                return true;
+                return false;
             }
 
             var components = currentHash.Split('.');
 
-            // hash provided password with same salt to compare result
-            var hashedPassword = HashPassword(password, components[1]);
-            return currentHash == hashedPassword;
+            // A stored value which is not in the expected format cannot be matched against. Checking this before
+            // indexing also avoids throwing on a malformed hash, which would surface as a server error rather than
+            // as a failed login.
+            if (components.Length != PasswordHashComponentCount
+                || components[0] != PasswordHashVersionPrefix
+                || string.IsNullOrWhiteSpace(components[1]))
+            {
+                return false;
+            }
+
+            string hashedPassword;
+
+            try
+            {
+                // hash provided password with same salt to compare result
+                hashedPassword = HashPassword(password, components[1]);
+            }
+            catch (FormatException)
+            {
+                // the stored salt is not valid base64
+                return false;
+            }
+
+            return FixedTimeEquals(currentHash, hashedPassword);
+        }
+
+        /// <summary>
+        /// Compare two password hashes without leaking, through timing, how much of a candidate hash matched.
+        /// </summary>
+        private static bool FixedTimeEquals(string left, string right)
+        {
+            var leftBytes = Encoding.UTF8.GetBytes(left);
+            var rightBytes = Encoding.UTF8.GetBytes(right);
+
+            if (leftBytes.Length != rightBytes.Length)
+            {
+                return false;
+            }
+
+            return CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
         }
 
         /// <summary>

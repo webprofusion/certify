@@ -142,7 +142,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Username = "test administrator",
             Description = "Example test administrator used as context user during test",
             Email = "test_admin@test.com",
-            Password = "ABCDEFG",
+            Password = "ABCDEFGH",
             PrincipalType = SecurityPrincipalType.User
         };
         public static SecurityPrincipal Admin => new SecurityPrincipal
@@ -151,7 +151,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Username = "admin",
             Description = "Administrator account",
             Email = "info@test.com",
-            Password = "ABCDEFG",
+            Password = "ABCDEFGH",
             PrincipalType = SecurityPrincipalType.User,
         };
         public static SecurityPrincipal DomainOwner => new SecurityPrincipal
@@ -160,7 +160,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Username = "demo_owner",
             Description = "Example domain owner",
             Email = "domains@test.com",
-            Password = "ABCDEFG",
+            Password = "ABCDEFGH",
             PrincipalType = SecurityPrincipalType.User,
         };
         public static SecurityPrincipal DevopsUser => new SecurityPrincipal
@@ -169,7 +169,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Username = "devops_01",
             Description = "Example devops user",
             Email = "devops01@test.com",
-            Password = "ABCDEFG",
+            Password = "ABCDEFGH",
             PrincipalType = SecurityPrincipalType.User,
         };
         public static SecurityPrincipal DevopsAppDomainConsumer => new SecurityPrincipal
@@ -178,7 +178,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Username = "devapp_01",
             Description = "Example devops app domain consumer",
             Email = "dev_app01@test.com",
-            Password = "ABCDEFG",
+            Password = "ABCDEFGH",
             PrincipalType = SecurityPrincipalType.User,
         };
     }
@@ -448,7 +448,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual(storedSecurityPrincipal.Password, firstPasswordHashed, $"Expected SecurityPrincipal returned by GetSecurityPrincipal() to match Password '{firstPasswordHashed}' of SecurityPrincipal passed into AddSecurityPrincipal()");
 
             // Update security principal in AccessControl with a new password
-            var newPassword = "GFEDCBA";
+            var newPassword = "HGFEDCBA";
             var securityPrincipalUpdated = await access.UpdateSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordUpdate(adminSecurityPrincipals[0].Id, firstPassword, newPassword));
             Assert.IsTrue(securityPrincipalUpdated, $"Expected security principal password update for {adminSecurityPrincipals[0].Id} to succeed");
 
@@ -461,6 +461,105 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         [TestMethod]
+        public async Task TestAddSecurityPrincipalRejectsTooShortSuppliedPassword()
+        {
+            var shortPasswordPrincipal = new SecurityPrincipal
+            {
+                Id = "short-pwd-user",
+                Username = "shortpwd",
+                Password = new string('x', AccessControl.MinimumPasswordLength - 1),
+                PrincipalType = SecurityPrincipalType.User
+            };
+
+            var added = await access.AddSecurityPrincipal(contextUserId, shortPasswordPrincipal, bypassIntegrityCheck: true);
+
+            Assert.IsFalse(added, "A supplied password below the minimum length must be rejected.");
+            Assert.IsNull(await access.GetSecurityPrincipal(contextUserId, shortPasswordPrincipal.Id), "The principal must not have been stored.");
+        }
+
+        [TestMethod]
+        public async Task TestAddSecurityPrincipalAcceptsSuppliedPasswordAtMinimumLength()
+        {
+            var principal = new SecurityPrincipal
+            {
+                Id = "min-pwd-user",
+                Username = "minpwd",
+                Password = new string('x', AccessControl.MinimumPasswordLength),
+                PrincipalType = SecurityPrincipalType.User
+            };
+
+            var suppliedPassword = principal.Password;
+
+            var added = await access.AddSecurityPrincipal(contextUserId, principal, bypassIntegrityCheck: true);
+
+            Assert.IsTrue(added, $"A password of exactly {AccessControl.MinimumPasswordLength} characters should be accepted.");
+
+            var stored = await access.GetSecurityPrincipal(contextUserId, principal.Id, includePassword: true);
+            Assert.IsTrue(access.IsPasswordValid(suppliedPassword, stored.Password), "The supplied password should have been hashed and stored.");
+        }
+
+        [TestMethod]
+        public async Task TestAddSecurityPrincipalStillGeneratesPasswordForAutomatedPrincipals()
+        {
+            // Managed instance and other automated principals are created with no password. They must keep working
+            // and be given a generated one, rather than being caught by the minimum length rule.
+            var automatedPrincipal = new SecurityPrincipal
+            {
+                Id = "automated-principal",
+                Title = "Managed Instances Service Principal",
+                PrincipalType = SecurityPrincipalType.Application,
+                IsBuiltIn = true
+            };
+
+            var added = await access.AddSecurityPrincipal(contextUserId, automatedPrincipal, bypassIntegrityCheck: true);
+
+            Assert.IsTrue(added, "A principal created without a password must still be accepted.");
+
+            var stored = await access.GetSecurityPrincipal(contextUserId, automatedPrincipal.Id, includePassword: true);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(stored.Password), "A generated password hash should have been stored.");
+            Assert.IsFalse(access.IsPasswordValid("", stored.Password), "The generated password must not be blank.");
+        }
+
+        [TestMethod]
+        public async Task TestUpdateSecurityPrincipalPasswordRejectsTooShortPassword()
+        {
+            // The management UI applies its own minimum, so this covers a direct API caller or any client which
+            // does not. Without a server side rule a blank or one character password can be set.
+            var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
+            var firstPassword = adminSecurityPrincipals[0].Password;
+            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+
+            var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
+            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.Administrator.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
+            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+
+            var principalId = adminSecurityPrincipals[0].Id;
+
+            foreach (var tooShort in new[] { null, "", "   ", "a", "abc" })
+            {
+                var updated = await access.UpdateSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordUpdate(principalId, firstPassword, tooShort));
+                Assert.IsFalse(updated, $"A password of '{tooShort ?? "null"}' is below the minimum length and must be rejected.");
+            }
+
+            // the original password must still be the one in effect
+            var stored = await access.GetSecurityPrincipal(contextUserId, principalId, includePassword: true);
+            Assert.IsTrue(access.IsPasswordValid(firstPassword, stored.Password), "A rejected update must leave the existing password unchanged.");
+
+            // a password exactly at the minimum length is accepted
+            var atMinimum = new string('x', AccessControl.MinimumPasswordLength);
+            var acceptedAtMinimum = await access.UpdateSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordUpdate(principalId, firstPassword, atMinimum));
+            Assert.IsTrue(acceptedAtMinimum, $"A password of exactly {AccessControl.MinimumPasswordLength} characters should be accepted.");
+        }
+
+        [TestMethod]
         public async Task TestUpdateSecurityPrincipalPasswordNoRoles()
         {
             // Add test security principals
@@ -469,7 +568,7 @@ namespace Certify.Tests.Core.Unit.Tests
             adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
 
             // Update security principal in AccessControl with a new password
-            var newPassword = "GFEDCBA";
+            var newPassword = "HGFEDCBA";
             var securityPrincipalUpdated = await access.UpdateSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordUpdate(adminSecurityPrincipals[0].Id, firstPassword, newPassword));
             Assert.IsFalse(securityPrincipalUpdated, $"Expected security principal password update for {adminSecurityPrincipals[0].Id} to fail without roles");
 
@@ -505,7 +604,7 @@ namespace Certify.Tests.Core.Unit.Tests
             assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
 
             // Update security principal in AccessControl with a new password, but wrong original password
-            var newPassword = "GFEDCBA";
+            var newPassword = "HGFEDCBA";
             var securityPrincipalUpdated = await access.UpdateSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordUpdate(adminSecurityPrincipals[0].Id, firstPassword.ToLower(), newPassword));
             Assert.IsFalse(securityPrincipalUpdated, $"Expected security principal password update for {adminSecurityPrincipals[0].Id} to fail with wrong password");
 
@@ -778,6 +877,42 @@ namespace Certify.Tests.Core.Unit.Tests
             var check = await access.CheckSecurityPrincipalPassword(contextUserId, new Models.Hub.SecurityPrincipalPasswordCheck(TestSecurityPrincipals.DevopsUser.Id, TestSecurityPrincipals.DevopsUser.Password));
 
             Assert.IsTrue(check.IsSuccess, "Password should be valid");
+        }
+
+        [TestMethod]
+        public void TestPasswordNotValidAgainstBlankStoredHash()
+        {
+            // A principal with no stored password hash must not be able to authenticate. Principals are written to
+            // the store with no password by some paths, so this is a state which occurs in practice.
+            Assert.IsFalse(access.IsPasswordValid("", null), "A blank password must not match an absent hash.");
+            Assert.IsFalse(access.IsPasswordValid("", ""), "A blank password must not match a blank hash.");
+            Assert.IsFalse(access.IsPasswordValid("   ", "   "), "Whitespace must not match a whitespace hash.");
+            Assert.IsFalse(access.IsPasswordValid("anything", ""), "No password can match an absent hash.");
+        }
+
+        [TestMethod]
+        public void TestPasswordCheckRejectsMalformedStoredHash()
+        {
+            // A malformed stored value should fail the login rather than throwing, which would surface as a server
+            // error and previously happened when the value contained no '.' separator.
+            Assert.IsFalse(access.IsPasswordValid("secret", "not-a-hash"));
+            Assert.IsFalse(access.IsPasswordValid("secret", "v1.onlytwoparts"));
+            Assert.IsFalse(access.IsPasswordValid("secret", "v1..missingsalt"));
+            Assert.IsFalse(access.IsPasswordValid("secret", "v2.c2FsdA==.aGFzaA=="), "An unknown hash version should not be matched.");
+            Assert.IsFalse(access.IsPasswordValid("secret", "v1.!!!not-base64!!!.aGFzaA=="), "A non base64 salt should fail rather than throw.");
+            Assert.IsFalse(access.IsPasswordValid("secret", "v1.c2FsdA==.aGFzaA==.extra"));
+        }
+
+        [TestMethod]
+        public void TestPasswordCheckStillMatchesAValidHash()
+        {
+            // the fail closed changes must not affect a genuine password check
+            var hash = access.HashPassword("correct horse battery staple");
+
+            Assert.IsTrue(access.IsPasswordValid("correct horse battery staple", hash));
+            Assert.IsFalse(access.IsPasswordValid("wrong password", hash));
+            Assert.IsFalse(access.IsPasswordValid("", hash));
+            Assert.IsFalse(access.IsPasswordValid(null, hash));
         }
 
         [TestMethod]
