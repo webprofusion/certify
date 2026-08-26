@@ -253,6 +253,7 @@ builder.Services
         loggingBuilder.AddSerilog(dispose: true);
     })
     .AddMemoryCache()
+    .AddHubRateLimiting(builder.Configuration)
     .AddTokenAuthentication(builder.Configuration)
     .AddAuthorization()
     .AddControllers()
@@ -408,6 +409,10 @@ app.UseCors((p) =>
 });
 
 app.UseMiddleware<ManagedInstanceRequestAuthBodyHashMiddleware>();
+
+// applied before authentication so that unauthenticated floods against login and the other anonymous endpoints are
+// rejected without the hub doing credential validation work for each one
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

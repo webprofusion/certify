@@ -8,6 +8,7 @@ using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Certify.Server.Hub.Api.Controllers
 {
@@ -224,6 +225,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("/api/v1/hub/register")]
+        [EnableRateLimiting(RateLimitingExtension.HubJoinPolicy)]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubJoiningInfo))]
 
@@ -238,6 +240,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Returns an IActionResult indicating the success or failure of the access check.</returns>
         [HttpGet]
         [Route("/api/v1/hub/joincheck/")]
+        [EnableRateLimiting(RateLimitingExtension.HubJoinPolicy)]
 
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubJoiningInfo))]

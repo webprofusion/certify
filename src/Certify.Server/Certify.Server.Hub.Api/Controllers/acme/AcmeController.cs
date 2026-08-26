@@ -1,11 +1,13 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Models.Acme;
 using Certify.Server.Hub.Api.Services;
 using Certify.Server.Hub.Api.Services.Acme;
 using Certify.Server.Hub.Api.SignalR.ManagementHub;
 using Certify.Shared.Core.Utils.PKI;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Certify.Server.Hub.Api.Controllers.acme
 {
@@ -15,6 +17,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     [Route("acme")]
+    [EnableRateLimiting(RateLimitingExtension.AcmePolicy)]
     // RFC 8555 Section 6.5 - every response from this controller carries a fresh replay nonce,
     // including error responses, so a client which fails a request can immediately retry.
     [ServiceFilter(typeof(AcmeReplayNonceFilter))]

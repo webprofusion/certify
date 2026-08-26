@@ -6,6 +6,7 @@ using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Protocols;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -54,13 +55,51 @@ namespace Certify.Server.Hub.Api.Controllers
             return await Task.FromResult(new OkResult());
         }
 
+        /// <summary>
+        /// Strip credential material from a security principal before it is returned in an API response.
+        /// The backend already clears the stored password hash, this is the boundary check so that a principal
+        /// built or fetched by any other route cannot leak a hash or a generated password to the caller.
+        /// </summary>
+        private static SecurityPrincipal? WithoutCredentials(SecurityPrincipal? principal)
+        {
+            if (principal != null)
+            {
+                principal.Password = null;
+            }
+
+            return principal;
+        }
+
+        private const string RefreshTokenCacheKeyPrefix = "RefreshToken_";
+
+        /// <summary>
+        /// Marker retained after a refresh token is redeemed, so that a second presentation of the same token is
+        /// recognised as reuse rather than looking identical to an unknown or expired token.
+        /// </summary>
+        private const string RedeemedRefreshTokenCacheKeyPrefix = "RefreshTokenRedeemed_";
+
+        private TimeSpan RefreshTokenLifetime
+        {
+            get
+            {
+                var refreshTokenExpiryMinutes = int.Parse(_config["JwtSettings:refreshTokenExpirationInMinutes"] ?? "600");
+                return new TimeSpan(0, refreshTokenExpiryMinutes, 0);
+            }
+        }
+
         private void CacheRefreshToken(string userId, string refreshToken)
         {
-            var refreshTokenExpiryMinutes = int.Parse(_config["JwtSettings:refreshTokenExpirationInMinutes"] ?? "600");
+            _memoryCache.Set(RefreshTokenCacheKeyPrefix + refreshToken, userId, RefreshTokenLifetime);
+        }
 
-            var expiry = new TimeSpan(0, refreshTokenExpiryMinutes, 0);
-
-            _memoryCache.Set("RefreshToken_" + refreshToken, userId, expiry);
+        /// <summary>
+        /// Invalidate a refresh token so it cannot be redeemed again, and remember that it was redeemed for the
+        /// remainder of its original lifetime so reuse can be detected.
+        /// </summary>
+        private void ConsumeRefreshToken(string refreshToken, string userId)
+        {
+            _memoryCache.Remove(RefreshTokenCacheKeyPrefix + refreshToken);
+            _memoryCache.Set(RedeemedRefreshTokenCacheKeyPrefix + refreshToken, userId, RefreshTokenLifetime);
         }
 
         /// <summary>
@@ -70,6 +109,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Response contains access token and refresh token for API operations.</returns>
         [HttpPost]
         [Route("login")]
+        [EnableRateLimiting(RateLimitingExtension.AuthPolicy)]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login(AuthRequest login)
@@ -101,7 +141,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     Detail = "OK",
                     AccessToken = newJwt,
                     RefreshToken = refreshToken,
-                    SecurityPrincipal = validation.SecurityPrincipal,
+                    SecurityPrincipal = WithoutCredentials(validation.SecurityPrincipal),
                     RoleStatus = await _client.GetSecurityPrincipalRoleStatus(validation.SecurityPrincipal.Id, authContext)
                 };
 
@@ -127,15 +167,20 @@ namespace Certify.Server.Hub.Api.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("refresh")]
+        [EnableRateLimiting(RateLimitingExtension.TokenRefreshPolicy)]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         public async Task<IActionResult> Refresh(string refreshToken)
         {
             try
             {
                 // validate token and issue new one
-                if (_memoryCache.TryGetValue("RefreshToken_" + refreshToken, out string? userId))
+                if (_memoryCache.TryGetValue(RefreshTokenCacheKeyPrefix + refreshToken, out string? userId))
                 {
                     // we have a valid refresh token, refresh and auth user
+
+                    // Retire the presented token before issuing a replacement. Without this a captured refresh token
+                    // stays redeemable for its full lifetime, no matter how many times it has already been used.
+                    ConsumeRefreshToken(refreshToken, userId!);
 
                     var spList = await _client.GetSecurityPrincipals(CurrentAuthContext);
                     var sp = spList.Single(s => s.Id == userId);
@@ -144,7 +189,6 @@ namespace Certify.Server.Hub.Api.Controllers
                     var jwt = new Hub.Api.Services.JwtService(_config);
                     var newJwt = jwt.GenerateSecurityToken(sp.Id, jwtExpiryMinutes);
 
-                    // invalidate old refresh token and store new one
                     var newRefreshToken = jwt.GenerateRefreshToken();
 
                     CacheRefreshToken(sp.Id, newRefreshToken);
@@ -161,7 +205,7 @@ namespace Certify.Server.Hub.Api.Controllers
                         Detail = "OK",
                         AccessToken = newJwt,
                         RefreshToken = newRefreshToken,
-                        SecurityPrincipal = sp,
+                        SecurityPrincipal = WithoutCredentials(sp),
                         RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, authContext)
                     };
 
@@ -169,6 +213,14 @@ namespace Certify.Server.Hub.Api.Controllers
                 }
                 else
                 {
+                    if (_memoryCache.TryGetValue(RedeemedRefreshTokenCacheKeyPrefix + refreshToken, out string? redeemedByUserId))
+                    {
+                        // A token which has already been redeemed is being presented again. Either the holder replayed
+                        // it, or it was captured and used by someone else, so it is worth surfacing rather than being
+                        // reported as an ordinary expired token.
+                        _logger.LogWarning("Refresh token reuse detected for security principal {userId}. The token had already been redeemed and is no longer valid.", redeemedByUserId);
+                    }
+
                     // no valid refresh token found
                     return Unauthorized();
                 }
@@ -187,6 +239,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Authorization URL for client redirect</returns>
         [HttpGet]
         [Route("oidc/login")]
+        [EnableRateLimiting(RateLimitingExtension.AuthPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(OidcLoginResponse))]
         public async Task<IActionResult> BeginOidcLogin(string? provider = "default", string? returnUrl = null)
         {
@@ -234,13 +287,20 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Authentication result</returns>
         [HttpPost]
         [Route("oidc/login-callback")]
+        [EnableRateLimiting(RateLimitingExtension.AuthPolicy)]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
         public async Task<IActionResult> CompleteOidcLogin([FromBody] OidcCallbackBody msg)
         {
             try
             {
 
-                _logger.LogInformation("OIDC authentication CompleteOidcLogin: {@Callback}", msg);
+                // Only non-secret fields are logged. The callback body carries the authorization code and may carry an
+                // id_token, and this log is written to file and retained, so it must not be destructured wholesale.
+                _logger.LogInformation(
+                    "OIDC authentication CompleteOidcLogin: state {state}, has code: {hasCode}, has id_token: {hasIdToken}",
+                    msg.state,
+                    !string.IsNullOrEmpty(msg.code),
+                    !string.IsNullOrEmpty(msg.id_token));
 
                 // Handle OIDC errors
                 if (!string.IsNullOrEmpty(msg.error))
@@ -489,7 +549,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 IsSuccess = true,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
-                SecurityPrincipal = sp,
+                SecurityPrincipal = WithoutCredentials(sp),
                 RoleStatus = await _client.GetSecurityPrincipalRoleStatus(sp.Id, CurrentAuthContext)
             };
         }

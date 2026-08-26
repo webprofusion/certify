@@ -167,6 +167,36 @@ namespace Certify.Server.Hub.Api.Controllers
                 : new Certify.Models.Config.ActionResult($"Identifier '{denied}' is not permitted by the domain restrictions on this role assignment", false);
         }
 
+        /// <summary>
+        /// Upper bound on how long a resolved auth context is cached, so that a very long lived token is still
+        /// revalidated periodically. The token's own expiry takes precedence when it is sooner.
+        /// </summary>
+        private static readonly TimeSpan MaxAuthContextCacheDuration = TimeSpan.FromMinutes(20);
+
+        /// <summary>
+        /// Cache key for a resolved auth context, derived from the token rather than being the token.
+        /// </summary>
+        private static string AuthContextCacheKey(string token)
+        {
+            var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
+            return "AuthContext_" + Convert.ToBase64String(hash);
+        }
+
+        /// <summary>
+        /// The token's expiry, or null when there is no readable exp claim.
+        /// </summary>
+        private static DateTimeOffset? GetTokenExpiry(ClaimsIdentity claimsIdentity)
+        {
+            var expClaim = claimsIdentity.FindFirst("exp")?.Value;
+
+            if (string.IsNullOrWhiteSpace(expClaim) || !long.TryParse(expClaim, out var expSeconds))
+            {
+                return null;
+            }
+
+            return DateTimeOffset.FromUnixTimeSeconds(expSeconds);
+        }
+
         internal AccessToken? GetAccessTokenFromRequest()
         {
             var clientId = Request.Headers["X-Client-ID"];
@@ -248,7 +278,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 var _cache = HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
 
-                if (_cache.TryGetValue(authToken, out AuthContext? cachedAuthContext))
+                // The token is not used as the cache key directly, so that a bearer token is not held in a keyspace
+                // which tends to surface in diagnostics and memory dumps.
+                var cacheKey = AuthContextCacheKey(authToken);
+
+                if (_cache.TryGetValue(cacheKey, out AuthContext? cachedAuthContext))
                 {
                     if (cachedAuthContext != null)
                     {
@@ -265,7 +299,29 @@ namespace Certify.Server.Hub.Api.Controllers
 
                     var authContext = new AuthContext { Token = authToken, UserId = userId };
 
-                    _cache.Set(authToken, authContext, TimeSpan.FromMinutes(20));
+                    // The token's lifetime is only checked on a cache miss, so the entry must not outlive the token
+                    // itself. Otherwise an expired token keeps working on any endpoint which resolves the auth context
+                    // without the JWT bearer middleware having rejected it first.
+                    var tokenExpiry = GetTokenExpiry(claimsIdentity);
+
+                    if (tokenExpiry == null)
+                    {
+                        // a token whose expiry cannot be read is not cached, every request revalidates it
+                        return authContext;
+                    }
+
+                    var cacheDuration = tokenExpiry.Value - DateTimeOffset.UtcNow;
+
+                    if (cacheDuration > MaxAuthContextCacheDuration)
+                    {
+                        cacheDuration = MaxAuthContextCacheDuration;
+                    }
+
+                    if (cacheDuration > TimeSpan.Zero)
+                    {
+                        _cache.Set(cacheKey, authContext, cacheDuration);
+                    }
+
                     return authContext;
                 }
                 catch (Exception)

@@ -143,7 +143,12 @@ namespace Certify.Server.Hub.Api.Services
                 return bodyHash;
             }
 
-            request.EnableBuffering();
+            // bounded for the same reason as the body hash middleware, this path runs when that middleware did not
+            // already cache a hash for the request
+            request.EnableBuffering(
+                Middleware.ManagedInstanceRequestBodyLimits.MemoryBufferThresholdBytes,
+                Middleware.ManagedInstanceRequestBodyLimits.MaxBodyBytes);
+
             request.Body.Position = 0;
 
             using var ms = new MemoryStream();
