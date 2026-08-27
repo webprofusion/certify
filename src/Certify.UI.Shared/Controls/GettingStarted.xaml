@@ -47,14 +47,14 @@
                 <GroupBox
                     x:Name="UnlicensedEvaluation"
                     Margin="0,16,0,0"
-                    Custom:HeaderedControlHelper.HeaderBackground="{StaticResource ErrorColorBrush}"
+                    Custom:HeaderedControlHelper.HeaderBackground="{StaticResource WarningColorBrush}"
                     BorderThickness="0"
                     Header="License Not Activated"
                     Visibility="{Binding IsLicenseUpgradeRecommended, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
                     <StackPanel>
 
                         <TextBlock Margin="8" Style="{StaticResource Instructions}">
-                            <Run Text="This app is running in Evaluation Mode. All features are available. If you are using this application within a business or funded organisation you should apply a license key when you have completed your evaluation. Use About &gt; Enter Key.. to activate. Visit certifytheweb.com/register for more information." />
+                            <Run Text="This app is running in Evaluation Mode. All features are available and evaluation has no time limit. You should apply a license key when you have completed your evaluation. Use About &gt; Enter Key.. to activate. Visit certifytheweb.com/register for more information." />
 
                         </TextBlock>
                     </StackPanel>

@@ -191,6 +191,13 @@ namespace Certify.UI.Windows
                 ((ICertifyApp)_appViewModel.GetApplication()).ToggleTheme(_appViewModel.DefaultUITheme);
             }
 
+            // note when the app was first run so we can avoid nagging brand new installs
+            if (_appViewModel.UISettings.FirstRunUtc == null)
+            {
+                _appViewModel.UISettings.FirstRunUtc = DateTime.UtcNow;
+                UISettings.Save(_appViewModel.UISettings);
+            }
+
             await PerformAppStartupChecks();
         }
 
@@ -324,12 +331,17 @@ namespace Certify.UI.Windows
                 else if (_appViewModel.NumManagedCerts > 0 && _appViewModel.UISettings?.CommunityMode != "personal")
                 {
                     const int daysBetweenNag = 30;
+                    const int daysBeforeFirstNag = 30;
 
                     var ui = _appViewModel.UISettings;
                     var lastNag = ui.LastEvaluationMsgUtc;
 
+                    // don't mention evaluation mode until the app has been in use for a while
+                    var firstRun = ui.FirstRunUtc ?? DateTime.UtcNow;
+                    var isEstablishedInstall = (DateTime.UtcNow - firstRun.ToUniversalTime()).TotalDays >= daysBeforeFirstNag;
+
                     // only nag if we have never nagged before, or it's been long enough since we last did
-                    var shouldShow = !lastNag.HasValue || (DateTime.UtcNow - lastNag.Value.ToUniversalTime()).TotalDays >= daysBetweenNag;
+                    var shouldShow = isEstablishedInstall && (!lastNag.HasValue || (DateTime.UtcNow - lastNag.Value.ToUniversalTime()).TotalDays >= daysBetweenNag);
 
                     if (shouldShow)
                     {

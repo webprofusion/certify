@@ -26,6 +26,11 @@ namespace Certify.UI.Settings
         /// </summary>
         public System.DateTime? LastEvaluationMsgUtc { get; set; }
 
+        /// <summary>
+        /// UTC time the app was first run by this user, used to defer evaluation mode reminders for new installs
+        /// </summary>
+        public System.DateTime? FirstRunUtc { get; set; }
+
         public static UISettings Load()
         {
             var uiSettingsFilePath = Path.Combine(EnvironmentUtil.EnsuredAppDataPath(), SETTINGS_FILE);
@@ -35,6 +40,19 @@ namespace Certify.UI.Settings
                 {
                     var configData = File.ReadAllText(uiSettingsFilePath);
                     var uiSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<UISettings>(configData);
+
+                    if (uiSettings != null && uiSettings.FirstRunUtc == null)
+                    {
+                        // settings predate first run tracking, approximate using the age of the settings file itself
+                        try
+                        {
+                            uiSettings.FirstRunUtc = File.GetCreationTimeUtc(uiSettingsFilePath);
+                        }
+                        catch
+                        {
+                            // if we can't determine the file age, first run will be set to the current time by the caller
+                        }
+                    }
 
                     return uiSettings;
                 }
