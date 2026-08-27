@@ -691,7 +691,7 @@ namespace Certify.UI.ViewModel
 
                 if (IsRenewalOnHold)
                 {
-                    return "On Hold";
+                    return "Awaiting Next Attempt";
                 }
 
                 if (RenewalPlan?.IsDeferredByMaintenanceWindow == true)
