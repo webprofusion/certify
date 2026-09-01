@@ -170,10 +170,15 @@ namespace Certify.Management
                 filter.PageIndex = 0;
 
                 var batch = new List<ManagedCertificate>();
-                var resultsRemaining = totalRenewalCandidates;
+
+                // candidates are paged through until the batch is full or every candidate has been considered. This
+                // counts down by the page size rather than by each item examined, because most candidates are not
+                // due and do not join the batch - counting per item would exhaust the count on the first page and
+                // leave every candidate beyond it unexamined
+                var candidatesRemaining = totalRenewalCandidates;
 
                 // identify items we will attempt and begin tracking progress
-                while (batch.Count < maxRenewalTasks && resultsRemaining > 0)
+                while (batch.Count < maxRenewalTasks && candidatesRemaining > 0)
                 {
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -182,12 +187,17 @@ namespace Certify.Management
                     }
 
                     var results = await itemManager.Find(filter);
-                    resultsRemaining = results.Count;
+
+                    if (!results.Any())
+                    {
+                        // fewer candidates are present than the count indicated (e.g. items removed since it was taken)
+                        break;
+                    }
+
+                    candidatesRemaining -= results.Count;
 
                     foreach (var item in results)
                     {
-                        resultsRemaining--;
-
                         if (batch.Count < maxRenewalTasks)
                         {
                             // if cert is not awaiting manual user input (manual DNS etc), proceed with renewal checks

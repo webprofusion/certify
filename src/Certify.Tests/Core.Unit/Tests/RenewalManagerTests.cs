@@ -116,8 +116,13 @@ namespace Certify.Tests.Core.Unit.Tests
                 // Apply ordering
                 query = query.OrderBy(i => i.DateRenewed ?? i.DateLastRenewalAttempt ?? DateTimeOffset.MinValue);
 
-                // Apply pagination and limits
-                if (filter.MaxResults > 0)
+                // Apply pagination and limits. Paging is applied the way the real data stores apply it (LIMIT/OFFSET),
+                // so a caller which pages through candidates is exercised here rather than always seeing every item
+                if (filter.PageIndex != null && filter.PageSize != null)
+                {
+                    query = query.Skip(filter.PageIndex.Value * filter.PageSize.Value).Take(filter.PageSize.Value);
+                }
+                else if (filter.MaxResults > 0)
                 {
                     query = query.Take(filter.MaxResults);
                 }
@@ -720,6 +725,60 @@ namespace Certify.Tests.Core.Unit.Tests
             // Assert
             Assert.HasCount(3, results, "Should respect max renewal requests limit");
             Assert.IsTrue(results.All(r => r.IsSuccess), "All processed renewals should be successful");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll examines candidates beyond the first page of results")]
+        public async Task TestPerformRenewAll_ScansBeyondFirstPageOfCandidates()
+        {
+            // Arrange - a long lifetime certificate which is nowhere near due sorts ahead of a short lifetime
+            // certificate which is due, because it was renewed longer ago. With enough of them the due item falls
+            // beyond the first page of candidates and is only found if the scan pages through them
+            var now = DateTimeOffset.UtcNow;
+
+            for (var i = 0; i < 100; i++)
+            {
+                var longLifetimeCert = CreateTestManagedCertificate($"longlife{i}", $"LongLife{i}");
+
+                // one year certificate obtained 100 days ago, 27% of its lifetime elapsed
+                longLifetimeCert.DateStart = now.AddDays(-100).AddMinutes(i);
+                longLifetimeCert.DateRenewed = now.AddDays(-100).AddMinutes(i);
+                longLifetimeCert.DateExpiry = now.AddDays(265).AddMinutes(i);
+
+                await _itemStore.Update(longLifetimeCert);
+            }
+
+            // six day certificate obtained 5 days ago, 83% of its lifetime elapsed, so renewal is due
+            var shortLifetimeCert = CreateTestManagedCertificate("shortlife", "ShortLife");
+            shortLifetimeCert.DateStart = now.AddDays(-5);
+            shortLifetimeCert.DateRenewed = now.AddDays(-5);
+            shortLifetimeCert.DateExpiry = now.AddDays(1);
+
+            await _itemStore.Update(shortLifetimeCert);
+
+            var prefs = new RenewalPrefs
+            {
+                RenewalIntervalDays = 75, // percentage of lifetime
+                RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime,
+                MaxRenewalRequests = 10,
+                PerformParallelRenewals = false,
+                IncludeStoppedSites = true
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                prefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "The due certificate should be renewed even though it is not on the first page of candidates");
+            Assert.AreEqual("shortlife", results[0].ManagedItem.Id, "The short lifetime certificate is the one which was due");
         }
 
         [TestMethod, Description("Test PerformRenewAll with cancellation token")]

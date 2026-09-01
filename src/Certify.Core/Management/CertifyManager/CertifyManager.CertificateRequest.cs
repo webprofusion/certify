@@ -1649,6 +1649,11 @@ namespace Certify.Management
             var config = managedCertificate.RequestConfig;
             var pfxPath = managedCertificate.CertificatePath;
 
+            // preserve the failure count from before this deployment. A successful binding deployment records success
+            // and resets the count, so a deployment task which then fails must continue the existing back off rather
+            // than restarting it from zero on every attempt
+            var currentFailureCount = managedCertificate.RenewalFailureCount;
+
             // perform required deployment
             if (!isPreviewOnly)
             {
@@ -1688,20 +1693,6 @@ namespace Certify.Management
                 //all done
                 LogMessage(managedCertificate.Id, logPrefix + CoreSR.CertifyManager_CompleteRequestAndUpdateBinding, LogItemType.CertificateRequestSuccessful);
 
-                if (!isPreviewOnly)
-                {
-                    // a successful redeployment must not mask a recorded primary request failure;
-                    // only mark the overall status as success if the last primary request did not explicitly fail
-                    if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Error)
-                    {
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, managedCertificate.LastPrimaryRequest?.Message ?? managedCertificate.RenewalFailureMessage, incrementFailureCount: false, updateLastAttempt: false);
-                    }
-                    else
-                    {
-                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
-                    }
-                }
-
                 result.IsSuccess = true;
 
                 var hasBindingDeploymentActions = actions.Any(a =>
@@ -1727,6 +1718,21 @@ namespace Certify.Management
 
                 if (!isPreviewOnly)
                 {
+                    // record the outcome of this deployment stage, so an item which previously failed to deploy is no
+                    // longer reported as undeployed and is not re-attempted by the deployment retry pass
+                    SetBindingDeploymentStatus(managedCertificate, RequestState.Success, result.Message);
+
+                    // a successful redeployment must not mask a recorded primary request failure;
+                    // only mark the overall status as success if the last primary request did not explicitly fail
+                    if (managedCertificate.LastPrimaryRequest?.Status == RequestState.Error)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, managedCertificate.LastPrimaryRequest?.Message ?? managedCertificate.RenewalFailureMessage, incrementFailureCount: false, updateLastAttempt: false);
+                    }
+                    else
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Success);
+                    }
+
                     ReportProgress(progress, new RequestProgressState(RequestState.Success, result.Message, managedCertificate));
                 }
 
@@ -1774,8 +1780,15 @@ namespace Certify.Management
 
                         if (!isPreviewOnly)
                         {
-                            await RecordDeploymentFailure(managedCertificate, msg);
+                            await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
                         }
+                    }
+                    else if (!isPreviewOnly)
+                    {
+                        // the task run state (last executed, last run status, last result) is only held in memory at this
+                        // point, because the status update above ran before the tasks did. Without storing it here a
+                        // previously failed task would still be recorded as failed after a run which succeeded
+                        await UpdateManagedCertificate(managedCertificate);
                     }
                 }
             }
@@ -1785,6 +1798,10 @@ namespace Certify.Management
                 result.Message = logPrefix + string.Format(CoreSR.CertifyManager_CertificateInstallFailed, pfxPath);
                 if (!isPreviewOnly)
                 {
+                    // recording the failed deployment stage is what allows the deployment retry pass to identify an item
+                    // which holds a certificate it could not deploy
+                    SetBindingDeploymentStatus(managedCertificate, RequestState.Error, result.Message);
+
                     await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, result.Message);
                 }
 

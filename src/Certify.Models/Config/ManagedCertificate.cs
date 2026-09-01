@@ -86,6 +86,13 @@ namespace Certify.Models
         public const int FailureWarning = 3;
         public const int FailureDanger = 5;
         public const int FailureTerminal = 1000;
+
+        /// <summary>
+        /// Consecutive failures allowed before attempts start being spaced out by
+        /// <see cref="ManagedCertificate.CalculateFailureBackoff"/>. The first few attempts are made without delay so a
+        /// brief outage recovers quickly
+        /// </summary>
+        public const int FailuresBeforeBackoff = 4;
     }
 
     public class Lifetime
@@ -852,6 +859,49 @@ namespace Certify.Models
             }
         }
 
+        /// <summary>
+        /// Calculate how long an item which is failing should wait before its next attempt, and the date that attempt
+        /// becomes due. The wait grows with the number of consecutive failures up to a ceiling of 10% of the certificate
+        /// lifetime, or 48hrs where the lifetime is not known or is long.
+        /// Shared by renewal scheduling and deployment retries, so an item is paced the same way whichever stage of the
+        /// process it is failing at. Callers apply this only once <see cref="LifetimeHealthThresholds.FailuresBeforeBackoff"/>
+        /// failures have accumulated, and must have a <see cref="DateLastRenewalAttempt"/> to measure the wait from.
+        /// </summary>
+        /// <param name="s">the item to calculate the back off for, with a non-null DateLastRenewalAttempt</param>
+        /// <returns>the calculated wait in hours, and the date the next attempt is due</returns>
+        public static (float WaitHrs, DateTimeOffset NextAttemptByDate) CalculateFailureBackoff(ManagedCertificate s)
+        {
+            var maxWaitHrsLimit = 48f; // absolute max wait time if cert lifetime not known
+            var maxWaitHrs = maxWaitHrsLimit;
+
+            // prefer max hold wait of 10% of lifetime, particularly useful for short lifetime certs
+            if (s.RequestConfig.PreferredExpiryDays != null)
+            {
+                maxWaitHrs = ((float)s.RequestConfig.PreferredExpiryDays * 24) * 0.1f;
+            }
+            else if (s.DateExpiry != null && s.DateStart != null)
+            {
+                var lifetime = s.DateExpiry - s.DateStart;
+                maxWaitHrs = (float)lifetime.Value.TotalHours * 0.1f;
+            }
+            else
+            {
+                // cert lifetime is unknown, if not yet requested default to a short retry interval
+                maxWaitHrs = Math.Max(0.25f * s.RenewalFailureCount, 1f);
+            }
+
+            // set ceiling for max hold wait time
+            maxWaitHrs = Math.Min(maxWaitHrs, maxWaitHrsLimit);
+
+            // calculate exponential back off, increasing 10% with retries to a max wait based on lifetime
+            var factor = 1 + (maxWaitHrs / 10);
+            var minWaitHrs = 1;
+
+            var calcWaitHrs = (float)Math.Min(minWaitHrs * (factor * s.RenewalFailureCount), maxWaitHrs);
+
+            return (calcWaitHrs, s.DateLastRenewalAttempt!.Value.AddHours(calcWaitHrs));
+        }
+
         public static RenewalDueInfo? CalculateNextRenewalAttempt(ManagedCertificate s, float renewalInterval, string renewalIntervalMode, DateTimeOffset? testDateTime = null)
         {
 
@@ -985,7 +1035,7 @@ namespace Certify.Models
                 // we should attempt now or scale wait time based on how many attempts we've made.
                 // Max 48hrs between attempts or 90% of lifetime (if known)
 
-                if (s.RenewalFailureCount < 4)
+                if (s.RenewalFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff)
                 {
                     return new RenewalDueInfo(
                                 reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times.",
@@ -1000,34 +1050,7 @@ namespace Certify.Models
 
                     if (s.DateLastRenewalAttempt != null)
                     {
-                        var maxWaitHrsLimit = 48f; // absolute max wait time if cert lifetime not known
-                        var maxWaitHrs = maxWaitHrsLimit;
-
-                        // prefer max hold wait of 10% of lifetime, particularly useful for short lifetime certs
-                        if (s.RequestConfig.PreferredExpiryDays != null)
-                        {
-                            maxWaitHrs = ((float)s.RequestConfig.PreferredExpiryDays * 24) * 0.1f;
-                        }
-                        else if (s.DateExpiry != null && s.DateStart != null)
-                        {
-                            var lifetime = s.DateExpiry - s.DateStart;
-                            maxWaitHrs = (float)lifetime.Value.TotalHours * 0.1f;
-                        }
-                        else
-                        {
-                            // cert lifetime is unknown, if not yet requested default to a short retry interval
-                            maxWaitHrs = Math.Max(0.25f * s.RenewalFailureCount, 1f);
-                        }
-
-                        // set ceiling for max hold wait time
-                        maxWaitHrs = Math.Min(maxWaitHrs, maxWaitHrsLimit);
-
-                        // calculate exponential back off, increasing 10% with retries to a max wait based on lifetime
-                        var factor = 1 + (maxWaitHrs / 10);
-                        var minWaitHrs = 1;
-
-                        var calcWaitHrs = (float)Math.Min(minWaitHrs * (factor * s.RenewalFailureCount), maxWaitHrs);
-                        var nextAttemptByDate = s.DateLastRenewalAttempt.Value.AddHours(calcWaitHrs);
+                        var (calcWaitHrs, nextAttemptByDate) = CalculateFailureBackoff(s);
 
                         if (DateTimeOffset.UtcNow < nextAttemptByDate)
                         {

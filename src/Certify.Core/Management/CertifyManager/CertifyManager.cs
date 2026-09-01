@@ -516,6 +516,10 @@ namespace Certify.Management
                 // process external subscription polls, pending deployments, and queued push notifications
                 await PerformSubscriptionTasks(CancellationToken.None);
 
+                // re-attempt deployment for items holding a certificate which was obtained but not fully deployed.
+                // These are not due for renewal (their certificate is current) so the renewal pass will not pick them up
+                await PerformDeploymentRetryTasks(CancellationToken.None);
+
                 // perform managhed challenge cleanup tasks (if any)
                 _ = PerformManagedChallengeCleanup();
 
