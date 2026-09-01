@@ -75,7 +75,7 @@ namespace Certify.Management
         /// <summary>
         /// The outcome of an attempt to fetch and deploy a certificate update from an external (subscription) source
         /// </summary>
-        private class SubscriptionProcessResult
+        internal class SubscriptionProcessResult
         {
             public SubscriptionProcessResult(string? msg, SubscriptionRequestOutcome outcome)
             {
@@ -89,6 +89,14 @@ namespace Certify.Management
 
         private int _isSubscriptionTaskRunning = 0;
         private int _isSubscriptionPassRequested = 0;
+
+        /// <summary>
+        /// Subscriptions currently waiting for a maintenance window before an available update can be applied, and when
+        /// each wait began. The wait is re-evaluated on every pass, so this is what keeps the item log to one entry per
+        /// wait rather than one per pass. It is in memory only - a deferral is derived from the item and the current
+        /// time, so nothing is lost by rebuilding it after a restart
+        /// </summary>
+        private readonly System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset> _subscriptionsAwaitingMaintenanceWindow = new();
 
         /// <summary>
         /// Message reported when a certificate fetched from an external source could not be loaded as a PFX
@@ -160,6 +168,18 @@ namespace Certify.Management
                 }
 
                 var targetItems = await GetSubscriptionTargets();
+
+                // drop maintenance window waits for items which are no longer subscriptions we process, so the tracking
+                // does not accumulate entries for items which have since been deleted or reconfigured
+                if (!_subscriptionsAwaitingMaintenanceWindow.IsEmpty)
+                {
+                    var currentTargetIds = targetItems.Select(i => i.Id).ToHashSet();
+
+                    foreach (var trackedId in _subscriptionsAwaitingMaintenanceWindow.Keys.Where(id => !currentTargetIds.Contains(id)).ToList())
+                    {
+                        _subscriptionsAwaitingMaintenanceWindow.TryRemove(trackedId, out _);
+                    }
+                }
 
                 if (!targetItems.Any())
                 {
@@ -284,19 +304,11 @@ namespace Certify.Management
                 var maintenanceWindowCheck = GetMaintenanceWindowStatus(item);
                 if (!maintenanceWindowCheck.IsWithinWindow)
                 {
-                    sourceConfig.LastError = null;
-
-                    var deferredMessage = $"External certificate update deferred: {maintenanceWindowCheck.Reason}";
-                    SetBindingDeploymentStatus(item, RequestState.Warning, deferredMessage);
-                    item.LastRenewalStatus = RequestState.Warning;
-                    item.RenewalFailureMessage = deferredMessage;
-
-                    LogMessage(item.Id, $"Deferred external certificate fetch and deployment - {maintenanceWindowCheck.Reason}");
-                    await UpdateManagedCertificate(item);
-
-                    // deployment has been deliberately deferred until the next maintenance window, so no deployment tasks apply
-                    return new SubscriptionProcessResult(deferredMessage, SubscriptionRequestOutcome.Deferred);
+                    return DeferSubscriptionForMaintenanceWindow(item, maintenanceWindowCheck.Reason);
                 }
+
+                // the window is open, so a later wait for it is logged again
+                _subscriptionsAwaitingMaintenanceWindow.TryRemove(item.Id, out _);
             }
 
             ClearPrimaryAndBindingRequestStatus(item);
@@ -466,6 +478,36 @@ namespace Certify.Management
         private (bool IsWithinWindow, string Reason) GetMaintenanceWindowStatus(ManagedCertificate item)
         {
             return RenewalScheduleCalculator.IsWithinMaintenanceWindow(item, GetRenewalPrefs());
+        }
+
+        /// <summary>
+        /// Defer a subscription update which cannot be applied yet because the item is outside its maintenance window.
+        /// Waiting for a window is normal operation rather than a failure, so this deliberately leaves the item exactly
+        /// as it is: recording a warning against it would report a problem the operator cannot act on, and would
+        /// overwrite the recorded status of the deployment which actually took place. The renewal plan already reports
+        /// the deferral and its reason to the UI.
+        /// Nothing is stored and the source is not polled, so the wait is re-evaluated on every subscription pass until
+        /// the window opens. The item log therefore records the start of the wait rather than one entry per pass
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="windowReason">why the item is currently outside its window, and when the window next opens</param>
+        /// <returns></returns>
+        internal SubscriptionProcessResult DeferSubscriptionForMaintenanceWindow(ManagedCertificate item, string windowReason)
+        {
+            if (_subscriptionsAwaitingMaintenanceWindow.TryAdd(item.Id, DateTimeOffset.UtcNow))
+            {
+                LogMessage(item.Id, $"Deferred external certificate fetch and deployment - {windowReason}");
+            }
+
+            return new SubscriptionProcessResult($"External certificate update deferred: {windowReason}", SubscriptionRequestOutcome.Deferred);
+        }
+
+        /// <summary>
+        /// Whether the given item is currently recorded as waiting for its maintenance window
+        /// </summary>
+        internal bool IsSubscriptionAwaitingMaintenanceWindow(string managedCertificateId)
+        {
+            return _subscriptionsAwaitingMaintenanceWindow.ContainsKey(managedCertificateId);
         }
 
         private static bool IsPullModeEnabled(ExternalCertificateSubscription sourceConfig)
