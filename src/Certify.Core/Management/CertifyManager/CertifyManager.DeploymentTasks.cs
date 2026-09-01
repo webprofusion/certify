@@ -491,6 +491,7 @@ namespace Certify.Management
                     }
 
                     var item = candidate;
+                    int? currentFailureCount = null;
 
                     try
                     {
@@ -503,6 +504,10 @@ namespace Certify.Management
                         {
                             continue;
                         }
+
+                        // preserved before the attempt, because a deployment which succeeds before a later step throws
+                        // will have reset the count, and this attempt still needs to continue the existing back off
+                        currentFailureCount = item.RenewalFailureCount;
 
                         _serviceLog?.Information("Re-attempting deployment for {name} [{id}], it holds a certificate which was not fully deployed.", item.Name, item.Id);
                         LogMessage(item.Id, $"---- Re-attempting Deployment ----{Environment.NewLine}The certificate held by this item was obtained but not fully deployed. Deployment and any deployment tasks will be attempted again. No new certificate is requested.");
@@ -529,7 +534,7 @@ namespace Certify.Management
                         {
                             // the attempt is still recorded as a failure so the back off applies and the retry does not
                             // repeat on every pass
-                            await RecordDeploymentFailure(item, $"Deployment retry failed: {exp.Message}", item.RenewalFailureCount);
+                            await RecordDeploymentFailure(item, $"Deployment retry failed: {exp.Message}", currentFailureCount);
                         }
                     }
                     finally

@@ -456,11 +456,23 @@ namespace Certify.Management
             return status;
         }
 
-        private void IncrementManagedCertificateRenewalFailureCount(ManagedCertificate managedCertificate, int? failureCount = null)
+        /// <summary>
+        /// Advance the consecutive failure count for an item which has just failed.
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <param name="failureCount">
+        /// the count held before the current request began, where the caller preserved it. A single failed request can
+        /// record its outcome more than once - a failed deployment task is recorded, then the overall request status is
+        /// resolved and recorded - and one request must only advance the count by one, or the failure thresholds and the
+        /// retry back off both progress at twice the intended rate. Applying the preserved count is idempotent, so
+        /// every recording of the same request settles on the same value. Omitted where no count was preserved (the
+        /// caller is the only place recording that failure), in which case the current count is simply incremented
+        /// </param>
+        internal static void IncrementManagedCertificateRenewalFailureCount(ManagedCertificate managedCertificate, int? failureCount = null)
         {
-            if (failureCount > managedCertificate.RenewalFailureCount)
+            if (failureCount != null)
             {
-                managedCertificate.RenewalFailureCount = ((int)failureCount) + 1;
+                managedCertificate.RenewalFailureCount = failureCount.Value + 1;
             }
             else
             {
