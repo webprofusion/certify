@@ -814,6 +814,9 @@ namespace Certify.Management
                             "Management Hub Connection",
                             $"Successfully connected to Management Hub: {hubUri}"
                         );
+
+                    // pick up any subscription update pushed while this instance was not connected
+                    await RequestSubscriptionResyncFromMgmtHub("hub connection established");
                 }
             }
             else
@@ -837,6 +840,9 @@ namespace Certify.Management
                             "Management Hub Connection",
                             $"Successfully connected to Management Hub: {hubUri}"
                         );
+
+                        // pick up any subscription update pushed while this instance was not connected
+                        await RequestSubscriptionResyncFromMgmtHub("hub connection established");
                     }
                     else
                     {
@@ -1453,6 +1459,109 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// The minimum time between subscription resync requests, so a flapping connection does not ask the hub to
+        /// re-send every subscription version on each reconnect
+        /// </summary>
+        private static readonly TimeSpan _minSubscriptionResyncInterval = TimeSpan.FromMinutes(5);
+
+        private DateTimeOffset _lastSubscriptionResync = DateTimeOffset.MinValue;
+
+        /// <summary>
+        /// Determine whether a certificate subscription needs the hub to re-send its current source version, and if so
+        /// resolve the source it refers to. Only a subscription which depends on being told about updates needs this -
+        /// one which polls its source will pick an update up on its own interval
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceInstanceId">the instance which owns the source certificate</param>
+        /// <param name="sourceManagedCertificateId">the source certificate on that instance</param>
+        /// <returns></returns>
+        internal static bool RequiresSubscriptionResync(ManagedCertificate item, out string sourceInstanceId, out string sourceManagedCertificateId)
+        {
+            sourceInstanceId = string.Empty;
+            sourceManagedCertificateId = string.Empty;
+
+            var sourceConfig = item?.ExternalSource;
+
+            if (sourceConfig == null || !item.IsActionableSubscription)
+            {
+                return false;
+            }
+
+            // a subscription which polls its source does not depend on being told about updates
+            if (!IsPushModeEnabled(sourceConfig))
+            {
+                return false;
+            }
+
+            // only the hub can answer this, other source types have no push notification to re-send
+            if (!string.Equals(sourceConfig.SourceType, ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return ManagedCertificate.TryParseManagementHubReference(sourceConfig.ExternalReference, out sourceInstanceId, out sourceManagedCertificateId);
+        }
+
+        /// <summary>
+        /// Ask the hub to re-send the current source version for each certificate subscription which depends on push
+        /// notifications.
+        /// A push issued while this instance was disconnected is dropped by the hub rather than queued, so without this
+        /// an update which arrived during a restart or a network outage would not be applied until the subscription's
+        /// own renewal fell due - and for a push only subscription, which never polls, not at all.
+        /// A pull capable subscription checks its source on its own interval, so it is left to do that.
+        /// </summary>
+        private async Task RequestSubscriptionResyncFromMgmtHub(string reason)
+        {
+            if (_managementServerClient?.IsConnected() != true || IsInDegradedMode)
+            {
+                return;
+            }
+
+            if (DateTimeOffset.UtcNow < _lastSubscriptionResync.Add(_minSubscriptionResyncInterval))
+            {
+                _serviceLog?.Debug("Skipping certificate subscription resync ({reason}), one was requested recently.", reason);
+                return;
+            }
+
+            try
+            {
+                var subscriptions = await GetSubscriptionTargets();
+
+                var requested = 0;
+
+                foreach (var item in subscriptions)
+                {
+                    if (!RequiresSubscriptionResync(item, out var sourceInstanceId, out var sourceManagedCertificateId))
+                    {
+                        continue;
+                    }
+
+                    _managementServerClient.SendNotificationToManagementHub(
+                        ManagementHubCommands.NotificationRequestSubscriptionUpdate,
+                        new SubscriptionUpdateRequest
+                        {
+                            TargetManagedCertificateId = item.Id,
+                            SourceInstanceId = sourceInstanceId,
+                            SourceManagedCertificateId = sourceManagedCertificateId
+                        });
+
+                    requested++;
+                }
+
+                _lastSubscriptionResync = DateTimeOffset.UtcNow;
+
+                if (requested > 0)
+                {
+                    _serviceLog?.Information("Requested current certificate subscription versions from hub for {count} item(s) ({reason}).", requested, reason);
+                }
+            }
+            catch (Exception ex)
+            {
+                _serviceLog?.Error(ex, "Failed to request certificate subscription versions from the management hub ({reason}). Subscriptions will be checked again on the next connection.", reason);
+            }
+        }
+
         private void ReportManagedItemUpdateToMgmtHub(ManagedCertificate item)
         {
             if (item == null || _managementServerClient == null)
@@ -1564,6 +1673,10 @@ namespace Certify.Management
             {
                 _serviceLog.Error(ex, "Failed to send heartbeat after reconnection");
             }
+
+            // any subscription update pushed while the connection was down was dropped rather than queued, so the
+            // current source versions are requested again now the instance can receive them
+            _ = Task.Run(() => RequestSubscriptionResyncFromMgmtHub("hub connection re-established"));
         }
 
         private void _managementServerClient_OnConnectionClosed()
