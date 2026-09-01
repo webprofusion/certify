@@ -573,6 +573,33 @@ namespace Certify.Management
             return WasLastCertificatePrimaryRequestSuccessful(managedCert) ? RequestState.Success : RequestState.Error;
         }
 
+        /// <summary>
+        /// Record a task which could not be prepared for execution, so it is reported as a failed task rather than
+        /// silently missing from the results. Storing the failure against the task itself is what allows the overall
+        /// request status to reflect it, and what lets the deployment retry pass identify the item as needing another
+        /// attempt - a task which never ran leaves its previous run status behind and would otherwise look successful
+        /// </summary>
+        /// <param name="steps"></param>
+        /// <param name="taskConfig"></param>
+        /// <param name="message"></param>
+        /// <param name="log"></param>
+        private static void RecordTaskSetupFailure(List<ActionStep> steps, DeploymentTaskConfig taskConfig, string message, ILog log)
+        {
+            taskConfig.LastRunStatus = RequestState.Error;
+            taskConfig.LastResult = message;
+
+            log?.Error($"Task [{taskConfig.TaskName}] :: {message}");
+
+            steps.Add(new ActionStep
+            {
+                Key = taskConfig.Id,
+                Title = "Task: " + taskConfig.TaskName,
+                Category = "Task",
+                HasError = true,
+                Description = message
+            });
+        }
+
         private static bool ShouldContinueAfterPreviousTaskFailure(TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
         {
             if (taskTrigger == TaskTriggerType.ON_TASK_ERROR)
@@ -652,7 +679,12 @@ namespace Certify.Management
 
                             if (credentials == null)
                             {
-                                return new List<ActionStep> { new ActionStep { HasError = true, Title = taskConfig.TaskName, Description = "Failed to decrypt selected credentials for this task." } };
+                                // only this task can't run. The credential may be unreadable for a temporary reason
+                                // (the credential store being briefly unavailable) as well as a permanent one, so
+                                // failing the whole task list here would skip deployment steps which are fine, and would
+                                // leave their stored run status describing a previous run
+                                RecordTaskSetupFailure(steps, taskConfig, "Failed to decrypt selected credentials for this task.", log);
+                                continue;
                             }
                         }
 
@@ -662,7 +694,7 @@ namespace Certify.Management
                     }
                     catch (Exception exp)
                     {
-                        steps.Add(new ActionStep { HasError = true, Title = "Task: " + taskConfig.TaskName, Description = "Cannot create task provider for deployment task: " + exp.ToString() });
+                        RecordTaskSetupFailure(steps, taskConfig, "Cannot create task provider for deployment task: " + exp.ToString(), log);
                     }
                 }
             }
