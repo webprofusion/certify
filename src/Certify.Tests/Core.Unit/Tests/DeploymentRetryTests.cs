@@ -192,5 +192,25 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsTrue(CertifyManager.IsDeploymentRetryDue(item, now));
         }
+
+        [TestMethod, Description("A subscription with an update still pending is left to the subscription pass rather than redeployed")]
+        public void SubscriptionWithPendingUpdateDoesNotRequireDeploymentRetry()
+        {
+            var item = CreateItemWithFailedBindingDeployment();
+            item.ItemType = ManagedCertificateType.SSL_ExternalSubscription;
+            item.ExternalSource = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                ExternalReference = "instance-a/cert-1",
+                PendingSourceVersion = "v2"
+            };
+
+            Assert.IsFalse(CertifyManager.RequiresDeploymentRetry(item), "The pending update is fetched and deployed in full by the subscription pass");
+
+            item.ExternalSource.PendingSourceVersion = null;
+
+            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "With nothing pending the certificate it holds is redeployed");
+        }
     }
 }

@@ -69,7 +69,7 @@ namespace Certify.Management
         Task<List<SiteInfo>> GetPrimaryWebSites(StandardServerTypes serverType, bool ignoreStoppedSites, string? itemId = null);
         Task<List<CertificateRequestResult>> RedeployManagedCertificates(ManagedCertificateFilter filter, IProgress<RequestProgressState>? progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false);
         Task<CertificateRequestResult> DeployCertificate(ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null, bool isPreviewOnly = false, bool includeDeploymentTasks = false);
-        Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null, bool resumePaused = false, bool skipRequest = false, bool failOnSkip = false, bool skipTasks = false, bool isInteractive = false, string? reason = null);
+        Task<CertificateRequestResult> PerformCertificateRequest(ILog log, ManagedCertificate managedCertificate, IProgress<RequestProgressState>? progress = null, bool resumePaused = false, bool skipRequest = false, bool failOnSkip = false, bool skipTasks = false, bool isInteractive = false, string? reason = null, bool redeployOnly = false);
         Task<List<DomainOption>> GetDomainOptionsFromSite(StandardServerTypes serverType, string siteId);
         Task<List<CertificateRequestResult>> PerformRenewAll(RenewalSettings settings, CancellationToken cancellationToken);
         Task<bool> PerformRenewalTasks(CancellationToken cancellationToken);

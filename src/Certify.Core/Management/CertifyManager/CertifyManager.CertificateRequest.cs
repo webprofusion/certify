@@ -191,9 +191,9 @@ namespace Certify.Management
                                                 settings,
                                                 prefs,
                                                 ReportProgress, IsManagedCertificateRunning,
-                                                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason) =>
+                                                (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason, bool redeployOnly) =>
                                                 {
-                                                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason);
+                                                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason, redeployOnly: redeployOnly);
                                                 },
                                                 renewalCancellationSource.Token);
 
@@ -266,6 +266,10 @@ namespace Certify.Management
         /// <param name="skipTasks">if true, pre-request and post-request deployment tasks are not performed  </param>
         /// <param name="isInteractive">true when the request was explicitly started by a user rather than by scheduled renewal  </param>
         /// <param name="reason">  </param>
+        /// <param name="redeployOnly">
+        /// if true, the certificate the item already holds is deployed again and its deployment tasks run, without
+        /// requesting a new certificate. Used for an item whose certificate was obtained but not fully deployed
+        /// </param>
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(
                 ILog log, ManagedCertificate managedCertificate,
@@ -275,7 +279,8 @@ namespace Certify.Management
                 bool failOnSkip = false,
                 bool skipTasks = false,
                 bool isInteractive = false,
-                string reason = null
+                string reason = null,
+                bool redeployOnly = false
             )
         {
 
@@ -325,8 +330,10 @@ namespace Certify.Management
             var requestResult = new CertificateRequestResult(managedCertificate);
 
             // routing is decided by what the item is, not by how completely it is configured - an unconfigured
-            // subscription must be skipped, never fall through to ordering its own certificate
-            var isSubscriptionRequest = managedCertificate.IsSubscription;
+            // subscription must be skipped, never fall through to ordering its own certificate.
+            // Deploying the certificate already held is the same for every kind of item, so a redeploy is routed as a
+            // standard request and resolves its final status the same way
+            var isSubscriptionRequest = managedCertificate.IsSubscription && !redeployOnly;
 
             managedCertificate.RenewalFailureMessage = ""; // clear any previous renewal error or instructions
             var currentFailureCount = managedCertificate.RenewalFailureCount; // preserve current failure count if we encounter a new failure later in the process
@@ -334,8 +341,8 @@ namespace Certify.Management
 
             try
             {
-
-                if (!skipTasks && managedCertificate.PreRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
+                // pre-request tasks prepare for the certificate request itself, so a redeploy does not run them
+                if (!skipTasks && !redeployOnly && managedCertificate.PreRequestTasks?.Any() == true && managedCertificate.Health != ManagedCertificateHealth.AwaitingUser)
                 {
                     // run pre-request tasks, currently if any of these fail the request will abort
 
@@ -372,9 +379,32 @@ namespace Certify.Management
                     }
                 }
 
-                // if the script has requested the certificate request to be aborted, skip the request
-                if (!isSubscriptionRequest && !requestResult.Abort)
+                if (redeployOnly)
                 {
+                    // the certificate already held was obtained but not fully deployed, so only its deployment is
+                    // repeated: the certificate store and binding deployment here, then the deployment tasks once the
+                    // outcome is known. The primary request is the one which obtained the certificate, so it is recorded
+                    // as successful and the deployment tasks are evaluated against that
+                    log.Information("Deploying the certificate already held. No new certificate is requested.");
+
+                    SetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Success, "The certificate already held is being deployed again.");
+
+                    var deployResult = await DeployCertificate(managedCertificate, progress, isPreviewOnly: skipRequest, includeDeploymentTasks: false);
+
+                    if (!deployResult.IsSuccess && !skipRequest)
+                    {
+                        // a deployment which could not start (e.g. the certificate file is missing) records nothing
+                        // itself, and the failure has to be recorded for the final status to reflect it
+                        SetBindingDeploymentStatus(managedCertificate, RequestState.Error, deployResult.Message);
+                    }
+
+                    requestResult.IsSuccess = deployResult.IsSuccess;
+                    requestResult.Message = deployResult.Message;
+                    requestResult.Actions.AddRange(deployResult.Actions);
+                }
+                else if (!isSubscriptionRequest && !requestResult.Abort)
+                {
+                    // the request is skipped if a pre-request task has asked for it to be aborted
 
                     if (!skipRequest && managedCertificate.SkipCertificateRequest != true)
                     {

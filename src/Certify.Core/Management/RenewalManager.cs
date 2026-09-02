@@ -20,6 +20,19 @@ namespace Certify.Management
         private const int DEFAULT_CERTIFICATE_REQUEST_TASKS = 50;
 
         /// <summary>
+        /// Performs the request for an item selected by a renewal pass
+        /// </summary>
+        /// <param name="item">the item to request</param>
+        /// <param name="progress">progress tracker for the request</param>
+        /// <param name="isPreviewMode">true to preview the request rather than perform it</param>
+        /// <param name="reason">why the item was selected, logged with the request</param>
+        /// <param name="redeployOnly">
+        /// true to deploy the certificate the item already holds again, and run its deployment tasks, without requesting
+        /// a new certificate. Used for an item whose certificate was obtained but not fully deployed
+        /// </param>
+        public delegate Task<CertificateRequestResult> RenewalRequestHandler(ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreviewMode, string reason, bool redeployOnly);
+
+        /// <summary>
         /// Checks if the current time is within the maintenance window for a managed certificate
         /// </summary>
         /// <param name="item">The managed certificate to check</param>
@@ -59,7 +72,7 @@ namespace Certify.Management
                 RenewalPrefs prefs,
                 Action<IProgress<RequestProgressState>, RequestProgressState, bool> reportProgress,
                 Func<string, Task<bool>> isManagedCertificateRunning,
-                Func<ManagedCertificate, IProgress<RequestProgressState>, bool, string, Task<CertificateRequestResult>> performCertificateRequest,
+                RenewalRequestHandler performCertificateRequest,
                 CancellationToken cancellationToken
 
                 )
@@ -124,7 +137,7 @@ namespace Certify.Management
 
                     renewalTasks.Add(
                     new Task<CertificateRequestResult>(
-                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
+                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason, redeployOnly: false).Result,
                             TaskCreationOptions.LongRunning
                             )
                     );
@@ -254,6 +267,20 @@ namespace Certify.Management
                                     }
                                 }
 
+                                // an item whose certificate was obtained but not fully deployed is not due for renewal,
+                                // because scheduling counts from the date the certificate was obtained. It is selected
+                                // for a request which deploys the certificate it already holds instead, paced by the same
+                                // failure back off as a renewal attempt and subject to the same checks below
+                                var redeployOnly = false;
+
+                                if (!isRenewalRequired && settings.Mode == RenewalMode.Auto && !settings.IsPreviewMode
+                                    && CertifyManager.RequiresDeploymentRetry(item) && CertifyManager.IsDeploymentRetryDue(item))
+                                {
+                                    isRenewalRequired = true;
+                                    redeployOnly = true;
+                                    renewalReason = "The certificate held by this item was obtained but not fully deployed. Deployment and deployment tasks will be attempted again; no new certificate is requested.";
+                                }
+
                                 // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
                                 if (!prefs.IncludeStoppedSites && !string.IsNullOrEmpty(item.ServerSiteId) && item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
                                 {
@@ -271,7 +298,10 @@ namespace Certify.Management
                                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto && renewalDueCheck.IsDeferredByMaintenanceWindow)
                                 {
                                     isRenewalRequired = false;
-                                    renewalReason = renewalDueCheck.Reason;
+
+                                    // the due check only describes the window when renewal itself is due, so a deployment
+                                    // retry held by the window reports the window directly
+                                    renewalReason = redeployOnly ? IsWithinMaintenanceWindow(item, prefs).Reason : renewalDueCheck.Reason;
 
                                     if (!prefs.SuppressSkippedItems)
                                     {
@@ -287,7 +317,7 @@ namespace Certify.Management
 
                                     renewalTasks.Add(
                                         new Task<CertificateRequestResult>(
-                                                () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason).Result,
+                                                () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason, redeployOnly).Result,
                                                     cancellationToken: cancellationToken,
                                                     TaskCreationOptions.LongRunning
                                                 )

@@ -16,22 +16,10 @@ namespace Certify.Management
     public partial class CertifyManager
     {
         /// <summary>
-        /// The maximum number of items a single deployment retry pass will re-attempt
-        /// </summary>
-        private const int MAX_DEPLOYMENT_RETRY_TASKS = 50;
-
-        /// <summary>
-        /// The number of items read per query while looking for items which require a deployment retry
-        /// </summary>
-        private const int DEPLOYMENT_RETRY_SCAN_PAGE_SIZE = 75;
-
-        /// <summary>
         /// Minimum time left between deployment retry attempts while an item is still within its initial attempts, so a
         /// retry does not immediately follow the renewal attempt which has just failed to deploy
         /// </summary>
         private static readonly TimeSpan _minDeploymentRetryInterval = TimeSpan.FromMinutes(5);
-
-        private int _isDeploymentRetryInProgress = 0;
 
         /// <summary>
         /// Get list of deployment task providers (from plugins)
@@ -335,9 +323,10 @@ namespace Certify.Management
         /// Determine whether an item holds a usable certificate which was not fully deployed, so its deployment can be
         /// re-attempted without ordering a new certificate.
         /// Renewal scheduling is calculated from the date the certificate was obtained, so an item whose certificate
-        /// arrived but then failed to store, bind or run its deployment tasks is not due for renewal, and without this
-        /// would not be attempted again until its next renewal falls due - most of a certificate lifetime later, with
-        /// the deployment target still using the previous certificate
+        /// arrived but then failed to store, bind or run its deployment tasks is not due for renewal. The renewal pass
+        /// selects such an item for a request which deploys the certificate it already holds, otherwise it would not be
+        /// attempted again until its next renewal falls due - most of a certificate lifetime later, with the deployment
+        /// target still using the previous certificate
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
@@ -363,6 +352,13 @@ namespace Certify.Management
 
             // an expired or missing certificate cannot usefully be deployed, and renewal is due for it by definition
             if (!HasUsableCertificate(item))
+            {
+                return false;
+            }
+
+            // a subscription which still has an update pending is retried in full (fetch and deploy) by the
+            // subscription pass, which is the only place its retained pending version is cleared
+            if (HasPendingSubscriptionUpdate(item.ExternalSource))
             {
                 return false;
             }
@@ -398,179 +394,6 @@ namespace Certify.Management
             }
 
             return now >= ManagedCertificate.CalculateFailureBackoff(item).NextAttemptByDate;
-        }
-
-        /// <summary>
-        /// Identify the items which currently require a deployment retry, paging through the stored items until the
-        /// retry batch is full or every item has been considered
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private async Task<List<ManagedCertificate>> GetDeploymentRetryCandidates(CancellationToken cancellationToken)
-        {
-            var candidates = new List<ManagedCertificate>();
-
-            var filter = new ManagedCertificateFilter
-            {
-                IncludeOnlyNextAutoRenew = true,
-                OrderBy = ManagedCertificateFilter.SortMode.RENEWAL_ASC,
-                PageSize = DEPLOYMENT_RETRY_SCAN_PAGE_SIZE,
-                PageIndex = 0
-            };
-
-            var itemsRemaining = await _itemManager.CountAll(filter);
-
-            while (candidates.Count < MAX_DEPLOYMENT_RETRY_TASKS && itemsRemaining > 0)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    break;
-                }
-
-                var page = await _itemManager.Find(filter);
-
-                if (!page.Any())
-                {
-                    // fewer items are present than the count indicated (e.g. items removed since it was taken)
-                    break;
-                }
-
-                itemsRemaining -= page.Count;
-
-                foreach (var item in page)
-                {
-                    if (candidates.Count >= MAX_DEPLOYMENT_RETRY_TASKS)
-                    {
-                        break;
-                    }
-
-                    if (!RequiresDeploymentRetry(item) || !IsDeploymentRetryDue(item))
-                    {
-                        continue;
-                    }
-
-                    // a subscription which still has an update pending is retried in full (fetch and deploy) by the
-                    // subscription pass, which is the only place its retained pending version is cleared
-                    if (HasPendingSubscriptionUpdate(item.ExternalSource))
-                    {
-                        continue;
-                    }
-
-                    candidates.Add(item);
-                }
-
-                filter.PageIndex++;
-            }
-
-            return candidates;
-        }
-
-        /// <summary>
-        /// Re-attempt deployment for items which hold a usable certificate that was not fully deployed, because the
-        /// certificate store/binding deployment failed or because a post-request deployment task failed. Only the
-        /// deployment of the certificate already held is repeated - no new certificate is ordered, so this is safe to
-        /// run frequently and cannot contribute to certificate authority rate limits
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns>the results of the deployments attempted</returns>
-        public async Task<List<CertificateRequestResult>> PerformDeploymentRetryTasks(CancellationToken cancellationToken)
-        {
-            var results = new List<CertificateRequestResult>();
-
-            if (IsInDegradedMode)
-            {
-                return results;
-            }
-
-            if (Interlocked.CompareExchange(ref _isDeploymentRetryInProgress, 1, 0) != 0)
-            {
-                _serviceLog?.Verbose("Deployment retry pass is already in progress, skipping..");
-                return results;
-            }
-
-            try
-            {
-                var candidates = await GetDeploymentRetryCandidates(cancellationToken);
-
-                foreach (var candidate in candidates)
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    // taking the in-progress slot for the item is what keeps the renewal and subscription passes off an
-                    // item while it is being redeployed, and skips an item one of them is already working on
-                    if (!_renewalsInProgress.TryAdd(candidate.Id, DateTimeOffset.Now))
-                    {
-                        _serviceLog?.Verbose("Skipping deployment retry for {name} [{id}], a request is already in progress for it.", candidate.Name, candidate.Id);
-                        continue;
-                    }
-
-                    var item = candidate;
-                    int? currentFailureCount = null;
-
-                    try
-                    {
-                        // the candidate was selected before the in-progress slot was taken, so it is re-read and
-                        // re-checked here. Another process may have renewed or redeployed the item in between, in which
-                        // case the copy selected is stale and would deploy the wrong certificate
-                        item = await _itemManager.GetById(candidate.Id);
-
-                        if (item == null || !RequiresDeploymentRetry(item))
-                        {
-                            continue;
-                        }
-
-                        // preserved before the attempt, because a deployment which succeeds before a later step throws
-                        // will have reset the count, and this attempt still needs to continue the existing back off
-                        currentFailureCount = item.RenewalFailureCount;
-
-                        _serviceLog?.Information("Re-attempting deployment for {name} [{id}], it holds a certificate which was not fully deployed.", item.Name, item.Id);
-                        LogMessage(item.Id, $"---- Re-attempting Deployment ----{Environment.NewLine}The certificate held by this item was obtained but not fully deployed. Deployment and any deployment tasks will be attempted again. No new certificate is requested.");
-
-                        var result = await DeployCertificate(item, progress: null, isPreviewOnly: false, includeDeploymentTasks: true);
-
-                        results.Add(result);
-
-                        if (result.IsSuccess)
-                        {
-                            _serviceLog?.Information("Deployment retry completed for {name} [{id}].", item.Name, item.Id);
-                        }
-                        else
-                        {
-                            _serviceLog?.Warning("Deployment retry did not complete for {name} [{id}]: {msg}", item.Name, item.Id, result.Message);
-                        }
-                    }
-                    catch (Exception exp)
-                    {
-                        _tc?.TrackException(exp);
-                        _serviceLog?.Error(exp, "Deployment retry failed for {name} [{id}]", candidate.Name, candidate.Id);
-
-                        if (item != null)
-                        {
-                            // the attempt is still recorded as a failure so the back off applies and the retry does not
-                            // repeat on every pass
-                            await RecordDeploymentFailure(item, $"Deployment retry failed: {exp.Message}", currentFailureCount);
-                        }
-                    }
-                    finally
-                    {
-                        _renewalsInProgress.TryRemove(candidate.Id, out _);
-                    }
-                }
-            }
-            catch (Exception exp)
-            {
-                _tc?.TrackException(exp);
-                _serviceLog?.Error(exp, "PerformDeploymentRetryTasks: error while re-attempting deployments.");
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _isDeploymentRetryInProgress, 0);
-            }
-
-            return results;
         }
 
         /// <summary>

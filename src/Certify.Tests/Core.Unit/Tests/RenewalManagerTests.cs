@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
@@ -171,7 +173,28 @@ namespace Certify.Tests.Core.Unit.Tests
                         Status = item.LastPrimaryRequest.Status,
                         Message = item.LastPrimaryRequest.Message
                     },
+                LastBindingDeployment = item.LastBindingDeployment == null
+                    ? null
+                    : new RequestStageStatus
+                    {
+                        Status = item.LastBindingDeployment.Status,
+                        Message = item.LastBindingDeployment.Message
+                    },
                 RenewalFailureCount = item.RenewalFailureCount,
+                RenewalFailureMessage = item.RenewalFailureMessage,
+                CertificateThumbprintHash = item.CertificateThumbprintHash,
+                CertificatePath = item.CertificatePath,
+                PostRequestTasks = item.PostRequestTasks == null
+                    ? null
+                    : new ObservableCollection<DeploymentTaskConfig>(item.PostRequestTasks.Select(t => new DeploymentTaskConfig
+                    {
+                        Id = t.Id,
+                        TaskName = t.TaskName,
+                        TaskTypeId = t.TaskTypeId,
+                        TaskTrigger = t.TaskTrigger,
+                        LastRunStatus = t.LastRunStatus,
+                        LastResult = t.LastResult
+                    })),
                 ServerSiteId = item.ServerSiteId,
                 Version = item.Version,
                 ItemType = item.ItemType,
@@ -781,6 +804,199 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.AreEqual("shortlife", results[0].ManagedItem.Id, "The short lifetime certificate is the one which was due");
         }
 
+        /// <summary>
+        /// An item which obtained a certificate a day ago, so is nowhere near due for renewal, but whose deployment of
+        /// that certificate failed
+        /// </summary>
+        private ManagedCertificate CreateItemWithUndeployedCertificate(string id, string name, DateTimeOffset? lastAttempt = null, int renewalFailureCount = 1)
+        {
+            var now = DateTimeOffset.UtcNow;
+            var item = CreateTestManagedCertificate(id, name, dateRenewed: now.AddDays(-1), lastRenewalStatus: RequestState.Error, renewalFailureCount: renewalFailureCount);
+
+            item.DateStart = now.AddDays(-1);
+            item.DateExpiry = now.AddDays(89);
+            item.DateLastRenewalAttempt = lastAttempt ?? now.AddMinutes(-10);
+            item.CertificateThumbprintHash = "ABC123";
+            item.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "New certificate received OK." };
+            item.LastBindingDeployment = new RequestStageStatus { Status = RequestState.Error, Message = "Certificate install failed." };
+
+            return item;
+        }
+
+        [TestMethod, Description("Test PerformRenewAll redeploys an item whose certificate was obtained but not fully deployed")]
+        public async Task TestPerformRenewAll_RedeploysUndeployedCertificate()
+        {
+            // Arrange - the certificate is a day old so renewal is not due, but its deployment failed
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("undeployed", "Undeployed"));
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "The item should be selected even though renewal is not due");
+            Assert.AreEqual("undeployed", results[0].ManagedItem.Id);
+            Assert.IsTrue(_requestsPerformed.Single().RedeployOnly, "The certificate already held is deployed again rather than a new one requested");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll holds a redeploy which is within the failure back off")]
+        public async Task TestPerformRenewAll_RedeployIsHeldByBackOff()
+        {
+            // Arrange - enough deployment attempts have failed for the back off to apply, and the last was recent
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("held", "Held", lastAttempt: DateTimeOffset.UtcNow.AddMinutes(-30), renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff));
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(0, results, "Once enough deployment attempts have failed the next is spaced out");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll does not redeploy immediately after the attempt which failed to deploy")]
+        public async Task TestPerformRenewAll_RedeployIsNotDueImmediately()
+        {
+            // Arrange
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("recent", "Recent", lastAttempt: DateTimeOffset.UtcNow.AddMinutes(-1)));
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(0, results, "A redeploy a minute after the failed attempt is too soon");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll holds a redeploy for the item's maintenance window")]
+        public async Task TestPerformRenewAll_RedeployRespectsMaintenanceWindow()
+        {
+            // Arrange
+            await _itemStore.DeleteAll();
+
+            var item = CreateItemWithUndeployedCertificate("windowed", "Windowed");
+            item.MaintenanceWindowId = "never-window";
+            await _itemStore.Update(item);
+
+            var prefsWithWindow = new RenewalPrefs
+            {
+                RenewalIntervalDays = 30,
+                RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal,
+                MaxRenewalRequests = 10,
+                PerformParallelRenewals = false,
+                SuppressSkippedItems = false,
+                MaintenanceWindows = new List<MaintenanceWindow>
+                {
+                    new MaintenanceWindow
+                    {
+                        Id = "never-window",
+                        Name = "Never Window",
+                        IsEnabled = true,
+                        Days = MaintenanceDays.None,
+                        StartTime = TimeSpan.FromHours(0),
+                        EndTime = TimeSpan.FromHours(0)
+                    }
+                }
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                prefsWithWindow,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(0, results, "A deployment outside the maintenance window is what the window exists to prevent");
+
+            var skipLog = _mockLog.LogEntries.FirstOrDefault(l => l.Contains("Windowed") && l.Contains("Limited to Maintenance Window"));
+            Assert.IsNotNull(skipLog, "The skip should report the window the redeploy is waiting for");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll renews rather than redeploys an item which is also due for renewal")]
+        public async Task TestPerformRenewAll_DueItemWithFailedDeploymentIsRenewed()
+        {
+            // Arrange - renewed 35 days ago so renewal is due under the 30 day default, and its last deployment failed
+            await _itemStore.DeleteAll();
+
+            var item = CreateItemWithUndeployedCertificate("due", "Due");
+            item.DateRenewed = DateTimeOffset.UtcNow.AddDays(-35);
+            item.DateStart = DateTimeOffset.UtcNow.AddDays(-35);
+            await _itemStore.Update(item);
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results);
+            Assert.IsFalse(_requestsPerformed.Single().RedeployOnly, "A certificate which is due is replaced, not redeployed");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll does not redeploy in preview mode")]
+        public async Task TestPerformRenewAll_DoesNotRedeployInPreviewMode()
+        {
+            // Arrange
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("preview", "Preview"));
+
+            var previewSettings = new RenewalSettings { Mode = RenewalMode.Auto, IsPreviewMode = true };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                previewSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(0, results, "A preview reports what would be renewed and does not redeploy anything");
+        }
+
         [TestMethod, Description("Test PerformRenewAll with cancellation token")]
         public async Task TestPerformRenewAll_CancellationToken()
         {
@@ -858,8 +1074,16 @@ namespace Certify.Tests.Core.Unit.Tests
             return Task.FromResult(managedCertId != "cert2");
         }
 
-        private Task<CertificateRequestResult> PerformCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, bool isPreviewMode, string renewalReason)
+        /// <summary>
+        /// The requests the mock request handler received, with whether each was a redeploy of the certificate already
+        /// held rather than a request for a new one
+        /// </summary>
+        private readonly ConcurrentQueue<(string Id, bool RedeployOnly)> _requestsPerformed = new();
+
+        private Task<CertificateRequestResult> PerformCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, bool isPreviewMode, string renewalReason, bool redeployOnly)
         {
+            _requestsPerformed.Enqueue((managedCertificate.Id, redeployOnly));
+
             // Mock implementation - simulate successful certificate request
             var result = new CertificateRequestResult(managedCertificate, true, $"Mock renewal successful: {renewalReason}");
 
