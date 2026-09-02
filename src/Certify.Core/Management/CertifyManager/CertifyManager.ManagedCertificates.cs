@@ -420,7 +420,7 @@ namespace Certify.Management
                 // that would happen for every item, so degraded mode stops processing until the store is reachable
                 // again. A write which fails for a reason specific to this item must not stop every other item being
                 // processed, so the store is probed before it is treated as unavailable
-                if (await GetDataStoreWriteFailure() == null)
+                if (await CheckForDataStoreWriteFailure() == null)
                 {
                     _serviceLog?.Error(exp, "Failed to store status update for {name} [{id}]. The data store is writable, so the failure is specific to this item and its outcome has not been recorded.", managedCertificate.Name, managedCertificate.Id);
                 }

@@ -147,7 +147,7 @@ namespace Certify.Management
         /// cannot, or null when it can
         /// </summary>
         /// <returns></returns>
-        private async Task<Exception?> GetDataStoreWriteFailure()
+        private async Task<Exception?> CheckForDataStoreWriteFailure()
         {
             try
             {
@@ -237,7 +237,7 @@ namespace Certify.Management
                 }
 
                 // attempt to create and delete a test item
-                var writeFailure = await GetDataStoreWriteFailure();
+                var writeFailure = await CheckForDataStoreWriteFailure();
 
                 if (writeFailure != null)
                 {
