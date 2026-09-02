@@ -126,5 +126,19 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource, now),
                 "A broken deployment task must not delay a certificate update which is perfectly fine");
         }
+
+        [TestMethod, Description("Recording the same failed request more than once advances the subscription failure count by one")]
+        public void RepeatedRecordingOfTheSameFailureIsIdempotent()
+        {
+            // a deployment failure is recorded by the deployment and again by the exception handler which observed it,
+            // so the count is advanced from the value held before the request rather than from wherever it is now
+            var source = new ExternalCertificateSubscription { SubscriptionFailureCount = 3 };
+            var countBeforeRequest = source.SubscriptionFailureCount;
+
+            CertifyManager.AdvanceSubscriptionFailureCount(source, countBeforeRequest);
+            CertifyManager.AdvanceSubscriptionFailureCount(source, countBeforeRequest);
+
+            Assert.AreEqual(4, source.SubscriptionFailureCount);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Certify.Core.Management.Access;
 using Certify.Datastore.SQLite;
@@ -168,9 +169,11 @@ namespace Certify.Management
         {
             var enableExtendedDataStores = true;
 
-            // the failure count survives the reset, so repeated reconnection attempts are counted rather than each
-            // attempt reporting a first failure
-            _dataStoreStatus = new DataStoreStatus { ConsecutiveFailures = _dataStoreStatus?.ConsecutiveFailures ?? 0 };
+            // the current status is kept as it is until the store has actually been connected and written to. A service
+            // in degraded mode therefore stays in degraded mode for the length of a reconnection attempt - for a remote
+            // store, up to the full connection timeout - rather than reporting itself available while the stores are
+            // being swapped out underneath any caller which believed it. The consecutive failure count carries across
+            // attempts for the same reason: each failed attempt is one more failure, not a first one
 
             try
             {
@@ -258,6 +261,8 @@ namespace Certify.Management
                 _dataStoreStatus.IsDegradedMode = false;
                 _dataStoreStatus.StatusMessage = "Data store connected and operational.";
                 _dataStoreStatus.LastSuccessfulConnection = DateTimeOffset.UtcNow;
+                _dataStoreStatus.LastErrorTime = null;
+                _dataStoreStatus.LastErrorMessage = null;
                 _dataStoreStatus.ConsecutiveFailures = 0;
             }
             catch (DataStoreConnectionException dsEx)
@@ -335,6 +340,13 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Gate for data store reconnection attempts. The maintenance pass and a person pressing reconnect can both
+        /// start one, and an attempt replaces the store instances as it goes, so a second attempt is refused while one
+        /// is in progress rather than racing it
+        /// </summary>
+        private readonly SemaphoreSlim _dataStoreReconnectionSync = new SemaphoreSlim(1, 1);
+
+        /// <summary>
         /// Attempt to reconnect to the data store after a failure
         /// </summary>
         public async Task<ActionResult> AttemptDataStoreReconnection()
@@ -344,10 +356,21 @@ namespace Certify.Management
                 return new ActionResult("Data store is already connected.", true);
             }
 
-            _serviceLog?.Information("Attempting to reconnect to data store...");
+            if (!await _dataStoreReconnectionSync.WaitAsync(0))
+            {
+                return new ActionResult("A data store reconnection attempt is already in progress.", false);
+            }
 
             try
             {
+                // the attempt which held the gate may have reconnected in the meantime
+                if (!_dataStoreStatus.IsDegradedMode)
+                {
+                    return new ActionResult("Data store is already connected.", true);
+                }
+
+                _serviceLog?.Information("Attempting to reconnect to data store...");
+
                 await InitDataStore();
 
                 AddSystemStatusItem(
@@ -365,6 +388,10 @@ namespace Certify.Management
                 var msg = $"Failed to reconnect to data store: {ex.Message}";
                 _serviceLog?.Error(ex, msg);
                 return new ActionResult(msg, false);
+            }
+            finally
+            {
+                _dataStoreReconnectionSync.Release();
             }
         }
 

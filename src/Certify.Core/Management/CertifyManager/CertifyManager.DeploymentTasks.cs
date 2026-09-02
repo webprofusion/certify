@@ -123,9 +123,27 @@ namespace Certify.Management
                 evaluateAgainstPrimaryRequestStatus: true
             );
 
-            // when recomputing the overall stored status, the explicitly recorded primary request status is
-            // authoritative (a failed renewal must stay failed even if an older usable certificate allowed the
-            // manual task run to proceed); the certificate-availability fallback only applies when no status was recorded
+            // the stored overall status is recomputed from every recorded stage, so the outcome of this run is judged
+            // alongside the recorded primary request and deployment rather than replacing them
+            await StoreRecomputedRenewalStatus(managedCert);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Resolve the overall renewal status an item should show from the stage outcomes recorded against it: the
+        /// primary request, the certificate store and binding deployment, and the automated deployment tasks. Used
+        /// where one stage has changed outside a full request - a task run on demand, or a subscription check which
+        /// found its source answering again - so the stored status describes all of the recorded stages together
+        /// rather than only the stage which changed
+        /// </summary>
+        /// <param name="managedCert"></param>
+        /// <returns>the overall status and the message describing it</returns>
+        internal static (RequestState Status, string Message) ResolveRecordedRenewalStatus(ManagedCertificate managedCert)
+        {
+            // the explicitly recorded primary request status is authoritative (a failed renewal must stay failed even if
+            // an older usable certificate allowed a manual task run to proceed); the certificate-availability fallback
+            // only applies when no status was recorded
             var recordedPrimaryRequestStatus = ResolveRecordedPrimaryRequestStatus(managedCert);
 
             var primaryRequestResult = new CertificateRequestResult(managedCert, isSuccess: recordedPrimaryRequestStatus == RequestState.Success, string.Empty)
@@ -138,27 +156,35 @@ namespace Certify.Management
                 Message = managedCert.LastPrimaryRequest?.Message ?? string.Empty
             };
 
-            var finalState = ResolveOverallRenewalStatus(managedCert, primaryRequestResult, postRequestTasksRan: managedCert.PostRequestTasks?.Any() == true);
-            var finalMessage = ResolveOverallRenewalMessage(managedCert, primaryRequestResult, finalState, postRequestTasksRan: managedCert.PostRequestTasks?.Any() == true);
+            var postRequestTasksRan = managedCert.PostRequestTasks?.Any() == true;
 
-            var statusChanged = managedCert.LastRenewalStatus != finalState
-                || !string.Equals(managedCert.RenewalFailureMessage, finalMessage, StringComparison.Ordinal);
+            var status = ResolveOverallRenewalStatus(managedCert, primaryRequestResult, postRequestTasksRan);
+            var message = ResolveOverallRenewalMessage(managedCert, primaryRequestResult, status, postRequestTasksRan);
+
+            return (status, message);
+        }
+
+        /// <summary>
+        /// Store the item with its overall renewal status recomputed from the recorded stages. No new attempt has been
+        /// made, only what is known about the last one has changed, so the last attempt date is left as it is and the
+        /// failure count is only touched by a recomputed success, which clears it as any success does
+        /// </summary>
+        /// <param name="managedCert"></param>
+        private async Task StoreRecomputedRenewalStatus(ManagedCertificate managedCert)
+        {
+            var (status, message) = ResolveRecordedRenewalStatus(managedCert);
+
+            var statusChanged = managedCert.LastRenewalStatus != status
+                || !string.Equals(managedCert.RenewalFailureMessage, message, StringComparison.Ordinal);
 
             if (statusChanged)
             {
-                await UpdateManagedCertificateStatus(
-                    managedCert,
-                    finalState,
-                    finalMessage,
-                    incrementFailureCount: false,
-                    updateLastAttempt: false);
+                await UpdateManagedCertificateStatus(managedCert, status, message, incrementFailureCount: false, updateLastAttempt: false);
             }
             else
             {
                 await UpdateManagedCertificate(managedCert);
             }
-
-            return result;
         }
 
         /// <summary>

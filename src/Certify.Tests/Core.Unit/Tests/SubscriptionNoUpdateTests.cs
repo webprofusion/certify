@@ -164,5 +164,60 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item), "The check must not record success against this item");
             Assert.IsFalse(CertifyManager.IsDeploymentRetryDue(item, now), "With the count intact the retry stays held by the back off");
         }
+
+        /// <summary>
+        /// The state left behind when a deployment task failed on an earlier update and the source then stopped
+        /// answering: a source failure recorded against the primary request stage alongside the older task failure
+        /// </summary>
+        private static ManagedCertificate CreateSubscriptionWithFailedFetchAndOldTaskFailure()
+        {
+            var item = CreateSubscriptionWithFailedDeploymentTask();
+
+            item.LastRenewalStatus = RequestState.Error;
+            item.RenewalFailureCount = 5;
+            item.RenewalFailureMessage = "ManagementHub source returned 503";
+            item.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Error, Message = item.RenewalFailureMessage };
+
+            return item;
+        }
+
+        [TestMethod, Description("A source failure is recognised even when the item also carries an older task failure")]
+        public void SourceFailureAlongsideOldTaskFailureIsStillASourceFailure()
+        {
+            // judging the item by its overall status and the presence of a deployment failure would read the task
+            // failure as the reason and leave the source failure in place, so the item would stay reported as unable to
+            // reach its source for as long as the task kept failing
+            var item = CreateSubscriptionWithFailedFetchAndOldTaskFailure();
+
+            Assert.IsTrue(CertifyManager.HasRecordedSourceFailure(item), "The source failure is recorded against the primary request stage, whatever else has failed");
+            Assert.IsFalse(CertifyManager.RequiresDeploymentRetry(item), "Until the source answers again there is no certificate to redeploy");
+        }
+
+        [TestMethod, Description("Resolving the source failure leaves the deployment failure in place and hands the item to the deployment retry")]
+        public void ResolvingTheSourceLeavesTheDeploymentFailureInPlace()
+        {
+            var item = CreateSubscriptionWithFailedFetchAndOldTaskFailure();
+
+            // what the no-update check records once the source has answered
+            item.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "No updated certificate was available from Management Hub." };
+
+            var (status, message) = CertifyManager.ResolveRecordedRenewalStatus(item);
+
+            Assert.AreEqual(RequestState.Error, status, "Nothing was deployed, so the failed deployment task still describes the item");
+            Assert.AreEqual("Endpoint unavailable", message, "The status now explains the deployment failure rather than the resolved source failure");
+            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "With the source answering, the certificate it holds can be redeployed");
+        }
+
+        [TestMethod, Description("Resolving the source failure on an item with nothing else wrong makes it healthy")]
+        public void ResolvingTheSourceOnAnOtherwiseHealthyItemIsASuccess()
+        {
+            var item = CreateSubscriptionWithFailedFetch();
+
+            item.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "No updated certificate was available from Management Hub." };
+
+            var (status, _) = CertifyManager.ResolveRecordedRenewalStatus(item);
+
+            Assert.AreEqual(RequestState.Success, status);
+        }
     }
 }
