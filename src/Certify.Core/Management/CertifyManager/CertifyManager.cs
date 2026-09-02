@@ -471,6 +471,9 @@ namespace Certify.Management
             {
                 await PerformCertificateMaintenanceTasks();
 
+                // release any order left paused waiting for an external service which never came back
+                await ReleaseStalePausedOrders(CancellationToken.None);
+
                 try
                 {
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);
@@ -510,6 +513,21 @@ namespace Certify.Management
         {
             try
             {
+                // nothing else in this pass can do useful work without the data store, and until now degraded mode was
+                // only ever cleared by a user pressing reconnect in the UI
+                if (IsInDegradedMode)
+                {
+                    var reconnection = await AttemptDataStoreReconnection();
+
+                    if (!reconnection.IsSuccess)
+                    {
+                        _serviceLog?.Warning("Data store is still unavailable, skipping this maintenance pass. {msg}", reconnection.Message);
+                        return;
+                    }
+
+                    _serviceLog?.Information("Data store reconnected, resuming normal processing.");
+                }
+
                 // perform frequent tasks such as checking for due renewals
                 await PerformRenewalTasks(CancellationToken.None);
 

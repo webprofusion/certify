@@ -34,6 +34,15 @@ namespace Certify.Management
         private bool _isRenewAllInProgress => Volatile.Read(ref _renewAllInProgress) != 0;
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
+        /// <summary>
+        /// How long a request may be in progress before a new request for the same item treats it as stuck and starts
+        /// anyway. This has to sit above any realistic request duration - several dns-01 identifiers each waiting for
+        /// propagation, followed by slow deployment tasks, take far longer than a few minutes - because starting a
+        /// second request for an item which is still working means two concurrent certificate orders for it.
+        /// The renewal batch itself is abandoned after 3hrs, so nothing legitimately runs longer than that
+        /// </summary>
+        private static readonly TimeSpan _maxRequestInProgressAge = TimeSpan.FromHours(3);
+
         private static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
         {
             using (var timeoutCancellation = new CancellationTokenSource())
@@ -84,6 +93,14 @@ namespace Certify.Management
         /// <returns>  </returns>
         public async Task<bool> PerformRenewalTasks(CancellationToken cancellationToken)
         {
+            // results cannot be recorded without the data store, and a renewal whose outcome is not stored is repeated
+            // on the next pass. The subscription and deployment retry passes already stand down for the same reason
+            if (IsInDegradedMode)
+            {
+                _serviceLog?.Warning("Skipping renewal tasks - service is in degraded mode due to data store issues.");
+                return false;
+            }
+
             var renewalPerformedOK = false;
 
             // perform next renewal batch (if any)
@@ -262,16 +279,18 @@ namespace Certify.Management
             )
         {
 
-            // check if we have an existing request in progress, if so skip for now (max request in progress age 10 mins)
+            // check if we have an existing request in progress, if so skip for now
             _renewalsInProgress.TryGetValue(managedCertificate.Id, out var existingRequest);
 
             if (existingRequest.HasValue)
             {
-                var age = existingRequest.Value - DateTimeOffset.Now;
+                var elapsed = DateTimeOffset.Now - existingRequest.Value;
 
-                if (Math.Abs(age.TotalMinutes) > 10)
+                if (elapsed > _maxRequestInProgressAge)
                 {
                     // if we have a stuck request, let the user start it again
+                    _serviceLog?.Warning("A certificate request for {Name} [{Id}] has been in progress for {elapsed} and is being treated as stuck, so a new request can start.", managedCertificate.Name, managedCertificate.Id, elapsed);
+
                     _renewalsInProgress.TryRemove(managedCertificate.Id, out existingRequest);
                 }
                 else
@@ -280,7 +299,11 @@ namespace Certify.Management
                 }
             }
 
-            _renewalsInProgress.TryAdd(managedCertificate.Id, DateTimeOffset.Now);
+            // taken atomically, because two callers can both pass the check above before either records its request
+            if (!_renewalsInProgress.TryAdd(managedCertificate.Id, DateTimeOffset.Now))
+            {
+                return new CertificateRequestResult { Abort = true, IsSuccess = false, ManagedItem = managedCertificate, Message = "Certificate request already in progress." };
+            }
 
             _serviceLog?.Information("Performing Certificate Request: {Name} [{Id}]", managedCertificate.Name, managedCertificate.Id);
 

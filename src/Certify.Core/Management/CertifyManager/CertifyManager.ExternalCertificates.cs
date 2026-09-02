@@ -315,6 +315,11 @@ namespace Certify.Management
 
             LogSubscriptionStart(item, sourceConfig, requestMode);
 
+            // stamped before the fetch rather than after it, so a fetch which fails in a way that leaves this method
+            // early still counts as an attempt. Otherwise the poll interval never advances and the source is contacted
+            // on every pass instead of on its own schedule
+            sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
+
             var fetchResult = await FetchExternalCertificateAsset(
                 item,
                 sourceConfig,
@@ -322,10 +327,9 @@ namespace Certify.Management
                 cancellationToken,
                 ignoreCurrentVersion: requestMode == SubscriptionRequestMode.Manual);
 
-            sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
-
             if (!fetchResult.IsSuccess)
             {
+                sourceConfig.SubscriptionFailureCount++;
                 sourceConfig.LastError = fetchResult.Message;
                 LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} failed: {fetchResult.Message}", LogItemType.GeneralError);
                 SetPrimaryRequestStatus(item, null, RequestState.Error, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
@@ -343,6 +347,9 @@ namespace Certify.Management
 
                 ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastError = noUpdateStatus == RequestState.Error ? message : null;
+
+                // the source answered, so attempts against it are not failing even if it had nothing new for us
+                sourceConfig.SubscriptionFailureCount = 0;
                 await UpdateManagedCertificate(item);
 
                 // an automatic check simply tries again later. A manual request still performs its deployment tasks,
@@ -362,6 +369,7 @@ namespace Certify.Management
             var assetPath = await StoreExternalCertificateAsset(item, fetchResult.CertificateData);
             if (assetPath == null)
             {
+                sourceConfig.SubscriptionFailureCount++;
                 sourceConfig.LastError = "External certificate update was detected but could not be written to local storage.";
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
                 SetPrimaryRequestStatus(item, null, RequestState.Error, sourceConfig.LastError);
@@ -372,6 +380,7 @@ namespace Certify.Management
             var validationResult = await ValidateExternalCertificateAsset(item, sourceConfig, assetPath);
             if (!validationResult.IsValid)
             {
+                sourceConfig.SubscriptionFailureCount++;
                 sourceConfig.LastError = validationResult.Message;
                 LogMessage(item.Id, $"External certificate update rejected: {validationResult.Message}", LogItemType.GeneralError);
                 SetPrimaryRequestStatus(item, null, RequestState.Error, validationResult.Message ?? "External certificate update failed validation.");
@@ -549,8 +558,55 @@ namespace Certify.Management
                 return false;
             }
 
-            return HasPendingSubscriptionUpdate(sourceConfig)
+            return (HasPendingSubscriptionUpdate(sourceConfig) && IsPendingSubscriptionUpdateRetryDue(sourceConfig, checkDate))
                    || ShouldPollSource(item, sourceConfig, checkDate);
+        }
+
+        /// <summary>
+        /// Determine whether a subscription which has an update waiting should attempt it now.
+        /// An update is normally attempted on the very next pass, which is the point of being told about one. An update
+        /// which cannot be applied would otherwise be retried on every pass indefinitely, contacting the source every
+        /// few minutes for as long as the problem lasts, so once attempts have started failing they are spaced out.
+        /// </summary>
+        /// <param name="sourceConfig"></param>
+        /// <param name="checkDate"></param>
+        /// <returns></returns>
+        internal static bool IsPendingSubscriptionUpdateRetryDue(ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
+        {
+            if (sourceConfig == null)
+            {
+                return false;
+            }
+
+            // the first few attempts are made at the normal pass cadence, so a brief problem at the source is
+            // recovered from quickly
+            if (sourceConfig.SubscriptionFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff
+                || !sourceConfig.DateLastPoll.HasValue)
+            {
+                return true;
+            }
+
+            var now = checkDate ?? DateTimeOffset.UtcNow;
+
+            return sourceConfig.DateLastPoll.Value.AddMinutes(GetPendingSubscriptionUpdateRetryWaitMinutes(sourceConfig)) <= now;
+        }
+
+        /// <summary>
+        /// The wait between attempts at a pending update which keeps failing, doubling from the subscription's own poll
+        /// interval with each further failure up to a ceiling of 48hrs
+        /// </summary>
+        /// <param name="sourceConfig"></param>
+        /// <returns></returns>
+        internal static double GetPendingSubscriptionUpdateRetryWaitMinutes(ExternalCertificateSubscription sourceConfig)
+        {
+            const double maxWaitMinutes = 48 * 60;
+
+            var pollIntervalMinutes = sourceConfig.PollIntervalMinutes <= 0 ? 30 : sourceConfig.PollIntervalMinutes;
+
+            // clamped before use, because the doubling would otherwise overflow long before the ceiling matters
+            var doublings = Math.Min(sourceConfig.SubscriptionFailureCount - LifetimeHealthThresholds.FailuresBeforeBackoff, 16);
+
+            return Math.Min(pollIntervalMinutes * Math.Pow(2, doublings), maxWaitMinutes);
         }
 
         internal static bool ShouldPollSource(ManagedCertificate item, ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
@@ -813,6 +869,20 @@ namespace Certify.Management
                 {
                     IsSuccess = false,
                     Message = $"Could not connection to management hub to fetch updated certificate ({hubApiBase}) check hub is available and connectivity is allowed."
+                };
+            }
+            catch (Exception ex)
+            {
+                // anything else the fetch can throw is still a failed fetch and has to be reported as one. A request
+                // timeout surfaces as TaskCanceledException rather than HttpRequestException, and reading the response
+                // or resolving credentials can fail in their own ways - none of which the caller can distinguish from
+                // success unless they are turned into a result here
+                _serviceLog?.Error(ex, "Unexpected error fetching external certificate for {name} [{id}] from {hubApiBase}", item.Name, item.Id, hubApiBase);
+
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = $"Unexpected error retrieving certificate from management hub ({hubApiBase}): {ex.Message}"
                 };
             }
         }
@@ -1138,6 +1208,7 @@ namespace Certify.Management
             if (!metadataApplied)
             {
                 sourceConfig.LastError = SubscriptionPfxLoadErrorMessage;
+                sourceConfig.SubscriptionFailureCount++;
                 LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
                 SetBindingDeploymentStatus(item, RequestState.Error, sourceConfig.LastError);
                 IncrementManagedCertificateRenewalFailureCount(item);
@@ -1156,6 +1227,7 @@ namespace Certify.Management
             if (!deployResult.IsSuccess)
             {
                 sourceConfig.LastError = deployResult.Message;
+                sourceConfig.SubscriptionFailureCount++;
                 LogMessage(item.Id, $"External certificate deployment failed after certificate metadata was applied: {deployResult.Message}", LogItemType.CertificateRequestAttentionRequired);
                 SetBindingDeploymentStatus(item, RequestState.Error, deployResult.Message);
                 IncrementManagedCertificateRenewalFailureCount(item);
@@ -1171,6 +1243,7 @@ namespace Certify.Management
                 ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastSourceVersion = sourceVersion ?? sourceConfig.LastSourceVersion;
                 sourceConfig.LastError = null;
+                sourceConfig.SubscriptionFailureCount = 0;
 
                 var successMessage = $"External certificate deployment completed successfully. Source version: {FormatSourceVersion(sourceVersion)}.";
                 SetBindingDeploymentStatus(item, RequestState.Success, successMessage);
@@ -1318,7 +1391,35 @@ namespace Certify.Management
             // the not-due and no-pending-update checks are applied by ProcessSubscription, which is the single place
             // deciding whether a fetch is applicable for this request mode
 
-            var processResult = await ProcessSubscription(managedCertificate, requestMode, cancellationToken);
+            SubscriptionProcessResult processResult;
+
+            try
+            {
+                processResult = await ProcessSubscription(managedCertificate, requestMode, cancellationToken);
+            }
+            catch (Exception exp)
+            {
+                // storing the asset, reading its password, parsing it or deploying it can all throw. Without this the
+                // exception reaches the scheduled pass, which only writes it to the service log - leaving the item
+                // looking healthy while it fails on every pass, and leaving its failure count and back off untouched
+                _tc?.TrackException(exp);
+                _serviceLog?.Error(exp, "External certificate request failed for {name} [{id}]", managedCertificate.Name, managedCertificate.Id);
+
+                var failureMessage = $"External certificate request failed: {exp.Message}";
+
+                LogMessage(managedCertificate.Id, failureMessage, LogItemType.GeneralError);
+
+                if (managedCertificate.ExternalSource != null)
+                {
+                    managedCertificate.ExternalSource.LastError = failureMessage;
+                }
+
+                SetPrimaryRequestStatus(managedCertificate, null, RequestState.Error, failureMessage);
+                await RecordPrimaryRequestFailure(managedCertificate, failureMessage);
+
+                processResult = new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
+            }
+
             var updatedManagedCertificate = await _itemManager.GetById(managedCertificate.Id) ?? managedCertificate;
 
             result.ManagedItem = updatedManagedCertificate;
