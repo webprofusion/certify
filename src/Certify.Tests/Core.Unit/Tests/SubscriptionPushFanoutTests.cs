@@ -294,6 +294,42 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
+        public void ShouldPollSource_ReturnsFalse_ForManagementHub_WhenOnlyRedeploymentIsDue()
+        {
+            // the item holds a certificate it could not deploy, so the renewal pass is due to deploy it again. That does
+            // not involve the source, and polling the source as well would put both passes on the same item at once
+            CoreAppSettings.Current.RenewalIntervalDays = 30;
+            CoreAppSettings.Current.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
+
+            var now = DateTimeOffset.UtcNow;
+            var item = new ManagedCertificate
+            {
+                ItemType = ManagedCertificateType.SSL_ExternallyManaged,
+                DateRenewed = now.AddDays(-5),
+                DateStart = now.AddDays(-5),
+                DateExpiry = now.AddDays(85),
+                DateLastRenewalAttempt = now.AddMinutes(-10),
+                CertificateThumbprintHash = "ABC123",
+                LastRenewalStatus = RequestState.Error,
+                RenewalFailureCount = 1,
+                LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "External certificate pulled from Management Hub." },
+                LastBindingDeployment = new RequestStageStatus { Status = RequestState.Error, Message = "Certificate install failed." }
+            };
+
+            var source = new ExternalCertificateSubscription
+            {
+                SourceType = ExternalCertificateSourceTypes.ManagementHub,
+                RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                PollIntervalMinutes = 5,
+                DateLastPoll = now.AddMinutes(-10)
+            };
+
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item, now), "The item is due to be redeployed by the renewal pass");
+            Assert.IsFalse(CertifyManager.IsAutomaticSubscriptionRetryDue(item, now), "A redeployment is not an attempt against the source");
+            Assert.IsFalse(CertifyManager.ShouldPollSource(item, source, now));
+        }
+
+        [TestMethod]
         public void ShouldPollSource_ReturnsTrue_ForPullOnlyManagementHub_WhenRenewalNotDueButPollIntervalElapsed()
         {
             // a pull only subscription is never sent a push notification when its source is updated, so it has to poll

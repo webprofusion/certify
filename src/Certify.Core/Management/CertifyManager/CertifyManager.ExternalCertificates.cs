@@ -193,22 +193,23 @@ namespace Certify.Management
                         break;
                     }
 
-                    // a renewal driven request for this item holds its place in _renewalsInProgress for the whole
-                    // request, including its post-request deployment tasks, which run after the subscription gate is
-                    // released. Skipping the item here is what keeps the two paths off the same item, the gate alone
-                    // only covers fetch and deployment
-                    if (_renewalsInProgress.ContainsKey(item.Id))
-                    {
-                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], a certificate request is already in progress for it.", item.Name, item.Id);
-                        continue;
-                    }
-
                     // the source has no update waiting for us and is not yet due to be polled, so there is nothing
                     // for this pass to do. The item is left untouched rather than run through a request which would
                     // only record a no-op status against it and report that to connected UI clients
                     if (!ShouldProcessSubscription(item, item.ExternalSource))
                     {
                         _serviceLog?.Verbose("Skipping subscription check for {name} [{id}]: no update or poll is due, or attempts are being spaced out after repeated failures.", item.Name, item.Id);
+                        continue;
+                    }
+
+                    // the item's place in _renewalsInProgress is what keeps this pass and a renewal driven request off
+                    // the same item: the subscription gate only covers this pass, and a redeployment of the certificate
+                    // already held goes through the renewal pass without taking it. A renewal driven request holds its
+                    // place for the whole request, including its post-request deployment tasks, which run after the
+                    // subscription gate is released, and this pass holds its place for the same span
+                    if (!TryBeginRequest(item))
+                    {
+                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], a certificate request is already in progress for it.", item.Name, item.Id);
                         continue;
                     }
 
@@ -219,6 +220,10 @@ namespace Certify.Management
                     catch (Exception ex)
                     {
                         _serviceLog?.Error(ex, "External certificate processing failed for {name} [{id}]", item.Name, item.Id);
+                    }
+                    finally
+                    {
+                        _renewalsInProgress.TryRemove(item.Id, out _);
                     }
                 }
             }
@@ -233,8 +238,8 @@ namespace Certify.Management
         /// performing the applicable post-request deployment tasks. This uses the same task trigger evaluation as a
         /// renewal driven request, so the outcome does not depend on which scheduled process picked up the item first.
         /// Only called from <see cref="PerformSubscriptionTasks"/>, which already holds the subscription processing gate
-        /// (<see cref="_isSubscriptionTaskRunning"/>), so it does not take it again, and which skips any item with a
-        /// certificate request already in progress
+        /// (<see cref="_isSubscriptionTaskRunning"/>), so it does not take it again, and which holds the item's place
+        /// in <see cref="_renewalsInProgress"/> for the duration so no other request runs against the item meanwhile
         /// </summary>
         /// <param name="item"></param>
         /// <param name="cancellationToken"></param>
@@ -422,14 +427,27 @@ namespace Certify.Management
         /// <param name="failureCount">the count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
         private async Task RecordSubscriptionRequestFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount)
         {
-            sourceConfig.LastError = message;
-
             LogMessage(item.Id, message, LogItemType.GeneralError);
 
-            ClearPrimaryAndBindingRequestStatus(item);
-            SetPrimaryRequestStatus(item, null, RequestState.Error, message);
+            SetSubscriptionSourceFailure(item, sourceConfig, message);
 
             await RecordPrimaryRequestFailure(item, message, failureCount);
+        }
+
+        /// <summary>
+        /// Record a source failure against the item's primary request stage. Only that stage is replaced: the item may
+        /// still hold a certificate the source supplied earlier which was not fully deployed, and that deployment
+        /// failure is left in place so the item is redeployed once the source answers again. Clearing it here would
+        /// leave the item looking healthy as soon as the source failure resolved, with the certificate never installed
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="message"></param>
+        internal static void SetSubscriptionSourceFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message)
+        {
+            sourceConfig.LastError = message;
+
+            SetPrimaryRequestStatus(item, null, RequestState.Error, message);
         }
 
         /// <summary>
@@ -741,13 +759,22 @@ namespace Certify.Management
                 || sourceConfig.SourceType.Equals(ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// Whether an automatic attempt against the subscription source is due under renewal scheduling: renewal is
+        /// due and is not held by the failure back off. A redeployment of the certificate already held is not an
+        /// attempt against the source, so an item which is due only for that is not due to fetch or poll - the renewal
+        /// pass redeploys it, and polling it as well would put both passes on the same item at once
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="checkDate"></param>
+        /// <returns></returns>
         internal static bool IsAutomaticSubscriptionRetryDue(ManagedCertificate item, DateTimeOffset? checkDate = null)
         {
             var now = checkDate ?? DateTimeOffset.UtcNow;
             var renewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
             var renewalCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, CoreAppSettings.Current.RenewalIntervalDays, renewalIntervalMode, testDateTime: now);
 
-            return renewalCheck?.IsRenewalDue == true && !renewalCheck.IsRenewalOnHold;
+            return renewalCheck?.IsRenewalDue == true && !renewalCheck.IsRenewalOnHold && !renewalCheck.IsRedeployOnly;
         }
 
         internal static void ClearSubscriptionRenewalTrigger(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, bool clearPendingSourceVersion)

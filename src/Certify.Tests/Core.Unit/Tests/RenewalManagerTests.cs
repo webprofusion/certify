@@ -605,6 +605,82 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.DoesNotContain("cert2", renewedIds, "cert2 should not be renewed");
         }
 
+        [TestMethod, Description("Test PerformRenewAll with a specific target redeploys an item whose certificate was obtained but not fully deployed")]
+        public async Task TestPerformRenewAll_SpecificTargets_RedeploysUndeployedCertificate()
+        {
+            // Arrange - the certificate is a day old so renewal is not due, but its deployment failed
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("undeployed", "Undeployed"));
+
+            var targetSettings = new RenewalSettings
+            {
+                Mode = RenewalMode.Auto,
+                IsPreviewMode = false,
+                TargetManagedCertificates = new List<string> { "undeployed" }
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                targetSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results);
+            Assert.IsTrue(_requestsPerformed.Single().RedeployOnly, "The certificate already held is deployed again rather than a new one requested");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll with a specific target redeploys a subscription whose certificate was fetched but not deployed, even when its source is not due to be checked")]
+        public async Task TestPerformRenewAll_SpecificTargets_RedeploysUndeployedSubscription()
+        {
+            // Arrange - a push only subscription is never due to poll its source, so without the redeploy it would be
+            // skipped as not due and there would be no way to ask for the certificate it holds to be deployed
+            await _itemStore.DeleteAll();
+
+            var now = DateTimeOffset.UtcNow;
+            var subscription = CreateManagedCertificateSubscription("sub-undeployed", "SubUndeployed", dateRenewed: now.AddDays(-1));
+            subscription.ExternalSource.RetrievalMode = ExternalCertificateRetrievalModes.Push;
+            subscription.DateStart = now.AddDays(-1);
+            subscription.DateLastRenewalAttempt = now.AddMinutes(-10);
+            subscription.CertificateThumbprintHash = "ABC123";
+            subscription.LastRenewalStatus = RequestState.Error;
+            subscription.RenewalFailureCount = 1;
+            subscription.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "External certificate pulled from Management Hub." };
+            subscription.LastBindingDeployment = new RequestStageStatus { Status = RequestState.Error, Message = "Certificate install failed." };
+
+            await _itemStore.Update(subscription);
+
+            var targetSettings = new RenewalSettings
+            {
+                Mode = RenewalMode.Auto,
+                IsPreviewMode = false,
+                TargetManagedCertificates = new List<string> { "sub-undeployed" }
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                targetSettings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "The subscription is selected for its redeployment even though its source is not due to be checked");
+            Assert.AreEqual("sub-undeployed", results[0].ManagedItem.Id);
+            Assert.IsTrue(_requestsPerformed.Single().RedeployOnly, "The certificate already held is deployed again, the source is not involved");
+        }
+
         [TestMethod, Description("Test PerformRenewAll excludes targeted external subscriptions that are not due and have no pending update")]
         public async Task TestPerformRenewAll_SpecificTargets_ExcludesSubscriptionsNotDue()
         {
@@ -973,8 +1049,8 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(_requestsPerformed.Single().RedeployOnly, "A certificate which is due is replaced, not redeployed");
         }
 
-        [TestMethod, Description("Test PerformRenewAll does not redeploy in preview mode")]
-        public async Task TestPerformRenewAll_DoesNotRedeployInPreviewMode()
+        [TestMethod, Description("Test PerformRenewAll previews a redeployment like any other request")]
+        public async Task TestPerformRenewAll_PreviewsRedeployment()
         {
             // Arrange
             await _itemStore.DeleteAll();
@@ -995,7 +1071,11 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Assert
-            Assert.HasCount(0, results, "A preview reports what would be renewed and does not redeploy anything");
+            Assert.HasCount(1, results, "A preview reports the redeployment which is due, so an operator can see it before it happens");
+
+            var request = _requestsPerformed.Single();
+            Assert.IsTrue(request.RedeployOnly);
+            Assert.IsTrue(request.IsPreview, "The redeployment is previewed, not performed");
         }
 
         [TestMethod, Description("Test PerformRenewAll with cancellation token")]
@@ -1077,13 +1157,13 @@ namespace Certify.Tests.Core.Unit.Tests
 
         /// <summary>
         /// The requests the mock request handler received, with whether each was a redeploy of the certificate already
-        /// held rather than a request for a new one
+        /// held rather than a request for a new one, and whether it was a preview
         /// </summary>
-        private readonly ConcurrentQueue<(string Id, bool RedeployOnly)> _requestsPerformed = new();
+        private readonly ConcurrentQueue<(string Id, bool RedeployOnly, bool IsPreview)> _requestsPerformed = new();
 
         private Task<CertificateRequestResult> PerformCertificateRequest(ManagedCertificate managedCertificate, IProgress<RequestProgressState> progress, bool isPreviewMode, string renewalReason, bool redeployOnly)
         {
-            _requestsPerformed.Enqueue((managedCertificate.Id, redeployOnly));
+            _requestsPerformed.Enqueue((managedCertificate.Id, redeployOnly, isPreviewMode));
 
             // Mock implementation - simulate successful certificate request
             var result = new CertificateRequestResult(managedCertificate, true, $"Mock renewal successful: {renewalReason}");

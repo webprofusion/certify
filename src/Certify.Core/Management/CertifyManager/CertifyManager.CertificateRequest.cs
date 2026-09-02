@@ -35,6 +35,36 @@ namespace Certify.Management
         private ConcurrentDictionary<string, DateTimeOffset?> _renewalsInProgress = new System.Collections.Concurrent.ConcurrentDictionary<string, DateTimeOffset?>();
 
         /// <summary>
+        /// Take the item's place in <see cref="_renewalsInProgress"/> for a request which is about to start, so no other
+        /// request runs against the item meanwhile. Returns false if a request for the item is already in progress, in
+        /// which case the caller skips the item. A place held for longer than <see cref="_maxRequestInProgressAge"/> is
+        /// treated as a stuck request and given up, so a request which never finished cannot block the item for good.
+        /// The caller removes the place once its request completes
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
+        private bool TryBeginRequest(ManagedCertificate managedCertificate)
+        {
+            if (_renewalsInProgress.TryGetValue(managedCertificate.Id, out var existingRequest) && existingRequest.HasValue)
+            {
+                var elapsed = DateTimeOffset.Now - existingRequest.Value;
+
+                if (elapsed <= _maxRequestInProgressAge)
+                {
+                    return false;
+                }
+
+                // if we have a stuck request, let the user start it again
+                _serviceLog?.Warning("A certificate request for {Name} [{Id}] has been in progress for {elapsed} and is being treated as stuck, so a new request can start.", managedCertificate.Name, managedCertificate.Id, elapsed);
+
+                _renewalsInProgress.TryRemove(managedCertificate.Id, out _);
+            }
+
+            // taken atomically, because two callers can both pass the check above before either records its request
+            return _renewalsInProgress.TryAdd(managedCertificate.Id, DateTimeOffset.Now);
+        }
+
+        /// <summary>
         /// How long a request may be in progress before a new request for the same item treats it as stuck and starts
         /// anyway. This has to sit above any realistic request duration - several dns-01 identifiers each waiting for
         /// propagation, followed by slow deployment tasks, take far longer than a few minutes - because starting a
@@ -193,7 +223,7 @@ namespace Certify.Management
                                                 ReportProgress, IsManagedCertificateRunning,
                                                 (ManagedCertificate item, IProgress<RequestProgressState> progress, bool isPreview, string reason, bool redeployOnly) =>
                                                 {
-                                                    return PerformCertificateRequest(null, item, progress, skipRequest: isPreview, skipTasks: isPreview, reason: reason, redeployOnly: redeployOnly);
+                                                    return PerformCertificateRequest(null, item, progress, isPreview: isPreview, reason: reason, redeployOnly: redeployOnly);
                                                 },
                                                 renewalCancellationSource.Token);
 
@@ -270,6 +300,10 @@ namespace Certify.Management
         /// if true, the certificate the item already holds is deployed again and its deployment tasks run, without
         /// requesting a new certificate. Used for an item whose certificate was obtained but not fully deployed
         /// </param>
+        /// <param name="isPreview">
+        /// if true, the request is only previewed: no certificate is ordered, deployment is previewed rather than
+        /// performed, deployment tasks are not run, and nothing about the item is stored or changed
+        /// </param>
         /// <returns>  </returns>
         public async Task<CertificateRequestResult> PerformCertificateRequest(
                 ILog log, ManagedCertificate managedCertificate,
@@ -280,7 +314,8 @@ namespace Certify.Management
                 bool skipTasks = false,
                 bool isInteractive = false,
                 string reason = null,
-                bool redeployOnly = false
+                bool redeployOnly = false,
+                bool isPreview = false
             )
         {
 
@@ -301,32 +336,23 @@ namespace Certify.Management
             }
 
             // check if we have an existing request in progress, if so skip for now
-            _renewalsInProgress.TryGetValue(managedCertificate.Id, out var existingRequest);
-
-            if (existingRequest.HasValue)
-            {
-                var elapsed = DateTimeOffset.Now - existingRequest.Value;
-
-                if (elapsed > _maxRequestInProgressAge)
-                {
-                    // if we have a stuck request, let the user start it again
-                    _serviceLog?.Warning("A certificate request for {Name} [{Id}] has been in progress for {elapsed} and is being treated as stuck, so a new request can start.", managedCertificate.Name, managedCertificate.Id, elapsed);
-
-                    _renewalsInProgress.TryRemove(managedCertificate.Id, out existingRequest);
-                }
-                else
-                {
-                    return new CertificateRequestResult { Abort = true, IsSuccess = false, ManagedItem = managedCertificate, Message = "Certificate request already in progress." };
-                }
-            }
-
-            // taken atomically, because two callers can both pass the check above before either records its request
-            if (!_renewalsInProgress.TryAdd(managedCertificate.Id, DateTimeOffset.Now))
+            if (!TryBeginRequest(managedCertificate))
             {
                 return new CertificateRequestResult { Abort = true, IsSuccess = false, ManagedItem = managedCertificate, Message = "Certificate request already in progress." };
             }
 
-            _serviceLog?.Information("Performing Certificate Request: {Name} [{Id}]", managedCertificate.Name, managedCertificate.Id);
+            if (isPreview)
+            {
+                // a preview reports what a request would do without doing it: no certificate is ordered, deployment
+                // is only previewed, deployment tasks are not run, and nothing about the item is stored. It works on
+                // its own copy of the item, so the state built up while previewing is never seen by anything else
+                // holding the item
+                managedCertificate = managedCertificate.Clone();
+                skipRequest = true;
+                skipTasks = true;
+            }
+
+            _serviceLog?.Information("{mode} Certificate Request: {Name} [{Id}]", isPreview ? "Previewing" : "Performing", managedCertificate.Name, managedCertificate.Id);
 
             // Perform pre-request checks and scripting hooks, invoke main request process, then
             // perform an post request scripting hooks
@@ -475,19 +501,30 @@ namespace Certify.Management
                         }
                         else
                         {
-                            requestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
+                            requestResult.Message = isPreview
+                                ? $"[Preview Mode] Certificate request would be performed: {managedCertificate.Name}"
+                                : $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
                             requestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
                             SetPrimaryRequestStatus(managedCertificate, requestResult, requestResult.IsSuccess ? RequestState.Success : RequestState.Skipped, requestResult.Message);
                         }
 
-                        ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate));
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate, isPreviewMode: isPreview));
                     }
                 }
 
                 if (isSubscriptionRequest)
                 {
+                    if (isPreview)
+                    {
+                        // a request against the source fetches and deploys whatever it supplies, none of which a preview
+                        // does. The item is left exactly as it is, and no deployment tasks apply
+                        requestResult.IsSubscriptionUpdateDeferred = true;
+                        requestResult.IsSuccess = true;
+                        requestResult.Message = $"[Preview Mode] External certificate subscription would be checked for an update, and any update deployed: {managedCertificate.Name}";
 
-                    if (managedCertificate.IsActionableSubscription)
+                        ReportProgress(progress, new RequestProgressState(RequestState.Success, requestResult.Message, managedCertificate, isPreviewMode: true));
+                    }
+                    else if (managedCertificate.IsActionableSubscription)
                     {
                         // interactive requests explicitly fetch the latest external certificate;
                         // non-interactive renewals follow the automatic due/pending checks.
@@ -521,9 +558,12 @@ namespace Certify.Management
 
                     log?.Error(requestResult.Message);
 
-                    ReportProgress(progress, new RequestProgressState(RequestState.Error, requestResult.Message, managedCertificate), logThisEvent: false);
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, requestResult.Message, managedCertificate, isPreviewMode: isPreview), logThisEvent: false);
 
-                    await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, requestResult.Message, currentFailureCount);
+                    if (!isPreview)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, requestResult.Message, currentFailureCount);
+                    }
                 }
                 catch { }
             }
@@ -550,9 +590,13 @@ namespace Certify.Management
 
                     requestResult.IsSuccess = finalState == RequestState.Success;
 
-                    ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate), logThisEvent: false);
+                    ReportProgress(progress, new RequestProgressState(finalState, requestResult.Message, managedCertificate, isPreviewMode: isPreview), logThisEvent: false);
 
-                    await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
+                    // nothing about a preview is stored: it did no work, so it has no outcome to record against the item
+                    if (!isPreview)
+                    {
+                        await UpdateManagedCertificateStatus(managedCertificate, finalState, requestResult.Message, currentFailureCount);
+                    }
                 }
 
                 _renewalsInProgress.TryRemove(managedCertificate.Id, out _);

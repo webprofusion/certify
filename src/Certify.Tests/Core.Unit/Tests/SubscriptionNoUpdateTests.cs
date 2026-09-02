@@ -128,6 +128,26 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item));
         }
 
+        [TestMethod, Description("A source failure recorded after a failed binding deployment leaves the deployment failure in place")]
+        public void SourceFailureLeavesTheBindingDeploymentFailureInPlace()
+        {
+            // the deployment failure is what selects the item for redeployment once the source answers again. Were it
+            // cleared along with the outcome of the previous request, a source outage would leave the item looking
+            // healthy as soon as it resolved, with the certificate the item holds never installed
+            var item = CreateSubscriptionWithFailedBindingDeployment();
+
+            CertifyManager.SetSubscriptionSourceFailure(item, item.ExternalSource, "ManagementHub source returned 503");
+
+            Assert.IsTrue(CertifyManager.HasRecordedSourceFailure(item));
+            Assert.AreEqual(RequestState.Error, item.LastBindingDeployment?.Status, "The deployment failure is untouched by the source failure");
+            Assert.IsFalse(ManagedCertificate.RequiresRedeployment(item), "Until the source answers again there is no certificate to redeploy");
+
+            // what the no-update check records once the source has answered
+            item.LastPrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "No updated certificate was available from Management Hub." };
+
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item), "With the source answering, the certificate the item holds is redeployed");
+        }
+
         [TestMethod, Description("A failed deployment task is not resolved by finding no newer certificate")]
         public void FailedDeploymentTaskIsADeploymentFailure()
         {

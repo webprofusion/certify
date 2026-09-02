@@ -144,16 +144,29 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Prefix of the id of the throwaway item stored by <see cref="CheckForDataStoreWriteFailure"/>
+        /// </summary>
+        private const string DataStoreWriteCheckIdPrefix = "writecheck_";
+
+        /// <summary>
         /// Check the data store can be written to, by storing and removing a throwaway item. Returns the failure when it
         /// cannot, or null when it can
         /// </summary>
         /// <returns></returns>
         private async Task<Exception?> CheckForDataStoreWriteFailure()
         {
+            // the item is left out of auto renewal and named for what it is, so should its removal fail it is not picked
+            // up by the renewal pass as a new item to request, and is recognisable in the item list until the next
+            // start removes it
+            var item = new ManagedCertificate
+            {
+                Id = $"{DataStoreWriteCheckIdPrefix}{Guid.NewGuid()}",
+                Name = "Data store write check",
+                IncludeInAutoRenew = false
+            };
+
             try
             {
-                var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
-
                 await _itemManager.Update(item);
                 await _itemManager.Delete(item);
 
@@ -162,6 +175,31 @@ namespace Certify.Management
             catch (Exception exp)
             {
                 return exp;
+            }
+        }
+
+        /// <summary>
+        /// Remove any write check items left behind by an earlier check which stored its item but could not remove it
+        /// </summary>
+        /// <returns></returns>
+        private async Task RemoveLeftoverDataStoreWriteCheckItems()
+        {
+            try
+            {
+                var leftovers = (await _itemManager.Find(ManagedCertificateFilter.ALL))
+                    .Where(i => i.Id?.StartsWith(DataStoreWriteCheckIdPrefix, StringComparison.Ordinal) == true)
+                    .ToList();
+
+                foreach (var item in leftovers)
+                {
+                    _serviceLog?.Warning("Removing data store write check item {id}, left behind by an earlier check which could not remove it.", item.Id);
+
+                    await _itemManager.Delete(item);
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Warning("Could not check for leftover data store write check items: {msg}", exp.Message);
             }
         }
 
@@ -247,6 +285,8 @@ namespace Certify.Management
                     _serviceLog?.Error(writeFailure, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {writeFailure}", writeFailure.Message);
                     throw new DataStoreConnectionException($"Data store write test failed: {writeFailure.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
                 }
+
+                await RemoveLeftoverDataStoreWriteCheckItems();
 
                 var isInitialised = await _itemManager.IsInitialised();
                 if (!isInitialised)

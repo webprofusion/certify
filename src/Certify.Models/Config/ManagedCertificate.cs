@@ -700,16 +700,18 @@ namespace Certify.Models
             }
         }
 
+        /// <summary>
+        /// A deep copy of this item, for work which must not touch the instance others hold, such as a preview
+        /// </summary>
+        /// <returns></returns>
+        public ManagedCertificate Clone()
+        {
+            return JsonConvert.DeserializeObject<ManagedCertificate>(JsonConvert.SerializeObject(this)) ?? new ManagedCertificate();
+        }
+
         public ManagedCertificate CopyAsTemplate(bool preserveAttributes = false)
         {
-
-            // clone current object
-            var managedCert = JsonConvert.DeserializeObject<ManagedCertificate>(JsonConvert.SerializeObject(this));
-
-            if (managedCert == null)
-            {
-                return new ManagedCertificate();
-            }
+            var managedCert = Clone();
 
             // reset fields we don't want to re-use from the original
             managedCert.Id = Guid.NewGuid().ToString();

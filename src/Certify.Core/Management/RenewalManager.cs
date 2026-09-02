@@ -116,7 +116,19 @@ namespace Certify.Management
                 {
                     var renewalReason = "Renewal requested";
 
-                    if (item.IsSubscription)
+                    // a targeted request is an explicit request for the item, so it is not subject to the schedule, the
+                    // failure hold or the maintenance window. The one thing taken from the schedule is whether the item
+                    // holds a certificate which was obtained but not fully deployed: as in the scheduled pass, that
+                    // certificate is deployed again rather than replaced, unless a new certificate is asked for outright
+                    // (Renewal Mode All)
+                    var renewalDueCheck = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, prefs);
+                    var redeployOnly = renewalDueCheck.IsRedeployOnly && settings.Mode != RenewalMode.All;
+
+                    if (redeployOnly)
+                    {
+                        renewalReason = renewalDueCheck.Reason;
+                    }
+                    else if (item.IsSubscription)
                     {
                         if (!CertifyManager.ShouldProcessSubscription(item, item.ExternalSource))
                         {
@@ -137,7 +149,7 @@ namespace Certify.Management
 
                     renewalTasks.Add(
                     new Task<CertificateRequestResult>(
-                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason, redeployOnly: false).Result,
+                            () => performCertificateRequest(item, progressTracker, settings.IsPreviewMode, renewalReason, redeployOnly).Result,
                             TaskCreationOptions.LongRunning
                             )
                     );
@@ -271,21 +283,9 @@ namespace Certify.Management
 
                                 // the scheduler reports an item whose certificate was obtained but not fully deployed as
                                 // due for a request which deploys the certificate it already holds, paced and windowed
-                                // like any other attempt. Renewal Mode All asks for a new certificate regardless, and a
-                                // preview reports what would be renewed without deploying anything, so neither redeploys
+                                // like any other attempt. Renewal Mode All asks for a new certificate regardless. A
+                                // preview previews the redeployment as it would any other request, without deploying
                                 var redeployOnly = renewalDueCheck.IsRedeployOnly && settings.Mode != RenewalMode.All;
-
-                                if (redeployOnly && settings.IsPreviewMode)
-                                {
-                                    isRenewalRequired = false;
-                                    redeployOnly = false;
-                                    renewalReason = "The certificate held by this item is due to be deployed again. Redeployment is not previewed.";
-
-                                    if (!prefs.SuppressSkippedItems)
-                                    {
-                                        serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
-                                    }
-                                }
 
                                 // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
                                 if (!prefs.IncludeStoppedSites && !string.IsNullOrEmpty(item.ServerSiteId) && item.RequestConfig.DeploymentSiteOption == DeploymentOption.SingleSite)
