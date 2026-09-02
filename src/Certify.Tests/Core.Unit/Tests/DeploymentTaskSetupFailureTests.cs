@@ -110,12 +110,12 @@ namespace Certify.Tests.Core.Unit.Tests
             var failedTask = new DeploymentTaskConfig { Id = "task-1", TaskName = "Upload", LastRunStatus = RequestState.Success };
             var item = CreateItemWithTasks(failedTask);
 
-            Assert.IsFalse(CertifyManager.RequiresDeploymentRetry(item), "Nothing has failed yet");
+            Assert.IsFalse(ManagedCertificate.RequiresRedeployment(item), "Nothing has failed yet");
 
             InvokeRecordTaskSetupFailure(new List<ActionStep>(), failedTask, CredentialFailureMessage);
 
             // an unreadable credential may be a temporary problem, so the deployment retry pass has to be able to see it
-            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "The item should be re-attempted by the deployment retry pass");
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item), "The item should be redeployed by the renewal pass");
         }
 
         [TestMethod, Description("Only the task which could not be prepared is marked failed, the rest of the list is untouched")]

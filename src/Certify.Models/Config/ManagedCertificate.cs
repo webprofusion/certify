@@ -59,6 +59,13 @@ namespace Certify.Models
         public bool IsDeferredByMaintenanceWindow { get; set; }
 
         /// <summary>
+        /// True when the attempt which is due deploys the certificate the item already holds, and runs its deployment
+        /// tasks, rather than requesting a new certificate: the certificate was obtained but not fully deployed, and
+        /// scheduling counts from the date it was obtained, so it is not due for renewal
+        /// </summary>
+        public bool IsRedeployOnly { get; set; }
+
+        /// <summary>
         /// Parameterless constructor for serialization. This type travels between an instance, the hub and the UI,
         /// which use different serializers, so it must be constructible without arguments.
         /// </summary>
@@ -860,6 +867,119 @@ namespace Certify.Models
         }
 
         /// <summary>
+        /// Whether the item holds a certificate which could be deployed: one is recorded and it has not expired
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="checkDate">the time to judge expiry against, defaulting to now</param>
+        /// <returns></returns>
+        public static bool HasUsableCertificate(ManagedCertificate s, DateTimeOffset? checkDate = null)
+        {
+            return s?.DateExpiry.HasValue == true
+                && s.DateExpiry > (checkDate ?? DateTimeOffset.UtcNow)
+                && (!string.IsNullOrWhiteSpace(s.CertificateThumbprintHash) || !string.IsNullOrWhiteSpace(s.CertificatePath));
+        }
+
+        /// <summary>
+        /// The post-request tasks which failed on their last run and count against the outcome of automated
+        /// deployment. A manual-trigger task is only ever run on demand by a person, never by an automated request, so
+        /// its result is not part of that outcome. Counting it would also leave the item failed for as long as the task
+        /// was not re-run, and would select it for redeployment after every back off - a redeploy cannot run the task
+        /// and so could never clear the failure
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static List<DeploymentTaskConfig> GetFailedDeploymentTasks(ManagedCertificate s)
+        {
+            return s?.PostRequestTasks?
+                .Where(t => t.TaskTrigger != TaskTriggerType.MANUAL && t.LastRunStatus == RequestState.Error)
+                .ToList() ?? new List<DeploymentTaskConfig>();
+        }
+
+        public static bool HasFailedDeploymentTasks(ManagedCertificate s)
+        {
+            return GetFailedDeploymentTasks(s).Any();
+        }
+
+        /// <summary>
+        /// Whether the item holds a certificate which was obtained but not fully deployed: the certificate store or
+        /// binding deployment failed, or an automated post-request deployment task did. Only a successful deployment
+        /// clears this, so it survives a subscription check which finds nothing newer at the source
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public static bool HasRecordedDeploymentFailure(ManagedCertificate s)
+        {
+            return s != null && (s.LastBindingDeployment?.Status == RequestState.Error || HasFailedDeploymentTasks(s));
+        }
+
+        /// <summary>
+        /// Whether the item is due for a request which deploys the certificate it already holds, rather than one which
+        /// requests a new certificate: it holds a usable certificate which its last request obtained, and the deployment
+        /// of that certificate or its automated deployment tasks failed. Renewal scheduling counts from the date the
+        /// certificate was obtained, so such an item is not due for renewal and would otherwise not be attempted again
+        /// until its next renewal fell due - most of a certificate lifetime later, with the deployment target still using
+        /// the previous certificate.
+        /// A subscription with an update still pending is left out: the subscription pass fetches and deploys the update
+        /// in full, and is the only place the retained pending version is cleared
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="checkDate">the time to judge the certificate's expiry against, defaulting to now</param>
+        /// <returns></returns>
+        public static bool RequiresRedeployment(ManagedCertificate s, DateTimeOffset? checkDate = null)
+        {
+            if (s == null)
+            {
+                return false;
+            }
+
+            // the item is waiting on a person (manual DNS etc), so it is not ours to retry
+            if (s.LastRenewalStatus == RequestState.Paused)
+            {
+                return false;
+            }
+
+            // only the deployment of a certificate which was actually obtained can be retried. A failed request needs a
+            // new certificate, which is renewal's job - redeploying the previous certificate would not help
+            if (s.LastPrimaryRequest?.Status != RequestState.Success)
+            {
+                return false;
+            }
+
+            // an expired or missing certificate cannot usefully be deployed, and renewal is due for it by definition
+            if (!HasUsableCertificate(s, checkDate))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(s.ExternalSource?.PendingSourceVersion))
+            {
+                return false;
+            }
+
+            return HasRecordedDeploymentFailure(s);
+        }
+
+        /// <summary>
+        /// Whether the next attempt for an item which has been failing is held back by the failure back off. The first
+        /// <see cref="LifetimeHealthThresholds.FailuresBeforeBackoff"/> failures are retried without delay, so a brief
+        /// problem recovers quickly; after that each attempt waits for <see cref="CalculateFailureBackoff"/>.
+        /// This is the one pacing rule for every kind of attempt: a renewal, a redeployment of the certificate already
+        /// held, and a subscription's fetch of an update or poll of its source
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="checkDate">the time to evaluate at, defaulting to now</param>
+        /// <returns></returns>
+        public static bool IsHeldByFailureBackoff(ManagedCertificate s, DateTimeOffset? checkDate = null)
+        {
+            if (s == null || s.RenewalFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff || s.DateLastRenewalAttempt == null)
+            {
+                return false;
+            }
+
+            return (checkDate ?? DateTimeOffset.UtcNow) < CalculateFailureBackoff(s).NextAttemptByDate;
+        }
+
+        /// <summary>
         /// Calculate how long an item which is failing should wait before its next attempt, and the date that attempt
         /// becomes due. The wait grows with the number of consecutive failures up to a ceiling of 10% of the certificate
         /// lifetime, or 48hrs where the lifetime is not known or is long.
@@ -1027,6 +1147,19 @@ namespace Certify.Models
                 renewalStatusReason = "Certificate has not yet been successfully requested, so a renewal attempt is required.";
             }
 
+            // a certificate which was obtained but not fully deployed is not due for renewal, because scheduling counts
+            // from the date it was obtained. It is instead due for a request which deploys the certificate already held,
+            // subject to the same failure hold and maintenance window as any other attempt
+            var isRedeployOnly = false;
+
+            if (!isRenewalRequired && RequiresRedeployment(s, checkDate))
+            {
+                isRenewalRequired = true;
+                isRedeployOnly = true;
+                nextRenewalAttemptDate = checkDate;
+                renewalStatusReason = "The certificate held by this item was obtained but not fully deployed. Deployment and deployment tasks will be attempted again; no new certificate is requested.";
+            }
+
             // if renewal is required but we have previously failed, scale the frequency of renewal
             // attempts to a minimum of once per 24hrs.
             if (isRenewalRequired && (s.LastRenewalStatus == RequestState.Error || s.LastRenewalStatus == RequestState.Warning || s.RenewalFailureCount > 0))
@@ -1034,16 +1167,18 @@ namespace Certify.Models
                 // our last attempt failed, check how many failures we've had to decide whether
                 // we should attempt now or scale wait time based on how many attempts we've made.
                 // Max 48hrs between attempts or 90% of lifetime (if known)
+                var attempt = isRedeployOnly ? "Redeployment" : "Renewal";
 
                 if (s.RenewalFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff)
                 {
                     return new RenewalDueInfo(
-                                reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times.",
+                                reason: $"{attempt} attempt is due, item has failed {s.RenewalFailureCount} times.",
                                 isRenewalDue: true,
                                 checkDate,
                                 certLifetime,
                                 isRenewalOnHold: false
-                                );
+                                )
+                    { IsRedeployOnly = isRedeployOnly };
                 }
                 else
                 {
@@ -1052,15 +1187,16 @@ namespace Certify.Models
                     {
                         var (calcWaitHrs, nextAttemptByDate) = CalculateFailureBackoff(s);
 
-                        if (DateTimeOffset.UtcNow < nextAttemptByDate)
+                        if (IsHeldByFailureBackoff(s, checkDate))
                         {
                             return new RenewalDueInfo(
-                                    reason: $"Renewal attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs because item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",
+                                    reason: $"{attempt} attempt is on hold for {Math.Round(calcWaitHrs, 0, MidpointRounding.AwayFromZero)}hrs because item has failed {s.RenewalFailureCount} times and attempts are subject to periodic limits.",
                                     isRenewalDue: true,
                                     nextAttemptByDate, certLifetime,
                                     isRenewalOnHold: true,
                                     holdHrs: calcWaitHrs
-                                    );
+                                    )
+                            { IsRedeployOnly = isRedeployOnly };
                         }
                         else
                         {
@@ -1068,21 +1204,23 @@ namespace Certify.Models
                             {
                                 // item has failed too many times and need to be fixed manually before it can resume renewal
                                 return new RenewalDueInfo(
-                                   reason: $"Renewal will no longer be attempted because the item has failed {s.RenewalFailureCount} times. The limit for failed attempts is {LifetimeHealthThresholds.FailureTerminal}. Manually request this item to resolve the issue or remove if no longer required.",
+                                   reason: $"{attempt} will no longer be attempted because the item has failed {s.RenewalFailureCount} times. The limit for failed attempts is {LifetimeHealthThresholds.FailureTerminal}. Manually request this item to resolve the issue or remove if no longer required.",
                                    isRenewalDue: true,
                                    nextAttemptByDate, certLifetime,
                                    isRenewalOnHold: true,
                                    holdHrs: calcWaitHrs
-                                   );
+                                   )
+                                { IsRedeployOnly = isRedeployOnly };
                             }
                             else
                             {
                                 return new RenewalDueInfo(
-                                       reason: $"Renewal attempt is due, item has failed {s.RenewalFailureCount} times and renewal will be periodically attempted.",
+                                       reason: $"{attempt} attempt is due, item has failed {s.RenewalFailureCount} times and it will be periodically attempted.",
                                        isRenewalDue: true,
                                        nextAttemptByDate, certLifetime,
                                        isRenewalOnHold: false
-                                       );
+                                       )
+                                { IsRedeployOnly = isRedeployOnly };
                             }
                         }
                     }
@@ -1090,12 +1228,13 @@ namespace Certify.Models
                     {
                         // never attempted, can't be put on hold
                         return new RenewalDueInfo(
-                                  reason: $"Renewal attempt is due, item has not yet been attempted.",
+                                  reason: $"{attempt} attempt is due, item has not yet been attempted.",
                                   isRenewalDue: true,
                                   checkDate,
                                   certLifetime,
                                   isRenewalOnHold: false
-                                  );
+                                  )
+                        { IsRedeployOnly = isRedeployOnly };
                     }
                 }
             }
@@ -1118,7 +1257,8 @@ namespace Certify.Models
 
             return new RenewalDueInfo(renewalStatusReason, isRenewalRequired, nextRenewalAttemptDate, certLifetime)
             {
-                IsRenewalScheduled = isRenewalScheduled
+                IsRenewalScheduled = isRenewalScheduled,
+                IsRedeployOnly = isRedeployOnly
             };
         }
 

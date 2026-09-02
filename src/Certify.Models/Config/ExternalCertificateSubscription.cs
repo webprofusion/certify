@@ -77,16 +77,6 @@ namespace Certify.Models
         public string? LastError { get; set; }
 
         /// <summary>
-        /// Consecutive failed attempts to fetch and apply an update from this source, reset as soon as an attempt
-        /// completes. This is deliberately separate from the owning item's <see cref="ManagedCertificate.RenewalFailureCount"/>,
-        /// which counts failures at every stage of the process and drives item health, renewal scheduling and CA
-        /// failover. Spacing out retries of a pending update from that shared count would delay a certificate update
-        /// which is perfectly fine because something unrelated on the same item - a deployment task, for instance - had
-        /// been failing
-        /// </summary>
-        public int SubscriptionFailureCount { get; set; }
-
-        /// <summary>
         /// True if the user has configured something on this subscription which would be lost if the subscription
         /// was discarded. Source type, retrieval mode and poll interval are populated with defaults by the editor,
         /// so on their own they do not count as user configuration

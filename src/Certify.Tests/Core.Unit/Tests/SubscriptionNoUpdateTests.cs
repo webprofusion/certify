@@ -103,7 +103,7 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             var item = CreateSubscription();
 
-            Assert.IsFalse(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsFalse(ManagedCertificate.HasRecordedDeploymentFailure(item));
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item));
         }
 
@@ -113,7 +113,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var item = CreateSubscriptionWithFailedFetch();
 
             Assert.IsTrue(CertifyManager.HasRecordedSourceFailure(item), "The source answered this time, so the recorded failure no longer applies");
-            Assert.IsFalse(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsFalse(ManagedCertificate.HasRecordedDeploymentFailure(item));
         }
 
         [TestMethod, Description("A failure to deploy the fetched certificate is not resolved by finding no newer one")]
@@ -121,11 +121,11 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             var item = CreateSubscriptionWithFailedBindingDeployment();
 
-            Assert.IsTrue(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsTrue(ManagedCertificate.HasRecordedDeploymentFailure(item));
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item), "Nothing was deployed by the check, so the failure stands");
 
             // this is what keeps the item eligible for the deployment retry pass after the check
-            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item));
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item));
         }
 
         [TestMethod, Description("A failed deployment task is not resolved by finding no newer certificate")]
@@ -133,9 +133,9 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             var item = CreateSubscriptionWithFailedDeploymentTask();
 
-            Assert.IsTrue(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsTrue(ManagedCertificate.HasRecordedDeploymentFailure(item));
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item));
-            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item));
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item));
         }
 
         [TestMethod, Description("An item which has never been attempted has nothing to resolve")]
@@ -147,7 +147,7 @@ namespace Certify.Tests.Core.Unit.Tests
             item.LastBindingDeployment = null;
 
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item));
-            Assert.IsFalse(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsFalse(ManagedCertificate.HasRecordedDeploymentFailure(item));
         }
 
         [TestMethod, Description("A subscription with a failed deployment task keeps its failure count across a no-update check")]
@@ -162,7 +162,7 @@ namespace Certify.Tests.Core.Unit.Tests
             item.DateLastRenewalAttempt = now.AddMinutes(-30);
 
             Assert.IsFalse(CertifyManager.HasRecordedSourceFailure(item), "The check must not record success against this item");
-            Assert.IsFalse(CertifyManager.IsDeploymentRetryDue(item, now), "With the count intact the retry stays held by the back off");
+            Assert.IsTrue(ManagedCertificate.IsHeldByFailureBackoff(item, now), "With the count intact the retry stays held by the back off");
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var item = CreateSubscriptionWithFailedFetchAndOldTaskFailure();
 
             Assert.IsTrue(CertifyManager.HasRecordedSourceFailure(item), "The source failure is recorded against the primary request stage, whatever else has failed");
-            Assert.IsFalse(CertifyManager.RequiresDeploymentRetry(item), "Until the source answers again there is no certificate to redeploy");
+            Assert.IsFalse(ManagedCertificate.RequiresRedeployment(item), "Until the source answers again there is no certificate to redeploy");
         }
 
         [TestMethod, Description("Resolving the source failure leaves the deployment failure in place and hands the item to the deployment retry")]
@@ -205,7 +205,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.AreEqual(RequestState.Error, status, "Nothing was deployed, so the failed deployment task still describes the item");
             Assert.AreEqual("Endpoint unavailable", message, "The status now explains the deployment failure rather than the resolved source failure");
-            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "With the source answering, the certificate it holds can be redeployed");
+            Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item), "With the source answering, the certificate it holds can be redeployed");
         }
 
         [TestMethod, Description("Resolving the source failure on an item with nothing else wrong makes it healthy")]

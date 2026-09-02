@@ -70,7 +70,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateExpiry = DateTimeOffset.UtcNow.AddDays(daysUntilExpiry)
             };
 
-            Assert.AreEqual(expected, CertifyManager.HasUsableCertificate(managedCert));
+            Assert.AreEqual(expected, ManagedCertificate.HasUsableCertificate(managedCert));
         }
 
         private static ManagedCertificate GetManagedCertificateWithPostRequestTask()

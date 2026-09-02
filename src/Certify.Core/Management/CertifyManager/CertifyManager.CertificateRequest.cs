@@ -8,7 +8,6 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Certify.Config;
 using Certify.Core.Management;
 using Certify.Locales;
 using Certify.Models;
@@ -869,7 +868,7 @@ namespace Certify.Management
                 return RequestState.Error;
             }
 
-            if (postRequestTasksRan && HasFailedDeploymentTasks(managedCertificate))
+            if (postRequestTasksRan && ManagedCertificate.HasFailedDeploymentTasks(managedCertificate))
             {
                 return RequestState.Error;
             }
@@ -877,30 +876,9 @@ namespace Certify.Management
             return RequestState.Success;
         }
 
-        /// <summary>
-        /// The post-request tasks which failed on their last run and count against the outcome of automated
-        /// deployment. A manual-trigger task is only ever run on demand by a person, never by an automated request, so
-        /// its result is not part of that outcome. Counting it would also leave the item failed for as long as the task
-        /// was not re-run, and would select it for redeployment after every back off - a redeploy cannot run the task
-        /// and so could never clear the failure
-        /// </summary>
-        /// <param name="managedCertificate"></param>
-        /// <returns></returns>
-        private static List<DeploymentTaskConfig> GetFailedDeploymentTasks(ManagedCertificate managedCertificate)
-        {
-            return managedCertificate.PostRequestTasks?
-                .Where(t => t.TaskTrigger != TaskTriggerType.MANUAL && t.LastRunStatus == RequestState.Error)
-                .ToList() ?? [];
-        }
-
-        private static bool HasFailedDeploymentTasks(ManagedCertificate managedCertificate)
-        {
-            return GetFailedDeploymentTasks(managedCertificate).Any();
-        }
-
         private static string GetDeploymentTaskFailureMessage(ManagedCertificate managedCertificate)
         {
-            var failedTasks = GetFailedDeploymentTasks(managedCertificate);
+            var failedTasks = ManagedCertificate.GetFailedDeploymentTasks(managedCertificate);
 
             if (!failedTasks.Any())
             {
@@ -942,7 +920,7 @@ namespace Certify.Management
                     ?? managedCertificate.RenewalFailureMessage;
             }
 
-            if (postRequestTasksRan && HasFailedDeploymentTasks(managedCertificate))
+            if (postRequestTasksRan && ManagedCertificate.HasFailedDeploymentTasks(managedCertificate))
             {
                 return GetDeploymentTaskFailureMessage(managedCertificate).AsNullWhenBlank()
                     ?? result.Message.AsNullWhenBlank()
@@ -1856,7 +1834,7 @@ namespace Certify.Management
 
                     result.Actions.Add(postRequestTasks);
 
-                    // certificate may already be deployed to some extent so this counts a completed with warnings
+                    // a task which failed leaves the certificate not fully deployed, which is recorded as a failed request
                     if (results.Any(r => r.HasError))
                     {
                         result.IsSuccess = false;

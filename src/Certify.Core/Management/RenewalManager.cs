@@ -239,7 +239,9 @@ namespace Certify.Management
                                     renewalReason = "Renewal Mode is set to All";
                                 }
 
-                                if (item.IsSubscription)
+                                // a subscription which is due to redeploy the certificate it already holds is treated like
+                                // any other item: the redeploy is a standard request which does not involve the source
+                                if (item.IsSubscription && !renewalDueCheck.IsRedeployOnly)
                                 {
                                     var shouldProcessSubscription = CertifyManager.ShouldProcessSubscription(item, item.ExternalSource);
                                     if (shouldProcessSubscription)
@@ -258,7 +260,7 @@ namespace Certify.Management
                                         // keeps a no-op request status off the UI - the scheduled subscription poll
                                         // picks the item up when it is next due
                                         isRenewalRequired = false;
-                                        renewalReason = "External certificate subscription is not due and has no pending certificate update.";
+                                        renewalReason = "External certificate subscription is not due to be checked: no update or poll is due, or attempts are being spaced out after repeated failures.";
 
                                         if (!prefs.SuppressSkippedItems)
                                         {
@@ -267,18 +269,22 @@ namespace Certify.Management
                                     }
                                 }
 
-                                // an item whose certificate was obtained but not fully deployed is not due for renewal,
-                                // because scheduling counts from the date the certificate was obtained. It is selected
-                                // for a request which deploys the certificate it already holds instead, paced by the same
-                                // failure back off as a renewal attempt and subject to the same checks below
-                                var redeployOnly = false;
+                                // the scheduler reports an item whose certificate was obtained but not fully deployed as
+                                // due for a request which deploys the certificate it already holds, paced and windowed
+                                // like any other attempt. Renewal Mode All asks for a new certificate regardless, and a
+                                // preview reports what would be renewed without deploying anything, so neither redeploys
+                                var redeployOnly = renewalDueCheck.IsRedeployOnly && settings.Mode != RenewalMode.All;
 
-                                if (!isRenewalRequired && settings.Mode == RenewalMode.Auto && !settings.IsPreviewMode
-                                    && CertifyManager.RequiresDeploymentRetry(item) && CertifyManager.IsDeploymentRetryDue(item))
+                                if (redeployOnly && settings.IsPreviewMode)
                                 {
-                                    isRenewalRequired = true;
-                                    redeployOnly = true;
-                                    renewalReason = "The certificate held by this item was obtained but not fully deployed. Deployment and deployment tasks will be attempted again; no new certificate is requested.";
+                                    isRenewalRequired = false;
+                                    redeployOnly = false;
+                                    renewalReason = "The certificate held by this item is due to be deployed again. Redeployment is not previewed.";
+
+                                    if (!prefs.SuppressSkippedItems)
+                                    {
+                                        serviceLog?.Information($"Skipping renewal for '{item.Name}': {renewalReason}");
+                                    }
                                 }
 
                                 // if we care about stopped sites being stopped, check if a specific site is selected and if it's running
@@ -298,10 +304,7 @@ namespace Certify.Management
                                 if (isRenewalRequired && settings.Mode == RenewalMode.Auto && renewalDueCheck.IsDeferredByMaintenanceWindow)
                                 {
                                     isRenewalRequired = false;
-
-                                    // the due check only describes the window when renewal itself is due, so a deployment
-                                    // retry held by the window reports the window directly
-                                    renewalReason = redeployOnly ? IsWithinMaintenanceWindow(item, prefs).Reason : renewalDueCheck.Reason;
+                                    renewalReason = renewalDueCheck.Reason;
 
                                     if (!prefs.SuppressSkippedItems)
                                     {

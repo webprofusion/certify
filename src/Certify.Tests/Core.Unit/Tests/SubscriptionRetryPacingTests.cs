@@ -8,14 +8,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Certify.Tests.Core.Unit.Tests
 {
     /// <summary>
-    /// Tests for how often a subscription with an update waiting is attempted. An update is applied on the next pass,
-    /// which is the point of being told about one, but an update which cannot be applied must not be retried on every
-    /// pass indefinitely
+    /// Tests for how often a subscription is attempted. An update the source has announced is applied on the next
+    /// pass, which is the point of being told about one, but an attempt which keeps failing is spaced out by the same
+    /// failure hold as any other attempt for the item rather than repeated on every pass indefinitely
     /// </summary>
     [TestClass]
     public class SubscriptionRetryPacingTests
     {
-        private static ManagedCertificate CreateSubscriptionWithPendingUpdate(int subscriptionFailureCount = 0, DateTimeOffset? dateLastPoll = null, int pollIntervalMinutes = 30)
+        private static ManagedCertificate CreateSubscription(int renewalFailureCount = 0, DateTimeOffset? dateLastRenewalAttempt = null, string? retrievalMode = null, string? pendingVersion = "v2", DateTimeOffset? dateLastPoll = null)
         {
             var now = DateTimeOffset.UtcNow;
 
@@ -28,15 +28,17 @@ namespace Certify.Tests.Core.Unit.Tests
                 DateStart = now.AddDays(-1),
                 DateRenewed = now.AddDays(-1),
                 DateExpiry = now.AddDays(6),
-                DateLastRenewalAttempt = now.AddMinutes(-5),
+                DateLastRenewalAttempt = dateLastRenewalAttempt ?? now.AddMinutes(-5),
+                LastRenewalStatus = renewalFailureCount > 0 ? RequestState.Error : RequestState.Success,
+                RenewalFailureCount = renewalFailureCount,
                 ExternalSource = new ExternalCertificateSubscription
                 {
                     SourceType = ExternalCertificateSourceTypes.ManagementHub,
-                    RetrievalMode = ExternalCertificateRetrievalModes.Auto,
+                    RetrievalMode = retrievalMode ?? ExternalCertificateRetrievalModes.Auto,
                     ExternalReference = "instance-a/cert-1",
-                    PollIntervalMinutes = pollIntervalMinutes,
-                    PendingSourceVersion = "v2",
-                    SubscriptionFailureCount = subscriptionFailureCount,
+                    PollIntervalMinutes = 30,
+                    PendingSourceVersion = pendingVersion,
+                    LastSourceVersion = "v1",
                     DateLastPoll = dateLastPoll
                 },
                 RequestConfig = new CertRequestConfig
@@ -47,12 +49,11 @@ namespace Certify.Tests.Core.Unit.Tests
             };
         }
 
-        [TestMethod, Description("A newly notified update is attempted on the next pass")]
+        [TestMethod, Description("A newly announced update is attempted on the next pass")]
         public void NewPendingUpdateIsAttemptedImmediately()
         {
-            var item = CreateSubscriptionWithPendingUpdate();
+            var item = CreateSubscription();
 
-            Assert.IsTrue(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource));
             Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource));
         }
 
@@ -60,11 +61,10 @@ namespace Certify.Tests.Core.Unit.Tests
         public void EarlyFailedAttemptsAreNotHeldBack()
         {
             var now = DateTimeOffset.UtcNow;
-            var item = CreateSubscriptionWithPendingUpdate(
-                subscriptionFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff - 1,
-                dateLastPoll: now.AddMinutes(-5));
+            var item = CreateSubscription(renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff - 1, dateLastRenewalAttempt: now.AddMinutes(-5));
 
-            Assert.IsTrue(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource, now),
+            Assert.IsFalse(ManagedCertificate.IsHeldByFailureBackoff(item, now));
+            Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, now),
                 "A brief problem at the source should recover within a pass or two");
         }
 
@@ -72,13 +72,10 @@ namespace Certify.Tests.Core.Unit.Tests
         public void RepeatedlyFailingUpdateIsBackedOff()
         {
             var now = DateTimeOffset.UtcNow;
-            var item = CreateSubscriptionWithPendingUpdate(
-                subscriptionFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff,
-                dateLastPoll: now.AddMinutes(-5));
+            var item = CreateSubscription(renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff, dateLastRenewalAttempt: now.AddMinutes(-5));
 
-            Assert.IsFalse(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource, now),
+            Assert.IsTrue(ManagedCertificate.IsHeldByFailureBackoff(item, now),
                 "Five minutes after the last failure is too soon once attempts have started failing");
-
             Assert.IsFalse(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, now),
                 "The pass should leave the item alone entirely while it is held");
         }
@@ -87,58 +84,60 @@ namespace Certify.Tests.Core.Unit.Tests
         public void HeldUpdateIsAttemptedOnceWaitElapses()
         {
             var now = DateTimeOffset.UtcNow;
-            var item = CreateSubscriptionWithPendingUpdate(
-                subscriptionFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff,
-                dateLastPoll: now.AddMinutes(-31));
+            var item = CreateSubscription(renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff, dateLastRenewalAttempt: now.AddMinutes(-5));
 
-            Assert.IsTrue(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource, now));
+            var backoff = ManagedCertificate.CalculateFailureBackoff(item);
+
+            Assert.IsGreaterThan(0, backoff.WaitHrs);
+            Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, backoff.NextAttemptByDate));
         }
 
-        [TestMethod, Description("The wait between attempts grows with consecutive failures, up to a ceiling")]
-        public void RetryWaitGrowsAndIsCapped()
+        [TestMethod, Description("A pull-only subscription whose polls keep failing is held by the same back off")]
+        public void FailingPullOnlyPollIsHeldByTheSameBackOff()
         {
-            var source = CreateSubscriptionWithPendingUpdate(pollIntervalMinutes: 30).ExternalSource;
+            // a poll which keeps failing would otherwise contact the source at every poll interval for as long as the
+            // problem lasted, with the item's failure count climbing on every one
+            var now = DateTimeOffset.UtcNow;
+            var item = CreateSubscription(renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff, dateLastRenewalAttempt: now.AddMinutes(-5), retrievalMode: ExternalCertificateRetrievalModes.Pull, pendingVersion: null, dateLastPoll: now.AddMinutes(-60));
 
-            source.SubscriptionFailureCount = LifetimeHealthThresholds.FailuresBeforeBackoff;
-            var firstWait = CertifyManager.GetPendingSubscriptionUpdateRetryWaitMinutes(source);
+            Assert.IsTrue(CertifyManager.ShouldPollSource(item, item.ExternalSource, now), "On its own the poll interval says the source is due to be polled");
+            Assert.IsFalse(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, now), "The hold keeps the failing poll spaced out");
 
-            source.SubscriptionFailureCount = LifetimeHealthThresholds.FailuresBeforeBackoff + 2;
-            var laterWait = CertifyManager.GetPendingSubscriptionUpdateRetryWaitMinutes(source);
+            item.RenewalFailureCount = 0;
+            item.LastRenewalStatus = RequestState.Success;
 
-            Assert.AreEqual(30, firstWait, "The first held attempt waits the subscription's own poll interval");
-            Assert.IsGreaterThan(firstWait, laterWait, "Further failures space the attempts out further");
-
-            source.SubscriptionFailureCount = 1000;
-
-            Assert.AreEqual(48 * 60, CertifyManager.GetPendingSubscriptionUpdateRetryWaitMinutes(source),
-                "The wait is capped at 48hrs however many times it has failed");
+            Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, now), "A subscription which is not failing polls on its interval");
         }
 
-        [TestMethod, Description("The retry pacing uses the subscription's own failure count, not the item's overall one")]
-        public void PacingIsIndependentOfUnrelatedFailures()
+        [TestMethod, Description("A genuinely new version announced by the source clears the hold, because it is new work")]
+        public void NewVersionClearsTheHold()
         {
             var now = DateTimeOffset.UtcNow;
+            var item = CreateSubscription(renewalFailureCount: 10, dateLastRenewalAttempt: now.AddMinutes(-5), pendingVersion: null);
 
-            // an item whose deployment task has been failing for days, but whose source is answering fine
-            var item = CreateSubscriptionWithPendingUpdate(subscriptionFailureCount: 0, dateLastPoll: now.AddMinutes(-1));
-            item.RenewalFailureCount = 50;
+            Assert.IsTrue(ManagedCertificate.IsHeldByFailureBackoff(item, now), "After repeated failures the item is backing off");
 
-            Assert.IsTrue(CertifyManager.IsPendingSubscriptionUpdateRetryDue(item.ExternalSource, now),
-                "A broken deployment task must not delay a certificate update which is perfectly fine");
+            Assert.IsTrue(CertifyManager.TryRecordPendingSubscriptionUpdate(item, item.ExternalSource, "v2"), "A version the item does not hold is recorded as pending");
+
+            Assert.AreEqual("v2", item.ExternalSource.PendingSourceVersion);
+            Assert.AreEqual(0, item.RenewalFailureCount, "The new version is attempted without waiting out the hold for the old one");
+            Assert.IsFalse(ManagedCertificate.IsHeldByFailureBackoff(item, now));
+            Assert.IsTrue(CertifyManager.ShouldProcessSubscription(item, item.ExternalSource, now), "The update is fetched on the next pass");
+
+            item.RenewalFailureCount = 3;
+
+            Assert.IsFalse(CertifyManager.TryRecordPendingSubscriptionUpdate(item, item.ExternalSource, "v2"), "The same version announced again is already recorded");
+            Assert.AreEqual(3, item.RenewalFailureCount, "A repeated announcement does not clear anything");
         }
 
-        [TestMethod, Description("Recording the same failed request more than once advances the subscription failure count by one")]
-        public void RepeatedRecordingOfTheSameFailureIsIdempotent()
+        [TestMethod, Description("A version the item already holds is not recorded as an update")]
+        public void AlreadyHeldVersionIsNotRecorded()
         {
-            // a deployment failure is recorded by the deployment and again by the exception handler which observed it,
-            // so the count is advanced from the value held before the request rather than from wherever it is now
-            var source = new ExternalCertificateSubscription { SubscriptionFailureCount = 3 };
-            var countBeforeRequest = source.SubscriptionFailureCount;
+            var item = CreateSubscription(renewalFailureCount: 3, pendingVersion: null);
 
-            CertifyManager.AdvanceSubscriptionFailureCount(source, countBeforeRequest);
-            CertifyManager.AdvanceSubscriptionFailureCount(source, countBeforeRequest);
-
-            Assert.AreEqual(4, source.SubscriptionFailureCount);
+            Assert.IsFalse(CertifyManager.TryRecordPendingSubscriptionUpdate(item, item.ExternalSource, "v1"), "v1 is the version last deployed");
+            Assert.IsNull(item.ExternalSource.PendingSourceVersion);
+            Assert.AreEqual(3, item.RenewalFailureCount);
         }
     }
 }

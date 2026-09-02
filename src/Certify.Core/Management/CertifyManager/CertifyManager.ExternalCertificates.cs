@@ -208,7 +208,7 @@ namespace Certify.Management
                     // only record a no-op status against it and report that to connected UI clients
                     if (!ShouldProcessSubscription(item, item.ExternalSource))
                     {
-                        _serviceLog?.Verbose("Skipping subscription poll for {name} [{id}], the source is not due to be polled and has no pending certificate update.", item.Name, item.Id);
+                        _serviceLog?.Verbose("Skipping subscription check for {name} [{id}]: no update or poll is due, or attempts are being spaced out after repeated failures.", item.Name, item.Id);
                         continue;
                     }
 
@@ -318,10 +318,9 @@ namespace Certify.Management
             // on every pass instead of on its own schedule
             sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
 
-            // preserved before anything is recorded, so however many times this request records a failure each count
+            // preserved before anything is recorded, so however many times this request records a failure the count
             // only advances by one
             var currentFailureCount = item.RenewalFailureCount;
-            var currentSubscriptionFailureCount = sourceConfig.SubscriptionFailureCount;
 
             // set once the source has supplied a certificate, so a failure after that point is recorded against
             // deploying it rather than against the source
@@ -340,7 +339,7 @@ namespace Certify.Management
                 {
                     var failureMessage = $"External certificate subscription {GetExternalActionNoun(requestMode)} failed: {fetchResult.Message ?? "Failed to retrieve certificate from external source."}";
 
-                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount);
                     return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
                 }
 
@@ -360,7 +359,7 @@ namespace Certify.Management
                 {
                     var failureMessage = "External certificate update was detected but could not be written to local storage.";
 
-                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount);
                     return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
                 }
 
@@ -369,7 +368,7 @@ namespace Certify.Management
                 {
                     var failureMessage = $"External certificate update rejected: {validationResult.Message ?? "External certificate update failed validation."}";
 
-                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount);
                     return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
                 }
 
@@ -377,7 +376,7 @@ namespace Certify.Management
                 SetPrimaryRequestStatus(item, null, RequestState.Success, "External certificate pulled from Management Hub.");
                 certificateObtained = true;
 
-                var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == SubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update", currentFailureCount, currentSubscriptionFailureCount);
+                var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == SubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update", currentFailureCount);
 
                 if (deploymentResult.IsSuccess && requestMode == SubscriptionRequestMode.Manual)
                 {
@@ -400,45 +399,29 @@ namespace Certify.Management
 
                 if (certificateObtained)
                 {
-                    await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                    await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount);
                 }
                 else
                 {
-                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage, currentFailureCount);
                 }
 
                 return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
             }
         }
 
-        /// <summary>
-        /// Advance the subscription's consecutive failure count for a request which has just failed, from the count held
-        /// before that request began. A single request can record its failure more than once - a deployment failure is
-        /// recorded by the deployment, then again by the exception handler which observed it - and each recording has
-        /// to settle on the same value or the retry pacing progresses at twice the intended rate. This is the
-        /// subscription's counterpart of <see cref="IncrementManagedCertificateRenewalFailureCount"/>
-        /// </summary>
-        /// <param name="sourceConfig"></param>
-        /// <param name="subscriptionFailureCount">the count held before the request began</param>
-        internal static void AdvanceSubscriptionFailureCount(ExternalCertificateSubscription sourceConfig, int subscriptionFailureCount)
-        {
-            sourceConfig.SubscriptionFailureCount = subscriptionFailureCount + 1;
-        }
 
         /// <summary>
         /// Record a failed attempt to obtain an update from the subscription source: the source could not be reached or
         /// read, or what it supplied could not be stored or validated. Recorded as a failed primary request which
-        /// replaces the outcome of the previous request, and counted against the source so the next attempt is paced
-        /// by <see cref="IsPendingSubscriptionUpdateRetryDue"/>
+        /// replaces the outcome of the previous request; the item's failure count then paces the next attempt
         /// </summary>
         /// <param name="item"></param>
         /// <param name="sourceConfig"></param>
         /// <param name="message"></param>
-        /// <param name="failureCount">the item's count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
-        /// <param name="subscriptionFailureCount">the subscription's count held before the request began, see <see cref="AdvanceSubscriptionFailureCount"/></param>
-        private async Task RecordSubscriptionRequestFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount, int subscriptionFailureCount)
+        /// <param name="failureCount">the count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
+        private async Task RecordSubscriptionRequestFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount)
         {
-            AdvanceSubscriptionFailureCount(sourceConfig, subscriptionFailureCount);
             sourceConfig.LastError = message;
 
             LogMessage(item.Id, message, LogItemType.GeneralError);
@@ -457,11 +440,9 @@ namespace Certify.Management
         /// <param name="item"></param>
         /// <param name="sourceConfig"></param>
         /// <param name="message"></param>
-        /// <param name="failureCount">the item's count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
-        /// <param name="subscriptionFailureCount">the subscription's count held before the request began, see <see cref="AdvanceSubscriptionFailureCount"/></param>
-        private async Task RecordSubscriptionDeploymentFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount, int subscriptionFailureCount)
+        /// <param name="failureCount">the count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
+        private async Task RecordSubscriptionDeploymentFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount)
         {
-            AdvanceSubscriptionFailureCount(sourceConfig, subscriptionFailureCount);
             sourceConfig.LastError = message;
 
             LogMessage(item.Id, message, LogItemType.CertificateRequestAttentionRequired);
@@ -490,7 +471,6 @@ namespace Certify.Management
 
             ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
             sourceConfig.LastError = null;
-            sourceConfig.SubscriptionFailureCount = 0;
 
             LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} completed with no update. Source version: {FormatSourceVersion(sourceVersion)}.");
 
@@ -518,6 +498,38 @@ namespace Certify.Management
             return new SubscriptionProcessResult(message, outcome);
         }
 
+        /// <summary>
+        /// Record that the source has a version of the certificate which the item does not yet hold, so the next pass
+        /// fetches and deploys it. Returns false if that version is already held or is already recorded as pending.
+        /// A version which is genuinely new is new work rather than a repeat of whatever has been failing, so the failure
+        /// count which paces retries is cleared: the update is attempted on the next pass even if the item was backing
+        /// off after repeated failures, which matters most for the short lifetime certificates push mode exists for.
+        /// Should the new version fail in the same way, the count climbs again and the back off resumes within a few passes
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="sourceVersion">the version announced by the source, or null if it did not say</param>
+        /// <returns>whether a new pending update was recorded</returns>
+        internal static bool TryRecordPendingSubscriptionUpdate(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? sourceVersion)
+        {
+            var pendingVersion = string.IsNullOrWhiteSpace(sourceVersion)
+                ? DateTimeOffset.UtcNow.UtcTicks.ToString()
+                : sourceVersion;
+
+            if (string.Equals(sourceConfig.LastSourceVersion, pendingVersion, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(sourceConfig.PendingSourceVersion, pendingVersion, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            sourceConfig.PendingSourceVersion = pendingVersion;
+            sourceConfig.LastError = null;
+            item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
+            item.RenewalFailureCount = 0;
+
+            return true;
+        }
+
         private async Task<ActionResult> MarkSubscriptionUpdateAvailable(string managedCertificateId, string? sourceVersion)
         {
             if (string.IsNullOrWhiteSpace(managedCertificateId))
@@ -537,19 +549,10 @@ namespace Certify.Management
                 return new ActionResult("Source push mode not enabled", false);
             }
 
-            var pendingVersion = string.IsNullOrWhiteSpace(sourceVersion)
-                ? DateTimeOffset.UtcNow.UtcTicks.ToString()
-                : sourceVersion;
-
-            if (string.Equals(sourceConfig.LastSourceVersion, pendingVersion, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(sourceConfig.PendingSourceVersion, pendingVersion, StringComparison.OrdinalIgnoreCase))
+            if (!TryRecordPendingSubscriptionUpdate(item, sourceConfig, sourceVersion))
             {
                 return new ActionResult("External managed certificate update already recorded.", true);
             }
-
-            sourceConfig.PendingSourceVersion = pendingVersion;
-            sourceConfig.LastError = null;
-            item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
 
             await UpdateManagedCertificate(item);
 
@@ -687,55 +690,15 @@ namespace Certify.Management
                 return false;
             }
 
-            return (HasPendingSubscriptionUpdate(sourceConfig) && IsPendingSubscriptionUpdateRetryDue(sourceConfig, checkDate))
-                   || ShouldPollSource(item, sourceConfig, checkDate);
-        }
-
-        /// <summary>
-        /// Determine whether a subscription which has an update waiting should attempt it now.
-        /// An update is normally attempted on the very next pass, which is the point of being told about one. An update
-        /// which cannot be applied would otherwise be retried on every pass indefinitely, contacting the source every
-        /// few minutes for as long as the problem lasts, so once attempts have started failing they are spaced out.
-        /// </summary>
-        /// <param name="sourceConfig"></param>
-        /// <param name="checkDate"></param>
-        /// <returns></returns>
-        internal static bool IsPendingSubscriptionUpdateRetryDue(ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
-        {
-            if (sourceConfig == null)
+            // an attempt which keeps failing is spaced out by the same hold as any other attempt for the item, whether
+            // it is fetching an update the source has announced or polling the source on its own interval. Without the
+            // hold the source would be contacted on every pass for as long as the problem lasted
+            if (ManagedCertificate.IsHeldByFailureBackoff(item, checkDate))
             {
                 return false;
             }
 
-            // the first few attempts are made at the normal pass cadence, so a brief problem at the source is
-            // recovered from quickly
-            if (sourceConfig.SubscriptionFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff
-                || !sourceConfig.DateLastPoll.HasValue)
-            {
-                return true;
-            }
-
-            var now = checkDate ?? DateTimeOffset.UtcNow;
-
-            return sourceConfig.DateLastPoll.Value.AddMinutes(GetPendingSubscriptionUpdateRetryWaitMinutes(sourceConfig)) <= now;
-        }
-
-        /// <summary>
-        /// The wait between attempts at a pending update which keeps failing, doubling from the subscription's own poll
-        /// interval with each further failure up to a ceiling of 48hrs
-        /// </summary>
-        /// <param name="sourceConfig"></param>
-        /// <returns></returns>
-        internal static double GetPendingSubscriptionUpdateRetryWaitMinutes(ExternalCertificateSubscription sourceConfig)
-        {
-            const double maxWaitMinutes = 48 * 60;
-
-            var pollIntervalMinutes = sourceConfig.PollIntervalMinutes <= 0 ? 30 : sourceConfig.PollIntervalMinutes;
-
-            // clamped before use, because the doubling would otherwise overflow long before the ceiling matters
-            var doublings = Math.Min(sourceConfig.SubscriptionFailureCount - LifetimeHealthThresholds.FailuresBeforeBackoff, 16);
-
-            return Math.Min(pollIntervalMinutes * Math.Pow(2, doublings), maxWaitMinutes);
+            return HasPendingSubscriptionUpdate(sourceConfig) || ShouldPollSource(item, sourceConfig, checkDate);
         }
 
         internal static bool ShouldPollSource(ManagedCertificate item, ExternalCertificateSubscription? sourceConfig, DateTimeOffset? checkDate = null)
@@ -1329,14 +1292,14 @@ namespace Certify.Management
             }
         }
 
-        private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason, int? currentFailureCount, int currentSubscriptionFailureCount)
+        private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason, int? currentFailureCount)
         {
             sourceConfig.PendingSourceVersion = sourceVersion ?? sourceConfig.PendingSourceVersion;
 
             var metadataApplied = await ApplyExternalCertificateMetadata(item, sourceConfig, assetPath);
             if (!metadataApplied)
             {
-                await RecordSubscriptionDeploymentFailure(item, sourceConfig, SubscriptionPfxLoadErrorMessage, currentFailureCount, currentSubscriptionFailureCount);
+                await RecordSubscriptionDeploymentFailure(item, sourceConfig, SubscriptionPfxLoadErrorMessage, currentFailureCount);
                 return new ActionResult(SubscriptionPfxLoadErrorMessage, false);
             }
 
@@ -1352,7 +1315,7 @@ namespace Certify.Management
                 // this from counting the same failure twice
                 var failureMessage = $"External certificate deployment failed: {deployResult.Message}";
 
-                await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount, currentSubscriptionFailureCount);
+                await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount);
                 return new ActionResult(failureMessage, false);
             }
             else
@@ -1360,7 +1323,6 @@ namespace Certify.Management
                 ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
                 sourceConfig.LastSourceVersion = sourceVersion ?? sourceConfig.LastSourceVersion;
                 sourceConfig.LastError = null;
-                sourceConfig.SubscriptionFailureCount = 0;
 
                 var successMessage = $"External certificate deployment completed successfully. Source version: {FormatSourceVersion(sourceVersion)}.";
                 SetBindingDeploymentStatus(item, RequestState.Success, successMessage);

@@ -455,9 +455,16 @@ namespace Certify.Management
             return UpdateManagedCertificateStatus(managedCertificate, status, msg, failureCount);
         }
 
+        /// <summary>
+        /// Record a failure to deploy the certificate the item holds, or to run its deployment tasks. The certificate is
+        /// not in use where it should be, so this is a failed request, recorded the same way whichever pass hit it, and
+        /// the item is selected for redeployment until a deployment succeeds. A warning would not do: item health treats
+        /// a warning status as healthy, and the final status of a renewal driven request records an error for the same
+        /// failure anyway
+        /// </summary>
         private Task RecordDeploymentFailure(ManagedCertificate managedCertificate, string msg, int? failureCount = null)
         {
-            return UpdateManagedCertificateStatus(managedCertificate, RequestState.Warning, msg, failureCount);
+            return UpdateManagedCertificateStatus(managedCertificate, RequestState.Error, msg, failureCount);
         }
 
         /// <summary>

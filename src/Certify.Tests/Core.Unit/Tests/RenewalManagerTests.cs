@@ -871,10 +871,10 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.HasCount(0, results, "Once enough deployment attempts have failed the next is spaced out");
         }
 
-        [TestMethod, Description("Test PerformRenewAll does not redeploy immediately after the attempt which failed to deploy")]
-        public async Task TestPerformRenewAll_RedeployIsNotDueImmediately()
+        [TestMethod, Description("Test PerformRenewAll redeploys on the next pass while the item is within its first attempts")]
+        public async Task TestPerformRenewAll_RedeployIsDueOnTheNextPass()
         {
-            // Arrange
+            // Arrange - the deployment failed a minute ago, on the item's first attempt
             await _itemStore.DeleteAll();
             await _itemStore.Update(CreateItemWithUndeployedCertificate("recent", "Recent", lastAttempt: DateTimeOffset.UtcNow.AddMinutes(-1)));
 
@@ -891,7 +891,8 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Assert
-            Assert.HasCount(0, results, "A redeploy a minute after the failed attempt is too soon");
+            Assert.HasCount(1, results, "The first few attempts are made without delay, so a brief problem recovers quickly");
+            Assert.IsTrue(_requestsPerformed.Single().RedeployOnly);
         }
 
         [TestMethod, Description("Test PerformRenewAll holds a redeploy for the item's maintenance window")]

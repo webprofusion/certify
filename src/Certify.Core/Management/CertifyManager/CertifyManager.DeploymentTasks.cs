@@ -15,11 +15,6 @@ namespace Certify.Management
 {
     public partial class CertifyManager
     {
-        /// <summary>
-        /// Minimum time left between deployment retry attempts while an item is still within its initial attempts, so a
-        /// retry does not immediately follow the renewal attempt which has just failed to deploy
-        /// </summary>
-        private static readonly TimeSpan _minDeploymentRetryInterval = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// Get list of deployment task providers (from plugins)
@@ -200,21 +195,9 @@ namespace Certify.Management
                 return true;
             }
 
-            return HasUsableCertificate(managedCert);
+            return ManagedCertificate.HasUsableCertificate(managedCert);
         }
 
-        /// <summary>
-        /// Determine whether the managed certificate currently has a certificate we could deploy (present and not expired)
-        /// </summary>
-        /// <param name="managedCert"></param>
-        /// <returns></returns>
-        internal static bool HasUsableCertificate(ManagedCertificate managedCert)
-        {
-            return managedCert?.DateExpiry.HasValue == true
-                && managedCert.DateExpiry > DateTimeOffset.UtcNow
-                && (!string.IsNullOrWhiteSpace(managedCert.CertificateThumbprintHash)
-                    || !string.IsNullOrWhiteSpace(managedCert.CertificatePath));
-        }
 
         /// <summary>
         /// Determine whether post-request deployment tasks should be evaluated for the completed request
@@ -305,7 +288,7 @@ namespace Certify.Management
 
             requestResult.Actions.Add(postRequestTasks);
 
-            // certificate may already be deployed to some extent so this counts a completed with warnings
+            // a task which failed leaves the certificate not fully deployed, which is recorded as a failed request
             if (results.Any(r => r.HasError))
             {
                 requestResult.IsSuccess = false;
@@ -327,100 +310,6 @@ namespace Certify.Management
             return true;
         }
 
-        /// <summary>
-        /// Whether the item holds a certificate which was obtained but not fully deployed: the certificate store or
-        /// binding deployment failed, or a post-request deployment task did. Only a successful deployment clears this,
-        /// so it survives a subscription check which finds nothing newer at the source
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        internal static bool HasRecordedDeploymentFailure(ManagedCertificate item)
-        {
-            if (item == null)
-            {
-                return false;
-            }
-
-            return item.LastBindingDeployment?.Status == RequestState.Error
-                || HasFailedDeploymentTasks(item);
-        }
-
-        /// <summary>
-        /// Determine whether an item holds a usable certificate which was not fully deployed, so its deployment can be
-        /// re-attempted without ordering a new certificate.
-        /// Renewal scheduling is calculated from the date the certificate was obtained, so an item whose certificate
-        /// arrived but then failed to store, bind or run its deployment tasks is not due for renewal. The renewal pass
-        /// selects such an item for a request which deploys the certificate it already holds, otherwise it would not be
-        /// attempted again until its next renewal falls due - most of a certificate lifetime later, with the deployment
-        /// target still using the previous certificate
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        internal static bool RequiresDeploymentRetry(ManagedCertificate item)
-        {
-            if (item?.IncludeInAutoRenew != true)
-            {
-                return false;
-            }
-
-            // the item is waiting on a person (manual DNS etc), so it is not ours to retry
-            if (item.Health == ManagedCertificateHealth.AwaitingUser)
-            {
-                return false;
-            }
-
-            // only the deployment of a certificate we actually obtained can be retried here. A failed request needs a
-            // new certificate, which is the renewal pass's job - redeploying the previous certificate would not help
-            if (item.LastPrimaryRequest?.Status != RequestState.Success)
-            {
-                return false;
-            }
-
-            // an expired or missing certificate cannot usefully be deployed, and renewal is due for it by definition
-            if (!HasUsableCertificate(item))
-            {
-                return false;
-            }
-
-            // a subscription which still has an update pending is retried in full (fetch and deploy) by the
-            // subscription pass, which is the only place its retained pending version is cleared
-            if (HasPendingSubscriptionUpdate(item.ExternalSource))
-            {
-                return false;
-            }
-
-            return HasRecordedDeploymentFailure(item);
-        }
-
-        /// <summary>
-        /// Determine whether a deployment retry for the given item is due now. This applies the same failure back off
-        /// used for renewal attempts, so a deployment target which stays unreachable is not re-attempted on every pass
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="checkDate"></param>
-        /// <returns></returns>
-        internal static bool IsDeploymentRetryDue(ManagedCertificate item, DateTimeOffset? checkDate = null)
-        {
-            var now = checkDate ?? DateTimeOffset.UtcNow;
-
-            if (item.DateLastRenewalAttempt == null)
-            {
-                return true;
-            }
-
-            // a retry must not immediately follow the attempt whose deployment has just failed
-            if (now < item.DateLastRenewalAttempt.Value.Add(_minDeploymentRetryInterval))
-            {
-                return false;
-            }
-
-            if (item.RenewalFailureCount < LifetimeHealthThresholds.FailuresBeforeBackoff)
-            {
-                return true;
-            }
-
-            return now >= ManagedCertificate.CalculateFailureBackoff(item).NextAttemptByDate;
-        }
 
         /// <summary>
         /// Resolve the primary request status to use when recomputing the stored overall renewal status.
