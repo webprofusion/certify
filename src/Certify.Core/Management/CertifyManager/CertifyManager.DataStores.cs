@@ -142,11 +142,35 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Check the data store can be written to, by storing and removing a throwaway item. Returns the failure when it
+        /// cannot, or null when it can
+        /// </summary>
+        /// <returns></returns>
+        private async Task<Exception?> GetDataStoreWriteFailure()
+        {
+            try
+            {
+                var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
+
+                await _itemManager.Update(item);
+                await _itemManager.Delete(item);
+
+                return null;
+            }
+            catch (Exception exp)
+            {
+                return exp;
+            }
+        }
+
         private async Task InitDataStore()
         {
             var enableExtendedDataStores = true;
 
-            _dataStoreStatus = new DataStoreStatus();
+            // the failure count survives the reset, so repeated reconnection attempts are counted rather than each
+            // attempt reporting a first failure
+            _dataStoreStatus = new DataStoreStatus { ConsecutiveFailures = _dataStoreStatus?.ConsecutiveFailures ?? 0 };
 
             try
             {
@@ -213,18 +237,12 @@ namespace Certify.Management
                 }
 
                 // attempt to create and delete a test item
-                try
-                {
-                    var item = new ManagedCertificate { Id = $"writecheck_{Guid.NewGuid()}" };
+                var writeFailure = await GetDataStoreWriteFailure();
 
-                    await _itemManager.Update(item);
-
-                    await _itemManager.Delete(item);
-                }
-                catch (Exception ex)
+                if (writeFailure != null)
                 {
-                    _serviceLog?.Error(ex, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {ex}", ex.Message);
-                    throw new DataStoreConnectionException($"Data store write test failed: {ex.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+                    _serviceLog?.Error(writeFailure, $"Data store write failed. Check connection and data integrity. Ensure file based databases are not subject to locks via AV scanning etc as this can cause data corruption. {writeFailure}", writeFailure.Message);
+                    throw new DataStoreConnectionException($"Data store write test failed: {writeFailure.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
                 }
 
                 var isInitialised = await _itemManager.IsInitialised();

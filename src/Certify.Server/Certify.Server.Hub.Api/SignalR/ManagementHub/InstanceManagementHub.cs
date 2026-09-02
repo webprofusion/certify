@@ -336,10 +336,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
+            // the current version of the source certificate is included where the hub knows it, so a subscriber which
+            // already holds that version can tell without fetching it. Without a version the subscriber checks the
+            // source, which is the right fallback when the hub has no record of the source certificate
             var payload = new SubscriptionUpdate
             {
                 ManagedCertificateId = request.TargetManagedCertificateId,
-                SourceVersion = null
+                SourceVersion = GetSubscriptionSourceVersion(GetCachedManagedCertificate(request.SourceInstanceId, request.SourceManagedCertificateId))
             };
 
             var command = new InstanceCommandRequest(ManagementHubCommands.PushSubscriptionUpdate)
@@ -357,6 +360,29 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 request.SourceManagedCertificateId);
         }
 
+        /// <summary>
+        /// The version identifier pushed to subscribers for a source certificate. This is the lower case thumbprint,
+        /// because that is the ETag the certificate download returns and so the version a subscriber records once it
+        /// has fetched the certificate. A push carrying the same value therefore lets a subscriber see it already holds
+        /// that certificate without fetching it again. The renewal date is used only for a source with no thumbprint
+        /// </summary>
+        /// <param name="source">the source certificate, or null if the hub has no record of it</param>
+        /// <returns>the version, or null if it cannot be determined</returns>
+        internal static string? GetSubscriptionSourceVersion(ManagedCertificate? source)
+        {
+            if (source == null)
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrWhiteSpace(source.CertificateThumbprintHash))
+            {
+                return source.CertificateThumbprintHash.ToLowerInvariant();
+            }
+
+            return source.DateRenewed?.UtcDateTime.Ticks.ToString();
+        }
+
         private async Task NotifyExternalSubscribersOfManagedItemUpdate(string sourceInstanceId, ManagedCertificate updatedManagedCertificate)
         {
             if (string.IsNullOrWhiteSpace(sourceInstanceId) || string.IsNullOrWhiteSpace(updatedManagedCertificate.Id))
@@ -364,7 +390,7 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
                 return;
             }
 
-            var sourceVersion = updatedManagedCertificate.DateRenewed?.UtcDateTime.Ticks.ToString();
+            var sourceVersion = GetSubscriptionSourceVersion(updatedManagedCertificate);
             var managedItemsByInstance = _stateProvider.GetManagedInstanceItems();
             var targets = GetExternalPushSubscriptionTargets(sourceInstanceId, updatedManagedCertificate, managedItemsByInstance);
 

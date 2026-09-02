@@ -1465,7 +1465,7 @@ namespace Certify.Management
         /// </summary>
         private static readonly TimeSpan _minSubscriptionResyncInterval = TimeSpan.FromMinutes(5);
 
-        private DateTimeOffset _lastSubscriptionResync = DateTimeOffset.MinValue;
+        private long _lastSubscriptionResyncTicks = DateTimeOffset.MinValue.UtcTicks;
 
         /// <summary>
         /// Determine whether a certificate subscription needs the hub to re-send its current source version, and if so
@@ -1518,7 +1518,13 @@ namespace Certify.Management
                 return;
             }
 
-            if (DateTimeOffset.UtcNow < _lastSubscriptionResync.Add(_minSubscriptionResyncInterval))
+            // the slot is claimed atomically before any work is done, because the heartbeat and the reconnected event
+            // can both arrive at once and would otherwise each request a resync
+            var nowTicks = DateTimeOffset.UtcNow.UtcTicks;
+            var lastResyncTicks = System.Threading.Interlocked.Read(ref _lastSubscriptionResyncTicks);
+
+            if (nowTicks < lastResyncTicks + _minSubscriptionResyncInterval.Ticks
+                || System.Threading.Interlocked.CompareExchange(ref _lastSubscriptionResyncTicks, nowTicks, lastResyncTicks) != lastResyncTicks)
             {
                 _serviceLog?.Debug("Skipping certificate subscription resync ({reason}), one was requested recently.", reason);
                 return;
@@ -1548,8 +1554,6 @@ namespace Certify.Management
 
                     requested++;
                 }
-
-                _lastSubscriptionResync = DateTimeOffset.UtcNow;
 
                 if (requested > 0)
                 {

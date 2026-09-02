@@ -415,12 +415,21 @@ namespace Certify.Management
                 managedCertificate.RenewalFailureMessage = "Error: Cannot store certificate status update to the Data Store. Check there is enough disk space and permission for database writes. If this problem persists, contact support. " + exp;
 
                 // the outcome of this request is now lost, so the item still looks like it needs the work which was
-                // just done. Continuing to renew while results cannot be recorded repeats the same request on every
-                // pass, which for a successful certificate order means ordering it again and again against the CA's
-                // duplicate certificate limits. Degraded mode stops that until the store is reachable again
-                _serviceLog?.Error(exp, "Failed to store status update for {name} [{id}]. Entering degraded mode until the data store is writable again.", managedCertificate.Name, managedCertificate.Id);
+                // just done and is repeated on the next pass - for a successful certificate order that means ordering
+                // it again, against the CA's duplicate certificate limits. When the store itself cannot be written to
+                // that would happen for every item, so degraded mode stops processing until the store is reachable
+                // again. A write which fails for a reason specific to this item must not stop every other item being
+                // processed, so the store is probed before it is treated as unavailable
+                if (await GetDataStoreWriteFailure() == null)
+                {
+                    _serviceLog?.Error(exp, "Failed to store status update for {name} [{id}]. The data store is writable, so the failure is specific to this item and its outcome has not been recorded.", managedCertificate.Name, managedCertificate.Id);
+                }
+                else
+                {
+                    _serviceLog?.Error(exp, "Failed to store status update for {name} [{id}]. Entering degraded mode until the data store is writable again.", managedCertificate.Name, managedCertificate.Id);
 
-                HandleDataStoreFailure($"Failed to store managed certificate status update: {exp.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+                    HandleDataStoreFailure($"Failed to store managed certificate status update: {exp.Message}", _dataStoreStatus.DataStoreId, _dataStoreStatus.DataStoreType);
+                }
             }
 
             // report request state to status hub clients
@@ -565,20 +574,31 @@ namespace Certify.Management
             };
         }
 
-        private async Task SendStatusReport(RenewalStatusReport report)
+        /// <summary>
+        /// Send a status report to the reporting dashboard, if reporting is enabled
+        /// </summary>
+        /// <param name="report"></param>
+        /// <returns>false if the report could not be sent</returns>
+        private async Task<bool> SendStatusReport(RenewalStatusReport report)
         {
-            if (CoreAppSettings.Current.EnableStatusReporting && _dashboardClient != null)
+            if (!CoreAppSettings.Current.EnableStatusReporting || _dashboardClient == null)
             {
-                try
-                {
-                    await _dashboardClient.ReportRenewalStatusAsync(report);
-                }
-                catch (Exception)
-                {
-                    // failed to report status
-                    LogMessage(report?.ManagedSite?.Id, "Failed to send renewal status report.",
-                        LogItemType.GeneralWarning);
-                }
+                return true;
+            }
+
+            try
+            {
+                await _dashboardClient.ReportRenewalStatusAsync(report);
+
+                return true;
+            }
+            catch (Exception exp)
+            {
+                // failed to report status
+                _serviceLog?.Warning("Failed to send renewal status report for {itemId}: {msg}", report?.ManagedSite?.Id, exp.Message);
+                LogMessage(report?.ManagedSite?.Id, "Failed to send renewal status report.", LogItemType.GeneralWarning);
+
+                return false;
             }
         }
 
@@ -586,47 +606,44 @@ namespace Certify.Management
         {
             try
             {
-                if (_statusReportQueue.Any())
+                if (_statusReportQueue.IsEmpty)
                 {
-                    var itemsSent = 0;
-                    var itemsFailed = 0;
+                    return;
+                }
 
-                    foreach (var k in _statusReportQueue.Keys)
+                var itemsSent = 0;
+
+                foreach (var k in _statusReportQueue.Keys)
+                {
+                    if (!_statusReportQueue.TryRemove(k, out var report))
                     {
-                        if (_statusReportQueue.TryRemove(k, out var report))
-                        {
-                            try
-                            {
-                                await SendStatusReport(report);
-                                itemsSent++;
-                            }
-                            catch (Exception exp)
-                            {
-                                // the report is already off the queue, so without putting it back a failure to send
-                                // loses the notification for the item which most needed one. Catching per report also
-                                // keeps one bad send from abandoning the rest of the batch
-                                _statusReportQueue.TryAdd(k, report);
-                                itemsFailed++;
-
-                                _serviceLog.Error(exp, "Failed to send queued status report for {itemId}, it will be retried.", k);
-                            }
-                        }
+                        continue;
                     }
 
-                    if (itemsSent > 0)
+                    if (await SendStatusReport(report))
                     {
-                        _serviceLog.Information($"Sent {itemsSent} queued status reports.");
+                        itemsSent++;
+                        continue;
                     }
 
-                    if (itemsFailed > 0)
-                    {
-                        _serviceLog.Warning($"{itemsFailed} queued status reports could not be sent and remain queued.");
-                    }
+                    // the report is already off the queue, so it goes back rather than losing the notification for the
+                    // item which most needed one - unless a newer report for the item was queued in the meantime, which
+                    // takes precedence. The rest of the queue is left for the next pass instead of being attempted
+                    // one by one against a service which has just failed to answer
+                    _statusReportQueue.TryAdd(k, report);
+
+                    _serviceLog?.Warning("A queued status report could not be sent. {count} report(s) remain queued and will be retried on the next pass.", _statusReportQueue.Count);
+                    break;
+                }
+
+                if (itemsSent > 0)
+                {
+                    _serviceLog?.Information($"Sent {itemsSent} queued status reports.");
                 }
             }
             catch (Exception exp)
             {
-                _serviceLog.Error(exp, "Failed to send queued status reports.");
+                _serviceLog?.Error(exp, "Failed to send queued status reports.");
             }
         }
 

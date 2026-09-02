@@ -535,5 +535,42 @@ namespace Certify.Core.Tests.Unit
             Assert.IsNull(item.DateNextScheduledRenewalAttempt);
             Assert.IsNull(source.PendingSourceVersion);
         }
+
+        [TestMethod]
+        public void GetSubscriptionSourceVersion_UsesTheThumbprint_SoItMatchesTheVersionAFetchRecords()
+        {
+            // a fetch records the ETag of the download, the lower case thumbprint, as the version it holds. A push
+            // carrying the same value lets a subscriber see it already has that certificate without fetching it
+            var source = new ManagedCertificate
+            {
+                Id = "source-cert",
+                CertificateThumbprintHash = "ABCDEF",
+                DateRenewed = DateTimeOffset.UtcNow
+            };
+
+            Assert.AreEqual("abcdef", InstanceManagementHub.GetSubscriptionSourceVersion(source));
+        }
+
+        [TestMethod]
+        public void GetSubscriptionSourceVersion_FallsBackToTheRenewalDate_WithoutAThumbprint()
+        {
+            var renewed = DateTimeOffset.UtcNow;
+            var source = new ManagedCertificate
+            {
+                Id = "source-cert",
+                DateRenewed = renewed
+            };
+
+            Assert.AreEqual(renewed.UtcDateTime.Ticks.ToString(), InstanceManagementHub.GetSubscriptionSourceVersion(source));
+        }
+
+        [TestMethod]
+        public void GetSubscriptionSourceVersion_IsNull_WhenTheSourceIsUnknown()
+        {
+            // a push without a version tells the subscriber to check the source, which is the right fallback when the
+            // hub has no record of the source certificate
+            Assert.IsNull(InstanceManagementHub.GetSubscriptionSourceVersion(null));
+            Assert.IsNull(InstanceManagementHub.GetSubscriptionSourceVersion(new ManagedCertificate { Id = "source-cert" }));
+        }
     }
 }
