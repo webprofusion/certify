@@ -311,8 +311,6 @@ namespace Certify.Management
                 _subscriptionsAwaitingMaintenanceWindow.TryRemove(item.Id, out _);
             }
 
-            ClearPrimaryAndBindingRequestStatus(item);
-
             LogSubscriptionStart(item, sourceConfig, requestMode);
 
             // stamped before the fetch rather than after it, so a fetch which fails in a way that leaves this method
@@ -320,87 +318,181 @@ namespace Certify.Management
             // on every pass instead of on its own schedule
             sourceConfig.DateLastPoll = DateTimeOffset.UtcNow;
 
-            var fetchResult = await FetchExternalCertificateAsset(
-                item,
-                sourceConfig,
-                pushedSourceVersion: hasPendingSourceUpdate ? sourceConfig.PendingSourceVersion : null,
-                cancellationToken,
-                ignoreCurrentVersion: requestMode == SubscriptionRequestMode.Manual);
+            // preserved before anything is recorded, so however many times this request records a failure the count
+            // only advances by one
+            var currentFailureCount = item.RenewalFailureCount;
 
-            if (!fetchResult.IsSuccess)
+            // set once the source has supplied a certificate, so a failure after that point is recorded against
+            // deploying it rather than against the source
+            var certificateObtained = false;
+
+            try
             {
-                sourceConfig.SubscriptionFailureCount++;
-                sourceConfig.LastError = fetchResult.Message;
-                LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} failed: {fetchResult.Message}", LogItemType.GeneralError);
-                SetPrimaryRequestStatus(item, null, RequestState.Error, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
+                var fetchResult = await FetchExternalCertificateAsset(
+                    item,
+                    sourceConfig,
+                    pushedSourceVersion: hasPendingSourceUpdate ? sourceConfig.PendingSourceVersion : null,
+                    cancellationToken,
+                    ignoreCurrentVersion: requestMode == SubscriptionRequestMode.Manual);
 
-                await RecordPrimaryRequestFailure(item, fetchResult.Message ?? "Failed to retrieve certificate from external source.");
-                return new SubscriptionProcessResult(fetchResult.Message, SubscriptionRequestOutcome.Failed);
+                if (!fetchResult.IsSuccess)
+                {
+                    var failureMessage = $"External certificate subscription {GetExternalActionNoun(requestMode)} failed: {fetchResult.Message ?? "Failed to retrieve certificate from external source."}";
+
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage);
+                    return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
+                }
+
+                if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
+                {
+                    return await RecordSubscriptionNoUpdate(item, sourceConfig, fetchResult.SourceVersion, requestMode);
+                }
+
+                // a new certificate is about to be stored and deployed, so the outcome of the previous request no longer
+                // describes the item
+                ClearPrimaryAndBindingRequestStatus(item);
+
+                LogMessage(item.Id, $"External certificate update detected. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}.");
+
+                var assetPath = await StoreExternalCertificateAsset(item, fetchResult.CertificateData);
+                if (assetPath == null)
+                {
+                    var failureMessage = "External certificate update was detected but could not be written to local storage.";
+
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage);
+                    return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
+                }
+
+                var validationResult = await ValidateExternalCertificateAsset(item, sourceConfig, assetPath);
+                if (!validationResult.IsValid)
+                {
+                    var failureMessage = $"External certificate update rejected: {validationResult.Message ?? "External certificate update failed validation."}";
+
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage);
+                    return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
+                }
+
+                LogMessage(item.Id, $"External certificate asset validated. Thumbprint: {validationResult.Thumbprint}; valid until {validationResult.DateExpiry:u}; lifetime elapsed: {validationResult.PercentageElapsed}%.");
+                SetPrimaryRequestStatus(item, null, RequestState.Success, "External certificate pulled from Management Hub.");
+                certificateObtained = true;
+
+                var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == SubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update", currentFailureCount);
+
+                if (deploymentResult.IsSuccess && requestMode == SubscriptionRequestMode.Manual)
+                {
+                    return new SubscriptionProcessResult("External certificate pulled from Management Hub and deployment completed.", SubscriptionRequestOutcome.Completed);
+                }
+
+                return new SubscriptionProcessResult(
+                    deploymentResult.Message,
+                    deploymentResult.IsSuccess ? SubscriptionRequestOutcome.Completed : SubscriptionRequestOutcome.Failed);
             }
-
-            if (!fetchResult.HasUpdate || fetchResult.CertificateData == null)
+            catch (Exception exp)
             {
-                var message = "No updated certificate was available from Management Hub.";
-                var noUpdateStatus = await RecordSubscriptionNoUpdate(item, message);
-                LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} completed with no update. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}. Recorded status: {noUpdateStatus}; failure count: {item.RenewalFailureCount}.", noUpdateStatus == RequestState.Error ? LogItemType.GeneralError : LogItemType.CertificateRequestAttentionRequired);
-                SetPrimaryRequestStatus(item, null, noUpdateStatus, message);
+                // fetching, storing, parsing or deploying the certificate can all throw. The failure is recorded here,
+                // against the copy of the item this request has been working on, so it is paced and reported like any
+                // other failure instead of being repeated on every pass and written over a stale copy
+                _tc?.TrackException(exp);
+                _serviceLog?.Error(exp, "External certificate request failed for {name} [{id}]", item.Name, item.Id);
 
-                ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
-                sourceConfig.LastError = noUpdateStatus == RequestState.Error ? message : null;
+                var failureMessage = $"External certificate request failed: {exp.Message}";
 
-                // the source answered, so attempts against it are not failing even if it had nothing new for us
-                sourceConfig.SubscriptionFailureCount = 0;
+                if (certificateObtained)
+                {
+                    await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount);
+                }
+                else
+                {
+                    await RecordSubscriptionRequestFailure(item, sourceConfig, failureMessage);
+                }
+
+                return new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
+            }
+        }
+
+        /// <summary>
+        /// Record a failed attempt to obtain an update from the subscription source: the source could not be reached or
+        /// read, or what it supplied could not be stored or validated. Recorded as a failed primary request which
+        /// replaces the outcome of the previous request, and counted against the source so the next attempt is paced
+        /// by <see cref="IsPendingSubscriptionUpdateRetryDue"/>
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="message"></param>
+        private async Task RecordSubscriptionRequestFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message)
+        {
+            sourceConfig.SubscriptionFailureCount++;
+            sourceConfig.LastError = message;
+
+            LogMessage(item.Id, message, LogItemType.GeneralError);
+
+            ClearPrimaryAndBindingRequestStatus(item);
+            SetPrimaryRequestStatus(item, null, RequestState.Error, message);
+
+            await RecordPrimaryRequestFailure(item, message);
+        }
+
+        /// <summary>
+        /// Record a failure to apply or deploy a certificate the source has supplied. The certificate was obtained, so
+        /// this is recorded against the deployment stage rather than the request: the item stays eligible for the
+        /// deployment retry pass, and a later check which finds nothing newer at the source leaves the failure in place
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="message"></param>
+        /// <param name="failureCount">the count held before the request began, see <see cref="IncrementManagedCertificateRenewalFailureCount"/></param>
+        private async Task RecordSubscriptionDeploymentFailure(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string message, int? failureCount)
+        {
+            sourceConfig.SubscriptionFailureCount++;
+            sourceConfig.LastError = message;
+
+            LogMessage(item.Id, message, LogItemType.CertificateRequestAttentionRequired);
+
+            SetBindingDeploymentStatus(item, RequestState.Error, message);
+
+            await RecordDeploymentFailure(item, message, failureCount);
+        }
+
+        /// <summary>
+        /// Record a check which found the source has nothing newer than the certificate the item already holds.
+        /// The source answered, so attempts against it are no longer failing and any pending update notification is
+        /// satisfied. Nothing was deployed, so the item's own status is left describing what last happened to it: a
+        /// certificate which was fetched but not fully deployed stays recorded that way, with the failure count which
+        /// paces its deployment retries intact. The one thing this check does resolve is an earlier failure to reach
+        /// or read the source
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="sourceConfig"></param>
+        /// <param name="sourceVersion"></param>
+        /// <param name="requestMode"></param>
+        /// <returns></returns>
+        private async Task<SubscriptionProcessResult> RecordSubscriptionNoUpdate(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? sourceVersion, SubscriptionRequestMode requestMode)
+        {
+            const string message = "No updated certificate was available from Management Hub.";
+
+            ClearSubscriptionRenewalTrigger(item, sourceConfig, clearPendingSourceVersion: true);
+            sourceConfig.LastError = null;
+            sourceConfig.SubscriptionFailureCount = 0;
+
+            LogMessage(item.Id, $"External certificate subscription {GetExternalActionNoun(requestMode)} completed with no update. Source version: {FormatSourceVersion(sourceVersion)}.");
+
+            if (HasRecordedSourceFailure(item))
+            {
+                SetPrimaryRequestStatus(item, null, RequestState.Success, message);
+                await RecordPrimaryRequestSuccess(item, message);
+            }
+            else
+            {
                 await UpdateManagedCertificate(item);
-
-                // an automatic check simply tries again later. A manual request still performs its deployment tasks,
-                // deploying the certificate we already hold - unless the subscription is now overdue for an update,
-                // which is a genuine failure to report
-                var noUpdateOutcome = requestMode == SubscriptionRequestMode.Automatic
-                    ? SubscriptionRequestOutcome.Deferred
-                    : noUpdateStatus == RequestState.Error
-                        ? SubscriptionRequestOutcome.Failed
-                        : SubscriptionRequestOutcome.Completed;
-
-                return new SubscriptionProcessResult(message, noUpdateOutcome);
             }
 
-            LogMessage(item.Id, $"External certificate update detected. Source version: {FormatSourceVersion(fetchResult.SourceVersion)}.");
+            // an automatic check simply tries again later. A manual request still performs its deployment tasks,
+            // deploying the certificate we already hold
+            var outcome = requestMode == SubscriptionRequestMode.Automatic
+                ? SubscriptionRequestOutcome.Deferred
+                : SubscriptionRequestOutcome.Completed;
 
-            var assetPath = await StoreExternalCertificateAsset(item, fetchResult.CertificateData);
-            if (assetPath == null)
-            {
-                sourceConfig.SubscriptionFailureCount++;
-                sourceConfig.LastError = "External certificate update was detected but could not be written to local storage.";
-                LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
-                SetPrimaryRequestStatus(item, null, RequestState.Error, sourceConfig.LastError);
-                await RecordPrimaryRequestFailure(item, sourceConfig.LastError);
-                return new SubscriptionProcessResult(sourceConfig.LastError, SubscriptionRequestOutcome.Failed);
-            }
-
-            var validationResult = await ValidateExternalCertificateAsset(item, sourceConfig, assetPath);
-            if (!validationResult.IsValid)
-            {
-                sourceConfig.SubscriptionFailureCount++;
-                sourceConfig.LastError = validationResult.Message;
-                LogMessage(item.Id, $"External certificate update rejected: {validationResult.Message}", LogItemType.GeneralError);
-                SetPrimaryRequestStatus(item, null, RequestState.Error, validationResult.Message ?? "External certificate update failed validation.");
-                await RecordPrimaryRequestFailure(item, validationResult.Message ?? "External certificate update failed validation.");
-                return new SubscriptionProcessResult(validationResult.Message, SubscriptionRequestOutcome.Failed);
-            }
-
-            LogMessage(item.Id, $"External certificate asset validated. Thumbprint: {validationResult.Thumbprint}; valid until {validationResult.DateExpiry:u}; lifetime elapsed: {validationResult.PercentageElapsed}%.");
-            SetPrimaryRequestStatus(item, null, RequestState.Success, "External certificate pulled from Management Hub.");
-
-            var deploymentResult = await DeployExternalCertificateAsset(item, sourceConfig, assetPath, fetchResult.SourceVersion, requestMode == SubscriptionRequestMode.Manual ? "Manual external subscription request" : "External source update");
-
-            if (deploymentResult.IsSuccess && requestMode == SubscriptionRequestMode.Manual)
-            {
-                return new SubscriptionProcessResult("External certificate pulled from Management Hub and deployment completed.", SubscriptionRequestOutcome.Completed);
-            }
-
-            return new SubscriptionProcessResult(
-                deploymentResult.Message,
-                deploymentResult.IsSuccess ? SubscriptionRequestOutcome.Completed : SubscriptionRequestOutcome.Failed);
+            return new SubscriptionProcessResult(message, outcome);
         }
 
         private async Task<ActionResult> MarkSubscriptionUpdateAvailable(string managedCertificateId, string? sourceVersion)
@@ -541,6 +633,20 @@ namespace Certify.Management
         internal static bool HasPendingSubscriptionUpdate(ExternalCertificateSubscription? sourceConfig)
         {
             return !string.IsNullOrWhiteSpace(sourceConfig?.PendingSourceVersion);
+        }
+
+        /// <summary>
+        /// Whether the failure recorded against a subscription item is a failure to reach or read its source, as
+        /// opposed to a failure to deploy the certificate it holds. A check which reaches the source resolves the
+        /// former, only a successful deployment resolves the latter
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        internal static bool HasRecordedSourceFailure(ManagedCertificate item)
+        {
+            return item.LastRenewalStatus != null
+                && item.LastRenewalStatus != RequestState.Success
+                && !HasRecordedDeploymentFailure(item);
         }
 
         /// <summary>
@@ -1200,22 +1306,15 @@ namespace Certify.Management
             }
         }
 
-        private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason)
+        private async Task<ActionResult> DeployExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string assetPath, string? sourceVersion, string reason, int? currentFailureCount)
         {
             sourceConfig.PendingSourceVersion = sourceVersion ?? sourceConfig.PendingSourceVersion;
 
             var metadataApplied = await ApplyExternalCertificateMetadata(item, sourceConfig, assetPath);
             if (!metadataApplied)
             {
-                sourceConfig.LastError = SubscriptionPfxLoadErrorMessage;
-                sourceConfig.SubscriptionFailureCount++;
-                LogMessage(item.Id, sourceConfig.LastError, LogItemType.GeneralError);
-                SetBindingDeploymentStatus(item, RequestState.Error, sourceConfig.LastError);
-                IncrementManagedCertificateRenewalFailureCount(item);
-                item.LastRenewalStatus = RequestState.Warning;
-                item.RenewalFailureMessage = sourceConfig.LastError;
-                await UpdateManagedCertificate(item);
-                return new ActionResult(sourceConfig.LastError, false);
+                await RecordSubscriptionDeploymentFailure(item, sourceConfig, SubscriptionPfxLoadErrorMessage, currentFailureCount);
+                return new ActionResult(SubscriptionPfxLoadErrorMessage, false);
             }
 
             _serviceLog?.Information("Deploying external certificate update for {name} [{id}] - {reason}", item.Name, item.Id, reason);
@@ -1226,17 +1325,12 @@ namespace Certify.Management
 
             if (!deployResult.IsSuccess)
             {
-                sourceConfig.LastError = deployResult.Message;
-                sourceConfig.SubscriptionFailureCount++;
-                LogMessage(item.Id, $"External certificate deployment failed after certificate metadata was applied: {deployResult.Message}", LogItemType.CertificateRequestAttentionRequired);
-                SetBindingDeploymentStatus(item, RequestState.Error, deployResult.Message);
-                IncrementManagedCertificateRenewalFailureCount(item);
-                item.LastRenewalStatus = RequestState.Warning;
-                item.RenewalFailureMessage = deployResult.Message;
+                // the deployment has already recorded its own failure against the item, so the preserved count keeps
+                // this from counting the same failure twice
+                var failureMessage = $"External certificate deployment failed: {deployResult.Message}";
 
-                await UpdateManagedCertificate(item);
-
-                return new ActionResult(sourceConfig.LastError, false);
+                await RecordSubscriptionDeploymentFailure(item, sourceConfig, failureMessage, currentFailureCount);
+                return new ActionResult(failureMessage, false);
             }
             else
             {
@@ -1389,36 +1483,9 @@ namespace Certify.Management
             }
 
             // the not-due and no-pending-update checks are applied by ProcessSubscription, which is the single place
-            // deciding whether a fetch is applicable for this request mode
-
-            SubscriptionProcessResult processResult;
-
-            try
-            {
-                processResult = await ProcessSubscription(managedCertificate, requestMode, cancellationToken);
-            }
-            catch (Exception exp)
-            {
-                // storing the asset, reading its password, parsing it or deploying it can all throw. Without this the
-                // exception reaches the scheduled pass, which only writes it to the service log - leaving the item
-                // looking healthy while it fails on every pass, and leaving its failure count and back off untouched
-                _tc?.TrackException(exp);
-                _serviceLog?.Error(exp, "External certificate request failed for {name} [{id}]", managedCertificate.Name, managedCertificate.Id);
-
-                var failureMessage = $"External certificate request failed: {exp.Message}";
-
-                LogMessage(managedCertificate.Id, failureMessage, LogItemType.GeneralError);
-
-                if (managedCertificate.ExternalSource != null)
-                {
-                    managedCertificate.ExternalSource.LastError = failureMessage;
-                }
-
-                SetPrimaryRequestStatus(managedCertificate, null, RequestState.Error, failureMessage);
-                await RecordPrimaryRequestFailure(managedCertificate, failureMessage);
-
-                processResult = new SubscriptionProcessResult(failureMessage, SubscriptionRequestOutcome.Failed);
-            }
+            // deciding whether a fetch is applicable for this request mode. It also records any failure against the
+            // stored copy of the item it works on, so nothing is recorded here against the copy the caller supplied
+            var processResult = await ProcessSubscription(managedCertificate, requestMode, cancellationToken);
 
             var updatedManagedCertificate = await _itemManager.GetById(managedCertificate.Id) ?? managedCertificate;
 

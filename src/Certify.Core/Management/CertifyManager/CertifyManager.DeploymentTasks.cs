@@ -314,89 +314,21 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// How long an order paused waiting for an external service to finalize it is left paused before it is treated
-        /// as failed. A paused item is excluded from every renewal batch and accrues no failure count, which is correct
-        /// while a person is expected to act but leaves an order waiting on a service stuck silently if the call which
-        /// would resume it never arrives. Well inside the lifetime of an ACME order, so a resumable order is never
-        /// discarded while it could still have been finalized
-        /// </summary>
-        private static readonly TimeSpan _maxAutomatedPauseAge = TimeSpan.FromHours(24);
-
-        /// <summary>
-        /// Determine whether a paused item is waiting for an external service rather than a person, and has been
-        /// waiting long enough that the call which would resume it is not coming.
-        /// This positively identifies the machine-waited pause rather than treating anything non-manual as safe to
-        /// discard - resetting an order which a person is part way through would throw away the work they have done
+        /// Whether the item holds a certificate which was obtained but not fully deployed: the certificate store or
+        /// binding deployment failed, or a post-request deployment task did. Only a successful deployment clears this,
+        /// so it survives a subscription check which finds nothing newer at the source
         /// </summary>
         /// <param name="item"></param>
-        /// <param name="checkDate"></param>
         /// <returns></returns>
-        internal static bool IsStalePausedOrder(ManagedCertificate item, DateTimeOffset? checkDate = null)
+        internal static bool HasRecordedDeploymentFailure(ManagedCertificate item)
         {
-            if (item?.LastRenewalStatus != RequestState.Paused || item.DateLastRenewalAttempt == null)
+            if (item == null)
             {
                 return false;
             }
 
-            // the only pause which waits on a service is the managed ACME flow, which pauses so a proxy can supply a
-            // custom CSR and finalize the order
-            var isAwaitingExternalFinalize = item.RequestConfig?.Challenges?.Any(c => c.ChallengeProvider == "ManagedAcme") == true
-                && string.IsNullOrEmpty(item.RequestConfig.CustomCSR);
-
-            if (!isAwaitingExternalFinalize)
-            {
-                return false;
-            }
-
-            return (checkDate ?? DateTimeOffset.UtcNow) >= item.DateLastRenewalAttempt.Value.Add(_maxAutomatedPauseAge);
-        }
-
-        /// <summary>
-        /// Release orders which have been paused waiting for an external service for longer than the service could
-        /// reasonably take. Recording the failure is what lets normal renewal scheduling pick them up again, with the
-        /// usual back off, instead of leaving them paused indefinitely with no failure signal
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns>the number of orders released</returns>
-        public async Task<int> ReleaseStalePausedOrders(CancellationToken cancellationToken)
-        {
-            if (IsInDegradedMode)
-            {
-                return 0;
-            }
-
-            var released = 0;
-
-            try
-            {
-                var pausedItems = await _itemManager.Find(new ManagedCertificateFilter { IncludeOnlyNextAutoRenew = true });
-
-                foreach (var item in pausedItems.Where(i => IsStalePausedOrder(i)))
-                {
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        break;
-                    }
-
-                    var msg = $"The certificate order was paused waiting to be finalized by an external service and has been waiting for more than {_maxAutomatedPauseAge.TotalHours}hrs. It has been marked as failed so renewal can be attempted again.";
-
-                    _serviceLog?.Warning("Releasing stale paused order for {name} [{id}] - {msg}", item.Name, item.Id, msg);
-                    LogMessage(item.Id, msg, LogItemType.CertificateRequestAttentionRequired);
-
-                    SetPrimaryRequestStatus(item, null, RequestState.Error, msg);
-
-                    await UpdateManagedCertificateStatus(item, RequestState.Error, msg);
-
-                    released++;
-                }
-            }
-            catch (Exception exp)
-            {
-                _tc?.TrackException(exp);
-                _serviceLog?.Error(exp, "ReleaseStalePausedOrders: error while releasing paused orders.");
-            }
-
-            return released;
+            return item.LastBindingDeployment?.Status == RequestState.Error
+                || HasFailedDeploymentTasks(item);
         }
 
         /// <summary>
@@ -435,8 +367,7 @@ namespace Certify.Management
                 return false;
             }
 
-            return item.LastBindingDeployment?.Status == RequestState.Error
-                || HasFailedDeploymentTasks(item);
+            return HasRecordedDeploymentFailure(item);
         }
 
         /// <summary>

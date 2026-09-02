@@ -471,9 +471,6 @@ namespace Certify.Management
             {
                 await PerformCertificateMaintenanceTasks();
 
-                // release any order left paused waiting for an external service which never came back
-                await ReleaseStalePausedOrders(CancellationToken.None);
-
                 try
                 {
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Default);

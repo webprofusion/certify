@@ -451,19 +451,6 @@ namespace Certify.Management
             return UpdateManagedCertificateStatus(managedCertificate, RequestState.Warning, msg, failureCount);
         }
 
-        private Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg)
-        {
-            var status = RequestState.Success;
-
-            return RecordSubscriptionNoUpdate(managedCertificate, msg, status);
-        }
-
-        private async Task<RequestState> RecordSubscriptionNoUpdate(ManagedCertificate managedCertificate, string msg, RequestState status)
-        {
-            await UpdateManagedCertificateStatus(managedCertificate, status, msg, incrementFailureCount: false);
-            return status;
-        }
-
         /// <summary>
         /// Advance the consecutive failure count for an item which has just failed.
         /// </summary>
