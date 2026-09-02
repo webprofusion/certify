@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Reflection;
 using Certify.Config;
 using Certify.Management;
 using Certify.Models;
@@ -211,6 +212,69 @@ namespace Certify.Tests.Core.Unit.Tests
             item.ExternalSource.PendingSourceVersion = null;
 
             Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "With nothing pending the certificate it holds is redeployed");
+        }
+
+        /// <summary>
+        /// A fully deployed item whose on-demand (manual-trigger) task failed the last time a person ran it
+        /// </summary>
+        private static ManagedCertificate CreateItemWithFailedManualTask()
+        {
+            var item = CreateDeployedItem();
+
+            item.PostRequestTasks = new ObservableCollection<DeploymentTaskConfig>
+            {
+                new DeploymentTaskConfig { TaskName = "Upload", TaskTrigger = TaskTriggerType.ON_SUCCESS, LastRunStatus = RequestState.Success },
+                new DeploymentTaskConfig { TaskName = "Export on demand", TaskTrigger = TaskTriggerType.MANUAL, LastRunStatus = RequestState.Error, LastResult = "Export path not found" }
+            };
+
+            return item;
+        }
+
+        private static RequestState InvokeResolveOverallRenewalStatus(ManagedCertificate managedCertificate, CertificateRequestResult requestResult)
+        {
+            var method = typeof(CertifyManager).GetMethod("ResolveOverallRenewalStatus", BindingFlags.NonPublic | BindingFlags.Static);
+
+            Assert.IsNotNull(method);
+
+            return (RequestState)method.Invoke(null, new object[] { managedCertificate, requestResult, true });
+        }
+
+        [TestMethod, Description("A manual-trigger task which failed when last run on demand does not make the item require a deployment retry")]
+        public void FailedManualTaskDoesNotRequireDeploymentRetry()
+        {
+            // an automated request never runs a manual-trigger task, so a redeploy could never clear its failure.
+            // Counting it would select the item for redeployment after every back off, for the life of the certificate
+            var item = CreateItemWithFailedManualTask();
+
+            Assert.IsFalse(CertifyManager.HasRecordedDeploymentFailure(item), "A manual task is not part of automated deployment");
+            Assert.IsFalse(CertifyManager.RequiresDeploymentRetry(item));
+        }
+
+        [TestMethod, Description("A failed manual-trigger task does not make an automated request fail")]
+        public void FailedManualTaskDoesNotFailTheRequest()
+        {
+            var item = CreateItemWithFailedManualTask();
+
+            var requestResult = new CertificateRequestResult(item, isSuccess: true, "Certificate issued.")
+            {
+                PrimaryRequest = new RequestStageStatus { Status = RequestState.Success, Message = "Certificate issued." }
+            };
+
+            Assert.AreEqual(RequestState.Success, InvokeResolveOverallRenewalStatus(item, requestResult),
+                "The request did everything it was asked to do; the manual task was not part of it");
+        }
+
+        [TestMethod, Description("A failed automated task still requires a deployment retry when a manual task is also configured")]
+        public void FailedAutomatedTaskStillRequiresRetryAlongsideManualTask()
+        {
+            var item = CreateItemWithFailedManualTask();
+
+            item.PostRequestTasks[0].LastRunStatus = RequestState.Error;
+            item.PostRequestTasks[0].LastResult = "Endpoint unavailable";
+            item.PostRequestTasks[1].LastRunStatus = RequestState.Success;
+
+            Assert.IsTrue(CertifyManager.HasRecordedDeploymentFailure(item));
+            Assert.IsTrue(CertifyManager.RequiresDeploymentRetry(item), "The automated task's failure is what the redeploy exists to retry");
         }
     }
 }

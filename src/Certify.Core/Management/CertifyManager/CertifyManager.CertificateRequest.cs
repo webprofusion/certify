@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Certify.Config;
 using Certify.Core.Management;
 using Certify.Locales;
 using Certify.Models;
@@ -283,6 +284,22 @@ namespace Certify.Management
                 bool redeployOnly = false
             )
         {
+
+            // the outcome of a request cannot be recorded while the data store is unavailable, and a request whose
+            // outcome is not recorded is repeated on the next pass - for a certificate order, against the CA's duplicate
+            // certificate limits. The scheduled passes already stand down in degraded mode, but degraded mode is entered
+            // from a failed status write part way through a batch, so the requests still to come in that batch (and any
+            // request started by a user or the hub in the meantime) have to stop here
+            if (IsInDegradedMode)
+            {
+                var degradedMessage = "Certificate request skipped: the data store is unavailable, so the outcome of a request could not be recorded. The request will be attempted again once the data store is available.";
+
+                _serviceLog?.Warning("Skipping certificate request for {Name} [{Id}] - service is in degraded mode due to data store issues.", managedCertificate.Name, managedCertificate.Id);
+
+                ReportProgress(progress, new RequestProgressState(RequestState.Warning, degradedMessage, managedCertificate));
+
+                return new CertificateRequestResult { Abort = true, IsSuccess = false, ManagedItem = managedCertificate, Message = degradedMessage };
+            }
 
             // check if we have an existing request in progress, if so skip for now
             _renewalsInProgress.TryGetValue(managedCertificate.Id, out var existingRequest);
@@ -860,14 +877,30 @@ namespace Certify.Management
             return RequestState.Success;
         }
 
+        /// <summary>
+        /// The post-request tasks which failed on their last run and count against the outcome of automated
+        /// deployment. A manual-trigger task is only ever run on demand by a person, never by an automated request, so
+        /// its result is not part of that outcome. Counting it would also leave the item failed for as long as the task
+        /// was not re-run, and would select it for redeployment after every back off - a redeploy cannot run the task
+        /// and so could never clear the failure
+        /// </summary>
+        /// <param name="managedCertificate"></param>
+        /// <returns></returns>
+        private static List<DeploymentTaskConfig> GetFailedDeploymentTasks(ManagedCertificate managedCertificate)
+        {
+            return managedCertificate.PostRequestTasks?
+                .Where(t => t.TaskTrigger != TaskTriggerType.MANUAL && t.LastRunStatus == RequestState.Error)
+                .ToList() ?? [];
+        }
+
         private static bool HasFailedDeploymentTasks(ManagedCertificate managedCertificate)
         {
-            return managedCertificate.PostRequestTasks?.Any(t => t.LastRunStatus == RequestState.Error) == true;
+            return GetFailedDeploymentTasks(managedCertificate).Any();
         }
 
         private static string GetDeploymentTaskFailureMessage(ManagedCertificate managedCertificate)
         {
-            var failedTasks = managedCertificate.PostRequestTasks?.Where(t => t.LastRunStatus == RequestState.Error).ToList() ?? [];
+            var failedTasks = GetFailedDeploymentTasks(managedCertificate);
 
             if (!failedTasks.Any())
             {

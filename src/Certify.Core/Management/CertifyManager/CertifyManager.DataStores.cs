@@ -311,9 +311,10 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// Handle data store connection failure
+        /// Handle data store connection failure, placing the service in degraded mode. Internal so a test can put a
+        /// manager into degraded mode without a data store
         /// </summary>
-        private void HandleDataStoreFailure(string errorMessage, string? dataStoreId, string? dataStoreType)
+        internal void HandleDataStoreFailure(string errorMessage, string? dataStoreId, string? dataStoreType)
         {
             _dataStoreStatus.IsConnected = false;
             _dataStoreStatus.IsDegradedMode = true;
