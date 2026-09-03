@@ -947,6 +947,32 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.HasCount(0, results, "Once enough deployment attempts have failed the next is spaced out");
         }
 
+        [TestMethod, Description("Test PerformRenewAll attempts an item within the failure back off when a renewal is requested rather than scheduled")]
+        public async Task TestPerformRenewAll_RequestedRenewalOverridesBackOff()
+        {
+            // Arrange - the same held item, but a person has asked for failing items to be renewed
+            await _itemStore.DeleteAll();
+            await _itemStore.Update(CreateItemWithUndeployedCertificate("held", "Held", lastAttempt: DateTimeOffset.UtcNow.AddMinutes(-30), renewalFailureCount: LifetimeHealthThresholds.FailuresBeforeBackoff));
+
+            var settings = new RenewalSettings { Mode = RenewalMode.RenewalsWithErrors, IsPreviewMode = false };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                settings,
+                _defaultPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(1, results, "The wait after repeated failures paces the scheduled pass, not a renewal a person asked for");
+            Assert.IsTrue(_requestsPerformed.Single().RedeployOnly, "The certificate already held is still what is deployed again");
+        }
+
         [TestMethod, Description("Test PerformRenewAll redeploys on the next pass while the item is within its first attempts")]
         public async Task TestPerformRenewAll_RedeployIsDueOnTheNextPass()
         {

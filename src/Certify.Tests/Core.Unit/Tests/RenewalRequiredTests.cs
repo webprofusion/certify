@@ -11,6 +11,49 @@ namespace Certify.Tests.Core.Unit.Tests
     [TestClass]
     public class RenewalRequiredTests
     {
+        [TestMethod, Description("An item's own renewal interval takes precedence over the default for the days after renewal mode")]
+        public void TestCustomRenewalIntervalDaysAfterRenewal()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = DateTimeOffset.UtcNow.AddDays(-15),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-15),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(75),
+                LastRenewalStatus = RequestState.Success
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, 30, RenewalIntervalModes.DaysAfterLastRenewal);
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "With the default 30 day interval a 15 day old certificate is not due");
+
+            managedCertificate.CustomRenewalTarget = 10;
+
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, 30, RenewalIntervalModes.DaysAfterLastRenewal);
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "With the item's own 10 day interval it is due");
+        }
+
+        [TestMethod, Description("An item's own renewal mode and interval take precedence over the defaults for the days before expiry mode")]
+        public void TestCustomRenewalIntervalDaysBeforeExpiry()
+        {
+            var managedCertificate = new ManagedCertificate
+            {
+                IncludeInAutoRenew = true,
+                DateStart = DateTimeOffset.UtcNow.AddDays(-75),
+                DateRenewed = DateTimeOffset.UtcNow.AddDays(-5),
+                DateExpiry = DateTimeOffset.UtcNow.AddDays(15),
+                LastRenewalStatus = RequestState.Success
+            };
+
+            var renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, 30, RenewalIntervalModes.DaysAfterLastRenewal);
+            Assert.IsFalse(renewalDueCheck.IsRenewalDue, "With the default mode and interval a certificate renewed 5 days ago is not due");
+
+            managedCertificate.CustomRenewalIntervalMode = RenewalIntervalModes.DaysBeforeExpiry;
+            managedCertificate.CustomRenewalTarget = 20;
+
+            renewalDueCheck = ManagedCertificate.CalculateNextRenewalAttempt(managedCertificate, 30, RenewalIntervalModes.DaysAfterLastRenewal);
+            Assert.IsTrue(renewalDueCheck.IsRenewalDue, "With the item's own mode of 20 days before expiry, a certificate expiring in 15 days is due");
+        }
+
         [TestMethod, Description("Ensure a site which should be renewed correctly requires renewal, where failure has previously occurred")]
         public void TestCheckAutoRenewalPeriodRequiredWithFailures()
         {

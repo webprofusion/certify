@@ -312,7 +312,15 @@ namespace Certify.Management
                                     }
                                 }
 
-                                if (isRenewalRequired && !renewalDueCheck.IsRenewalOnHold)
+                                // the wait after repeated failures paces the scheduled pass. A person asking for a
+                                // renewal (any other mode) is asking for it now: the modes for failing and new items
+                                // exist for exactly the items the wait would otherwise hold back
+                                if (isRenewalRequired && renewalDueCheck.IsRenewalOnHold && settings.Mode != RenewalMode.Auto)
+                                {
+                                    renewalReason = "Renewal was requested, so the wait after repeated failures does not apply.";
+                                }
+
+                                if (isRenewalRequired && (!renewalDueCheck.IsRenewalOnHold || settings.Mode != RenewalMode.Auto))
                                 {
                                     batch.Add(item);
 
@@ -401,7 +409,8 @@ namespace Certify.Management
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_SINGLE);
             }
 
-            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) > 2)
+            // any certificate with more than one DNS name needs SAN support from the CA it fails over to
+            if (identifiers.Count(i => i.IdentifierType == CertIdentifierType.Dns) > 1)
             {
                 requiredCaFeatures.Add(CertAuthoritySupportedRequests.DOMAIN_MULTIPLE_SAN);
             }

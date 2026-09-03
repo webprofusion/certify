@@ -302,6 +302,12 @@ namespace Certify.Management
                                     reason = "OCSP status (Revoked)";
                                     item.CertificateRevoked = true;
                                     item.DateNextScheduledRenewalAttempt = DateTimeOffset.UtcNow;
+
+                                    // a revoked certificate has to be replaced now, not after the wait an item which
+                                    // has been failing is held for. Replacing it is new work rather than a repeat of
+                                    // what was failing, so the count which paces retries starts again; should the
+                                    // replacement fail in the same way the count climbs and the wait resumes
+                                    item.RenewalFailureCount = 0;
                                 }
                                 else if (itemsOcspExpired.Contains(item.Id))
                                 {

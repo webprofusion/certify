@@ -1069,7 +1069,7 @@ namespace Certify.Models
                 {
 
                     // strategy if cert lifetime is less than the standard renewal interval allows or the renewal mode is based on percentage lifetime
-                    if (certLifetime.HasValue && (certLifetime.Value.TotalDays < renewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
+                    if (certLifetime.HasValue && (certLifetime.Value.TotalDays < selectedRenewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
                     {
                         // cert has a shorter lifetime than the renewal interval. Switch to a percentage based renewal 
                         float targetRenewalPercentage = 75;
@@ -1098,14 +1098,15 @@ namespace Certify.Models
                     }
                     else
                     {
-                        // calculate renewal for non-percentage based strategies
+                        // calculate renewal for non-percentage based strategies, using the item's own interval and
+                        // mode where it has them, otherwise the defaults
 
-                        if (renewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
+                        if (selectedRenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
                         {
-                            var renewalDiffDays = timeToExpiry.TotalDays - renewalInterval;
+                            var renewalDiffDays = timeToExpiry.TotalDays - selectedRenewalInterval;
 
                             // is item expiring within N days
-                            if (timeToExpiry.TotalDays <= renewalInterval)
+                            if (timeToExpiry.TotalDays <= selectedRenewalInterval)
                             {
 
                                 isRenewalRequired = true;
@@ -1123,9 +1124,9 @@ namespace Certify.Models
                         {
                             // was item renewed more than N days ago
                             var daysSinceLastRenewal = timeSinceLastRenewal.TotalDays;
-                            var renewalDiffDays = timeSinceLastRenewal.TotalDays - renewalInterval;
+                            var renewalDiffDays = timeSinceLastRenewal.TotalDays - selectedRenewalInterval;
 
-                            if (daysSinceLastRenewal >= renewalInterval)
+                            if (daysSinceLastRenewal >= selectedRenewalInterval)
                             {
                                 isRenewalRequired = true;
                                 nextRenewalAttemptDate = checkDate;

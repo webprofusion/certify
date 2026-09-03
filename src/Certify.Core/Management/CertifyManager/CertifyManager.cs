@@ -123,6 +123,13 @@ namespace Certify.Management
         private System.Timers.Timer _initTimer;
         private System.Timers.Timer _heartbeatTimer;
         private System.Timers.Timer _frequentTimer;
+
+        /// <summary>
+        /// Gate for the frequent maintenance pass. The timer fires on its interval whether or not the previous pass has
+        /// finished, and a renewal batch can run for hours, so a pass which is still running is left to finish rather
+        /// than a second one started alongside it
+        /// </summary>
+        private int _isFrequentMaintenanceRunning = 0;
         private System.Timers.Timer _hourlyTimer;
         private System.Timers.Timer _dailyTimer;
 
@@ -508,6 +515,12 @@ namespace Certify.Management
 
         private async void _frequentTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            if (Interlocked.CompareExchange(ref _isFrequentMaintenanceRunning, 1, 0) != 0)
+            {
+                _serviceLog?.Verbose("Frequent maintenance pass is still running, skipping this interval.");
+                return;
+            }
+
             try
             {
                 // nothing else in this pass can do useful work without the data store, and until now degraded mode was
@@ -539,6 +552,10 @@ namespace Certify.Management
             catch (Exception ex)
             {
                 _serviceLog?.Error(ex, "_frequentTimer_Elapsed: unhandled exception during frequent maintenance tasks.");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _isFrequentMaintenanceRunning, 0);
             }
         }
 

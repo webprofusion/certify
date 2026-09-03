@@ -65,13 +65,21 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// How long a renewal batch is waited for before it is abandoned. Abandoning the batch only stops waiting for
+        /// it: the requests it started are not interrupted and run to completion, recording their outcome as usual
+        /// </summary>
+        private static readonly TimeSpan _renewalBatchTimeout = TimeSpan.FromHours(3);
+
+        /// <summary>
         /// How long a request may be in progress before a new request for the same item treats it as stuck and starts
         /// anyway. This has to sit above any realistic request duration - several dns-01 identifiers each waiting for
         /// propagation, followed by slow deployment tasks, take far longer than a few minutes - because starting a
         /// second request for an item which is still working means two concurrent certificate orders for it.
-        /// The renewal batch itself is abandoned after 3hrs, so nothing legitimately runs longer than that
+        /// It also has to sit well above <see cref="_renewalBatchTimeout"/>: a request started early in a batch which
+        /// is abandoned is still running when the next batch starts, and were the two limits the same the next batch
+        /// would treat it as stuck and order again while it was still working
         /// </summary>
-        private static readonly TimeSpan _maxRequestInProgressAge = TimeSpan.FromHours(3);
+        private static readonly TimeSpan _maxRequestInProgressAge = _renewalBatchTimeout + _renewalBatchTimeout;
 
         private static async Task<T> TaskWithTimeoutAndException<T>(Task<T> task, TimeSpan timeout)
         {
@@ -227,7 +235,7 @@ namespace Certify.Management
                                                 },
                                                 renewalCancellationSource.Token);
 
-                        return await TaskWithTimeoutAndException(renewalTask, TimeSpan.FromHours(3));
+                        return await TaskWithTimeoutAndException(renewalTask, _renewalBatchTimeout);
                     }
                     catch (TimeoutException)
                     {
@@ -433,10 +441,11 @@ namespace Certify.Management
 
                     var deployResult = await DeployCertificate(managedCertificate, progress, isPreviewOnly: skipRequest, includeDeploymentTasks: false);
 
-                    if (!deployResult.IsSuccess && !skipRequest)
+                    if (!deployResult.IsSuccess)
                     {
                         // a deployment which could not start (e.g. the certificate file is missing) records nothing
-                        // itself, and the failure has to be recorded for the final status to reflect it
+                        // itself, and the failure has to be recorded for the final status to reflect it. A preview
+                        // records it too, against its own copy of the item, so a preview which would fail says so
                         SetBindingDeploymentStatus(managedCertificate, RequestState.Error, deployResult.Message);
                     }
 
@@ -499,11 +508,17 @@ namespace Certify.Management
                             requestResult.IsSuccess = false;
                             SetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Error, requestResult.Message);
                         }
+                        else if (isPreview)
+                        {
+                            // the request would be made, which is what the preview reports. It is not a failure, whatever
+                            // the outcome of the last real request was
+                            requestResult.Message = $"[Preview Mode] Certificate request would be performed: {managedCertificate.Name}";
+                            requestResult.IsSuccess = true;
+                            SetPrimaryRequestStatus(managedCertificate, requestResult, RequestState.Success, requestResult.Message);
+                        }
                         else
                         {
-                            requestResult.Message = isPreview
-                                ? $"[Preview Mode] Certificate request would be performed: {managedCertificate.Name}"
-                                : $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
+                            requestResult.Message = $"Certificate Request Skipped (on demand): {managedCertificate.Name}";
                             requestResult.IsSuccess = managedCertificate.LastRenewalStatus == RequestState.Success;
                             SetPrimaryRequestStatus(managedCertificate, requestResult, requestResult.IsSuccess ? RequestState.Success : RequestState.Skipped, requestResult.Message);
                         }
@@ -1032,7 +1047,7 @@ namespace Certify.Management
                     {
                         var normalisedKey = identifier.IdentifierType == CertIdentifierType.Dns ? _idnMapping.GetAscii(identifier.Value).ToLower() : identifier.Value;
 
-                        var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Value == normalisedKey);
+                        var authorization = authorizations.FirstOrDefault(a => a.Identifier?.Value == normalisedKey && a.Identifier?.IdentifierType.ToLower() == identifier.IdentifierType.ToLower());
 
                         if (authorization?.IsValidated == true)
                         {
@@ -1239,6 +1254,7 @@ namespace Certify.Management
                     var primaryCertFilePath = certRequestResult.Result.ToString();
 
                     var certCleanupName = "";
+                    string parseFailureMessage = null;
 
                     // update managed site summary
                     try
@@ -1277,6 +1293,24 @@ namespace Certify.Management
                     catch (Exception exp)
                     {
                         log?.Error("Failed to parse certificate: {exp}", exp);
+
+                        parseFailureMessage = $"The certificate was issued but could not be read from the certificate file, so it has not been recorded or deployed: {exp.Message}";
+                    }
+
+                    if (parseFailureMessage != null)
+                    {
+                        // the order completed but the file built from it cannot be read, so the item has no new
+                        // certificate to record or deploy. This is a failed request: recording it as a success would
+                        // report a certificate the item does not hold, and would deploy an unreadable file, while the
+                        // item's dates stay as they were and a new order is placed on the next pass regardless. Recorded
+                        // as a failure, the next order is paced by the failure count like any other failing request
+                        result.IsSuccess = false;
+                        result.Message = parseFailureMessage;
+                        SetPrimaryRequestStatus(managedCertificate, result, RequestState.Error, parseFailureMessage);
+
+                        ReportProgress(progress, new RequestProgressState(RequestState.Error, result.Message, managedCertificate), logThisEvent: false);
+
+                        return result;
                     }
 
                     SetPrimaryRequestStatus(managedCertificate, result, RequestState.Success, "New certificate received OK.");

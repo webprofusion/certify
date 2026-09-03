@@ -61,6 +61,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsFalse(manager.IsInDegradedMode, "A preview must not attempt to store the item");
             Assert.AreNotSame(item, result.ManagedItem, "A preview works on its own copy of the item");
+            Assert.IsTrue(result.IsSuccess, "The request would be made, which is not a failure whatever the last real request did");
             AssertItemUntouched(item, lastAttempt);
             Assert.IsTrue(ManagedCertificate.RequiresRedeployment(item), "The item is still due to be redeployed by a real request");
         }
