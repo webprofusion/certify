@@ -20,16 +20,21 @@ namespace Certify.Management
             public string? TraceInstanceName { get; init; }
         }
 
+        /// <summary>
+        /// Environment variable which requires the management hub to present a certificate this machine already
+        /// trusts. Off by default, because a hub is commonly reached over a private CA or a self signed certificate
+        /// </summary>
+        internal const string RequireTrustedHubCertificateVariable = "CERTIFY_MANAGEMENT_HUB_REQUIRE_TRUSTED";
+
         private static HttpClientHandler CreateHubApiMessageHandler()
         {
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-            };
+            var handler = new HttpClientHandler();
 
-            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
+            if (Environment.GetEnvironmentVariable(RequireTrustedHubCertificateVariable) != "true")
             {
-                handler.ServerCertificateCustomValidationCallback = null;
+                // leaving the callback unset applies the platform's normal validation, so accepting the hub's
+                // certificate without it has to be done explicitly
+                handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
             }
 
             return handler;
