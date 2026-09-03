@@ -1089,6 +1089,31 @@ namespace Certify.Tests.Integration.Containers
             }
         }
 
+        [TestMethod, Description("Test that an updated custom CA directory URL applies without a service restart")]
+        public async Task TestCertifyManagerUpdateCertificateAuthorityRefreshesAcmeProvider()
+        {
+            var dummyManagedCert = new ManagedCertificate { UseStagingMode = true };
+
+            // populate the ACME provider cache using the CA's current directory URL
+            var originalProvider = await _certifyManager.GetACMEProvider(dummyManagedCert, _customCaAccount);
+            Assert.IsNotNull(originalProvider, "Expected an ACME provider for the custom CA account");
+            Assert.AreEqual(_customCa.StagingAPIEndpoint, originalProvider.GetAcmeBaseURI(), "Expected the ACME provider to use the configured CA directory URL");
+
+            // some CAs (e.g. DigiCert) select a specific certificate order using directory URL query parameters,
+            // so an edited directory URL has to apply to subsequent requests rather than requiring a service restart
+            var updatedEndpoint = _customCa.StagingAPIEndpoint + "?action=renew&orderId=555123456";
+
+            _customCa.StagingAPIEndpoint = updatedEndpoint;
+            _customCa.ProductionAPIEndpoint = updatedEndpoint;
+
+            var updateCaRes = await _certifyManager.UpdateCertificateAuthority(_customCa);
+            Assert.IsTrue(updateCaRes.IsSuccess, $"Expected Custom CA update for CA with ID {_customCa.Id} to be successful");
+
+            var updatedProvider = await _certifyManager.GetACMEProvider(dummyManagedCert, _customCaAccount);
+            Assert.IsNotNull(updatedProvider, "Expected an ACME provider for the custom CA account after the CA was updated");
+            Assert.AreEqual(updatedEndpoint, updatedProvider.GetAcmeBaseURI(), "Expected the updated CA directory URL to apply without a service restart");
+        }
+
         [TestMethod, Description("Test for using CertifyManager.UpdateCertificateAuthority() on a default CA")]
         public async Task TestCertifyManagerUpdateCertificateAuthorityDefaultCa()
         {

@@ -592,6 +592,39 @@ namespace Certify.Management
         }
 
         /// <summary>
+        /// Discard cached ACME provider instances for the given CA, so that a change to the CA config
+        /// (such as an edited ACME directory URL) applies on next use instead of requiring a service restart.
+        /// </summary>
+        /// <param name="certificateAuthorityId"></param>
+        private async Task DiscardCachedACMEProviders(string certificateAuthorityId)
+        {
+            if (string.IsNullOrEmpty(certificateAuthorityId))
+            {
+                return;
+            }
+
+            try
+            {
+                // providers are cached per account, so discard the provider for each account belonging to this CA
+                var accounts = await GetAccountRegistrations();
+
+                foreach (var storageKey in accounts
+                    .Where(a => a.CertificateAuthorityId == certificateAuthorityId && !string.IsNullOrEmpty(a.StorageKey))
+                    .Select(a => a.StorageKey))
+                {
+                    _acmeClientProviders.TryRemove(storageKey, out _);
+                }
+            }
+            catch (Exception exp)
+            {
+                // if accounts can't be enumerated we can't discard selectively, so discard all cached providers
+                _serviceLog?.Warning($"Could not identify ACME accounts for {certificateAuthorityId}, discarding all cached ACME providers: {exp.Message}");
+
+                _acmeClientProviders.Clear();
+            }
+        }
+
+        /// <summary>
         /// Add/Update details of a custom ACME CA
         /// </summary>
         /// <param name="certificateAuthority"></param>
@@ -615,21 +648,19 @@ namespace Certify.Management
                 {
                     // replace
                     customCAs.Remove(customCa);
-                    customCAs.Add(certificateAuthority);
-
-                    _certificateAuthorities.TryUpdate(certificateAuthority.Id, certificateAuthority, customCa);
                 }
-                else
-                {
-                    // add
-                    customCAs.Add(certificateAuthority);
 
-                    _certificateAuthorities.TryAdd(certificateAuthority.Id, certificateAuthority);
-                }
+                customCAs.Add(certificateAuthority);
 
                 //store updated CAs
                 if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
                 {
+                    // apply the updated config in memory. Note the previously cached copy is a different object
+                    // instance (custom CAs are deserialized from disk on each read) so this is a set, not a TryUpdate.
+                    _certificateAuthorities[certificateAuthority.Id] = certificateAuthority;
+
+                    await DiscardCachedACMEProviders(certificateAuthority.Id);
+
                     return new ActionResult("OK", true);
                 }
                 else
@@ -664,7 +695,11 @@ namespace Certify.Management
 
                 if (SettingsManager.SaveCustomCertificateAuthorities(customCAs))
                 {
-                    return await Task.FromResult(new ActionResult("OK", true));
+                    _certificateAuthorities.TryRemove(id, out _);
+
+                    await DiscardCachedACMEProviders(id);
+
+                    return new ActionResult("OK", true);
                 }
                 else
                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -87,6 +88,99 @@ namespace Certify.Tests.Core.Unit.Tests
             var dir = await acmeContext.GetDirectory(throwOnError: true);
 
             Assert.IsNotNull(dir);
+        }
+
+        [TestMethod, Description("Test Directory Query Preserves URL Query Parameters")]
+        public async Task TestAcmeDirectoryQueryStringPreserved()
+        {
+            // Some CAs (e.g. DigiCert) select a specific certificate order using query parameters on the ACME
+            // directory URL, e.g. ?action=renew&orderId=555123456. These must be sent verbatim on the directory
+            // request, otherwise the CA treats the request as a new enrollment instead of a renewal or reissue
+            // (which for a commercial CA means an unexpected charge). Setting HttpClient.BaseAddress and then
+            // requesting a relative "directory" path would silently drop them.
+
+            var directoryUrl = "https://acme.example.com/mpki/api/v1/acme/v2/directory?action=renew&orderId=555123456";
+            var expectedNonceUrl = "https://acme.example.com/mpki/api/v1/acme/v2/newNonce?orderId=555123456";
+
+            var directoryJson = """
+
+                {
+                  "newNonce": "https://acme.example.com/mpki/api/v1/acme/v2/newNonce?orderId=555123456",
+                  "newAccount": "https://acme.example.com/mpki/api/v1/acme/v2/newAccount",
+                  "newOrder": "https://acme.example.com/mpki/api/v1/acme/v2/newOrder?orderId=555123456",
+                  "revokeCert": "https://acme.example.com/mpki/api/v1/acme/v2/revokeCert",
+                  "keyChange": "https://acme.example.com/mpki/api/v1/acme/v2/keyChange"
+                }
+
+                """;
+
+            var requestedUris = new List<Uri>();
+
+            var mockMessageHandler = new Mock<HttpMessageHandler>();
+
+            mockMessageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .Returns<HttpRequestMessage, CancellationToken>((request, cancellationToken) =>
+                {
+                    requestedUris.Add(request.RequestUri);
+
+                    // the nonce is fetched using HEAD, any other request here is for the directory
+                    if (request.Method == HttpMethod.Head)
+                    {
+                        var nonceResponse = new HttpResponseMessage(HttpStatusCode.OK);
+                        nonceResponse.Headers.Add("Replay-Nonce", "test-nonce");
+                        return Task.FromResult(nonceResponse);
+                    }
+
+                    return Task.FromResult(new HttpResponseMessage
+                    {
+                        StatusCode = HttpStatusCode.OK,
+                        Content = new StringContent(directoryJson.Trim(), Encoding.UTF8, "application/json")
+                    });
+                });
+
+            using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddDebug());
+
+            var logger = factory.CreateLogger(nameof(MiscAcmeTests));
+
+            // this mirrors the handler chain built by AnvilACMEProvider, which sets no HttpClient.BaseAddress
+            var loggingHandler = new LoggingHandler(mockMessageHandler.Object, new Loggy(logger), maxRequestsPerSecond: 2);
+            var customHttpClient = new System.Net.Http.HttpClient(loggingHandler);
+
+            var directoryUri = new Uri(directoryUrl);
+
+            var acmeHttpClient = new AcmeHttpClient(directoryUri, customHttpClient);
+
+            var acmeContext = new AcmeContext(directoryUri, http: acmeHttpClient);
+
+            var dir = await acmeContext.GetDirectory(throwOnError: true);
+
+            Assert.IsNotNull(dir);
+            Assert.AreEqual(1, requestedUris.Count, "Expected a single directory request");
+            Assert.AreEqual(directoryUrl, requestedUris[0].AbsoluteUri, "ACME directory request must retain the CA directory URL query string");
+
+            // resources must be resolved from the directory response, not derived from the directory URL
+            var nonce = await acmeHttpClient.ConsumeNonce();
+
+            Assert.AreEqual("test-nonce", nonce);
+            Assert.AreEqual(expectedNonceUrl, requestedUris[requestedUris.Count - 1].AbsoluteUri, "Nonce must be requested from the newNonce URL given by the directory response");
+        }
+
+        [TestMethod, Description("Test ACME Provider Preserves Directory URL Query Parameters")]
+        public void TestAcmeProviderDirectoryQueryStringPreserved()
+        {
+            // the configured CA directory URL must reach the ACME context unmodified, including any query string
+
+            var directoryUrl = "https://acme.example.com/mpki/api/v1/acme/v2/directory?action=reissue&orderId=555789012";
+
+            var provider = new AnvilACMEProvider(new AnvilACMEProviderSettings
+            {
+                AcmeBaseUri = directoryUrl,
+                UserAgentName = "Certify/Test"
+            });
+
+            Assert.AreEqual(directoryUrl, provider.GetAcmeBaseURI(), "ACME base URI must retain the CA directory URL query string");
         }
 
         [TestMethod, Description("Test Directory Query Rate Limit 429")]
