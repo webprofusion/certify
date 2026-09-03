@@ -117,6 +117,7 @@ namespace Certify.Management
         /// </summary>
         private Shared.ServiceConfig _serverConfig;
         private readonly SemaphoreSlim _hubApiClientLock = new(1, 1);
+        private readonly HttpMessageHandler? _hubApiMessageHandler;
         private HttpClient? _hubApiHttpClient;
         private Certify.Server.Hub.Api.Client? _hubApiClient;
 
@@ -139,8 +140,23 @@ namespace Certify.Management
             _injectedServiceProvider = injectedServiceProvider;
         }
 
-        public CertifyManager()
+        /// <summary>
+        /// Declared separately rather than as an optional argument on the overload below: a constructor whose
+        /// arguments are all optional is still not a parameterless one, and mocking frameworks which subclass this
+        /// type require a real parameterless constructor to do so
+        /// </summary>
+        public CertifyManager() : this(hubApiMessageHandler: null)
         {
+        }
+
+        /// <param name="hubApiMessageHandler">
+        /// transport for management hub API calls. Supplied by tests so hub responses can be driven without a hub;
+        /// left null in normal use, when the client builds its own. A supplied handler stays owned by the caller
+        /// </param>
+        public CertifyManager(HttpMessageHandler hubApiMessageHandler)
+        {
+            _hubApiMessageHandler = hubApiMessageHandler;
+
             // load setting here so that we know our instance ID etc early on. Other longer tasks are deferred until Init is called.
             SettingsManager.LoadAppSettings();
 

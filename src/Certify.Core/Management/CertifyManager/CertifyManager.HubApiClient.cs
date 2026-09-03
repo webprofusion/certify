@@ -20,23 +20,31 @@ namespace Certify.Management
             public string? TraceInstanceName { get; init; }
         }
 
+        private static HttpClientHandler CreateHubApiMessageHandler()
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (_, _, _, _) => true
+            };
+
+            if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
+            {
+                handler.ServerCertificateCustomValidationCallback = null;
+            }
+
+            return handler;
+        }
+
         private Certify.Server.Hub.Api.Client GetHubApiClient(string hubApiBase)
         {
             var normalizedBaseUrl = hubApiBase.TrimEnd('/') + "/";
 
             if (_hubApiHttpClient == null || _hubApiClient == null)
             {
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (_, _, _, _) => true
-                };
-
-                if (Environment.GetEnvironmentVariable("CERTIFY_MANAGEMENT_HUB_ALLOW_UNTRUSTED") == "true")
-                {
-                    handler.ServerCertificateCustomValidationCallback = null;
-                }
-
-                _hubApiHttpClient = new HttpClient(handler);
+                // a supplied handler is owned by whoever supplied it, so it is not disposed along with the client
+                _hubApiHttpClient = _hubApiMessageHandler != null
+                    ? new HttpClient(_hubApiMessageHandler, disposeHandler: false)
+                    : new HttpClient(CreateHubApiMessageHandler());
                 _hubApiClient = new Certify.Server.Hub.Api.Client(_hubApiHttpClient)
                 {
                     BaseUrl = normalizedBaseUrl
