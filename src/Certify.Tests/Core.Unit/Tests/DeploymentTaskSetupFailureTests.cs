@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using Certify.Config;
+using Certify.Core.Management.DeploymentTasks;
 using Certify.Management;
 using Certify.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,13 +21,7 @@ namespace Certify.Tests.Core.Unit.Tests
         private const string CredentialFailureMessage = "Failed to decrypt selected credentials for this task.";
 
         private static void InvokeRecordTaskSetupFailure(List<ActionStep> steps, DeploymentTaskConfig taskConfig, string message)
-        {
-            var method = typeof(CertifyManager).GetMethod("RecordTaskSetupFailure", BindingFlags.NonPublic | BindingFlags.Static);
-
-            Assert.IsNotNull(method);
-
-            method.Invoke(null, new object[] { steps, taskConfig, message, null });
-        }
+            => DeploymentTaskRunner.RecordTaskSetupFailure(steps, taskConfig, message, null);
 
         private static RequestState InvokeResolveOverallRenewalStatus(ManagedCertificate managedCertificate, CertificateRequestResult requestResult, bool postRequestTasksRan)
         {

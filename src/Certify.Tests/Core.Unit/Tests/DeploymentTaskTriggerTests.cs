@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Reflection;
 using Certify.Config;
+using Certify.Core.Management.DeploymentTasks;
 using Certify.Management;
 using Certify.Models;
 using Certify.Models.Config;
@@ -12,22 +12,10 @@ namespace Certify.Tests.Core.Unit.Tests
     public class DeploymentTaskTriggerTests
     {
         private static bool InvokeShouldContinueAfterPreviousTaskFailure(TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
-        {
-            var method = typeof(CertifyManager).GetMethod("ShouldContinueAfterPreviousTaskFailure", BindingFlags.NonPublic | BindingFlags.Static);
-
-            Assert.IsNotNull(method);
-
-            return (bool)method.Invoke(null, new object[] { taskTrigger, primaryRequestSucceeded });
-        }
+            => DeploymentTaskRunner.ShouldContinueAfterPreviousTaskFailure(taskTrigger, primaryRequestSucceeded);
 
         private static bool InvokeShouldSkipTaskBecausePreviousTaskFailed(bool previousTaskFailed, bool runIfLastStepFailed, TaskTriggerType taskTrigger, bool primaryRequestSucceeded)
-        {
-            var method = typeof(CertifyManager).GetMethod("ShouldSkipTaskBecausePreviousTaskFailed", BindingFlags.NonPublic | BindingFlags.Static);
-
-            Assert.IsNotNull(method);
-
-            return (bool)method.Invoke(null, new object[] { previousTaskFailed, runIfLastStepFailed, taskTrigger, primaryRequestSucceeded });
-        }
+            => DeploymentTaskRunner.ShouldSkipTaskBecausePreviousTaskFailed(previousTaskFailed, runIfLastStepFailed, taskTrigger, primaryRequestSucceeded);
 
         [DataTestMethod]
         [DataRow(TaskTriggerType.ANY_STATUS, false, true)]

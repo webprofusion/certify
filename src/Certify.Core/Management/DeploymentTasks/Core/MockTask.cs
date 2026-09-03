@@ -71,7 +71,11 @@ namespace Certify.Providers.DeploymentTasks.Core
         public async Task<List<ActionResult>> Validate(DeploymentTaskExecutionParams execParams)
         {
             var results = new List<ActionResult> { };
-            foreach (var p in execParams.Definition.ProviderParameters)
+
+            // the caller does not supply a definition (DeploymentTask.Execute passes null), so fall back to our own,
+            // as the other task providers do. Dereferencing execParams.Definition directly made every preview of this
+            // task report a failed task instead of validating it
+            foreach (var p in GetDefinition(execParams.Definition).ProviderParameters)
             {
 
                 if (!execParams.Settings.Parameters.Exists(s => s.Key == p.Key) && p.IsRequired)
