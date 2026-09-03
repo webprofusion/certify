@@ -83,14 +83,21 @@ namespace Certify.UI.ViewModel
         public bool IsRegisteredVersion { get; set; }
 
         /// <summary>
+        /// If true, the license status of this install has been checked, so IsRegisteredVersion reflects the real license state.
+        /// Until then the license state is unknown and the UI must not advise the user that their license is not activated.
+        /// </summary>
+        public bool IsLicenseStatusKnown { get; set; }
+
+        /// <summary>
         /// If true, a license upgrade is recommended based on current usage
         /// </summary>
-        [DependsOn(nameof(NumManagedCerts), nameof(IsRegisteredVersion))]
+        [DependsOn(nameof(NumManagedCerts), nameof(IsRegisteredVersion), nameof(IsLicenseStatusKnown))]
         public bool IsLicenseUpgradeRecommended
         {
             get
             {
-                if (!IsRegisteredVersion && NumManagedCerts >= 0 && UISettings?.CommunityMode != "personal")
+                // only recommend a license once we have confirmed this install has no active license
+                if (IsLicenseStatusKnown && !IsRegisteredVersion && UISettings?.CommunityMode != "personal")
                 {
                     return true;
                 }

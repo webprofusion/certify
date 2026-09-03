@@ -289,10 +289,22 @@ namespace Certify.UI.Windows
             var licensingManager = _appViewModel.LicensingManager;
             if (licensingManager != null)
             {
-                if (licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath(), _appViewModel.Preferences?.InstanceId ?? string.Empty))
+                try
                 {
-                    _appViewModel.IsRegisteredVersion = true;
+                    _appViewModel.IsRegisteredVersion = licensingManager.IsInstallRegistered(ViewModel.AppViewModel.ProductTypeId, EnvironmentUtil.EnsuredAppDataPath(), _appViewModel.Preferences?.InstanceId ?? string.Empty);
+
+                    // license state is now confirmed, so the UI can report it
+                    _appViewModel.IsLicenseStatusKnown = true;
                 }
+                catch (Exception exp)
+                {
+                    // license state could not be determined, leave it unknown rather than reporting the install as unlicensed
+                    _appViewModel.Log?.Error("Failed to check license registration status: {err}", exp.Message);
+                }
+            }
+            else
+            {
+                _appViewModel.Log?.Error("Licensing manager unavailable, license status could not be determined.");
             }
 
             // check if IIS is available, if so also populates IISVersion

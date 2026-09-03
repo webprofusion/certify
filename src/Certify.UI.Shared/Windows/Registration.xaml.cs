@@ -76,6 +76,7 @@ namespace Certify.UI.Windows
                             if (licensingManager.FinaliseInstall(productTypeId, installRegistration, settingsPath, ViewModel.AppViewModel.Current.Preferences.InstanceId ?? string.Empty))
                             {
                                 ViewModel.AppViewModel.Current.IsRegisteredVersion = true;
+                                ViewModel.AppViewModel.Current.IsLicenseStatusKnown = true;
                                 MessageBox.Show(installRegistration.Message);
 
                                 Close();
@@ -156,6 +157,7 @@ namespace Certify.UI.Windows
                 if (resultOK)
                 {
                     ViewModel.AppViewModel.Current.IsRegisteredVersion = false;
+                    ViewModel.AppViewModel.Current.IsLicenseStatusKnown = true;
                     MessageBox.Show("This install has now been deactivated. You can enter a different license key or use your key on another install.");
                     Close();
                 }
