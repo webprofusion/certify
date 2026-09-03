@@ -1830,6 +1830,120 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.HasCount(1, results, "All mode should ignore maintenance windows and process certificate");
         }
 
+
+        [TestMethod, Description("Test PerformRenewAll in parallel mode attempts every item which is due")]
+        public async Task TestPerformRenewAll_ParallelMode_RenewsEveryDueItem()
+        {
+            // Arrange
+            for (var i = 1; i <= 4; i++)
+            {
+                await _itemStore.Update(CreateTestManagedCertificate($"cert{i}", $"Test{i}", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35)));
+            }
+
+            var parallelPrefs = new RenewalPrefs
+            {
+                RenewalIntervalDays = 30,
+                RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime,
+                MaxRenewalRequests = 10,
+                PerformParallelRenewals = true
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                parallelPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert - running the batch at once must not lose or duplicate any of its items
+            Assert.HasCount(4, results, "Every item due for renewal is attempted when renewals run in parallel");
+            Assert.IsTrue(results.All(r => r.IsSuccess));
+
+            var attemptedIds = _requestsPerformed.Select(r => r.Id).OrderBy(id => id).ToList();
+            CollectionAssert.AreEqual(new[] { "cert1", "cert2", "cert3", "cert4" }, attemptedIds, "Each item is attempted exactly once");
+        }
+
+        [TestMethod, Description("Test PerformRenewAll in parallel mode respects the max renewal requests limit")]
+        public async Task TestPerformRenewAll_ParallelMode_RespectsMaxRequestsLimit()
+        {
+            // Arrange
+            for (var i = 1; i <= 5; i++)
+            {
+                await _itemStore.Update(CreateTestManagedCertificate($"cert{i}", $"Test{i}", dateRenewed: DateTimeOffset.UtcNow.AddDays(-35)));
+            }
+
+            var parallelPrefs = new RenewalPrefs
+            {
+                RenewalIntervalDays = 30,
+                RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime,
+                MaxRenewalRequests = 2,
+                PerformParallelRenewals = true
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                _defaultSettings,
+                parallelPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert - the limit exists to bound how many certificate orders are in flight at once, which is exactly
+            // what running them in parallel would otherwise remove
+            Assert.HasCount(2, results, "Running renewals in parallel must not exceed the configured batch size");
+            Assert.HasCount(2, _requestsPerformed);
+        }
+
+        [TestMethod, Description("Test PerformRenewAll in parallel mode attempts each targeted item")]
+        public async Task TestPerformRenewAll_ParallelMode_SpecificTargets()
+        {
+            // Arrange
+            await _itemStore.Update(CreateTestManagedCertificate("cert1", "Test1", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5)));
+            await _itemStore.Update(CreateTestManagedCertificate("cert2", "Test2", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5)));
+            await _itemStore.Update(CreateTestManagedCertificate("cert3", "Test3", dateRenewed: DateTimeOffset.UtcNow.AddDays(-5)));
+
+            var parallelPrefs = new RenewalPrefs
+            {
+                RenewalIntervalDays = 30,
+                RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime,
+                MaxRenewalRequests = 10,
+                PerformParallelRenewals = true
+            };
+
+            var targetedSettings = new RenewalSettings
+            {
+                Mode = RenewalMode.All,
+                TargetManagedCertificates = new List<string> { "cert1", "cert3" }
+            };
+
+            // Act
+            var results = await RenewalManager.PerformRenewAll(
+                _mockLog,
+                _itemStore,
+                targetedSettings,
+                parallelPrefs,
+                ReportProgress,
+                IsManagedCertificateRunning,
+                PerformCertificateRequest,
+                _cancellationTokenSource.Token
+            );
+
+            // Assert
+            Assert.HasCount(2, results);
+
+            var attemptedIds = _requestsPerformed.Select(r => r.Id).OrderBy(id => id).ToList();
+            CollectionAssert.AreEqual(new[] { "cert1", "cert3" }, attemptedIds, "A targeted request runs exactly the items asked for, whichever way the batch is run");
+        }
+
         #endregion
     }
 }
