@@ -242,13 +242,16 @@ namespace Certify.Management
         /// <param name="requestResult"></param>
         /// <param name="skipTasks"></param>
         /// <param name="currentFailureCount"></param>
-        /// <param name="persistTaskState">
-        /// whether the deployment task run state needs storing here. True for a subscription request, which performs no
-        /// final renewal status update of its own, so last executed date, last run status and result would otherwise
-        /// stay in memory. False for a standard request, which stores the item as part of resolving its final status
+        /// <param name="isFinalRequestStage">
+        /// whether this task run is the last stage of the request, with nothing after it resolving the overall outcome.
+        /// True for a subscription request, which records and reports the outcome of its fetch and deployment before
+        /// these tasks run: the task run state would otherwise only stay in memory, and a task failure would never
+        /// reach the request progress shown to the user. False for a standard request, which stores and reports its
+        /// final status once these tasks are done
         /// </param>
+        /// <param name="progress">progress tracker of the caller which started the request, where it supplied one</param>
         /// <returns>whether the task list was evaluated</returns>
-        private async Task<bool> PerformPostRequestTasksIfApplicable(ILog log, ManagedCertificate managedCertificate, CertificateRequestResult requestResult, bool skipTasks, int? currentFailureCount, bool persistTaskState)
+        private async Task<bool> PerformPostRequestTasksIfApplicable(ILog log, ManagedCertificate managedCertificate, CertificateRequestResult requestResult, bool skipTasks, int? currentFailureCount, bool isFinalRequestStage, IProgress<RequestProgressState> progress)
         {
             if (!ShouldPerformPostRequestTasks(managedCertificate, requestResult, skipTasks))
             {
@@ -299,10 +302,18 @@ namespace Certify.Management
                 // this stores the item, so the task run state is persisted here whether or not it was asked for
                 await RecordDeploymentFailure(managedCertificate, msg, currentFailureCount);
 
+                if (isFinalRequestStage)
+                {
+                    // nothing after this resolves and reports the outcome of the request, and the progress already
+                    // reported describes the request as it stood before these tasks ran, so without this the request
+                    // progress would keep showing a request which succeeded. This reports the failure recorded above
+                    ReportProgress(progress, new RequestProgressState(RequestState.Error, msg, managedCertificate), logThisEvent: false);
+                }
+
                 return true;
             }
 
-            if (persistTaskState)
+            if (isFinalRequestStage)
             {
                 requestResult.ManagedItem = await UpdateManagedCertificate(managedCertificate);
             }

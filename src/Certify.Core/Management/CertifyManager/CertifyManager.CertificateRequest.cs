@@ -596,7 +596,7 @@ namespace Certify.Management
                 requestResult.ManagedItem = managedCertificate;
 
                 // if request is not paused and there are any post-request tasks, evaluate each task trigger now
-                var tasksRan = await PerformPostRequestTasksIfApplicable(log, managedCertificate, requestResult, skipTasks, currentFailureCount, persistTaskState: isSubscriptionRequest);
+                var tasksRan = await PerformPostRequestTasksIfApplicable(log, managedCertificate, requestResult, skipTasks, currentFailureCount, isFinalRequestStage: isSubscriptionRequest, progress: progress);
 
                 if (!isSubscriptionRequest)
                 {

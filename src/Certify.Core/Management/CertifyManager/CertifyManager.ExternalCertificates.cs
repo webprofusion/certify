@@ -251,7 +251,8 @@ namespace Certify.Management
 
             var result = await PerformSubscriptionRequest(item, progress: null, SubscriptionRequestMode.Automatic, cancellationToken);
 
-            await PerformPostRequestTasksIfApplicable(log: null, result.ManagedItem ?? item, result, skipTasks: false, currentFailureCount, persistTaskState: true);
+            // the pass has no progress tracker of its own, the outcome is broadcast to connected UI clients regardless
+            await PerformPostRequestTasksIfApplicable(log: null, result.ManagedItem ?? item, result, skipTasks: false, currentFailureCount, isFinalRequestStage: true, progress: null);
         }
 
         /// <summary>
