@@ -26,7 +26,7 @@ namespace Certify.Management
             Manual
         }
 
-        private class ExternalCertificateFetchResult
+        internal class ExternalCertificateFetchResult
         {
             public bool IsSuccess { get; set; }
             public bool HasUpdate { get; set; }
@@ -336,7 +336,6 @@ namespace Certify.Management
                 var fetchResult = await FetchExternalCertificateAsset(
                     item,
                     sourceConfig,
-                    pushedSourceVersion: hasPendingSourceUpdate ? sourceConfig.PendingSourceVersion : null,
                     cancellationToken,
                     ignoreCurrentVersion: requestMode == SubscriptionRequestMode.Manual);
 
@@ -806,7 +805,7 @@ namespace Certify.Management
 
             log?.Information("Testing download access for external certificate subscription {managedItem}", managedCertificate);
 
-            var fetchResult = await FetchExternalCertificateAsset(managedCertificate, sourceConfig, pushedSourceVersion: null, CancellationToken.None, ignoreCurrentVersion: true);
+            var fetchResult = await FetchExternalCertificateAsset(managedCertificate, sourceConfig, CancellationToken.None, ignoreCurrentVersion: true);
 
             if (!fetchResult.IsSuccess)
             {
@@ -852,13 +851,13 @@ namespace Certify.Management
             return results;
         }
 
-        private async Task<ExternalCertificateFetchResult> FetchExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
+        private async Task<ExternalCertificateFetchResult> FetchExternalCertificateAsset(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
         {
             var sourceType = sourceConfig.SourceType?.Trim() ?? string.Empty;
 
             if (sourceType.Equals(ExternalCertificateSourceTypes.ManagementHub, StringComparison.OrdinalIgnoreCase))
             {
-                return await FetchFromManagementHub(item, sourceConfig, pushedSourceVersion, cancellationToken, ignoreCurrentVersion);
+                return await FetchFromManagementHub(item, sourceConfig, cancellationToken, ignoreCurrentVersion);
             }
 
             return new ExternalCertificateFetchResult
@@ -868,7 +867,7 @@ namespace Certify.Management
             };
         }
 
-        private async Task<ExternalCertificateFetchResult> FetchFromManagementHub(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, string? pushedSourceVersion, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
+        private async Task<ExternalCertificateFetchResult> FetchFromManagementHub(ManagedCertificate item, ExternalCertificateSubscription sourceConfig, CancellationToken cancellationToken, bool ignoreCurrentVersion = false)
         {
             if (!ManagedCertificate.TryParseManagementHubReference(sourceConfig.ExternalReference, out var sourceInstanceId, out var sourceManagedCertificateId))
             {
@@ -916,54 +915,11 @@ namespace Certify.Management
                     (client, ct) => client.DownloadAsync(sourceInstanceId, sourceManagedCertificateId, "pfx", ct),
                     cancellationToken);
 
-                var certData = await ReadHubApiFileResponse(response, cancellationToken);
-                if (certData.Length == 0)
-                {
-                    return new ExternalCertificateFetchResult
-                    {
-                        IsSuccess = false,
-                        Message = "ManagementHub source returned an empty certificate payload."
-                    };
-                }
-
-                var sourceVersion = GetHubApiHeaderValue(response, "ETag");
-                sourceVersion ??= Convert.ToHexString(SHA256.HashData(certData)).ToLowerInvariant();
-
-                if (!ignoreCurrentVersion
-                    && !string.IsNullOrWhiteSpace(pushedSourceVersion)
-                    && !string.IsNullOrWhiteSpace(sourceVersion)
-                    && string.Equals(pushedSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase)
-                    && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
-                {
-                    return new ExternalCertificateFetchResult
-                    {
-                        IsSuccess = true,
-                        HasUpdate = false,
-                        SourceVersion = sourceVersion,
-                        CertificateData = certData
-                    };
-                }
-
-                if (!ignoreCurrentVersion
-                    && !string.IsNullOrWhiteSpace(sourceConfig.LastSourceVersion)
-                    && string.Equals(sourceConfig.LastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase))
-                {
-                    return new ExternalCertificateFetchResult
-                    {
-                        IsSuccess = true,
-                        HasUpdate = false,
-                        SourceVersion = sourceVersion,
-                        CertificateData = certData
-                    };
-                }
-
-                return new ExternalCertificateFetchResult
-                {
-                    IsSuccess = true,
-                    HasUpdate = true,
-                    SourceVersion = sourceVersion,
-                    CertificateData = certData
-                };
+                return ResolveFetchedCertificate(
+                    await ReadHubApiFileResponse(response, cancellationToken),
+                    GetHubApiHeaderValue(response, "ETag"),
+                    sourceConfig.LastSourceVersion,
+                    ignoreCurrentVersion);
             }
             catch (ApiException ex) when (ex.StatusCode == (int)HttpStatusCode.NotModified)
             {
@@ -1004,6 +960,52 @@ namespace Certify.Management
                     Message = $"Unexpected error retrieving certificate from management hub ({hubApiBase}): {ex.Message}"
                 };
             }
+        }
+
+        /// <summary>
+        /// Decide whether what the source returned is a certificate the item does not already hold. The version marker
+        /// is the source's own if it supplied one, otherwise a digest of the payload, so a source which does not
+        /// version its certificates still only reports an update when the certificate itself changes.
+        /// This is the whole of the update decision, deliberately kept apart from fetching: what the source returned is
+        /// judged the same way however it was obtained, and a change here cannot depend on the transport
+        /// </summary>
+        /// <param name="certificateData">the payload the source returned</param>
+        /// <param name="sourceETag">the version the source declared, if any</param>
+        /// <param name="lastSourceVersion">the version the item last deployed</param>
+        /// <param name="ignoreCurrentVersion">true for a manual request or an access test, which fetch regardless of the version held</param>
+        /// <returns></returns>
+        internal static ExternalCertificateFetchResult ResolveFetchedCertificate(
+            byte[] certificateData,
+            string? sourceETag,
+            string? lastSourceVersion,
+            bool ignoreCurrentVersion)
+        {
+            if (certificateData == null || certificateData.Length == 0)
+            {
+                return new ExternalCertificateFetchResult
+                {
+                    IsSuccess = false,
+                    Message = "ManagementHub source returned an empty certificate payload."
+                };
+            }
+
+            // a source which declares a blank version has effectively declared none, so it falls back to the digest
+            // rather than recording an empty marker the next check would compare against
+            var sourceVersion = sourceETag.AsNullWhenBlank()
+                ?? Convert.ToHexString(SHA256.HashData(certificateData)).ToLowerInvariant();
+
+            // hub versions are ETags, whose case is not significant
+            var alreadyHeld = !ignoreCurrentVersion
+                && !string.IsNullOrWhiteSpace(lastSourceVersion)
+                && string.Equals(lastSourceVersion, sourceVersion, StringComparison.OrdinalIgnoreCase);
+
+            return new ExternalCertificateFetchResult
+            {
+                IsSuccess = true,
+                HasUpdate = !alreadyHeld,
+                SourceVersion = sourceVersion,
+                CertificateData = certificateData
+            };
         }
 
         private async Task<ClientSecret?> GetHubClientSecret(string? sourceCredentialKey)
