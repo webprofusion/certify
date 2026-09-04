@@ -21,7 +21,7 @@ namespace Certify.Management
             EnableValidationProxyAPI = true;
             EnableAppTelematics = true;
             EnableDNSValidationChecks = false;
-            RenewalIntervalDays = 75;
+            RenewalIntervalDays = RenewalIntervalModes.DefaultPercentageLifetime;
             RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
             DefaultKeyType = StandardKeyTypes.RSA256;
             MaxRenewalRequests = 0;

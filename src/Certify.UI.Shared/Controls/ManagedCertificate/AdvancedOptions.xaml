@@ -333,6 +333,57 @@
                             Margin="0,16,0,0"
                             DockPanel.Dock="Top"
                             Style="{StaticResource Subheading}">
+                            Renewal Interval
+                        </TextBlock>
+                        <TextBlock
+                            x:Name="RenewalIntervalInstanceDefault"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Instructions}"
+                            TextWrapping="Wrap" />
+                        <CheckBox
+                            x:Name="UseCustomRenewalInterval"
+                            Margin="0,8,0,0"
+                            Checked="UseCustomRenewalInterval_Changed"
+                            Content="Use a custom renewal interval for this certificate"
+                            DockPanel.Dock="Top"
+                            Unchecked="UseCustomRenewalInterval_Changed" />
+                        <StackPanel
+                            x:Name="CustomRenewalIntervalPanel"
+                            Margin="24,8,0,0"
+                            DockPanel.Dock="Top"
+                            Orientation="Vertical"
+                            Visibility="Collapsed">
+                            <Label
+                                Width="220"
+                                HorizontalAlignment="Left"
+                                Content="Percentage of Elapsed Lifetime" />
+                            <Controls:NumericUpDown
+                                x:Name="CustomRenewalPercentage"
+                                Width="100"
+                                Margin="8,0,8,4"
+                                HorizontalAlignment="Left"
+                                Interval="1"
+                                Maximum="99"
+                                Minimum="1"
+                                ValueChanged="CustomRenewalPercentage_ValueChanged" />
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                Style="{StaticResource Instructions}"
+                                Text="Renewal is attempted once this percentage of the certificate lifetime has elapsed."
+                                TextWrapping="Wrap" />
+                            <TextBlock
+                                x:Name="DeprecatedRenewalIntervalWarning"
+                                Margin="8,8,0,4"
+                                Foreground="Orange"
+                                TextWrapping="Wrap"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+
+
+                        <TextBlock
+                            Margin="0,16,0,0"
+                            DockPanel.Dock="Top"
+                            Style="{StaticResource Subheading}">
                             Maintenance Window
                         </TextBlock>
                         <TextBlock

@@ -385,7 +385,7 @@ namespace Certify.Management
                             var ariCertId = await ComputeARICertificateId(item);
                             var info = await provider.GetRenewalInfo(ariCertId);
 
-                            var nextRenewal = ManagedCertificate.CalculateNextRenewalAttempt(item, CoreAppSettings.Current.RenewalIntervalDays, CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal);
+                            var nextRenewal = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs());
 
                             if (info != null && nextRenewal?.DateNextRenewalAttempt != null)
                             {

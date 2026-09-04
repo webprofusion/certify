@@ -102,25 +102,24 @@ namespace Certify.UI.Controls.Settings
                 CertStoreSelector.SelectedIndex = 0;
             }
 
+            // the deprecated day based modes are only offered while an instance is still configured to use one
+            DeprecationWarning.Visibility = RenewalIntervalModes.IsDeprecatedMode(EditModel.Prefs.RenewalIntervalMode)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+
             if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysBeforeExpiry)
             {
                 RenewalIntervalMode_DaysBeforeExpiry.IsChecked = true;
                 RenewalIntervalMode_DaysBeforeExpiry.Visibility = Visibility.Visible;
-                DeprecationWarning.Visibility = Visibility.Visible;
-            }
-            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.PercentageLifetime)
-            {
-                RenewalIntervalMode_PercentageLifetime.IsChecked = true;
             }
             else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.DaysAfterLastRenewal)
             {
                 RenewalIntervalMode_DaysAfterLastRenewal.IsChecked = true;
                 RenewalIntervalMode_DaysAfterLastRenewal.Visibility = Visibility.Visible;
-                DeprecationWarning.Visibility = Visibility.Visible;
             }
             else
             {
-                // Default to PercentageLifetime for new configurations
+                // PercentageLifetime, which is also the default for new configurations
                 RenewalIntervalMode_PercentageLifetime.IsChecked = true;
             }
 
@@ -211,21 +210,21 @@ namespace Certify.UI.Controls.Settings
                 if (RenewalIntervalMode_DaysAfterLastRenewal.IsChecked == true)
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysAfterLastRenewal;
-                    DeprecationWarning.Visibility = Visibility.Visible;
-                    RefreshRewalIntervalLimits();
                 }
                 else if (RenewalIntervalMode_PercentageLifetime.IsChecked == true)
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.PercentageLifetime;
-                    DeprecationWarning.Visibility = Visibility.Collapsed;
-                    RefreshRewalIntervalLimits();
                 }
                 else
                 {
                     EditModel.Prefs.RenewalIntervalMode = RenewalIntervalModes.DaysBeforeExpiry;
-                    DeprecationWarning.Visibility = Visibility.Visible;
-                    RefreshRewalIntervalLimits();
                 }
+
+                DeprecationWarning.Visibility = RenewalIntervalModes.IsDeprecatedMode(EditModel.Prefs.RenewalIntervalMode)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+
+                RefreshRewalIntervalLimits();
 
                 EditModel.Prefs.CsrCommonNameMode = CsrCommonNameModeSelector?.SelectedValue?.ToString() ?? CsrCommonNameModes.IncludeInCsr;
 
@@ -250,10 +249,11 @@ namespace Certify.UI.Controls.Settings
                 RenewalIntervalDays.Minimum = 14;
                 RenewalIntervalDays.Maximum = 180;
             }
-            else if (EditModel.Prefs.RenewalIntervalMode == RenewalIntervalModes.PercentageLifetime)
+            else
             {
-                RenewalIntervalDays.Minimum = 1;
-                RenewalIntervalDays.Maximum = 99;
+                // PercentageLifetime, which is also the mode an instance falls back to when none is set
+                RenewalIntervalDays.Minimum = RenewalIntervalModes.MinPercentageLifetime;
+                RenewalIntervalDays.Maximum = RenewalIntervalModes.MaxPercentageLifetime;
             }
 
             if (EditModel.Prefs.RenewalIntervalDays < RenewalIntervalDays.Minimum)

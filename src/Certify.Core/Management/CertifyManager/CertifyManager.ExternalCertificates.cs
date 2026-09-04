@@ -770,9 +770,7 @@ namespace Certify.Management
         /// <returns></returns>
         internal static bool IsAutomaticSubscriptionRetryDue(ManagedCertificate item, DateTimeOffset? checkDate = null)
         {
-            var now = checkDate ?? DateTimeOffset.UtcNow;
-            var renewalIntervalMode = CoreAppSettings.Current.RenewalIntervalMode ?? RenewalIntervalModes.DaysAfterLastRenewal;
-            var renewalCheck = ManagedCertificate.CalculateNextRenewalAttempt(item, CoreAppSettings.Current.RenewalIntervalDays, renewalIntervalMode, testDateTime: now);
+            var renewalCheck = RenewalScheduleCalculator.CalculateNextRenewalAttempt(item, GetRenewalPrefs(), checkDate ?? DateTimeOffset.UtcNow);
 
             return renewalCheck?.IsRenewalDue == true && !renewalCheck.IsRenewalOnHold && !renewalCheck.IsRedeployOnly;
         }

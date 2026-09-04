@@ -59,6 +59,81 @@ namespace Certify.Models
         /// Renews after n% of certificate lifetime has elapsed
         /// </summary>
         public const string PercentageLifetime = "PercentageLifetime";
+
+        /// <summary>
+        /// Lowest percentage of certificate lifetime which can be selected as a renewal target
+        /// </summary>
+        public const int MinPercentageLifetime = 1;
+
+        /// <summary>
+        /// Highest percentage of certificate lifetime which can be selected as a renewal target
+        /// </summary>
+        public const int MaxPercentageLifetime = 99;
+
+        /// <summary>
+        /// The percentage of lifetime renewal target used when no other target is known
+        /// </summary>
+        public const int DefaultPercentageLifetime = 75;
+
+        /// <summary>
+        /// True if the given renewal interval mode is one of the deprecated day count based modes. New configuration
+        /// uses <see cref="PercentageLifetime"/>, but existing configuration may still specify a day based mode.
+        /// </summary>
+        public static bool IsDeprecatedMode(string? mode) => !string.IsNullOrEmpty(mode) && mode != PercentageLifetime;
+
+        /// <summary>
+        /// Constrain a percentage of lifetime renewal target to the range the UI allows
+        /// </summary>
+        public static int ClampPercentageLifetime(float value)
+        {
+            if (value < MinPercentageLifetime)
+            {
+                return MinPercentageLifetime;
+            }
+
+            if (value > MaxPercentageLifetime)
+            {
+                return MaxPercentageLifetime;
+            }
+
+            return (int)value;
+        }
+
+        /// <summary>
+        /// The percentage of lifetime target implied by an existing renewal interval, used as the starting point when
+        /// an item is first given a custom renewal target of its own.
+        /// </summary>
+        public static int GetDefaultPercentageLifetime(string? mode, int interval)
+        {
+            return string.IsNullOrEmpty(mode) || mode == PercentageLifetime
+                ? ClampPercentageLifetime(interval)
+                : DefaultPercentageLifetime;
+        }
+
+        /// <summary>
+        /// Describe a renewal interval and mode for display, e.g. "75% of certificate lifetime"
+        /// </summary>
+        public static string GetIntervalDescription(string? mode, float interval)
+        {
+            if (string.IsNullOrEmpty(mode) || mode == PercentageLifetime)
+            {
+                return $"{interval:0.##}% of certificate lifetime";
+            }
+
+#pragma warning disable CS0618 // the deprecated modes are no longer offered but existing configuration is still described
+            if (mode == DaysBeforeExpiry)
+            {
+                return $"{interval:0.##} days before expiry";
+            }
+
+            if (mode == DaysAfterLastRenewal)
+            {
+                return $"{interval:0.##} days after last renewal";
+            }
+#pragma warning restore CS0618
+
+            return $"{interval:0.##} ({mode})";
+        }
     }
 
     public static class CsrCommonNameModes

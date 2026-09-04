@@ -25,6 +25,21 @@ namespace Certify.UI.Controls.ManagedCertificate
         public AdvancedOptions()
         {
             InitializeComponent();
+
+            // this control stays loaded while the user switches between certificates, so the fields which are populated
+            // from the selected item (rather than bound to it) have to be refreshed when the selection changes
+            AppViewModel.Current.PropertyChanged -= AppViewModel_PropertyChanged;
+            AppViewModel.Current.PropertyChanged += AppViewModel_PropertyChanged;
+        }
+
+        private void AppViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(ViewModel.AppViewModel.SelectedItem))
+            {
+                return;
+            }
+
+            Dispatcher.Invoke(LoadSelectedItemOptions);
         }
 
         private void OpenCertificateFile_Click(object sender, RoutedEventArgs e)
@@ -248,10 +263,28 @@ namespace Certify.UI.Controls.ManagedCertificate
 
             ItemViewModel.RaisePropertyChangedEvent(null);
 
-            Dispatcher.Invoke(() =>
+            Dispatcher.Invoke(LoadSelectedItemOptions);
+        }
+
+        private bool _isLoadingSelectedItemOptions;
+
+        /// <summary>
+        /// Populate the options which are read from the selected item on load rather than bound to it. The loading flag stops
+        /// the resulting control updates from being written back to the item as if the user had made them.
+        /// </summary>
+        private void LoadSelectedItemOptions()
+        {
+            _isLoadingSelectedItemOptions = true;
+
+            try
             {
                 LoadMaintenanceWindows();
-            });
+                LoadCustomRenewalInterval();
+            }
+            finally
+            {
+                _isLoadingSelectedItemOptions = false;
+            }
         }
 
         private void LoadMaintenanceWindows()
@@ -283,10 +316,109 @@ namespace Certify.UI.Controls.ManagedCertificate
 
         private void MaintenanceWindowSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_isLoadingSelectedItemOptions)
+            {
+                return;
+            }
+
             if (ItemViewModel.SelectedItem != null && MaintenanceWindowSelector.SelectedItem is MaintenanceWindowViewModel selected)
             {
                 ItemViewModel.SelectedItem.MaintenanceWindowId = selected.Id;
             }
+        }
+
+        /// <summary>
+        /// Populate the custom renewal interval controls from the selected item, describing the instance default which
+        /// applies when the item has no custom interval of its own
+        /// </summary>
+        private void LoadCustomRenewalInterval()
+        {
+            var item = ItemViewModel.SelectedItem;
+            var prefs = AppViewModel.Current.Preferences;
+
+            var instanceInterval = prefs != null
+                ? Models.RenewalIntervalModes.GetIntervalDescription(prefs.RenewalIntervalMode, prefs.RenewalIntervalDays)
+                : "the instance renewal settings";
+
+            RenewalIntervalInstanceDefault.Text = $"This certificate is renewed using the renewal interval configured for this instance ({instanceInterval}). Optionally set a custom renewal target for this certificate only.";
+
+            var hasCustomInterval = item?.CustomRenewalTarget != null;
+
+            // an item which has a target but no mode of its own is evaluated against the instance mode, so that is what
+            // decides whether its target is a percentage or a deprecated day count
+            var effectiveMode = item?.CustomRenewalIntervalMode ?? prefs?.RenewalIntervalMode;
+            var isDeprecatedMode = hasCustomInterval && Models.RenewalIntervalModes.IsDeprecatedMode(effectiveMode);
+
+            UseCustomRenewalInterval.IsChecked = hasCustomInterval;
+            CustomRenewalIntervalPanel.Visibility = hasCustomInterval ? Visibility.Visible : Visibility.Collapsed;
+
+            // a deprecated day based target is not a percentage, so the control starts from the default instead
+            CustomRenewalPercentage.Value = hasCustomInterval && !isDeprecatedMode
+                ? Models.RenewalIntervalModes.ClampPercentageLifetime(item.CustomRenewalTarget.Value)
+                : GetDefaultCustomRenewalPercentage();
+
+            DeprecatedRenewalIntervalWarning.Text = isDeprecatedMode
+                ? $"This certificate has a deprecated custom renewal setting ({Models.RenewalIntervalModes.GetIntervalDescription(effectiveMode, item.CustomRenewalTarget.Value)}). Set a percentage of elapsed lifetime above to replace it, or clear the custom renewal interval to use the instance default."
+                : string.Empty;
+
+            DeprecatedRenewalIntervalWarning.Visibility = isDeprecatedMode ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        /// <summary>
+        /// The percentage target an item starts with when a custom renewal interval is first enabled, being the instance
+        /// default where that is also a percentage
+        /// </summary>
+        private static int GetDefaultCustomRenewalPercentage()
+        {
+            var prefs = AppViewModel.Current.Preferences;
+
+            return prefs != null
+                ? Models.RenewalIntervalModes.GetDefaultPercentageLifetime(prefs.RenewalIntervalMode, prefs.RenewalIntervalDays)
+                : Models.RenewalIntervalModes.DefaultPercentageLifetime;
+        }
+
+        private void UseCustomRenewalInterval_Changed(object sender, RoutedEventArgs e)
+        {
+            if (_isLoadingSelectedItemOptions || ItemViewModel.SelectedItem == null)
+            {
+                return;
+            }
+
+            if (UseCustomRenewalInterval.IsChecked == true)
+            {
+                CustomRenewalIntervalPanel.Visibility = Visibility.Visible;
+                SetCustomRenewalPercentage(CustomRenewalPercentage.Value ?? GetDefaultCustomRenewalPercentage());
+            }
+            else
+            {
+                ItemViewModel.SelectedItem.CustomRenewalTarget = null;
+                ItemViewModel.SelectedItem.CustomRenewalIntervalMode = null;
+
+                CustomRenewalIntervalPanel.Visibility = Visibility.Collapsed;
+                DeprecatedRenewalIntervalWarning.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void CustomRenewalPercentage_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double?> e)
+        {
+            if (_isLoadingSelectedItemOptions || ItemViewModel.SelectedItem == null || UseCustomRenewalInterval.IsChecked != true)
+            {
+                return;
+            }
+
+            SetCustomRenewalPercentage(e.NewValue ?? GetDefaultCustomRenewalPercentage());
+        }
+
+        /// <summary>
+        /// Apply a percentage of lifetime renewal target to the selected item. Percentage of lifetime is the only custom
+        /// renewal mode offered per item, so applying it also replaces any deprecated day based mode the item had.
+        /// </summary>
+        private void SetCustomRenewalPercentage(double percentage)
+        {
+            ItemViewModel.SelectedItem.CustomRenewalIntervalMode = Models.RenewalIntervalModes.PercentageLifetime;
+            ItemViewModel.SelectedItem.CustomRenewalTarget = Models.RenewalIntervalModes.ClampPercentageLifetime((float)percentage);
+
+            DeprecatedRenewalIntervalWarning.Visibility = Visibility.Collapsed;
         }
 
         private async void ResetFailureInfo_Click(object sender, RoutedEventArgs e)

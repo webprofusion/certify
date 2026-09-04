@@ -445,8 +445,14 @@ namespace Certify.Models
         /// provider never carry one)
         /// </summary>
         [JsonIgnore]
-        public bool IsSubscription => ItemType == ManagedCertificateType.SSL_ExternalSubscription
+        public bool IsSubscription
+        {
+            get
+            {
+                return ItemType == ManagedCertificateType.SSL_ExternalSubscription
             || (ItemType == ManagedCertificateType.SSL_ExternallyManaged && ExternalSource?.SourceType != null);
+            }
+        }
 
         /// <summary>
         /// True if this item is a certificate subscription which has enough configuration for a request to actually be
@@ -1072,7 +1078,7 @@ namespace Certify.Models
                     if (certLifetime.HasValue && (certLifetime.Value.TotalDays < selectedRenewalInterval || selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime))
                     {
                         // cert has a shorter lifetime than the renewal interval. Switch to a percentage based renewal 
-                        float targetRenewalPercentage = 75;
+                        float targetRenewalPercentage = RenewalIntervalModes.DefaultPercentageLifetime;
 
                         if (selectedRenewalIntervalMode == RenewalIntervalModes.PercentageLifetime && selectedRenewalInterval > 0)
                         {
