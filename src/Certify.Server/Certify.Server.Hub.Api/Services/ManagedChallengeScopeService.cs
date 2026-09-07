@@ -75,7 +75,7 @@ namespace Certify.Server.Hub.Api.Services
 
             if (!scope.HasAccess)
             {
-                return (false, "Security principal is not authorised to use managed challenges");
+                return (false, await DenyNoAuthorizingRole(securityPrincipalId, requiredActionId, scopedAssignedRoles));
             }
 
             // Domain restrictions apply regardless of tag scope, so check them before the tag filtering shortcut.
@@ -134,13 +134,10 @@ namespace Certify.Server.Hub.Api.Services
 
                 if (!scope.HasAccess)
                 {
-                    _logger.LogWarning(
-                        "Managed challenge access denied for principal {PrincipalId}: no authorizing role grants {ActionId} (scoped assigned roles: {ScopedRoles})",
-                        securityPrincipalId,
-                        requiredActionId,
-                        scopedAssignedRoles?.Count > 0 ? string.Join(", ", scopedAssignedRoles) : "(none)");
-
-                    return (false, "Security principal is not authorised to use managed challenges", Array.Empty<ManagedChallenge>());
+                    return (
+                        false,
+                        await DenyNoAuthorizingRole(securityPrincipalId, requiredActionId, scopedAssignedRoles),
+                        Array.Empty<ManagedChallenge>());
                 }
 
                 // Enforce per-identifier domain restrictions on the authorizing roles.
@@ -297,6 +294,63 @@ namespace Certify.Server.Hub.Api.Services
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Report a denial where no role assigned to the principal grants the required action, and return the
+        /// failure reason. The principal's stored role assignments are logged with it: this state is always a
+        /// configuration problem, and the log has to distinguish "nothing assigned to this principal" from
+        /// "assigned to a role which no longer exists" and "assigned to a role whose policies do not grant
+        /// this action", which the denial alone does not say.
+        /// </summary>
+        private async Task<string> DenyNoAuthorizingRole(
+            string securityPrincipalId,
+            string requiredActionId,
+            ICollection<string>? scopedAssignedRoles)
+        {
+            _logger.LogWarning(
+                "Managed challenge access denied for principal {PrincipalId}: no authorizing role grants {ActionId} (scoped assigned roles: {ScopedRoles}). {RoleAssignments}",
+                securityPrincipalId,
+                requiredActionId,
+                scopedAssignedRoles?.Count > 0 ? string.Join(", ", scopedAssignedRoles) : "(none)",
+                await DescribeStoredRoleAssignments(securityPrincipalId, requiredActionId));
+
+            return "Security principal is not authorised to use managed challenges";
+        }
+
+        /// <summary>
+        /// Describe the role assignments actually held by a principal, and the actions those roles grant.
+        /// </summary>
+        private async Task<string> DescribeStoredRoleAssignments(string securityPrincipalId, string requiredActionId)
+        {
+            try
+            {
+                var roleStatus = await _client.GetSecurityPrincipalRoleStatus(securityPrincipalId, SystemAuthContext);
+
+                var assignments = roleStatus?.AssignedRoles?.ToList() ?? [];
+
+                if (assignments.Count == 0)
+                {
+                    return $"This principal holds no role assignments at all, so '{requiredActionId}' is granted to a different security principal or was never assigned. "
+                        + "For a managed instance, check the role is assigned to the instance's own security principal (Users > Managed Instances).";
+                }
+
+                var roles = roleStatus!.Roles?.ToList() ?? [];
+                var grantedActions = roleStatus.Policies?.SelectMany(p => p.ResourceActions ?? []).Distinct().ToList() ?? [];
+
+                var describedAssignments = assignments.Select(a => roles.Exists(r => r.Id == a.RoleId)
+                    ? $"'{a.RoleId}' (assignment {a.Id})"
+                    : $"'{a.RoleId}' (assignment {a.Id}, NO SUCH ROLE DEFINITION IN THE STORE)");
+
+                return $"Roles assigned to this principal: {string.Join(", ", describedAssignments)}. "
+                    + $"Actions granted by those roles: {(grantedActions.Count == 0 ? "(none)" : string.Join(", ", grantedActions))}. "
+                    + $"Required: {requiredActionId}.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Could not read role assignments for principal {PrincipalId} while reporting a managed challenge denial", securityPrincipalId);
+                return "The principal's role assignments could not be read.";
+            }
         }
 
         /// <summary>

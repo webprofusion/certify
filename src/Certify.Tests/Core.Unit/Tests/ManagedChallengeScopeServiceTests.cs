@@ -118,5 +118,62 @@ namespace Certify.Core.Tests.Unit
             Assert.IsTrue(result.CanSatisfy, result.FailureReason);
             Assert.HasCount(1, result.AccessibleChallenges);
         }
+
+        [TestMethod]
+        [Description("A principal whose roles do not grant the action is denied, and the denial reads back its stored role assignments")]
+        public async Task PrincipalWithoutAuthorizingRole_IsDeniedAndRoleAssignmentsAreReported()
+        {
+            var client = CreateClient(allowUnscoped: false, new List<ItemTag>());
+
+            client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ResourceAccessScope { HasAccess = false });
+
+            client.Setup(c => c.GetSecurityPrincipalRoleStatus("sp-1", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new RoleStatus
+                {
+                    AssignedRoles = [new AssignedRole { Id = "ar-1", RoleId = StandardRoles.HubViewer.Id, SecurityPrincipalId = "sp-1" }],
+                    Roles = [new Role(StandardRoles.HubViewer.Id, "Hub Viewer", "", policies: [StandardPolicies.ManagementHubReader])],
+                    Policies = [new ResourcePolicy { Id = StandardPolicies.ManagementHubReader, ResourceActions = [StandardResourceActions.ManagedChallengeList] }]
+                });
+
+            var service = new ManagedChallengeScopeService(client.Object, NullLogger<ManagedChallengeScopeService>.Instance);
+
+            var result = await service.ValidatePrincipalCanSatisfyIdentifiers(
+                "sp-1",
+                ["app.finance.example.com"],
+                null,
+                StandardResourceActions.ManagedChallengeCleanup);
+
+            Assert.IsFalse(result.CanSatisfy);
+            Assert.IsEmpty(result.AccessibleChallenges);
+            StringAssert.Contains(result.FailureReason, "not authorised to use managed challenges");
+
+            // the denial has to be able to say which roles the principal actually holds
+            client.Verify(c => c.GetSecurityPrincipalRoleStatus("sp-1", It.IsAny<AuthContext>()), Times.Once);
+        }
+
+        [TestMethod]
+        [Description("A denial still reports when the principal's role assignments cannot be read")]
+        public async Task PrincipalWithoutAuthorizingRole_IsDeniedWhenRoleAssignmentsCannotBeRead()
+        {
+            var client = CreateClient(allowUnscoped: false, new List<ItemTag>());
+
+            client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ResourceAccessScope { HasAccess = false });
+
+            client.Setup(c => c.GetSecurityPrincipalRoleStatus(It.IsAny<string>(), It.IsAny<AuthContext>()))
+                .ThrowsAsync(new System.Net.Http.HttpRequestException("backend unavailable"));
+
+            var service = new ManagedChallengeScopeService(client.Object, NullLogger<ManagedChallengeScopeService>.Instance);
+
+            var result = await service.AuthorizeIdentifiersForPrincipal(
+                "sp-1",
+                ["app.finance.example.com"],
+                null,
+                StandardResourceActions.ManagedChallengeCleanup);
+
+            Assert.IsFalse(result.IsAuthorized);
+            StringAssert.Contains(result.FailureReason, "not authorised to use managed challenges");
+        }
     }
 }
