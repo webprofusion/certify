@@ -96,5 +96,120 @@ namespace Certify.Core.Tests.Unit
             Assert.AreEqual("sp-456", authContext!.UserId);
             CollectionAssert.AreEquivalent(new[] { "assigned-role-a" }, authContext.ScopedAssignedRoles);
         }
+
+        /// <summary>
+        /// An API access token authorized request reaches [AllowAnonymous] endpoints without the ApiToken
+        /// authentication scheme having run, so HttpContext.User carries no principal for it. The domain restriction
+        /// check must still resolve the principal from the token which authorized the request, rather than failing
+        /// closed and rejecting every API token call.
+        /// </summary>
+        [TestMethod]
+        public async Task CheckIdentifiersAuthorized_UsesAccessTokenPrincipalWithoutAuthenticatedUser()
+        {
+            var (controller, client) = CreateAccessTokenAuthorizedController(domainRestriction: "*.example.com");
+
+            var requestAuthorized = await InvokeCheckRequestAuthorized(controller, client);
+            Assert.IsTrue(requestAuthorized.IsSuccess, requestAuthorized.Message);
+
+            var permitted = await InvokeCheckIdentifiersAuthorized(controller, client, "www.example.com");
+            Assert.IsTrue(permitted.IsSuccess, permitted.Message);
+
+            var denied = await InvokeCheckIdentifiersAuthorized(controller, client, "www.notpermitted.com");
+            Assert.IsFalse(denied.IsSuccess);
+            StringAssert.Contains(denied.Message, "not permitted by the domain restrictions");
+        }
+
+        /// <summary>
+        /// A principal whose authorizing roles carry no domain resources is unrestricted, so the check passes without
+        /// needing to know the identifiers.
+        /// </summary>
+        [TestMethod]
+        public async Task CheckIdentifiersAuthorized_AccessTokenPrincipalWithoutDomainRestrictionsIsUnrestricted()
+        {
+            var (controller, client) = CreateAccessTokenAuthorizedController(domainRestriction: null);
+
+            var requestAuthorized = await InvokeCheckRequestAuthorized(controller, client);
+            Assert.IsTrue(requestAuthorized.IsSuccess, requestAuthorized.Message);
+
+            var result = await InvokeCheckIdentifiersAuthorized(controller, client, "anything.example.org");
+            Assert.IsTrue(result.IsSuccess, result.Message);
+        }
+
+        private static (ApiControllerBase Controller, ICertifyInternalApiClient Client) CreateAccessTokenAuthorizedController(string? domainRestriction)
+        {
+            var authorizingRole = new AssignedRole
+            {
+                Id = "ar-1",
+                RoleId = "cert_consumer_role",
+                SecurityPrincipalId = "sp-token",
+                IncludedResources = domainRestriction == null
+                    ? []
+                    : [new Resource { ResourceType = ResourceTypes.Domain, Identifier = domainRestriction }]
+            };
+
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+
+            client.Setup(c => c.CheckApiTokenHasAccess(
+                    It.IsAny<AccessToken>(),
+                    It.IsAny<AccessCheck>(),
+                    It.IsAny<AuthContext>()))
+                .ReturnsAsync(new ActionResultConfig("OK", true)
+                {
+                    // as it arrives from a remote backend, over the internal API
+                    Result = JObject.FromObject(new AccessTokenAuthorizationContext
+                    {
+                        SecurityPrincipalId = "sp-token",
+                        ScopedAssignedRoles = ["ar-1"]
+                    })
+                });
+
+            client.Setup(c => c.EvaluateAccessScope(It.IsAny<AccessCheck>(), It.IsAny<AuthContext>()))
+                .ReturnsAsync((AccessCheck check, AuthContext _) =>
+                {
+                    // the scope must be evaluated for the token's principal and role scope, not for an anonymous caller
+                    Assert.AreEqual("sp-token", check.SecurityPrincipalId);
+                    CollectionAssert.AreEquivalent(new[] { "ar-1" }, check.ScopedAssignedRoles);
+
+                    return new ResourceAccessScope
+                    {
+                        HasAccess = true,
+                        IsUnrestricted = true,
+                        AuthorizingRoles = [authorizingRole]
+                    };
+                });
+
+            var context = new DefaultHttpContext();
+
+            // an API token request carries no bearer token and no authenticated user
+            context.Request.Headers["X-Client-ID"] = "client-id";
+            context.Request.Headers["X-Client-Secret"] = "client-secret";
+
+            var controller = new ApiControllerBase
+            {
+                ControllerContext = new ControllerContext { HttpContext = context }
+            };
+
+            return (controller, client.Object);
+        }
+
+        private static async Task<ActionResultConfig> InvokeCheckRequestAuthorized(ApiControllerBase controller, ICertifyInternalApiClient client)
+        {
+            var method = typeof(ApiControllerBase).GetMethod("CheckRequestAuthorized", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+
+            var check = new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload);
+
+            return await (Task<ActionResultConfig>)method!.Invoke(controller, [client, check])!;
+        }
+
+        private static async Task<ActionResultConfig> InvokeCheckIdentifiersAuthorized(ApiControllerBase controller, ICertifyInternalApiClient client, params string?[] identifiers)
+        {
+            var method = typeof(ApiControllerBase).GetMethod("CheckIdentifiersAuthorized", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+
+            return await (Task<ActionResultConfig>)method!.Invoke(
+                controller,
+                [client, StandardResourceActions.CertificateDownload, identifiers])!;
+        }
     }
 }

@@ -127,7 +127,7 @@ namespace Certify.Server.Hub.Api.Middleware
                 return AuthenticateResult.Fail("API credentials invalid");
             }
 
-            var tokenAuthContext = ParseTokenAuthContext(result.Result);
+            var tokenAuthContext = AccessTokenAuthorization.FromCheckResult(result.Result);
 
             var claims = new List<Claim>
             {
@@ -149,8 +149,16 @@ namespace Certify.Server.Hub.Api.Middleware
 
             return AuthenticateResult.Success(ticket);
         }
+    }
 
-        private static AccessTokenAuthorizationContext? ParseTokenAuthContext(object? value)
+    /// <summary>
+    /// Reads the security principal an API access token resolved to from an access check result. The result crosses
+    /// the internal API boundary, so it arrives already typed from an in-process backend and as deserialized JSON
+    /// from a remote one.
+    /// </summary>
+    internal static class AccessTokenAuthorization
+    {
+        public static AccessTokenAuthorizationContext? FromCheckResult(object? value)
         {
             if (value == null)
             {

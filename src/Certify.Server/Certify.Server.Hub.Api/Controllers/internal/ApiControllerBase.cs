@@ -52,8 +52,37 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         internal async Task<Certify.Models.Config.ActionResult> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
         {
-            return await internalApiClient.CheckApiTokenHasAccess(token, check, CurrentAuthContext);
+            var result = await internalApiClient.CheckApiTokenHasAccess(token, check, CurrentAuthContext);
+
+            if (result?.IsSuccess == true)
+            {
+                var tokenAuthContext = AccessTokenAuthorization.FromCheckResult(result.Result);
+
+                if (!string.IsNullOrWhiteSpace(tokenAuthContext?.SecurityPrincipalId))
+                {
+                    _accessTokenAuthContext = new AuthContext
+                    {
+                        UserId = tokenAuthContext!.SecurityPrincipalId,
+                        ScopedAssignedRoles = tokenAuthContext.ScopedAssignedRoles?.Count > 0 ? tokenAuthContext.ScopedAssignedRoles : null
+                    };
+                }
+            }
+
+            return result;
         }
+
+        /// <summary>
+        /// Security principal resolved from an API access token while authorizing this request.
+        /// </summary>
+        private AuthContext? _accessTokenAuthContext;
+
+        /// <summary>
+        /// The security principal which authorized the current request: from the bearer token when there is one,
+        /// otherwise from the API access token which authorized it. An access token authorized request reaching an
+        /// [AllowAnonymous] endpoint has not been through the ApiToken authentication scheme, so HttpContext.User
+        /// carries no principal for it and <see cref="CurrentAuthContext"/> alone is null.
+        /// </summary>
+        internal AuthContext? RequestAuthContext => CurrentAuthContext ?? _accessTokenAuthContext;
 
         internal async Task<Certify.Models.Config.ActionResult> CheckRequestAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
         {
@@ -127,7 +156,11 @@ namespace Certify.Server.Hub.Api.Controllers
             string resourceActionId,
             IEnumerable<string?>? identifiers)
         {
-            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
+            // the caller may have authorized by bearer token or by API access token, and an access token request
+            // reaching an [AllowAnonymous] endpoint has no authenticated HttpContext.User to read the principal from
+            var authContext = RequestAuthContext;
+
+            if (string.IsNullOrWhiteSpace(authContext?.UserId))
             {
                 return new Certify.Models.Config.ActionResult("No authenticated security principal to check domain restrictions for", false);
             }
@@ -135,9 +168,9 @@ namespace Certify.Server.Hub.Api.Controllers
             // resolve the rule set once, then evaluate each identifier locally against the shared Domain Match rules
             var domainRules = await GetDomainRestrictionRulesForPrincipal(
                 internalApiClient,
-                CurrentAuthContext.UserId,
+                authContext.UserId,
                 resourceActionId,
-                CurrentAuthContext.ScopedAssignedRoles);
+                authContext.ScopedAssignedRoles);
 
             if (domainRules == null)
             {
