@@ -1847,6 +1847,103 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// Removing a role from a principal and assigning it again only breaks a token scoped to it when the removal
+        /// is saved first. Removing and re-adding in one update leaves the assignment untouched, because the add is
+        /// skipped while an assignment for that role still exists. Saving the removal deletes the assignment, so the
+        /// later add creates a new one and any token still scoped to the old id grants nothing.
+        /// </summary>
+        [TestMethod]
+        public async Task TestRemovingAndReassigningARoleOnlyBreaksATokenScopeWhenSavedSeparately()
+        {
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+            _ = await access.AddResourcePolicy(contextUserId, Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedChallengeConsumer), bypassIntegrityCheck: true);
+            await access.AddRole(contextUserId, Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id), bypassIntegrityCheck: true);
+
+            var originalAssignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, originalAssignment, bypassIntegrityCheck: true);
+
+            var apiToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id,
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple
+            };
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccessTokens = new List<AccessToken> { apiToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Managed Challenge Token",
+                ScopedAssignedRoles = new List<string> { originalAssignment.Id }
+            });
+
+            var check = new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedChallenge,
+                ResourceActionId = StandardResourceActions.ManagedChallengeRequest
+            };
+
+            Assert.IsTrue((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "Precondition: the token authorizes via its scoped assignment");
+
+            AssignedRole NewAssignmentForSameRole() => new()
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            // removed then re-added before saving: the roles dialog cancels the pending removal, so the update only
+            // carries the add, which the store skips because an assignment for that role is still there
+            await access.UpdateAssignedRoles(contextUserId, new SecurityPrincipalAssignedRoleUpdate
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                AddedAssignedRoles = [NewAssignmentForSameRole()],
+                RemovedAssignedRoles = []
+            });
+
+            var assignmentsAfterSingleSave = await access.GetAssignedRoles(contextUserId, TestSecurityPrincipals.DevopsUser.Id);
+            Assert.AreEqual(originalAssignment.Id, assignmentsAfterSingleSave.Single(a => a.RoleId == StandardRoles.ManagedChallengeConsumer.Id).Id, "The existing assignment should be left as it is");
+            Assert.IsTrue((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "The token should still authorize after a remove and re-add in one save");
+
+            // removal saved on its own, then the role assigned again: a new assignment id, and the token still points
+            // at the old one
+            await access.UpdateAssignedRoles(contextUserId, new SecurityPrincipalAssignedRoleUpdate
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                AddedAssignedRoles = [],
+                RemovedAssignedRoles = [NewAssignmentForSameRole()]
+            });
+
+            await access.UpdateAssignedRoles(contextUserId, new SecurityPrincipalAssignedRoleUpdate
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                AddedAssignedRoles = [NewAssignmentForSameRole()],
+                RemovedAssignedRoles = []
+            });
+
+            var assignmentsAfterTwoSaves = await access.GetAssignedRoles(contextUserId, TestSecurityPrincipals.DevopsUser.Id);
+            var reassigned = assignmentsAfterTwoSaves.Single(a => a.RoleId == StandardRoles.ManagedChallengeConsumer.Id);
+
+            Assert.AreNotEqual(originalAssignment.Id, reassigned.Id, "Re-assigning after a saved removal creates a new role assignment");
+
+            var denied = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+
+            Assert.IsFalse(denied.IsSuccess, "The token is still scoped to the assignment which was removed");
+            StringAssert.Contains(denied.Message, originalAssignment.Id);
+            StringAssert.Contains(denied.Message, "no longer exist");
+        }
+
+        /// <summary>
         /// The recovery path for a token scoped to a removed role assignment: re-scope it to the current assignment
         /// and it works again, with the same client id and secret, so nothing using the token has to be reconfigured.
         /// </summary>
