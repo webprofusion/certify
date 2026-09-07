@@ -355,10 +355,12 @@ namespace Certify.Core.Management.Access
 
             IEnumerable<AssignedRole> spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId);
 
-            // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check
+            // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check.
+            // Ids are guids whose casing carries no meaning and other code paths already treat them case insensitively,
+            // so a casing difference must not silently reduce the scope to nothing and deny everything.
             if (check.ScopedAssignedRoles?.Any() == true)
             {
-                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id));
+                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id, StringComparer.OrdinalIgnoreCase));
             }
 
             var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id)).ToList();
@@ -414,6 +416,31 @@ namespace Certify.Core.Management.Access
                 .Any(r => r.Identifier == check.Identifier);
         }
 
+        /// <summary>
+        /// The assigned role ids a token is scoped to which are not currently assigned to the token's security
+        /// principal. An empty result means the token's scope resolves, including when the token is unscoped.
+        /// </summary>
+        private async Task<List<string>> GetStaleScopedAssignedRoles(string securityPrincipalId, ICollection<string>? scopedAssignedRoles)
+        {
+            if (!(scopedAssignedRoles?.Count > 0))
+            {
+                return [];
+            }
+
+            var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
+
+            var principalAssignmentIds = assignedRoles
+                .Where(a => a.SecurityPrincipalId == securityPrincipalId)
+                .Select(a => a.Id)
+                .ToList();
+
+            // must match how EvaluateAccessScopeInternal filters, otherwise a token could be reported as stale
+            // while still authorizing, or the reverse
+            return scopedAssignedRoles
+                .Where(id => !principalAssignmentIds.Contains(id, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+        }
+
         public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
         {
             // resolve security principal from access token
@@ -426,6 +453,28 @@ namespace Certify.Core.Management.Access
             if (knownAssignedToken == null)
             {
                 return new ActionResult("Access token unknown, expired or revoked.", false);
+            }
+
+            // A token is scoped to AssignedRole ids, not role ids, so removing and re-assigning a role leaves the
+            // token pointing at an assignment which no longer exists. The scope filter then reduces the principal's
+            // roles to an empty set and every check fails, which is otherwise indistinguishable from the role never
+            // having been assigned. Report it instead, as the token has to be re-scoped to the current assignment.
+            var staleScopedAssignedRoles = await GetStaleScopedAssignedRoles(knownAssignedToken.SecurityPrincipalId, knownAssignedToken.ScopedAssignedRoles);
+
+            if (staleScopedAssignedRoles.Count > 0)
+            {
+                await AuditWarning(
+                    "Access token for principal [{securityPrincipalId}] is scoped to role assignment(s) which no longer exist: {staleAssignedRoles}",
+                    knownAssignedToken.SecurityPrincipalId,
+                    string.Join(", ", staleScopedAssignedRoles));
+
+                if (staleScopedAssignedRoles.Count == knownAssignedToken.ScopedAssignedRoles.Count)
+                {
+                    return new ActionResult(
+                        $"Access token is scoped to role assignment(s) which no longer exist ({string.Join(", ", staleScopedAssignedRoles)}), so it grants no access. "
+                        + "Re-assigning a role creates a new role assignment, so the token needs to be scoped to the current assignment for this security principal.",
+                        false);
+                }
             }
 
             // check related principal has access

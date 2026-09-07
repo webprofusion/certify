@@ -1710,6 +1710,142 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsFalse(isAuthorized.IsSuccess, "API token should NOT have access to development resources");
         }
 
+        /// <summary>
+        /// An access token holds AssignedRole ids, not role ids. Removing and re-assigning a role gives it a new
+        /// AssignedRole id, leaving the token scoped to an assignment which no longer exists. The scope filter then
+        /// reduces the principal's roles to nothing, which denies everything the token could previously do - so the
+        /// denial has to say that, rather than reading as though the role was never assigned.
+        /// </summary>
+        [TestMethod]
+        public async Task TestAccessTokenScopedToRemovedRoleAssignmentReportsStaleScope()
+        {
+            // adding assigned access tokens requires the context user to be an admin
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
+
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+
+            var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedChallengeConsumer);
+            _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
+
+            var role = Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id);
+            await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
+
+            // the role assignment which exists now, after the role was removed and re-assigned
+            var currentAssignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, currentAssignment, bypassIntegrityCheck: true);
+
+            var apiToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id,
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple,
+                Description = "Managed challenge API token"
+            };
+
+            var staleAssignedRoleId = Guid.NewGuid().ToString();
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccessTokens = new List<AccessToken> { apiToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Managed Challenge Token",
+
+                // still scoped to the assignment id the role had before it was re-assigned
+                ScopedAssignedRoles = new List<string> { staleAssignedRoleId }
+            });
+
+            var check = new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedChallenge,
+                ResourceActionId = StandardResourceActions.ManagedChallengeRequest
+            };
+
+            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+
+            Assert.IsFalse(isAuthorized.IsSuccess, "A token scoped only to a removed role assignment cannot authorize anything");
+            StringAssert.Contains(isAuthorized.Message, staleAssignedRoleId, "The denial must name the stale role assignment the token is scoped to");
+            StringAssert.Contains(isAuthorized.Message, "no longer exist");
+
+            // the same principal and action are authorized when the token is not scoped to the removed assignment
+            var unscopedToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id + "-unscoped",
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple
+            };
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccessTokens = new List<AccessToken> { unscopedToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Unscoped Token"
+            });
+
+            var unscopedResult = await access.IsAccessTokenAuthorised(contextUserId, unscopedToken, check);
+            Assert.IsTrue(unscopedResult.IsSuccess, unscopedResult.Message);
+        }
+
+        /// <summary>
+        /// Assigned role ids are guids whose casing carries no meaning, and they are deduplicated case insensitively
+        /// elsewhere. A casing difference between a token's scope and the stored assignment must not reduce the
+        /// scope to nothing, which would deny everything the token can do.
+        /// </summary>
+        [TestMethod]
+        public async Task TestAccessTokenScopeMatchesAssignedRoleIdCaseInsensitively()
+        {
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+            _ = await access.AddResourcePolicy(contextUserId, Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedChallengeConsumer), bypassIntegrityCheck: true);
+            await access.AddRole(contextUserId, Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id), bypassIntegrityCheck: true);
+
+            var assignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString().ToLowerInvariant(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, assignment, bypassIntegrityCheck: true);
+
+            var apiToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id,
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple
+            };
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccessTokens = new List<AccessToken> { apiToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Managed Challenge Token",
+
+                // same assignment, different casing
+                ScopedAssignedRoles = new List<string> { assignment.Id.ToUpperInvariant() }
+            });
+
+            var result = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedChallenge,
+                ResourceActionId = StandardResourceActions.ManagedChallengeRequest
+            });
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+        }
+
         [TestMethod]
         public void TestIsResourceTagScopeMatch_MixedCategoryAndValueScopes()
         {
