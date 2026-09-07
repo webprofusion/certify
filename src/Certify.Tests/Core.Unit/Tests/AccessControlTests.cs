@@ -1846,6 +1846,100 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(result.IsSuccess, result.Message);
         }
 
+        /// <summary>
+        /// The recovery path for a token scoped to a removed role assignment: re-scope it to the current assignment
+        /// and it works again, with the same client id and secret, so nothing using the token has to be reconfigured.
+        /// </summary>
+        [TestMethod]
+        public async Task TestUpdateAssignedAccessTokenRescopesWithoutChangingTheToken()
+        {
+            await access.AddAssignedRole(contextUserId, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
+            _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(contextUserId, Policies.GetStandardResourceActions().Find(r => r.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+            _ = await access.AddResourcePolicy(contextUserId, Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.ManagedChallengeConsumer), bypassIntegrityCheck: true);
+            await access.AddRole(contextUserId, Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id), bypassIntegrityCheck: true);
+
+            var currentAssignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(contextUserId, currentAssignment, bypassIntegrityCheck: true);
+
+            var apiToken = new AccessToken
+            {
+                ClientId = TestSecurityPrincipals.DevopsUser.Id,
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple
+            };
+
+            var assignedTokenId = Guid.NewGuid().ToString();
+
+            await access.AddAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = assignedTokenId,
+                AccessTokens = new List<AccessToken> { apiToken },
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Managed Challenge Token",
+                ScopedAssignedRoles = new List<string> { Guid.NewGuid().ToString() }
+            });
+
+            var check = new AccessCheck
+            {
+                ResourceType = ResourceTypes.ManagedChallenge,
+                ResourceActionId = StandardResourceActions.ManagedChallengeRequest
+            };
+
+            Assert.IsFalse((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "Precondition: the token is scoped to a removed assignment");
+
+            // a scope which does not resolve is refused rather than stored
+            var badUpdate = await access.UpdateAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = assignedTokenId,
+                Title = "Managed Challenge Token",
+                ScopedAssignedRoles = new List<string> { "not-an-assignment-for-this-principal" }
+            });
+
+            Assert.IsFalse(badUpdate.IsSuccess);
+            StringAssert.Contains(badUpdate.Message, "not assigned to this token's security principal");
+
+            // the token cannot be moved to another identity
+            var movedUpdate = await access.UpdateAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = assignedTokenId,
+                SecurityPrincipalId = "some-other-principal",
+                ScopedAssignedRoles = new List<string> { currentAssignment.Id }
+            });
+
+            Assert.IsFalse(movedUpdate.IsSuccess);
+            StringAssert.Contains(movedUpdate.Message, "cannot be changed");
+
+            // re-scope to the assignment which exists now
+            var update = await access.UpdateAssignedAccessToken(contextUserId, new AssignedAccessToken
+            {
+                Id = assignedTokenId,
+                Title = "Managed Challenge Token (rescoped)",
+                Description = "Re-scoped after the role was re-assigned",
+                ScopedAssignedRoles = new List<string> { currentAssignment.Id }
+            });
+
+            Assert.IsTrue(update.IsSuccess, update.Message);
+
+            // the original credentials still authorize, so nothing using the token needs reconfiguring
+            var authorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            Assert.IsTrue(authorized.IsSuccess, authorized.Message);
+
+            var stored = (await access.GetAssignedAccessTokens(contextUserId)).Single(t => t.Id == assignedTokenId);
+
+            Assert.AreEqual("Managed Challenge Token (rescoped)", stored.Title);
+            CollectionAssert.AreEquivalent(new[] { currentAssignment.Id }, stored.ScopedAssignedRoles);
+            Assert.AreEqual(apiToken.ClientId, stored.AccessTokens.Single().ClientId, "The client id must be unchanged by an edit");
+            Assert.AreEqual(apiToken.Secret, stored.AccessTokens.Single().Secret, "The secret must be unchanged by an edit");
+        }
+
         [TestMethod]
         public void TestIsResourceTagScopeMatch_MixedCategoryAndValueScopes()
         {

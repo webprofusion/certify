@@ -865,6 +865,69 @@ namespace Certify.Core.Management.Access
             return true;
         }
 
+        /// <summary>
+        /// Update the title, description and role scope of an assigned access token, keeping the token itself.
+        /// The access tokens and the owning security principal are deliberately not updatable here: re-issuing a
+        /// secret or moving a live credential to another identity are separate operations, and the whole point of
+        /// this one is that an integration's credentials keep working while its scope is corrected.
+        /// </summary>
+        public async Task<ActionResult> UpdateAssignedAccessToken(string contextUserId, AssignedAccessToken token)
+        {
+            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            {
+                await AuditWarning("User {contextUserId} attempted to update an assigned access token without being in required role.", contextUserId);
+                return new ActionResult("Not authorized to update assigned access tokens.", false);
+            }
+
+            if (string.IsNullOrWhiteSpace(token?.Id))
+            {
+                return new ActionResult("An assigned access token id is required.", false);
+            }
+
+            var existing = await _store.Get<AssignedAccessToken>(nameof(AssignedAccessToken), token.Id);
+
+            if (existing == null)
+            {
+                return new ActionResult("Assigned access token not found.", false);
+            }
+
+            if (!string.IsNullOrWhiteSpace(token.SecurityPrincipalId) && token.SecurityPrincipalId != existing.SecurityPrincipalId)
+            {
+                await AuditWarning(
+                    "User {contextUserId} attempted to move assigned access token [{tokenId}] to a different security principal.",
+                    contextUserId,
+                    token.Id);
+
+                return new ActionResult("The security principal of an existing access token cannot be changed. Remove the token and assign a new one instead.", false);
+            }
+
+            var scopedAssignedRoles = token.ScopedAssignedRoles?.Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().ToList() ?? [];
+
+            // Reject a scope which does not resolve, rather than storing a token that silently grants nothing.
+            var staleScopedAssignedRoles = await GetStaleScopedAssignedRoles(existing.SecurityPrincipalId, scopedAssignedRoles);
+
+            if (staleScopedAssignedRoles.Count > 0)
+            {
+                return new ActionResult(
+                    $"Role assignment(s) {string.Join(", ", staleScopedAssignedRoles)} are not assigned to this token's security principal, so scoping the token to them would grant no access.",
+                    false);
+            }
+
+            existing.Title = token.Title;
+            existing.Description = token.Description;
+            existing.ScopedAssignedRoles = scopedAssignedRoles;
+
+            await _store.Update(nameof(AssignedAccessToken), existing);
+
+            await AuditInformation(
+                "User {contextUserId} updated assigned access token [{tokenId}], role scope is now [{scopedAssignedRoles}]",
+                contextUserId,
+                token.Id,
+                scopedAssignedRoles.Count > 0 ? string.Join(", ", scopedAssignedRoles) : "(unscoped)");
+
+            return new ActionResult("Updated", true);
+        }
+
         public async Task<bool> DeleteAssignedAccessToken(string contextUserId, string id)
         {
             if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))

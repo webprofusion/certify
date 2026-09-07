@@ -150,6 +150,16 @@ namespace Certify.Service.Controllers
             };
         }
 
+        [HttpPost, Route("assignedtoken/update")]
+        public async Task<Models.Config.ActionResult> UpdateAssignedAccessToken([FromBody] AssignedAccessToken token)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            // unlike the add operation this does not touch token.AccessTokens, so the issued client id and secret
+            // are unchanged and existing integrations keep working while their role scope is corrected
+            return await accessControl.UpdateAssignedAccessToken(GetContextUserId(), token);
+        }
+
         [HttpDelete, Route("assignedtoken/{id}")]
         public async Task<Models.Config.ActionResult> RemoveAssignedAccessToken(string id)
         {

@@ -150,6 +150,18 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "UpdateAssignedAccessToken",
+                    OperationMethod = HttpPost,
+                    Comment = "Update the title, description and role scope of an assigned access token, keeping the issued token",
+                    PublicAPIController = "Access",
+                    PublicAPIRoute = "assignedtoken/update",
+                    ServiceAPIRoute = "access/assignedtoken/update",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string> { { "token", "Certify.Models.Hub.AssignedAccessToken" } },
+                    RequiredPermissions = [new(ResourceTypes.AccessToken, StandardResourceActions.AccessTokenUpdate)]
+                },
+                new()
+                {
                     OperationName = "RemoveAssignedAccessToken",
                     OperationMethod = HttpDelete,
                     Comment = "Remove assigned access token",
