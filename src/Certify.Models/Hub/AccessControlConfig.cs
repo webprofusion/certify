@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -22,10 +22,11 @@ namespace Certify.Models.Hub
 
     public class StandardRoles
     {
-        internal static Role BackupOperator { get; } = new Role("backup_operator_role", "Backup Operator", "Can perform import and export operations",
+        public static Role BackupOperator { get; } = new Role("backup_operator_role", "Backup Operator", "Can perform import and export operations",
             policies: [
                 StandardPolicies.ManagedInstanceSystemExport,
-                StandardPolicies.ManagedInstanceSystemImport
+                StandardPolicies.ManagedInstanceSystemImport,
+                StandardPolicies.SystemUser
             ]);
 
         public static Role Administrator { get; } = new Role("sysadmin_role", "Administrator", "Certify Server Administrator",
