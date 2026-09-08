@@ -181,8 +181,6 @@ namespace Certify.Models.Hub
         public const string AccessTokenUpdate = "accesstoken_update_action";
         public const string AccessTokenDelete = "accesstoken_delete_action";
 
-        public const string SystemGeneralAction = "system_general_action";
-
         public const string SystemStatusList = "system_status_list_action";
         public const string SystemLogList = "system_log_list_action";
         public const string SystemServiceConfigList = "system_serviceconfig_list_action";
@@ -631,7 +629,6 @@ namespace Certify.Models.Hub
                         StandardResourceActions.StoredCredentialList,
                         StandardResourceActions.RoleList,
                         StandardResourceActions.TagList,
-                        StandardResourceActions.ManagementHubInstancesList,
                         StandardResourceActions.TargetTypesList,
                         StandardResourceActions.SystemStatusList,
                         StandardResourceActions.SystemCoreSettingsList,
@@ -717,6 +714,36 @@ namespace Certify.Models.Hub
         }
     }
 
+    /// <summary>
+    /// Outcome of applying the standard access control config to the store, so a caller can report what an upgrade
+    /// actually did. A run which wrote nothing and a run which failed to write anything are otherwise identical.
+    /// </summary>
+    public class StandardAccessConfigResult
+    {
+        public int ResourceActionsUpdated { get; set; }
+        public int ResourcePoliciesUpdated { get; set; }
+        public int RolesUpdated { get; set; }
+
+        /// <summary>
+        /// Items which could not be written or set up. Any entry here means the store does not match the standard
+        /// config, so some roles grant less than they are declared to.
+        /// </summary>
+        public List<string> Failures { get; } = [];
+
+        /// <summary>
+        /// References which do not resolve, in the standard config itself or in the store after the update.
+        /// These never throw: authorization resolves role -> policy -> action and a reference which is not there
+        /// simply contributes nothing, so an incomplete role looks exactly like a correctly restrictive one.
+        /// </summary>
+        public List<string> IntegrityProblems { get; } = [];
+
+        public bool IsSuccess => Failures.Count == 0 && IntegrityProblems.Count == 0;
+
+        public override string ToString()
+            => $"{ResourceActionsUpdated} resource action(s), {ResourcePoliciesUpdated} policy(s) and {RolesUpdated} role(s) updated"
+                + $", {Failures.Count} failure(s), {IntegrityProblems.Count} integrity problem(s)";
+    }
+
     public static class AccessControlConfig
     {
         /// <summary>
@@ -724,11 +751,18 @@ namespace Certify.Models.Hub
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public static async Task UpdateStandardAccessConfig(IAccessControl access)
+        public static async Task<StandardAccessConfigResult> UpdateStandardAccessConfig(IAccessControl access)
         {
+            var result = new StandardAccessConfigResult();
+
+            // check the config before applying it. A role which points at a policy that is not defined, or a policy
+            // which grants an action that is not defined, is written to the store without error and then quietly
+            // grants less than the role says it does, which is the failure this is here to catch.
+            result.IntegrityProblems.AddRange(GetStandardConfigIntegrityProblems());
+
             // setup roles with policies
 
-            var adminSvcPrincipal = "admin_01";
+            var adminSvcPrincipal = AdminSecurityPrincipalId;
 
             // fetch the currently stored config so we only write items which are new or have changed, otherwise every startup rewrites (and audit logs) the entire standard config
 
@@ -742,7 +776,14 @@ namespace Certify.Models.Hub
             {
                 if (!IsResourceActionUnchanged(storedActions.FirstOrDefault(a => a.Id == action.Id), action))
                 {
-                    await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true);
+                    if (await access.AddResourceAction(adminSvcPrincipal, action, bypassIntegrityCheck: true))
+                    {
+                        result.ResourceActionsUpdated++;
+                    }
+                    else
+                    {
+                        result.Failures.Add($"Resource action [{action.Id}] could not be written to the store.");
+                    }
                 }
             }
 
@@ -755,7 +796,14 @@ namespace Certify.Models.Hub
             {
                 if (!IsResourcePolicyUnchanged(storedPolicies.FirstOrDefault(p => p.Id == r.Id), r))
                 {
-                    _ = await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                    if (await access.AddResourcePolicy(adminSvcPrincipal, r, bypassIntegrityCheck: true))
+                    {
+                        result.ResourcePoliciesUpdated++;
+                    }
+                    else
+                    {
+                        result.Failures.Add($"Resource policy [{r.Id}] could not be written to the store.");
+                    }
                 }
             }
 
@@ -767,9 +815,126 @@ namespace Certify.Models.Hub
                 if (!IsRoleUnchanged(storedRoles.FirstOrDefault(role => role.Id == r.Id), r))
                 {
                     // add roles and policy assignments to store
-                    await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true);
+                    if (await access.AddRole(adminSvcPrincipal, r, bypassIntegrityCheck: true))
+                    {
+                        result.RolesUpdated++;
+                    }
+                    else
+                    {
+                        result.Failures.Add($"Role [{r.Id}] could not be written to the store.");
+                    }
                 }
             }
+
+            // authorization reads the store, not the standard config, so confirm the update actually landed rather
+            // than assuming it did. A partially applied update leaves assigned roles and access tokens working but
+            // missing the actions the upgrade was supposed to grant them.
+            result.IntegrityProblems.AddRange(await GetStoredConfigIntegrityProblems(access, adminSvcPrincipal));
+
+            return result;
+        }
+
+        /// <summary>
+        /// Problems in the standard config as declared in code: duplicate ids, or a role/policy referencing
+        /// something which is not defined. Standard role, policy and resource action ids are permanent identifiers
+        /// held by stored role assignments and scoped access tokens, so a reference which does not resolve is a
+        /// config authoring mistake rather than a deliberate restriction.
+        /// </summary>
+        public static List<string> GetStandardConfigIntegrityProblems()
+        {
+            var problems = new List<string>();
+
+            var actions = Policies.GetStandardResourceActions();
+            var policies = Policies.GetStandardPolicies();
+            var roles = Policies.GetStandardRoles();
+
+            problems.AddRange(GetDuplicates(actions.Select(a => a.Id)).Select(id => $"Resource action [{id}] is declared more than once."));
+            problems.AddRange(GetDuplicates(policies.Select(p => p.Id)).Select(id => $"Resource policy [{id}] is declared more than once."));
+            problems.AddRange(GetDuplicates(roles.Select(r => r.Id)).Select(id => $"Role [{id}] is declared more than once."));
+
+            var actionIds = new HashSet<string>(actions.Select(a => a.Id), StringComparer.Ordinal);
+            var policyIds = new HashSet<string>(policies.Select(p => p.Id), StringComparer.Ordinal);
+
+            foreach (var policy in policies)
+            {
+                var policyActions = policy.ResourceActions ?? [];
+
+                problems.AddRange(policyActions
+                    .Where(a => !actionIds.Contains(a))
+                    .Select(a => $"Resource policy [{policy.Id}] grants resource action [{a}] which is not a standard resource action."));
+
+                problems.AddRange(GetDuplicates(policyActions)
+                    .Select(a => $"Resource policy [{policy.Id}] lists resource action [{a}] more than once."));
+            }
+
+            foreach (var role in roles)
+            {
+                var rolePolicies = role.Policies ?? [];
+
+                problems.AddRange(rolePolicies
+                    .Where(p => !policyIds.Contains(p))
+                    .Select(p => $"Role [{role.Id}] references policy [{p}] which is not a standard resource policy."));
+
+                problems.AddRange(GetDuplicates(rolePolicies)
+                    .Select(p => $"Role [{role.Id}] lists policy [{p}] more than once."));
+            }
+
+            return problems;
+        }
+
+        /// <summary>
+        /// Problems in the stored config after an update has been applied. Covers a standard item which failed to
+        /// write, and a stored role or policy whose references no longer resolve, including roles which are no longer
+        /// part of the standard config but are still assigned to security principals.
+        /// </summary>
+        private static async Task<List<string>> GetStoredConfigIntegrityProblems(IAccessControl access, string contextUserId)
+        {
+            var problems = new List<string>();
+
+            var storedActions = await access.GetResourceActions(contextUserId) ?? [];
+            var storedPolicies = await access.GetResourcePolicies(contextUserId) ?? [];
+            var storedRoles = await access.GetRoles(contextUserId) ?? [];
+
+            var storedActionIds = new HashSet<string>(storedActions.Select(a => a.Id), StringComparer.Ordinal);
+            var storedPolicyIds = new HashSet<string>(storedPolicies.Select(p => p.Id), StringComparer.Ordinal);
+
+            foreach (var standardRole in DistinctById(Policies.GetStandardRoles()))
+            {
+                var storedRole = storedRoles.FirstOrDefault(r => r.Id == standardRole.Id);
+
+                if (storedRole == null)
+                {
+                    problems.Add($"Standard role [{standardRole.Id}] is not present in the store, so it grants nothing to the principals assigned to it.");
+                }
+                else if (!IsRoleUnchanged(storedRole, standardRole))
+                {
+                    problems.Add($"Stored role [{standardRole.Id}] does not match its standard definition after the update.");
+                }
+            }
+
+            foreach (var role in storedRoles)
+            {
+                problems.AddRange((role.Policies ?? [])
+                    .Where(p => !storedPolicyIds.Contains(p))
+                    .Select(p => $"Stored role [{role.Id}] references policy [{p}] which is not in the store, so that policy grants nothing."));
+            }
+
+            foreach (var policy in storedPolicies)
+            {
+                problems.AddRange((policy.ResourceActions ?? [])
+                    .Where(a => !storedActionIds.Contains(a))
+                    .Select(a => $"Stored policy [{policy.Id}] grants resource action [{a}] which is not in the store."));
+            }
+
+            return problems;
+        }
+
+        /// <summary>
+        /// The values which occur more than once in a sequence, each reported once.
+        /// </summary>
+        private static IEnumerable<string> GetDuplicates(IEnumerable<string> values)
+        {
+            return values.GroupBy(v => v, StringComparer.Ordinal).Where(g => g.Count() > 1).Select(g => g.Key);
         }
 
         /// <summary>
@@ -812,21 +977,38 @@ namespace Certify.Models.Hub
                 && (existing!.Policies ?? []).SequenceEqual(standard.Policies ?? []);
         }
 
-        public static async Task ConfigureStandardUsersAndRoles(IAccessControl access, ICredentialsManager creds)
+        /// <summary>
+        /// Id of the built-in admin security principal. Standard config is written to the store as this principal.
+        /// </summary>
+        public const string AdminSecurityPrincipalId = "admin_01";
+
+        /// <summary>
+        /// Id of the service principal a hub uses to join itself as a managed instance.
+        /// </summary>
+        public const string ManagedInstanceSecurityPrincipalId = "managedinstance_sp_01";
+
+        /// <summary>
+        /// Title of the access token issued to the managed instance service principal.
+        /// </summary>
+        public const string ManagedInstanceJoiningTokenTitle = "Managed Instance Hub Joining Key";
+
+        public static async Task<StandardAccessConfigResult> ConfigureStandardUsersAndRoles(IAccessControl access, ICredentialsManager creds)
         {
             // setup roles with policies
-            await UpdateStandardAccessConfig(access);
+            var result = await UpdateStandardAccessConfig(access);
 
             // setup standard security principals
 
             // admin user
-            var adminSpId = "admin_01";
-            var managedInstanceSpId = "managedinstance_sp_01";
+            var adminSpId = AdminSecurityPrincipalId;
+            var managedInstanceSpId = ManagedInstanceSecurityPrincipalId;
 
-            var users = await access.GetSecurityPrincipals(adminSpId);
+            var users = await access.GetSecurityPrincipals(adminSpId) ?? [];
 
-            // add admin user if not already present
-            if (!users.Any(u => u.Id == adminSpId))
+            // The default admin is only created when the store holds no security principals at all, i.e. a genuine
+            // first run. Recreating it whenever this particular id is missing would resurrect, with the default
+            // password, an account an administrator had deliberately removed, on the next service restart.
+            if (users.Count == 0)
             {
                 var adminSp = new SecurityPrincipal
                 {
@@ -839,29 +1021,27 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true);
-            }
-            // get assigned roles for admin and update any missing roles
-            var assignedRolesForAdmin = await access.GetAssignedRoles(adminSpId, adminSpId);
-
-            // assign admin role to admin security principal
-            var toBeAssignedRoles = new List<AssignedRole> {
-                     // administrator
-                     new AssignedRole{
-                         Id= Guid.NewGuid().ToString(),
-                         RoleId=StandardRoles.Administrator.Id,
-                         SecurityPrincipalId=adminSpId
-                     }
-                };
-
-            foreach (var r in toBeAssignedRoles)
-            {
-                if (assignedRolesForAdmin?.Any(a => a.RoleId == r.RoleId) != true)
+                if (!await access.AddSecurityPrincipal(adminSp.Id, adminSp, bypassIntegrityCheck: true))
                 {
-                    // add roles and policy assignments to store
-                    await access.AddAssignedRole(adminSpId, r, bypassIntegrityCheck: true);
+                    result.Failures.Add($"The default admin security principal [{adminSpId}] could not be created.");
+                    return result;
                 }
+
+                users = await access.GetSecurityPrincipals(adminSpId) ?? [];
             }
+
+            if (!users.Any(u => u.Id == adminSpId))
+            {
+                // an established deployment which no longer holds the built-in admin. The remaining setup acts as
+                // that principal, so it cannot run, but the standard roles and policies above are already applied.
+                result.Failures.Add(
+                    $"The built-in admin security principal [{adminSpId}] is not present, so standard service principal and access token setup was skipped.");
+
+                return result;
+            }
+
+            // get assigned roles for admin and add the admin role if it is missing
+            _ = await EnsureAssignedRole(access, result, adminSpId, adminSpId, StandardRoles.Administrator.Id);
 
             // add managed instance service principal if not already present
             if (!users.Any(u => u.Id == managedInstanceSpId))
@@ -875,68 +1055,138 @@ namespace Certify.Models.Hub
                     IsBuiltIn = true
                 };
 
-                await access.AddSecurityPrincipal(adminSpId, managedInstanceServicePrincipal, bypassIntegrityCheck: true);
-
-                // assign managed instance role to  security principal
-                var assignedRoles = new List<AssignedRole> {
-
-                    new AssignedRole{
-                        Id= Guid.NewGuid().ToString(),
-                        RoleId=StandardRoles.ManagedInstance.Id,
-                        SecurityPrincipalId=managedInstanceSpId
-                    }
-                };
-
-                foreach (var r in assignedRoles)
+                if (!await access.AddSecurityPrincipal(adminSpId, managedInstanceServicePrincipal, bypassIntegrityCheck: true))
                 {
-                    // add roles and policy assignments to store
-                    await access.AddAssignedRole(adminSpId, r, bypassIntegrityCheck: true);
+                    result.Failures.Add($"The managed instance service principal [{managedInstanceSpId}] could not be created.");
+                    return result;
                 }
-
-                // assign an API token for hub managed instances scoped to the managed instance role
-                var assignedApiAccessToken = new AssignedAccessToken
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    SecurityPrincipalId = managedInstanceSpId,
-                    Title = "Managed Instance Hub Joining Key",
-                    AccessTokens = [
-                        new AccessToken {
-                            ClientId = managedInstanceSpId,
-                            Description = "System Generated",
-                            Secret = Guid.NewGuid().ToString().ToLowerInvariant(),
-                            TokenType = AccessTokenTypes.Simple,
-                            DateCreated = DateTime.UtcNow
-                        }
-                    ],
-                    ScopedAssignedRoles = [
-                        // scope assigned role is the id for AssignedRole (not the role id itself)
-                        assignedRoles.First(a=>a.RoleId==StandardRoles.ManagedInstance.Id).Id
-                    ],
-                };
-
-                await access.AddAssignedAccessToken(adminSpId, assignedApiAccessToken);
             }
+
+            // The role assignment and joining token are checked on every startup rather than only when the principal
+            // is first created, so an instance whose managed instance access was removed, or whose config was
+            // restored without them, is repaired instead of failing later with no explanation.
+            var managedInstanceAssignedRole = await EnsureAssignedRole(access, result, adminSpId, managedInstanceSpId, StandardRoles.ManagedInstance.Id);
+
+            var (joiningToken, joiningTokenIsNew) = await EnsureManagedInstanceJoiningToken(access, result, adminSpId, managedInstanceSpId, managedInstanceAssignedRole);
 
             // if we don't have a stored credential as a client secret for the managed instance to join it's own hub, create one
             // direct instances don't really need this, but remote backends do so they can join back to their own hub.
             var existingJoiningKey = await creds.GetUnlockedCredential(HubSharedConstants.MgmtHubJoiningCredId);
-            if (existingJoiningKey == null)
-            {
-                var assignedTokens = await access.GetAssignedAccessTokens(contextUserId: adminSpId);
-                var token = assignedTokens.First(t => t.Title == "Managed Instance Hub Joining Key")?.AccessTokens?.First();
 
-                if (token != null)
+            // a newly issued token also has to be written out, otherwise the stored credential keeps pointing at the
+            // token it replaced and joining fails with credentials which look present but are not accepted
+            if (joiningToken != null && (existingJoiningKey == null || joiningTokenIsNew))
+            {
+                var clientSecret = new ClientSecret { ClientId = joiningToken.ClientId, Secret = joiningToken.Secret };
+                await creds.Update(new Config.StoredCredential
                 {
-                    var clientSecret = new ClientSecret { ClientId = token.ClientId, Secret = token.Secret };
-                    await creds.Update(new Config.StoredCredential
-                    {
-                        StorageKey = "_ManagementHubJoiningKey",
-                        ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
-                        Title = "Management Hub Joining Key",
-                        Secret = System.Text.Json.JsonSerializer.Serialize(clientSecret)
-                    });
-                }
+                    StorageKey = HubSharedConstants.MgmtHubJoiningCredId,
+                    ProviderType = StandardAuthTypes.STANDARD_AUTH_MGMTHUB,
+                    Title = "Management Hub Joining Key",
+                    Secret = System.Text.Json.JsonSerializer.Serialize(clientSecret)
+                });
             }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Ensure a security principal holds a role, returning the assignment.
+        ///
+        /// An existing assignment is returned unchanged: access tokens are scoped by AssignedRole id rather than by
+        /// role id, so replacing an assignment here would silently strip the scope from every token pointing at it.
+        /// </summary>
+        private static async Task<AssignedRole?> EnsureAssignedRole(
+            IAccessControl access,
+            StandardAccessConfigResult result,
+            string contextUserId,
+            string securityPrincipalId,
+            string roleId)
+        {
+            var assignedRoles = await access.GetAssignedRoles(contextUserId, securityPrincipalId) ?? [];
+
+            var existing = assignedRoles.FirstOrDefault(a => a.RoleId == roleId);
+
+            if (existing != null)
+            {
+                return existing;
+            }
+
+            var assignedRole = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = roleId,
+                SecurityPrincipalId = securityPrincipalId
+            };
+
+            if (!await access.AddAssignedRole(contextUserId, assignedRole, bypassIntegrityCheck: true))
+            {
+                result.Failures.Add($"Role [{roleId}] could not be assigned to security principal [{securityPrincipalId}].");
+                return null;
+            }
+
+            return assignedRole;
+        }
+
+        /// <summary>
+        /// Ensure the managed instance service principal holds a usable joining token, returning it and whether it
+        /// had to be issued. An existing token is kept as it is, because managed instances already hold its secret.
+        /// </summary>
+        private static async Task<(AccessToken? Token, bool IsNew)> EnsureManagedInstanceJoiningToken(
+            IAccessControl access,
+            StandardAccessConfigResult result,
+            string contextUserId,
+            string securityPrincipalId,
+            AssignedRole? scopedAssignedRole)
+        {
+            var assignedTokens = await access.GetAssignedAccessTokens(contextUserId) ?? [];
+
+            var existingToken = assignedTokens
+                .Where(t => t.SecurityPrincipalId == securityPrincipalId && t.Title == ManagedInstanceJoiningTokenTitle)
+                .SelectMany(t => t.AccessTokens ?? [])
+                .FirstOrDefault(a => a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow));
+
+            if (existingToken != null)
+            {
+                return (existingToken, false);
+            }
+
+            if (scopedAssignedRole == null)
+            {
+                result.Failures.Add(
+                    $"A managed instance joining token could not be issued because security principal [{securityPrincipalId}] does not hold the [{StandardRoles.ManagedInstance.Id}] role.");
+
+                return (null, false);
+            }
+
+            var token = new AccessToken
+            {
+                ClientId = securityPrincipalId,
+                Description = "System Generated",
+                Secret = Guid.NewGuid().ToString().ToLowerInvariant(),
+                TokenType = AccessTokenTypes.Simple,
+                DateCreated = DateTime.UtcNow
+            };
+
+            var assignedApiAccessToken = new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                SecurityPrincipalId = securityPrincipalId,
+                Title = ManagedInstanceJoiningTokenTitle,
+                AccessTokens = [token],
+                ScopedAssignedRoles = [
+                    // scope assigned role is the id for AssignedRole (not the role id itself)
+                    scopedAssignedRole.Id
+                ],
+            };
+
+            if (!await access.AddAssignedAccessToken(contextUserId, assignedApiAccessToken))
+            {
+                result.Failures.Add("The managed instance joining token could not be written to the store.");
+                return (null, false);
+            }
+
+            return (token, true);
         }
     }
 }

@@ -13,6 +13,13 @@ using Newtonsoft.Json;
 
 namespace Certify.Tests.Core.Unit.Tests
 {
+    /// <summary>
+    /// In-memory <see cref="IConfigurationStore"/> for tests.
+    ///
+    /// Add and Update are both upserts here because that is what every store provider does: SQLite, Postgres and
+    /// SQL Server all route Add through Update to a single INSERT OR REPLACE. An insert-only Add would make the
+    /// standard access config appear never to update an existing role, which is the opposite of production.
+    /// </summary>
     public class MemoryObjectStore : IConfigurationStore
     {
         private ConcurrentDictionary<string, ConfigurationStoreItem> _store = new ConcurrentDictionary<string, ConfigurationStoreItem>();
@@ -23,7 +30,8 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // clone the item to avoid reference issue mutating the same object, as we are using an in-memory store
             var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as ConfigurationStoreItem;
-            return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
+            _store[clonedItem.Id] = clonedItem;
+            return Task.CompletedTask;
         }
 
         public Task<bool> Delete<T>(string itemType, string id)
@@ -52,22 +60,20 @@ namespace Certify.Tests.Core.Unit.Tests
             o.ItemType = itemType;
 
             var clonedItem = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(o)) as ConfigurationStoreItem;
-            return Task.FromResult(_store.TryAdd(clonedItem.Id, clonedItem));
+            _store[clonedItem.Id] = clonedItem;
+            return Task.CompletedTask;
         }
 
         public Task Update<T>(string itemType, T item)
         {
             var o = JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(item)) as ConfigurationStoreItem;
 
-            _store.TryGetValue(o.Id, out var value);
-            var c = Task.FromResult((T)Convert.ChangeType(value, typeof(T))).Result as ConfigurationStoreItem;
-            var r = Task.FromResult(_store.TryUpdate(o.Id, o, c));
-            if (r.Result == false)
-            {
-                throw new Exception("Could not store item type");
-            }
+            // an update to an item which is not there is an insert, matching the store providers
+            _store.TryGetValue(o.Id, out var existing);
+            o.ItemType = existing?.ItemType ?? (string.IsNullOrEmpty(itemType) ? typeof(T).Name : itemType);
 
-            return r;
+            _store[o.Id] = o;
+            return Task.CompletedTask;
         }
 
         public Task<bool> IsInitialised()
@@ -1848,9 +1854,9 @@ namespace Certify.Tests.Core.Unit.Tests
 
         /// <summary>
         /// Removing a role from a principal and assigning it again only breaks a token scoped to it when the removal
-        /// is saved first. Removing and re-adding in one update leaves the assignment untouched, because the add is
-        /// skipped while an assignment for that role still exists. Saving the removal deletes the assignment, so the
-        /// later add creates a new one and any token still scoped to the old id grants nothing.
+        /// is saved first. Removing and re-adding in one update keeps the assignment id, because an add for a role
+        /// the principal still holds is applied to the existing assignment. Saving the removal deletes the
+        /// assignment, so the later add creates a new one and any token still scoped to the old id grants nothing.
         /// </summary>
         [TestMethod]
         public async Task TestRemovingAndReassigningARoleOnlyBreaksATokenScopeWhenSavedSeparately()
@@ -1903,7 +1909,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // removed then re-added before saving: the roles dialog cancels the pending removal, so the update only
-            // carries the add, which the store skips because an assignment for that role is still there
+            // carries the add, which lands on the assignment for that role which is still there
             await access.UpdateAssignedRoles(contextUserId, new SecurityPrincipalAssignedRoleUpdate
             {
                 SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
@@ -2152,6 +2158,139 @@ namespace Certify.Tests.Core.Unit.Tests
             var status = await access.GetSecurityPrincipalRoleStatus(StandardSecurityPrincipals.System, TestSecurityPrincipals.DevopsUser.Id);
             Assert.IsNotNull(status);
             Assert.IsTrue(status.AssignedRoles.Any(r => r.Id == assigned.Id));
+        }
+
+        #endregion
+
+        #region Security Principal And Role Assignment Integrity
+
+        /// <summary>
+        /// Set up the admin principal holding the administrator role, so operations gated on it can be exercised.
+        /// </summary>
+        private async Task<string> SetupAdminPrincipal()
+        {
+            var adminId = TestSecurityPrincipals.Admin.Id;
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.Admin, bypassIntegrityCheck: true);
+            await access.AddAssignedRole(adminId, new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.Administrator.Id,
+                SecurityPrincipalId = adminId
+            }, bypassIntegrityCheck: true);
+
+            return adminId;
+        }
+
+        [TestMethod]
+        public async Task TestDeleteSecurityPrincipalRefusesABuiltInPrincipal()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            var builtIn = new SecurityPrincipal
+            {
+                Id = "builtin_sp_01",
+                Username = "builtin_service",
+                PrincipalType = SecurityPrincipalType.Application,
+                Provider = StandardIdentityProviders.INTERNAL,
+                IsBuiltIn = true
+            };
+
+            Assert.IsTrue(await access.AddSecurityPrincipal(adminId, builtIn, bypassIntegrityCheck: true));
+
+            Assert.IsFalse(await access.DeleteSecurityPrincipal(adminId, builtIn.Id), "a built-in security principal should not be deletable");
+            Assert.IsNotNull(await access.GetSecurityPrincipal(adminId, builtIn.Id), "the built-in principal should still be in the store");
+        }
+
+        [TestMethod]
+        public async Task TestDeleteSecurityPrincipalRejectsAnUnknownId()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            Assert.IsFalse(
+                await access.DeleteSecurityPrincipal(adminId, "no_such_principal"),
+                "deleting a security principal which is not there should fail rather than throw");
+        }
+
+        /// <summary>
+        /// Setting the scope of a role a principal already holds has to land on the existing assignment. The
+        /// assignment id is what an access token is scoped by, so it must survive, and the change must not be
+        /// dropped while the call still reports success.
+        /// </summary>
+        [TestMethod]
+        public async Task TestUpdateAssignedRolesAppliesAScopeChangeToTheExistingAssignment()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+            await access.AddRole(adminId, Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.ManagedChallengeConsumer.Id), bypassIntegrityCheck: true);
+
+            var assignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(adminId, assignment, bypassIntegrityCheck: true);
+
+            // a caller which sends only the add, carrying its own id, as the API allows
+            Assert.IsTrue(await access.UpdateAssignedRoles(adminId, new SecurityPrincipalAssignedRoleUpdate
+            {
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                AddedAssignedRoles = [
+                    new AssignedRole
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                        SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                    }
+                ],
+                RemovedAssignedRoles = []
+            }));
+
+            var stored = (await access.GetAssignedRoles(adminId, TestSecurityPrincipals.DevopsUser.Id))
+                .Single(a => a.RoleId == StandardRoles.ManagedChallengeConsumer.Id);
+
+            Assert.AreEqual(assignment.Id, stored.Id, "the existing assignment id must be kept, an access token is scoped by it");
+            Assert.HasCount(1, stored.ScopedTags, "the tag scope change should be applied rather than silently discarded");
+            Assert.AreEqual("production", stored.ScopedTags[0].Value);
+        }
+
+        /// <summary>
+        /// Role status is a read of stored config, which an import can leave holding a policy with no action list.
+        /// </summary>
+        [TestMethod]
+        public async Task TestGetSecurityPrincipalRoleStatusToleratesAPolicyWithNoActions()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            await access.AddResourceAction(adminId, Policies.GetStandardResourceActions().Find(a => a.Id == StandardResourceActions.ManagedChallengeRequest), bypassIntegrityCheck: true);
+
+            _ = await access.AddResourcePolicy(adminId, new ResourcePolicy
+            {
+                Id = "policy_with_no_actions",
+                Title = "Policy with no actions",
+                SecurityPermissionType = SecurityPermissionType.ALLOW,
+                ResourceActions = null
+            }, bypassIntegrityCheck: true);
+
+            await access.AddRole(adminId, new Role("legacy_role", "Legacy Role", "Left over from a previous version", ["policy_with_no_actions"]), bypassIntegrityCheck: true);
+
+            await access.AddAssignedRole(adminId, new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = "legacy_role",
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            }, bypassIntegrityCheck: true);
+
+            var status = await access.GetSecurityPrincipalRoleStatus(adminId, TestSecurityPrincipals.DevopsUser.Id);
+
+            Assert.IsNotNull(status, "role status should be returned rather than failing on a policy with no action list");
+            Assert.IsEmpty(status.Action, "a policy with no actions should contribute none");
         }
 
         #endregion

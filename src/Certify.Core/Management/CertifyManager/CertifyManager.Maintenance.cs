@@ -8,6 +8,7 @@ using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Hub;
 using Certify.Models.Providers;
+using Certify.Models.Reporting;
 using Certify.Models.Shared;
 
 namespace Certify.Management
@@ -67,7 +68,7 @@ namespace Certify.Management
 
                 // if we are a management hub backend, upgrade users and roles if required
                 var accessControl = await GetCurrentAccessControl();
-                await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
+                await ApplyStandardAccessConfig(accessControl);
 
                 // we are the hub backend instance directly connected, if we are not already a registered instance for ourself, register now
 
@@ -102,6 +103,57 @@ namespace Certify.Management
                 _serviceLog?.Information("Demo: creating test items.");
                 var maxItems = Environment.GetEnvironmentVariable("CERTIFY_GENERATE_DEMO_ITEMS_MAX") ?? "500";
                 await GenerateDemoItems(int.Parse(maxItems));
+            }
+        }
+
+        /// <summary>
+        /// Apply the standard roles, policies, resource actions and service principals to the access control store.
+        ///
+        /// This runs on every hub startup rather than only on a version change, so that a role which gained policies
+        /// or actions in a new build is picked up by the principals and access tokens already assigned to it. It
+        /// reports rather than throws: a hub which cannot start is harder to recover than one running with a stale
+        /// permission set, and an operator needs to be able to sign in to fix it.
+        /// </summary>
+        private async Task ApplyStandardAccessConfig(Certify.Core.Management.Access.IAccessControl accessControl)
+        {
+            try
+            {
+                var result = await AccessControlConfig.ConfigureStandardUsersAndRoles(accessControl, _credentialsManager);
+
+                _serviceLog?.Information("Hub: standard access config applied. {result}", result.ToString());
+
+                foreach (var problem in result.IntegrityProblems)
+                {
+                    _serviceLog?.Error("Hub: access control config integrity problem: {problem}", problem);
+                }
+
+                foreach (var failure in result.Failures)
+                {
+                    _serviceLog?.Error("Hub: access control config failure: {failure}", failure);
+                }
+
+                if (!result.IsSuccess)
+                {
+                    AddSystemStatusItem(
+                        SystemStatusCategories.SERVICE_CORE,
+                        SystemStatusKeys.SERVICE_CORE_ACCESS_CONFIG,
+                        title: "Access Control Config",
+                        description: $"Standard roles and policies were not fully applied ({result}). Assigned roles and API access tokens may be missing permissions granted by this version. See the service log for details.",
+                        hasError: true
+                    );
+                }
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Error(exp, "Hub: failed to apply standard access config.");
+
+                AddSystemStatusItem(
+                    SystemStatusCategories.SERVICE_CORE,
+                    SystemStatusKeys.SERVICE_CORE_ACCESS_CONFIG,
+                    title: "Access Control Config",
+                    description: $"Standard roles and policies could not be applied: {exp.Message}. Assigned roles and API access tokens may be missing permissions granted by this version.",
+                    hasError: true
+                );
             }
         }
 

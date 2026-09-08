@@ -30,6 +30,7 @@ namespace Certify.Models.Reporting
         public const string SERVICE_CORE_DATASTORE_INIT = "service.core.datastore.init";
         public const string SERVICE_CORE_DATASTORE_STATUS = "service.core.datastore.status";
         public const string SERVICE_CORE_CA_CUSTOM_LOAD = "service.core.ca.custom.load";
+        public const string SERVICE_CORE_ACCESS_CONFIG = "service.core.access.config";
         public const string SERVICE_CORE_HUB_JOINING_KEY = "service.core.hub.joining.key";
         public const string SERVICE_CORE_HUB_JOINING_AUTH = "service.core.hub.joining.auth";
         public const string SERVICE_CORE_HUB_CONNECTION = "service.core.hub.connection";

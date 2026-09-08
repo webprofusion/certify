@@ -191,13 +191,20 @@ namespace Certify.Core.Management.Access
 
             var existing = await GetSecurityPrincipal(contextUserId, id);
 
+            if (existing == null)
+            {
+                await AuditWarning("User {contextUserId} attempted to delete security principal [{id}] which does not exist.", contextUserId, id);
+                return false;
+            }
+
+            // Built-in principals are part of the system's own configuration rather than ordinary accounts: startup
+            // acts as the built-in admin when it applies the standard roles, and the managed instance principal owns
+            // the hub joining token. The check which used to be here could never be true, because the self-delete
+            // case it repeated has already returned above, so a built-in principal was in practice deletable.
             if (existing.IsBuiltIn)
             {
-                if (!allowSelfDelete && id == contextUserId)
-                {
-                    await AuditWarning("User {contextUserId} tried to delete built-in user [{id}].", contextUserId, id);
-                    return false;
-                }
+                await AuditWarning("User {contextUserId} tried to delete built-in security principal [{id}].", contextUserId, id);
+                return false;
             }
 
             var deleted = await _store.Delete<SecurityPrincipal>(nameof(SecurityPrincipal), id);
@@ -760,10 +767,12 @@ namespace Certify.Core.Management.Access
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
             var allActions = await _store.GetItems<ResourceAction>(nameof(ResourceAction));
 
-            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == id);
-            var spRoles = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id));
-            var spPolicies = allPolicies.Where(r => spRoles.Any(p => p.Policies.Contains(r.Id)));
-            var spActions = allActions.Where(r => spPolicies.Any(p => p.ResourceActions.Contains(r.Id)));
+            // a stored role or policy can carry an empty list, so resolve defensively rather than letting a role
+            // status request fail outright on config which authorization itself tolerates
+            var spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == id).ToList();
+            var spRoles = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id)).ToList();
+            var spPolicies = allPolicies.Where(r => spRoles.Any(p => p.Policies?.Contains(r.Id) == true)).ToList();
+            var spActions = allActions.Where(r => spPolicies.Any(p => p.ResourceActions?.Contains(r.Id) == true)).ToList();
 
             var roleStatus = new RoleStatus
             {
@@ -795,15 +804,35 @@ namespace Certify.Core.Management.Access
                 }
             }
 
-            // add items to assigned roles
+            // add items to assigned roles, or apply the update to an assignment for a role the principal already holds
             existing = await GetAssignedRoles(contextUserId, update.SecurityPrincipalId);
+
             foreach (var added in update.AddedAssignedRoles)
             {
-                if (!existing.Exists(r => r.RoleId == added.RoleId))
+                var current = existing.FirstOrDefault(r => r.RoleId == added.RoleId);
+
+                if (current == null)
                 {
                     await _store.Add<AssignedRole>(nameof(AssignedRole), added);
+                    continue;
                 }
+
+                // The role is already assigned, so this is a change to the scope of that assignment rather than a
+                // new one. It is applied to the existing assignment id, which keeps any access token scoped to that
+                // id working. Skipping it, as this used to, discarded the change while still reporting success.
+                current.ScopedTags = added.ScopedTags;
+                current.RequireAllScopedTags = added.RequireAllScopedTags;
+                current.IncludedResources = added.IncludedResources;
+
+                await _store.Update<AssignedRole>(nameof(AssignedRole), current);
             }
+
+            await AuditInformation(
+                "User {contextUserId} updated assigned roles for [{id}], added/updated [{added}], removed [{removed}]",
+                contextUserId,
+                update.SecurityPrincipalId,
+                string.Join(", ", update.AddedAssignedRoles.Select(r => r.RoleId)),
+                string.Join(", ", update.RemovedAssignedRoles.Select(r => r.RoleId)));
 
             return true;
         }
