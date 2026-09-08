@@ -209,7 +209,10 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Get stored security principals
             var storedSecurityPrincipals = await access.GetSecurityPrincipals(contextUserId);
@@ -238,7 +241,10 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             foreach (var securityPrincipal in adminSecurityPrincipals)
             {
@@ -256,11 +262,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -276,7 +288,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate AssignedRole list returned by AccessControl.GetAssignedRoles()
             foreach (var assignedRole in assignedRoles)
@@ -293,7 +308,10 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // assigned admin role to TestAdmin (also the contextUserId) so they can check roles for the other admin user
             await access.AddAssignedRole(TestSecurityPrincipals.TestAdmin.Id, TestAssignedRoles.TestAdmin, bypassIntegrityCheck: true);
@@ -309,11 +327,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -329,11 +353,17 @@ namespace Certify.Tests.Core.Unit.Tests
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
 
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -345,7 +375,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate email of SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before update
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id);
@@ -374,7 +407,10 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate email of SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before update
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id);
@@ -393,11 +429,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -409,7 +451,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate email of SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before update
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id);
@@ -430,11 +475,17 @@ namespace Certify.Tests.Core.Unit.Tests
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
             var firstPassword = adminSecurityPrincipals[0].Password;
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -446,7 +497,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate password of SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before update
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id, includePassword: true);
@@ -533,10 +587,16 @@ namespace Certify.Tests.Core.Unit.Tests
             // does not. Without a server side rule a blank or one character password can be set.
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
             var firstPassword = adminSecurityPrincipals[0].Password;
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
             _ = await access.AddResourcePolicy(contextUserId, policy, bypassIntegrityCheck: true);
@@ -545,7 +605,10 @@ namespace Certify.Tests.Core.Unit.Tests
             await access.AddRole(contextUserId, role, bypassIntegrityCheck: true);
 
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             var principalId = adminSecurityPrincipals[0].Id;
 
@@ -571,7 +634,10 @@ namespace Certify.Tests.Core.Unit.Tests
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
             var firstPassword = adminSecurityPrincipals[0].Password;
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Update security principal in AccessControl with a new password
             var newPassword = "HGFEDCBA";
@@ -591,11 +657,17 @@ namespace Certify.Tests.Core.Unit.Tests
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
             var firstPassword = adminSecurityPrincipals[0].Password;
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -607,7 +679,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Update security principal in AccessControl with a new password, but wrong original password
             var newPassword = "HGFEDCBA";
@@ -625,11 +700,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -641,7 +722,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before delete is not null
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id);
@@ -662,7 +746,10 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before delete is not null
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[0].Id);
@@ -683,11 +770,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -699,7 +792,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before delete is not null
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[1].Id);
@@ -720,11 +816,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -736,7 +838,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate SecurityPrincipal object returned by AccessControl.GetSecurityPrincipal() before delete is not null
             var storedSecurityPrincipal = await access.GetSecurityPrincipal(contextUserId, adminSecurityPrincipals[1].Id);
@@ -757,11 +862,17 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             // Add test security principals
             var adminSecurityPrincipals = new List<SecurityPrincipal> { TestSecurityPrincipals.Admin, TestSecurityPrincipals.TestAdmin };
-            adminSecurityPrincipals.ForEach(async p => await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true));
+            foreach (var p in adminSecurityPrincipals)
+            {
+                Assert.IsTrue(await access.AddSecurityPrincipal(contextUserId, p, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup security principal actions
             var actions = Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.System);
-            actions.ForEach(async a => await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true));
+            foreach (var a in actions)
+            {
+                Assert.IsTrue(await access.AddResourceAction(contextUserId, a, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Setup policy with actions and add policy to store
             var policy = Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.AccessAdmin);
@@ -773,7 +884,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assign security principals to roles and add roles and policy assignments to store
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.Admin, TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Validate specified admin user is a principal role
             bool hasAccess;
@@ -952,7 +1066,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // allow test admin to perform access checks
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Add test devops user security principal
             _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
@@ -1228,7 +1345,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Setup admin roles for context user
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Add test devops user security principal
             _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
@@ -1312,7 +1432,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Setup admin roles for context user
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Add test devops user security principal
             _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
@@ -1387,7 +1510,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Setup admin roles for context user
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Add test devops user security principal
             _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
@@ -1632,7 +1758,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Setup admin roles for context user
             var assignedRoles = new List<AssignedRole> { TestAssignedRoles.TestAdmin };
-            assignedRoles.ForEach(async r => await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true));
+            foreach (var r in assignedRoles)
+            {
+                Assert.IsTrue(await access.AddAssignedRole(contextUserId, r, bypassIntegrityCheck: true), "test setup should succeed");
+            }
 
             // Add test devops user security principal
             _ = await access.AddSecurityPrincipal(contextUserId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
