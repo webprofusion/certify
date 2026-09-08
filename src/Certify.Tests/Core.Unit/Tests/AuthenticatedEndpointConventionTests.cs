@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -11,12 +12,15 @@ namespace Certify.Tests.Core.Unit.Tests
 {
     /// <summary>
     /// Being authenticated says who the caller is, not what they may do. A JWT is issued to any security principal
-    /// which can sign in, whatever roles it holds, so an endpoint carrying only [AuthorizedApi] is reachable by
-    /// every user of the hub. Each one therefore has to check the resource action it needs, or say in the code why
-    /// it does not.
+    /// which can sign in, whatever roles it holds, so an endpoint which only requires authentication is reachable
+    /// by every user of the hub. Each one therefore has to check the resource action it needs, or say in the code
+    /// why it does not.
+    ///
+    /// This covers both [AuthorizedApi] and plain [Authorize], because the distinction between them is which
+    /// credentials are accepted, not what the caller is allowed to do with them.
     /// </summary>
     [TestClass]
-    public class AuthorizedApiConventionTests
+    public class AuthenticatedEndpointConventionTests
     {
         /// <summary>
         /// Methods on ApiControllerBase which establish that the caller may perform the requested action.
@@ -31,9 +35,9 @@ namespace Certify.Tests.Core.Unit.Tests
         };
 
         [TestMethod]
-        public void EveryAuthorizedApiEndpointChecksAResourceActionOrSaysWhyItDoesNot()
+        public void EveryAuthenticatedEndpointChecksAResourceActionOrSaysWhyItDoesNot()
         {
-            var endpoints = GetAuthorizedApiEndpoints();
+            var endpoints = GetAuthenticatedEndpoints();
 
             // guard against the reflection or IL walk below quietly finding nothing and passing vacuously
             Assert.IsGreaterThan(50, endpoints.Count, "expected to find the hub API's authenticated endpoints by reflection");
@@ -64,12 +68,12 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.IsEmpty(
                 unchecked_,
-                $"These [AuthorizedApi] endpoints perform no resource action check, so any authenticated principal can call them "
-                    + $"regardless of role. Add a CheckRequestAuthorized call, or [NoResourceActionRequired(\"reason\")] if the "
-                    + $"endpoint genuinely exposes no resource:\r\n{string.Join("\r\n", unchecked_)}");
+                $"These authenticated endpoints perform no resource action check, so any authenticated principal can call "
+                    + $"them regardless of role. Add a CheckRequestAuthorized call, or [NoResourceActionRequired(\"reason\")] "
+                    + $"if the endpoint genuinely exposes no resource:\r\n{string.Join("\r\n", unchecked_)}");
         }
 
-        private static List<MethodInfo> GetAuthorizedApiEndpoints()
+        private static List<MethodInfo> GetAuthenticatedEndpoints()
         {
             var assembly = typeof(Certify.Server.Hub.Api.Middleware.ApiKeyAuthenticationHandler).Assembly;
 
@@ -77,8 +81,8 @@ namespace Certify.Tests.Core.Unit.Tests
                 .GetTypes()
                 .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract)
                 .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-                // AuthorizedApiAttribute is internal to the hub API, so it is matched by name rather than by type
-                .Where(m => m.GetCustomAttributes(inherit: false).Any(a => a.GetType().Name == "AuthorizedApiAttribute"))
+                // AuthorizedApiAttribute derives from AuthorizeAttribute, so this covers it as well as plain [Authorize]
+                .Where(m => m.GetCustomAttributes(inherit: false).Any(a => a is AuthorizeAttribute))
                 .ToList();
         }
 

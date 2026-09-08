@@ -172,6 +172,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpGet]
         [Route("datastore/status")]
         [Authorize]
+        [NoResourceActionRequired("Break-glass: a resource action check resolves roles through the configuration data store, so requiring one here would deny an operator during the data store failure this endpoint exists to diagnose. Authentication is the whole gate, deliberately.")]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(DataStoreStatus))]
         [ProducesResponseType(StatusCodes.Status503ServiceUnavailable, Type = typeof(DataStoreStatus))]
         public async Task<IActionResult> GetDataStoreStatus()
@@ -192,6 +193,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>Result of the reconnection attempt</returns>
         [HttpPost]
         [Route("datastore/reconnect")]
+        [NoResourceActionRequired("Break-glass: recovery from a data store failure, and a resource action check resolves roles through that same store, so requiring one would deny an operator during exactly the incident this endpoint is for. Authentication is the whole gate, deliberately.")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Certify.Models.Config.ActionResult))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(Certify.Models.Config.ActionResult))]

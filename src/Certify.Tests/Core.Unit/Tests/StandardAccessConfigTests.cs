@@ -103,6 +103,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 [nameof(StandardRoles.ManagedChallengeConsumer)] = "managedchallenge_consumer_role",
                 [nameof(StandardRoles.ManagedInstance)] = "managedinstance_role",
                 [nameof(StandardRoles.ManagedAcmeConsumer)] = "managedacme_consumer_role",
+                [nameof(StandardRoles.BackupOperator)] = "backup_operator_role",
             };
 
             foreach (var (name, id) in expected)
