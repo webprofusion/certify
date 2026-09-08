@@ -213,6 +213,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> DownloadSystemLog(string instanceId, string logName)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.System, StandardResourceActions.SystemLogList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
             var log = await _mgmtAPI.GetSystemLog(instanceId, logName, -1, CurrentAuthContext);
             var content = string.Join("\r\n", log);
 

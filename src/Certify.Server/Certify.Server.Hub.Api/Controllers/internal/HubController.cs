@@ -56,6 +56,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ManagedCertificateSummaryResult))]
         public async Task<IActionResult> GetHubManagedItems(string? instanceId, string? keyword, string? health = null, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false, int? page = null, int? pageSize = null)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
             var list = await GetFilteredManagedItems(instanceId, keyword, health, tagScopes, requireAllTags, includeUntagged);
 
             var resolvedPageSize = pageSize ?? 100;
@@ -89,6 +96,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(StatusSummary))]
         public async Task<IActionResult> GetHubManagedItemsSummary(string? instanceId, string? keyword, [FromQuery] string[]? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
             var scopes = TagScopeFilter.ParseAll(tagScopes);
             var userTagScopes = await GetUserTagScopes();
 
@@ -448,6 +462,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> FlushHubManagedInstances()
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstancesList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
             _mgmtAPI.ReconnectInstances();
 
             return new OkResult();
@@ -477,6 +498,12 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ActionStep>))]
         public async Task<IActionResult> GetSystemStatusItems(string? instanceId = null)
         {
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.System, StandardResourceActions.SystemStatusList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
 
             var status = _mgmtStateProvider.GetSystemStatusItems();
 

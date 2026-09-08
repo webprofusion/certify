@@ -2293,6 +2293,80 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsEmpty(status.Action, "a policy with no actions should contribute none");
         }
 
+        /// <summary>
+        /// Resolving an access token is authentication: it asks whether the token is valid, not what its principal
+        /// may do. It has to succeed for a role which grants no general access, otherwise holding one particular
+        /// action becomes an invisible prerequisite for using an API token at all.
+        /// </summary>
+        [TestMethod]
+        public async Task TestResolveAccessTokenAuthenticatesWithoutAuthorizingAnAction()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            await access.AddSecurityPrincipal(adminId, TestSecurityPrincipals.DevopsUser, bypassIntegrityCheck: true);
+
+            foreach (var action in Policies.GetStandardResourceActions().FindAll(a => a.ResourceType == ResourceTypes.Certificate))
+            {
+                Assert.IsTrue(await access.AddResourceAction(adminId, action, bypassIntegrityCheck: true), "test setup should succeed");
+            }
+
+            _ = await access.AddResourcePolicy(adminId, Policies.GetStandardPolicies().Find(p => p.Id == StandardPolicies.CertificateConsumer), bypassIntegrityCheck: true);
+            await access.AddRole(adminId, Policies.GetStandardRoles().Find(r => r.Id == StandardRoles.CertificateConsumer.Id), bypassIntegrityCheck: true);
+
+            var assignment = new AssignedRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                RoleId = StandardRoles.CertificateConsumer.Id,
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id
+            };
+
+            await access.AddAssignedRole(adminId, assignment, bypassIntegrityCheck: true);
+
+            var token = new AccessToken
+            {
+                ClientId = "consumer_client_01",
+                Secret = Guid.NewGuid().ToString(),
+                TokenType = AccessTokenTypes.Simple
+            };
+
+            Assert.IsTrue(await access.AddAssignedAccessToken(adminId, new AssignedAccessToken
+            {
+                Id = Guid.NewGuid().ToString(),
+                SecurityPrincipalId = TestSecurityPrincipals.DevopsUser.Id,
+                Title = "Certificate consumer integration",
+                AccessTokens = [token],
+                ScopedAssignedRoles = [assignment.Id]
+            }));
+
+            var resolved = await access.ResolveAccessToken(adminId, token);
+
+            Assert.IsTrue(resolved.IsSuccess, "a valid token should resolve whatever its roles happen to grant");
+
+            var tokenContext = resolved.Result as AccessTokenAuthorizationContext;
+            Assert.IsNotNull(tokenContext);
+            Assert.AreEqual(TestSecurityPrincipals.DevopsUser.Id, tokenContext.SecurityPrincipalId);
+            CollectionAssert.AreEquivalent(new[] { assignment.Id }, tokenContext.ScopedAssignedRoles);
+
+            // the role's own action is authorized
+            Assert.IsTrue(
+                (await access.IsAccessTokenAuthorised(adminId, token, new AccessCheck(null, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload))).IsSuccess);
+
+            // but resolving the token did not by itself grant anything else
+            Assert.IsFalse(
+                (await access.IsAccessTokenAuthorised(adminId, token, new AccessCheck(null, ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess))).IsSuccess,
+                "authenticating a token must not authorize an action the principal's roles do not grant");
+        }
+
+        [TestMethod]
+        public async Task TestResolveAccessTokenRejectsAnUnknownToken()
+        {
+            var adminId = await SetupAdminPrincipal();
+
+            var resolved = await access.ResolveAccessToken(adminId, new AccessToken { ClientId = "nobody", Secret = "wrong" });
+
+            Assert.IsFalse(resolved.IsSuccess, "an unknown token should not authenticate");
+        }
+
         #endregion
     }
 }

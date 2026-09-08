@@ -39,6 +39,12 @@ namespace Certify.Client
         Task<ActionResult> CheckManagementHubConnectionStatus(AuthContext authContext = null);
         Task<HubInfo> GetHubInfo(AuthContext authContext = null);
         Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null);
+
+        /// <summary>
+        /// Resolve an access token to the security principal it authenticates as, without checking what that
+        /// principal may do.
+        /// </summary>
+        Task<Certify.Models.Config.ActionResult> ResolveApiToken(AccessToken token, AuthContext authContext = null);
         #endregion System
 
         #region Server

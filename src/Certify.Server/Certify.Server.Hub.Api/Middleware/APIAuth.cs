@@ -17,35 +17,25 @@ namespace Certify.Server.Hub.Api.Middleware
         }
     }
 
-    internal class FeatureAuthorizeAttribute : AuthorizeAttribute
+    /// <summary>
+    /// Marks an <see cref="AuthorizedApiAttribute"/> endpoint which deliberately performs no resource action check,
+    /// because it exposes no stored resource. Authentication alone is the whole requirement for these.
+    ///
+    /// Every other authenticated endpoint has to check the action it needs: being authenticated says who the caller
+    /// is, not what they may do, and a JWT is issued to any principal which can sign in regardless of its roles.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    internal sealed class NoResourceActionRequiredAttribute : Attribute
     {
-
-        private string _resourceType = "";
-        private string _resourceAction = "";
-
-        public string ResourceType
+        public NoResourceActionRequiredAttribute(string reason)
         {
-            get
-            {
-                return _resourceType;
-            }
-            set
-            {
-                _resourceType = value;
-            }
+            Reason = reason;
         }
 
-        public string ResourceAction
-        {
-            get
-            {
-                return _resourceAction;
-            }
-            set
-            {
-                _resourceAction = value;
-            }
-        }
+        /// <summary>
+        /// Why this endpoint needs no resource action, so the choice is reviewable rather than assumed.
+        /// </summary>
+        public string Reason { get; }
     }
 
     /// <summary>
@@ -101,26 +91,17 @@ namespace Certify.Server.Hub.Api.Middleware
                 return AuthenticateResult.NoResult();
             }
 
-            var endpoint = Context.GetEndpoint();
-            if (endpoint?.Metadata?.GetMetadata<FeatureAuthorizeAttribute>() != null)
-            {
-                // could apply check directly here if needed
-            }
-
             var token = new AccessToken
             {
                 ClientId = Request.Headers["X-Client-ID"]!,
                 Secret = Request.Headers["X-Client-Secret"]!
             };
 
-            var check = new AccessCheck
-            {
-                ResourceType = ResourceTypes.SecurityPrincipal,
-                ResourceActionId = StandardResourceActions.SecurityPrincipalCheckAccess
-            };
-
-            // check api key is valid for general access
-            var result = await _client.CheckApiTokenHasAccess(token, check, default!);
+            // Resolve the token to the principal it belongs to. This is authentication and asks only whether the
+            // token is valid: it used to also require the principal to hold a specific action, which made that one
+            // action an invisible prerequisite for every API token and locked out tokens for roles which do not
+            // grant it. What the resolved principal may do is checked by each endpoint against its own action.
+            var result = await _client.ResolveApiToken(token, default!);
 
             if (!result.IsSuccess)
             {

@@ -881,6 +881,12 @@ namespace Certify.Client
             return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
         }
 
+        public async Task<Certify.Models.Config.ActionResult> ResolveApiToken(AccessToken token, AuthContext authContext = null)
+        {
+            var result = await PostAsync("access/apitoken/resolve", token, authContext);
+            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+        }
+
         public async Task<HubInfo> GetHubInfo(AuthContext authContext = null)
         {
             var result = await FetchAsync("system/hub/info", authContext);

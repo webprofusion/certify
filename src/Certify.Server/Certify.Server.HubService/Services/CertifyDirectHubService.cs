@@ -112,6 +112,7 @@ namespace Certify.Server.HubService.Services
         public Task<ActionResult> UpdateAssignedAccessToken(AssignedAccessToken token, AuthContext authContext) => _accessController(authContext).UpdateAssignedAccessToken(token);
         public Task<ActionResult> RemoveAssignedAccessToken(string id, AuthContext authContext) => _accessController(authContext).RemoveAssignedAccessToken(id);
         public Task<ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext) => _accessController(authContext).CheckApiTokenHasAccess(new AccessTokenCheck { Check = check, Token = token });
+        public Task<ActionResult> ResolveApiToken(AccessToken token, AuthContext authContext) => _accessController(authContext).ResolveApiToken(token);
         public Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens(AuthContext authContext) => _accessController(authContext).GetAssignedAccessTokens();
         public Task<ActionResult> RemoveSecurityPrincipal(string id, AuthContext authContext) => _accessController(authContext).DeleteSecurityPrincipal(id);
         public Task<ActionResult> UpdateSecurityPrincipal(SecurityPrincipal principal, AuthContext authContext) => _accessController(authContext).UpdateSecurityPrincipal(principal);

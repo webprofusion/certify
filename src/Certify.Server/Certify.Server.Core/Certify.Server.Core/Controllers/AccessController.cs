@@ -121,6 +121,18 @@ namespace Certify.Service.Controllers
             return await accessControl.IsAccessTokenAuthorised(GetContextUserId(), tokenCheck.Token, tokenCheck.Check);
         }
 
+        /// <summary>
+        /// Resolve an access token to the security principal it authenticates as, without checking what that
+        /// principal may do. Used to authenticate an API token request, which is then authorized per operation.
+        /// </summary>
+        [HttpPost, Route("apitoken/resolve/")]
+        public async Task<Certify.Models.Config.ActionResult> ResolveApiToken(AccessToken token)
+        {
+            var accessControl = await _certifyManager.GetCurrentAccessControl();
+
+            return await accessControl.ResolveAccessToken(GetContextUserId(), token);
+        }
+
         [HttpGet, Route("assignedtoken/list/")]
         public async Task<ICollection<AssignedAccessToken>> GetAssignedAccessTokens()
         {

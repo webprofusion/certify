@@ -48,6 +48,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         /// <returns></returns>
         [AuthorizedApi]
+        [NoResourceActionRequired("Reports whether the presented credentials authenticate, which is the whole purpose of the endpoint. It returns no data.")]
         [HttpGet]
         [Route("status")]
         public async Task<IActionResult> CheckAuthStatus()

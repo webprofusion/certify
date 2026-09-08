@@ -448,7 +448,15 @@ namespace Certify.Core.Management.Access
                 .ToList();
         }
 
-        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
+        /// <summary>
+        /// Resolve an access token to the security principal and role scope it authenticates as, without deciding
+        /// whether that principal may perform any particular action.
+        ///
+        /// This is authentication: the token exists, has not expired or been revoked, and its role scope still
+        /// resolves to assignments the principal holds. What the resulting principal may then do is a separate
+        /// question, answered per operation by the caller, because a token's roles vary by what it is for.
+        /// </summary>
+        public async Task<ActionResult> ResolveAccessToken(string contextUserId, AccessToken accessToken)
         {
             // resolve security principal from access token
 
@@ -484,15 +492,34 @@ namespace Certify.Core.Management.Access
                 }
             }
 
+            return new ActionResult("OK", true)
+            {
+                Result = new AccessTokenAuthorizationContext
+                {
+                    SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
+                    ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles ?? []
+                }
+            };
+        }
+
+        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
+        {
+            var resolved = await ResolveAccessToken(contextUserId, accessToken);
+
+            if (!resolved.IsSuccess || resolved.Result is not AccessTokenAuthorizationContext tokenContext)
+            {
+                return resolved;
+            }
+
             // check related principal has access
 
             var scopedCheck = new AccessCheck
             {
-                SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
+                SecurityPrincipalId = tokenContext.SecurityPrincipalId,
                 ResourceActionId = check.ResourceActionId,
                 Identifier = check.Identifier,
                 ResourceType = check.ResourceType,
-                ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles,
+                ScopedAssignedRoles = tokenContext.ScopedAssignedRoles,
                 ResourceTags = check.ResourceTags // Pass resource tags for tag-based access control
             };
 
@@ -501,14 +528,7 @@ namespace Certify.Core.Management.Access
             if (isAuthorised)
             {
                 // TODO: check token scope restrictions
-                return new ActionResult("OK", true)
-                {
-                    Result = new AccessTokenAuthorizationContext
-                    {
-                        SecurityPrincipalId = knownAssignedToken.SecurityPrincipalId,
-                        ScopedAssignedRoles = knownAssignedToken.ScopedAssignedRoles ?? []
-                    }
-                };
+                return resolved;
             }
             else
             {

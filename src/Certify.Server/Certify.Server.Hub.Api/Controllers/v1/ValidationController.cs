@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models;
+using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,15 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SimpleAuthorizationChallengeItem>))]
         public async Task<IActionResult> GetValidationChallenges(string? type = "http-01", string? key = null)
         {
+            // pending challenge responses are what proves control of an identifier, so this is restricted to callers
+            // who can already see the managed items those challenges belong to
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)System.Net.HttpStatusCode.Unauthorized);
+            }
+
             if (type == null)
             {
                 type = "http-01";

@@ -25,10 +25,11 @@ namespace Certify.Core.Tests.Unit
         [TestMethod]
         public async Task ApiKeyAuthenticationHandler_PopulatesPrincipalFromResolvedTokenContext()
         {
+            // the handler authenticates the token, it does not authorize an action: a strict mock which only
+            // answers ResolveApiToken fails the test if it starts asking whether the principal may do something
             var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
-            client.Setup(c => c.CheckApiTokenHasAccess(
+            client.Setup(c => c.ResolveApiToken(
                     It.IsAny<AccessToken>(),
-                    It.IsAny<AccessCheck>(),
                     It.IsAny<AuthContext>()))
                 .ReturnsAsync(new ActionResultConfig("OK", true)
                 {

@@ -203,6 +203,14 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         public async Task<object> GetDecodedCertificate(string instanceId, string managedCertId, bool strictExport)
         {
+            // this exports the certificate in order to decode it, so it is gated the same way a download is
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
+
+            if (!accessCheck.IsSuccess)
+            {
+                return Problem(detail: accessCheck.Message, statusCode: (int)HttpStatusCode.Unauthorized);
+            }
+
             var exportResult = await _mgmtAPI.ExportCertificate(instanceId, managedCertId, "pem_fullchain_root", strictExport, CurrentAuthContext);
 
             if (exportResult.IsSuccess && exportResult.Result != null)

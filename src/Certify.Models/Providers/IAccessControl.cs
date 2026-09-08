@@ -34,6 +34,13 @@ namespace Certify.Core.Management.Access
         Task<Models.Config.ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
 
         /// <summary>
+        /// Resolve an access token to the security principal and role scope it authenticates as, without checking
+        /// whether that principal may perform any particular action. On success the result carries an
+        /// <see cref="AccessTokenAuthorizationContext"/>.
+        /// </summary>
+        Task<Models.Config.ActionResult> ResolveAccessToken(string contextUserId, AccessToken accessToken);
+
+        /// <summary>
         /// Evaluate the access scope for a principal/action, including authorizing roles and whether
         /// access is unrestricted or constrained by tag scopes / included resources.
         /// </summary>
