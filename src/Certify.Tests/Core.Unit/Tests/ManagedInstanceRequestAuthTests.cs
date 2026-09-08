@@ -119,8 +119,14 @@ namespace Certify.Core.Tests.Unit
         }
 
         [TestMethod]
-        public async Task PerformManagedChallenge_AllowsManagedInstanceAuthorizationBeforeAccessTokenFailure()
+        public async Task PerformManagedChallenge_AuthorizesManagedInstanceAndFulfillsAsItsOwnPrincipal()
         {
+            // A managed instance signs with the hub joining credentials, which belong to the shared managed
+            // instance service principal and grant hub joining only. Instance authorization therefore has to
+            // win over the failing access token check, and fulfillment has to run as the instance's own
+            // principal - scoping the forwarded request to the joining token instead makes the hub re-check
+            // managed challenge access against a principal which can never hold it, refusing every challenge
+            // with "Security principal is not authorised to use managed challenges".
             var secret = ManagedInstanceRequestAuth.GenerateSecret();
             var secretHash = ManagedInstanceRequestAuth.DeriveSecretHash(secret);
             var request = new ManagedChallengeRequest
@@ -129,7 +135,7 @@ namespace Certify.Core.Tests.Unit
                 Identifier = "test.exmaple.com",
                 ResponseKey = "_acme-challenge.test.exmaple.com",
                 ResponseValue = "txt-value",
-                AuthKey = "join-client",
+                AuthKey = AccessControlConfig.ManagedInstanceSecurityPrincipalId,
                 AuthSecret = "join-secret"
             };
 
@@ -185,6 +191,20 @@ namespace Certify.Core.Tests.Unit
                     It.IsAny<AuthContext>()))
                 .ReturnsAsync(new ResourceAccessScope { HasAccess = true, IsUnrestricted = true });
 
+            // Deliberately unused while the code is correct: it is what the joining credentials would resolve
+            // to if fulfillment went back to deriving identity from the access token, so a regression fails
+            // naming the wrong principal rather than a null one.
+            client.Setup(c => c.GetAssignedAccessTokens(It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<AssignedAccessToken>
+                {
+                    new AssignedAccessToken
+                    {
+                        SecurityPrincipalId = AccessControlConfig.ManagedInstanceSecurityPrincipalId,
+                        ScopedAssignedRoles = ["managedinstance-assignment-1"],
+                        AccessTokens = [new AccessToken { ClientId = request.AuthKey, Secret = request.AuthSecret }]
+                    }
+                });
+
             client.Setup(c => c.CheckSecurityPrincipalHasAccess(
                     It.Is<AccessCheck>(a =>
                         a.SecurityPrincipalId == "sp-1"
@@ -194,9 +214,11 @@ namespace Certify.Core.Tests.Unit
                     It.Is<AuthContext>(a => a.UserId == "sp-1")))
                 .ReturnsAsync(true);
 
+            ManagedChallengeRequest? forwardedRequest = null;
             client.Setup(c => c.PerformManagedChallenge(
                     It.Is<ManagedChallengeRequest>(r => r.Identifier == request.Identifier && r.ResponseKey == request.ResponseKey),
                     It.IsAny<AuthContext>()))
+                .Callback<ManagedChallengeRequest, AuthContext>((r, _) => forwardedRequest = r)
                 .ReturnsAsync(new Certify.Models.Config.ActionResult("Managed challenge completed", true));
 
             var services = new ServiceCollection();
@@ -218,6 +240,10 @@ namespace Certify.Core.Tests.Unit
             var okResult = (OkObjectResult)result;
             Assert.IsInstanceOfType<Certify.Models.Config.ActionResult>(okResult.Value);
             Assert.IsTrue(((Certify.Models.Config.ActionResult)okResult.Value!).IsSuccess);
+
+            Assert.IsNotNull(forwardedRequest, "the challenge request should have been forwarded for fulfillment");
+            Assert.AreEqual("sp-1", forwardedRequest!.SecurityPrincipalId, "fulfillment must run as the managed instance's own security principal");
+            Assert.IsNull(forwardedRequest.ScopedAssignedRoles, "the instance's own role assignments apply, not the joining token's scope");
         }
 
         [TestMethod]

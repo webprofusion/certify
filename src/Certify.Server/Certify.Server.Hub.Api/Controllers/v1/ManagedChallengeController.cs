@@ -48,13 +48,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> PerformManagedChallenge(ManagedChallengeRequest request)
         {
-            var authResult = await AuthorizeManagedChallengeRequestAsync(request);
-            if (authResult != null)
+            var authorization = await AuthorizeManagedChallengeRequestAsync(request);
+            if (authorization.Denial != null)
             {
-                return authResult;
+                return authorization.Denial;
             }
 
-            await ApplyCallerScopeToRequestAsync(request);
+            authorization.ApplyTo(request);
 
             // Perform the challenge
             var result = await _client.PerformManagedChallenge(request, null);
@@ -90,13 +90,13 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> BeginManagedChallenge(ManagedChallengeRequest request)
         {
-            var authResult = await AuthorizeManagedChallengeRequestAsync(request);
-            if (authResult != null)
+            var authorization = await AuthorizeManagedChallengeRequestAsync(request);
+            if (authorization.Denial != null)
             {
-                return authResult;
+                return authorization.Denial;
             }
 
-            await ApplyCallerScopeToRequestAsync(request);
+            authorization.ApplyTo(request);
 
             var operation = await _client.BeginManagedChallenge(request, null);
             return AcceptedAtAction(nameof(GetManagedChallengeOperationStatus), new { id = operation.Id }, operation);
@@ -121,11 +121,11 @@ namespace Certify.Server.Hub.Api.Controllers
                 return NotFound();
             }
 
-            var authResult = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeRequest, operation?.Request);
+            var authorization = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeRequest, operation?.Request);
 
-            if (authResult != null)
+            if (authorization.Denial != null)
             {
-                return authResult;
+                return authorization.Denial;
             }
 
             return Ok(operation);
@@ -143,32 +143,70 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CleanupManagedChallenge(ManagedChallengeRequest request)
         {
-            var authResult = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeCleanup, request);
-            if (authResult != null)
+            var authorization = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeCleanup, request);
+            if (authorization.Denial != null)
             {
-                return authResult;
+                return authorization.Denial;
             }
 
-            await ApplyCallerScopeToRequestAsync(request);
+            authorization.ApplyTo(request);
 
             var result = await _client.CleanupManagedChallenge(request, null);
             return new OkObjectResult(result);
         }
 
-        private sealed class ManagedChallengeAuthorizationResult
+        /// <summary>
+        /// The outcome of authorizing a managed challenge action: either a denial to return to the caller,
+        /// or the security principal and role scope the request was authorized as. Fulfillment must run as
+        /// that principal, so whichever authorization path succeeds also decides the identity applied to the
+        /// request - re-deriving it afterwards would substitute a different principal than the one checked.
+        /// </summary>
+        private sealed class ManagedChallengeAuthorization
         {
-            public bool IsSuccess { get; init; }
-            public bool WasEvaluated { get; init; }
-            public int StatusCode { get; init; } = StatusCodes.Status401Unauthorized;
-            public string Message { get; init; } = "Access denied";
+            public IActionResult? Denial { get; init; }
+
+            /// <summary>
+            /// Why authorization was refused, for logging alongside the denial the caller receives.
+            /// </summary>
+            public string? DenialReason { get; init; }
+
+            public string? SecurityPrincipalId { get; init; }
+
+            public List<string>? ScopedAssignedRoles { get; init; }
+
+            public bool IsAllowed => Denial == null;
+
+            public static ManagedChallengeAuthorization Allowed(string? securityPrincipalId = null, List<string>? scopedAssignedRoles = null)
+                => new() { SecurityPrincipalId = securityPrincipalId, ScopedAssignedRoles = scopedAssignedRoles };
+
+            /// <summary>
+            /// Attach the authorized principal and role scope to the request so fulfillment only selects
+            /// challenges within that scope. Caller supplied values are never trusted: identity comes from
+            /// authorization, or is cleared.
+            /// </summary>
+            public void ApplyTo(ManagedChallengeRequest request)
+            {
+                request.SecurityPrincipalId = SecurityPrincipalId;
+                request.ScopedAssignedRoles = ScopedAssignedRoles;
+            }
         }
 
-        private async Task<IActionResult?> AuthorizeManagedChallengeActionAsync(string actionId, ManagedChallengeRequest? request = null)
+        /// <summary>
+        /// Refuse the request, keeping the reason available for logging as well as for the caller.
+        /// </summary>
+        private ManagedChallengeAuthorization Deny(string detail, int statusCode) => new()
+        {
+            Denial = Problem(detail: detail, statusCode: statusCode),
+            DenialReason = detail
+        };
+
+        private async Task<ManagedChallengeAuthorization> AuthorizeManagedChallengeActionAsync(string actionId, ManagedChallengeRequest? request = null)
         {
             var managedCertId = request?.ManagedCertId ?? "<none>";
             var identifier = request?.Identifier ?? "<none>";
             var challengeType = request?.ChallengeType ?? "<none>";
             var hasManagedInstanceHeader = HasManagedInstanceRequestHeader();
+            var accessToken = GetAccessTokenFromRequestOrManagedChallenge(request);
 
             var accessCheck = new AccessCheck
             {
@@ -193,13 +231,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     identifier,
                     challengeType);
 
-                var scopeDenied = await AuthorizeIdentifierScopeAsync(GetAccessTokenFromRequest(), request, actionId);
-                if (scopeDenied != null)
-                {
-                    return scopeDenied;
-                }
-
-                return null;
+                return await AuthorizeAccessTokenScopeAsync(accessToken, request, actionId);
             }
 
             _logger.LogDebug(
@@ -209,16 +241,15 @@ namespace Certify.Server.Hub.Api.Controllers
                 identifier,
                 challengeType);
 
-            var accessToken = GetAccessTokenFromRequestOrManagedChallenge(request);
             if (accessToken != null)
             {
-                ManagedChallengeAuthorizationResult? managedInstanceAuthorization = null;
+                ManagedChallengeAuthorization? managedInstanceAuthorization = null;
                 if (request != null && hasManagedInstanceHeader)
                 {
                     managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, accessToken);
-                    if (managedInstanceAuthorization.IsSuccess)
+                    if (managedInstanceAuthorization.IsAllowed)
                     {
-                        return null;
+                        return managedInstanceAuthorization;
                     }
 
                     _logger.LogWarning(
@@ -227,22 +258,16 @@ namespace Certify.Server.Hub.Api.Controllers
                         managedCertId,
                         identifier,
                         challengeType,
-                        managedInstanceAuthorization.Message);
+                        managedInstanceAuthorization.DenialReason);
                 }
 
                 var authResult = await IsAccessTokenAuthorized(_client, accessToken, accessCheck);
                 if (authResult.IsSuccess)
                 {
-                    var scopeDenied = await AuthorizeIdentifierScopeAsync(accessToken, request, actionId);
-                    if (scopeDenied != null)
-                    {
-                        return scopeDenied;
-                    }
-
-                    return null;
+                    return await AuthorizeAccessTokenScopeAsync(accessToken, request, actionId);
                 }
 
-                if (managedInstanceAuthorization?.WasEvaluated == true)
+                if (managedInstanceAuthorization != null)
                 {
                     _logger.LogWarning(
                         "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
@@ -250,12 +275,9 @@ namespace Certify.Server.Hub.Api.Controllers
                         managedCertId,
                         identifier,
                         challengeType,
-                        managedInstanceAuthorization.Message);
+                        managedInstanceAuthorization.DenialReason);
 
-                    return Problem(
-                        detail: managedInstanceAuthorization.Message,
-                        statusCode: managedInstanceAuthorization.StatusCode
-                    );
+                    return managedInstanceAuthorization;
                 }
 
                 _logger.LogWarning(
@@ -265,37 +287,11 @@ namespace Certify.Server.Hub.Api.Controllers
                     identifier,
                     challengeType);
 
-                return Problem(
-                detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
-                    statusCode: StatusCodes.Status401Unauthorized
-                );
+                return DenyMissingAuthorization();
             }
 
-            if (request != null)
-            {
-                var managedInstanceAuthorization = await AuthorizeManagedInstanceManagedChallengeAsync(request, actionId, null);
-                if (managedInstanceAuthorization.IsSuccess)
-                {
-                    return null;
-                }
-
-                if (managedInstanceAuthorization.WasEvaluated)
-                {
-                    _logger.LogWarning(
-                        "AuthorizeManagedChallengeActionAsync denied by managed-instance authorization without access token for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
-                        actionId,
-                        managedCertId,
-                        identifier,
-                        challengeType,
-                        managedInstanceAuthorization.Message);
-
-                    return Problem(
-                        detail: managedInstanceAuthorization.Message,
-                        statusCode: managedInstanceAuthorization.StatusCode
-                    );
-                }
-            }
-
+            // no access token at all: a managed instance signs with the joining credentials, so instance
+            // authorization has nothing to check either
             _logger.LogWarning(
                 "AuthorizeManagedChallengeActionAsync rejected request due to missing authorization for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
                 actionId,
@@ -303,18 +299,20 @@ namespace Certify.Server.Hub.Api.Controllers
                 identifier,
                 challengeType);
 
-            return Problem(
-                detail: "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
-                statusCode: StatusCodes.Status401Unauthorized
-            );
+            return DenyMissingAuthorization();
         }
+
+        private ManagedChallengeAuthorization DenyMissingAuthorization()
+            => Deny(
+                "Authorization header, X-Client-ID/X-Client-Secret headers, or AuthKey/AuthSecret request values are required.",
+                StatusCodes.Status401Unauthorized);
 
         private bool HasManagedInstanceRequestHeader()
         {
             return !string.IsNullOrWhiteSpace(Request.Headers[ManagedInstanceRequestAuth.HubAssignedIdHeaderName].ToString());
         }
 
-        private async Task<IActionResult?> AuthorizeManagedChallengeRequestAsync(ManagedChallengeRequest request)
+        private async Task<ManagedChallengeAuthorization> AuthorizeManagedChallengeRequestAsync(ManagedChallengeRequest request)
         {
             return await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeRequest, request);
         }
@@ -344,68 +342,44 @@ namespace Certify.Server.Hub.Api.Controllers
             };
         }
 
-        private async Task<ManagedChallengeAuthorizationResult> AuthorizeManagedInstanceManagedChallengeAsync(ManagedChallengeRequest request, string actionId, AccessToken? accessToken)
+        /// <summary>
+        /// Authorize the caller as a managed instance signing with the hub joining credentials. On success the
+        /// instance's own security principal is returned: the joining credentials belong to the shared managed
+        /// instance service principal, which only grants hub joining, so fulfillment scoped to it would deny
+        /// every managed challenge.
+        /// </summary>
+        private async Task<ManagedChallengeAuthorization> AuthorizeManagedInstanceManagedChallengeAsync(ManagedChallengeRequest request, string actionId, AccessToken accessToken)
         {
-            if (accessToken == null)
-            {
-                return new ManagedChallengeAuthorizationResult { WasEvaluated = false };
-            }
-
             var joiningAccessCheck = await IsAccessTokenAuthorized(_client, accessToken, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
             if (!joiningAccessCheck.IsSuccess)
             {
-                return new ManagedChallengeAuthorizationResult
-                {
-                    WasEvaluated = true,
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Message = joiningAccessCheck.Message ?? "Managed instance joining key is not authorized."
-                };
+                return Deny(joiningAccessCheck.Message ?? "Managed instance joining key is not authorized.", StatusCodes.Status401Unauthorized);
             }
 
             var requestingInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString();
             if (string.IsNullOrWhiteSpace(requestingInstanceId))
             {
-                return new ManagedChallengeAuthorizationResult
-                {
-                    WasEvaluated = true,
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Message = "X-Certify-HubAssignedId header is required."
-                };
+                return Deny("X-Certify-HubAssignedId header is required.", StatusCodes.Status401Unauthorized);
             }
 
             var instanceAuth = await ValidateManagedInstanceRequestAuthAsync();
             if (!instanceAuth.IsSuccess)
             {
-                return new ManagedChallengeAuthorizationResult
-                {
-                    WasEvaluated = true,
-                    StatusCode = instanceAuth.StatusCode,
-                    Message = instanceAuth.Message
-                };
+                return Deny(instanceAuth.Message, instanceAuth.StatusCode);
             }
 
             var matchingInstance = instanceAuth.ManagedInstance;
 
             if (matchingInstance == null || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
             {
-                return new ManagedChallengeAuthorizationResult
-                {
-                    WasEvaluated = true,
-                    StatusCode = StatusCodes.Status401Unauthorized,
-                    Message = "Managed instance is not registered with a linked security principal."
-                };
+                return Deny("Managed instance is not registered with a linked security principal.", StatusCodes.Status401Unauthorized);
             }
 
             var isAuthorized = await ValidateManagedInstanceChallengeAccessAsync(request, matchingInstance, actionId);
 
             return isAuthorized
-                ? new ManagedChallengeAuthorizationResult { IsSuccess = true, WasEvaluated = true, Message = "Authorized as managed instance challenge consumer." }
-                : new ManagedChallengeAuthorizationResult
-                {
-                    WasEvaluated = true,
-                    StatusCode = StatusCodes.Status403Forbidden,
-                    Message = "Managed instance is not permitted to access a matching managed challenge for this request."
-                };
+                ? ManagedChallengeAuthorization.Allowed(matchingInstance.SecurityPrincipalId)
+                : Deny("Managed instance is not permitted to access a matching managed challenge for this request.", StatusCodes.Status403Forbidden);
         }
 
         private async Task<bool> ValidateManagedInstanceChallengeAccessAsync(ManagedChallengeRequest request, ManagedInstanceInfo managedInstance, string actionId)
@@ -434,21 +408,25 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Deny the request when the caller's API token is tag-scoped and no accessible managed
-        /// challenge covers the requested identifier. Unrestricted principals are unaffected.
+        /// Authorize the caller as the security principal their access token belongs to, denying the request
+        /// when that principal is tag-scoped and no accessible managed challenge covers the requested
+        /// identifier. Unrestricted principals are unaffected, and a caller authenticated without an access
+        /// token (an interactive hub user) resolves to no principal, leaving fulfillment unscoped.
         /// </summary>
-        private async Task<IActionResult?> AuthorizeIdentifierScopeAsync(AccessToken? accessToken, ManagedChallengeRequest? request, string actionId)
+        private async Task<ManagedChallengeAuthorization> AuthorizeAccessTokenScopeAsync(AccessToken? accessToken, ManagedChallengeRequest? request, string actionId)
         {
-            if (string.IsNullOrWhiteSpace(request?.Identifier))
-            {
-                return null;
-            }
-
             var principal = await _scopeService.ResolveAccessTokenPrincipal(accessToken);
             if (principal == null)
             {
                 // not an API-token principal - other authorization paths apply
-                return null;
+                return ManagedChallengeAuthorization.Allowed();
+            }
+
+            var allowed = ManagedChallengeAuthorization.Allowed(principal.SecurityPrincipalId, principal.ScopedAssignedRoles);
+
+            if (string.IsNullOrWhiteSpace(request?.Identifier))
+            {
+                return allowed;
             }
 
             var (isAuthorized, failureReason) = await _scopeService.AuthorizeIdentifiersForPrincipal(
@@ -459,7 +437,7 @@ namespace Certify.Server.Hub.Api.Controllers
 
             if (isAuthorized)
             {
-                return null;
+                return allowed;
             }
 
             _logger.LogWarning(
@@ -469,29 +447,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 request.Identifier,
                 request.ChallengeType);
 
-            return Problem(
-                detail: failureReason ?? "Access denied. No accessible managed challenge found for this domain with your API token's role scope.",
-                statusCode: StatusCodes.Status403Forbidden
-            );
-        }
-
-        /// <summary>
-        /// Attach the caller's security principal and scoped assigned roles to the challenge request
-        /// so fulfillment only selects challenges within that scope. Caller-supplied values are never
-        /// trusted: identity is always derived from the authenticated access token, or cleared.
-        /// </summary>
-        private async Task ApplyCallerScopeToRequestAsync(ManagedChallengeRequest request)
-        {
-            if (request == null)
-            {
-                return;
-            }
-
-            // never trust principal/scope supplied by the client
-            var principal = await _scopeService.ResolveAccessTokenPrincipal(GetAccessTokenFromRequestOrManagedChallenge(request));
-
-            request.SecurityPrincipalId = principal?.SecurityPrincipalId;
-            request.ScopedAssignedRoles = principal?.ScopedAssignedRoles;
+            return Deny(
+                failureReason ?? "Access denied. No accessible managed challenge found for this domain with your API token's role scope.",
+                StatusCodes.Status403Forbidden);
         }
     }
 }
