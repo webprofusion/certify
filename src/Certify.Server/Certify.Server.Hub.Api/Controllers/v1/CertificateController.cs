@@ -203,8 +203,11 @@ namespace Certify.Server.Hub.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(object))]
         public async Task<object> GetDecodedCertificate(string instanceId, string managedCertId, bool strictExport)
         {
-            // this exports the certificate in order to decode it, so it is gated the same way a download is
-            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload));
+            // Decoding reports the public certificate and its chain. The export format used below is
+            // pem_fullchain_root, which carries no private key, and the decoder reports only key metadata such as
+            // algorithm and modulus length rather than key material. So this is a read of the managed item's
+            // certificate detail, not a certificate download, and is gated as such.
+            var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedItem, StandardResourceActions.ManagedItemList));
 
             if (!accessCheck.IsSuccess)
             {
