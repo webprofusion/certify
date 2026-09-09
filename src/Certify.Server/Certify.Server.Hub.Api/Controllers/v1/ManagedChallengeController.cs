@@ -52,10 +52,8 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authorization.Denial;
             }
 
-            authorization.ApplyTo(request);
-
-            // Perform the challenge
-            var result = await _client.PerformManagedChallenge(request, null);
+            // perform the challenge as the principal the request was authorized as
+            var result = await _client.PerformManagedChallenge(authorization.Authorize(request), null);
 
             if (result.IsSuccess)
             {
@@ -94,9 +92,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authorization.Denial;
             }
 
-            authorization.ApplyTo(request);
-
-            var operation = await _client.BeginManagedChallenge(request, null);
+            var operation = await _client.BeginManagedChallenge(authorization.Authorize(request), null);
             return AcceptedAtAction(nameof(GetManagedChallengeOperationStatus), new { id = operation.Id }, operation);
         }
 
@@ -133,32 +129,69 @@ namespace Certify.Server.Hub.Api.Controllers
             // a hub user may hold a bearer token even though the endpoint does not require one
             await IdentifyOptionalCallerAsync();
 
-            var authorization = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeRequest, operation?.Request);
+            var authorization = await AuthorizeOperationStatusAsync(operation);
 
             if (authorization.Denial != null)
             {
                 return authorization.Denial;
             }
 
-            return Ok(WithoutCallerCredentials(operation));
+            return Ok(WithoutCallerIdentity(operation));
         }
 
         /// <summary>
-        /// A copy of the operation with the requesting caller's credentials and resolved identity removed.
+        /// Authorize a status query for an operation.
         ///
-        /// The stored request keeps the AuthKey/AuthSecret it was made with, because fulfillment and cleanup still
-        /// need them, and this endpoint is reachable by anyone holding the operation id. Returning the stored request
-        /// verbatim therefore hands that party the API credentials the operation was created with, which are longer
-        /// lived and far more valuable than the operation itself. The legitimate caller already holds its own
-        /// credentials and only reads status and result, so removing them costs it nothing.
+        /// A caller who presented credentials is checked against their own roles. One who did not is relying on
+        /// holding the operation id, which is an unguessable value issued only to whoever created the operation;
+        /// the principal it was created for must still hold the action, so revoking that role stops the polling.
+        /// This used to be expressed by re-resolving the API credentials stored on the operation, which meant
+        /// keeping a live credential in memory for the operation's lifetime to answer a question about a role.
+        /// </summary>
+        private async Task<ManagedChallengeAuthorization> AuthorizeOperationStatusAsync(ManagedChallengeOperation operation)
+        {
+            var caller = operation.Caller;
+            var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(
+                caller?.Origin,
+                StandardResourceActions.ManagedChallengeRequest);
+
+            if (!string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
+            {
+                return await IsAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedChallenge, actionId))
+                    ? ManagedChallengeAuthorization.Allowed()
+                    : Deny("Access denied. You are not authorized to read managed challenge operations.", StatusCodes.Status403Forbidden);
+            }
+
+            if (string.IsNullOrWhiteSpace(caller?.SecurityPrincipalId))
+            {
+                return DenyMissingAuthorization();
+            }
+
+            var check = new AccessCheck(caller.SecurityPrincipalId, ResourceTypes.ManagedChallenge, actionId);
+
+            if (caller.ScopedAssignedRoles?.Count > 0)
+            {
+                check.ScopedAssignedRoles = caller.ScopedAssignedRoles;
+            }
+
+            return await _client.CheckSecurityPrincipalHasAccess(check, SystemAuthContext)
+                ? ManagedChallengeAuthorization.Allowed()
+                : Deny("Access denied. The security principal this operation was created for is no longer authorized.", StatusCodes.Status403Forbidden);
+        }
+
+        /// <summary>
+        /// A copy of the operation with the identity it was authorized as removed.
+        ///
+        /// That identity is internal: this endpoint reads it to authorize the query, and an external caller has no
+        /// business learning which security principal an operation belongs to. The stored request itself no longer
+        /// carries the credentials it was made with - they authenticate the request and are dropped once they have,
+        /// so there is nothing left here to strip beyond the resolved principal.
         ///
         /// The operation is copied rather than edited in place: the core holds operations in memory, so the instance
-        /// returned here is the live one, and blanking its fields would destroy the credentials cleanup still needs.
+        /// returned here is the live one, and blanking its fields would destroy what a later status query needs.
         /// </summary>
-        private static ManagedChallengeOperation WithoutCallerCredentials(ManagedChallengeOperation operation)
+        private static ManagedChallengeOperation WithoutCallerIdentity(ManagedChallengeOperation operation)
         {
-            var request = operation.Request;
-
             return new ManagedChallengeOperation
             {
                 Id = operation.Id,
@@ -168,17 +201,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 DateLastUpdated = operation.DateLastUpdated,
                 DateStarted = operation.DateStarted,
                 DateCompleted = operation.DateCompleted,
+                Request = operation.Request,
 
-                // AuthKey, AuthSecret, SecurityPrincipalId and ScopedAssignedRoles are deliberately not carried over
-                Request = request == null ? new ManagedChallengeRequest() : new ManagedChallengeRequest
-                {
-                    ChallengeType = request.ChallengeType,
-                    Identifier = request.Identifier,
-                    ResponseKey = request.ResponseKey,
-                    ResponseValue = request.ResponseValue,
-                    DateTimePerformed = request.DateTimePerformed,
-                    ManagedCertId = request.ManagedCertId
-                }
+                // Caller is deliberately not carried over
             };
         }
 
@@ -200,9 +225,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authorization.Denial;
             }
 
-            authorization.ApplyTo(request);
-
-            var result = await _client.CleanupManagedChallenge(request, null);
+            var result = await _client.CleanupManagedChallenge(authorization.Authorize(request), null);
             return new OkObjectResult(result);
         }
 
@@ -231,19 +254,37 @@ namespace Certify.Server.Hub.Api.Controllers
                 => new() { SecurityPrincipalId = securityPrincipalId, ScopedAssignedRoles = scopedAssignedRoles };
 
             /// <summary>
-            /// Attach the authorized principal and role scope to the request so fulfillment only selects
-            /// challenges within that scope. Caller supplied values are never trusted: identity comes from
-            /// authorization, or is cleared.
+            /// Pair the request with the identity it was authorized as, so fulfillment only selects challenges
+            /// within that scope.
+            ///
+            /// The identity is built here rather than written onto the request: it comes from authorization and
+            /// there is nothing of the caller's to overwrite. The origin is set for the same reason as the
+            /// principal - it decides which resource action fulfillment checks, so a caller who could choose it
+            /// could be checked against a role other than the one this endpoint authorized them under.
+            ///
+            /// The credentials the caller presented are dropped here too. They authenticated the request and have
+            /// no purpose beyond that, so nothing downstream stores or returns them.
             /// </summary>
-            public void ApplyTo(ManagedChallengeRequest request)
+            public AuthorizedManagedChallengeRequest Authorize(ManagedChallengeRequest request)
             {
-                request.SecurityPrincipalId = SecurityPrincipalId;
-                request.ScopedAssignedRoles = ScopedAssignedRoles;
-
-                // Set rather than left alone for the same reason as the principal: the origin decides which resource
-                // action fulfillment checks, so a caller who could choose it could be checked against a role other
-                // than the one this endpoint authorized them under.
-                request.Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi;
+                return new AuthorizedManagedChallengeRequest
+                {
+                    Request = new ManagedChallengeRequest
+                    {
+                        ChallengeType = request.ChallengeType,
+                        Identifier = request.Identifier,
+                        ResponseKey = request.ResponseKey,
+                        ResponseValue = request.ResponseValue,
+                        DateTimePerformed = request.DateTimePerformed,
+                        ManagedCertId = request.ManagedCertId
+                    },
+                    Caller = new ManagedChallengeCaller
+                    {
+                        SecurityPrincipalId = SecurityPrincipalId,
+                        ScopedAssignedRoles = ScopedAssignedRoles,
+                        Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi
+                    }
+                };
             }
         }
 

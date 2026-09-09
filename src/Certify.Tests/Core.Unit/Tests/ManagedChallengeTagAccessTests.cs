@@ -850,8 +850,8 @@ namespace Certify.Tests.Core.Unit.Tests
         [TestMethod]
         public void ManagedChallengeApiRequestChecksTheManagedChallengeActionHoweverCredentialsWerePresented()
         {
-            // no AuthKey/AuthSecret: this caller presented X-Client-ID/X-Client-Secret headers instead
-            var headerAuthenticated = new ManagedChallengeRequest { SecurityPrincipalId = "sp-consumer" };
+            // the caller may have presented credentials as headers or in the body; neither decides the action
+            var headerAuthenticated = new ManagedChallengeCaller { SecurityPrincipalId = "sp-consumer" };
 
             Assert.AreEqual(
                 ManagedChallengeRequestOrigins.ManagedChallengeApi,
@@ -1049,6 +1049,38 @@ namespace Certify.Tests.Core.Unit.Tests
             // the same principal holds no role granting the per-request action
             var asRequest = await Authorize("sp-acme", "www.example.com", StandardResourceActions.ManagedChallengeRequest);
             Assert.IsFalse(asRequest.IsSuccess);
+        }
+
+        /// <summary>
+        /// The credentials a caller presents authenticate the request and have no purpose beyond that. They used to
+        /// live on the request itself, which meant a stored operation held a live API credential for its whole
+        /// lifetime and the status endpoint had to build a redacted copy before returning one.
+        /// </summary>
+        [TestMethod]
+        [Description("A stored operation keeps the identity it was authorized as, and none of the credentials")]
+        public async Task BeginManagedChallengeRequest_KeepsTheIdentityAndNotTheCredentials()
+        {
+            var authorized = new AuthorizedManagedChallengeRequest
+            {
+                Request = new ManagedChallengeRequest
+                {
+                    ChallengeType = "dns-01",
+                    Identifier = "www.example.com",
+                    AuthKey = "client-id",
+                    AuthSecret = "client-secret"
+                },
+                Caller = new ManagedChallengeCaller { SecurityPrincipalId = "sp-1", Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi }
+            };
+
+            var operation = await _manager.BeginManagedChallengeRequest(authorized);
+            var stored = await _manager.GetManagedChallengeOperation(operation.Id);
+
+            Assert.IsNotNull(stored);
+            Assert.IsEmpty(stored!.Request.AuthKey, "a stored operation must not retain the credentials it was created with");
+            Assert.IsEmpty(stored.Request.AuthSecret, "a stored operation must not retain the credentials it was created with");
+
+            Assert.AreEqual("sp-1", stored.Caller?.SecurityPrincipalId, "the identity it was authorized as is what a later status query is checked against");
+            Assert.AreEqual("www.example.com", stored.Request.Identifier);
         }
 
         [TestMethod]

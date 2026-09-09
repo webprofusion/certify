@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Certify.Models.Config;
 
 namespace Certify.Models.Hub
@@ -57,26 +58,52 @@ namespace Certify.Models.Hub
 
         public DateTimeOffset? DateTimePerformed { get; set; }
         public string? ManagedCertId { get; set; }
+    }
 
+    /// <summary>
+    /// Who a managed challenge request was authorized as, and under which action.
+    ///
+    /// This is decided by the layer which authorized the request and is never accepted from a caller. It is kept
+    /// separate from <see cref="ManagedChallengeRequest"/> because that type is the wire contract an external
+    /// client sends: identity fields living on it had to be overwritten on the way in, stripped on the way out,
+    /// and carefully preserved when the request was cloned for deferred cleanup - three pieces of defensive code
+    /// for one misplaced set of fields, any of which failing would let a caller choose the identity or the action
+    /// they are checked against.
+    /// </summary>
+    public class ManagedChallengeCaller
+    {
         /// <summary>
-        /// Optional security principal on whose behalf the challenge is being performed.
-        /// When set, managed challenge selection honours that principal's scoped roles.
+        /// The security principal the challenge is performed on behalf of. Challenge selection honours the roles
+        /// this principal holds; when absent, selection is unscoped and every challenge is eligible.
         /// </summary>
         public string? SecurityPrincipalId { get; set; }
 
         /// <summary>
-        /// Optional assigned-role ids that further scope the principal (e.g. from EAB/API token).
+        /// Assigned role ids further scoping the principal, from an API access token or an ACME account binding.
         /// </summary>
         public List<string>? ScopedAssignedRoles { get; set; }
 
         /// <summary>
-        /// What authorized this request, which decides the resource action fulfillment checks the principal against.
-        ///
-        /// Like <see cref="SecurityPrincipalId"/> this is authorization state set by the layer which authorized the
-        /// request, never trusted from the caller: choosing the action would let a caller be checked against a role
-        /// other than the one they were authorized under, which resolves a different set of accessible challenges.
+        /// What authorized the request, which decides the resource action fulfillment checks the principal against.
         /// </summary>
         public string Origin { get; set; } = ManagedChallengeRequestOrigins.ManagedChallengeApi;
+
+        public ManagedChallengeCaller Clone() => new()
+        {
+            SecurityPrincipalId = SecurityPrincipalId,
+            ScopedAssignedRoles = ScopedAssignedRoles?.ToList(),
+            Origin = Origin
+        };
+    }
+
+    /// <summary>
+    /// A managed challenge request together with the identity it was authorized as. This is what crosses the
+    /// internal API to fulfillment, so that the identity travels beside the request rather than inside it.
+    /// </summary>
+    public class AuthorizedManagedChallengeRequest
+    {
+        public ManagedChallengeRequest Request { get; set; } = new();
+        public ManagedChallengeCaller Caller { get; set; } = new();
     }
 
     /// <summary>
@@ -169,6 +196,13 @@ namespace Certify.Models.Hub
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public string Status { get; set; } = ManagedChallengeOperationStates.Pending;
         public ManagedChallengeRequest Request { get; set; } = new ManagedChallengeRequest();
+
+        /// <summary>
+        /// The identity the operation was authorized as. Internal: the hub reads it to authorize a status query
+        /// against the same principal, and clears it before the operation is returned to an external caller.
+        /// </summary>
+        public ManagedChallengeCaller? Caller { get; set; }
+
         public ActionResult? Result { get; set; }
         public DateTimeOffset DateCreated { get; set; } = DateTimeOffset.UtcNow;
         public DateTimeOffset DateLastUpdated { get; set; } = DateTimeOffset.UtcNow;

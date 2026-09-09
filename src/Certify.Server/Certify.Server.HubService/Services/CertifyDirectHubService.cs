@@ -123,11 +123,11 @@ namespace Certify.Server.HubService.Services
 
         public Task<ICollection<ManagedChallenge>> GetManagedChallenges(AuthContext authContext) => _managedChallengeController(authContext).Get();
         public Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update, AuthContext authContext) => _managedChallengeController(authContext).Update(update);
-        public Task<ActionResult> CleanupManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(request);
+        public Task<ActionResult> CleanupManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _managedChallengeController(authContext).CleanupChallengeResponse(authorized);
         public Task<ActionResult> RemoveManagedChallenge(string id, AuthContext authContext) => _managedChallengeController(authContext).Delete(id);
         public Task<ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check, AuthContext authContext) => _managedChallengeController(authContext).AuthorizeManagedChallengeIdentifiers(check);
-        public Task<ActionResult> PerformManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(request);
-        public Task<ManagedChallengeOperation> BeginManagedChallenge(ManagedChallengeRequest request, AuthContext authContext) => _certifyManager.BeginManagedChallengeRequest(request);
+        public Task<ActionResult> PerformManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _managedChallengeController(authContext).PerformChallengeResponse(authorized);
+        public Task<ManagedChallengeOperation> BeginManagedChallenge(AuthorizedManagedChallengeRequest authorized, AuthContext authContext) => _certifyManager.BeginManagedChallengeRequest(authorized);
         public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId, AuthContext authContext) => _certifyManager.GetManagedChallengeOperation(operationId);
         public Task<HubSettings> GetHubSettings(AuthContext authContext) => _hubSettingsController(authContext).Get();
         public Task<ActionResult> UpdateHubSettings(HubSettings settings, AuthContext authContext) => _hubSettingsController(authContext).Update(settings);

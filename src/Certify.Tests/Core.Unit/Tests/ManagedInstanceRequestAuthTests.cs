@@ -202,11 +202,11 @@ namespace Certify.Core.Tests.Unit
                     It.Is<AuthContext>(a => a.UserId == "sp-1")))
                 .ReturnsAsync(true);
 
-            ManagedChallengeRequest? forwardedRequest = null;
+            AuthorizedManagedChallengeRequest? forwarded = null;
             client.Setup(c => c.PerformManagedChallenge(
-                    It.Is<ManagedChallengeRequest>(r => r.Identifier == request.Identifier && r.ResponseKey == request.ResponseKey),
+                    It.Is<AuthorizedManagedChallengeRequest>(a => a.Request.Identifier == request.Identifier && a.Request.ResponseKey == request.ResponseKey),
                     It.IsAny<AuthContext>()))
-                .Callback<ManagedChallengeRequest, AuthContext>((r, _) => forwardedRequest = r)
+                .Callback<AuthorizedManagedChallengeRequest, AuthContext>((a, _) => forwarded = a)
                 .ReturnsAsync(new Certify.Models.Config.ActionResult("Managed challenge completed", true));
 
             var services = new ServiceCollection();
@@ -226,9 +226,13 @@ namespace Certify.Core.Tests.Unit
             Assert.IsInstanceOfType<Certify.Models.Config.ActionResult>(okResult.Value);
             Assert.IsTrue(((Certify.Models.Config.ActionResult)okResult.Value!).IsSuccess);
 
-            Assert.IsNotNull(forwardedRequest, "the challenge request should have been forwarded for fulfillment");
-            Assert.AreEqual("sp-1", forwardedRequest!.SecurityPrincipalId, "fulfillment must run as the managed instance's own security principal");
-            Assert.IsNull(forwardedRequest.ScopedAssignedRoles, "the instance's own role assignments apply, not the joining token's scope");
+            Assert.IsNotNull(forwarded, "the challenge request should have been forwarded for fulfillment");
+            Assert.AreEqual("sp-1", forwarded!.Caller.SecurityPrincipalId, "fulfillment must run as the managed instance's own security principal");
+            Assert.IsNull(forwarded.Caller.ScopedAssignedRoles, "the instance's own role assignments apply, not the joining token's scope");
+
+            // the credentials which authenticated the request have no purpose beyond that, so they do not travel on
+            Assert.IsEmpty(forwarded.Request.AuthKey, "the caller's credentials must not be forwarded for fulfillment");
+            Assert.IsEmpty(forwarded.Request.AuthSecret, "the caller's credentials must not be forwarded for fulfillment");
         }
 
         [TestMethod]

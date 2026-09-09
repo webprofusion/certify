@@ -1641,21 +1641,27 @@ namespace Certify.Management
                         if (challengeConfig.ChallengeProvider == "ManagedAcme" || challengeConfig.ChallengeProvider == "DNS01.ManagedChallengeHub")
                         {
                             // attempt to complete challenge using internal managed challenge provider
-                            var request = new Models.Hub.ManagedChallengeRequest
+                            var request = new Models.Hub.AuthorizedManagedChallengeRequest
                             {
-                                ChallengeType = challengeConfig.ChallengeType,
-                                Identifier = authorization.Identifier.Value,
-                                ResponseKey = rc?.Key,
-                                ResponseValue = rc?.Value,
-                                ManagedCertId = managedCertificate.Id,
-                                SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
-                                ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
-                                    ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
-                                    : null,
+                                Request = new Models.Hub.ManagedChallengeRequest
+                                {
+                                    ChallengeType = challengeConfig.ChallengeType,
+                                    Identifier = authorization.Identifier.Value,
+                                    ResponseKey = rc?.Key,
+                                    ResponseValue = rc?.Value,
+                                    ManagedCertId = managedCertificate.Id
+                                },
+                                Caller = new Models.Hub.ManagedChallengeCaller
+                                {
+                                    SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
+                                    ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
+                                        ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
+                                        : null,
 
-                                // fulfilling an order which was already authorized as a whole, so the principal is
-                                // checked against the managed ACME order action rather than the per-request ones
-                                Origin = Models.Hub.ManagedChallengeRequestOrigins.ManagedAcme
+                                    // fulfilling an order which was already authorized as a whole, so the principal is
+                                    // checked against the managed ACME order action rather than the per-request ones
+                                    Origin = Models.Hub.ManagedChallengeRequestOrigins.ManagedAcme
+                                }
                             };
 
                             var challengeResponseResult = await PerformManagedChallengeRequest(request);

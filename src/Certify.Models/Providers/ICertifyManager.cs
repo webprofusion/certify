@@ -117,10 +117,10 @@ namespace Certify.Management
         Task<ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check);
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
         Task<ActionResult> DeleteManagedChallenge(string id);
-        Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ManagedChallengeOperation> BeginManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized);
         Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId);
-        Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
-        Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
+        Task<ActionResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized);
+        Task<ActionResult> CleanupManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized);
 
         Task<HubSettings> GetHubSettings();
         Task<ActionResult> UpdateHubSettings(HubSettings settings);

@@ -455,7 +455,7 @@ namespace Certify.SourceGenerators
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
-                        { "request", "Certify.Models.Hub.ManagedChallengeRequest" }
+                        { "authorized", "Certify.Models.Hub.AuthorizedManagedChallengeRequest" }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeRequest)]
                 },
@@ -469,7 +469,7 @@ namespace Certify.SourceGenerators
                     ReturnType = nameof(ManagedChallengeOperation),
                     Params = new Dictionary<string, string>
                     {
-                        { "request", nameof(ManagedChallengeRequest) }
+                        { "authorized", nameof(AuthorizedManagedChallengeRequest) }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeRequest)]
                 },
@@ -497,7 +497,7 @@ namespace Certify.SourceGenerators
                     ReturnType = actionResultTypeName,
                     Params = new Dictionary<string, string>
                     {
-                        { "request", GetFormattedTypeName(typeof(Certify.Models.Hub.ManagedChallengeRequest)) }
+                        { "authorized", GetFormattedTypeName(typeof(Certify.Models.Hub.AuthorizedManagedChallengeRequest)) }
                     },
                     RequiredPermissions = [new(ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup)]
                 },

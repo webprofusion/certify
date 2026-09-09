@@ -53,21 +53,21 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("request")]
-        public async Task<Models.Config.ActionResult> PerformChallengeResponse(ManagedChallengeRequest request)
+        public async Task<Models.Config.ActionResult> PerformChallengeResponse(AuthorizedManagedChallengeRequest authorized)
         {
             DebugLog();
 
-            var result = await _certifyManager.PerformManagedChallengeRequest(request);
+            var result = await _certifyManager.PerformManagedChallengeRequest(authorized);
 
             return result;
         }
 
         [HttpPost, Route("requestbegin")]
-        public async Task<ManagedChallengeOperation> BeginChallengeResponse(ManagedChallengeRequest request)
+        public async Task<ManagedChallengeOperation> BeginChallengeResponse(AuthorizedManagedChallengeRequest authorized)
         {
             DebugLog();
 
-            return await _certifyManager.BeginManagedChallengeRequest(request);
+            return await _certifyManager.BeginManagedChallengeRequest(authorized);
         }
 
         [HttpGet, Route("requeststatus/{id}")]
@@ -86,11 +86,11 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("cleanup")]
-        public async Task<Models.Config.ActionResult> CleanupChallengeResponse(ManagedChallengeRequest request)
+        public async Task<Models.Config.ActionResult> CleanupChallengeResponse(AuthorizedManagedChallengeRequest authorized)
         {
             DebugLog();
 
-            var result = await _certifyManager.CleanupManagedChallengeRequest(request);
+            var result = await _certifyManager.CleanupManagedChallengeRequest(authorized);
 
             return result;
         }

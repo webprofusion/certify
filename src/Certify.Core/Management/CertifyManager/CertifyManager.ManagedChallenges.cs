@@ -389,46 +389,56 @@ namespace Certify.Management
             ICollection<ManagedChallenge> accessibleChallenges)
             => ManagedChallengeAccess.FindBestMatch(request, accessibleChallenges);
 
-        private static ManagedChallengeRequest CloneManagedChallengeRequest(ManagedChallengeRequest request)
+        /// <summary>
+        /// Copy a request for deferred cleanup. Only the request is copied: the identity it was authorized as
+        /// travels alongside it, so there is nothing here to remember to carry over.
+        /// </summary>
+        private static AuthorizedManagedChallengeRequest CloneAuthorizedRequest(AuthorizedManagedChallengeRequest authorized)
         {
-            return new ManagedChallengeRequest
-            {
-                ChallengeType = request.ChallengeType,
-                Identifier = request.Identifier,
-                ResponseKey = request.ResponseKey,
-                ResponseValue = request.ResponseValue,
-                AuthKey = request.AuthKey,
-                AuthSecret = request.AuthSecret,
-                DateTimePerformed = request.DateTimePerformed,
-                ManagedCertId = request.ManagedCertId,
-                SecurityPrincipalId = request.SecurityPrincipalId,
-                ScopedAssignedRoles = request.ScopedAssignedRoles?.ToList(),
+            var request = authorized.Request;
 
-                // carried with the principal: deferred cleanup re-checks the same principal, so it has to know what
-                // authorized the request it is cleaning up after
-                Origin = request.Origin
+            return new AuthorizedManagedChallengeRequest
+            {
+                Request = new ManagedChallengeRequest
+                {
+                    ChallengeType = request.ChallengeType,
+                    Identifier = request.Identifier,
+                    ResponseKey = request.ResponseKey,
+                    ResponseValue = request.ResponseValue,
+                    DateTimePerformed = request.DateTimePerformed,
+                    ManagedCertId = request.ManagedCertId
+                },
+                Caller = authorized.Caller.Clone()
             };
         }
 
         /// <summary>
         /// maintain a set of changed challenge requests that we need to ensure get cleaned up later
         /// </summary>
-        private ConcurrentDictionary<string, ManagedChallengeRequest> _managedChallengesPendingCleanup = [];
+        private ConcurrentDictionary<string, AuthorizedManagedChallengeRequest> _managedChallengesPendingCleanup = [];
 
         private ConcurrentDictionary<string, byte> _managedChallengesCleanupInProgress = [];
 
-        private ConcurrentDictionary<string, ManagedChallengeOperation> _managedChallengeOperations = [];
+        /// <summary>
+        /// A running or completed operation, and the identity it was authorized as.
+        /// </summary>
+        private sealed record ManagedChallengeOperationState(ManagedChallengeOperation Operation, ManagedChallengeCaller Caller);
 
-        public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request)
+        private ConcurrentDictionary<string, ManagedChallengeOperationState> _managedChallengeOperations = [];
+
+        public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             CleanupExpiredManagedChallengeOperations();
 
+            var cloned = CloneAuthorizedRequest(authorized);
+
             var operation = new ManagedChallengeOperation
             {
-                Request = CloneManagedChallengeRequest(request)
+                Request = cloned.Request,
+                Caller = cloned.Caller
             };
 
-            _managedChallengeOperations[operation.Id] = operation;
+            _managedChallengeOperations[operation.Id] = new ManagedChallengeOperationState(operation, cloned.Caller);
 
             _ = RunManagedChallengeOperation(operation.Id);
 
@@ -437,21 +447,23 @@ namespace Certify.Management
 
         public Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId)
         {
-            _managedChallengeOperations.TryGetValue(operationId, out var operation);
-            return Task.FromResult(operation);
+            _managedChallengeOperations.TryGetValue(operationId, out var state);
+            return Task.FromResult(state?.Operation);
         }
 
-        public Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
+        public Task<ActionResult> PerformManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
-            return ExecuteManagedChallengeRequest(request);
+            return ExecuteManagedChallengeRequest(authorized);
         }
 
         private async Task RunManagedChallengeOperation(string operationId)
         {
-            if (!_managedChallengeOperations.TryGetValue(operationId, out var operation))
+            if (!_managedChallengeOperations.TryGetValue(operationId, out var state))
             {
                 return;
             }
+
+            var operation = state.Operation;
 
             try
             {
@@ -459,7 +471,8 @@ namespace Certify.Management
                 operation.DateStarted = DateTimeOffset.UtcNow;
                 operation.DateLastUpdated = operation.DateStarted.Value;
 
-                var result = await ExecuteManagedChallengeRequest(operation.Request);
+                var result = await ExecuteManagedChallengeRequest(
+                    new AuthorizedManagedChallengeRequest { Request = operation.Request, Caller = state.Caller });
 
                 operation.Result = result;
                 operation.Status = result.IsSuccess ? ManagedChallengeOperationStates.Succeeded : ManagedChallengeOperationStates.Failed;
@@ -483,58 +496,73 @@ namespace Certify.Management
 
             foreach (var kvp in _managedChallengeOperations)
             {
-                if (kvp.Value.IsCompleted && kvp.Value.DateLastUpdated < cutoff)
+                if (kvp.Value.Operation.IsCompleted && kvp.Value.Operation.DateLastUpdated < cutoff)
                 {
                     _managedChallengeOperations.TryRemove(kvp.Key, out _);
                 }
             }
         }
 
-        private async Task<ActionResult> ExecuteManagedChallengeRequest(ManagedChallengeRequest request)
+        /// <summary>
+        /// The challenges a caller may use for an identifier, having first confirmed they are authorized to.
+        ///
+        /// Perform and cleanup ask the same question against different actions, so they share this rather than
+        /// each resolving the scope themselves. A caller with no security principal is the unscoped local path -
+        /// an instance performing its own challenge, with no hub principal to scope by - and every challenge is
+        /// eligible for domain matching.
+        /// </summary>
+        private async Task<(bool IsAuthorized, string? FailureReason, ICollection<ManagedChallenge> Challenges)> ResolveEligibleChallenges(
+            ManagedChallengeCaller caller,
+            string? identifier,
+            string defaultActionId)
+        {
+            if (string.IsNullOrWhiteSpace(caller?.SecurityPrincipalId))
+            {
+                return (true, null, await GetManagedChallenges());
+            }
+
+            // Managed ACME fulfillment is covered by the order action it was authorized under; a direct managed
+            // challenge call is checked against the per-request action.
+            var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(caller.Origin, defaultActionId);
+
+            // This is the authorization decision for the request, and the same one every other caller asks, so
+            // domain restrictions and role scope are enforced here rather than only in whichever layer happened to
+            // be in front. Fulfillment reports a missing challenge on its own, so a match is not required.
+            var authorized = await AuthorizeManagedChallengeIdentifiers(new ManagedChallengeAuthorizationCheck
+            {
+                SecurityPrincipalId = caller.SecurityPrincipalId,
+                Identifiers = string.IsNullOrWhiteSpace(identifier) ? [] : [identifier],
+                ScopedAssignedRoles = caller.ScopedAssignedRoles,
+                RequiredActionId = actionId
+            });
+
+            if (!authorized.IsSuccess)
+            {
+                return (false, authorized.Message, []);
+            }
+
+            var accessScope = await GetManagedChallengeAccessScope(caller.SecurityPrincipalId, caller.ScopedAssignedRoles, actionId);
+
+            return (true, null, await GetAccessibleManagedChallenges(accessScope));
+        }
+
+        private async Task<ActionResult> ExecuteManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             var log = _serviceLog;
+            var request = authorized.Request;
+            var caller = authorized.Caller;
 
-            ICollection<ManagedChallenge> managedChallenges;
+            var eligible = await ResolveEligibleChallenges(
+                caller,
+                request.Identifier,
+                StandardResourceActions.ManagedChallengeRequest);
 
-            if (!string.IsNullOrWhiteSpace(request.SecurityPrincipalId))
+            if (!eligible.IsAuthorized)
             {
-                // Managed ACME fulfillment is covered by the order action it was authorized under; a direct managed
-                // challenge call is checked against the per-request action.
-                var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(
-                    request.Origin,
-                    StandardResourceActions.ManagedChallengeRequest);
-
-                // This is the authorization decision for the request, and the same one every other caller asks, so
-                // domain restrictions and role scope are enforced here rather than only in whichever layer happened
-                // to be in front. Fulfillment reports a missing challenge on its own, so a match is not required.
-                var authorized = await AuthorizeManagedChallengeIdentifiers(new ManagedChallengeAuthorizationCheck
-                {
-                    SecurityPrincipalId = request.SecurityPrincipalId,
-                    Identifiers = string.IsNullOrWhiteSpace(request.Identifier) ? [] : [request.Identifier],
-                    ScopedAssignedRoles = request.ScopedAssignedRoles,
-                    RequiredActionId = actionId
-                });
-
-                if (!authorized.IsSuccess)
-                {
-                    return new ActionResult { IsSuccess = false, Message = authorized.Message };
-                }
-
-                var accessScope = await GetManagedChallengeAccessScope(
-                    request.SecurityPrincipalId,
-                    request.ScopedAssignedRoles,
-                    actionId);
-
-                managedChallenges = await GetAccessibleManagedChallenges(accessScope);
-            }
-            else
-            {
-                // Unscoped/system path - all challenges eligible for domain matching. Reached by a local instance
-                // performing its own challenge, where there is no hub principal to scope by.
-                managedChallenges = await GetManagedChallenges();
+                return new ActionResult { IsSuccess = false, Message = eligible.FailureReason };
             }
 
-            var matchingChallenge = ManagedChallengeFindBestMatch(request, managedChallenges);
+            var matchingChallenge = ManagedChallengeFindBestMatch(request, eligible.Challenges);
 
             if (matchingChallenge == null)
             {
@@ -608,7 +636,7 @@ namespace Certify.Management
                 }
 
                 request.DateTimePerformed = DateTimeOffset.UtcNow;
-                _managedChallengesPendingCleanup[CreateManagedChallengeCleanupKey(request)] = CloneManagedChallengeRequest(request);
+                _managedChallengesPendingCleanup[CreateManagedChallengeCleanupKey(request)] = CloneAuthorizedRequest(authorized);
 
                 return new ActionResult { IsSuccess = true, Message = $"Challenge response {request.ChallengeType} completed {request.ResponseKey} : {request.ResponseValue}" };
             }
@@ -623,7 +651,7 @@ namespace Certify.Management
                     // Process items one by one and keep failed cleanup entries for retry
                     foreach (var kvp in _managedChallengesPendingCleanup)
                     {
-                        if (kvp.Value.ManagedCertId == managedCertId &&
+                        if (kvp.Value.Request.ManagedCertId == managedCertId &&
                             _managedChallengesCleanupInProgress.TryAdd(kvp.Key, 0))
                         {
                             try
@@ -646,7 +674,7 @@ namespace Certify.Management
                     var cutoff = DateTimeOffset.UtcNow.AddMinutes(-15);
                     foreach (var kvp in _managedChallengesPendingCleanup)
                     {
-                        if (kvp.Value.DateTimePerformed < cutoff &&
+                        if (kvp.Value.Request.DateTimePerformed < cutoff &&
                             _managedChallengesCleanupInProgress.TryAdd(kvp.Key, 0))
                         {
                             try
@@ -671,36 +699,22 @@ namespace Certify.Management
             }
         }
 
-        public async Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request)
+        public async Task<ActionResult> CleanupManagedChallengeRequest(AuthorizedManagedChallengeRequest authorized)
         {
             var log = _serviceLog;
+            var request = authorized.Request;
 
-            ICollection<ManagedChallenge> managedChallenges;
+            var eligible = await ResolveEligibleChallenges(
+                authorized.Caller,
+                request.Identifier,
+                StandardResourceActions.ManagedChallengeCleanup);
 
-            if (!string.IsNullOrWhiteSpace(request.SecurityPrincipalId))
+            if (!eligible.IsAuthorized)
             {
-                var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(
-                    request.Origin,
-                    StandardResourceActions.ManagedChallengeCleanup);
-
-                var accessScope = await GetManagedChallengeAccessScope(
-                    request.SecurityPrincipalId,
-                    request.ScopedAssignedRoles,
-                    actionId);
-
-                if (!accessScope.HasAccess)
-                {
-                    return new ActionResult { IsSuccess = false, Message = "Security principal is not authorised to cleanup managed challenges" };
-                }
-
-                managedChallenges = await GetAccessibleManagedChallenges(accessScope);
-            }
-            else
-            {
-                managedChallenges = await GetManagedChallenges();
+                return new ActionResult { IsSuccess = false, Message = eligible.FailureReason };
             }
 
-            var matchingChallenge = ManagedChallengeFindBestMatch(request, managedChallenges);
+            var matchingChallenge = ManagedChallengeFindBestMatch(request, eligible.Challenges);
 
             if (matchingChallenge == null)
             {
