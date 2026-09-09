@@ -39,6 +39,13 @@ namespace Certify.UI.Controls.Settings
                 new KeyValuePair<string,string>(CsrCommonNameModes.IncludeInCsr, "Include CN in CSR (default)"),
                 new KeyValuePair<string,string>(CsrCommonNameModes.Optional, "Optional")
             };
+
+            public KeyValuePair<string, string>[] WindowsKeyStorageProviderList = new KeyValuePair<string, string>[] {
+                new KeyValuePair<string,string>("", "System Default (CNG)"),
+                new KeyValuePair<string,string>(WindowsKeyStorageProviders.EnhancedCryptographicProvider, "Legacy CSP - Microsoft Enhanced Cryptographic Provider v1.0"),
+                new KeyValuePair<string,string>(WindowsKeyStorageProviders.RsaSChannelCryptographicProvider, "Legacy CSP - Microsoft RSA SChannel Cryptographic Provider"),
+                new KeyValuePair<string,string>(WindowsKeyStorageProviders.SoftwareKeyStorageProvider, "CNG - Microsoft Software Key Storage Provider")
+            };
         }
 
         public class MaintenanceWindowViewModel
@@ -50,6 +57,8 @@ namespace Certify.UI.Controls.Settings
         public Model EditModel { get; set; } = new Model();
 
         private ComboBox? CsrCommonNameModeSelector => CsrCommonNameModeSelectorControl;
+
+        private ComboBox? WindowsKeyStorageProviderSelector => WindowsKeyStorageProviderSelectorControl;
 
         public General()
         {
@@ -127,6 +136,12 @@ namespace Certify.UI.Controls.Settings
             if (CsrCommonNameModeSelector != null)
             {
                 CsrCommonNameModeSelector.ItemsSource = EditModel.CsrCommonNameModeList;
+            }
+
+            if (WindowsKeyStorageProviderSelector != null)
+            {
+                WindowsKeyStorageProviderSelector.ItemsSource = EditModel.WindowsKeyStorageProviderList;
+                WindowsKeyStorageProviderSelector.SelectedValue = EditModel.Prefs.WindowsKeyStorageProvider ?? "";
             }
 
             if (string.IsNullOrEmpty(EditModel.Prefs.DefaultKeyType))
@@ -227,6 +242,10 @@ namespace Certify.UI.Controls.Settings
                 RefreshRewalIntervalLimits();
 
                 EditModel.Prefs.CsrCommonNameMode = CsrCommonNameModeSelector?.SelectedValue?.ToString() ?? CsrCommonNameModes.IncludeInCsr;
+
+                // an empty selection means use the system default provider
+                var selectedKeyStorageProvider = WindowsKeyStorageProviderSelector?.SelectedValue?.ToString();
+                EditModel.Prefs.WindowsKeyStorageProvider = string.IsNullOrWhiteSpace(selectedKeyStorageProvider) ? null : selectedKeyStorageProvider;
 
                 // save settings
                 await EditModel.MainViewModel.SavePreferences();

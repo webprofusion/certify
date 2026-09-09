@@ -146,6 +146,22 @@
                                                 SelectedValuePath="Key"
                                                 SelectionChanged="SettingsUpdated" />
                                         </StackPanel>
+
+                                        <Label Content="Windows Private Key Storage Provider" />
+                                        <StackPanel Margin="8,0,0,0">
+                                            <ComboBox
+                                                x:Name="WindowsKeyStorageProviderSelectorControl"
+                                                DisplayMemberPath="Value"
+                                                SelectedValuePath="Key"
+                                                SelectionChanged="SettingsUpdated" />
+                                            <TextBlock
+                                                Margin="0,4,0,0"
+                                                MaxWidth="420"
+                                                HorizontalAlignment="Left"
+                                                Opacity="0.7"
+                                                Text="Legacy CSP options are required by consumers which cannot read CNG keys (VMware Horizon, some Exchange versions, certain vendor certificate utilities) and by tools which need a plain text exportable key. ECDSA keys always require CNG."
+                                                TextWrapping="Wrap" />
+                                        </StackPanel>
                                     </StackPanel>
 
                                     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">

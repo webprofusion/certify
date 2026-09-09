@@ -1268,6 +1268,7 @@ namespace Certify.Management
                     prefs.RenewalIntervalMode = update.RenewalIntervalMode;
                     prefs.StoreCertificateIntermediates = update.StoreCertificateIntermediates;
                     prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
+                    prefs.WindowsKeyStorageProvider = update.WindowsKeyStorageProvider;
 
                     prefs.CertificateManagers = update.CertificateManagers;
 

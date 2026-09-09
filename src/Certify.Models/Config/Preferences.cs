@@ -150,6 +150,34 @@ namespace Certify.Models
     }
 
     /// <summary>
+    /// Windows CSP/CNG key storage providers a certificate private key can be imported into when storing a certificate
+    /// in the windows certificate store.
+    /// </summary>
+    /// <remarks>
+    /// The system default is CNG (<see cref="SoftwareKeyStorageProvider"/>). Consumers which only speak legacy CryptoAPI
+    /// (java SunMSCAPI as used by VMware Horizon, older Exchange versions, various vendor certificate utilities) cannot
+    /// see CNG keys, and tools which expect a plain text exportable key also require a legacy CSP.
+    /// Note that ECDSA keys can only be stored in a CNG provider.
+    /// </remarks>
+    public static class WindowsKeyStorageProviders
+    {
+        /// <summary>
+        /// CNG. The default for new certificates and the only provider which supports ECDSA keys.
+        /// </summary>
+        public const string SoftwareKeyStorageProvider = "Microsoft Software Key Storage Provider";
+
+        /// <summary>
+        /// Legacy CryptoAPI CSP. RSA only.
+        /// </summary>
+        public const string EnhancedCryptographicProvider = "Microsoft Enhanced Cryptographic Provider v1.0";
+
+        /// <summary>
+        /// Legacy CryptoAPI CSP, commonly required by Exchange and other schannel consumers. RSA only.
+        /// </summary>
+        public const string RsaSChannelCryptographicProvider = "Microsoft RSA SChannel Cryptographic Provider";
+    }
+
+    /// <summary>
     /// Note the settings specified here are mapped to CoreAppSettings
     /// </summary>
     public class Preferences : BindableBase
@@ -210,6 +238,13 @@ namespace Certify.Models
         /// If true, PFX build favours older key store algorithms compatible with older OpenSSL etc
         /// </summary>
         public bool UseModernPFXAlgs { get; set; }
+
+        /// <summary>
+        /// Windows only: the CSP or CNG key storage provider certificate private keys should be imported into when
+        /// storing a certificate in the windows certificate store. Null/empty uses the system default (CNG).
+        /// See <see cref="WindowsKeyStorageProviders"/>.
+        /// </summary>
+        public string? WindowsKeyStorageProvider { get; set; }
 
         /// <summary>
         /// If true, will allow plugins to load from appdata

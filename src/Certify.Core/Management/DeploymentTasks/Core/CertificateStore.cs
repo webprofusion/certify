@@ -89,7 +89,9 @@ namespace Certify.Providers.DeploymentTasks.Core
                         storeName: certStoreName,
                         customFriendlyName: friendlyName,
                         pwd: certPwd,
-                        storeIntermediates: CoreAppSettings.Current.StoreCertificateIntermediates
+                        storeIntermediates: CoreAppSettings.Current.StoreCertificateIntermediates,
+                        keyStorageProviderName: CoreAppSettings.Current.WindowsKeyStorageProvider,
+                        log: execParams.Log
                        );
 
                     if (storedCert != null)
