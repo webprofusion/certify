@@ -38,6 +38,8 @@ namespace Certify.Server.Hub.Api.Services.Acme
         {
             if (eab == null)
             {
+                _logger.LogWarning("New account request rejected, external account binding is required but was not supplied");
+
                 return EabValidationResult.Failed("External account binding is required but was not supplied");
             }
 

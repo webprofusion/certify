@@ -175,6 +175,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 Contact = request.Contact,
                 TermsOfServiceAgreed = request.TermsOfServiceAgreed,
                 Orders = $"{baseUrl}/account/{accountId}/orders",
+                DateCreated = DateTimeOffset.UtcNow,
             };
 
             var accountKid = AcmeHelper.BuildAccountUrl(baseUrl, accountId);

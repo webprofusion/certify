@@ -37,6 +37,7 @@ namespace Certify.Models.Hub
                      StandardPolicies.AcmeAccountAdmin,
                      StandardPolicies.StoredCredentialAdmin,
                      StandardPolicies.ManagedChallengeAdmin,
+                     StandardPolicies.ManagedAcmeAdmin,
                      StandardPolicies.AccessAdmin,
                      StandardPolicies.OidcAdmin,
                      StandardPolicies.AccessTokenAdmin,
@@ -214,6 +215,8 @@ namespace Certify.Models.Hub
         public const string ManagedLicenseStatus = "managedlicense_status_action";
 
         public const string ManagedAcmePerformOrder = "managedacme_order_action";
+        public const string ManagedAcmeAccountList = "managedacme_account_list_action";
+        public const string ManagedAcmeAccountDelete = "managedacme_account_delete_action";
 
         public const string OidcProviderList = "oidcprovider_list_action";
         public const string OidcProviderAdd = "oidcprovider_add_action";
@@ -242,6 +245,7 @@ namespace Certify.Models.Hub
         public const string ManagedInstanceSystemExport = "system_export_policy";
         public const string ManagedLicenseAdmin = "managedlicense_admin_policy";
         public const string ManagedAcmeConsumer = "managedacme_consumer_policy";
+        public const string ManagedAcmeAdmin = "managedacme_admin_policy";
         public const string SystemUser = "system_user_policy";
         public const string TagAdmin = "tag_admin_policy";
 
@@ -367,6 +371,8 @@ namespace Certify.Models.Hub
                 new(StandardResourceActions.ManagedLicenseStatus, "Get status for a managed license", ResourceTypes.ManagedLicense),
 
                 new(StandardResourceActions.ManagedAcmePerformOrder, "Perform managed acme order", ResourceTypes.ManagedAcme),
+                new(StandardResourceActions.ManagedAcmeAccountList, "List managed acme accounts", ResourceTypes.ManagedAcme),
+                new(StandardResourceActions.ManagedAcmeAccountDelete, "Delete managed acme account", ResourceTypes.ManagedAcme),
 
                 new(StandardResourceActions.OidcProviderList, "List Oidc Provider licenses", ResourceTypes.OidcProvider),
                 new(StandardResourceActions.OidcProviderAdd, "Add Oidc Provider", ResourceTypes.OidcProvider),
@@ -695,6 +701,16 @@ namespace Certify.Models.Hub
                  SecurityPermissionType = SecurityPermissionType.ALLOW,
                  ResourceActions = [
                      StandardResourceActions.ManagedAcmePerformOrder
+                 ]
+             },
+              new() {
+                 Id = StandardPolicies.ManagedAcmeAdmin,
+                 Title = "Managed Acme Administration",
+                 Description = "Administer the ACME accounts registered with the hub managed ACME service.",
+                 SecurityPermissionType = SecurityPermissionType.ALLOW,
+                 ResourceActions = [
+                     StandardResourceActions.ManagedAcmeAccountList,
+                     StandardResourceActions.ManagedAcmeAccountDelete
                  ]
              },
                 new() {

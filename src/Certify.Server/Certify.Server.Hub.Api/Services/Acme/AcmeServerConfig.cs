@@ -17,9 +17,26 @@ namespace Certify.Server.Hub.Api.Services.Acme
         private static readonly ConcurrentDictionary<string, DateTime> _nonces = new();
 
         /// <summary>
+        /// Last time an account's usage was persisted, so a client polling an order does not rewrite the account
+        /// row on every request. Only used to decide whether a write is due; the stored account is the record.
+        /// </summary>
+        private static readonly ConcurrentDictionary<string, DateTimeOffset> _lastUsedWrites = new();
+
+        /// <summary>
+        /// Id prefix under which account resources are stored, so accounts can be listed and their kid recovered.
+        /// </summary>
+        private const string AccountIdPrefix = "account_";
+
+        /// <summary>
         /// Maximum age of an issued replay nonce before it is rejected.
         /// </summary>
         public static readonly TimeSpan NonceMaxAge = TimeSpan.FromHours(1);
+
+        /// <summary>
+        /// How stale a recorded last-used time has to be before it is written again. Last use is reported to an
+        /// operator, so minute granularity is enough and order polling does not turn into a write per request.
+        /// </summary>
+        public static readonly TimeSpan LastUsedWriteInterval = TimeSpan.FromMinutes(1);
 
         private IConfigurationStore _configStore;
         private string _acmeServerConfigPath;
@@ -150,7 +167,7 @@ namespace Certify.Server.Hub.Api.Services.Acme
 
         public async Task StoreAcmeAccount(string accountKid, AcmeAccount account)
         {
-            await AddTypedStoreItem($"account_{accountKid}", account);
+            await AddTypedStoreItem($"{AccountIdPrefix}{accountKid}", account);
         }
 
         public Task StoreAcmeOrder(string orderId, AcmeOrder orderDetails)
@@ -214,6 +231,11 @@ namespace Certify.Server.Hub.Api.Services.Acme
             }
         }
 
+        private async Task<List<TypedConfigurationItem<T>>> GetTypedStoreItems<T>()
+        {
+            return await _configStore.GetItems<TypedConfigurationItem<T>>(typeof(T).Name.ToLowerInvariant()) ?? [];
+        }
+
         private async Task UpdateTypedStoreItem<T>(string id, T item)
         {
             var storeItem = new TypedConfigurationItem<T>(id, item);
@@ -231,12 +253,70 @@ namespace Certify.Server.Hub.Api.Services.Acme
         }
         public async Task RemoveAcmeAccount(string accountKid)
         {
-            await DeleteTypedStoreItem<AcmeAccount>($"account_{accountKid}");
+            _lastUsedWrites.TryRemove(accountKid, out _);
+            await DeleteTypedStoreItem<AcmeAccount>($"{AccountIdPrefix}{accountKid}");
         }
 
         public async Task<AcmeAccount?> GetAccount(string accountKid)
         {
-            return await GetTypedStoreItem<AcmeAccount>($"account_{accountKid}");
+            return await GetTypedStoreItem<AcmeAccount>($"{AccountIdPrefix}{accountKid}");
+        }
+
+        /// <summary>
+        /// All registered ACME accounts, keyed by the account url (kid) the client signs its requests with.
+        /// </summary>
+        public async Task<IReadOnlyCollection<KeyValuePair<string, AcmeAccount>>> GetAccounts()
+        {
+            var storedItems = await GetTypedStoreItems<AcmeAccount>();
+            var accounts = new List<KeyValuePair<string, AcmeAccount>>();
+
+            foreach (var storedItem in storedItems)
+            {
+                if (storedItem.Id?.StartsWith(AccountIdPrefix, StringComparison.Ordinal) != true)
+                {
+                    continue;
+                }
+
+                var account = storedItem.GetItem();
+
+                if (account != null)
+                {
+                    accounts.Add(new KeyValuePair<string, AcmeAccount>(storedItem.Id[AccountIdPrefix.Length..], account));
+                }
+            }
+
+            return accounts;
+        }
+
+        /// <summary>
+        /// Record that an account was used to sign a request which passed validation. Writes are spaced by
+        /// <see cref="LastUsedWriteInterval"/>, so a client polling an order does not rewrite the account each time.
+        /// </summary>
+        public async Task RecordAccountUsed(string accountKid)
+        {
+            if (string.IsNullOrWhiteSpace(accountKid))
+            {
+                return;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+
+            if (_lastUsedWrites.TryGetValue(accountKid, out var lastWrite) && now - lastWrite < LastUsedWriteInterval)
+            {
+                return;
+            }
+
+            var account = await GetAccount(accountKid);
+
+            if (account == null)
+            {
+                return;
+            }
+
+            account.DateLastUsed = now;
+            _lastUsedWrites[accountKid] = now;
+
+            await UpdateTypedStoreItem($"{AccountIdPrefix}{accountKid}", account);
         }
         internal async Task<JsonWebKey?> GetAccountKey(string kid)
         {

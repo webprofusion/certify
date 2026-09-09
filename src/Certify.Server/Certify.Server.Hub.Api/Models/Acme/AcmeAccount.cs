@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Certify.Server.Hub.Api.Models.Acme
@@ -53,5 +54,20 @@ namespace Certify.Server.Hub.Api.Models.Acme
         /// </summary>
         [JsonPropertyName("orders")]
         public string Orders { get; set; }
+
+        /// <summary>
+        /// When the ACME client registered this account.
+        /// Internal hub bookkeeping only; not part of the ACME account resource.
+        /// </summary>
+        [JsonIgnore]
+        public DateTimeOffset? DateCreated { get; set; }
+
+        /// <summary>
+        /// When this account last signed an ACME request which passed validation, or null if it has not been
+        /// used since registration. Recorded at a coarse granularity, see AcmeServerConfig.LastUsedWriteInterval.
+        /// Internal hub bookkeeping only; not part of the ACME account resource.
+        /// </summary>
+        [JsonIgnore]
+        public DateTimeOffset? DateLastUsed { get; set; }
     }
 }

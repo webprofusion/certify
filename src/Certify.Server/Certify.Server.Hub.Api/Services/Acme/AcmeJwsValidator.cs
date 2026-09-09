@@ -68,6 +68,14 @@ namespace Certify.Server.Hub.Api.Services.Acme
                     throw Malformed("JWS signature verification failed. Ensure Account Key is valid and known to this CA");
                 }
 
+                // the request is signed by a registered account key, so this is the point the account was last
+                // used. Every kid signed ACME request passes through here, so usage is recorded in one place
+                // rather than per endpoint, and a request which failed validation does not count as a use.
+                if (!string.IsNullOrEmpty(protectedHeader.Kid))
+                {
+                    await _config.RecordAccountUsed(protectedHeader.Kid);
+                }
+
                 // Decode the payload (RFC 7515 Section 7.2.2), allow blank payload for POST-As-Get
                 if (string.IsNullOrEmpty(payload.Payload))
                 {
