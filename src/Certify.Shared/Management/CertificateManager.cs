@@ -121,6 +121,46 @@ namespace Certify.Management
         /// <param name="certPwd">The password used to decrypt and re-encrypt the PKCS#12 (PFX) data. Can be null for passwordless PFX files.</param>
         /// <returns>A byte array containing the PKCS#12 (PFX) data with the new friendly name applied.</returns>
         public static byte[] GetPfxDataWithNewFriendlyName(string newFriendlyName, byte[] pfxData, string? certPwd)
+            => RebuildPfxData(pfxData, certPwd, newFriendlyName: newFriendlyName, keyProviderName: null);
+
+        /// <summary>
+        /// szOID_PKCS_12_KEY_PROVIDER_NAME_ATTR - the Microsoft PKCS#12 bag attribute naming the CSP or CNG key storage
+        /// provider a private key should be imported into.
+        /// </summary>
+        private static readonly DerObjectIdentifier PKCS12_KEY_PROVIDER_NAME_ATTR = new DerObjectIdentifier("1.3.6.1.4.1.311.17.1");
+
+#if NET9_0_OR_GREATER
+        /// <summary>
+        /// Loader limits which honour the key storage provider declared in the pfx. Without this the .NET 9+ pkcs12
+        /// loader imports every private key into the CNG 'Microsoft Software Key Storage Provider', where the older
+        /// X509Certificate2 constructor used the legacy CryptoAPI CSP. Consumers which only speak legacy CryptoAPI
+        /// (java SunMSCAPI, various vendor certificate utilities) cannot see CNG keys at all.
+        /// </summary>
+        private static readonly Pkcs12LoaderLimits PreserveStorageProviderLimits = new Pkcs12LoaderLimits(Pkcs12LoaderLimits.Defaults) { PreserveStorageProvider = true };
+#endif
+
+        /// <summary>
+        /// Creates a new PKCS#12 (PFX) data blob declaring the windows key storage provider (CSP or CNG KSP) which the
+        /// private key should be imported into.
+        /// </summary>
+        /// <remarks>Windows only. The declared provider is only honoured on import when the loader is asked to preserve
+        /// it, see <see cref="LoadPfxForCertStore"/>.</remarks>
+        /// <param name="keyProviderName">The CSP or CNG key storage provider name, e.g. 'Microsoft RSA SChannel Cryptographic Provider'.</param>
+        /// <param name="pfxData">The PKCS#12 (PFX) data as a byte array to be modified.</param>
+        /// <param name="certPwd">The password used to decrypt and re-encrypt the PKCS#12 (PFX) data. Can be null for passwordless PFX files.</param>
+        /// <returns>A byte array containing the PKCS#12 (PFX) data with the key provider name applied.</returns>
+        public static byte[] GetPfxDataWithKeyProviderName(string keyProviderName, byte[] pfxData, string? certPwd)
+            => RebuildPfxData(pfxData, certPwd, newFriendlyName: null, keyProviderName: keyProviderName);
+
+        /// <summary>
+        /// Rebuild PKCS#12 (PFX) data, optionally renaming all entries and/or declaring the windows key storage provider
+        /// the private key should be imported into. The result uses the same password as the input.
+        /// </summary>
+        /// <param name="pfxData">The PKCS#12 (PFX) data as a byte array to be modified.</param>
+        /// <param name="certPwd">The password used to decrypt and re-encrypt the PKCS#12 (PFX) data. Can be null for passwordless PFX files.</param>
+        /// <param name="newFriendlyName">If set, the friendly name to assign to all key and certificate entries, otherwise existing entry names are kept.</param>
+        /// <param name="keyProviderName">If set, the CSP or CNG key storage provider name to declare on each key entry.</param>
+        private static byte[] RebuildPfxData(byte[] pfxData, string? certPwd, string? newFriendlyName, string? keyProviderName)
         {
             var pkcs12Store = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
 
@@ -129,30 +169,44 @@ namespace Certify.Management
                 pkcs12Store.Load(stream, certPwd?.ToCharArray() ?? []);
             }
 
-            // Rebuild the store with the desired friendly name
             var newStore = new Org.BouncyCastle.Pkcs.Pkcs12StoreBuilder().Build();
             foreach (var alias in pkcs12Store.Aliases)
             {
+                var newAlias = newFriendlyName ?? alias;
+
                 if (pkcs12Store.IsKeyEntry(alias))
                 {
                     var keyEntry = pkcs12Store.GetKey(alias);
                     var chain = pkcs12Store.GetCertificateChain(alias);
-                    newStore.SetKeyEntry(newFriendlyName, keyEntry, chain);
+
+                    if (keyProviderName != null)
+                    {
+                        var attributes = new Dictionary<DerObjectIdentifier, Asn1Encodable>();
+
+                        foreach (var attribute in keyEntry.BagAttributeKeys)
+                        {
+                            attributes[attribute] = keyEntry[attribute];
+                        }
+
+                        attributes[PKCS12_KEY_PROVIDER_NAME_ATTR] = new DerBmpString(keyProviderName);
+
+                        keyEntry = new AsymmetricKeyEntry(keyEntry.Key, attributes);
+                    }
+
+                    newStore.SetKeyEntry(newAlias, keyEntry, chain);
                 }
                 else if (pkcs12Store.IsCertificateEntry(alias))
                 {
                     var certEntry = pkcs12Store.GetCertificate(alias);
-                    newStore.SetCertificateEntry(newFriendlyName, certEntry);
+                    newStore.SetCertificateEntry(newAlias, certEntry);
                 }
             }
 
             using (var output = new MemoryStream())
             {
                 newStore.Save(output, certPwd?.ToCharArray() ?? [], new Org.BouncyCastle.Security.SecureRandom());
-                pfxData = output.ToArray();
+                return output.ToArray();
             }
-
-            return pfxData;
         }
 
         public static bool VerifyCertificateSAN(System.Security.Cryptography.X509Certificates.X509Certificate certificate, string sni)
@@ -407,6 +461,51 @@ namespace Certify.Management
             }
         }
 
+        /// <summary>
+        /// Import a PFX ready for storage in the local certificate store, optionally targeting a specific windows key
+        /// storage provider (CSP or CNG KSP).
+        /// </summary>
+        private static X509Certificate2 LoadPfxForCertStore(byte[] pfxBytes, string pwd, string keyStorageProviderName, ILog log)
+        {
+            const X509KeyStorageFlags storageFlags = X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable;
+
+            if (IsWindows && !string.IsNullOrWhiteSpace(keyStorageProviderName))
+            {
+                try
+                {
+                    pfxBytes = GetPfxDataWithKeyProviderName(keyStorageProviderName, pfxBytes, pwd);
+                }
+                catch (Exception exp)
+                {
+                    // pfx could not be read (wrong password etc), continue with the original data and let the import report the problem
+                    log?.Verbose($"Could not apply key storage provider [{keyStorageProviderName}] to certificate data: {exp.Message}");
+                }
+            }
+
+#if NET9_0_OR_GREATER
+            return X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, storageFlags, PreserveStorageProviderLimits);
+#else
+            return new X509Certificate2(pfxBytes, pwd, storageFlags);
+#endif
+        }
+
+        /// <summary>
+        /// Import a PFX for certificate store use, retrying with a blank password as some stored assets use one.
+        /// </summary>
+        /// <returns>The imported certificate and the password which was accepted.</returns>
+        private static (X509Certificate2 certificate, string password) LoadPfxForCertStoreWithPasswordRetry(byte[] pfxBytes, string pwd, string keyStorageProviderName, ILog log)
+        {
+            try
+            {
+                return (LoadPfxForCertStore(pfxBytes, pwd, keyStorageProviderName, log), pwd);
+            }
+            catch (CryptographicException)
+            {
+                // retry with blank pwd, may be transitional
+                return (LoadPfxForCertStore(pfxBytes, "", keyStorageProviderName, log), "");
+            }
+        }
+
         public static async Task<X509Certificate2> StoreCertificate(
                 string host,
                 string pfxFile,
@@ -415,41 +514,28 @@ namespace Certify.Management
                 string storeName = DEFAULT_STORE_NAME,
                 string customFriendlyName = null,
                 string pwd = "",
-                bool storeIntermediates = false
+                bool storeIntermediates = false,
+                string keyStorageProviderName = null,
+                ILog log = null
             )
         {
             // https://support.microsoft.com/en-gb/help/950090/installing-a-pfx-file-using-x509certificate-from-a-standard--net-appli
             X509Certificate2 certificate;
 
-#if NET9_0_OR_GREATER
+            var pfxBytes = File.ReadAllBytes(pfxFile);
+
             try
             {
-                var pfxBytes = File.ReadAllBytes(pfxFile);
-                certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
+                (certificate, pwd) = LoadPfxForCertStoreWithPasswordRetry(pfxBytes, pwd, keyStorageProviderName, log);
             }
-            catch (CryptographicException)
+            catch (CryptographicException exp) when (!string.IsNullOrWhiteSpace(keyStorageProviderName))
             {
-                var pfxBytes = File.ReadAllBytes(pfxFile);
-                certificate = X509CertificateLoader.LoadPkcs12(pfxBytes, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+                // the requested provider may not be able to hold this key (a legacy CSP cannot store an ECDSA key, for
+                // instance), fall back to the system default rather than failing the deployment
+                log?.Warning($"Could not import certificate private key using key storage provider [{keyStorageProviderName}], using the system default provider instead. {exp.Message}");
 
-                // success using blank pwd, continue with blank pwd
-                pwd = "";
+                (certificate, pwd) = LoadPfxForCertStoreWithPasswordRetry(pfxBytes, pwd, null, log);
             }
-#else
-            try
-            {
-                certificate = new X509Certificate2(pfxFile, pwd, X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-            }
-            catch (CryptographicException)
-            {
-                // retry  with blank pwd, may be transitional
-                certificate = new X509Certificate2(pfxFile, "", X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
-
-                // success using blank pwd, continue with blank pwd
-                pwd = "";
-            }
-#endif
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -483,7 +569,7 @@ namespace Certify.Management
                     // hack/workaround - importing cert from system account causes private key to be
                     // transient. Re-import the same cert fixes it. re -try apply .net dev on why
                     // re-import helps with private key: https://stackoverflow.com/questions/40892512/add-a-generated-certificate-to-the-store-and-update-an-iis-site-binding
-                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName, pwd: pwd, storeIntermediates: storeIntermediates);
+                    return await StoreCertificate(host, pfxFile, isRetry: true, storeName: storeName, customFriendlyName: customFriendlyName, pwd: pwd, storeIntermediates: storeIntermediates, keyStorageProviderName: keyStorageProviderName, log: log);
                 }
             }
 

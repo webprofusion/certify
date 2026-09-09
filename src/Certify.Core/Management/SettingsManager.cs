@@ -36,6 +36,7 @@ namespace Certify.Management
             EnableAutomaticCAFailover = true;
             EnableExternalCertManagers = true;
             UseModernPFXAlgs = false;
+            WindowsKeyStorageProvider = null;
             CsrCommonNameMode = CsrCommonNameModes.IncludeInCsr;
             NtpServer = "pool.ntp.org";
             CertificateManagers = new List<CertificateManagerPreference>();
@@ -170,6 +171,12 @@ namespace Certify.Management
         /// </summary>
         public bool UseModernPFXAlgs { get; set; }
 
+        /// <summary>
+        /// Windows only: CSP or CNG key storage provider to import certificate private keys into. Null/empty uses the
+        /// system default (CNG).
+        /// </summary>
+        public string WindowsKeyStorageProvider { get; set; }
+
         public string ConfigDataStoreConnectionId { get; set; }
         public string DefaultKeyType { get; set; }
 
@@ -243,6 +250,7 @@ namespace Certify.Management
 
             CoreAppSettings.Current.DefaultKeyCredentials = prefs.DefaultKeyCredentials;
             CoreAppSettings.Current.UseModernPFXAlgs = prefs.UseModernPFXAlgs;
+            CoreAppSettings.Current.WindowsKeyStorageProvider = prefs.WindowsKeyStorageProvider;
 
             // the mode is the setting users choose, the enabled flag is what cleanup is gated on, so keep the flag in step
             var cleanupMode = prefs.CertificateCleanupMode ?? GetLegacyCertificateCleanupMode(prefs.EnableCertificateCleanup);
@@ -309,6 +317,7 @@ namespace Certify.Management
                 DefaultKeyCredentials = CoreAppSettings.Current.DefaultKeyCredentials,
                 EnableAutomaticCAFailover = CoreAppSettings.Current.EnableAutomaticCAFailover,
                 UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs,
+                WindowsKeyStorageProvider = CoreAppSettings.Current.WindowsKeyStorageProvider,
                 IncludeExternalPlugins = CoreAppSettings.Current.IncludeExternalPlugins,
                 FeatureFlags = CoreAppSettings.Current.FeatureFlags,
                 NtpServer = CoreAppSettings.Current.NtpServer,

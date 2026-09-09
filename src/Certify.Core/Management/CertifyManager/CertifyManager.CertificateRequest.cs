@@ -1461,7 +1461,9 @@ namespace Certify.Management
                             pfxPwd,
                             isPreviewOnly: false,
                             CoreAppSettings.Current.DefaultCertificateStore,
-                            CoreAppSettings.Current.StoreCertificateIntermediates
+                            CoreAppSettings.Current.StoreCertificateIntermediates,
+                            CoreAppSettings.Current.WindowsKeyStorageProvider,
+                            log
                         );
 
                     log?.Debug("Performing post request cleanup as required");
@@ -1963,7 +1965,9 @@ namespace Certify.Management
                     pfxPwd,
                     isPreviewOnly: isPreviewOnly,
                     CoreAppSettings.Current.DefaultCertificateStore,
-                    CoreAppSettings.Current.StoreCertificateIntermediates
+                    CoreAppSettings.Current.StoreCertificateIntermediates,
+                    CoreAppSettings.Current.WindowsKeyStorageProvider,
+                    log
                 );
 
             result.Actions = actions;
