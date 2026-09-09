@@ -4,6 +4,7 @@ using Certify.Models;
 using Certify.Models.Hub;
 using Certify.Models.Reporting;
 using Certify.Providers;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -20,8 +21,13 @@ namespace Certify.Server.Hub.Api.SignalR.ManagementHub
     /// Connections are authenticated by the JWT bearer middleware during the negotiate/handshake request, so an instance presenting
     /// a missing, invalid or expired token is rejected with a 401 and never establishes a connection. This avoids the hub having to
     /// notify an instance of an auth failure over a connection it is about to abort.
+    ///
+    /// The attribute names the joining token policy rather than being a bare [Authorize]. MapHub copies it onto the endpoint, where
+    /// it is combined with the policy the hub is mapped with, and a bare one resolves to the default policy - which refuses joining
+    /// tokens. The two would then combine into requirements no token can satisfy at once and every negotiate would be a 403. The
+    /// attribute also gates each hub method invocation, which only a connected instance makes.
     /// </summary>
-    [Authorize]
+    [Authorize(Policy = HubTokenPurposes.ManagementHubJoinPolicy)]
     public class InstanceManagementHub : Hub<IInstanceManagementHub>, IInstanceManagementHub
     {
         private IInstanceManagementStateProvider _stateProvider;
