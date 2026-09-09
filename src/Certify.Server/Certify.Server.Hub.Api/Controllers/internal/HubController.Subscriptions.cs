@@ -42,16 +42,34 @@ namespace Certify.Server.Hub.Api.Controllers
             var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
             var matchingInstance = instanceAuth.ManagedInstance ?? allKnownInstances.FirstOrDefault(c => c.InstanceId == requestingInstanceId);
 
-            var results = await CheckSubscribableManagedCertsForInstance(matchingInstance, allKnownInstances);
+            if (matchingInstance == null
+                || string.IsNullOrWhiteSpace(matchingInstance.InstanceId)
+                || string.IsNullOrWhiteSpace(matchingInstance.SecurityPrincipalId))
+            {
+                // an instance the hub does not know cannot be resolved to a principal to evaluate access for
+                return Ok(new List<ManagedCertificateSummary>());
+            }
+
+            var results = await CheckSubscribableManagedCerts(
+                matchingInstance.SecurityPrincipalId,
+                allKnownInstances,
+                excludeInstanceId: matchingInstance.InstanceId);
 
             return Ok(results);
         }
 
+        /// <summary>
+        /// Managed certificate summaries a given security principal is permitted to pull. Any principal type can be
+        /// previewed: a managed instance subscribes to them, while a user or application downloads them, and both
+        /// are permitted by the same certificate download action.
+        /// </summary>
+        /// <param name="id">the security principal to preview access for</param>
+        /// <param name="assignedAccessTokenId">optionally evaluate access as one of the principal's API access tokens, which narrows the preview to the role assignments that token is scoped to</param>
         [HttpGet]
         [Route("subscription/available/securityprincipal/{id}")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedCertificateSummary>))]
-        public async Task<IActionResult> GetSubscribableManagedCertificatesBySecurityPrincipal(string id)
+        public async Task<IActionResult> GetSubscribableManagedCertificatesBySecurityPrincipal(string id, [FromQuery] string? assignedAccessTokenId = null)
         {
 
             // if query is not from a managed instance could be admin UI
@@ -61,25 +79,51 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Problem(detail: accessCheck.Message, statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
-            var matchingInstance = allKnownInstances.FirstOrDefault(c => c.SecurityPrincipalId == id);
-            if (matchingInstance == null)
+            List<string> scopedAssignedRoles = [];
+
+            if (!string.IsNullOrWhiteSpace(assignedAccessTokenId))
             {
-                return Ok(new List<ManagedCertificateSummary>());
+                var tokenScope = await GetAssignedAccessTokenScope(_client, id, assignedAccessTokenId);
+
+                if (!tokenScope.IsSuccess)
+                {
+                    return Problem(detail: tokenScope.Message, statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                scopedAssignedRoles = tokenScope.Result ?? [];
             }
 
-            var results = await CheckSubscribableManagedCertsForInstance(matchingInstance, allKnownInstances);
+            var allKnownInstances = await _client.GetHubManagedInstances(CurrentAuthContext);
+
+            // where the principal is a managed instance, its own items are excluded as they would be when it pulls.
+            // A user, application or group principal has no instance of its own, so nothing is excluded for them.
+            var ownInstanceId = allKnownInstances.FirstOrDefault(c => c.SecurityPrincipalId == id)?.InstanceId;
+
+            var results = await CheckSubscribableManagedCerts(id, allKnownInstances, ownInstanceId, scopedAssignedRoles);
 
             return Ok(results);
         }
 
-        private async Task<List<ManagedCertificateSummary>> CheckSubscribableManagedCertsForInstance(ManagedInstanceInfo requestingInstance, ICollection<ManagedInstanceInfo> allKnownInstances)
+        /// <summary>
+        /// The managed certificates a security principal is permitted to download, whichever principal type it is.
+        /// </summary>
+        /// <param name="securityPrincipalId">the principal whose access is being evaluated</param>
+        /// <param name="allKnownInstances">the hub's managed instances, used to title the source of each item</param>
+        /// <param name="excludeInstanceId">
+        /// the principal's own managed instance, where it has one. Those items are already held there, so an instance
+        /// is never offered its own certificates back. Principal types other than a managed instance have no such
+        /// instance and nothing is excluded for them.
+        /// </param>
+        /// <param name="scopedAssignedRoles">the role assignments to narrow to, when evaluating access as an API token</param>
+        private async Task<List<ManagedCertificateSummary>> CheckSubscribableManagedCerts(
+            string? securityPrincipalId,
+            ICollection<ManagedInstanceInfo> allKnownInstances,
+            string? excludeInstanceId = null,
+            ICollection<string>? scopedAssignedRoles = null)
         {
             // check which items we can download, TODO: optimize based on tagged items
 
-            if (requestingInstance == null
-                || string.IsNullOrWhiteSpace(requestingInstance.InstanceId)
-                || string.IsNullOrWhiteSpace(requestingInstance.SecurityPrincipalId))
+            if (string.IsNullOrWhiteSpace(securityPrincipalId))
             {
                 return [];
             }
@@ -91,8 +135,9 @@ namespace Certify.Server.Hub.Api.Controllers
             // a cert, matching what the download endpoint enforces. Resolved once here rather than per item.
             var domainRules = await GetDomainRestrictionRulesForPrincipal(
                 _client,
-                requestingInstance.SecurityPrincipalId,
-                StandardResourceActions.CertificateDownload);
+                securityPrincipalId,
+                StandardResourceActions.CertificateDownload,
+                scopedAssignedRoles);
 
             if (domainRules == null)
             {
@@ -103,9 +148,9 @@ namespace Certify.Server.Hub.Api.Controllers
             var certTagCache = new Dictionary<string, ICollection<TagSummary>>();
             foreach (var sourceItems in allInstanceItems.Values.ToList())
             {
-                if (sourceItems.InstanceId == requestingInstance.InstanceId)
+                if (!string.IsNullOrWhiteSpace(excludeInstanceId) && sourceItems.InstanceId == excludeInstanceId)
                 {
-                    //skip items from the requesting instance itself
+                    //skip items from the principal's own instance
                     continue;
                 }
 
@@ -117,40 +162,37 @@ namespace Certify.Server.Hub.Api.Controllers
                         continue;
                     }
 
-                    // if instance is not requesting certs on behalf of itself, then we need to check access for each cert, otherwise we can skip as we know the instance has access to all certs returned in the list
-                    if (sourceItems.InstanceId != requestingInstance.InstanceId)
+                    ICollection<TagSummary> tags = [];
+
+                    if (certTagCache.TryGetValue(cert.Id, out var itemTags))
                     {
-                        ICollection<TagSummary> tags = [];
+                        tags = itemTags;
+                    }
 
-                        if (certTagCache.TryGetValue(cert.Id, out var itemTags))
-                        {
-                            tags = itemTags;
-                        }
+                    tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, cert.Id, SystemAuthContext);
 
-                        tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedCertificate, cert.Id, SystemAuthContext);
+                    certTagCache[cert.Id] = tags;
 
-                        certTagCache[cert.Id] = tags;
+                    var certAccessCheck = new AccessCheck
+                    {
+                        SecurityPrincipalId = securityPrincipalId,
+                        ResourceType = ResourceTypes.Certificate,
+                        ResourceActionId = StandardResourceActions.CertificateDownload,
+                        Identifier = cert.Id,
+                        ResourceTags = tags?.ToList(),
+                        ScopedAssignedRoles = scopedAssignedRoles?.ToList() ?? []
+                    };
 
-                        var certAccessCheck = new AccessCheck
-                        {
-                            SecurityPrincipalId = requestingInstance.SecurityPrincipalId,
-                            ResourceType = ResourceTypes.Certificate,
-                            ResourceActionId = StandardResourceActions.CertificateDownload,
-                            Identifier = cert.Id,
-                            ResourceTags = tags?.ToList()
-                        };
+                    if (!await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new Client.AuthContext { UserId = securityPrincipalId }))
+                    {
+                        continue;
+                    }
 
-                        if (!await _client.CheckSecurityPrincipalHasAccess(certAccessCheck, new Client.AuthContext { UserId = requestingInstance.SecurityPrincipalId }))
-                        {
-                            continue;
-                        }
-
-                        // the whole cert is downloaded, so every identifier on it must be within the domain scope
-                        if (domainRules.Count > 0
-                            && !cert.GetCertificateIdentifiers().All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i.Value)))
-                        {
-                            continue;
-                        }
+                    // the whole cert is downloaded, so every identifier on it must be within the domain scope
+                    if (domainRules.Count > 0
+                        && !cert.GetCertificateIdentifiers().All(i => ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i.Value)))
+                    {
+                        continue;
                     }
 
                     results.Add(new ManagedCertificateSummary

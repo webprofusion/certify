@@ -110,12 +110,13 @@ namespace Certify.Server.Hub.Api.Controllers
         /// Get managed challenges a specific security principal can use, based on assigned roles and tag restrictions.
         /// </summary>
         /// <param name="id">The security principal ID</param>
+        /// <param name="assignedAccessTokenId">optionally evaluate access as one of the principal's API access tokens, which narrows the result to the role assignments that token is scoped to</param>
         /// <returns>List of accessible managed challenge summaries</returns>
         [HttpGet]
         [Route("available/securityprincipal/{id}")]
         [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ICollection<ManagedChallengeSummary>))]
-        public async Task<IActionResult> GetSubscribableManagedChallengesBySecurityPrincipal(string id)
+        public async Task<IActionResult> GetSubscribableManagedChallengesBySecurityPrincipal(string id, [FromQuery] string? assignedAccessTokenId = null)
         {
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess));
             if (!accessCheck.IsSuccess)
@@ -130,6 +131,20 @@ namespace Certify.Server.Hub.Api.Controllers
             if (string.IsNullOrWhiteSpace(id))
             {
                 return new OkObjectResult(new List<ManagedChallengeSummary>());
+            }
+
+            List<string> scopedAssignedRoles = [];
+
+            if (!string.IsNullOrWhiteSpace(assignedAccessTokenId))
+            {
+                var tokenScope = await GetAssignedAccessTokenScope(_client, id, assignedAccessTokenId);
+
+                if (!tokenScope.IsSuccess)
+                {
+                    return Problem(detail: tokenScope.Message, statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                scopedAssignedRoles = tokenScope.Result ?? [];
             }
 
             var challenges = await _client.GetManagedChallenges(SystemAuthContext);
@@ -166,7 +181,8 @@ namespace Certify.Server.Hub.Api.Controllers
                     ResourceType = ResourceTypes.ManagedChallenge,
                     ResourceActionId = StandardResourceActions.ManagedChallengeRequest,
                     Identifier = challenge.Id,
-                    ResourceTags = tagSummaries
+                    ResourceTags = tagSummaries,
+                    ScopedAssignedRoles = scopedAssignedRoles
                 };
 
                 if (!await _client.CheckSecurityPrincipalHasAccess(challengeAccessCheck, new AuthContext { UserId = id }))

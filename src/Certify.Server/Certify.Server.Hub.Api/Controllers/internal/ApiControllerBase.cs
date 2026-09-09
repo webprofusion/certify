@@ -117,6 +117,48 @@ namespace Certify.Server.Hub.Api.Controllers
                 : new Certify.Models.Config.ActionResult($"Not authorized to perform {check.ResourceActionId}", false);
         }
         /// <summary>
+        /// The role assignment scope an API access token narrows its security principal to, used when previewing
+        /// what a given identity can reach rather than what the principal holds overall.
+        ///
+        /// An empty result means the token is unscoped, so it carries the principal's whole role set. A failed
+        /// result means the token could not be resolved for this principal, which must not be reported as
+        /// unscoped: that would preview more access than the token actually grants.
+        /// </summary>
+        internal async Task<Certify.Models.Config.ActionResult<List<string>>> GetAssignedAccessTokenScope(
+            ICertifyInternalApiClient internalApiClient,
+            string? securityPrincipalId,
+            string assignedAccessTokenId)
+        {
+            if (string.IsNullOrWhiteSpace(securityPrincipalId))
+            {
+                return new Certify.Models.Config.ActionResult<List<string>>("No security principal to resolve the access token for.", false);
+            }
+
+            try
+            {
+                var assignedTokens = await internalApiClient.GetAssignedAccessTokens(SystemAuthContext);
+
+                var assignedToken = assignedTokens?.FirstOrDefault(t => string.Equals(t.Id, assignedAccessTokenId, StringComparison.OrdinalIgnoreCase));
+
+                if (assignedToken == null || assignedToken.SecurityPrincipalId != securityPrincipalId)
+                {
+                    return new Certify.Models.Config.ActionResult<List<string>>(
+                        $"Access token {assignedAccessTokenId} is not assigned to security principal {securityPrincipalId}.",
+                        false);
+                }
+
+                return new Certify.Models.Config.ActionResult<List<string>>(
+                    "Resolved access token scope",
+                    true,
+                    assignedToken.ScopedAssignedRoles?.Where(r => !string.IsNullOrWhiteSpace(r)).ToList() ?? []);
+            }
+            catch (Exception exp)
+            {
+                return new Certify.Models.Config.ActionResult<List<string>>($"Failed to resolve access token scope: {exp.Message}", false);
+            }
+        }
+
+        /// <summary>
         /// The Domain Match rules restricting a security principal for a resource action, taken from the domain-typed
         /// IncludedResources on the roles authorizing that action.
         /// An empty list means the principal is unrestricted; null means the scope could not be evaluated and the
