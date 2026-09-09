@@ -1,9 +1,39 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Certify.Server.Hub.Api.Middleware
 {
+    /// <summary>
+    /// What a hub issued JWT is for.
+    ///
+    /// A joining token and a signed in user's token are both bearer tokens signed with the same key, so without
+    /// something to tell them apart every endpoint which accepts one accepts the other. That mattered: a joining
+    /// token could subscribe to the user interface status hub, which carries managed certificate state for every
+    /// connected instance.
+    /// </summary>
+    public static class HubTokenPurposes
+    {
+        public const string ClaimType = "certify.token_purpose";
+
+        /// <summary>
+        /// Issued to a managed instance so it can open its management hub connection, and good for nothing else.
+        /// </summary>
+        public const string ManagementHubJoin = "managementhub-join";
+
+        /// <summary>
+        /// Authorization policy for the management hub connection: the caller must present a joining token.
+        /// </summary>
+        public const string ManagementHubJoinPolicy = "certify.managementhub-join";
+
+        /// <summary>
+        /// True when a principal was authenticated from a joining token.
+        /// </summary>
+        public static bool IsManagementHubJoinToken(System.Security.Claims.ClaimsPrincipal? principal)
+            => principal?.FindFirst(ClaimType)?.Value == ManagementHubJoin;
+    }
+
     /// <summary>
     /// Provides authentication related extensions
     /// </summary>
@@ -106,6 +136,29 @@ namespace Certify.Server.Hub.Api.Middleware
             });
 
             return services;
+        }
+
+        /// <summary>
+        /// Authorization policies separating the two kinds of token this hub issues.
+        ///
+        /// The default policy is what every [AuthorizedApi] endpoint and RequireAuthorization() call resolves to, so
+        /// excluding joining tokens there covers the whole API and the user interface status hub in one place rather
+        /// than relying on each endpoint to notice. The management hub connection opts back in explicitly, since a
+        /// joining token is exactly what it expects.
+        /// </summary>
+        public static IServiceCollection AddHubAuthorization(this IServiceCollection services)
+        {
+            return services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .RequireAssertion(context => !HubTokenPurposes.IsManagementHubJoinToken(context.User))
+                    .Build();
+
+                options.AddPolicy(HubTokenPurposes.ManagementHubJoinPolicy, policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireClaim(HubTokenPurposes.ClaimType, HubTokenPurposes.ManagementHubJoin));
+            });
         }
     }
 }

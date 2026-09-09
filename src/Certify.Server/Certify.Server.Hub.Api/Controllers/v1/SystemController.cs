@@ -378,9 +378,17 @@ namespace Certify.Server.Hub.Api.Controllers
                 {
                     new Claim("hub-assigned-id", hubAssignedInstanceId),
                     new Claim(ClaimTypes.Name, instanceTitle??""),
+
+                    // marks this as a joining token, which the management hub connection requires and every other
+                    // authenticated endpoint refuses. Without it a joining token is an ordinary bearer token signed
+                    // with the same key, and was accepted anywhere one is.
+                    new Claim(HubTokenPurposes.ClaimType, HubTokenPurposes.ManagementHubJoin),
                 };
 
-            joiningInfo.JoiningToken = jwtService.GenerateSecurityToken($"{Request.Headers["X-Client-ID"]}", additionalClaims: additionalClaims);
+            // The subject is the security principal the joining credentials authenticated as, as it is in every
+            // other token this hub issues. It used to be the API token's client id, which put a value from a
+            // different namespace in the claim the rest of the system reads a principal id from.
+            joiningInfo.JoiningToken = jwtService.GenerateSecurityToken(CurrentAuthContext!.UserId, additionalClaims: additionalClaims);
             joiningInfo.HubAssignedInstanceId = hubAssignedInstanceId!;
             joiningInfo.RequestAuthSecret = requestAuthSecret;
 

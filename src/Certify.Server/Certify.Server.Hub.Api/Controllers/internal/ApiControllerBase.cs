@@ -237,6 +237,13 @@ namespace Certify.Server.Hub.Api.Controllers
 
                 if (result.Succeeded && result.Principal != null)
                 {
+                    // a joining token is refused by the default policy on every other endpoint, so it does not
+                    // identify a caller here either - this runs outside that policy, being an anonymous endpoint
+                    if (HubTokenPurposes.IsManagementHubJoinToken(result.Principal))
+                    {
+                        continue;
+                    }
+
                     HttpContext.User = result.Principal;
                     return;
                 }

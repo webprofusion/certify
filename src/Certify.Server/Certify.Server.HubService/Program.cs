@@ -255,7 +255,7 @@ builder.Services
     .AddMemoryCache()
     .AddHubRateLimiting(builder.Configuration)
     .AddTokenAuthentication(builder.Configuration)
-    .AddAuthorization()
+    .AddHubAuthorization()
     .AddControllers()
     .AddJsonOptions(o =>
     {
@@ -423,8 +423,12 @@ app.MapControllers();
 // connected instance, so an anonymous connection to it is a live feed of managed domains and config.
 // Clients present their token via the access_token query string, which the JWT bearer middleware is
 // configured to read for these two paths (see AuthenticationExtension).
+//
+// The two hubs accept different tokens. The status hub takes the default policy, which excludes the joining
+// tokens issued to managed instances - those are signed with the same key as a user's token, so before the
+// policies existed an instance's joining token could subscribe to this feed. The management hub requires one.
 app.MapHub<UserInterfaceStatusHub>("/api/internal/status").RequireAuthorization();
-app.MapHub<InstanceManagementHub>("/api/internal/managementhub").RequireAuthorization();
+app.MapHub<InstanceManagementHub>("/api/internal/managementhub").RequireAuthorization(HubTokenPurposes.ManagementHubJoinPolicy);
 
 app.MapDefaultControllerRoute().WithStaticAssets();
 
