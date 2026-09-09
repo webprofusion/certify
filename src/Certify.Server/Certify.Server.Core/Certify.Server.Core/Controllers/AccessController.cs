@@ -98,7 +98,7 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.IsSecurityPrincipalAuthorised(GetContextUserId(), check);
+            return await accessControl.IsSecurityPrincipalAuthorised(check);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.EvaluateAccessScope(GetContextUserId(), check);
+            return await accessControl.EvaluateAccessScope(check);
         }
 
         [HttpPost, Route("apitoken/check/")]
@@ -118,7 +118,7 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.IsAccessTokenAuthorised(GetContextUserId(), tokenCheck.Token, tokenCheck.Check);
+            return await accessControl.IsAccessTokenAuthorised(tokenCheck.Token, tokenCheck.Check);
         }
 
         /// <summary>
@@ -130,7 +130,7 @@ namespace Certify.Service.Controllers
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
-            return await accessControl.ResolveAccessToken(GetContextUserId(), token);
+            return await accessControl.ResolveAccessToken(token);
         }
 
         [HttpGet, Route("assignedtoken/list/")]

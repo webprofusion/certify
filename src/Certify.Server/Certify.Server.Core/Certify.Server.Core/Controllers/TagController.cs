@@ -46,7 +46,7 @@ namespace Certify.Service.Controllers
             // Cache miss or expired - check the database
             var accessControl = await _certifyManager.GetCurrentAccessControl();
             var check = new AccessCheck(userId, ResourceTypes.Tag, action);
-            var result = await accessControl.IsSecurityPrincipalAuthorised(userId, check);
+            var result = await accessControl.IsSecurityPrincipalAuthorised(check);
 
             // Store in cache with expiry
             _permissionCache[cacheKey] = (result, DateTime.UtcNow.Add(_cacheExpiry));
@@ -107,7 +107,7 @@ namespace Certify.Service.Controllers
             }
 
             var check = new AccessCheck(null, resourceType, action);
-            var result = await accessControl.IsSecurityPrincipalAuthorised(userId, check);
+            var result = await accessControl.IsSecurityPrincipalAuthorised(check);
 
             // Store in cache with expiry
             _permissionCache[cacheKey] = (result, DateTime.UtcNow.Add(_cacheExpiry));

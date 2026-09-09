@@ -163,8 +163,9 @@ namespace Certify.Management
                 check.ScopedAssignedRoles = scopedAssignedRoles.ToList();
             }
 
-            // System context evaluates the target principal without auto-allowing access.
-            var scope = await access.EvaluateAccessScope(StandardSecurityPrincipals.System, check);
+            // Evaluating a scope asks about the principal named on the check and nothing else, so there is no acting
+            // caller to pass here - and so no system context to mistake for one which auto-allows.
+            var scope = await access.EvaluateAccessScope(check);
             return new ManagedChallengeAccessScope(scope);
         }
 

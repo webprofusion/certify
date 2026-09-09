@@ -94,7 +94,7 @@ namespace Certify.Core.Management.Access
                 bypassIntegrityCheck = true;
             }
 
-            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
                 return false;
@@ -142,7 +142,7 @@ namespace Certify.Core.Management.Access
         public async Task<bool> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal)
         {
 
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use UpdateSecurityPrincipal [{principalId}] without being in required role.", contextUserId, principal?.Id);
                 return false;
@@ -177,7 +177,7 @@ namespace Certify.Core.Management.Access
         /// <returns></returns>
         public async Task<bool> DeleteSecurityPrincipal(string contextUserId, string id, bool allowSelfDelete = false)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use DeleteSecurityPrincipal [{id}] without being in required role.", contextUserId, id);
                 return false;
@@ -270,9 +270,9 @@ namespace Certify.Core.Management.Access
         /// Check if a security principal has access to the given resource action.
         /// System context may evaluate another principal's access but does not auto-allow.
         /// </summary>
-        public async Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check)
+        public async Task<bool> IsSecurityPrincipalAuthorised(AccessCheck check)
         {
-            if (!await CanEvaluateAccessCheck(contextUserId, check))
+            if (!IsEvaluableAccessCheck(check))
             {
                 return false;
             }
@@ -300,9 +300,9 @@ namespace Certify.Core.Management.Access
         /// <summary>
         /// Evaluate authorizing roles and unrestricted/scoped state for a principal and action.
         /// </summary>
-        public async Task<ResourceAccessScope> EvaluateAccessScope(string contextUserId, AccessCheck check)
+        public async Task<ResourceAccessScope> EvaluateAccessScope(AccessCheck check)
         {
-            if (!await CanEvaluateAccessCheck(contextUserId, check))
+            if (!IsEvaluableAccessCheck(check))
             {
                 return new ResourceAccessScope
                 {
@@ -319,17 +319,19 @@ namespace Certify.Core.Management.Access
         public bool IsResourceInScope(ResourceAccessScope scope, IEnumerable<TagSummary>? resourceTags)
             => ResourceAccess.IsResourceInScope(scope, resourceTags);
 
-        private Task<bool> CanEvaluateAccessCheck(string contextUserId, AccessCheck? check)
+        /// <summary>
+        /// Whether a check names both a principal and an action, and so can be answered at all. An incomplete check
+        /// is refused rather than evaluated, because an empty principal or action would otherwise match nothing and
+        /// read as a legitimate denial.
+        ///
+        /// This used to be called CanEvaluateAccessCheck and took the acting principal, which it ignored - the name
+        /// said it was an authorization gate when it was a well-formedness test.
+        /// </summary>
+        private static bool IsEvaluableAccessCheck(AccessCheck? check)
         {
-            // Authorization evaluation is always against check.SecurityPrincipalId.
-            // contextUserId is reserved for mutating/read-admin gates elsewhere; historically
-            // IsSecurityPrincipalAuthorised did not require the caller to be admin to evaluate a check.
-            if (check == null || string.IsNullOrWhiteSpace(check.SecurityPrincipalId) || string.IsNullOrWhiteSpace(check.ResourceActionId))
-            {
-                return Task.FromResult(false);
-            }
-
-            return Task.FromResult(true);
+            return check != null
+                && !string.IsNullOrWhiteSpace(check.SecurityPrincipalId)
+                && !string.IsNullOrWhiteSpace(check.ResourceActionId);
         }
 
         private async Task<bool> CanReadPrincipalAccess(string contextUserId, string principalId)
@@ -344,7 +346,7 @@ namespace Certify.Core.Management.Access
                 return true;
             }
 
-            return await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id);
+            return await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id);
         }
 
         private async Task<ResourceAccessScope> EvaluateAccessScopeInternal(AccessCheck check)
@@ -451,7 +453,7 @@ namespace Certify.Core.Management.Access
         /// resolves to assignments the principal holds. What the resulting principal may then do is a separate
         /// question, answered per operation by the caller, because a token's roles vary by what it is for.
         /// </summary>
-        public async Task<ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(string contextUserId, AccessToken accessToken)
+        public async Task<ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(AccessToken accessToken)
         {
             // resolve security principal from access token
 
@@ -497,9 +499,9 @@ namespace Certify.Core.Management.Access
             };
         }
 
-        public async Task<ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
+        public async Task<ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(AccessToken accessToken, AccessCheck check)
         {
-            var resolved = await ResolveAccessToken(contextUserId, accessToken);
+            var resolved = await ResolveAccessToken(accessToken);
 
             if (!resolved.IsSuccess || resolved.Result == null)
             {
@@ -520,7 +522,7 @@ namespace Certify.Core.Management.Access
                 ResourceTags = check.ResourceTags // Pass resource tags for tag-based access control
             };
 
-            var isAuthorised = await IsSecurityPrincipalAuthorised(scopedCheck.SecurityPrincipalId, scopedCheck);
+            var isAuthorised = await IsSecurityPrincipalAuthorised(scopedCheck);
 
             if (isAuthorised)
             {
@@ -540,11 +542,11 @@ namespace Certify.Core.Management.Access
         /// <param name="id"></param>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public async Task<bool> IsPrincipalInRole(string contextUserId, string id, string roleId)
+        public async Task<bool> IsPrincipalInRole(string securityPrincipalId, string roleId)
         {
             var assignedRoles = await _store.GetItems<AssignedRole>(nameof(AssignedRole));
 
-            if (assignedRoles.Any(a => a.RoleId == roleId && a.SecurityPrincipalId == id))
+            if (assignedRoles.Any(a => a.RoleId == roleId && a.SecurityPrincipalId == securityPrincipalId))
             {
                 return true;
             }
@@ -556,7 +558,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddResourcePolicy(string contextUserId, ResourcePolicy resourcePolicy, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use AddResourcePolicy [{resourcePolicyId}] without being in required role.", contextUserId, resourcePolicy?.Id);
                 return false;
@@ -579,7 +581,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> UpdateSecurityPrincipalPassword(string contextUserId, SecurityPrincipalPasswordUpdate passwordUpdate, bool requirePasswordConfirmation = true)
         {
-            if (passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (passwordUpdate.SecurityPrincipalId != contextUserId && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to use updated password for [{id}] without being in required role.", contextUserId, passwordUpdate.SecurityPrincipalId);
                 return false;
@@ -724,7 +726,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddRole(string contextUserId, Role r, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an role action without being in required role.", contextUserId);
                 return false;
@@ -736,7 +738,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddAssignedRole(string contextUserId, AssignedRole r, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an assigned role without being in required role.", contextUserId);
                 return false;
@@ -748,7 +750,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddResourceAction(string contextUserId, ResourceAction action, bool bypassIntegrityCheck = false)
         {
-            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!bypassIntegrityCheck && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add a resource action without being in required role.", contextUserId);
                 return false;
@@ -804,7 +806,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> UpdateAssignedRoles(string contextUserId, SecurityPrincipalAssignedRoleUpdate update)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to update assigned role for [{id}] without being in required role.", contextUserId, update.SecurityPrincipalId);
                 return false;
@@ -889,7 +891,7 @@ namespace Certify.Core.Management.Access
             // if not system user, must be in administrator role to list assigned access tokens
             // this system user is a special case because our ACME endpoints do not use the standard security principal model and have no associated user in most cases
 
-            if (contextUserId != StandardSecurityPrincipals.System && !await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (contextUserId != StandardSecurityPrincipals.System && !await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to list assigned access tokens without being in required role.", contextUserId);
                 return null;
@@ -900,7 +902,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> AddAssignedAccessToken(string contextUserId, AssignedAccessToken a)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to add an assigned access token without being in required role.", contextUserId);
                 return false;
@@ -919,7 +921,7 @@ namespace Certify.Core.Management.Access
         /// </summary>
         public async Task<ActionResult> UpdateAssignedAccessToken(string contextUserId, AssignedAccessToken token)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to update an assigned access token without being in required role.", contextUserId);
                 return new ActionResult("Not authorized to update assigned access tokens.", false);
@@ -976,7 +978,7 @@ namespace Certify.Core.Management.Access
 
         public async Task<bool> DeleteAssignedAccessToken(string contextUserId, string id)
         {
-            if (!await IsPrincipalInRole(contextUserId, contextUserId, StandardRoles.Administrator.Id))
+            if (!await IsPrincipalInRole(contextUserId, StandardRoles.Administrator.Id))
             {
                 await AuditWarning("User {contextUserId} attempted to delete an assigned access token without being in required role.", contextUserId);
                 return false;

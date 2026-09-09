@@ -276,7 +276,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var cleanupCheck = new AccessCheck(consumer.Id, ResourceTypes.ManagedChallenge, StandardResourceActions.ManagedChallengeCleanup);
 
             Assert.IsFalse(
-                (await _access.IsAccessTokenAuthorised(AdminId, token, cleanupCheck)).IsSuccess,
+                (await _access.IsAccessTokenAuthorised(token, cleanupCheck)).IsSuccess,
                 "before the upgrade the previous policy definition should not grant the cleanup action");
 
             // the upgrade
@@ -284,7 +284,7 @@ namespace Certify.Tests.Core.Unit.Tests
             AssertNoProblems(result);
 
             Assert.IsTrue(
-                (await _access.IsAccessTokenAuthorised(AdminId, token, cleanupCheck)).IsSuccess,
+                (await _access.IsAccessTokenAuthorised(token, cleanupCheck)).IsSuccess,
                 "the same access token should grant the action the upgrade added to the role's policy");
 
             // the assignment id is what the token is scoped by, so it has to survive the upgrade untouched
@@ -309,7 +309,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(principals.Any(p => p.Id == AdminId), "the default admin should be created");
             Assert.IsTrue(principals.Any(p => p.Id == AccessControlConfig.ManagedInstanceSecurityPrincipalId), "the managed instance service principal should be created");
 
-            Assert.IsTrue(await _access.IsPrincipalInRole(AdminId, AdminId, StandardRoles.Administrator.Id), "the default admin should hold the administrator role");
+            Assert.IsTrue(await _access.IsPrincipalInRole(AdminId, StandardRoles.Administrator.Id), "the default admin should hold the administrator role");
 
             var managedInstanceAssignment = (await _access.GetAssignedRoles(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();
             Assert.AreEqual(StandardRoles.ManagedInstance.Id, managedInstanceAssignment.RoleId);
@@ -382,19 +382,19 @@ namespace Certify.Tests.Core.Unit.Tests
                 RemovedAssignedRoles = [assignment]
             });
 
-            Assert.IsFalse(await _access.IsPrincipalInRole(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId, StandardRoles.ManagedInstance.Id));
+            Assert.IsFalse(await _access.IsPrincipalInRole(AccessControlConfig.ManagedInstanceSecurityPrincipalId, StandardRoles.ManagedInstance.Id));
 
             var result = await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
             AssertNoProblems(result);
             Assert.IsTrue(
-                await _access.IsPrincipalInRole(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId, StandardRoles.ManagedInstance.Id),
+                await _access.IsPrincipalInRole(AccessControlConfig.ManagedInstanceSecurityPrincipalId, StandardRoles.ManagedInstance.Id),
                 "the managed instance role assignment should be restored on startup rather than only when the principal is first created");
 
             // Repairing the assignment creates a new AssignedRole id, and the joining token is scoped by that id, so
             // restoring the role without re-scoping the token leaves managed instances holding a credential which
             // resolves to nothing - while the repair reports success, which is what stops anyone looking.
-            var resolved = await _access.ResolveAccessToken(AdminId, joiningToken);
+            var resolved = await _access.ResolveAccessToken(joiningToken);
 
             Assert.IsTrue(
                 resolved.IsSuccess,

@@ -61,7 +61,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Act
             // This should validate the token and return the context
-            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, accessToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(accessToken, accessCheck);
 
             // Assert
             Assert.IsTrue(result.IsSuccess, "API token should validate successfully");
@@ -94,7 +94,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Act
             // This should check if principal has the permission
-            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
+            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
             // Assert
             Assert.IsTrue(isAuthorized, "Principal with HubViewer role should have TagList permission");
@@ -124,7 +124,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
+            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
             // Assert
             // Should still authorize if the scoped role has the permission
@@ -150,7 +150,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalIdWithNoRoles, accessCheck);
+            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
             // Assert
             Assert.IsFalse(isAuthorized, "Principal with no roles should not have any permissions");
@@ -184,7 +184,7 @@ namespace Certify.Tests.Core.Unit.Tests
                     permission
                 );
 
-                var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
+                var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
                 // Note: TagAdmin role has all permissions, HubViewer only has TagList
                 if (permission == StandardResourceActions.TagList)
@@ -225,7 +225,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(principalId, accessCheck);
+            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
             // Assert
             // Result depends on whether principal's role assignment has matching tag scope
@@ -256,7 +256,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, expiredToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(expiredToken, accessCheck);
 
             // Assert
             Assert.IsFalse(result.IsSuccess, "Expired token should be rejected");
@@ -284,7 +284,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var result = await _accessControl.IsAccessTokenAuthorised(StandardSecurityPrincipals.System, revokedToken, accessCheck);
+            var result = await _accessControl.IsAccessTokenAuthorised(revokedToken, accessCheck);
 
             // Assert
             Assert.IsFalse(result.IsSuccess, "Revoked token should be rejected");
@@ -307,7 +307,7 @@ namespace Certify.Tests.Core.Unit.Tests
             );
 
             // Act
-            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(systemPrincipalId, accessCheck);
+            var isAuthorized = await _accessControl.IsSecurityPrincipalAuthorised(accessCheck);
 
             // Assert
             Assert.IsFalse(isAuthorized, "System context must evaluate the target principal rather than blanket allowing access");

@@ -893,12 +893,12 @@ namespace Certify.Tests.Core.Unit.Tests
             bool hasAccess;
             foreach (var assignedRole in assignedRoles)
             {
-                hasAccess = await access.IsPrincipalInRole(contextUserId, assignedRole.SecurityPrincipalId, StandardRoles.Administrator.Id);
+                hasAccess = await access.IsPrincipalInRole(assignedRole.SecurityPrincipalId, StandardRoles.Administrator.Id);
                 Assert.IsTrue(hasAccess, $"User '{assignedRole.SecurityPrincipalId}' should be in role");
             }
 
             // Validate fake admin user is not a principal role
-            hasAccess = await access.IsPrincipalInRole(contextUserId, "admin_02", StandardRoles.Administrator.Id);
+            hasAccess = await access.IsPrincipalInRole("admin_02", StandardRoles.Administrator.Id);
             Assert.IsFalse(hasAccess, "User should not be in role");
         }
 
@@ -923,11 +923,11 @@ namespace Certify.Tests.Core.Unit.Tests
             await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserDomainConsumer, true); // devops user in consumer role for a specific domain
 
             // Validate user can consume a cert for a given domain 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck(TestSecurityPrincipals.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com"));
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck(TestSecurityPrincipals.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "www.example.com"));
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this domain");
 
             // Validate user can't consume a cert for a subdomain they haven't been granted
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck(TestSecurityPrincipals.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "secure.example.com"));
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck(TestSecurityPrincipals.DevopsAppDomainConsumer.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "secure.example.com"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for this domain");
         }
 
@@ -952,15 +952,15 @@ namespace Certify.Tests.Core.Unit.Tests
             await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserWildcardDomainConsumer, bypassIntegrityCheck: true); // devops user in consumer role for a wildcard domain
 
             // Validate user can consume any subdomain via a granted wildcard
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsTrue(isAuthorised, "User should be a cert consumer for this subdomain via wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "*  lkjhasdf98862364"));
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "*  lkjhasdf98862364"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
 
             // Validate user can't consume a random wildcard
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "lkjhasdf98862364.*.microsoft.com"));
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck(TestSecurityPrincipals.DevopsUser.Id, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "lkjhasdf98862364.*.microsoft.com"));
             Assert.IsFalse(isAuthorised, "User should not be a cert consumer for random wildcard");
         }
 
@@ -985,7 +985,7 @@ namespace Certify.Tests.Core.Unit.Tests
             await access.AddAssignedRole(contextUserId, TestAssignedRoles.DevopsUserWildcardDomainConsumer); // devops user in consumer role for a wildcard domain
 
             // Validate that random user should not be authorised
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, new AccessCheck("randomuser", ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(new AccessCheck("randomuser", ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorised, "Unknown user should not be a cert consumer for this subdomain via wildcard");
         }
 
@@ -1105,19 +1105,19 @@ namespace Certify.Tests.Core.Unit.Tests
 
             await access.AddAssignedAccessToken(contextUserId, assignedToken);
 
-            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            var isAuthorized = await access.IsAccessTokenAuthorised(apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsTrue(isAuthorized.IsSuccess, "Token should have access");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.test.com"));
+            isAuthorized = await access.IsAccessTokenAuthorised(apiToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.test.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (wrong domain identifier resource)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiTokenBad, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            isAuthorized = await access.IsAccessTokenAuthorised(apiTokenBad, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (bad token)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiExpiredToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            isAuthorized = await access.IsAccessTokenAuthorised(apiExpiredToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (expired)");
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiRevokedToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
+            isAuthorized = await access.IsAccessTokenAuthorised(apiRevokedToken, new AccessCheck(null, ResourceTypes.Domain, StandardResourceActions.CertificateDownload, identifier: "random.microsoft.com"));
             Assert.IsFalse(isAuthorized.IsSuccess, "Token should not have access (revoked)");
 
         }
@@ -1392,7 +1392,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = productionResourceTags
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "User should have access to resources tagged with environment:production");
 
             // Test 2: Resource with non-matching tag - should NOT be authorized
@@ -1409,7 +1409,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = developmentResourceTags
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "User should NOT have access to resources tagged with environment:development");
 
             // Test 3: Resource with no tags - should NOT be authorized (role requires tags)
@@ -1421,7 +1421,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = new List<TagSummary>()
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "User should NOT have access to resources with no tags when role requires specific tags");
         }
 
@@ -1481,7 +1481,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = matchingResourceTags
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "User should have access when ALL required tags match");
 
             // Test 2: Resource with only ONE matching tag - should NOT be authorized (AND logic)
@@ -1499,7 +1499,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = partialMatchResourceTags
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "User should NOT have access when only some tags match (AND logic)");
         }
 
@@ -1554,7 +1554,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = anyResourceTags
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "User with non-tag-scoped role should have access to any resource");
         }
 
@@ -1596,7 +1596,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 }
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "User should have access to certificates tagged with environment:Development");
 
             check.ResourceTags = new List<TagSummary>
@@ -1604,12 +1604,12 @@ namespace Certify.Tests.Core.Unit.Tests
                 new TagSummary { CategoryKey = "environment", Value = "Production" }
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "User should not have access to certificates tagged with environment:Production");
 
             check.ResourceTags = new List<TagSummary>();
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "User should not have access to untagged certificates when the assigned consumer role is tag-scoped");
         }
 
@@ -1665,7 +1665,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 }
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "Matching certificate tags should authorize access via the tag-scoped consumer role");
 
             check.ResourceTags = new List<TagSummary>
@@ -1673,12 +1673,12 @@ namespace Certify.Tests.Core.Unit.Tests
                 new TagSummary { CategoryKey = "environment", Value = "Production" }
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not bypass tag restrictions for certificate download");
 
             check.ResourceTags = new List<TagSummary>();
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not grant access to untagged certificates when the consumer role is tag-scoped");
         }
 
@@ -1734,7 +1734,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 }
             };
 
-            var isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            var isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsTrue(isAuthorised, "Matching managed challenge tags should authorize access via the tag-scoped consumer role");
 
             check.ResourceTags = new List<TagSummary>
@@ -1742,12 +1742,12 @@ namespace Certify.Tests.Core.Unit.Tests
                 new TagSummary { CategoryKey = "environment", Value = "Production" }
             };
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not bypass tag restrictions for managed challenge access");
 
             check.ResourceTags = new List<TagSummary>();
 
-            isAuthorised = await access.IsSecurityPrincipalAuthorised(contextUserId, check);
+            isAuthorised = await access.IsSecurityPrincipalAuthorised(check);
             Assert.IsFalse(isAuthorised, "An unrelated unscoped role should not grant access to untagged managed challenges when the consumer role is tag-scoped");
         }
 
@@ -1825,7 +1825,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = productionResourceTags
             };
 
-            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            var isAuthorized = await access.IsAccessTokenAuthorised(apiToken, check);
             Assert.IsTrue(isAuthorized.IsSuccess, "API token should have access to production resources");
 
             // Test 2: API token accessing resource with non-matching tag - should NOT be authorized
@@ -1841,7 +1841,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceTags = developmentResourceTags
             };
 
-            isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            isAuthorized = await access.IsAccessTokenAuthorised(apiToken, check);
             Assert.IsFalse(isAuthorized.IsSuccess, "API token should NOT have access to development resources");
         }
 
@@ -1904,7 +1904,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceActionId = StandardResourceActions.ManagedChallengeRequest
             };
 
-            var isAuthorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            var isAuthorized = await access.IsAccessTokenAuthorised(apiToken, check);
 
             Assert.IsFalse(isAuthorized.IsSuccess, "A token scoped only to a removed role assignment cannot authorize anything");
             StringAssert.Contains(isAuthorized.Message, staleAssignedRoleId, "The denial must name the stale role assignment the token is scoped to");
@@ -1926,7 +1926,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 Title = "Unscoped Token"
             });
 
-            var unscopedResult = await access.IsAccessTokenAuthorised(contextUserId, unscopedToken, check);
+            var unscopedResult = await access.IsAccessTokenAuthorised(unscopedToken, check);
             Assert.IsTrue(unscopedResult.IsSuccess, unscopedResult.Message);
         }
 
@@ -1972,7 +1972,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ScopedAssignedRoles = new List<string> { assignment.Id.ToUpperInvariant() }
             });
 
-            var result = await access.IsAccessTokenAuthorised(contextUserId, apiToken, new AccessCheck
+            var result = await access.IsAccessTokenAuthorised(apiToken, new AccessCheck
             {
                 ResourceType = ResourceTypes.ManagedChallenge,
                 ResourceActionId = StandardResourceActions.ManagedChallengeRequest
@@ -2028,7 +2028,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceActionId = StandardResourceActions.ManagedChallengeRequest
             };
 
-            Assert.IsTrue((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "Precondition: the token authorizes via its scoped assignment");
+            Assert.IsTrue((await access.IsAccessTokenAuthorised(apiToken, check)).IsSuccess, "Precondition: the token authorizes via its scoped assignment");
 
             AssignedRole NewAssignmentForSameRole() => new()
             {
@@ -2048,7 +2048,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             var assignmentsAfterSingleSave = await access.GetAssignedRoles(contextUserId, TestSecurityPrincipals.DevopsUser.Id);
             Assert.AreEqual(originalAssignment.Id, assignmentsAfterSingleSave.Single(a => a.RoleId == StandardRoles.ManagedChallengeConsumer.Id).Id, "The existing assignment should be left as it is");
-            Assert.IsTrue((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "The token should still authorize after a remove and re-add in one save");
+            Assert.IsTrue((await access.IsAccessTokenAuthorised(apiToken, check)).IsSuccess, "The token should still authorize after a remove and re-add in one save");
 
             // removal saved on its own, then the role assigned again: a new assignment id, and the token still points
             // at the old one
@@ -2071,7 +2071,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             Assert.AreNotEqual(originalAssignment.Id, reassigned.Id, "Re-assigning after a saved removal creates a new role assignment");
 
-            var denied = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            var denied = await access.IsAccessTokenAuthorised(apiToken, check);
 
             Assert.IsFalse(denied.IsSuccess, "The token is still scoped to the assignment which was removed");
             StringAssert.Contains(denied.Message, originalAssignment.Id);
@@ -2125,7 +2125,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ResourceActionId = StandardResourceActions.ManagedChallengeRequest
             };
 
-            Assert.IsFalse((await access.IsAccessTokenAuthorised(contextUserId, apiToken, check)).IsSuccess, "Precondition: the token is scoped to a removed assignment");
+            Assert.IsFalse((await access.IsAccessTokenAuthorised(apiToken, check)).IsSuccess, "Precondition: the token is scoped to a removed assignment");
 
             // a scope which does not resolve is refused rather than stored
             var badUpdate = await access.UpdateAssignedAccessToken(contextUserId, new AssignedAccessToken
@@ -2161,7 +2161,7 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(update.IsSuccess, update.Message);
 
             // the original credentials still authorize, so nothing using the token needs reconfiguring
-            var authorized = await access.IsAccessTokenAuthorised(contextUserId, apiToken, check);
+            var authorized = await access.IsAccessTokenAuthorised(apiToken, check);
             Assert.IsTrue(authorized.IsSuccess, authorized.Message);
 
             var stored = (await access.GetAssignedAccessTokens(contextUserId)).Single(t => t.Id == assignedTokenId);
@@ -2241,9 +2241,9 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // System context must evaluate the target principal (not blanket allow / not fail role reads).
-            Assert.IsTrue(await access.IsSecurityPrincipalAuthorised(StandardSecurityPrincipals.System, actionCheck));
+            Assert.IsTrue(await access.IsSecurityPrincipalAuthorised(actionCheck));
 
-            var scope = await access.EvaluateAccessScope(StandardSecurityPrincipals.System, actionCheck);
+            var scope = await access.EvaluateAccessScope(actionCheck);
             Assert.IsTrue(scope.HasAccess);
             Assert.IsFalse(scope.IsUnrestricted);
             Assert.HasCount(1, scope.AuthorizingRoles);
@@ -2258,7 +2258,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Wrong scoped assigned role id should deny
             actionCheck.ScopedAssignedRoles = [Guid.NewGuid().ToString()];
-            Assert.IsFalse(await access.IsSecurityPrincipalAuthorised(StandardSecurityPrincipals.System, actionCheck));
+            Assert.IsFalse(await access.IsSecurityPrincipalAuthorised(actionCheck));
         }
 
         [TestMethod]
@@ -2467,7 +2467,7 @@ namespace Certify.Tests.Core.Unit.Tests
                 ScopedAssignedRoles = [assignment.Id]
             }));
 
-            var resolved = await access.ResolveAccessToken(adminId, token);
+            var resolved = await access.ResolveAccessToken(token);
 
             Assert.IsTrue(resolved.IsSuccess, "a valid token should resolve whatever its roles happen to grant");
 
@@ -2478,11 +2478,11 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // the role's own action is authorized
             Assert.IsTrue(
-                (await access.IsAccessTokenAuthorised(adminId, token, new AccessCheck(null, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload))).IsSuccess);
+                (await access.IsAccessTokenAuthorised(token, new AccessCheck(null, ResourceTypes.Certificate, StandardResourceActions.CertificateDownload))).IsSuccess);
 
             // but resolving the token did not by itself grant anything else
             Assert.IsFalse(
-                (await access.IsAccessTokenAuthorised(adminId, token, new AccessCheck(null, ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess))).IsSuccess,
+                (await access.IsAccessTokenAuthorised(token, new AccessCheck(null, ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess))).IsSuccess,
                 "authenticating a token must not authorize an action the principal's roles do not grant");
         }
 
@@ -2491,7 +2491,7 @@ namespace Certify.Tests.Core.Unit.Tests
         {
             var adminId = await SetupAdminPrincipal();
 
-            var resolved = await access.ResolveAccessToken(adminId, new AccessToken { ClientId = "nobody", Secret = "wrong" });
+            var resolved = await access.ResolveAccessToken(new AccessToken { ClientId = "nobody", Secret = "wrong" });
 
             Assert.IsFalse(resolved.IsSuccess, "an unknown token should not authenticate");
         }

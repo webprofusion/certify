@@ -30,32 +30,41 @@ namespace Certify.Core.Management.Access
         /// <returns></returns>
         Task<List<ResourceAction>> GetResourceActions(string contextUserId);
 
-        Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check);
+        // Two kinds of method live on this interface, and the signature says which.
+        //
+        // A method taking a contextUserId gates on it: that principal must be an administrator, the system, or the
+        // subject itself, or the call is refused and audited. Everything below which does not take one is a pure
+        // evaluator - it answers a question about the principal named in its arguments and has no opinion on who is
+        // asking, which is the API layer's job. They used to take a contextUserId as well and ignore it, so a caller
+        // could not tell from the signature whether passing the wrong actor would deny the call or do nothing at all;
+        // the mutation gates gave that away by passing the same id twice to IsPrincipalInRole.
+
+        Task<bool> IsSecurityPrincipalAuthorised(AccessCheck check);
 
         /// <summary>
         /// Resolve an access token and confirm the principal it authenticates as may perform the given action.
         /// On success the result carries that principal, as <see cref="ResolveAccessToken"/> does.
         /// </summary>
-        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
+        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(AccessToken accessToken, AccessCheck check);
 
         /// <summary>
         /// Resolve an access token to the security principal and role scope it authenticates as, without checking
         /// whether that principal may perform any particular action.
         /// </summary>
-        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(string contextUserId, AccessToken accessToken);
+        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(AccessToken accessToken);
 
         /// <summary>
         /// Evaluate the access scope for a principal/action, including authorizing roles and whether
         /// access is unrestricted or constrained by tag scopes / included resources.
         /// </summary>
-        Task<ResourceAccessScope> EvaluateAccessScope(string contextUserId, AccessCheck check);
+        Task<ResourceAccessScope> EvaluateAccessScope(AccessCheck check);
 
         /// <summary>
         /// True when a concrete resource (represented by its tags) is within the resolved access scope.
         /// </summary>
         bool IsResourceInScope(ResourceAccessScope scope, IEnumerable<TagSummary>? resourceTags);
 
-        Task<bool> IsPrincipalInRole(string contextUserId, string id, string roleId);
+        Task<bool> IsPrincipalInRole(string securityPrincipalId, string roleId);
         Task<List<AssignedRole>> GetAssignedRoles(string contextUserId, string id);
         Task<RoleStatus> GetSecurityPrincipalRoleStatus(string contextUserId, string id);
         Task<bool> UpdateSecurityPrincipal(string contextUserId, SecurityPrincipal principal);
