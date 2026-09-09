@@ -1005,12 +1005,5 @@ namespace Certify.Core.Management.Access
                 return sBuilder.ToString();
             }
         }
-
-        /// <summary>
-        /// Check if resource tags match the required tag scope for access control.
-        /// Delegates to the shared ResourceAccess helper.
-        /// </summary>
-        public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
-            => ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll);
     }
 }

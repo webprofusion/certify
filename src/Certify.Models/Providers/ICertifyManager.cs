@@ -105,8 +105,6 @@ namespace Certify.Management
         Task<IAccessControl> GetCurrentAccessControl();
 
         Task<ICollection<ManagedChallenge>> GetManagedChallenges();
-        Task<ICollection<ManagedChallenge>> GetManagedChallengesWithTagFilter(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
-        Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(ICollection<TagScope>? tagScopes = null, bool requireAllTags = false, bool includeUntagged = false);
         Task<ManagedChallengeAccessScope> GetManagedChallengeAccessScope(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
         Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
         Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope);

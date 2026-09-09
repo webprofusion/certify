@@ -104,7 +104,7 @@ namespace Certify.Server.Hub.Api.Controllers
             }
 
             var scopes = TagScopeFilter.ParseAll(tagScopes);
-            var userTagScopes = await GetUserTagScopes();
+            var userTagScopes = await GetCallerTagScopes(_client);
 
             // when nothing needs per-item evaluation we can use the pre-aggregated summaries reported by each instance
             if (scopes.Count == 0 && string.IsNullOrWhiteSpace(keyword) && userTagScopes?.Any() != true)
@@ -130,7 +130,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var scopes = TagScopeFilter.ParseAll(tagScopes);
 
             // if the user has scoped tags on their assigned roles they can only see items matching those tags
-            userTagScopes ??= await GetUserTagScopes();
+            userTagScopes ??= await GetCallerTagScopes(_client);
 
             var managedItems = _mgmtStateProvider.GetManagedInstanceItems();
             var instances = _mgmtStateProvider.GetConnectedInstances();
@@ -520,57 +520,5 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkObjectResult(status);
         }
 
-        /// <summary>
-        /// Get the tag scopes that should restrict what the current user can see/manage.
-        /// Returns null if no restrictions apply (user can see everything).
-        /// </summary>
-        private async Task<List<TagScope>?> GetUserTagScopes()
-        {
-            // Only apply tag scope restrictions if we have a valid user context
-            if (CurrentAuthContext?.UserId == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                // Get all assigned roles for the user
-                var assignedRoles = await _client.GetSecurityPrincipalAssignedRoles(CurrentAuthContext.UserId, CurrentAuthContext);
-
-                if (assignedRoles == null || !assignedRoles.Any())
-                {
-                    return null;
-                }
-
-                // An API token with scoped roles considers only those; a regular user considers all assigned roles.
-                // Getting the id comparison wrong here removes the tag filtering rather than tightening it, so this
-                // shares the matching used by the authorization check itself.
-                var rolesToCheck = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles);
-
-                // Collect tag scopes from the applicable roles
-                var tagScopes = new List<TagScope>();
-
-                foreach (var role in rolesToCheck)
-                {
-                    if (role.ScopedTags != null && role.ScopedTags.Any())
-                    {
-                        tagScopes.AddRange(role.ScopedTags);
-                    }
-                }
-
-                // If no tag restrictions found, return null (meaning no filtering)
-                if (!tagScopes.Any())
-                {
-                    return null;
-                }
-
-                return tagScopes;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting user tag scopes");
-                return null;
-            }
-        }
     }
 }

@@ -28,84 +28,10 @@ namespace Certify.Management
             return await _configStore.GetItems<ManagedChallenge>(nameof(ManagedChallenge));
         }
 
-        /// <summary>
-        /// Get managed challenges filtered by tag scopes (for access control)
-        /// </summary>
-        /// <param name="tagScopes">Tag scopes to filter by. If null/empty, returns all challenges.</param>
-        /// <param name="requireAllTags">If true, challenge must match ALL tag scopes (AND). If false, match ANY (OR).</param>
-        /// <param name="includeUntagged">If true, include challenges with no tags. Default false for tag-scoped access.</param>
-        /// <returns>Filtered collection of managed challenges</returns>
-        public async Task<ICollection<ManagedChallenge>> GetManagedChallengesWithTagFilter(
-            ICollection<TagScope>? tagScopes = null,
-            bool requireAllTags = false,
-            bool includeUntagged = false)
-        {
-            var challenges = await GetManagedChallenges();
-
-            if (tagScopes == null || !tagScopes.Any())
-            {
-                // No tag filtering - return all
-                return challenges;
-            }
-
-            // Get tags for all managed challenges
-            var challengeTags = await GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge);
-            var tagsByChallengeId = challengeTags.GroupBy(t => t.TaggedItemId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            var filteredChallenges = new List<ManagedChallenge>();
-
-            foreach (var challenge in challenges)
-            {
-                if (!tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags) || !itemTags.Any())
-                {
-                    // Challenge has no tags
-                    if (includeUntagged)
-                    {
-                        filteredChallenges.Add(challenge);
-                    }
-
-                    continue;
-                }
-
-                // Tag scope matching is centralized so role-scoped and explicit tag filtering stay consistent
-                if (ResourceAccess.IsResourceTagScopeMatch(
-                        ResourceAccess.ToTagSummaries(itemTags),
-                        tagScopes.ToList(),
-                        requireAllTags))
-                {
-                    filteredChallenges.Add(challenge);
-                }
-            }
-
-            return filteredChallenges;
-        }
-
-        /// <summary>
-        /// Get managed challenge summaries with tags included (for API responses)
-        /// </summary>
-        public async Task<ICollection<ManagedChallengeSummary>> GetManagedChallengeSummaries(
-            ICollection<TagScope>? tagScopes = null,
-            bool requireAllTags = false,
-            bool includeUntagged = false)
-        {
-            var challenges = await GetManagedChallengesWithTagFilter(tagScopes, requireAllTags, includeUntagged);
-            var summaries = new List<ManagedChallengeSummary>();
-
-            foreach (var challenge in challenges)
-            {
-                var tags = await GetHubItemTags(TaggedItemTypes.ManagedChallenge, challenge.Id);
-                summaries.Add(new ManagedChallengeSummary
-                {
-                    Id = challenge.Id,
-                    Title = challenge.Title,
-                    ChallengeConfig = challenge.ChallengeConfig,
-                    Tags = tags.ToList()
-                });
-            }
-
-            return summaries;
-        }
+        // GetManagedChallengesWithTagFilter and GetManagedChallengeSummaries used to live here. Nothing called
+        // either one but the other: the hub API builds its own summaries from GetManagedChallenges and the item
+        // tags, and role scoped selection goes through GetAccessibleManagedChallenges. They were a fourth
+        // implementation of tag matching, reachable only from tests.
 
         public async Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update)
         {

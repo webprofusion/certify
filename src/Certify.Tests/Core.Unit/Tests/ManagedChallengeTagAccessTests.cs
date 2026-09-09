@@ -95,6 +95,42 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
+        /// The challenges accessible to a caller whose authorizing role carries the given tag scopes.
+        ///
+        /// These tests used to call GetManagedChallengesWithTagFilter, which took raw tag scopes and was reachable
+        /// from nowhere in the product - so the tag matching semantics below were verified against an
+        /// implementation that never ran. This goes through the path that does: a resolved access scope, filtered
+        /// by the tags stored against each challenge.
+        /// </summary>
+        private Task<ICollection<ManagedChallenge>> AccessibleForTagScopes(
+            ICollection<TagScope> tagScopes,
+            bool requireAllTags = false,
+            bool includeUntagged = false)
+        {
+            var isTagScoped = tagScopes?.Count > 0;
+
+            return _manager.GetAccessibleManagedChallenges(new ManagedChallengeAccessScope
+            {
+                HasAccess = true,
+
+                // a role carrying no tag scopes is not restricted by tags, and reaches every challenge
+                IsUnrestricted = !isTagScoped,
+                AllowUnscopedResources = includeUntagged,
+                AuthorizingRoles =
+                [
+                    new AssignedRole
+                    {
+                        Id = "ar-test",
+                        RoleId = StandardRoles.ManagedChallengeConsumer.Id,
+                        SecurityPrincipalId = "sp-test",
+                        ScopedTags = tagScopes?.ToList(),
+                        RequireAllScopedTags = requireAllTags
+                    }
+                ]
+            });
+        }
+
+        /// <summary>
         /// Adds a tag to a managed challenge
         /// </summary>
         private async Task TagChallenge(string challengeId, string categoryKey, string value)
@@ -107,11 +143,11 @@ namespace Certify.Tests.Core.Unit.Tests
 
         #endregion
 
-        #region GetManagedChallengesWithTagFilter Tests
+        #region Tag scoped challenge access
 
         [TestMethod]
         [Description("Challenges without tags are excluded when filtering with tag scopes (unless includeUntagged=true)")]
-        public async Task GetManagedChallengesWithTagFilter_ExcludesUntaggedChallenges()
+        public async Task AccessibleChallenges_ExcludesUntaggedChallenges()
         {
             // Arrange: Create challenges - one tagged, one untagged
             await CreateManagedChallenge("challenge-1", "*.example.com");
@@ -126,7 +162,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act: Filter with tag scope, excluding untagged
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -138,7 +174,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Untagged challenges are included when includeUntagged=true")]
-        public async Task GetManagedChallengesWithTagFilter_IncludesUntaggedWhenRequested()
+        public async Task AccessibleChallenges_IncludesUntaggedWhenRequested()
         {
             // Arrange: Create challenges - one tagged, one untagged
             await CreateManagedChallenge("challenge-1", "*.example.com");
@@ -152,7 +188,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act: Filter with includeUntagged=true
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: false,
                 includeUntagged: true);
@@ -163,7 +199,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Returns all challenges when no tag scopes provided")]
-        public async Task GetManagedChallengesWithTagFilter_ReturnsAllWhenNoScopes()
+        public async Task AccessibleChallenges_ReturnsAllWhenNoScopes()
         {
             // Arrange: Create multiple challenges with different tags
             await CreateManagedChallenge("challenge-1", "*.example.com");
@@ -175,7 +211,7 @@ namespace Certify.Tests.Core.Unit.Tests
             // challenge-3 untagged
 
             // Act: No tag scopes (admin access)
-            var allChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var allChallenges = await AccessibleForTagScopes(
                 tagScopes: null,
                 requireAllTags: false,
                 includeUntagged: true);
@@ -186,7 +222,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Filter by specific category:value matches only challenges with that exact tag")]
-        public async Task GetManagedChallengesWithTagFilter_FiltersByExactValue()
+        public async Task AccessibleChallenges_FiltersByExactValue()
         {
             // Arrange: Create challenges with different department tags
             await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
@@ -203,7 +239,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -215,7 +251,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Filter by category with null value matches any value in that category")]
-        public async Task GetManagedChallengesWithTagFilter_FiltersByCategoryWildcard()
+        public async Task AccessibleChallenges_FiltersByCategoryWildcard()
         {
             // Arrange: Create challenges with different department values
             await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
@@ -232,7 +268,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -246,7 +282,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Multiple tag scopes with OR logic returns challenges matching ANY scope")]
-        public async Task GetManagedChallengesWithTagFilter_OrLogicMatchesAny()
+        public async Task AccessibleChallenges_OrLogicMatchesAny()
         {
             // Arrange: Create challenges with different tags
             await CreateManagedChallenge("challenge-finance-webapp", "*.finance.example.com");
@@ -266,7 +302,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act: OR logic (default)
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -280,7 +316,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Multiple tag scopes with AND logic requires challenges to match ALL scopes")]
-        public async Task GetManagedChallengesWithTagFilter_AndLogicMatchesAll()
+        public async Task AccessibleChallenges_AndLogicMatchesAll()
         {
             // Arrange: Create challenges with various tag combinations
             await CreateManagedChallenge("challenge-both", "*.both.example.com");
@@ -304,7 +340,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act: AND logic
-            var filteredChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var filteredChallenges = await AccessibleForTagScopes(
                 tagScopes,
                 requireAllTags: true,
                 includeUntagged: false);
@@ -316,59 +352,28 @@ namespace Certify.Tests.Core.Unit.Tests
 
         #endregion
 
-        #region GetManagedChallengeSummaries Tests
+        #region Stored challenge tags
+
+        // GetManagedChallengeSummaries used to be tested here. It built summaries in the core and nothing called
+        // it: the hub API assembles its own from the challenges and the stored item tags. Its tag scope test
+        // duplicated the filtering covered above; what remains unique to it is that a challenge's tags read back,
+        // which is the part the hub API relies on.
 
         [TestMethod]
-        [Description("GetManagedChallengeSummaries returns challenges with their tags")]
-        public async Task GetManagedChallengeSummaries_IncludesTags()
+        [Description("Every tag stored against a challenge reads back, which is what the hub API builds summaries from")]
+        public async Task StoredChallengeTags_ReadBackForEachChallenge()
         {
-            // Arrange
             await CreateManagedChallenge("challenge-1", "*.example.com");
             await TagChallenge("challenge-1", DepartmentCategory, FinanceDept);
             await TagChallenge("challenge-1", ProjectCategory, WebAppProject);
 
-            // Act
-            var summaries = await _manager.GetManagedChallengeSummaries(
-                tagScopes: null,
-                requireAllTags: false,
-                includeUntagged: true);
+            var tags = await _manager.GetHubItemTags(TaggedItemTypes.ManagedChallenge, "challenge-1");
 
-            // Assert
-            Assert.HasCount(1, summaries);
-            var summary = summaries.First();
-            Assert.AreEqual("challenge-1", summary.Id);
-            Assert.HasCount(2, summary.Tags);
+            Assert.HasCount(2, tags);
 
-            var tagKeys = summary.Tags.Select(t => t.CategoryKey).ToList();
+            var tagKeys = tags.Select(t => t.CategoryKey).ToList();
             Assert.IsTrue(tagKeys.Contains(DepartmentCategory));
             Assert.IsTrue(tagKeys.Contains(ProjectCategory));
-        }
-
-        [TestMethod]
-        [Description("GetManagedChallengeSummaries respects tag scope filtering")]
-        public async Task GetManagedChallengeSummaries_RespectsTagScopes()
-        {
-            // Arrange
-            await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
-            await CreateManagedChallenge("challenge-engineering", "*.eng.example.com");
-
-            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
-            await TagChallenge("challenge-engineering", DepartmentCategory, EngineeringDept);
-
-            var tagScopes = new List<TagScope>
-            {
-                new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }
-            };
-
-            // Act
-            var summaries = await _manager.GetManagedChallengeSummaries(
-                tagScopes,
-                requireAllTags: false,
-                includeUntagged: false);
-
-            // Assert: Only finance challenge returned
-            Assert.HasCount(1, summaries);
-            Assert.AreEqual("challenge-finance", summaries.First().Id);
         }
 
         #endregion
@@ -396,7 +401,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act: Get challenges accessible to finance consumer
-            var accessibleChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var accessibleChallenges = await AccessibleForTagScopes(
                 financeConsumerScopes,
                 requireAllTags: false,
                 includeUntagged: false); // Untagged NOT accessible to scoped consumers
@@ -430,7 +435,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var accessibleChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var accessibleChallenges = await AccessibleForTagScopes(
                 prodOpsScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -454,7 +459,7 @@ namespace Certify.Tests.Core.Unit.Tests
             // challenge-3 intentionally untagged
 
             // Act: Admin has no tag scope restrictions (null)
-            var accessibleChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var accessibleChallenges = await AccessibleForTagScopes(
                 tagScopes: null,
                 requireAllTags: false,
                 includeUntagged: true);
@@ -486,7 +491,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var accessibleChallenges = await _manager.GetManagedChallengesWithTagFilter(
+            var accessibleChallenges = await AccessibleForTagScopes(
                 consumerScopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -769,7 +774,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
                 [TestMethod]
                 [Description("Empty tag scopes list behaves same as null (no filtering)")]
-                public async Task GetManagedChallengesWithTagFilter_EmptyScopesReturnsAll()
+                public async Task AccessibleChallenges_EmptyScopesReturnsAll()
                 {
                     // Arrange
                     await CreateManagedChallenge("challenge-1", "*.example.com");
@@ -778,7 +783,7 @@ namespace Certify.Tests.Core.Unit.Tests
             await TagChallenge("challenge-1", DepartmentCategory, FinanceDept);
 
             // Act: Empty scopes list
-            var challenges = await _manager.GetManagedChallengesWithTagFilter(
+            var challenges = await AccessibleForTagScopes(
                 new List<TagScope>(),
                 requireAllTags: false,
                 includeUntagged: true);
@@ -789,7 +794,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("Challenge with multiple tags in same category is found by any matching value")]
-        public async Task GetManagedChallengesWithTagFilter_MultipleTagsInSameCategory()
+        public async Task AccessibleChallenges_MultipleTagsInSameCategory()
         {
             // Arrange: Challenge tagged with multiple projects
             await CreateManagedChallenge("challenge-multi", "*.multi.example.com");
@@ -803,7 +808,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var challenges = await _manager.GetManagedChallengesWithTagFilter(
+            var challenges = await AccessibleForTagScopes(
                 scopes,
                 requireAllTags: false,
                 includeUntagged: false);
@@ -815,7 +820,7 @@ namespace Certify.Tests.Core.Unit.Tests
 
         [TestMethod]
         [Description("No challenges match when scope value doesn't exist")]
-        public async Task GetManagedChallengesWithTagFilter_NonexistentValueReturnsEmpty()
+        public async Task AccessibleChallenges_NonexistentValueReturnsEmpty()
         {
             // Arrange
             await CreateManagedChallenge("challenge-1", "*.example.com");
@@ -828,7 +833,7 @@ namespace Certify.Tests.Core.Unit.Tests
             };
 
             // Act
-            var challenges = await _manager.GetManagedChallengesWithTagFilter(
+            var challenges = await AccessibleForTagScopes(
                 scopes,
                 requireAllTags: false,
                 includeUntagged: false);

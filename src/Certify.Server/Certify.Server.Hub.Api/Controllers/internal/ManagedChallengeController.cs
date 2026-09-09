@@ -52,7 +52,7 @@ namespace Certify.Server.Hub.Api.Controllers
             var challenges = await _client.GetManagedChallenges(CurrentAuthContext);
 
             // Get user's tag scopes from their scoped assigned roles
-            var tagScopes = await GetUserTagScopesForResource();
+            var tagScopes = await GetCallerTagScopes(_client);
 
             // Load all tags for managed challenges
             var allChallengeTags = await _client.GetAllHubItemTags(null, null, TaggedItemTypes.ManagedChallenge, null, CurrentAuthContext);
@@ -71,18 +71,14 @@ namespace Certify.Server.Hub.Api.Controllers
                 tagsByChallengeId.TryGetValue(challenge.Id, out var itemTags);
                 var challengeTags = itemTags ?? new List<ItemTag>();
 
-                // If user has tag restrictions, check if this challenge matches
-                if (tagScopes != null && tagScopes.Any())
+                // A tag restricted caller only sees matching challenges, and never an untagged one. This used to be
+                // matched by a loop written here, which compared category keys and values case sensitively while
+                // every other tag comparison in the product is case insensitive - so a challenge tagged
+                // "Production" was invisible to a role scoped to "production".
+                if (tagScopes?.Any() == true
+                    && !TagScopeFilter.Matches(challengeTags, tagScopes, matchAll: false))
                 {
-                    // Challenge must have at least one matching tag (OR logic)
-                    var hasMatchingTag = tagScopes.Any(scope =>
-                        challengeTags.Any(t => t.CategoryKey == scope.CategoryKey &&
-                            (scope.Value == null || t.Value == scope.Value)));
-
-                    if (!hasMatchingTag)
-                    {
-                        continue; // Skip challenges that don't match tag scope
-                    }
+                    continue;
                 }
 
                 // Build tag summaries
@@ -291,61 +287,5 @@ namespace Certify.Server.Hub.Api.Controllers
             return new OkObjectResult(result);
         }
 
-        /// <summary>
-        /// Get the user's tag scopes from their scoped assigned roles
-        /// </summary>
-        private async Task<ICollection<TagScope>?> GetUserTagScopesForResource()
-        {
-            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
-            {
-                return null;
-            }
-
-            try
-            {
-                // Get scoped assigned roles from the current auth context
-                // These are passed through from the access token validation
-                if (CurrentAuthContext.ScopedAssignedRoles == null || !CurrentAuthContext.ScopedAssignedRoles.Any())
-                {
-                    return null;
-                }
-
-                // Get the assigned roles to extract tag scopes
-                var assignedRoles = await _client.GetSecurityPrincipalAssignedRoles(CurrentAuthContext.UserId, CurrentAuthContext);
-
-                if (assignedRoles == null || !assignedRoles.Any())
-                {
-                    return null;
-                }
-
-                // Filter to only the scoped roles for this token, matching the way the authorization check itself
-                // resolves a token's scope - a mismatch here drops the tag scopes and removes the restriction
-                var scopedRoles = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles).ToList();
-
-                // Collect tag scopes from the scoped roles
-                var tagScopes = new List<TagScope>();
-
-                foreach (var role in scopedRoles)
-                {
-                    if (role.ScopedTags != null && role.ScopedTags.Any())
-                    {
-                        tagScopes.AddRange(role.ScopedTags);
-                    }
-                }
-
-                // If no tag restrictions found, return null (meaning no filtering)
-                if (!tagScopes.Any())
-                {
-                    return null;
-                }
-
-                return tagScopes;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting user tag scopes");
-                return null;
-            }
-        }
     }
 }

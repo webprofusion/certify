@@ -250,6 +250,53 @@ namespace Certify.Server.Hub.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// The tag scopes restricting what the caller may see, or null when they are unrestricted.
+        ///
+        /// A role assignment may be scoped to tags, which limits the resources that assignment can reach. An API
+        /// access token scoped to specific assignments considers only those; any other caller considers every
+        /// assignment they hold.
+        ///
+        /// There were two copies of this and they did not agree. One returned null - meaning no filtering at all -
+        /// whenever the caller had no token scope, so a signed in operator whose role was tag scoped saw every
+        /// resource while an API token scoped to that same role saw only the matching ones.
+        /// </summary>
+        internal async Task<List<TagScope>?> GetCallerTagScopes(ICertifyInternalApiClient internalApiClient)
+        {
+            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
+            {
+                return null;
+            }
+
+            try
+            {
+                var assignedRoles = await internalApiClient.GetSecurityPrincipalAssignedRoles(CurrentAuthContext.UserId, CurrentAuthContext);
+
+                if (assignedRoles?.Any() != true)
+                {
+                    return null;
+                }
+
+                // Getting the assignment id comparison wrong here removes the tag filtering rather than tightening
+                // it, so this shares the matching used by the authorization check itself.
+                var applicableRoles = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles);
+
+                var tagScopes = applicableRoles
+                    .Where(r => r.ScopedTags?.Count > 0)
+                    .SelectMany(r => r.ScopedTags!)
+                    .ToList();
+
+                // no tag restrictions on any applicable assignment, so the caller is unrestricted
+                return tagScopes.Count > 0 ? tagScopes : null;
+            }
+            catch (Exception)
+            {
+                // Fail closed on an empty scope set rather than null: null means unrestricted, so reporting it here
+                // would widen what an unreadable role assignment can see instead of narrowing it.
+                return [];
+            }
+        }
+
         internal AccessToken? GetAccessTokenFromRequest()
         {
             var clientId = Request.Headers["X-Client-ID"];

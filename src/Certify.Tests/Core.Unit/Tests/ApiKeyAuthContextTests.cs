@@ -376,6 +376,100 @@ namespace Certify.Core.Tests.Unit
             Assert.IsEmpty(evaluated.ScopedAssignedRoles);
         }
 
+        /// <summary>
+        /// A role assignment scoped to tags limits what that assignment can reach. There were two implementations of
+        /// reading those scopes off the caller and they disagreed: one returned "no restrictions" whenever the caller
+        /// had no API token scope, so a signed in operator whose role was tag scoped saw every resource while a token
+        /// scoped to that same role saw only the matching ones.
+        /// </summary>
+        [TestMethod]
+        public async Task GetCallerTagScopes_AppliesToACallerWithNoTokenScope()
+        {
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetSecurityPrincipalAssignedRoles("sp-operator", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<AssignedRole>
+                {
+                    new()
+                    {
+                        Id = "ar-1",
+                        RoleId = "hub_viewer_role",
+                        SecurityPrincipalId = "sp-operator",
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                    }
+                });
+
+            // authenticated with no scoped assigned roles, as an interactive user's bearer token is
+            var controller = CreateApiTokenAuthenticatedController("sp-operator");
+
+            var scopes = await InvokeGetCallerTagScopes(controller, client.Object);
+
+            Assert.IsNotNull(scopes, "a tag scoped role restricts its holder whether or not a token narrowed the scope");
+            Assert.HasCount(1, scopes!);
+            Assert.AreEqual("production", scopes![0].Value);
+        }
+
+        /// <summary>
+        /// A token scoped to one assignment considers only that assignment's tags, so tags on the principal's other
+        /// roles do not widen what the token can reach.
+        /// </summary>
+        [TestMethod]
+        public async Task GetCallerTagScopes_ConsidersOnlyTheAssignmentsATokenIsScopedTo()
+        {
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetSecurityPrincipalAssignedRoles("sp-app", It.IsAny<AuthContext>()))
+                .ReturnsAsync(new List<AssignedRole>
+                {
+                    new()
+                    {
+                        Id = "ar-scoped",
+                        RoleId = "managedchallenge_consumer_role",
+                        SecurityPrincipalId = "sp-app",
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "staging" }]
+                    },
+                    new()
+                    {
+                        Id = "ar-other",
+                        RoleId = "hub_viewer_role",
+                        SecurityPrincipalId = "sp-app",
+                        ScopedTags = [new TagScope { CategoryKey = "environment", Value = "production" }]
+                    }
+                });
+
+            var controller = CreateApiTokenAuthenticatedController("sp-app", "ar-scoped");
+
+            var scopes = await InvokeGetCallerTagScopes(controller, client.Object);
+
+            Assert.IsNotNull(scopes);
+            Assert.HasCount(1, scopes!);
+            Assert.AreEqual("staging", scopes![0].Value, "the other assignment's tags must not widen the token's reach");
+        }
+
+        /// <summary>
+        /// An unreadable role assignment must not read as unrestricted, which is what returning null would mean.
+        /// </summary>
+        [TestMethod]
+        public async Task GetCallerTagScopes_FailsClosedWhenRolesCannotBeRead()
+        {
+            var client = new Mock<ICertifyInternalApiClient>(MockBehavior.Strict);
+            client.Setup(c => c.GetSecurityPrincipalAssignedRoles(It.IsAny<string>(), It.IsAny<AuthContext>()))
+                .ThrowsAsync(new System.Exception("data store unavailable"));
+
+            var controller = CreateApiTokenAuthenticatedController("sp-operator");
+
+            var scopes = await InvokeGetCallerTagScopes(controller, client.Object);
+
+            Assert.IsNotNull(scopes, "null would mean unrestricted, which is the wrong way to fail");
+            Assert.IsEmpty(scopes!);
+        }
+
+        private static async Task<List<TagScope>?> InvokeGetCallerTagScopes(ApiControllerBase controller, ICertifyInternalApiClient client)
+        {
+            var method = typeof(ApiControllerBase).GetMethod("GetCallerTagScopes", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.IsNotNull(method);
+
+            return await (Task<List<TagScope>?>)method!.Invoke(controller, [client])!;
+        }
+
         private static ApiControllerBase CreateApiTokenAuthenticatedController(string securityPrincipalId, params string[] scopedAssignedRoleIds)
         {
             var claims = new List<Claim> { new(ClaimTypes.Sid, securityPrincipalId) };

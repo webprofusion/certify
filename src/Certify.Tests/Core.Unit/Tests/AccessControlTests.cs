@@ -1182,14 +1182,14 @@ namespace Certify.Tests.Core.Unit.Tests
         public void TestIsResourceTagScopeMatch_NoRestrictions_ReturnsTrue()
         {
             // When no tag restrictions are defined, access should be granted
-            var result = AccessControl.IsResourceTagScopeMatch(
+            var result = ResourceAccess.IsResourceTagScopeMatch(
                 resourceTags: new List<TagSummary> { new TagSummary { CategoryKey = "environment", Value = "production" } },
                 scopedTags: null,
                 requireAll: false);
 
             Assert.IsTrue(result, "Should grant access when no tag restrictions are defined");
 
-            result = AccessControl.IsResourceTagScopeMatch(
+            result = ResourceAccess.IsResourceTagScopeMatch(
                 resourceTags: new List<TagSummary> { new TagSummary { CategoryKey = "environment", Value = "production" } },
                 scopedTags: new List<TagScope>(),
                 requireAll: false);
@@ -1206,14 +1206,14 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "environment", Value = "production" }
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(
+            var result = ResourceAccess.IsResourceTagScopeMatch(
                 resourceTags: null,
                 scopedTags: scopedTags,
                 requireAll: false);
 
             Assert.IsFalse(result, "Should deny access when resource has no tags but restrictions exist");
 
-            result = AccessControl.IsResourceTagScopeMatch(
+            result = ResourceAccess.IsResourceTagScopeMatch(
                 resourceTags: new List<TagSummary>(),
                 scopedTags: scopedTags,
                 requireAll: false);
@@ -1235,10 +1235,10 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "environment", Value = "production" }
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
             Assert.IsTrue(result, "Should grant access when tags match exactly (OR logic)");
 
-            result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
             Assert.IsTrue(result, "Should grant access when tags match exactly (AND logic)");
         }
 
@@ -1256,7 +1256,7 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "environment", Value = null } // Any value in environment
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
             Assert.IsTrue(result, "Should grant access when resource has any value in the scoped category");
         }
 
@@ -1274,7 +1274,7 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "environment", Value = "production" }
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
             Assert.IsFalse(result, "Should deny access when tags don't match");
         }
 
@@ -1294,7 +1294,7 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "department", Value = "IT" } // Matches
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: false);
             Assert.IsTrue(result, "Should grant access when any scope matches (OR logic)");
         }
 
@@ -1314,7 +1314,7 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "department", Value = "IT" }
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
             Assert.IsTrue(result, "Should grant access when all scopes match (AND logic)");
         }
 
@@ -1334,7 +1334,7 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "department", Value = "IT" } // Doesn't match
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
             Assert.IsFalse(result, "Should deny access when not all scopes match (AND logic)");
         }
 
@@ -2190,12 +2190,12 @@ namespace Certify.Tests.Core.Unit.Tests
                             new TagScope { CategoryKey = "department", Value = "IT" } // Specific value
                         };
 
-            var result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            var result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
             Assert.IsTrue(result, "Should match when resource has any environment tag and department:IT");
 
             // Change department to Finance - should NOT match
             resourceTags[1] = new TagSummary { CategoryKey = "department", Value = "Finance" };
-            result = AccessControl.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
+            result = ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll: true);
             Assert.IsFalse(result, "Should NOT match when department doesn't match specific value");
         }
 

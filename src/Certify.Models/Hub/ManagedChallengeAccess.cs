@@ -141,9 +141,8 @@ namespace Certify.Models.Hub
             return unsatisfiedIdentifiers.Count == 0;
         }
 
-        public static List<TagSummary> ToTagSummaries(IEnumerable<ItemTag>? tags) => ResourceAccess.ToTagSummaries(tags);
-
-        public static bool IsResourceTagScopeMatch(List<TagSummary>? resourceTags, List<TagScope>? scopedTags, bool requireAll)
-            => ResourceAccess.IsResourceTagScopeMatch(resourceTags, scopedTags, requireAll);
+        // ToTagSummaries and IsResourceTagScopeMatch used to be re-exposed here, forwarding to ResourceAccess.
+        // Nothing called either, and a second name for one implementation is how a caller ends up believing there
+        // are two behaviours to choose between.
     }
 }
