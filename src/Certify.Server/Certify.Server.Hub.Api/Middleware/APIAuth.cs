@@ -1,5 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System.IO;
+using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using Certify.Client;
 using Certify.Models.Hub;
 using Microsoft.AspNetCore.Authentication;
@@ -52,6 +54,26 @@ namespace Certify.Server.Hub.Api.Middleware
     {
         public const string AuthenticationScheme = "ApiToken";
         public const string ScopedAssignedRoleClaimType = "certify.scoped_assigned_role";
+
+        /// <summary>
+        /// The client id of the API access token a request authenticated with. Lets a later stage recognise that a
+        /// credential it holds is the one the request already authenticated as, rather than resolving it again.
+        /// </summary>
+        public const string ApiClientIdClaimType = "certify.api_client_id";
+
+        /// <summary>
+        /// Headers carrying an API access token's client id and secret.
+        /// </summary>
+        public const string ClientIdHeaderName = "X-Client-ID";
+        public const string ClientSecretHeaderName = "X-Client-Secret";
+
+        /// <summary>
+        /// JSON body fields carrying the same credential. The managed challenge API has always accepted the client
+        /// id and secret this way, and the Certify managed DNS provider shipped in released agents sends them only
+        /// this way, so the hub has to keep accepting it.
+        /// </summary>
+        public const string InlineClientIdFieldName = "AuthKey";
+        public const string InlineClientSecretFieldName = "AuthSecret";
     }
 
     /// <summary>
@@ -80,22 +102,29 @@ namespace Certify.Server.Hub.Api.Middleware
         }
 
         /// <summary>
-        /// 
+        /// Largest request body which will be buffered and parsed looking for inline credentials.
+        ///
+        /// This path runs for callers who have not authenticated yet, so it has to be bounded: without a limit an
+        /// anonymous request could make the hub buffer and parse an arbitrarily large body before anything has
+        /// established who sent it. A credential carrying request is a few hundred bytes.
+        /// </summary>
+        private const long MaxInlineCredentialBodyBytes = 64 * 1024;
+
+        /// <summary>
+        /// Authenticate an API access token presented either as request headers or as fields inside a JSON request
+        /// body. Both transports carry the same credential, so both are resolved here rather than in the endpoints
+        /// which happen to accept the second one - that is what lets those endpoints authenticate through the
+        /// middleware like every other endpoint instead of reading credentials off the request themselves.
         /// </summary>
         /// <returns></returns>
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            //check if api key is present on request headers
-            if (!Request.Headers.ContainsKey("X-Client-ID") || !Request.Headers.ContainsKey("X-Client-Secret"))
+            var token = ReadHeaderCredentials() ?? await ReadInlineCredentialsAsync();
+
+            if (token == null)
             {
                 return AuthenticateResult.NoResult();
             }
-
-            var token = new AccessToken
-            {
-                ClientId = Request.Headers["X-Client-ID"]!,
-                Secret = Request.Headers["X-Client-Secret"]!
-            };
 
             // Resolve the token to the principal it belongs to. This is authentication and asks only whether the
             // token is valid: it used to also require the principal to hold a specific action, which made that one
@@ -108,12 +137,12 @@ namespace Certify.Server.Hub.Api.Middleware
                 return AuthenticateResult.Fail("API credentials invalid");
             }
 
-            var tokenAuthContext = AccessTokenAuthorization.FromCheckResult(result.Result);
+            var tokenAuthContext = result.Result;
 
             var claims = new List<Claim>
             {
                 new(ClaimTypes.Sid, string.IsNullOrWhiteSpace(tokenAuthContext?.SecurityPrincipalId) ? "api-client" : tokenAuthContext.SecurityPrincipalId),
-                new("certify.api_client_id", token.ClientId)
+                new(ApiKeyAuthenticationDefaults.ApiClientIdClaimType, token.ClientId)
             };
 
             if (tokenAuthContext?.ScopedAssignedRoles != null)
@@ -130,52 +159,110 @@ namespace Certify.Server.Hub.Api.Middleware
 
             return AuthenticateResult.Success(ticket);
         }
-    }
 
-    /// <summary>
-    /// Reads the security principal an API access token resolved to from an access check result. The result crosses
-    /// the internal API boundary, so it arrives already typed from an in-process backend and as deserialized JSON
-    /// from a remote one.
-    /// </summary>
-    internal static class AccessTokenAuthorization
-    {
-        public static AccessTokenAuthorizationContext? FromCheckResult(object? value)
+        /// <summary>
+        /// Credentials presented as request headers, the normal transport.
+        /// </summary>
+        private AccessToken? ReadHeaderCredentials()
         {
-            if (value == null)
+            var clientId = Request.Headers[ApiKeyAuthenticationDefaults.ClientIdHeaderName].ToString();
+            var secret = Request.Headers[ApiKeyAuthenticationDefaults.ClientSecretHeaderName].ToString();
+
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
             {
                 return null;
             }
 
-            if (value is AccessTokenAuthorizationContext typed)
+            return new AccessToken { ClientId = clientId, Secret = secret };
+        }
+
+        /// <summary>
+        /// Credentials presented as AuthKey/AuthSecret fields inside a JSON request body, as the managed challenge
+        /// API accepts them.
+        ///
+        /// The body is buffered and rewound so that model binding still sees it, and nothing is parsed unless the
+        /// request declares a JSON content type and a length small enough to be a credential carrying request.
+        /// A body which is not JSON, or carries neither field, simply yields no credential.
+        /// </summary>
+        private async Task<AccessToken?> ReadInlineCredentialsAsync()
+        {
+            if (!HttpMethods.IsPost(Request.Method) && !HttpMethods.IsPut(Request.Method))
             {
-                return typed;
+                return null;
             }
 
-            if (value is JObject jObject)
+            var contentLength = Request.ContentLength;
+
+            if (contentLength is null or <= 0 or > MaxInlineCredentialBodyBytes)
             {
-                return jObject.ToObject<AccessTokenAuthorizationContext>();
+                return null;
             }
 
-            if (value is IDictionary<string, object> dict)
+            if (Request.ContentType?.Contains("json", StringComparison.OrdinalIgnoreCase) != true)
             {
-                var principalId = dict.TryGetValue(nameof(AccessTokenAuthorizationContext.SecurityPrincipalId), out var principalObj)
-                    ? principalObj?.ToString()
-                    : null;
+                return null;
+            }
 
-                var scopedRoles = new List<string>();
-                if (dict.TryGetValue(nameof(AccessTokenAuthorizationContext.ScopedAssignedRoles), out var rolesObj) && rolesObj is IEnumerable<object> roleObjs)
+            try
+            {
+                Request.EnableBuffering();
+
+                if (!Request.Body.CanSeek)
                 {
-                    scopedRoles.AddRange(roleObjs.Select(r => r?.ToString()).Where(r => !string.IsNullOrWhiteSpace(r))!);
+                    return null;
                 }
 
-                return new AccessTokenAuthorizationContext
+                Request.Body.Position = 0;
+
+                using var document = await JsonDocument.ParseAsync(Request.Body, cancellationToken: Context.RequestAborted);
+
+                if (document.RootElement.ValueKind != JsonValueKind.Object)
                 {
-                    SecurityPrincipalId = principalId ?? string.Empty,
-                    ScopedAssignedRoles = scopedRoles
-                };
+                    return null;
+                }
+
+                var clientId = ReadStringProperty(document.RootElement, ApiKeyAuthenticationDefaults.InlineClientIdFieldName);
+                var secret = ReadStringProperty(document.RootElement, ApiKeyAuthenticationDefaults.InlineClientSecretFieldName);
+
+                if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(secret))
+                {
+                    return null;
+                }
+
+                return new AccessToken { ClientId = clientId, Secret = secret };
+            }
+            catch (Exception ex) when (ex is JsonException or IOException or InvalidOperationException)
+            {
+                // a body which cannot be read or is not valid JSON carries no credential, and this is not the
+                // layer which reports that to the caller - model binding will fail the request on its own terms
+                return null;
+            }
+            finally
+            {
+                if (Request.Body.CanSeek)
+                {
+                    Request.Body.Position = 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Read a string property by name, ignoring case. The field names travel over the wire and are serialized
+        /// by clients we do not control, so a casing difference must not decide whether a caller authenticates.
+        /// </summary>
+        private static string? ReadStringProperty(JsonElement element, string propertyName)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase)
+                    && property.Value.ValueKind == JsonValueKind.String)
+                {
+                    return property.Value.GetString();
+                }
             }
 
             return null;
         }
     }
+
 }

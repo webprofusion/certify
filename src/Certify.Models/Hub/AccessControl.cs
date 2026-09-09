@@ -272,6 +272,32 @@ namespace Certify.Models.Hub
     public static class ResourceAccess
     {
         /// <summary>
+        /// The role assignments an access token's scope selects, or all of them when the token is unscoped.
+        ///
+        /// A token is scoped by AssignedRole id rather than role id. Those ids are guids whose casing carries no
+        /// meaning, and they travel through JSON claims and stored config on the way here, so a casing difference
+        /// must not change the result. It matters in both directions and the two are easy to get wrong separately:
+        /// in the authorization check a mismatch reduces the scope to nothing and denies everything, while in the
+        /// resource filters it drops the role's tag scopes, which removes the restriction instead of applying it.
+        /// Sharing one implementation is what keeps those two from drifting apart.
+        /// </summary>
+        public static IEnumerable<AssignedRole> FilterToScopedAssignments(
+            IEnumerable<AssignedRole>? assignedRoles,
+            ICollection<string>? scopedAssignedRoleIds)
+        {
+            var roles = assignedRoles ?? [];
+
+            if (!(scopedAssignedRoleIds?.Count > 0))
+            {
+                return roles;
+            }
+
+            var scoped = new HashSet<string>(scopedAssignedRoleIds, StringComparer.OrdinalIgnoreCase);
+
+            return roles.Where(r => r.Id != null && scoped.Contains(r.Id));
+        }
+
+        /// <summary>
         /// True when the given domain identifier is permitted by the included domain resources on the
         /// authorizing roles. When no authorizing role carries any domain-typed IncludedResources the
         /// check is skipped (unrestricted).

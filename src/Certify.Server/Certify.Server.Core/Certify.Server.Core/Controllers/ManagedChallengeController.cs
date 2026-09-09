@@ -39,6 +39,19 @@ namespace Certify.Service.Controllers
             return await _certifyManager.DeleteManagedChallenge(id);
         }
 
+        /// <summary>
+        /// Whether a security principal may use managed challenges for a set of identifiers. Callers which need to
+        /// answer that before there is a challenge request to perform - the ACME endpoints accepting an order, for
+        /// one - ask it here rather than reassembling it from access control primitives.
+        /// </summary>
+        [HttpPost, Route("authorize")]
+        public async Task<Models.Config.ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check)
+        {
+            DebugLog();
+
+            return await _certifyManager.AuthorizeManagedChallengeIdentifiers(check);
+        }
+
         [HttpPost, Route("request")]
         public async Task<Models.Config.ActionResult> PerformChallengeResponse(ManagedChallengeRequest request)
         {

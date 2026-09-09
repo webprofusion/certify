@@ -110,14 +110,16 @@ namespace Certify.Management
         Task<ManagedChallengeAccessScope> GetManagedChallengeAccessScope(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
         Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(string? securityPrincipalId, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedChallengeRequest);
         Task<ICollection<ManagedChallenge>> GetAccessibleManagedChallenges(ManagedChallengeAccessScope scope);
-        Task<(bool CanSatisfy, List<string> UnsatisfiedIdentifiers)> CanPrincipalSatisfyManagedChallengeIdentifiers(string? securityPrincipalId, IEnumerable<string> identifiers, ICollection<string>? scopedAssignedRoles = null, string requiredActionId = StandardResourceActions.ManagedAcmePerformOrder);
+        /// <summary>
+        /// Whether a security principal may use managed challenges for a set of identifiers. This is the single
+        /// authorization decision behind managed challenges and managed ACME orders, for every caller.
+        /// </summary>
+        Task<ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check);
         Task<ActionResult> UpdateManagedChallenge(ManagedChallenge update);
         Task<ActionResult> DeleteManagedChallenge(string id);
         Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request);
-        Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
         Task<ManagedChallengeOperation?> GetManagedChallengeOperation(string operationId);
         Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request);
-        Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request, ICollection<TagScope>? tagScopes, bool requireAllTags = false);
         Task<ActionResult> CleanupManagedChallengeRequest(ManagedChallengeRequest request);
 
         Task<HubSettings> GetHubSettings();

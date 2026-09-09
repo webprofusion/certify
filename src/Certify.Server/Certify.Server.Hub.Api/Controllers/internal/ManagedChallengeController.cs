@@ -318,8 +318,9 @@ namespace Certify.Server.Hub.Api.Controllers
                     return null;
                 }
 
-                // Filter to only the scoped roles for this token
-                var scopedRoles = assignedRoles.Where(r => CurrentAuthContext.ScopedAssignedRoles.Contains(r.Id)).ToList();
+                // Filter to only the scoped roles for this token, matching the way the authorization check itself
+                // resolves a token's scope - a mismatch here drops the tag scopes and removes the restriction
+                var scopedRoles = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles).ToList();
 
                 // Collect tag scopes from the scoped roles
                 var tagScopes = new List<TagScope>();

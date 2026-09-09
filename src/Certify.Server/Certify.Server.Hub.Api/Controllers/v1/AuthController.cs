@@ -178,6 +178,11 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Refresh users current auth token using refresh token
         /// </summary>
+        /// <remarks>
+        /// Deliberately reachable without an access token: a caller refreshes precisely because the one it holds
+        /// has expired, so requiring a valid one would make the endpoint useless. The refresh token itself is the
+        /// credential, and it is single use.
+        /// </remarks>
         /// <param name="refreshToken"></param>
         /// <returns></returns>
         [AllowAnonymous]

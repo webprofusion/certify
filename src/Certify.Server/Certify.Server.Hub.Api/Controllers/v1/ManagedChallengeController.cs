@@ -1,5 +1,6 @@
 ﻿using Certify.Client;
 using Certify.Models.Hub;
+using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,19 +20,16 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private readonly ICertifyInternalApiClient _client;
 
-        private readonly ManagedChallengeScopeService _scopeService;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="logger"></param>
         /// <param name="client"></param>
-        /// <param name="scopeService"></param>
-        public ManagedChallengeController(ILogger<ManagedChallengeController> logger, ICertifyInternalApiClient client, ManagedChallengeScopeService scopeService)
+        public ManagedChallengeController(ILogger<ManagedChallengeController> logger, ICertifyInternalApiClient client)
         {
             _logger = logger;
             _client = client;
-            _scopeService = scopeService;
         }
 
         /// <summary>
@@ -41,7 +39,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("request")]
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Certify.Models.Config.ActionResult))]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
@@ -84,7 +82,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         [HttpPost]
         [Route("requestbegin")]
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status202Accepted, Type = typeof(ManagedChallengeOperation))]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
@@ -105,6 +103,17 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Get the status of a previously started managed challenge operation.
         /// </summary>
+        /// <remarks>
+        /// This endpoint cannot require authentication yet, so it is the one managed challenge operation which
+        /// does not go through the authentication middleware. The Certify managed DNS provider polls it with no
+        /// credentials at all (only a managed instance sends anything, and only its request signature), so the
+        /// authorization below falls back to the credentials stored on the operation itself. That makes the
+        /// unguessable operation id the effective capability.
+        ///
+        /// Requiring credentials here needs the provider to send them on the poll as well, which means an agent
+        /// side change before the hub side can be tightened. Until then this endpoint identifies an optional
+        /// caller explicitly rather than reimplementing token validation.
+        /// </remarks>
         [HttpGet]
         [Route("requeststatus/{id}")]
         [AllowAnonymous]
@@ -121,6 +130,9 @@ namespace Certify.Server.Hub.Api.Controllers
                 return NotFound();
             }
 
+            // a hub user may hold a bearer token even though the endpoint does not require one
+            await IdentifyOptionalCallerAsync();
+
             var authorization = await AuthorizeManagedChallengeActionAsync(StandardResourceActions.ManagedChallengeRequest, operation?.Request);
 
             if (authorization.Denial != null)
@@ -128,7 +140,46 @@ namespace Certify.Server.Hub.Api.Controllers
                 return authorization.Denial;
             }
 
-            return Ok(operation);
+            return Ok(WithoutCallerCredentials(operation));
+        }
+
+        /// <summary>
+        /// A copy of the operation with the requesting caller's credentials and resolved identity removed.
+        ///
+        /// The stored request keeps the AuthKey/AuthSecret it was made with, because fulfillment and cleanup still
+        /// need them, and this endpoint is reachable by anyone holding the operation id. Returning the stored request
+        /// verbatim therefore hands that party the API credentials the operation was created with, which are longer
+        /// lived and far more valuable than the operation itself. The legitimate caller already holds its own
+        /// credentials and only reads status and result, so removing them costs it nothing.
+        ///
+        /// The operation is copied rather than edited in place: the core holds operations in memory, so the instance
+        /// returned here is the live one, and blanking its fields would destroy the credentials cleanup still needs.
+        /// </summary>
+        private static ManagedChallengeOperation WithoutCallerCredentials(ManagedChallengeOperation operation)
+        {
+            var request = operation.Request;
+
+            return new ManagedChallengeOperation
+            {
+                Id = operation.Id,
+                Status = operation.Status,
+                Result = operation.Result,
+                DateCreated = operation.DateCreated,
+                DateLastUpdated = operation.DateLastUpdated,
+                DateStarted = operation.DateStarted,
+                DateCompleted = operation.DateCompleted,
+
+                // AuthKey, AuthSecret, SecurityPrincipalId and ScopedAssignedRoles are deliberately not carried over
+                Request = request == null ? new ManagedChallengeRequest() : new ManagedChallengeRequest
+                {
+                    ChallengeType = request.ChallengeType,
+                    Identifier = request.Identifier,
+                    ResponseKey = request.ResponseKey,
+                    ResponseValue = request.ResponseValue,
+                    DateTimePerformed = request.DateTimePerformed,
+                    ManagedCertId = request.ManagedCertId
+                }
+            };
         }
 
         /// <summary>
@@ -138,7 +189,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("cleanup")]
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Certify.Models.Config.ActionResult))]
         [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CleanupManagedChallenge(ManagedChallengeRequest request)
@@ -188,6 +239,11 @@ namespace Certify.Server.Hub.Api.Controllers
             {
                 request.SecurityPrincipalId = SecurityPrincipalId;
                 request.ScopedAssignedRoles = ScopedAssignedRoles;
+
+                // Set rather than left alone for the same reason as the principal: the origin decides which resource
+                // action fulfillment checks, so a caller who could choose it could be checked against a role other
+                // than the one this endpoint authorized them under.
+                request.Origin = ManagedChallengeRequestOrigins.ManagedChallengeApi;
             }
         }
 
@@ -231,7 +287,7 @@ namespace Certify.Server.Hub.Api.Controllers
                     identifier,
                     challengeType);
 
-                return await AuthorizeAccessTokenScopeAsync(accessToken, request, actionId);
+                return await AuthorizeCallerScopeAsync(accessToken, request, actionId);
             }
 
             _logger.LogDebug(
@@ -264,7 +320,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 var authResult = await IsAccessTokenAuthorized(_client, accessToken, accessCheck);
                 if (authResult.IsSuccess)
                 {
-                    return await AuthorizeAccessTokenScopeAsync(accessToken, request, actionId);
+                    return await AuthorizeCallerScopeAsync(accessToken, request, actionId);
                 }
 
                 if (managedInstanceAuthorization != null)
@@ -343,6 +399,29 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
+        /// Check that hub joining is authorized before the hub assigned id header is trusted enough to look an
+        /// instance up by it.
+        ///
+        /// Normally the caller is authenticated and this is a question about the principal they authenticated as,
+        /// which the authentication middleware already resolved their credentials to. The operation status endpoint
+        /// is the exception: it is reachable without credentials and authorizes against the token stored on the
+        /// operation, so on that path the token still has to be resolved here.
+        /// </summary>
+        private async Task<Certify.Models.Config.ActionResult> CheckJoiningAuthorizedAsync(AccessToken accessToken)
+        {
+            var joiningCheck = new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin);
+
+            if (!string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
+            {
+                return await IsAuthorized(_client, joiningCheck)
+                    ? new Certify.Models.Config.ActionResult("Authorized to join the hub", true)
+                    : new Certify.Models.Config.ActionResult("Caller is not authorized to join the hub as a managed instance.", false);
+            }
+
+            return await IsAccessTokenAuthorized(_client, accessToken, joiningCheck);
+        }
+
+        /// <summary>
         /// Authorize the caller as a managed instance signing with the hub joining credentials. On success the
         /// instance's own security principal is returned: the joining credentials belong to the shared managed
         /// instance service principal, which only grants hub joining, so fulfillment scoped to it would deny
@@ -350,7 +429,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         private async Task<ManagedChallengeAuthorization> AuthorizeManagedInstanceManagedChallengeAsync(ManagedChallengeRequest request, string actionId, AccessToken accessToken)
         {
-            var joiningAccessCheck = await IsAccessTokenAuthorized(_client, accessToken, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
+            var joiningAccessCheck = await CheckJoiningAuthorizedAsync(accessToken);
             if (!joiningAccessCheck.IsSuccess)
             {
                 return Deny(joiningAccessCheck.Message ?? "Managed instance joining key is not authorized.", StatusCodes.Status401Unauthorized);
@@ -389,37 +468,62 @@ namespace Certify.Server.Hub.Api.Controllers
                 return false;
             }
 
-            var (canSatisfy, failureReason, _) = await _scopeService.ValidatePrincipalCanSatisfyIdentifiers(
-                managedInstance.SecurityPrincipalId,
-                [request.Identifier],
-                scopedAssignedRoles: null,
-                requiredActionId: actionId);
+            var authorized = await _client.AuthorizeManagedChallengeIdentifiers(
+                new ManagedChallengeAuthorizationCheck
+                {
+                    SecurityPrincipalId = managedInstance.SecurityPrincipalId,
+                    Identifiers = [request.Identifier],
+                    RequiredActionId = actionId,
+                    RequireSatisfiableChallenge = true
+                },
+                SystemAuthContext);
 
-            if (!canSatisfy)
+            if (!authorized.IsSuccess)
             {
                 _logger.LogWarning(
                     "ValidateManagedInstanceChallengeAccessAsync found no accessible managed challenge for managed instance {managedInstanceId} / security principal {securityPrincipalId}: {message}",
                     managedInstance.InstanceId,
                     managedInstance.SecurityPrincipalId,
-                    failureReason);
+                    authorized.Message);
             }
 
-            return canSatisfy;
+            return authorized.IsSuccess;
         }
 
         /// <summary>
-        /// Authorize the caller as the security principal their access token belongs to, denying the request
-        /// when that principal is tag-scoped and no accessible managed challenge covers the requested
-        /// identifier. Unrestricted principals are unaffected, and a caller authenticated without an access
-        /// token (an interactive hub user) resolves to no principal, leaving fulfillment unscoped.
+        /// Authorize the caller as the security principal they authenticated as, and scope fulfillment to it.
+        ///
+        /// Every caller is scoped by their own principal, including one signed in interactively. That used to be
+        /// the exception: a caller with no API access token resolved to no principal at all, and fulfillment reads
+        /// an absent principal as the unscoped system path, so a tag scoped operator calling this endpoint got
+        /// access to every managed challenge rather than the ones their roles select.
         /// </summary>
-        private async Task<ManagedChallengeAuthorization> AuthorizeAccessTokenScopeAsync(AccessToken? accessToken, ManagedChallengeRequest? request, string actionId)
+        private async Task<ManagedChallengeAuthorization> AuthorizeCallerScopeAsync(AccessToken? accessToken, ManagedChallengeRequest? request, string actionId)
         {
-            var principal = await _scopeService.ResolveAccessTokenPrincipal(accessToken);
+            var principal = ResolveRequestPrincipal();
+
+            if (principal == null && accessToken != null)
+            {
+                // Credentials which did not resolve: revoked, expired, or the lookup failed. Falling through to
+                // Allowed() here would clear the principal from the request and hand the caller the unscoped path,
+                // so a failure to establish who they are would widen their access rather than deny it.
+                _logger.LogWarning(
+                    "AuthorizeManagedChallengeActionAsync denied for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: the access token presented did not resolve to a security principal.",
+                    actionId,
+                    request?.ManagedCertId ?? "<none>",
+                    request?.Identifier ?? "<none>",
+                    request?.ChallengeType ?? "<none>");
+
+                return Deny(
+                    "Access denied. The API credentials presented could not be resolved to a security principal.",
+                    StatusCodes.Status403Forbidden);
+            }
+
             if (principal == null)
             {
-                // not an API-token principal - other authorization paths apply
-                return ManagedChallengeAuthorization.Allowed();
+                return Deny(
+                    "Access denied. The request could not be attributed to a security principal.",
+                    StatusCodes.Status403Forbidden);
             }
 
             var allowed = ManagedChallengeAuthorization.Allowed(principal.SecurityPrincipalId, principal.ScopedAssignedRoles);
@@ -429,27 +533,58 @@ namespace Certify.Server.Hub.Api.Controllers
                 return allowed;
             }
 
-            var (isAuthorized, failureReason) = await _scopeService.AuthorizeIdentifiersForPrincipal(
-                principal.SecurityPrincipalId,
-                [request.Identifier],
-                principal.ScopedAssignedRoles,
-                actionId);
+            var authorized = await _client.AuthorizeManagedChallengeIdentifiers(
+                new ManagedChallengeAuthorizationCheck
+                {
+                    SecurityPrincipalId = principal.SecurityPrincipalId,
+                    Identifiers = [request.Identifier],
+                    ScopedAssignedRoles = principal.ScopedAssignedRoles,
+                    RequiredActionId = actionId
+                },
+                SystemAuthContext);
 
-            if (isAuthorized)
+            if (authorized.IsSuccess)
             {
                 return allowed;
             }
 
             _logger.LogWarning(
-                "AuthorizeManagedChallengeActionAsync denied by role scope for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}.",
+                "AuthorizeManagedChallengeActionAsync denied by role scope for action {actionId}, managed cert {managedCertId}, identifier {identifier}, challenge type {challengeType}: {message}",
                 actionId,
                 request.ManagedCertId,
                 request.Identifier,
-                request.ChallengeType);
+                request.ChallengeType,
+                authorized.Message);
 
             return Deny(
-                failureReason ?? "Access denied. No accessible managed challenge found for this domain with your API token's role scope.",
+                authorized.Message ?? "Access denied. No accessible managed challenge found for this domain within your role scope.",
                 StatusCodes.Status403Forbidden);
         }
+
+        /// <summary>
+        /// The principal this request acts as.
+        ///
+        /// Normally that is the caller, whose credential the authentication middleware already resolved. On the
+        /// operation status endpoint, which is reachable without credentials, there may be no authenticated caller
+        /// and the principal is instead the one the stored operation's token resolved to during authorization
+        /// above. <see cref="ApiControllerBase.RequestAuthContext"/> is exactly that distinction, so neither case
+        /// needs a credential resolved a second time here.
+        /// </summary>
+        private RequestPrincipal? ResolveRequestPrincipal()
+        {
+            var authContext = RequestAuthContext;
+
+            if (string.IsNullOrWhiteSpace(authContext?.UserId))
+            {
+                return null;
+            }
+
+            return new RequestPrincipal(authContext.UserId, authContext.ScopedAssignedRoles?.ToList());
+        }
+
+        /// <summary>
+        /// The security principal and role scope a request acts as.
+        /// </summary>
+        private sealed record RequestPrincipal(string SecurityPrincipalId, List<string>? ScopedAssignedRoles);
     }
 }

@@ -1131,7 +1131,8 @@ namespace Certify.Models.Hub
 
         /// <summary>
         /// Ensure the managed instance service principal holds a usable joining token, returning it and whether it
-        /// had to be issued. An existing token is kept as it is, because managed instances already hold its secret.
+        /// had to be issued. An existing token keeps its secret, because managed instances already hold it, but its
+        /// role scope is repaired if it no longer resolves.
         /// </summary>
         private static async Task<(AccessToken? Token, bool IsNew)> EnsureManagedInstanceJoiningToken(
             IAccessControl access,
@@ -1142,14 +1143,18 @@ namespace Certify.Models.Hub
         {
             var assignedTokens = await access.GetAssignedAccessTokens(contextUserId) ?? [];
 
-            var existingToken = assignedTokens
-                .Where(t => t.SecurityPrincipalId == securityPrincipalId && t.Title == ManagedInstanceJoiningTokenTitle)
-                .SelectMany(t => t.AccessTokens ?? [])
-                .FirstOrDefault(a => a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow));
+            static bool IsUsable(AccessToken a) => a.DateRevoked == null && (a.DateExpiry == null || a.DateExpiry >= DateTimeOffset.UtcNow);
 
-            if (existingToken != null)
+            var existingAssignedToken = assignedTokens
+                .FirstOrDefault(t => t.SecurityPrincipalId == securityPrincipalId
+                    && t.Title == ManagedInstanceJoiningTokenTitle
+                    && (t.AccessTokens ?? []).Any(IsUsable));
+
+            if (existingAssignedToken != null)
             {
-                return (existingToken, false);
+                await RescopeManagedInstanceJoiningToken(access, result, contextUserId, existingAssignedToken, scopedAssignedRole);
+
+                return (existingAssignedToken.AccessTokens!.First(IsUsable), false);
             }
 
             if (scopedAssignedRole == null)
@@ -1188,6 +1193,46 @@ namespace Certify.Models.Hub
             }
 
             return (token, true);
+        }
+
+        /// <summary>
+        /// Point an existing joining token at the current managed instance role assignment.
+        ///
+        /// A token is scoped by AssignedRole id, not role id, so repairing a removed role assignment creates a new
+        /// id and leaves the token scoped to one which no longer exists. Resolving such a token fails outright, so
+        /// without this the role is restored while the joining credential stays permanently dead - and the repair
+        /// reports success, which is what stops anyone looking.
+        /// </summary>
+        private static async Task RescopeManagedInstanceJoiningToken(
+            IAccessControl access,
+            StandardAccessConfigResult result,
+            string contextUserId,
+            AssignedAccessToken existingAssignedToken,
+            AssignedRole? scopedAssignedRole)
+        {
+            if (scopedAssignedRole == null)
+            {
+                return;
+            }
+
+            var scopedAssignedRoles = existingAssignedToken.ScopedAssignedRoles ?? [];
+
+            if (scopedAssignedRoles.Contains(scopedAssignedRole.Id, StringComparer.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            // Replaced rather than added to: this token is system issued for exactly this one assignment, and any
+            // other id it still carries is the stale one being corrected, which the update would reject.
+            existingAssignedToken.ScopedAssignedRoles = [scopedAssignedRole.Id];
+
+            var rescoped = await access.UpdateAssignedAccessToken(contextUserId, existingAssignedToken);
+
+            if (!rescoped.IsSuccess)
+            {
+                result.Failures.Add(
+                    $"The managed instance joining token is scoped to a role assignment which no longer exists and could not be re-scoped to the current [{StandardRoles.ManagedInstance.Id}] assignment: {rescoped.Message}");
+            }
         }
     }
 }

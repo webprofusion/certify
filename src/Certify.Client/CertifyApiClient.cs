@@ -15,6 +15,7 @@ using Certify.Providers;
 using Certify.Models.Utils;
 using Certify.Shared;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Polly;
 
 namespace Certify.Client
@@ -875,16 +876,39 @@ namespace Certify.Client
             return JsonToObject<List<SecurityPrincipal>>(result);
         }
 
-        public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null)
+        public async Task<Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>> CheckApiTokenHasAccess(AccessToken token, AccessCheck check, AuthContext authContext = null)
         {
             var result = await PostAsync("access/apitoken/check", new AccessTokenCheck { Check = check, Token = token }, authContext);
-            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+            return ToAccessTokenResult(await result.Content.ReadAsStringAsync());
         }
 
-        public async Task<Certify.Models.Config.ActionResult> ResolveApiToken(AccessToken token, AuthContext authContext = null)
+        public async Task<Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>> ResolveApiToken(AccessToken token, AuthContext authContext = null)
         {
             var result = await PostAsync("access/apitoken/resolve", token, authContext);
-            return JsonConvert.DeserializeObject<ActionResult>(await result.Content.ReadAsStringAsync());
+            return ToAccessTokenResult(await result.Content.ReadAsStringAsync());
+        }
+
+        /// <summary>
+        /// Read a token resolution response into a typed result.
+        ///
+        /// The response carries the resolved principal in the untyped ActionResult.Result, so it arrives here as a
+        /// JObject. This is the only place that is true - an in-process backend returns the principal already typed -
+        /// so the conversion belongs here rather than in each caller, which is where it used to live.
+        /// </summary>
+        private static Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext> ToAccessTokenResult(string json)
+        {
+            var result = JsonConvert.DeserializeObject<ActionResult>(json);
+
+            if (result == null)
+            {
+                return new Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>("No response from access token resolution.", false);
+            }
+
+            return new Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>(result.Message, result.IsSuccess)
+            {
+                IsWarning = result.IsWarning,
+                Result = (result.Result as JObject)?.ToObject<AccessTokenAuthorizationContext>()
+            };
         }
 
         public async Task<HubInfo> GetHubInfo(AuthContext authContext = null)

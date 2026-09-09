@@ -36,7 +36,6 @@ namespace Certify.Server.Hub.Api.Extensions
             // Register helper services as scoped (per request)
             services.AddScoped<AcmeJwsValidator>();
             services.AddScoped<AcmeExternalAccountBindingValidator>();
-            services.AddScoped<ManagedChallengeScopeService>();
             services.AddScoped<AcmeHelper>();
             services.AddScoped<AcmeReplayNonceFilter>();
 

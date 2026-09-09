@@ -206,17 +206,178 @@ namespace Certify.Management
         }
 
         /// <summary>
-        /// True when every identifier can be satisfied by a managed challenge accessible to the principal.
+        /// Whether a security principal may use managed challenges for a set of identifiers.
+        ///
+        /// This is the one answer to that question. It checks, in order: that the principal holds a role granting
+        /// the action, that every identifier is within the domain restrictions on the roles which granted it, and
+        /// - when the caller needs the request to be fulfillable - that an accessible managed challenge matches
+        /// every identifier.
         /// </summary>
-        public async Task<(bool CanSatisfy, List<string> UnsatisfiedIdentifiers)> CanPrincipalSatisfyManagedChallengeIdentifiers(
-            string? securityPrincipalId,
-            IEnumerable<string> identifiers,
-            ICollection<string>? scopedAssignedRoles = null,
-            string requiredActionId = StandardResourceActions.ManagedAcmePerformOrder)
+        public async Task<ActionResult> AuthorizeManagedChallengeIdentifiers(ManagedChallengeAuthorizationCheck check)
         {
-            var accessible = await GetAccessibleManagedChallenges(securityPrincipalId, scopedAssignedRoles, requiredActionId);
-            var ok = ManagedChallengeAccess.CanSatisfyIdentifiers(identifiers, accessible, out var unsatisfied);
-            return (ok, unsatisfied);
+            if (check == null || string.IsNullOrWhiteSpace(check.SecurityPrincipalId))
+            {
+                return new ActionResult("A security principal is required for managed challenge authorization", false);
+            }
+
+            var identifiers = check.Identifiers?
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Select(i => i.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
+
+            ManagedChallengeAccessScope scope;
+
+            try
+            {
+                scope = await GetManagedChallengeAccessScope(check.SecurityPrincipalId, check.ScopedAssignedRoles, check.RequiredActionId);
+            }
+            catch (Exception exp)
+            {
+                // fail closed: a transient evaluation error must not promote a scoped principal to unrestricted
+                _serviceLog?.Error(exp, "Failed to evaluate managed challenge access scope for principal {principalId}", check.SecurityPrincipalId);
+                return new ActionResult("Could not evaluate managed challenge access for this security principal", false);
+            }
+
+            if (!scope.HasAccess)
+            {
+                _serviceLog?.Warning(
+                    "Managed challenge access denied for principal {principalId}: no assigned role grants {actionId} (scoped assigned roles: {scopedRoles}). {roleAssignments}",
+                    check.SecurityPrincipalId,
+                    check.RequiredActionId,
+                    check.ScopedAssignedRoles?.Count > 0 ? string.Join(", ", check.ScopedAssignedRoles) : "(none)",
+                    await DescribeStoredRoleAssignments(check.SecurityPrincipalId, check.RequiredActionId));
+
+                return new ActionResult("Security principal is not authorised to use managed challenges", false);
+            }
+
+            // Domain restrictions are Domain Match rules held as domain-typed IncludedResources on the authorizing
+            // roles, so a principal whose roles carry none is unrestricted. These used to be enforced only in the
+            // hub API, which meant any other caller reaching this path was not subject to them at all.
+            var domainRules = ResourceAccess.GetDomainRestrictionRules(scope.AuthorizingRoles);
+
+            if (domainRules.Count > 0)
+            {
+                var denied = identifiers.Find(i => !ResourceAccess.IsIdentifierPermittedByDomainRules(domainRules, i));
+
+                if (denied != null)
+                {
+                    _serviceLog?.Warning(
+                        "Managed challenge identifier '{identifier}' denied for principal {principalId} by domain restrictions on the authorizing roles",
+                        denied,
+                        check.SecurityPrincipalId);
+
+                    return new ActionResult($"Identifier '{denied}' is not permitted by the domain restrictions on this role assignment", false);
+                }
+            }
+
+            if (!check.RequireSatisfiableChallenge && !scope.RequiresTagFiltering)
+            {
+                // unrestricted for this action, and the caller does not need the request to be fulfillable
+                return new ActionResult("Authorized", true);
+            }
+
+            if (identifiers.Count == 0)
+            {
+                return new ActionResult("At least one identifier is required", false);
+            }
+
+            var accessible = await GetAccessibleManagedChallenges(scope);
+
+            if (accessible.Count == 0)
+            {
+                _serviceLog?.Warning(
+                    "No managed challenges are accessible to principal {principalId} (unrestricted={isUnrestricted}, allowUnscoped={allowUnscoped}). Check managed challenge tags against the authorizing role tag scopes.",
+                    check.SecurityPrincipalId,
+                    scope.IsUnrestricted,
+                    scope.AllowUnscopedResources);
+
+                return new ActionResult(
+                    "No managed challenges are accessible to this security principal. The authorizing role is tag scoped and no managed challenge matches that tag scope.",
+                    false);
+            }
+
+            if (!ManagedChallengeAccess.CanSatisfyIdentifiers(identifiers, accessible, out var unsatisfied))
+            {
+                var rules = DescribeDomainMatchRules(accessible);
+
+                var detail = unsatisfied.Count == 1
+                    ? $"No accessible managed challenge matches identifier '{unsatisfied[0]}'. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains)."
+                    : $"No accessible managed challenge matches identifiers: {string.Join(", ", unsatisfied)}. Accessible Domain Match rules: {rules}. Note that '*.example.com' matches example.com and one subdomain level only (not deeper subdomains).";
+
+                _serviceLog?.Warning(
+                    "Managed challenge identifier matching failed for principal {principalId} against {count} accessible challenge(s). Unsatisfied: {identifiers}. Accessible Domain Match rules: {rules}",
+                    check.SecurityPrincipalId,
+                    accessible.Count,
+                    string.Join(", ", unsatisfied),
+                    rules);
+
+                return new ActionResult(detail, false);
+            }
+
+            return new ActionResult("Authorized", true);
+        }
+
+        /// <summary>
+        /// Describe the role assignments a principal actually holds, and the actions those roles grant.
+        ///
+        /// This state is always a configuration problem, and the denial alone does not distinguish "nothing is
+        /// assigned to this principal" from "assigned to a role which no longer exists" and "assigned to a role
+        /// whose policies do not grant this action", which are fixed in different places.
+        /// </summary>
+        private async Task<string> DescribeStoredRoleAssignments(string securityPrincipalId, string requiredActionId)
+        {
+            try
+            {
+                var access = await GetCurrentAccessControl();
+                var roleStatus = await access.GetSecurityPrincipalRoleStatus(StandardSecurityPrincipals.System, securityPrincipalId);
+
+                var assignments = roleStatus?.AssignedRoles?.ToList() ?? [];
+
+                if (assignments.Count == 0)
+                {
+                    return $"This principal holds no role assignments at all, so '{requiredActionId}' is granted to a different security principal or was never assigned. "
+                        + "For a managed instance, check the role is assigned to the instance's own security principal (Users > Managed Instances).";
+                }
+
+                var roles = roleStatus!.Roles?.ToList() ?? [];
+                var grantedActions = roleStatus.Policies?.SelectMany(p => p.ResourceActions ?? []).Distinct().ToList() ?? [];
+
+                var described = assignments.Select(a => roles.Exists(r => r.Id == a.RoleId)
+                    ? $"'{a.RoleId}' (assignment {a.Id})"
+                    : $"'{a.RoleId}' (assignment {a.Id}, NO SUCH ROLE DEFINITION IN THE STORE)");
+
+                return $"Roles assigned to this principal: {string.Join(", ", described)}. "
+                    + $"Actions granted by those roles: {(grantedActions.Count == 0 ? "(none)" : string.Join(", ", grantedActions))}. "
+                    + $"Required: {requiredActionId}.";
+            }
+            catch (Exception exp)
+            {
+                _serviceLog?.Debug($"Could not read role assignments for principal {securityPrincipalId} while reporting a managed challenge denial: {exp.Message}");
+                return "The principal's role assignments could not be read.";
+            }
+        }
+
+        /// <summary>
+        /// Summarise the accessible managed challenges and their Domain Match rules, so a matching failure reports
+        /// exactly which rules were evaluated.
+        /// </summary>
+        private static string DescribeDomainMatchRules(ICollection<ManagedChallenge> accessible)
+        {
+            if (accessible == null || accessible.Count == 0)
+            {
+                return "(none)";
+            }
+
+            return string.Join(", ", accessible.Select(c =>
+            {
+                var name = string.IsNullOrWhiteSpace(c.Title) ? c.Id : c.Title;
+                var rules = string.IsNullOrWhiteSpace(c.ChallengeConfig?.DomainMatch)
+                    ? "(no Domain Match set - matches nothing unless it is the only fallback)"
+                    : c.ChallengeConfig!.DomainMatch;
+
+                return $"'{name}' => [{rules}]";
+            }));
         }
 
         /// <summary>
@@ -241,7 +402,11 @@ namespace Certify.Management
                 DateTimePerformed = request.DateTimePerformed,
                 ManagedCertId = request.ManagedCertId,
                 SecurityPrincipalId = request.SecurityPrincipalId,
-                ScopedAssignedRoles = request.ScopedAssignedRoles?.ToList()
+                ScopedAssignedRoles = request.ScopedAssignedRoles?.ToList(),
+
+                // carried with the principal: deferred cleanup re-checks the same principal, so it has to know what
+                // authorized the request it is cleaning up after
+                Origin = request.Origin
             };
         }
 
@@ -256,14 +421,6 @@ namespace Certify.Management
 
         public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(ManagedChallengeRequest request)
         {
-            return BeginManagedChallengeRequest(request, tagScopes: null);
-        }
-
-        public Task<ManagedChallengeOperation> BeginManagedChallengeRequest(
-            ManagedChallengeRequest request,
-            ICollection<TagScope>? tagScopes,
-            bool requireAllTags = false)
-        {
             CleanupExpiredManagedChallengeOperations();
 
             var operation = new ManagedChallengeOperation
@@ -273,7 +430,7 @@ namespace Certify.Management
 
             _managedChallengeOperations[operation.Id] = operation;
 
-            _ = RunManagedChallengeOperation(operation.Id, tagScopes, requireAllTags);
+            _ = RunManagedChallengeOperation(operation.Id);
 
             return Task.FromResult(operation);
         }
@@ -286,25 +443,10 @@ namespace Certify.Management
 
         public Task<ActionResult> PerformManagedChallengeRequest(ManagedChallengeRequest request)
         {
-            return ExecuteManagedChallengeRequest(request, tagScopes: null);
+            return ExecuteManagedChallengeRequest(request);
         }
 
-        /// <summary>
-        /// Perform a managed challenge request with tag-based access control
-        /// </summary>
-        /// <param name="request">The challenge request details</param>
-        /// <param name="tagScopes">Tag scopes the caller is authorized for. If null, no tag filtering applied.</param>
-        /// <param name="requireAllTags">If true, challenge must match ALL tag scopes</param>
-        /// <returns>Result of the challenge operation</returns>
-        public Task<ActionResult> PerformManagedChallengeRequest(
-            ManagedChallengeRequest request,
-            ICollection<TagScope>? tagScopes,
-            bool requireAllTags = false)
-        {
-            return ExecuteManagedChallengeRequest(request, tagScopes, requireAllTags);
-        }
-
-        private async Task RunManagedChallengeOperation(string operationId, ICollection<TagScope>? tagScopes, bool requireAllTags)
+        private async Task RunManagedChallengeOperation(string operationId)
         {
             if (!_managedChallengeOperations.TryGetValue(operationId, out var operation))
             {
@@ -317,7 +459,7 @@ namespace Certify.Management
                 operation.DateStarted = DateTimeOffset.UtcNow;
                 operation.DateLastUpdated = operation.DateStarted.Value;
 
-                var result = await ExecuteManagedChallengeRequest(operation.Request, tagScopes, requireAllTags);
+                var result = await ExecuteManagedChallengeRequest(operation.Request);
 
                 operation.Result = result;
                 operation.Status = result.IsSuccess ? ManagedChallengeOperationStates.Succeeded : ManagedChallengeOperationStates.Failed;
@@ -348,10 +490,7 @@ namespace Certify.Management
             }
         }
 
-        private async Task<ActionResult> ExecuteManagedChallengeRequest(
-            ManagedChallengeRequest request,
-            ICollection<TagScope>? tagScopes,
-            bool requireAllTags = false)
+        private async Task<ActionResult> ExecuteManagedChallengeRequest(ManagedChallengeRequest request)
         {
             var log = _serviceLog;
 
@@ -359,33 +498,39 @@ namespace Certify.Management
 
             if (!string.IsNullOrWhiteSpace(request.SecurityPrincipalId))
             {
-                // Prefer principal-based scope resolution (Managed ACME / scoped consumer roles).
-                // Managed ACME fulfillment uses ManagedAcmePerformOrder; external API consumers use ManagedChallengeRequest.
-                var actionId = !string.IsNullOrWhiteSpace(request.AuthKey)
-                    ? StandardResourceActions.ManagedChallengeRequest
-                    : StandardResourceActions.ManagedAcmePerformOrder;
+                // Managed ACME fulfillment is covered by the order action it was authorized under; a direct managed
+                // challenge call is checked against the per-request action.
+                var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(
+                    request.Origin,
+                    StandardResourceActions.ManagedChallengeRequest);
+
+                // This is the authorization decision for the request, and the same one every other caller asks, so
+                // domain restrictions and role scope are enforced here rather than only in whichever layer happened
+                // to be in front. Fulfillment reports a missing challenge on its own, so a match is not required.
+                var authorized = await AuthorizeManagedChallengeIdentifiers(new ManagedChallengeAuthorizationCheck
+                {
+                    SecurityPrincipalId = request.SecurityPrincipalId,
+                    Identifiers = string.IsNullOrWhiteSpace(request.Identifier) ? [] : [request.Identifier],
+                    ScopedAssignedRoles = request.ScopedAssignedRoles,
+                    RequiredActionId = actionId
+                });
+
+                if (!authorized.IsSuccess)
+                {
+                    return new ActionResult { IsSuccess = false, Message = authorized.Message };
+                }
 
                 var accessScope = await GetManagedChallengeAccessScope(
                     request.SecurityPrincipalId,
                     request.ScopedAssignedRoles,
                     actionId);
 
-                if (!accessScope.HasAccess)
-                {
-                    return new ActionResult { IsSuccess = false, Message = "Security principal is not authorised to use managed challenges" };
-                }
-
                 managedChallenges = await GetAccessibleManagedChallenges(accessScope);
-            }
-            else if (tagScopes?.Any() == true)
-            {
-                // Explicit tag scopes from callers that already resolved token scopes.
-                var includeUntagged = (await GetHubSettings()).ManagedChallenge.AllowUnscopedForScopedPrincipals;
-                managedChallenges = await GetManagedChallengesWithTagFilter(tagScopes, requireAllTags, includeUntagged);
             }
             else
             {
-                // Unscoped/system path - all challenges eligible for domain matching.
+                // Unscoped/system path - all challenges eligible for domain matching. Reached by a local instance
+                // performing its own challenge, where there is no hub principal to scope by.
                 managedChallenges = await GetManagedChallenges();
             }
 
@@ -534,9 +679,9 @@ namespace Certify.Management
 
             if (!string.IsNullOrWhiteSpace(request.SecurityPrincipalId))
             {
-                var actionId = !string.IsNullOrWhiteSpace(request.AuthKey)
-                    ? StandardResourceActions.ManagedChallengeCleanup
-                    : StandardResourceActions.ManagedAcmePerformOrder;
+                var actionId = ManagedChallengeRequestOrigins.GetRequiredResourceAction(
+                    request.Origin,
+                    StandardResourceActions.ManagedChallengeCleanup);
 
                 var accessScope = await GetManagedChallengeAccessScope(
                     request.SecurityPrincipalId,

@@ -5,8 +5,8 @@ using Certify.Client;
 using Certify.Models.Hub;
 using Certify.Server.Hub.Api.Middleware;
 using Certify.Server.Hub.Api.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Certify.Server.Hub.Api.Controllers
 {
@@ -40,6 +40,21 @@ namespace Certify.Server.Hub.Api.Controllers
                 check.SecurityPrincipalId = CurrentAuthContext.UserId;
             }
 
+            // An API access token is issued scoped to specific role assignments, and being authenticated as a
+            // principal is not authority to act as every role that principal holds. The scope arrives as claims on
+            // the request, but only the check itself crosses to the access control store, so it has to be carried
+            // there or the token is evaluated against the principal's full role set.
+            //
+            // This only applies when the check is about the principal the caller authenticated as: an explicit
+            // security principal id asks whether some other principal has access, which the caller's own token
+            // scope does not narrow.
+            if (check.SecurityPrincipalId == CurrentAuthContext.UserId
+                && !(check.ScopedAssignedRoles?.Count > 0)
+                && CurrentAuthContext.ScopedAssignedRoles?.Count > 0)
+            {
+                check.ScopedAssignedRoles = CurrentAuthContext.ScopedAssignedRoles;
+            }
+
             return await internalApiClient.CheckSecurityPrincipalHasAccess(check, CurrentAuthContext);
         }
 
@@ -50,22 +65,17 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <param name="token"></param>
         /// <param name="check"></param>
         /// <returns></returns>
-        internal async Task<Certify.Models.Config.ActionResult> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
+        internal async Task<Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorized(ICertifyInternalApiClient internalApiClient, AccessToken token, AccessCheck check)
         {
             var result = await internalApiClient.CheckApiTokenHasAccess(token, check, CurrentAuthContext);
 
-            if (result?.IsSuccess == true)
+            if (result?.IsSuccess == true && !string.IsNullOrWhiteSpace(result.Result?.SecurityPrincipalId))
             {
-                var tokenAuthContext = AccessTokenAuthorization.FromCheckResult(result.Result);
-
-                if (!string.IsNullOrWhiteSpace(tokenAuthContext?.SecurityPrincipalId))
+                _accessTokenAuthContext = new AuthContext
                 {
-                    _accessTokenAuthContext = new AuthContext
-                    {
-                        UserId = tokenAuthContext!.SecurityPrincipalId,
-                        ScopedAssignedRoles = tokenAuthContext.ScopedAssignedRoles?.Count > 0 ? tokenAuthContext.ScopedAssignedRoles : null
-                    };
-                }
+                    UserId = result.Result.SecurityPrincipalId,
+                    ScopedAssignedRoles = result.Result.ScopedAssignedRoles?.Count > 0 ? result.Result.ScopedAssignedRoles : null
+                };
             }
 
             return result;
@@ -84,26 +94,27 @@ namespace Certify.Server.Hub.Api.Controllers
         /// </summary>
         internal AuthContext? RequestAuthContext => CurrentAuthContext ?? _accessTokenAuthContext;
 
+        /// <summary>
+        /// Check that the caller may perform the given resource action.
+        ///
+        /// There is one principal to check, whichever credential the caller presented: the authentication
+        /// middleware resolved it before the endpoint ran. This used to check the bearer token and then, on
+        /// failure, read an API token off the request headers and resolve it a second time - repeating for the
+        /// same credential the work the ApiToken scheme had already done, and reporting a missing header as the
+        /// reason a bearer-authenticated caller was refused.
+        /// </summary>
         internal async Task<Certify.Models.Config.ActionResult> CheckRequestAuthorized(ICertifyInternalApiClient internalApiClient, AccessCheck check)
         {
-            // check for authorization bearer token first
-
-            var currenAuthContextCheckOK = await IsAuthorized(internalApiClient, check);
-
-            if (currenAuthContextCheckOK)
+            if (string.IsNullOrWhiteSpace(CurrentAuthContext?.UserId))
             {
-                return new Certify.Models.Config.ActionResult("Authorized by bearer token", true);
+                return new Certify.Models.Config.ActionResult(
+                    "No authenticated caller. Present a bearer token, or X-Client-ID and X-Client-Secret headers.",
+                    false);
             }
 
-            // check for access token in request headers
-            var accessToken = GetAccessTokenFromRequest();
-
-            if (accessToken == null)
-            {
-                return new Certify.Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
-            }
-
-            return await IsAccessTokenAuthorized(internalApiClient, accessToken, check);
+            return await IsAuthorized(internalApiClient, check)
+                ? new Certify.Models.Config.ActionResult("Authorized", true)
+                : new Certify.Models.Config.ActionResult($"Not authorized to perform {check.ResourceActionId}", false);
         }
         /// <summary>
         /// The Domain Match rules restricting a security principal for a resource action, taken from the domain-typed
@@ -201,33 +212,35 @@ namespace Certify.Server.Hub.Api.Controllers
         }
 
         /// <summary>
-        /// Upper bound on how long a resolved auth context is cached, so that a very long lived token is still
-        /// revalidated periodically. The token's own expiry takes precedence when it is sooner.
+        /// Identify the caller on an endpoint which is reachable without credentials but still behaves differently
+        /// for a caller who presented some.
+        ///
+        /// This runs the same authentication handlers the middleware would have run for an [AuthorizedApi] endpoint,
+        /// so there is one implementation of "are these credentials valid" rather than a second one for endpoints
+        /// which opt out. A caller who presents nothing, or something invalid, is simply left unauthenticated: this
+        /// identifies, it does not authorize, and every endpoint still checks its own resource action afterwards.
         /// </summary>
-        private static readonly TimeSpan MaxAuthContextCacheDuration = TimeSpan.FromMinutes(20);
-
-        /// <summary>
-        /// Cache key for a resolved auth context, derived from the token rather than being the token.
-        /// </summary>
-        private static string AuthContextCacheKey(string token)
+        internal async Task IdentifyOptionalCallerAsync()
         {
-            var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token));
-            return "AuthContext_" + Convert.ToBase64String(hash);
-        }
-
-        /// <summary>
-        /// The token's expiry, or null when there is no readable exp claim.
-        /// </summary>
-        private static DateTimeOffset? GetTokenExpiry(ClaimsIdentity claimsIdentity)
-        {
-            var expClaim = claimsIdentity.FindFirst("exp")?.Value;
-
-            if (string.IsNullOrWhiteSpace(expClaim) || !long.TryParse(expClaim, out var expSeconds))
+            if (HttpContext.User?.Identity?.IsAuthenticated == true)
             {
-                return null;
+                return;
             }
 
-            return DateTimeOffset.FromUnixTimeSeconds(expSeconds);
+            foreach (var scheme in new[]
+            {
+                Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme,
+                ApiKeyAuthenticationDefaults.AuthenticationScheme
+            })
+            {
+                var result = await HttpContext.AuthenticateAsync(scheme);
+
+                if (result.Succeeded && result.Principal != null)
+                {
+                    HttpContext.User = result.Principal;
+                    return;
+                }
+            }
         }
 
         internal AccessToken? GetAccessTokenFromRequest()
@@ -295,72 +308,11 @@ namespace Certify.Server.Hub.Api.Controllers
                     }
                 }
 
-                var authHeader = Request.Headers["Authorization"];
-
-                if (string.IsNullOrWhiteSpace(authHeader))
-                {
-                    return null;
-                }
-
-                var authToken = AuthenticationHeaderValue.Parse(authHeader!).Parameter;
-
-                if (string.IsNullOrWhiteSpace(authToken))
-                {
-                    return null;
-                }
-
-                var _cache = HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
-
-                // The token is not used as the cache key directly, so that a bearer token is not held in a keyspace
-                // which tends to surface in diagnostics and memory dumps.
-                var cacheKey = AuthContextCacheKey(authToken);
-
-                if (_cache.TryGetValue(cacheKey, out AuthContext? cachedAuthContext))
-                {
-                    if (cachedAuthContext != null)
-                    {
-                        return cachedAuthContext;
-                    }
-                }
-
-                try
-                {
-                    var _config = HttpContext.RequestServices.GetRequiredService<IConfiguration>();
-                    var jwt = new Hub.Api.Services.JwtService(_config);
-                    var claimsIdentity = jwt.ClaimsIdentityFromTokenAsync(authToken, validateTokenLifetime: true).Result;
-                    var userId = claimsIdentity.FindFirst(ClaimTypes.Sid)?.Value;
-
-                    var authContext = new AuthContext { Token = authToken, UserId = userId };
-
-                    // The token's lifetime is only checked on a cache miss, so the entry must not outlive the token
-                    // itself. Otherwise an expired token keeps working on any endpoint which resolves the auth context
-                    // without the JWT bearer middleware having rejected it first.
-                    var tokenExpiry = GetTokenExpiry(claimsIdentity);
-
-                    if (tokenExpiry == null)
-                    {
-                        // a token whose expiry cannot be read is not cached, every request revalidates it
-                        return authContext;
-                    }
-
-                    var cacheDuration = tokenExpiry.Value - DateTimeOffset.UtcNow;
-
-                    if (cacheDuration > MaxAuthContextCacheDuration)
-                    {
-                        cacheDuration = MaxAuthContextCacheDuration;
-                    }
-
-                    if (cacheDuration > TimeSpan.Zero)
-                    {
-                        _cache.Set(cacheKey, authContext, cacheDuration);
-                    }
-
-                    return authContext;
-                }
-                catch (Exception)
-                {
-                    return null;
-                }
+                // No authenticated principal, so there is no caller to report. Credentials are validated by the
+                // authentication middleware for an [AuthorizedApi] endpoint, and by IdentifyOptionalCallerAsync
+                // for one which is reachable anonymously: this used to re-validate the bearer token here instead,
+                // which meant a second implementation of token validation with its own cache and expiry handling.
+                return null;
             }
         }
     }

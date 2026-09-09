@@ -150,13 +150,13 @@ namespace Certify.Core.Tests.Unit
                     It.Is<AccessToken>(t => t.ClientId == request.AuthKey && t.Secret == request.AuthSecret),
                     It.Is<AccessCheck>(a => a.ResourceType == ResourceTypes.ManagedInstance && a.ResourceActionId == StandardResourceActions.ManagementHubInstanceJoin),
                     It.IsAny<AuthContext>()))
-                .ReturnsAsync(new Certify.Models.Config.ActionResult("Managed instance join allowed", true));
+                .ReturnsAsync(new Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>("Managed instance join allowed", true));
 
             client.Setup(c => c.CheckApiTokenHasAccess(
                     It.Is<AccessToken>(t => t.ClientId == request.AuthKey && t.Secret == request.AuthSecret),
                     It.Is<AccessCheck>(a => a.ResourceType == ResourceTypes.ManagedChallenge && a.ResourceActionId == StandardResourceActions.ManagedChallengeRequest),
                     It.IsAny<AuthContext>()))
-                .ReturnsAsync(new Certify.Models.Config.ActionResult("Access token unknown, expired or revoked.", false));
+                .ReturnsAsync(new Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>("Access token unknown, expired or revoked.", false));
 
             client.Setup(c => c.GetHubManagedInstance("instance-1", It.IsAny<AuthContext>()))
                 .ReturnsAsync(new ManagedInstanceInfo
@@ -167,29 +167,17 @@ namespace Certify.Core.Tests.Unit
                     SecurityPrincipalId = "sp-1"
                 });
 
-            client.Setup(c => c.GetManagedChallenges(It.IsAny<AuthContext>()))
-                .ReturnsAsync(new List<ManagedChallenge>
-                {
-                    new ManagedChallenge
-                    {
-                        Id = "challenge-1",
-                        ChallengeConfig = new CertRequestChallengeConfig
-                        {
-                            DomainMatch = request.Identifier
-                        }
-                    }
-                });
-
-            client.Setup(c => c.GetHubItemTags(TaggedItemTypes.ManagedChallenge, "challenge-1", It.IsAny<AuthContext>()))
-                .ReturnsAsync(new List<TagSummary>());
-
-            client.Setup(c => c.GetHubSettings(It.IsAny<AuthContext>()))
-                .ReturnsAsync(new HubSettings());
-
-            client.Setup(c => c.EvaluateAccessScope(
-                    It.Is<AccessCheck>(a => a.SecurityPrincipalId == "sp-1" && a.ResourceActionId == StandardResourceActions.ManagedChallengeRequest),
+            // Managed challenge authorization is one question answered in one place, so the controller asks it
+            // rather than reassembling it from access scope, challenge and tag lookups. It must be asked about the
+            // instance's own principal: the joining credentials belong to the shared managed instance principal,
+            // which grants only hub joining.
+            client.Setup(c => c.AuthorizeManagedChallengeIdentifiers(
+                    It.Is<ManagedChallengeAuthorizationCheck>(a =>
+                        a.SecurityPrincipalId == "sp-1"
+                        && a.RequiredActionId == StandardResourceActions.ManagedChallengeRequest
+                        && a.Identifiers.Contains(request.Identifier)),
                     It.IsAny<AuthContext>()))
-                .ReturnsAsync(new ResourceAccessScope { HasAccess = true, IsUnrestricted = true });
+                .ReturnsAsync(new Certify.Models.Config.ActionResult("Authorized", true));
 
             // Deliberately unused while the code is correct: it is what the joining credentials would resolve
             // to if fulfillment went back to deriving identity from the access token, so a regression fails
@@ -226,10 +214,7 @@ namespace Certify.Core.Tests.Unit
 
             var context = CreateRequestContext(path, requestBody, timestamp, signature, bodyHash);
             context.RequestServices = services.BuildServiceProvider();
-
-            var scopeService = new ManagedChallengeScopeService(client.Object, NullLogger<ManagedChallengeScopeService>.Instance);
-
-            var controller = new ManagedChallengeController(NullLogger<ManagedChallengeController>.Instance, client.Object, scopeService)
+            var controller = new ManagedChallengeController(NullLogger<ManagedChallengeController>.Instance, client.Object)
             {
                 ControllerContext = new ControllerContext { HttpContext = context }
             };

@@ -31,14 +31,18 @@ namespace Certify.Core.Management.Access
         Task<List<ResourceAction>> GetResourceActions(string contextUserId);
 
         Task<bool> IsSecurityPrincipalAuthorised(string contextUserId, AccessCheck check);
-        Task<Models.Config.ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
+
+        /// <summary>
+        /// Resolve an access token and confirm the principal it authenticates as may perform the given action.
+        /// On success the result carries that principal, as <see cref="ResolveAccessToken"/> does.
+        /// </summary>
+        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check);
 
         /// <summary>
         /// Resolve an access token to the security principal and role scope it authenticates as, without checking
-        /// whether that principal may perform any particular action. On success the result carries an
-        /// <see cref="AccessTokenAuthorizationContext"/>.
+        /// whether that principal may perform any particular action.
         /// </summary>
-        Task<Models.Config.ActionResult> ResolveAccessToken(string contextUserId, AccessToken accessToken);
+        Task<Models.Config.ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(string contextUserId, AccessToken accessToken);
 
         /// <summary>
         /// Evaluate the access scope for a principal/action, including authorizing roles and whether

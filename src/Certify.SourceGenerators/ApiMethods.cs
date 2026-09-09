@@ -430,6 +430,23 @@ namespace Certify.SourceGenerators
                 },
                 new()
                 {
+                    OperationName = "AuthorizeManagedChallengeIdentifiers",
+                    OperationMethod = HttpPost,
+                    Comment = "Check whether a security principal may use managed challenges for a set of identifiers",
+                    PublicAPIController = null, // internal use only, this is how the hub asks the access question
+                    ServiceAPIRoute = "managedchallenge/authorize",
+                    ReturnType = actionResultTypeName,
+                    Params = new Dictionary<string, string>
+                    {
+                        { "check", "Certify.Models.Hub.ManagedChallengeAuthorizationCheck" }
+                    },
+
+                    // asking whether some principal may do something is the same question as CheckSecurityPrincipalHasAccess,
+                    // so it carries the same requirement rather than being readable by any authenticated caller
+                    RequiredPermissions = [new(ResourceTypes.SecurityPrincipal, StandardResourceActions.SecurityPrincipalCheckAccess)]
+                },
+                new()
+                {
                     OperationName = "PerformManagedChallenge",
                     OperationMethod = HttpPost,
                     Comment = "Perform a managed challenge (DNS challenge delegation etc)",

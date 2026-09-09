@@ -114,7 +114,7 @@ namespace Certify.Service.Controllers
         }
 
         [HttpPost, Route("apitoken/check/")]
-        public async Task<Certify.Models.Config.ActionResult> CheckApiTokenHasAccess(AccessTokenCheck tokenCheck)
+        public async Task<Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>> CheckApiTokenHasAccess(AccessTokenCheck tokenCheck)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 
@@ -126,7 +126,7 @@ namespace Certify.Service.Controllers
         /// principal may do. Used to authenticate an API token request, which is then authorized per operation.
         /// </summary>
         [HttpPost, Route("apitoken/resolve/")]
-        public async Task<Certify.Models.Config.ActionResult> ResolveApiToken(AccessToken token)
+        public async Task<Certify.Models.Config.ActionResult<AccessTokenAuthorizationContext>> ResolveApiToken(AccessToken token)
         {
             var accessControl = await _certifyManager.GetCurrentAccessControl();
 

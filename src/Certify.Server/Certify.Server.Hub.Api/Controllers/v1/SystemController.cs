@@ -235,7 +235,7 @@ namespace Certify.Server.Hub.Api.Controllers
         [HttpGet]
         [Route("/api/v1/hub/register")]
         [EnableRateLimiting(RateLimitingExtension.HubJoinPolicy)]
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubJoiningInfo))]
 
         public async Task<IActionResult> Register()
@@ -246,18 +246,19 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Checks if a client can join a hub based on provided credentials and parameters.
         /// </summary>
+        /// <remarks>
+        /// A joining instance presents its client id and secret as request headers, so the ApiToken scheme
+        /// authenticates it like any other API caller. The join action is still checked here: authenticating
+        /// only establishes which principal is calling, not that it may join a hub.
+        /// </remarks>
         /// <returns>Returns an IActionResult indicating the success or failure of the access check.</returns>
         [HttpGet]
         [Route("/api/v1/hub/joincheck/")]
         [EnableRateLimiting(RateLimitingExtension.HubJoinPolicy)]
-
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HubJoiningInfo))]
         public async Task<IActionResult> CheckJoining(bool? register = false, bool? reissueRequestAuthSecret = false)
         {
-
-            // auth based on client id and client secret
-
             var accessCheck = await CheckRequestAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
 
             if (!accessCheck.IsSuccess)

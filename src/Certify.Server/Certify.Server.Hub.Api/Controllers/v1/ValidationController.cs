@@ -64,6 +64,11 @@ namespace Certify.Server.Hub.Api.Controllers
         /// get current challenge info for a given type/key
         /// legacy route for backwards compatibility used by http challenge server to check for current expected responses
         /// </summary>
+        /// <remarks>
+        /// The one endpoint here which takes no credentials of any kind. The http challenge responder calls it
+        /// before any identity exists, and it returns only in-flight http-01 tokens, which the CA is about to fetch
+        /// over plain http anyway. Anything beyond that must not be added to this response.
+        /// </remarks>
         /// <param name="type"></param>
         /// <param name="key"></param>
         /// <returns></returns>

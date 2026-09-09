@@ -213,5 +213,52 @@ namespace Certify.Core.Tests.Unit
                 }
             }
         }
+
+        #region scoped role assignment matching
+
+        private static AssignedRole AssignmentWithId(string id)
+            => new() { Id = id, RoleId = StandardRoles.CertificateConsumer.Id, SecurityPrincipalId = "test_principal" };
+
+        /// <summary>
+        /// Assignment ids are guids whose casing carries no meaning, and they travel through JSON claims and stored
+        /// config before they get here. A casing difference denies everything in the authorization check and, in the
+        /// resource filters, drops the role's tag scopes - which removes the restriction rather than applying it.
+        /// </summary>
+        [TestMethod]
+        public void ScopedAssignmentsMatchRegardlessOfIdCasing()
+        {
+            var assignment = AssignmentWithId("A1B2C3D4-0000-0000-0000-000000000001");
+
+            var matched = ResourceAccess.FilterToScopedAssignments([assignment], ["a1b2c3d4-0000-0000-0000-000000000001"]).ToList();
+
+            Assert.AreEqual(1, matched.Count, "a casing difference must not change which role assignments a token's scope selects");
+            Assert.AreEqual(assignment.Id, matched[0].Id);
+        }
+
+        [TestMethod]
+        public void AnUnscopedTokenSelectsEveryAssignment()
+        {
+            var assignments = new List<AssignedRole> { AssignmentWithId("ar-1"), AssignmentWithId("ar-2") };
+
+            Assert.AreEqual(2, ResourceAccess.FilterToScopedAssignments(assignments, null).Count());
+            Assert.AreEqual(2, ResourceAccess.FilterToScopedAssignments(assignments, []).Count());
+        }
+
+        [TestMethod]
+        public void AScopedTokenSelectsOnlyTheAssignmentsItNames()
+        {
+            var assignments = new List<AssignedRole> { AssignmentWithId("ar-1"), AssignmentWithId("ar-2") };
+
+            var matched = ResourceAccess.FilterToScopedAssignments(assignments, ["ar-2"]).ToList();
+
+            Assert.AreEqual(1, matched.Count);
+            Assert.AreEqual("ar-2", matched[0].Id);
+
+            Assert.IsEmpty(
+                ResourceAccess.FilterToScopedAssignments(assignments, ["ar-does-not-exist"]),
+                "a scope naming an assignment the principal does not hold grants nothing");
+        }
+
+        #endregion
     }
 }

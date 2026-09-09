@@ -370,6 +370,10 @@ namespace Certify.Tests.Core.Unit.Tests
 
             await AccessControlConfig.ConfigureStandardUsersAndRoles(_access, creds);
 
+            var joiningToken = (await _access.GetAssignedAccessTokens(AdminId))
+                .Single(t => t.Title == AccessControlConfig.ManagedInstanceJoiningTokenTitle)
+                .AccessTokens.Single();
+
             var assignment = (await _access.GetAssignedRoles(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId)).Single();
 
             await _access.UpdateAssignedRoles(AdminId, new SecurityPrincipalAssignedRoleUpdate
@@ -386,6 +390,15 @@ namespace Certify.Tests.Core.Unit.Tests
             Assert.IsTrue(
                 await _access.IsPrincipalInRole(AdminId, AccessControlConfig.ManagedInstanceSecurityPrincipalId, StandardRoles.ManagedInstance.Id),
                 "the managed instance role assignment should be restored on startup rather than only when the principal is first created");
+
+            // Repairing the assignment creates a new AssignedRole id, and the joining token is scoped by that id, so
+            // restoring the role without re-scoping the token leaves managed instances holding a credential which
+            // resolves to nothing - while the repair reports success, which is what stops anyone looking.
+            var resolved = await _access.ResolveAccessToken(AdminId, joiningToken);
+
+            Assert.IsTrue(
+                resolved.IsSuccess,
+                $"the joining token should still resolve after the role assignment is repaired, but: {resolved.Message}");
         }
 
         [TestMethod]

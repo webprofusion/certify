@@ -360,15 +360,10 @@ namespace Certify.Core.Management.Access
             var allRoles = await _store.GetItems<Role>(nameof(Role));
             var allPolicies = await _store.GetItems<ResourcePolicy>(nameof(ResourcePolicy));
 
-            IEnumerable<AssignedRole> spAssignedRoles = allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId);
-
-            // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check.
-            // Ids are guids whose casing carries no meaning and other code paths already treat them case insensitively,
-            // so a casing difference must not silently reduce the scope to nothing and deny everything.
-            if (check.ScopedAssignedRoles?.Any() == true)
-            {
-                spAssignedRoles = spAssignedRoles.Where(a => check.ScopedAssignedRoles.Contains(a.Id, StringComparer.OrdinalIgnoreCase));
-            }
+            // if scoped AssignedRole.ID (not just the roleID) specified (access token check etc), reduce scope of assigned roles to check
+            var spAssignedRoles = ResourceAccess.FilterToScopedAssignments(
+                allAssignedRoles.Where(a => a.SecurityPrincipalId == check.SecurityPrincipalId),
+                check.ScopedAssignedRoles);
 
             var spAssignedRoleDefinitions = allRoles.Where(r => spAssignedRoles.Any(t => t.RoleId == r.Id)).ToList();
 
@@ -456,7 +451,7 @@ namespace Certify.Core.Management.Access
         /// resolves to assignments the principal holds. What the resulting principal may then do is a separate
         /// question, answered per operation by the caller, because a token's roles vary by what it is for.
         /// </summary>
-        public async Task<ActionResult> ResolveAccessToken(string contextUserId, AccessToken accessToken)
+        public async Task<ActionResult<AccessTokenAuthorizationContext>> ResolveAccessToken(string contextUserId, AccessToken accessToken)
         {
             // resolve security principal from access token
 
@@ -467,7 +462,7 @@ namespace Certify.Core.Management.Access
 
             if (knownAssignedToken == null)
             {
-                return new ActionResult("Access token unknown, expired or revoked.", false);
+                return new ActionResult<AccessTokenAuthorizationContext>("Access token unknown, expired or revoked.", false);
             }
 
             // A token is scoped to AssignedRole ids, not role ids, so removing and re-assigning a role leaves the
@@ -485,14 +480,14 @@ namespace Certify.Core.Management.Access
 
                 if (staleScopedAssignedRoles.Count == knownAssignedToken.ScopedAssignedRoles.Count)
                 {
-                    return new ActionResult(
+                    return new ActionResult<AccessTokenAuthorizationContext>(
                         $"Access token is scoped to role assignment(s) which no longer exist ({string.Join(", ", staleScopedAssignedRoles)}), so it grants no access. "
                         + "Re-assigning a role creates a new role assignment, so the token needs to be scoped to the current assignment for this security principal.",
                         false);
                 }
             }
 
-            return new ActionResult("OK", true)
+            return new ActionResult<AccessTokenAuthorizationContext>("OK", true)
             {
                 Result = new AccessTokenAuthorizationContext
                 {
@@ -502,14 +497,16 @@ namespace Certify.Core.Management.Access
             };
         }
 
-        public async Task<ActionResult> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
+        public async Task<ActionResult<AccessTokenAuthorizationContext>> IsAccessTokenAuthorised(string contextUserId, AccessToken accessToken, AccessCheck check)
         {
             var resolved = await ResolveAccessToken(contextUserId, accessToken);
 
-            if (!resolved.IsSuccess || resolved.Result is not AccessTokenAuthorizationContext tokenContext)
+            if (!resolved.IsSuccess || resolved.Result == null)
             {
                 return resolved;
             }
+
+            var tokenContext = resolved.Result;
 
             // check related principal has access
 
@@ -532,7 +529,7 @@ namespace Certify.Core.Management.Access
             }
             else
             {
-                return new ActionResult("Access token not authorized or invalid for action, resource or identifier", false);
+                return new ActionResult<AccessTokenAuthorizationContext>("Access token not authorized or invalid for action, resource or identifier", false);
             }
         }
 

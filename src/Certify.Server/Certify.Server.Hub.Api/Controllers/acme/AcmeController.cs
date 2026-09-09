@@ -29,7 +29,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
         private readonly AcmeBackgroundTaskService _backgroundTaskService;
         private readonly AcmeJwsValidator _jwsValidator;
         private readonly AcmeExternalAccountBindingValidator _eabValidator;
-        private readonly ManagedChallengeScopeService _managedChallengeScopeService;
+        private readonly ICertifyInternalApiClient _client;
         private readonly AcmeHelper _acmeHelper;
         private readonly string _hubInstanceId;
         private readonly AcmeServerConfig _config;
@@ -46,7 +46,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             AcmeBackgroundTaskService backgroundTaskService,
             AcmeJwsValidator jwsValidator,
             AcmeExternalAccountBindingValidator eabValidator,
-            ManagedChallengeScopeService managedChallengeScopeService,
             AcmeHelper acmeHelper)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -55,7 +54,7 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             _backgroundTaskService = backgroundTaskService ?? throw new ArgumentNullException(nameof(backgroundTaskService));
             _jwsValidator = jwsValidator ?? throw new ArgumentNullException(nameof(jwsValidator));
             _eabValidator = eabValidator ?? throw new ArgumentNullException(nameof(eabValidator));
-            _managedChallengeScopeService = managedChallengeScopeService ?? throw new ArgumentNullException(nameof(managedChallengeScopeService));
+            _client = certifyInternalApi ?? throw new ArgumentNullException(nameof(certifyInternalApi));
             _acmeHelper = acmeHelper ?? throw new ArgumentNullException(nameof(acmeHelper));
 
             _hubInstanceId = _stateProvider.GetManagementHubInstanceId();
@@ -294,22 +293,29 @@ namespace Certify.Server.Hub.Api.Controllers.acme
 
             // Reject orders that cannot be satisfied by a managed challenge within the principal's role scope.
             var identifierValues = request.Identifiers.Select(i => i.Value).Where(v => !string.IsNullOrWhiteSpace(v)).ToList();
-            var challengeScopeCheck = await _managedChallengeScopeService.ValidatePrincipalCanSatisfyIdentifiers(
-                account.SecurityPrincipalId,
-                identifierValues,
-                account.ScopedAssignedRoles,
-                StandardResourceActions.ManagedAcmePerformOrder);
+            var challengeScopeCheck = await _client.AuthorizeManagedChallengeIdentifiers(
+                new ManagedChallengeAuthorizationCheck
+                {
+                    SecurityPrincipalId = account.SecurityPrincipalId,
+                    Identifiers = identifierValues,
+                    ScopedAssignedRoles = account.ScopedAssignedRoles,
+                    RequiredActionId = StandardResourceActions.ManagedAcmePerformOrder,
 
-            if (!challengeScopeCheck.CanSatisfy)
+                    // an order which no managed challenge can answer for would only fail later, at fulfillment
+                    RequireSatisfiableChallenge = true
+                },
+                SystemAuthContext);
+
+            if (!challengeScopeCheck.IsSuccess)
             {
                 _logger.LogWarning(
                     "New order request rejected for account {AccountKid}: {Reason}",
                     accountKid,
-                    challengeScopeCheck.FailureReason);
+                    challengeScopeCheck.Message);
 
                 return AcmeErrorResponseService.CreateAcmeError(
                     AcmeErrorResponseService.AcmeErrorTypes.Unauthorized,
-                    challengeScopeCheck.FailureReason ?? "No accessible managed challenge matches the requested identifiers for this account");
+                    challengeScopeCheck.Message ?? "No accessible managed challenge matches the requested identifiers for this account");
             }
 
             var orderId = AcmeHelper.GenerateOrderId();
@@ -703,22 +709,26 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Account is unknown or not valid");
             }
 
-            var scopeCheck = await _managedChallengeScopeService.AuthorizeIdentifiersForPrincipal(
-                account.SecurityPrincipalId,
-                csrIdentifiers,
-                account.ScopedAssignedRoles,
-                StandardResourceActions.ManagedAcmePerformOrder);
+            var scopeCheck = await _client.AuthorizeManagedChallengeIdentifiers(
+                new ManagedChallengeAuthorizationCheck
+                {
+                    SecurityPrincipalId = account.SecurityPrincipalId,
+                    Identifiers = csrIdentifiers.ToList(),
+                    ScopedAssignedRoles = account.ScopedAssignedRoles,
+                    RequiredActionId = StandardResourceActions.ManagedAcmePerformOrder
+                },
+                SystemAuthContext);
 
-            if (!scopeCheck.IsAuthorized)
+            if (!scopeCheck.IsSuccess)
             {
                 _logger.LogWarning(
                     "Finalization rejected for order {OrderId}: {Reason}",
                     order.Id,
-                    scopeCheck.FailureReason);
+                    scopeCheck.Message);
 
                 return AcmeErrorResponseService.CreateAcmeError(
                     AcmeErrorResponseService.AcmeErrorTypes.Unauthorized,
-                    scopeCheck.FailureReason ?? "The identifiers requested by this CSR are not permitted for this account");
+                    scopeCheck.Message ?? "The identifiers requested by this CSR are not permitted for this account");
             }
 
             return null;

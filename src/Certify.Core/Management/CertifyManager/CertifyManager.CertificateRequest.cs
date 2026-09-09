@@ -1651,7 +1651,11 @@ namespace Certify.Management
                                 SecurityPrincipalId = managedCertificate.ManagedAcmeOrder?.SecurityPrincipalId,
                                 ScopedAssignedRoles = managedCertificate.ManagedAcmeOrder?.ScopedAssignedRoles?.Count > 0
                                     ? managedCertificate.ManagedAcmeOrder.ScopedAssignedRoles
-                                    : null
+                                    : null,
+
+                                // fulfilling an order which was already authorized as a whole, so the principal is
+                                // checked against the managed ACME order action rather than the per-request ones
+                                Origin = Models.Hub.ManagedChallengeRequestOrigins.ManagedAcme
                             };
 
                             var challengeResponseResult = await PerformManagedChallengeRequest(request);

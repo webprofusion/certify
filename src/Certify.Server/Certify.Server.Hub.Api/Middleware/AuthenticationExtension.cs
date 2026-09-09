@@ -54,8 +54,8 @@ namespace Certify.Server.Hub.Api.Middleware
 
             if (string.IsNullOrWhiteSpace(issuer))
             {
-                // JwtService omits the iss claim entirely when no issuer is configured, which would fail validation here
-                // and in JwtService.ClaimsIdentityFromTokenAsync, so this is surfaced at startup rather than as opaque 401s
+                // JwtService omits the iss claim entirely when no issuer is configured, which would fail validation
+                // here, so this is surfaced at startup rather than as opaque 401s
                 throw new ArgumentNullException("Token authentication requires JwtSettings > issuer to be set in order to issue and validate tokens");
             }
 

@@ -42,6 +42,11 @@ namespace Certify.Tests.Core.Unit.Tests
                 .GetField("_configStore", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             field?.SetValue(_manager, _store);
 
+            // access control reads the same store, so a principal seeded below resolves for authorization checks
+            var accessField = typeof(CertifyManager)
+                .GetField("_accessControl", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            accessField?.SetValue(_manager, new Certify.Core.Management.Access.AccessControl(null, _store));
+
             // Create tag categories
             await _manager.AddOrUpdateTagCategory(new TagCategory
             {
@@ -830,6 +835,232 @@ namespace Certify.Tests.Core.Unit.Tests
 
             // Assert: No challenges found
             Assert.IsEmpty(challenges);
+        }
+
+        #endregion
+
+        #region request origin decides the action fulfillment checks
+
+        /// <summary>
+        /// Which action fulfillment checks used to be inferred from whether the request carried AuthKey/AuthSecret.
+        /// A caller presenting the same credentials as X-Client-ID/X-Client-Secret headers leaves those empty, so a
+        /// managed challenge consumer authenticating by header was checked against the managed ACME order action and
+        /// denied against a role it was never meant to hold.
+        /// </summary>
+        [TestMethod]
+        public void ManagedChallengeApiRequestChecksTheManagedChallengeActionHoweverCredentialsWerePresented()
+        {
+            // no AuthKey/AuthSecret: this caller presented X-Client-ID/X-Client-Secret headers instead
+            var headerAuthenticated = new ManagedChallengeRequest { SecurityPrincipalId = "sp-consumer" };
+
+            Assert.AreEqual(
+                ManagedChallengeRequestOrigins.ManagedChallengeApi,
+                headerAuthenticated.Origin,
+                "an API request is the default origin, so a request which arrives without one is checked against the more restrictive action");
+
+            Assert.AreEqual(
+                StandardResourceActions.ManagedChallengeRequest,
+                ManagedChallengeRequestOrigins.GetRequiredResourceAction(headerAuthenticated.Origin, StandardResourceActions.ManagedChallengeRequest));
+
+            Assert.AreEqual(
+                StandardResourceActions.ManagedChallengeCleanup,
+                ManagedChallengeRequestOrigins.GetRequiredResourceAction(headerAuthenticated.Origin, StandardResourceActions.ManagedChallengeCleanup));
+        }
+
+        /// <summary>
+        /// Managed ACME authorizes the order as a whole, so every challenge performed and cleaned up for it is
+        /// covered by that one action rather than the per-request managed challenge actions.
+        /// </summary>
+        [TestMethod]
+        public void ManagedAcmeFulfillmentChecksTheOrderAction()
+        {
+            Assert.AreEqual(
+                StandardResourceActions.ManagedAcmePerformOrder,
+                ManagedChallengeRequestOrigins.GetRequiredResourceAction(ManagedChallengeRequestOrigins.ManagedAcme, StandardResourceActions.ManagedChallengeRequest));
+
+            Assert.AreEqual(
+                StandardResourceActions.ManagedAcmePerformOrder,
+                ManagedChallengeRequestOrigins.GetRequiredResourceAction(ManagedChallengeRequestOrigins.ManagedAcme, StandardResourceActions.ManagedChallengeCleanup));
+        }
+
+        #endregion
+
+        #region AuthorizeManagedChallengeIdentifiers
+
+        // The single managed challenge authorization decision, for every caller. These cover what the hub API's
+        // own scope service used to answer separately, plus the domain restrictions which only it enforced.
+
+        /// <summary>
+        /// Seed a principal holding one role which grants the action, optionally tag scoped and/or restricted to
+        /// specific domains, so an authorization check against it resolves through the real access control chain.
+        /// </summary>
+        private async Task SeedPrincipalWithRole(
+            string principalId,
+            string actionId,
+            List<TagScope> scopedTags = null,
+            string domainRestriction = null)
+        {
+            const string policyId = "test_managedchallenge_policy";
+            const string roleId = "test_managedchallenge_role";
+
+            await _store.Add<SecurityPrincipal>(nameof(SecurityPrincipal), new SecurityPrincipal
+            {
+                Id = principalId,
+                Username = principalId,
+                PrincipalType = SecurityPrincipalType.Application
+            });
+
+            await _store.Add<ResourcePolicy>(nameof(ResourcePolicy), new ResourcePolicy
+            {
+                Id = policyId,
+                Title = "Test managed challenge policy",
+                SecurityPermissionType = SecurityPermissionType.ALLOW,
+                ResourceActions = [actionId]
+            });
+
+            await _store.Add<Role>(nameof(Role), new Role(roleId, "Test managed challenge role", "", policies: [policyId]));
+
+            await _store.Add<AssignedRole>(nameof(AssignedRole), new AssignedRole
+            {
+                Id = $"ar-{principalId}",
+                RoleId = roleId,
+                SecurityPrincipalId = principalId,
+                ScopedTags = scopedTags,
+                IncludedResources = domainRestriction == null
+                    ? []
+                    : [new Resource { Id = $"res-{principalId}", ResourceType = ResourceTypes.Domain, Identifier = domainRestriction }]
+            });
+        }
+
+        private Task<Models.Config.ActionResult> Authorize(
+            string principalId,
+            string identifier,
+            string actionId = StandardResourceActions.ManagedChallengeRequest,
+            bool requireSatisfiableChallenge = false)
+        {
+            return _manager.AuthorizeManagedChallengeIdentifiers(new ManagedChallengeAuthorizationCheck
+            {
+                SecurityPrincipalId = principalId,
+                Identifiers = [identifier],
+                RequiredActionId = actionId,
+                RequireSatisfiableChallenge = requireSatisfiableChallenge
+            });
+        }
+
+        [TestMethod]
+        [Description("A principal whose roles do not grant the action is denied")]
+        public async Task AuthorizeIdentifiers_PrincipalWithoutAuthorizingRole_IsDenied()
+        {
+            await CreateManagedChallenge("challenge-any", "*.example.com");
+
+            var result = await Authorize("sp-unknown", "www.example.com");
+
+            Assert.IsFalse(result.IsSuccess);
+            StringAssert.Contains(result.Message, "not authorised to use managed challenges");
+        }
+
+        [TestMethod]
+        [Description("A tag scoped principal can act on an identifier a matching tagged challenge answers for")]
+        public async Task AuthorizeIdentifiers_TagScopedPrincipal_WithMatchingChallengeTag_IsAuthorized()
+        {
+            await CreateManagedChallenge("challenge-finance", "*.finance.example.com");
+            await TagChallenge("challenge-finance", DepartmentCategory, FinanceDept);
+
+            await SeedPrincipalWithRole(
+                "sp-finance",
+                StandardResourceActions.ManagedChallengeRequest,
+                scopedTags: [new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }]);
+
+            var result = await Authorize("sp-finance", "app.finance.example.com");
+
+            Assert.IsTrue(result.IsSuccess, result.Message);
+        }
+
+        [TestMethod]
+        [Description("A tag scoped principal is denied when no challenge carries a matching tag")]
+        public async Task AuthorizeIdentifiers_TagScopedPrincipal_WithoutMatchingChallengeTag_IsDenied()
+        {
+            await CreateManagedChallenge("challenge-eng", "*.finance.example.com");
+            await TagChallenge("challenge-eng", DepartmentCategory, EngineeringDept);
+
+            await SeedPrincipalWithRole(
+                "sp-finance",
+                StandardResourceActions.ManagedChallengeRequest,
+                scopedTags: [new TagScope { CategoryKey = DepartmentCategory, Value = FinanceDept }]);
+
+            var result = await Authorize("sp-finance", "app.finance.example.com");
+
+            Assert.IsFalse(result.IsSuccess);
+        }
+
+        /// <summary>
+        /// Domain restrictions are Domain Match rules held as domain-typed IncludedResources on the authorizing
+        /// roles. They used to be enforced only in the hub API, so any other caller reaching fulfillment was not
+        /// subject to them at all.
+        /// </summary>
+        [TestMethod]
+        [Description("An identifier outside the domain restrictions on the authorizing role is denied")]
+        public async Task AuthorizeIdentifiers_DomainRestrictedPrincipal_DeniesIdentifierOutsideTheRules()
+        {
+            await CreateManagedChallenge("challenge-any", "*.example.com");
+
+            await SeedPrincipalWithRole(
+                "sp-restricted",
+                StandardResourceActions.ManagedChallengeRequest,
+                domainRestriction: "*.permitted.example.com");
+
+            var permitted = await Authorize("sp-restricted", "www.permitted.example.com");
+            Assert.IsTrue(permitted.IsSuccess, permitted.Message);
+
+            var denied = await Authorize("sp-restricted", "www.other.example.com");
+            Assert.IsFalse(denied.IsSuccess);
+            StringAssert.Contains(denied.Message, "not permitted by the domain restrictions");
+        }
+
+        [TestMethod]
+        [Description("An unrestricted principal is authorized without a matching challenge unless one is required")]
+        public async Task AuthorizeIdentifiers_UnrestrictedPrincipal_OnlyNeedsAMatchWhenRequired()
+        {
+            await CreateManagedChallenge("challenge-other", "*.other.example.com");
+
+            await SeedPrincipalWithRole("sp-unrestricted", StandardResourceActions.ManagedChallengeRequest);
+
+            // fulfillment reports a missing challenge itself, so a direct call does not require one up front
+            var permitted = await Authorize("sp-unrestricted", "www.example.com");
+            Assert.IsTrue(permitted.IsSuccess, permitted.Message);
+
+            // an ACME order which no challenge can answer for would only fail later, so that caller requires one
+            var denied = await Authorize("sp-unrestricted", "www.example.com", requireSatisfiableChallenge: true);
+            Assert.IsFalse(denied.IsSuccess);
+            StringAssert.Contains(denied.Message, "No accessible managed challenge matches identifier");
+        }
+
+        [TestMethod]
+        [Description("Managed ACME order fulfillment is checked against the order action, not the per-request one")]
+        public async Task AuthorizeIdentifiers_ChecksTheActionItWasAskedFor()
+        {
+            await CreateManagedChallenge("challenge-any", "*.example.com");
+
+            await SeedPrincipalWithRole("sp-acme", StandardResourceActions.ManagedAcmePerformOrder);
+
+            var asOrder = await Authorize("sp-acme", "www.example.com", StandardResourceActions.ManagedAcmePerformOrder);
+            Assert.IsTrue(asOrder.IsSuccess, asOrder.Message);
+
+            // the same principal holds no role granting the per-request action
+            var asRequest = await Authorize("sp-acme", "www.example.com", StandardResourceActions.ManagedChallengeRequest);
+            Assert.IsFalse(asRequest.IsSuccess);
+        }
+
+        [TestMethod]
+        [Description("A check with no security principal is denied rather than treated as unscoped")]
+        public async Task AuthorizeIdentifiers_WithoutAPrincipal_IsDenied()
+        {
+            var result = await _manager.AuthorizeManagedChallengeIdentifiers(new ManagedChallengeAuthorizationCheck
+            {
+                Identifiers = ["www.example.com"]
+            });
+
+            Assert.IsFalse(result.IsSuccess);
         }
 
         #endregion

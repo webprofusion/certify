@@ -542,20 +542,10 @@ namespace Certify.Server.Hub.Api.Controllers
                     return null;
                 }
 
-                // If this is a scoped token (API access), only consider the scoped roles
-                // Otherwise, consider all assigned roles
-                IEnumerable<AssignedRole> rolesToCheck;
-
-                if (CurrentAuthContext.ScopedAssignedRoles != null && CurrentAuthContext.ScopedAssignedRoles.Any())
-                {
-                    // API token with specific scoped roles - only check those roles
-                    rolesToCheck = assignedRoles.Where(r => CurrentAuthContext.ScopedAssignedRoles.Contains(r.Id));
-                }
-                else
-                {
-                    // Regular user authentication - check all assigned roles for tag scopes
-                    rolesToCheck = assignedRoles;
-                }
+                // An API token with scoped roles considers only those; a regular user considers all assigned roles.
+                // Getting the id comparison wrong here removes the tag filtering rather than tightening it, so this
+                // shares the matching used by the authorization check itself.
+                var rolesToCheck = ResourceAccess.FilterToScopedAssignments(assignedRoles, CurrentAuthContext.ScopedAssignedRoles);
 
                 // Collect tag scopes from the applicable roles
                 var tagScopes = new List<TagScope>();

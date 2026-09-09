@@ -50,7 +50,7 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <returns>The certificate file in the chosen format</returns>
         [HttpGet]
         [Route("/api/v1/certificate/{instanceId}/download/{managedCertId}/{format?}")]
-        [AllowAnonymous]
+        [AuthorizedApi]
         [ProducesResponseType(typeof(FileContentResult), 200)]
         public async Task<IActionResult> Download(string instanceId, string managedCertId, string format)
         {
@@ -148,16 +148,11 @@ namespace Certify.Server.Hub.Api.Controllers
 
         private async Task<Certify.Models.Config.ActionResult> CheckManagedInstanceSubscriptionDownloadAuthorized(string managedCertId)
         {
-            var accessToken = GetAccessTokenFromRequest();
-            if (accessToken == null)
+            // the caller's credentials were resolved by the authentication middleware, so this asks whether the
+            // principal they authenticated as may join the hub - it does not resolve their token a second time
+            if (!await IsAuthorized(_client, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin)))
             {
-                return new Certify.Models.Config.ActionResult("X-Client-ID or X-Client-Secret HTTP header missing in request", false);
-            }
-
-            var joiningAccessCheck = await IsAccessTokenAuthorized(_client, accessToken, new AccessCheck(default!, ResourceTypes.ManagedInstance, StandardResourceActions.ManagementHubInstanceJoin));
-            if (!joiningAccessCheck.IsSuccess)
-            {
-                return joiningAccessCheck;
+                return new Certify.Models.Config.ActionResult("Caller is not authorized to join the hub as a managed instance.", false);
             }
 
             var requestingInstanceId = Request.Headers["X-Certify-HubAssignedId"].ToString();

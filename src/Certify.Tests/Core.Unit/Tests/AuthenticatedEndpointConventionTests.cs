@@ -87,23 +87,61 @@ namespace Certify.Tests.Core.Unit.Tests
         }
 
         /// <summary>
-        /// True when the endpoint's own body calls one of the authorization helpers. An async method's body is
-        /// compiled into a state machine, so the check is looked for where the code actually ends up.
+        /// How far the walk follows calls into an endpoint's own private helpers before giving up. Endpoints
+        /// routinely authorize through a helper on the same controller (an endpoint which delegates its whole body
+        /// to another action, or one whose authorization has several accepted routes), and a walk which only looked
+        /// at the endpoint body would report those as unchecked. A small bound keeps the search cheap and stops it
+        /// wandering out of the controller.
+        /// </summary>
+        private const int MaxHelperDepth = 3;
+
+        /// <summary>
+        /// True when the endpoint authorizes, either in its own body or through a helper declared on the same
+        /// controller. An async method's body is compiled into a state machine, so the check is looked for where
+        /// the code actually ends up.
         /// </summary>
         private static bool PerformsAuthorizationCheck(MethodInfo endpoint)
         {
-            var stateMachine = endpoint.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType;
+            return PerformsAuthorizationCheck(endpoint, endpoint.DeclaringType, MaxHelperDepth, []);
+        }
 
-            var implementation = stateMachine == null
-                ? endpoint
-                : stateMachine.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        private static bool PerformsAuthorizationCheck(MethodBase method, Type? controllerType, int depth, HashSet<MethodBase> visited)
+        {
+            if (depth < 0 || !visited.Add(method))
+            {
+                return false;
+            }
+
+            var implementation = GetImplementation(method);
 
             if (implementation == null)
             {
                 return false;
             }
 
-            return GetCalledMethodNames(implementation).Any(AuthorizationMethods.Contains);
+            var called = GetCalledMethods(implementation).ToList();
+
+            if (called.Any(m => AuthorizationMethods.Contains(m.Name)))
+            {
+                return true;
+            }
+
+            // follow calls into helpers on the same controller, so authorization reached indirectly still counts
+            return called
+                .Where(m => m.DeclaringType != null && m.DeclaringType == controllerType)
+                .Any(m => PerformsAuthorizationCheck(m, controllerType, depth - 1, visited));
+        }
+
+        /// <summary>
+        /// The method body which actually holds the code: an async method's is its state machine's MoveNext.
+        /// </summary>
+        private static MethodBase? GetImplementation(MethodBase method)
+        {
+            var stateMachine = method.GetCustomAttribute<AsyncStateMachineAttribute>()?.StateMachineType;
+
+            return stateMachine == null
+                ? method
+                : stateMachine.GetMethod("MoveNext", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
 
         private static readonly Dictionary<short, OpCode> OpCodesByValue = typeof(OpCodes)
@@ -113,9 +151,9 @@ namespace Certify.Tests.Core.Unit.Tests
             .ToDictionary(o => o.Value, o => o);
 
         /// <summary>
-        /// Names of the methods called by a method body, by walking its IL and resolving each call token.
+        /// The methods called by a method body, by walking its IL and resolving each call token.
         /// </summary>
-        private static IEnumerable<string> GetCalledMethodNames(MethodBase method)
+        private static IEnumerable<MethodBase> GetCalledMethods(MethodBase method)
         {
             var il = method.GetMethodBody()?.GetILAsByteArray();
 
@@ -149,20 +187,20 @@ namespace Certify.Tests.Core.Unit.Tests
                 {
                     var token = BitConverter.ToInt32(il, position);
 
-                    string? name = null;
+                    MethodBase? called = null;
 
                     try
                     {
-                        name = module.ResolveMethod(token, typeArgs, methodArgs)?.Name;
+                        called = module.ResolveMethod(token, typeArgs, methodArgs);
                     }
                     catch (ArgumentException)
                     {
                         // InlineTok can also be a type or field token, which is not a call
                     }
 
-                    if (name != null)
+                    if (called != null)
                     {
-                        yield return name;
+                        yield return called;
                     }
                 }
 

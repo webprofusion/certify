@@ -77,39 +77,11 @@ namespace Certify.Server.Hub.Api.Services
 
             return tokenHandler.CreateToken(tokenDescriptor);
         }
-        /// <summary>
-        /// Parse a provided token and extract claims
-        /// </summary>
-        /// <param name="token"></param>
-        /// <param name="validateTokenLifetime"></param>
-        /// <returns></returns>
-        /// <exception cref="SecurityTokenException"></exception>
-        public async Task<ClaimsIdentity> ClaimsIdentityFromTokenAsync(string token, bool validateTokenLifetime)
-        {
-            var key = Encoding.UTF8.GetBytes(_secret);
 
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = true,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(key),
-                ValidateLifetime = validateTokenLifetime,
-                ValidIssuer = _issuer
-            };
-
-            var tokenHandler = new JsonWebTokenHandler();
- 
-            var result = await tokenHandler.ValidateTokenAsync(token, tokenValidationParameters);
-            if (result.IsValid)
-            {
-                return result.ClaimsIdentity;
-            }
-            else
-            {
-                // the raw token is deliberately not included here, it would otherwise be written to the service log by callers
-                throw new SecurityTokenException($"Invalid token: {result.Exception?.Message}");
-            }
-        }
+        // Token validation deliberately lives only in the JWT bearer middleware (see AuthenticationExtension).
+        // This class used to also expose a ClaimsIdentityFromTokenAsync used by controllers which authenticated
+        // themselves, which meant two implementations of the same validation with their own caching and lifetime
+        // handling. Endpoints which are reachable anonymously now call ApiControllerBase.IdentifyOptionalCallerAsync,
+        // which runs the same handlers the middleware would have.
     }
 }
