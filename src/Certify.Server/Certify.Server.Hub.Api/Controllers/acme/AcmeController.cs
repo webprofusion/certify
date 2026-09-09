@@ -239,7 +239,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 acc.Status = AccountStatus.Deactivated;
             }
 
-
             return Ok(acc);
         }
 
@@ -392,7 +391,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.ServerInternal, "Failed to process order");
             }
 
-
             var orderUrl = AcmeHelper.BuildOrderUrl(baseUrl, orderId);
             AddLocationHeader(orderUrl);
 
@@ -538,7 +536,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             order.HubInstanceId ??= _hubInstanceId;
             await AcmeBackgroundTaskService.CleanupOrderAsync(_config, _mgmtAPI, order, CurrentAuthContext, _logger, _hubInstanceId);
 
-
             // Return the certificate as plain text with proper content type
             return Content(certPEM, "application/pem-certificate-chain");
         }
@@ -579,7 +576,6 @@ namespace Certify.Server.Hub.Api.Controllers.acme
             {
                 return AcmeErrorResponseService.CreateAcmeError(AcmeErrorResponseService.AcmeErrorTypes.Unauthorized, "Order not found");
             }
-
 
             if (order.Status == OrderStatus.ReadyForInternalFinalization)
             {

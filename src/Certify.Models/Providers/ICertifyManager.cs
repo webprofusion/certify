@@ -151,7 +151,7 @@ namespace Certify.Management
         Task<Certify.Models.Config.ActionResult> DeleteTagValue(string valueId);
         Task<Certify.Models.Config.ActionResult> MergeTagValues(ICollection<string> sourceValueIds, string targetValueId);
         Task<ICollection<ItemTag>> GetAllHubItemTags(string? categoryKey = null, string? value = null, string? itemTypeId = null, string? instanceId = null);
-        Task<ICollection<TagSummary>> GetHubItemTags(string itemId, string itemTypeId);
+        Task<ICollection<TagSummary>> GetHubItemTags(string itemTypeId, string itemId);
         Task<Certify.Models.Config.ActionResult> AddHubItemTags(ICollection<ItemTag> tags);
         Task<Certify.Models.Config.ActionResult> RemoveHubItemTags(ICollection<string> tagsIds);
         Task<Certify.Models.Config.ActionResult> RemoveHubItemTagByKey(string itemId, string itemType, string categoryKey, string value, string? instanceId = null);

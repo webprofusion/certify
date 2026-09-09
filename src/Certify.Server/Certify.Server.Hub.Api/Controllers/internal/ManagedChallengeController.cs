@@ -225,7 +225,7 @@ namespace Certify.Server.Hub.Api.Controllers
                 return Forbid();
             }
 
-            var tags = await _client.GetHubItemTags(id, TaggedItemTypes.ManagedChallenge, CurrentAuthContext);
+            var tags = await _client.GetHubItemTags(TaggedItemTypes.ManagedChallenge, id, CurrentAuthContext);
             return new OkObjectResult(tags);
         }
 
@@ -302,6 +302,5 @@ namespace Certify.Server.Hub.Api.Controllers
             var result = await _client.RemoveHubItemTags(new[] { tagToRemove.Id }, CurrentAuthContext);
             return new OkObjectResult(result);
         }
-
     }
 }

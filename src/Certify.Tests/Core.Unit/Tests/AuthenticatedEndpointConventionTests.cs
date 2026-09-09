@@ -73,6 +73,112 @@ namespace Certify.Tests.Core.Unit.Tests
                     + $"if the endpoint genuinely exposes no resource:\r\n{string.Join("\r\n", unchecked_)}");
         }
 
+        /// <summary>
+        /// Authorization methods which answer for the caller of the current request, and so read CurrentAuthContext.
+        /// Both refuse outright when there is no authenticated principal, whatever credentials were presented.
+        /// </summary>
+        private static readonly HashSet<string> CallerAuthorizationMethods = new(StringComparer.Ordinal)
+        {
+            "CheckRequestAuthorized",
+            "IsAuthorized",
+        };
+
+        /// <summary>
+        /// An endpoint which authorizes the caller has to be able to identify one, and only two things do that:
+        /// the authentication middleware, which runs for an endpoint carrying an authorization requirement, and
+        /// IdentifyOptionalCallerAsync, for one deliberately reachable without credentials. An endpoint with
+        /// neither reads CurrentAuthContext as null however good the caller's credentials were, and refuses
+        /// every request - which is not a difference the endpoint's own code makes visible.
+        /// </summary>
+        [TestMethod]
+        public void EveryEndpointWhichAuthorizesTheCallerCanIdentifyOne()
+        {
+            var endpoints = GetControllerEndpoints();
+
+            // guard against the reflection or IL walk below quietly finding nothing and passing vacuously
+            Assert.IsGreaterThan(50, endpoints.Count, "expected to find the hub API's endpoints by reflection");
+
+            var unidentifiable = new List<string>();
+            var authorizingCount = 0;
+
+            foreach (var endpoint in endpoints)
+            {
+                if (!Calls(endpoint, CallerAuthorizationMethods))
+                {
+                    continue;
+                }
+
+                authorizingCount++;
+
+                var isAuthenticated = endpoint.GetCustomAttributes(inherit: false).Any(a => a is AuthorizeAttribute)
+                    || endpoint.DeclaringType?.GetCustomAttributes(inherit: true).Any(a => a is AuthorizeAttribute) == true;
+
+                if (!isAuthenticated && !Calls(endpoint, CallerIdentificationMethods))
+                {
+                    unidentifiable.Add($"{endpoint.DeclaringType?.Name}.{endpoint.Name}");
+                }
+            }
+
+            Assert.IsGreaterThan(50, authorizingCount, "expected the IL walk to recognise the endpoints which authorize their caller");
+
+            Assert.IsEmpty(
+                unidentifiable,
+                $"These endpoints authorize the current caller but nothing authenticates one for them, so CurrentAuthContext "
+                    + $"is always null and they refuse every request. Add [AuthorizedApi], or call IdentifyOptionalCallerAsync "
+                    + $"if the endpoint is meant to be reachable anonymously:\r\n{string.Join("\r\n", unidentifiable)}");
+        }
+
+        private static readonly HashSet<string> CallerIdentificationMethods = new(StringComparer.Ordinal)
+        {
+            "IdentifyOptionalCallerAsync",
+        };
+
+        /// <summary>
+        /// Every routed action on the hub API's controllers, authenticated or not.
+        /// </summary>
+        private static List<MethodInfo> GetControllerEndpoints()
+        {
+            var assembly = typeof(Certify.Server.Hub.Api.Middleware.ApiKeyAuthenticationHandler).Assembly;
+
+            return assembly
+                .GetTypes()
+                .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && !t.IsAbstract)
+                .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                .Where(m => m.GetCustomAttributes(inherit: false).Any(a => a is Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute))
+                .ToList();
+        }
+
+        private static bool Calls(MethodInfo endpoint, HashSet<string> methodNames)
+        {
+            return Calls(endpoint, endpoint.DeclaringType, methodNames, MaxHelperDepth, []);
+        }
+
+        private static bool Calls(MethodBase method, Type? controllerType, HashSet<string> methodNames, int depth, HashSet<MethodBase> visited)
+        {
+            if (depth < 0 || !visited.Add(method))
+            {
+                return false;
+            }
+
+            var implementation = GetImplementation(method);
+
+            if (implementation == null)
+            {
+                return false;
+            }
+
+            var called = GetCalledMethods(implementation).ToList();
+
+            if (called.Any(m => methodNames.Contains(m.Name)))
+            {
+                return true;
+            }
+
+            return called
+                .Where(m => m.DeclaringType != null && m.DeclaringType == controllerType)
+                .Any(m => Calls(m, controllerType, methodNames, depth - 1, visited));
+        }
+
         private static List<MethodInfo> GetAuthenticatedEndpoints()
         {
             var assembly = typeof(Certify.Server.Hub.Api.Middleware.ApiKeyAuthenticationHandler).Assembly;

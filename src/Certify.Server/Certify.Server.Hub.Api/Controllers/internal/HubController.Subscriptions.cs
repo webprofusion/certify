@@ -9,9 +9,14 @@ namespace Certify.Server.Hub.Api.Controllers
         /// <summary>
         /// Returns managed certificate summaries that the authenticated calling instance is permitted to pull.
         /// Authenticated via X-Client-ID / X-Client-Secret + X-Certify-HubAssignedId headers (hub joining credentials).
+        ///
+        /// The credentials are resolved by the authentication middleware, which only runs for an endpoint carrying an
+        /// authorization requirement. Without [AuthorizedApi] here the ApiToken scheme never ran, so however good the
+        /// caller's credentials were there was no authenticated principal to check and every request was refused.
         /// </summary>
         [HttpGet]
         [Route("subscription/available")]
+        [AuthorizedApi]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<ManagedCertificateSummary>))]
         public async Task<IActionResult> GetSubscribableManagedCertificates()
         {
