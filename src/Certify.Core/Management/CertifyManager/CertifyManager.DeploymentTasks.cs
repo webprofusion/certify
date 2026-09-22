@@ -359,12 +359,18 @@ namespace Certify.Management
             var runner = new DeploymentTaskRunner(
                 _pluginManager.DeploymentTaskProviders,
                 _credentialsManager,
-                _serverConfig.PowershellExecutionPolicy,
+                GetDeploymentContext(),
                 _tc,
                 _loggingLevelSwitch);
 
             return await runner.Run(log, isPreviewOnly, skipDeferredTasks, result, taskList, forceTaskExecute, evaluateAgainstPrimaryRequestStatus);
         }
+
+        private DeploymentContext GetDeploymentContext() => new DeploymentContext
+        {
+            PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy,
+            UseModernPFXAlgs = CoreAppSettings.Current.UseModernPFXAlgs
+        };
 
         /// <summary>
         /// Perform validation for a specific deployment task configuration
@@ -386,7 +392,7 @@ namespace Certify.Management
 
             try
             {
-                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider?.GetDefinition(), new DeploymentContext { PowershellExecutionPolicy = _serverConfig.PowershellExecutionPolicy }, CancellationToken.None);
+                var execParams = new DeploymentTaskExecutionParams(null, _credentialsManager, managedCertificate, taskConfig, credentials, true, provider?.GetDefinition(), GetDeploymentContext(), CancellationToken.None);
                 var validationResult = await provider.Validate(execParams);
                 return validationResult;
             }

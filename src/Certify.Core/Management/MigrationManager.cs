@@ -140,8 +140,10 @@ namespace Certify.Core.Management
 
                     if (allTasks.Any())
                     {
+                        // tasks reference credentials for their target and optionally in parameters (e.g. an export password)
                         var usedTaskCredentials = allTasks
                             .Select(t => t.ChallengeCredentialKey)
+                            .Concat(allTasks.SelectMany(t => t.Parameters ?? []).Select(p => p.Value))
                             .Where(k => !string.IsNullOrEmpty(k))
                             .Distinct();
 

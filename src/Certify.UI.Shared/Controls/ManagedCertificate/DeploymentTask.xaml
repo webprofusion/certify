@@ -9,6 +9,7 @@
     xmlns:local="clr-namespace:Certify.UI.Windows"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:models="clr-namespace:Certify.Models;assembly=Certify.Models"
+    xmlns:utils="clr-namespace:Certify.UI.Utils"
     d:DesignHeight="480"
     mc:Ignorable="d">
     <UserControl.Resources>
@@ -22,7 +23,7 @@
                     Width="250"
                     Controls:TextBoxHelper.Watermark="{Binding Description}"
                     KeyUp="ParameterInput_KeyUp"
-                    Text="{Binding Value}" />
+                    Text="{Binding Value, NotifyOnSourceUpdated=True}" />
                 <Button
                     x:Name="ShowParamLookup"
                     Padding="4"
@@ -47,7 +48,7 @@
                 DockPanel.Dock="Left"
                 Orientation="Horizontal">
                 <Label Width="160" Content="{Binding Name}" />
-                <CheckBox IsChecked="{Binding Value, Mode=TwoWay}" />
+                <CheckBox IsChecked="{Binding Value, Mode=TwoWay, NotifyOnSourceUpdated=True}" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderDropDownParameter">
@@ -60,8 +61,26 @@
                     Width="250"
                     DisplayMemberPath="Value"
                     ItemsSource="{Binding Options}"
-                    SelectedValue="{Binding Value}"
+                    SelectedValue="{Binding Value, NotifyOnSourceUpdated=True}"
                     SelectedValuePath="Key" />
+            </StackPanel>
+        </DataTemplate>
+        <utils:StoredCredentialOptionsConverter x:Key="StoredCredentialOptionsConverter" />
+        <DataTemplate x:Key="ProviderStoredCredentialParameter">
+            <StackPanel
+                Margin="0,8,0,0"
+                DockPanel.Dock="Left"
+                Orientation="Horizontal">
+                <Label Width="160" Content="{Binding Name}" />
+                <ComboBox
+                    Width="250"
+                    Margin="0,0,8,0"
+                    DisplayMemberPath="Title"
+                    ItemsSource="{Binding ExtendedConfig, Converter={StaticResource StoredCredentialOptionsConverter}}"
+                    SelectedValue="{Binding Value, Converter={StaticResource NullValueConverter}, ConverterParameter='(Empty)', NotifyOnSourceUpdated=True}"
+                    SelectedValuePath="StorageKey"
+                    ToolTip="{Binding Description}" />
+                <Button Click="AddParameterCredential_Click" Content="New" />
             </StackPanel>
         </DataTemplate>
         <DataTemplate x:Key="ProviderPasswordParameter">
@@ -73,7 +92,7 @@
                 <PasswordBox
                     Width="250"
                     local:PasswordBoxAssistant.BindPassword="True"
-                    local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay}" />
+                    local:PasswordBoxAssistant.BoundPassword="{Binding Value, Mode=TwoWay, NotifyOnSourceUpdated=True}" />
             </StackPanel>
         </DataTemplate>
     </UserControl.Resources>
@@ -400,6 +419,7 @@
                         </StackPanel>
                         <ItemsControl
                             x:Name="DeploymentTaskParams"
+                            Binding.SourceUpdated="DeploymentTaskParams_SourceUpdated"
                             BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderColor}}"
                             DockPanel.Dock="Top"
                             ItemsSource="{Binding EditableParameters}">

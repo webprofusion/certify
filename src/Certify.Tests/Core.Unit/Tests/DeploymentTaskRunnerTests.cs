@@ -7,6 +7,7 @@ using Certify.Core.Management.DeploymentTasks;
 using Certify.Models;
 using Certify.Models.Config;
 using Certify.Models.Providers;
+using Certify.Providers.DeploymentTasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -43,7 +44,7 @@ namespace Certify.Tests.Core.Unit.Tests
         private static DeploymentTaskRunner GetRunner() => new DeploymentTaskRunner(
             deploymentTaskProviders: null,
             credentialsManager: null,
-            powershellExecutionPolicy: "Unrestricted");
+            context: new DeploymentContext());
 
         private static DeploymentTaskConfig GetMockTaskConfig(
             string name,
@@ -411,7 +412,7 @@ namespace Certify.Tests.Core.Unit.Tests
             var withPlugins = await new DeploymentTaskRunner(
                 deploymentTaskProviders: [],
                 credentialsManager: null,
-                powershellExecutionPolicy: "Unrestricted")
+                context: new DeploymentContext())
                 .Run(_log, isPreviewOnly: false, skipDeferredTasks: true, result, [unknown], forceTaskExecute: false, evaluateAgainstPrimaryRequestStatus: true);
 
             Assert.HasCount(1, withPlugins, "A task with an unresolvable provider should still be reported");

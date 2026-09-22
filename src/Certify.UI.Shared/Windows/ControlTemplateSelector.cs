@@ -42,6 +42,10 @@ namespace Certify.UI.Windows
             {
                 template = context.FindResource("ProviderPasswordParameter") as DataTemplate;
             }
+            else if (providerParameter.Type == OptionType.StoredCredential)
+            {
+                template = context.FindResource("ProviderStoredCredentialParameter") as DataTemplate;
+            }
             else if (providerParameter.Options.Count() != 0)
             {
                 template = context.FindResource("ProviderDropDownParameter") as DataTemplate;

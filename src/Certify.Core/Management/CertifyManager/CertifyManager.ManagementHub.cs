@@ -1243,38 +1243,11 @@ namespace Certify.Management
                 var prefUpdate = args.FirstOrDefault(a => a.Key == "prefs");
                 var update = JsonSerializer.Deserialize<Preferences>(prefUpdate.Value, JsonOptions.DefaultJsonSerializerOptions);
 
-                var prefs = SettingsManager.ToPreferences();
-
                 if (update != null)
                 {
-                    // update supported settings
-                    prefs.CertificateCleanupMode = update.CertificateCleanupMode;
-                    prefs.DefaultACMERetryInterval = update.DefaultACMERetryInterval;
-                    prefs.DefaultCertificateAuthority = update.DefaultCertificateAuthority;
-                    prefs.DefaultCertificateStore = update.DefaultCertificateStore;
-                    prefs.DefaultKeyType = update.DefaultKeyType;
-                    prefs.DisableARIChecks = update.DisableARIChecks;
+                    var prefs = SettingsManager.ToPreferences();
 
-                    prefs.EnableAppTelematics = update.EnableAppTelematics;
-                    prefs.EnableAutomaticCAFailover = update.EnableAutomaticCAFailover;
-                    prefs.EnableExternalCertManagers = update.EnableExternalCertManagers;
-                    prefs.EnableStatusReporting = update.EnableStatusReporting;
-                    prefs.EnableValidationProxyAPI = update.EnableValidationProxyAPI;
-                    prefs.EnableHttpChallengeServer = update.EnableHttpChallengeServer;
-                    prefs.IsInstanceRegistered = update.IsInstanceRegistered;
-
-                    prefs.NtpServer = update.NtpServer;
-                    prefs.RenewalIntervalDays = update.RenewalIntervalDays;
-                    prefs.RenewalIntervalMode = update.RenewalIntervalMode;
-                    prefs.StoreCertificateIntermediates = update.StoreCertificateIntermediates;
-                    prefs.UseModernPFXAlgs = update.UseModernPFXAlgs;
-
-                    prefs.CertificateManagers = update.CertificateManagers;
-
-                    prefs.MaintenanceWindows = update.MaintenanceWindows;
-                    prefs.DefaultMaintenanceWindowId = update.DefaultMaintenanceWindowId;
-                    prefs.CertificateManagers = update.CertificateManagers;
-
+                    SettingsManager.ApplyHubSettingsUpdate(prefs, update);
                     SettingsManager.FromPreferences(prefs);
 
                     try
@@ -1287,6 +1260,8 @@ namespace Certify.Management
                         _serviceLog.Error(ex, "Error saving preferences");
                         val = new ActionResult("Service core settings could not be updated.", false);
                     }
+
+                    await ApplyPreferences();
 
                     // cert manager config may have changed, refresh required
                     _externallyManagedCacheUpdated = DateTimeOffset.MinValue;
